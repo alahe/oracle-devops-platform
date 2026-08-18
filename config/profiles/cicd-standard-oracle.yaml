@@ -1,0 +1,40 @@
+profile:
+  id: cicd-standard-oracle
+  name: "CI/CD Pipeline Ephemeral DB (Oracle Registry)"
+  description: "Fast ephemeral CI/CD testing database for automated Liquibase schema migrations and pipeline unit tests."
+  functionality: cicd
+  db_type: standard
+  image_vendor: oracle
+
+database:
+  container_image: container-registry.oracle.com/database/free:latest
+  workload_type: NONE
+  admin_user: sys
+  admin_role: SYSDBA
+  default_service: FREEPDB1
+  db_port: 1535
+  wallet_required: false
+  configure_tde: false
+  encrypt_tablespaces: NONE
+  kafka_bootstrap_servers: "localhost:9092"
+
+components:
+  ords:
+    enabled: false
+    container_name: oracle-ords-cicd
+    service_name: ords-cicd
+  apex:
+    enabled: false
+  sqlcl:
+    container_image: container-registry.oracle.com/database/sqlcl:latest
+
+users:
+  - username: sys
+    role: SYSDBA
+    wallet_alias: DB_SYS
+    color: "#E74C3C"
+  - username: CICD_RUNNER
+    role: NORMAL
+    roles: [DB_DEVELOPER_ROLE]
+    wallet_alias: DB_CICD_RUNNER
+    color: "#34495E"

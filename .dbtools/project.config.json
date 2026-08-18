@@ -1,0 +1,11 @@
+{
+  "name": "oracle-free-db-in-prod",
+  "version": "1.0.0",
+  "schemas": [
+    "APEX_PROXY_SCHEMA"
+  ],
+  "src": "src",
+  "dist": "dist",
+  "artifact": "artifact",
+  "filters": ".dbtools/filters/project.filters"
+}

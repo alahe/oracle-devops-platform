@@ -1,0 +1,9 @@
+# SQL*Net Client Profile for Container (Auto-generated: Mon Aug 17 18:49:47 EEST 2026)
+WALLET_LOCATION =
+  (SOURCE =
+    (METHOD = FILE)
+    (METHOD_DATA =
+      (DIRECTORY = /tns)
+    )
+  )
+SQLNET.WALLET_OVERRIDE = TRUE

@@ -1,0 +1,56 @@
+profile:
+  id: bizapp-standard-oracle
+  name: "Business App Standard (Oracle Registry)"
+  description: "General purpose Business Application database running on official Oracle Free DB 23ai container with ORDS and Database Actions."
+  functionality: bizapp
+  db_type: standard
+  image_vendor: oracle
+
+database:
+  container_image: container-registry.oracle.com/database/free:latest
+  workload_type: NONE
+  admin_user: sys
+  admin_role: SYSDBA
+  default_service: FREEPDB1
+  db_port: 1533
+  wallet_required: false
+  configure_tde: true
+  encrypt_tablespaces: ALL
+  kafka_bootstrap_servers: "localhost:9092"
+
+components:
+  ords:
+    enabled: true
+    container_name: oracle-ords-bizapp
+    service_name: ords-bizapp
+    container_image: container-registry.oracle.com/database/ords:latest
+    download_url: "https://download.oracle.com/otn_software/java/ords/ords-latest.zip"
+    local_dir: "ords"
+    https_port: 8448
+    http_port: 8088
+    schema_alias: app_user
+  apex:
+    enabled: true
+    download_url: "https://download.oracle.com/otn_software/apex/apex_24.1.zip"
+    local_dir: "apex"
+    workspace: BIZAPP_WORKSPACE
+    version: 24.1
+  sqlcl:
+    container_image: container-registry.oracle.com/database/sqlcl:latest
+
+users:
+  - username: sys
+    role: SYSDBA
+    wallet_alias: DB_SYS
+    color: "#E74C3C"
+  - username: APP_SCHEMA
+    role: NORMAL
+    wallet_alias: DB_APP_SCHEMA
+    color: "#2980B9"
+  - username: APP_DEV
+    role: NORMAL
+    ords_enabled: true
+    ords_alias: app_dev
+    roles: [DB_DEVELOPER_ROLE]
+    wallet_alias: DB_APP_DEV
+    color: "#F39C12"

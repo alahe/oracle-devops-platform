@@ -1,0 +1,11 @@
+{
+  "name": "2. Publisher DB - OAS_CONFIG (FREEPDB1)",
+  "connectionType": "Basic",
+  "host": "localhost",
+  "port": "1531",
+  "serviceName": "FREEPDB1",
+  "user": "OAS_CONFIG",
+  "role": "NORMAL",
+  "savePassword": true,
+  "notes": "Oracle Analytics Server Publisher Config Database - OAS_CONFIG Schema"
+}

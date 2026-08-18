@@ -1,0 +1,11 @@
+{
+  "name": "4. APEX Proxy DB - APEX_PROXY_SCHEMA (FREEPDB1)",
+  "connectionType": "Basic",
+  "host": "localhost",
+  "port": "1532",
+  "serviceName": "FREEPDB1",
+  "user": "APEX_PROXY_SCHEMA",
+  "role": "NORMAL",
+  "savePassword": true,
+  "notes": "Oracle APEX Outbound Proxy Database - APEX_PROXY_SCHEMA Schema"
+}

@@ -1,0 +1,22 @@
+# ============================================================================
+# Oracle Free DB in Prod - Topology Configuration
+# Maps container instances to DB profiles and port offsets
+# ============================================================================
+
+topology:
+  network_name: oracle-free-prod-network
+
+instances:
+  - name: db-apex-proxy
+    profile: proxy-adb-oracle
+    container_name: oracle-db-apex-proxy
+    hostname: db-apex-proxy
+    port_offset: 0
+    volume_prefix: apex_proxy
+
+  - name: db-publisher
+    profile: appinfra-standard-gvenzl
+    container_name: oracle-db-publisher
+    hostname: db-publisher
+    port_offset: 10
+    volume_prefix: publisher

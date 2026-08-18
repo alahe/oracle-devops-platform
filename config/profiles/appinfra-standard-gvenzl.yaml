@@ -1,0 +1,39 @@
+profile:
+  id: appinfra-standard-gvenzl
+  name: "Application Infrastructure (Oracle Publisher / Forms)"
+  description: "Oracle Infrastructure DB for Oracle Analytics Publisher and Oracle Forms (RCU schemas, high processes=1000)."
+  functionality: appinfra
+  db_type: standard
+  image_vendor: gvenzl
+
+database:
+  container_image: docker.io/gvenzl/oracle-free:23-full-faststart
+  workload_type: NONE
+  admin_user: sys
+  admin_role: SYSDBA
+  default_service: FREEPDB1
+  db_port: 1534
+  wallet_required: false
+  configure_tde: true
+  encrypt_tablespaces: ALL
+  kafka_bootstrap_servers: "localhost:9092"
+
+components:
+  ords:
+    enabled: false
+    container_name: oracle-ords-publisher
+    service_name: ords-publisher
+  apex:
+    enabled: false
+  sqlcl:
+    container_image: container-registry.oracle.com/database/sqlcl:latest
+
+users:
+  - username: sys
+    role: SYSDBA
+    wallet_alias: DB_PUBLISHER_SYS
+    color: "#27AE60"
+  - username: OAS_CONFIG
+    role: NORMAL
+    wallet_alias: DB_OAS_CONFIG
+    color: "#27AE60"

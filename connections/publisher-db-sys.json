@@ -1,0 +1,11 @@
+{
+  "name": "1. Publisher DB - SYS (FREEPDB1)",
+  "connectionType": "Basic",
+  "host": "localhost",
+  "port": "1531",
+  "serviceName": "FREEPDB1",
+  "user": "sys",
+  "role": "SYSDBA",
+  "savePassword": true,
+  "notes": "Oracle Analytics Server Publisher Config Database - SYSDBA Role"
+}

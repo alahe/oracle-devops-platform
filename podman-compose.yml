@@ -1,0 +1,126 @@
+services:
+  # ---------------------------------------------------------------------------
+  # Dynamic Architecture Base Manifest
+  # All active database and ORDS services (e.g. db-dev-full, db-publisher, etc.)
+  # are generated 100% dynamically from .env & profiles into podman-compose.override.yml
+  # ---------------------------------------------------------------------------
+
+  # ---------------------------------------------------------------------------
+  # 3. Optional Local ORDS Container (macOS / Local Dev Only)
+  #    Toodangus kasutatakse eraldi Linux serveris asuvat ORDS-i.
+  #    Käivita Mac-is koos ORDS-iga: podman compose --profile dev-ords up -d
+  # ---------------------------------------------------------------------------
+  dev-ords:
+    profiles:
+      - dev-ords
+    image: ${ORDS_CONTAINER_IMAGE:-container-registry.oracle.com/database/ords:latest}
+    container_name: oracle-ords-dev
+    ports:
+      - "${ORDS_PORT:-8088}:8080"
+      - "${ORDS_SSL_PORT:-8448}:8443"
+    env_file:
+      - .env
+    entrypoint:
+      - /usr/bin/docker-entrypoint.sh
+    environment:
+      - DBHOST=db-apex-proxy
+      - DBPORT=1521
+      - DBSERVICENAME=FREEPDB1
+    secrets:
+      - apex_db_sys_password
+      - ords_listener_password
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 1024M
+    volumes:
+      - apex_images:/opt/ords/apex
+      - ./config/certs:/etc/ords/certs:ro
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # 4. Clean Linux Container for Testing Standalone ORDS Installation
+  # ---------------------------------------------------------------------------
+  dev-ords-standalone-test:
+    profiles:
+      - test-standalone
+    image: oraclelinux:9
+    container_name: oracle-ords-standalone-test
+    ports:
+      - "8089:8080"
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=db-apex-proxy
+      - DB_PORT=1521
+      - DB_SERVICE=FREEPDB1
+    secrets:
+      - apex_db_sys_password
+      - ords_listener_password
+    volumes:
+      - ./scripts/internal/install-ords-standalone.sh:/tmp/install-ords-standalone.sh:ro
+      - apex_images:/opt/ords/apex:rw
+    command: >
+      /bin/bash -c "
+      chmod +x /tmp/install-ords-standalone.sh &&
+      /tmp/install-ords-standalone.sh &&
+      /opt/ords/bin/ords --config /etc/ords/config serve
+      "
+    depends_on:
+      db-apex-proxy:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  # 5. Containerized Web IDE (code-server + Oracle Developer Tools + CI/CD UI)
+  # ---------------------------------------------------------------------------
+  web-ide:
+    profiles:
+      - web-ide
+    build:
+      context: ./docker/web-ide
+      args:
+        ARTIFACTORY_REGISTRY: ${ARTIFACTORY_DOCKER_REGISTRY:-""}
+    image: ${WEB_IDE_CONTAINER_IMAGE:-lscr.io/linuxserver/code-server:latest}
+    container_name: web-ide-dev
+    ports:
+      - "${WEB_IDE_HTTP_PORT:-8090}:8443"
+      - "${CICD_WEB_UI_PORT:-8091}:8091"
+    env_file:
+      - .env
+    environment:
+      - PWD=/workspace
+      - TNS_ADMIN=/config/.oracle/tns_admin
+      - JAVA_TOOL_OPTIONS=-Doracle.net.tns_admin=/config/.oracle/tns_admin
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - ./:/workspace
+      - ./config/tns_admin_container:/config/.oracle/tns_admin
+      - /run/user/1000/podman/podman.sock:/var/run/docker.sock
+      - web_ide_data:/config
+    restart: unless-stopped
+
+volumes:
+  publisher_oradata:
+  apex_proxy_oradata:
+  apex_images:
+  apex_proxy_data:
+  web_ide_data:
+
+secrets:
+
+  publisher_db_sys_password:
+    external: true
+  apex_db_sys_password:
+    external: true
+  apex_schema_password:
+    external: true
+  ords_listener_password:
+    external: true
+  test_dev_password:
+    external: true
+  apex_admin_password:
+    external: true
+  test_web_password:
+    external: true

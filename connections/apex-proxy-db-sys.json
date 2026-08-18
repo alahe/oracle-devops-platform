@@ -1,0 +1,11 @@
+{
+  "name": "3. APEX Proxy DB - SYS (FREEPDB1)",
+  "connectionType": "Basic",
+  "host": "localhost",
+  "port": "1532",
+  "serviceName": "FREEPDB1",
+  "user": "sys",
+  "role": "SYSDBA",
+  "savePassword": true,
+  "notes": "Oracle APEX Outbound Proxy Database - SYSDBA Role"
+}

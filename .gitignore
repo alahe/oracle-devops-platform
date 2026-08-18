@@ -1,0 +1,43 @@
+# Local Environment & Security Files (MUST NOT BE IN GIT)
+.env
+.env.secrets
+config/secrets/
+config/tns_admin/
+config/cookies.txt
+config/oracle_db_wallet.zip
+config/wallet-*/
+config/ords/*/databases/*/wallet/
+*.sso
+*.p12
+*.key
+*.lck
+
+
+
+# Local Installation Logs & Test History (Detailed logs remain local only)
+install_logs/
+golden-snapshots/
+tests/reports/history/
+
+
+# Temporary and Downloaded Archives & Binaries Kaustad
+binaries/**
+!binaries/
+!binaries/**/
+!binaries/**/README.md
+!binaries/**/readme.md
+!binaries/**/.gitkeep
+
+
+apex-latest.zip
+patches/*.zip
+patches/unzipped_*
+db_install/
+db-install/
+
+
+
+# OS / Editor Files
+.DS_Store
+.vscode/
+.idea/

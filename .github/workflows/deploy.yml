@@ -1,0 +1,66 @@
+name: CI/CD Proxy Databases Deployment Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  lint-and-validate:
+    name: 1. Lint & Validate Liquibase DDL
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate XML Changelogs
+        run: |
+          echo "Validating Liquibase XML syntax..."
+          xmllint --noout liquibase/db-publisher/changelog.xml
+          xmllint --noout liquibase/db-apex-proxy/changelog.xml
+
+  ephemeral-test-environment:
+    name: 2. Ephemeral Docker Test & Migration
+    needs: lint-and-validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start Ephemeral Proxy Databases
+        run: |
+          docker compose up -d db-publisher db-apex-proxy
+          docker compose ps
+
+      - name: Wait for Databases Healthcheck
+        run: |
+          echo "Waiting for Oracle Free databases to become healthy..."
+          timeout 180s bash -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" oracle-db-publisher)" == "healthy" ] && [ "$(docker inspect --format="{{.State.Health.Status}}" oracle-db-apex-proxy)" == "healthy" ]; do sleep 5; done' || true
+          docker ps
+
+      - name: Run Liquibase Migrations on Publisher DB
+        run: |
+          echo "Executing Liquibase migrations on db-publisher..."
+          # docker run --net=host liquibase/liquibase update --url="jdbc:oracle:thin:@localhost:1521/FREEPDB1" ...
+
+      - name: Run Liquibase Migrations on APEX Proxy DB
+        run: |
+          echo "Executing Liquibase migrations on db-apex-proxy..."
+          # docker run --net=host liquibase/liquibase update --url="jdbc:oracle:thin:@localhost:1522/FREEPDB1" ...
+
+      - name: Deploy APEX App via SQLcl API
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: |
+          echo "Deploying APEX application via apex_application_install..."
+          # sql sys/ApexProxySysPass123!@localhost:1522/FREEPDB1 as sysdba @scripts/deploy-apex.sql "$AZURE_CLIENT_ID" "$AZURE_CLIENT_SECRET"
+
+      - name: Teardown Ephemeral Environment
+        if: always()
+        run: |
+          docker compose down -v

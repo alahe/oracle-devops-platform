@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Saved on Tue Aug 11 05:41:15 UTC 2026</comment>
+<entry key="database.api.enabled">true</entry>
+<entry key="mongo.enabled">true</entry>
+<entry key="security.forceHTTPS">false</entry>
+<entry key="standalone.access.log">/tmp/ords_access_logs/</entry>
+<entry key="standalone.https.cert">/etc/ords/config/ssl/cert.crt</entry>
+<entry key="standalone.https.cert.key">/etc/ords/config/ssl/key.key</entry>
+<entry key="standalone.https.port">8443</entry>
+<entry key="standalone.static.context.path">/i</entry>
+<entry key="standalone.static.path">/opt/oracle/apex_images/images</entry>
+</properties>

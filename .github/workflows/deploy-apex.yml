@@ -1,0 +1,88 @@
+name: Oracle DB Schema & APEX Application CI/CD Deployment
+
+on:
+  push:
+    branches:
+      - main
+      - release/*
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: 'Sihtkeskkond (Target Environment)'
+        required: true
+        default: 'DEV'
+
+jobs:
+  deploy:
+    name: Deploy Schema & APEX via SQLcl Projects
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Oracle Wallet (mTLS SEPS Credentials)
+        run: |
+          mkdir -p $HOME/.oracle/tns_admin
+          if [ -n "${{ secrets.DB_WALLET_BASE64 }}" ]; then
+            echo "${{ secrets.DB_WALLET_BASE64 }}" | base64 -d > $HOME/.oracle/tns_admin/wallet.zip
+            unzip -o $HOME/.oracle/tns_admin/wallet.zip -d $HOME/.oracle/tns_admin/
+            rm -f $HOME/.oracle/tns_admin/wallet.zip
+            echo "✅ Oracle Wallet taastatud pühitud katses."
+          else
+            echo "ℹ️ DB_WALLET_BASE64 puudub. Kasutatakse lokaalset TNS_ADMIN konfigut."
+          fi
+
+      - name: 3. Login to Oracle Container Registry (OCR)
+        run: |
+          if [ -n "${{ secrets.OCR_USERNAME }}" ] && [ -n "${{ secrets.OCR_PASSWORD }}" ]; then
+            echo "${{ secrets.OCR_PASSWORD }}" | docker login container-registry.oracle.com -u "${{ secrets.OCR_USERNAME }}" --password-stdin
+          fi
+
+      - name: 4. Deploy Database Schema via SQLcl Projects (Ephemeral Container)
+        run: |
+          echo "🚀 Käivitan SQLcl Projects deploy käsu..."
+          docker run --rm \
+            --network=host \
+            -v "$(pwd):/workspace" \
+            -v "$HOME/.oracle/tns_admin:/root/.oracle/tns_admin" \
+            -e TNS_ADMIN=/root/.oracle/tns_admin \
+            -e JAVA_TOOL_OPTIONS="-Doracle.net.tns_admin=/root/.oracle/tns_admin" \
+            -w /workspace \
+            container-registry.oracle.com/database/sqlcl:latest \
+            /@DB_APEX_PROXY_SCHEMA <<'EOF'
+          lb status
+          project deploy -file artifact/*.zip || project deploy
+          exit;
+          EOF
+
+      - name: 5. Deploy APEX Applications via SQLcl Ephemeral Container
+        run: |
+          echo "🚀 Käivitan APEX rakenduste impordi..."
+          if [ -d "binaries/apex_apps" ]; then
+            for app_file in binaries/apex_apps/*.sql; do
+              if [ -f "$app_file" ]; then
+                echo "📦 Paigaldan APEX rakendust: $app_file"
+                docker run --rm \
+                  --network=host \
+                  -v "$(pwd):/workspace" \
+                  -v "$HOME/.oracle/tns_admin:/root/.oracle/tns_admin" \
+                  -e TNS_ADMIN=/root/.oracle/tns_admin \
+                  -e JAVA_TOOL_OPTIONS="-Doracle.net.tns_admin=/root/.oracle/tns_admin" \
+                  -w /workspace \
+                  container-registry.oracle.com/database/sqlcl:latest \
+                  /@DB_APEX_PROXY_SCHEMA <<EOF
+                @$app_file
+                exit;
+          EOF
+              fi
+            done
+          fi
+
+      - name: 6. Deployment Summary Audit
+        run: |
+          echo "=================================================================="
+          echo "🎉 CI/CD TARNE EDUKALT LÕPETATUD!"
+          echo "   Aeg: $(date)"
+          echo "   Haru: ${{ github.ref }}"
+          echo "=================================================================="

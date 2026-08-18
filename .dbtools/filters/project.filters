@@ -1,0 +1,7 @@
+-- SQLcl Project Export Filters
+-- Exclude temporary tables
+object_name not like 'TEMP_%'
+-- Exclude bin/recyclebin tables
+and not (object_type = 'TABLE' and object_name like 'BIN$%')
+-- Exclude system generated jobs/logs
+and not (object_type = 'TABLE' and object_name like 'LOGMNR_%')

@@ -1,0 +1,44 @@
+{
+  "connections": [
+    {
+      "name": "Publisher DB - SYS (FREEPDB1)",
+      "connectionType": "Basic",
+      "hostname": "localhost",
+      "port": "1531",
+      "serviceName": "FREEPDB1",
+      "username": "sys",
+      "password": "PublisherSysPass123!",
+      "role": "SYSDBA"
+    },
+    {
+      "name": "Publisher DB - OAS_CONFIG (FREEPDB1)",
+      "connectionType": "Basic",
+      "hostname": "localhost",
+      "port": "1531",
+      "serviceName": "FREEPDB1",
+      "username": "OAS_CONFIG",
+      "password": "OasConfigPass2026!",
+      "role": "NORMAL"
+    },
+    {
+      "name": "APEX Proxy DB - SYS (FREEPDB1)",
+      "connectionType": "Basic",
+      "hostname": "localhost",
+      "port": "1532",
+      "serviceName": "FREEPDB1",
+      "username": "sys",
+      "password": "ApexProxySysPass123!",
+      "role": "SYSDBA"
+    },
+    {
+      "name": "APEX Proxy DB - APEX_PROXY_SCHEMA (FREEPDB1)",
+      "connectionType": "Basic",
+      "hostname": "localhost",
+      "port": "1532",
+      "serviceName": "FREEPDB1",
+      "username": "APEX_PROXY_SCHEMA",
+      "password": "ProxySchemaPass2026!",
+      "role": "NORMAL"
+    }
+  ]
+}
