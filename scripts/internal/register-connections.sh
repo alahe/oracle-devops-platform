@@ -149,26 +149,34 @@ else:
       continue
     fi
 
+    # Map placeholder profile usernames to real database accounts if needed
+    real_db_user="$uname"
+    if [ "$uname" = "APP_SCHEMA" ]; then
+      real_db_user="APEX_PROXY_SCHEMA"
+    elif [ "$uname" = "APP_DEV" ]; then
+      real_db_user="TEST_DEV"
+    fi
+
     # 2. Passwords queried strictly from Oracle Wallet (redirect STDIN to prevent draining loop)
-    pwd_val=$(get_wallet_pwd "$walias" "$uname" </dev/null)
+    pwd_val=$(get_wallet_pwd "$walias" "$real_db_user" </dev/null)
     if [ -z "$pwd_val" ]; then
       c_name_upper=$(echo "$c_name" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-      pwd_val=$(get_wallet_pwd "DB_${c_name_upper}_${uname}" "$uname" </dev/null)
+      pwd_val=$(get_wallet_pwd "DB_${c_name_upper}_${real_db_user}" "$real_db_user" </dev/null)
     fi
     [ -z "$pwd_val" ] && continue
 
-    if [ "$uname" = "sys" ]; then
+    if [ "$real_db_user" = "sys" ] || [ "$real_db_user" = "SYS" ]; then
       pretty_name="1. Sys"
-    elif [ "$uname" = "APEX_PROXY_SCHEMA" ]; then
+    elif [ "$real_db_user" = "APEX_PROXY_SCHEMA" ]; then
       pretty_name="2. APEX_PROXY_SCHEMA"
-    elif [ "$uname" = "TEST_DEV" ]; then
+    elif [ "$real_db_user" = "TEST_DEV" ]; then
       pretty_name="3. TEST_DEV"
     else
-      pretty_name="${idx}. ${uname}"
+      pretty_name="${idx}. ${real_db_user}"
     fi
 
     # Build SQLcl connect command
-    conn_str="${uname}/${pwd_val}@localhost:${port}/${service}"
+    conn_str="${real_db_user}/${pwd_val}@localhost:${port}/${service}"
     if [ "$urole" = "SYSDBA" ]; then
       conn_str="${conn_str} as sysdba"
     fi
@@ -176,9 +184,9 @@ else:
     SQL_COMMANDS+=("connect -save \"${pretty_name}\" -savepwd -replace ${conn_str}")
     SQL_COMMANDS+=("connmgr move -conn \"${pretty_name}\" /${folder_name}")
 
-    final_user_color=$(get_existing_user_color "$uname" "$ucolor")
+    final_user_color=$(get_existing_user_color "$real_db_user" "$ucolor")
     user_json_str=$(jq -n \
-      --arg uname "$uname" \
+      --arg uname "$real_db_user" \
       --arg pwd "$pwd_val" \
       --arg role "$urole" \
       --arg color "$final_user_color" \
@@ -253,7 +261,7 @@ else:
     [ -z "$dev_pwd_val" ] && continue
 
     if [ "$dev_u_upper" = "TEST_DEV" ]; then
-      pretty_dev_name="${idx}. TEST_DEV"
+      pretty_dev_name="3. TEST_DEV"
     else
       pretty_dev_name="${idx}. Dev ${dev_u_upper}"
     fi
@@ -281,7 +289,7 @@ else:
   SQL_COMMANDS+=("connmgr list -folder /${folder_name}")
   SQL_COMMANDS+=("EXIT")
 
-  # Run SQLcl batch commands
+  # Run SQLcl batch commands (saves encrypted passwords to OS Keychain via SQLcl connect -save -savepwd)
   if [ -n "$VSCODE_SQLCL" ] && { command -v "$VSCODE_SQLCL" &>/dev/null || [ -x "$VSCODE_SQLCL" ]; }; then
     printf '%s\n' "${SQL_COMMANDS[@]}" | "$VSCODE_SQLCL" /nolog >/dev/null 2>&1 || true
   else
@@ -294,45 +302,32 @@ EOF
   # Combine built connections into JSON array
   CONNS_ARRAY_JSON=$(printf '%s\n' "${BUILT_CONNS[@]}" | jq -s .)
 
-  # Apply user colors from YAML profile into ~/.dbtools/connections/*/dbtools.properties
-  DBTOOLS_CONNS_DIR="$HOME/.dbtools/connections"
-  if [ -d "$DBTOOLS_CONNS_DIR" ]; then
-    while read -r user_obj; do
-      [ -z "$user_obj" ] && continue
-      uname=$(echo "$user_obj" | jq -r '.username // empty')
-      ucolor=$(echo "$user_obj" | jq -r '.color // "#2980B9"')
-      [ -z "$uname" ] && continue
-
-      for prop in "$DBTOOLS_CONNS_DIR"/*/dbtools.properties; do
-        [ -f "$prop" ] || continue
-        if grep -iq "^userName=${uname}$" "$prop"; then
-          grep -v "^color=" "$prop" > "${prop}.tmp" && mv "${prop}.tmp" "$prop"
-          echo "color=${ucolor}" >> "$prop"
-        fi
-      done
-    done < <(echo "$CONNS_ARRAY_JSON" | jq -c '.[]')
-  fi
-
-  # Synchronize ~/.sqldev/connections.json, ~/.dbtools/connections.json, and native ~/.dbtools/connections/*/dbtools.properties
+  # Synchronize colors and JSON files without overwriting SQLcl OS Keychain encrypted properties
   CONNS_JSON="$CONNS_ARRAY_JSON" FOLDER_NAME="$folder_name" PORT_VAL="$port" SERVICE_VAL="$service" python3 -c "
-import json, os, sys, secrets, shutil
+import json, os, sys
 
 conns_in = json.loads(os.environ.get('CONNS_JSON', '[]'))
 folder = os.environ.get('FOLDER_NAME', 'pub-db')
 port = os.environ.get('PORT_VAL', '1533')
 service = os.environ.get('SERVICE_VAL', 'FREEPDB1')
 
-conns = []
 dbtools_dir = os.path.expanduser('~/.dbtools/connections')
-folders_dir = os.path.expanduser('~/.dbtools/connection_folders')
-
 if os.path.exists(dbtools_dir):
-    shutil.rmtree(dbtools_dir)
-os.makedirs(dbtools_dir, exist_ok=True)
-os.makedirs(folders_dir, exist_ok=True)
+    for u in conns_in:
+        uname = u.get('username')
+        ucolor = u.get('color', '#2980B9')
+        for entry in os.listdir(dbtools_dir):
+            prop_file = os.path.join(dbtools_dir, entry, 'dbtools.properties')
+            if os.path.isfile(prop_file):
+                with open(prop_file, 'r', encoding='utf-8', errors='ignore') as pf:
+                    lines = pf.readlines()
+                if any(f'userName={uname}' in l for l in lines) or any(f'userName={uname.lower()}' in l for l in lines):
+                    new_lines = [l for l in lines if not l.startswith('color=')]
+                    new_lines.append(f'color={ucolor}\n')
+                    with open(prop_file, 'w', encoding='utf-8') as pf:
+                        pf.writelines(new_lines)
 
-created_folder_conn_ids = []
-
+conns = []
 for u in conns_in:
     uname = u.get('username')
     pwd = u.get('password', '')
@@ -340,22 +335,6 @@ for u in conns_in:
     color = u.get('color', '#2980B9')
     pretty_name = u.get('pretty_name', uname)
     
-    conn_id = secrets.token_urlsafe(16).replace('-', 'A').replace('_', 'B')[:22]
-    conn_folder_path = os.path.join(dbtools_dir, conn_id)
-    os.makedirs(conn_folder_path, exist_ok=True)
-    
-    prop_path = os.path.join(conn_folder_path, 'dbtools.properties')
-    with open(prop_path, 'w', encoding='utf-8') as pf:
-        pf.write(f'name={pretty_name}\n')
-        pf.write('type=ORACLE_DATABASE\n')
-        pf.write(f'connectionString=localhost\\:{port}/{service}\n')
-        pf.write(f'userName={uname}\n')
-        pf.write(f'color={color}\n')
-        if role == 'SYSDBA':
-            pf.write('role=SYSDBA\n')
-    
-    created_folder_conn_ids.append(conn_id)
-
     c_obj = {
         'name': pretty_name,
         'folder': f'/{folder}',
@@ -371,12 +350,6 @@ for u in conns_in:
         'savePassword': True
     }
     conns.append(c_obj)
-
-# Update folders.json
-folders_file = os.path.join(folders_dir, 'folders.json')
-folder_data = {'folders': [{'name': folder, 'connections': created_folder_conn_ids, 'folders': []}]}
-with open(folders_file, 'w', encoding='utf-8') as ff:
-    json.dump(folder_data, ff, indent=2)
 
 data = {'connections': conns}
 for json_path in [os.path.expanduser('~/.sqldev/connections.json'), os.path.expanduser('~/.dbtools/connections.json')]:
