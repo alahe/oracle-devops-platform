@@ -1,52 +1,80 @@
-# Standalone ORDS Paigaldamine Linux Serverisse (või Podmani)
+# 🏢 Eraldiseisva Standalone ORDS Serveri Paigaldus ja Testimine Ettevõttes
 
-See dokument kirjeldab Oracle REST Data Services (ORDS) automaatse standalone teenuse paigaldamist ja konfigureerimist eraldiseisvasse Linux serverisse (või konteinerisse).
-
----
-
-## Eeldused (Prerequisites)
-
-*   **Java:** Serverisse peab olema paigaldatud Java 11 või 17.
-*   **Võrguühendus:** Serverist peab olema pääs andmebaasile (TCPS port 2484 või standard port 1521/1522).
-*   **Tarkvara:** Allalaadimise URL-id (nt sise-Artifactory või OTN) on seadistatavad failis `config/repository.env`.
+See juhend kirjeldab **Oracle REST Data Services (ORDS)** eraldiseisva (Standalone) teenuse paigaldamist, konfigureerimist ja testimist ettevõtte infrastruktuuris või eraldi Linux virtuaalmasinas/serveris.
 
 ---
 
-## Automaatne paigaldamine (`install-ords-standalone.sh`)
+## 🏗️ 2 Ettevõtte Testimata / Katsestsenaariumi
 
-ORDS-i paigaldamiseks ja seadistamiseks eraldi Linux serveris või lokaalses virtuaalmasinas käivita järgmine käsk:
+### 🔹 Stsenaarium A: Ettevõttes on juba olemas eraldiseisev ORDS server
 
+Kui ettevõtte infrastruktuuris on ORDS teenus juba eraldi serveris seadistatud ning soovid lokaalselt või serveris paigaldada AINULT andmebaasi ja APEX mootori:
+
+Käivita paigaldus ilma lokaalse ORDS konteinerita:
 ```bash
-# Käivita Linux serveris (seadista andmebaasi ühenduse andmed)
-DB_HOST="db-apex-proxy-ip" \
+./scripts/setup-all.sh --no-ords
+```
+* **Mis juhtub?** Paigaldatakse Oracle DB, luuakse kasutajad/skeemid ja installeeritakse APEX mootor, kuid **lokaalset ORDS konteinerit ei käivitata**.
+* **Ühendamine:** Välise ORDS serveri ühenduse andmed seadistatakse failis `.env` (`APEX_DB_HOST`, `APEX_DB_PORT`).
+
+---
+
+### 🔹 Stsenaarium B: Uue eraldiseisva Standalone ORDS serveri paigaldamine
+
+Kui soovid ise paigaldada ja testida eraldiseisvat ORDS serverit eraldi Linux virtuaalmasinas (RedHat / Oracle Linux / Ubuntu):
+
+#### 1. Eeldused (Prerequisites):
+*   **Java:** Serverisse peab olema paigaldatud Java 11, 17 või 21.
+*   **Võrguühendus:** Serverist peab olema pääs andmebaasile (standard port 1521/1522 või turvaline TCPS port 2484).
+*   **Tarkvara hoidla:** Allalaadimise URL-id (nt sise-Artifactory või OTN) on seadistatavad failis `config/repository.env`.
+
+#### 2. Automaatne paigaldamine (`install-ords-standalone.sh`):
+
+Käivita paigaldusskript eraldiseisvas Linux serveris:
+```bash
+# Määratle sihtandmebaasi rekvisiidid:
+DB_HOST="192.168.1.100" \
 DB_PORT=1521 \
 DB_SERVICE="FREEPDB1" \
 ./scripts/internal/install-ords-standalone.sh
 ```
 
-### Skripti teostatavad sammud:
-1.  **Java kontroll:** Kontrollib, kas süsteemis on Java olemas.
-2.  **Laadib alla tarkvara:** Tõmbab ORDS `.zip` faili konfigureeritud Artifactory või OTN aadressilt.
-3.  **Paigaldab tarkvara:** Pakib ORDS-i lahti ja loob vajaliku kataloogistruktuuri.
-4.  **Seadistab ühenduse:** Loob ühenduse konfiguratsiooni sihtandmebaasiga ja loob vajadusel `ORDS_METADATA` skeemi.
-5.  **Seadistab teenuse (Systemd):** Registreerib ORDS-i Linuxi systemd teenusena, tagades automaatse käivitumise serveri taaskäivitusel.
+#### 3. Skripti teostatavad sammud:
+1. **Java kontroll:** Kontrollib, kas süsteemis on Java 17/21 olemas.
+2. **Tarkvara allalaadimine:** Tõmbab ORDS `.zip` faili konfigureeritud Artifactory või OTN aadressilt.
+3. **Paigaldamine:** Pakib ORDS-i lahti asukohta `/opt/ords` ja loodab vajaliku kataloogistruktuuri.
+4. **APEX staatilised pildid:** Kopeerib APEXi pildifailid kausta `/opt/ords/apex/images`.
+5. **Seadistus (`/etc/ords/config`):** Loob ühenduse konfiguratsiooni sihtandmebaasiga (`pool.xml`) ning teostab vajadusel `ORDS_METADATA` skeemi paigalduse.
+6. **Linux Systemd Teenus:** Registreerib ORDS-i Linuxi systemd teenusena (`ords.service`), mis tagab automaatse käivitumise serveri taaskäivitusel.
 
 ---
 
-## Testimise ja Kasutamise Aadressid
+## 🛠️ Konfigureerimine ja Haldus Käsurealt
 
-*   **ORDS Landing Page (HTTP):** `http://<server-ip>:8080/ords/`
-*   **ORDS Landing Page (HTTPS):** `https://<server-ip>:8443/ords/`
-
----
-
-## Konfigureeritavad portid ja seaded
 Kõik ORDS-i konfiguratsiooniväärtused loetakse ja salvestatakse ORDS-i seadete kausta (vaikimisi `/etc/ords/config`). Seadeid saab muuta käsurealt:
 
 ```bash
-# Gateway režiimi muutmine (nt direct -> proxied)
+# Kontrolli ORDS-i aktiivset konfiguratsiooni:
+ords --config /etc/ords/config config list
+
+# Muuda Gateway režiimi (nt direct -> proxied)
 ords --config /etc/ords/config config --db-pool default set plsql.gateway.mode proxied
 
-# Staatiliste failide asukoha muutmine
+# Muuda staatiliste failide asukohta
 ords --config /etc/ords/config config set standalone.static.path /opt/ords/apex/images
+
+# Systemd teenuse oleku kontroll ja taaskäivitamine
+sudo systemctl status ords
+sudo systemctl restart ords
 ```
+
+---
+
+## 🌐 Testimise ja Kasutamise Aadressid
+
+Pärast paigaldamist on eraldiseisev ORDS teenus kättesaadav järgmistel aadressidel:
+
+* **ORDS Landing Page (HTTP):** `http://<server-ip>:8080/ords/`
+* **APEX Builder / Tööruum (HTTP):** `http://<server-ip>:8080/ords/apex`
+* **ORDS Landing Page (HTTPS):** `https://<server-ip>:8443/ords/`
+* **APEX Builder / Tööruum (HTTPS):** `https://<server-ip>:8443/ords/apex`
