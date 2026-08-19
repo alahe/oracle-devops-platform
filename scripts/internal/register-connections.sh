@@ -46,6 +46,10 @@ get_wallet_pwd() {
     [ -z "$pwd_val" ] && pwd_val=$(podman exec "${c_name:-${PRIMARY_CONTAINER:-db-dev-full}}" cat /run/secrets/apex_db_dev_password 2>/dev/null | tr -d '\r\n' || true)
   fi
 
+  if [ -z "$pwd_val" ] && { [[ "$uname" == *"SCHEMA"* ]] || [[ "$alias_name" == *"SCHEMA"* ]]; }; then
+    pwd_val=$(podman secret inspect --showsecret apex_schema_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+  fi
+
 
   if [ -z "$pwd_val" ]; then
     pwd_val=$("$SCRIPT_DIR/view-wallet-credential.sh" "$alias_name" 2>/dev/null | grep "Password:" | sed $'s/\x1b\\[[0-9;]*m//g' | cut -d':' -f2- | tr -d ' \r')
@@ -104,9 +108,12 @@ for c_entry in $ACTIVE_INSTANCES; do
 
   port="${PROFILE_DB_PORT:-1532}"
   service="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
-  profile_file="$WORKSPACE_DIR/config/profiles/${PROFILE_ID:-proxy-standard-gvenzl}.yaml"
+  profile_file="${PROFILE_YAML:-$WORKSPACE_DIR/config/profiles/databases/${prof}.yaml}"
   if [ ! -f "$profile_file" ]; then
-    profile_file="$WORKSPACE_DIR/config/profiles/proxy-standard-gvenzl.yaml"
+    profile_file="$WORKSPACE_DIR/config/profiles/databases/${PROFILE_ID:-bizapp-standard-oracle}.yaml"
+  fi
+  if [ ! -f "$profile_file" ]; then
+    profile_file="$WORKSPACE_DIR/config/profiles/databases/proxy-adb-oracle.yaml"
   fi
 
   # 3. Read Database Configuration dynamically from YAML profile

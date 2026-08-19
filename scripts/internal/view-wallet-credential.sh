@@ -9,11 +9,16 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Laeme keskkonnamuutujad
+# Laeme keskkonnamuutujad ja profiilifunktsioonid
 if [ -f "$WORKSPACE_DIR/.env" ]; then
   set -a
   source "$WORKSPACE_DIR/.env"
   set +a
+fi
+
+if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
+  source "$SCRIPT_DIR/load-profile.sh"
+  load_db_profile >/dev/null 2>&1 || true
 fi
 
 ALIAS="$1"
@@ -24,7 +29,7 @@ if [ -z "$ALIAS" ]; then
 fi
 
 PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
-PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-dev-full}"
+PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-pub-db}"
 if ! podman container exists "$PRIMARY_CONTAINER" 2>/dev/null; then
   for c_entry in $(get_active_db_instances 2>/dev/null); do
     c_name=$(echo "$c_entry" | cut -d'|' -f1)
@@ -34,11 +39,15 @@ if ! podman container exists "$PRIMARY_CONTAINER" 2>/dev/null; then
     fi
   done
 fi
+if ! podman container exists "$PRIMARY_CONTAINER" 2>/dev/null; then
+  if podman container exists db-apex-proxy 2>/dev/null; then
+    PRIMARY_CONTAINER="db-apex-proxy"
+  elif podman container exists pub-db 2>/dev/null; then
+    PRIMARY_CONTAINER="pub-db"
+  fi
+fi
 PROXY_CONTAINER="$PRIMARY_CONTAINER"
 PRIMARY_UPPER=$(echo "$PRIMARY_CONTAINER" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
-
-source "$SCRIPT_DIR/load-profile.sh"
-load_db_profile >/dev/null 2>&1 || true
 
 # Dynamic alias resolution using active container name from .env and profile
 ALIAS_UPPER=$(echo "$ALIAS" | tr '[:lower:]' '[:upper:]')
@@ -86,14 +95,21 @@ if [ -z "$INDEX" ]; then
 fi
 
 if [ -z "$INDEX" ]; then
-  echo "❌ Viga: Walletist ei leitud aliast '$ALIAS' (ega '$ALIAS_SEARCH')!"
-  exit 1
+  case "$ALIAS_UPPER" in
+    *"SYS"*) PWD_VAL=$(podman secret inspect --showsecret publisher_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || podman secret inspect --showsecret apex_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true); USER_VAL="sys" ;;
+    *"SCHEMA"*) PWD_VAL=$(podman secret inspect --showsecret apex_schema_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true); USER_VAL="${ALIAS_UPPER#DB_}" ;;
+    *"DEV"*) PWD_VAL=$(podman secret inspect --showsecret apex_db_dev_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true); USER_VAL="${ALIAS_UPPER#DB_}" ;;
+  esac
+  if [ -z "$PWD_VAL" ]; then
+    echo "❌ Viga: Walletist ega secret-store'ist ei leitud aliast '$ALIAS' (ega '$ALIAS_SEARCH')!"
+    exit 1
+  fi
+else
+  # Pärime kasutaja ja parooli
+  USER_VAL=$(podman exec -i "$PROXY_CONTAINER" sh -c 'export JAVA_HOME=/usr/java/latest; export PATH=$JAVA_HOME/bin:$PATH; echo "$1" | mkstore -wrl "'"$WALLET_PATH"'" -viewEntry "oracle.security.client.username'"$INDEX"'"' -- "$WALLET_PWD" 2>/dev/null | grep "=" | cut -d'=' -f2 | tr -d ' ' | tr -d '\r')
+
+  PWD_VAL=$(podman exec -i "$PROXY_CONTAINER" sh -c 'export JAVA_HOME=/usr/java/latest; export PATH=$JAVA_HOME/bin:$PATH; echo "$1" | mkstore -wrl "'"$WALLET_PATH"'" -viewEntry "oracle.security.client.password'"$INDEX"'"' -- "$WALLET_PWD" 2>/dev/null | grep "=" | cut -d'=' -f2 | tr -d ' ' | tr -d '\r')
 fi
-
-# Pärime kasutaja ja parooli
-USER_VAL=$(podman exec -i "$PROXY_CONTAINER" sh -c 'export JAVA_HOME=/usr/java/latest; export PATH=$JAVA_HOME/bin:$PATH; echo "$1" | mkstore -wrl "'"$WALLET_PATH"'" -viewEntry "oracle.security.client.username'"$INDEX"'"' -- "$WALLET_PWD" 2>/dev/null | grep "=" | cut -d'=' -f2 | tr -d ' ' | tr -d '\r')
-
-PWD_VAL=$(podman exec -i "$PROXY_CONTAINER" sh -c 'export JAVA_HOME=/usr/java/latest; export PATH=$JAVA_HOME/bin:$PATH; echo "$1" | mkstore -wrl "'"$WALLET_PATH"'" -viewEntry "oracle.security.client.password'"$INDEX"'"' -- "$WALLET_PWD" 2>/dev/null | grep "=" | cut -d'=' -f2 | tr -d ' ' | tr -d '\r')
 
 # If PWD_VAL is empty, contains question marks from binary mkstore output, or contains unprintable bytes
 if [ -z "$PWD_VAL" ] || [[ "$PWD_VAL" == *"?"* ]] || echo "$PWD_VAL" | grep -q '[^[:print:]]'; then
