@@ -41,36 +41,33 @@ services:
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
-  # 4. Clean Linux Container for Testing Standalone ORDS Installation
+  # 4. Standalone Containerized ORDS Service (Profile: standalone-ords)
   # ---------------------------------------------------------------------------
-  dev-ords-standalone-test:
+  ords-standalone:
     profiles:
-      - test-standalone
-    image: oraclelinux:9
-    container_name: oracle-ords-standalone-test
+      - standalone-ords
+    image: ${ORDS_CONTAINER_IMAGE:-ubuntu:22.04}
+    container_name: ${ORDS_STANDALONE_CONTAINER_NAME:-ords-standalone-dev}
     ports:
-      - "8089:8080"
+      - "${ORDS_STANDALONE_HTTP_PORT:-8085}:8080"
+      - "${ORDS_STANDALONE_HTTPS_PORT:-8445}:8443"
     env_file:
       - .env
     environment:
-      - DB_HOST=db-apex-proxy
-      - DB_PORT=1521
-      - DB_SERVICE=FREEPDB1
-    secrets:
-      - apex_db_sys_password
-      - ords_listener_password
+      - DB_HOST=${APEX_DB_HOST:-db-apex-proxy}
+      - DB_PORT=${APEX_DB_PORT:-1521}
+      - DB_SERVICE=${APEX_DB_SERVICE:-FREEPDB1}
     volumes:
-      - ./scripts/internal/install-ords-standalone.sh:/tmp/install-ords-standalone.sh:ro
+      - ./:/workspace:rw
       - apex_images:/opt/ords/apex:rw
     command: >
       /bin/bash -c "
-      chmod +x /tmp/install-ords-standalone.sh &&
-      /tmp/install-ords-standalone.sh &&
+      apt-get update >/dev/null 2>&1 &&
+      apt-get install -y openjdk-17-jre-headless zip unzip wget curl ca-certificates >/dev/null 2>&1 &&
+      chmod +x /workspace/scripts/internal/install-ords-standalone.sh &&
+      /workspace/scripts/internal/install-ords-standalone.sh &&
       /opt/ords/bin/ords --config /etc/ords/config serve
       "
-    depends_on:
-      db-apex-proxy:
-        condition: service_healthy
 
   # ---------------------------------------------------------------------------
   # 5. Containerized Web IDE (code-server + Oracle Developer Tools + CI/CD UI)

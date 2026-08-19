@@ -73,13 +73,16 @@ resolve_topology() {
   export WEB_IDE_HTTP_PORT="${WEB_IDE_HTTP_PORT:-8090}"
   export WEB_IDE_HTTPS_PORT="${WEB_IDE_HTTPS_PORT:-8449}"
   export CICD_WEB_UI_PORT="${CICD_WEB_UI_PORT:-8091}"
+  export ORDS_STANDALONE_HTTP_PORT="${ORDS_STANDALONE_HTTP_PORT:-8085}"
+  export ORDS_STANDALONE_HTTPS_PORT="${ORDS_STANDALONE_HTTPS_PORT:-8445}"
 
   echo "✅ Topoloogia portide kontroll teostatud:"
-  echo "   - DB Port:       ${RESOLVED_DB_PORT}"
-  echo "   - HTTPS Port:    ${RESOLVED_HTTPS_PORT}"
-  echo "   - HTTP Port:     ${RESOLVED_HTTP_PORT}"
-  echo "   - Web IDE Port:  ${WEB_IDE_HTTP_PORT}"
-  echo "   - CI/CD UI Port: ${CICD_WEB_UI_PORT}"
+  echo "   - DB Port:                ${RESOLVED_DB_PORT}"
+  echo "   - HTTPS Port:             ${RESOLVED_HTTPS_PORT}"
+  echo "   - HTTP Port:              ${RESOLVED_HTTP_PORT}"
+  echo "   - Standalone ORDS HTTP:   ${ORDS_STANDALONE_HTTP_PORT}"
+  echo "   - Standalone ORDS HTTPS:  ${ORDS_STANDALONE_HTTPS_PORT}"
+  echo "   - Web IDE Port:           ${WEB_IDE_HTTP_PORT}"
 }
 
 

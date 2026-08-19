@@ -1,0 +1,40 @@
+profile:
+  id: proxy-external-ords
+  name: "Oracle APEX Proxy DB (External Corporate ORDS)"
+  description: "Oracle AI Database 26ai Free configured for an external corporate ORDS server running outside Podman."
+  type: database
+
+database:
+  container_name: db-apex-proxy
+  container_image: container-registry.oracle.com/database/free:latest
+  ports:
+    db_port: 1521
+    tcps_port: 2484
+  service_name: FREEPDB1
+
+ords:
+  enabled: false
+  mode: external
+  external_ords_url: "${EXTERNAL_ORDS_URL:-https://ords.corp.internal:8443/ords}"
+  external_ords_host: "${EXTERNAL_ORDS_HOST:-ords.corp.internal}"
+  external_ords_port: "${EXTERNAL_ORDS_PORT:-8443}"
+  external_ords_user: "${EXTERNAL_ORDS_USER:-ORDS_PUBLIC_USER}"
+  wallet_alias: "DB_ORDS_EXTERNAL"
+  skip_reason: "External Dedicated Corporate ORDS Server"
+
+users:
+  - username: SYS
+    role: SYSDBA
+    wallet_alias: DB_APEX_PROXY_SYS
+  - username: APEX_PROXY_SCHEMA
+    role: SCHEMA
+    wallet_alias: DB_APEX_PROXY_SCHEMA
+  - username: ORDS_PUBLIC_USER
+    role: ORDS_USER
+    wallet_alias: DB_ORDS_EXTERNAL
+  - username: TEST_DEV
+    role: DEVELOPER
+    wallet_alias: DB_TEST_DEV
+  - username: TEST_WEB_USER
+    role: WEB_USER
+    wallet_alias: TEST_WEB_USER

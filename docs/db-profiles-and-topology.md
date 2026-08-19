@@ -23,8 +23,10 @@ flowchart TD
     subgraph YAMLProfiles ["config/profiles/ Subdirectories Matrix"]
         P1["databases/proxy-adb-oracle.yaml"]
         P2["databases/proxy-standard-oracle.yaml"]
-        P3["databases/bizapp-standard-oracle.yaml"]
-        P4["web-ide/web-ide-standard.yaml"]
+        P3["databases/proxy-standalone-ords.yaml"]
+        P4["databases/proxy-external-ords.yaml"]
+        P5["databases/bizapp-standard-oracle.yaml"]
+        P6["web-ide/web-ide-standard.yaml"]
     end
 
     UserConfig --> ProfileEngine

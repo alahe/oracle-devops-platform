@@ -8,13 +8,13 @@
 
 | Parameeter | Väärtus |
 | :--- | :--- |
-| **Käivitamise Kellaaeg** | `2026-08-19 16:59:52 EEST` |
+| **Käivitamise Kellaaeg** | `2026-08-19 17:23:26 EEST` |
 | **Käivitaja Kasutaja** | `allanlahe` |
 | **Aktiivne Profiil** | `proxy-standard-gvenzl` |
 | **Integratsioonitestid** | ✅ 7 / 7 Läbitud |
 | **Ühikutestid (Unit Tests)** | ✅ 27 / 22 Läbitud |
 | **Skriptide Kaetus** | 🟢 100% (22/22 skripti kaetud) |
-| **Kogu Testi Kestus** | `67s` |
+| **Kogu Testi Kestus** | `64s` |
 | **Kõikide Testide Olek** | ✅ **PASSED (100%)** |
 
 ---

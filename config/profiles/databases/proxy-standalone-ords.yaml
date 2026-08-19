@@ -1,7 +1,7 @@
 profile:
   id: proxy-standalone-ords
-  name: "Oracle APEX Proxy DB (External Dedicated ORDS)"
-  description: "Oracle AI Database 26ai Free configured for external dedicated corporate ORDS server deployment."
+  name: "Oracle APEX Proxy DB (Podman Standalone ORDS)"
+  description: "Oracle AI Database 26ai Free configured with dedicated Podman Standalone ORDS service running on non-colliding ports 8085/8445."
   type: database
 
 database:
@@ -13,14 +13,13 @@ database:
   service_name: FREEPDB1
 
 ords:
-  enabled: false
-  mode: external
-  external_ords_url: "${EXTERNAL_ORDS_URL:-https://ords.corp.internal:8443/ords}"
-  external_ords_host: "${EXTERNAL_ORDS_HOST:-ords.corp.internal}"
-  external_ords_port: "${EXTERNAL_ORDS_PORT:-8443}"
-  external_ords_user: "${EXTERNAL_ORDS_USER:-ORDS_PUBLIC_USER}"
-  wallet_alias: "DB_ORDS_EXTERNAL"
-  skip_reason: "External Dedicated Corporate ORDS Server"
+  enabled: true
+  mode: standalone
+  container_name: ords-standalone-dev
+  service_name: standalone-ords
+  container_image: ubuntu:22.04
+  http_port: 8085
+  https_port: 8445
 
 users:
   - username: SYS
@@ -29,9 +28,6 @@ users:
   - username: APEX_PROXY_SCHEMA
     role: SCHEMA
     wallet_alias: DB_APEX_PROXY_SCHEMA
-  - username: ORDS_PUBLIC_USER
-    role: ORDS_USER
-    wallet_alias: DB_ORDS_EXTERNAL
   - username: TEST_DEV
     role: DEVELOPER
     wallet_alias: DB_TEST_DEV
