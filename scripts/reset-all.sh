@@ -257,10 +257,32 @@ case $COMPONENT in
     cleanup_volume "${PROJECT_NAME}_web_ide_data"
 
 
-    # 2. Otsime otse Podman daemonist KÕIK selle projektiga seotud jooksevad või peatunud konteinerid (nii etikettide kui eesliidete järgi)
+    # 2. Otsime .env failist KÕIK reamääratlused ilma mustrita (võtme ja väärtuse täpsed nimed) ja kontrollime Podmanist nende olemasolu
+    raw_env_containers=()
+    if [ -f "$SCRIPT_DIR/../.env" ]; then
+      while IFS= read -r env_line || [ -n "$env_line" ]; do
+        env_line=$(echo "$env_line" | sed 's/#.*//' | xargs)
+        [ -z "$env_line" ] && continue
+        if [[ "$env_line" =~ ^([A-Za-z0-9_.-]+)=([A-Za-z0-9_.-]+) ]]; then
+          k_raw="${BASH_REMATCH[1]}"
+          v_raw="${BASH_REMATCH[2]}"
+          k_slug=$(echo "$k_raw" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+          for candidate in "$k_raw" "$k_slug" "$v_raw"; do
+            if podman container exists "$candidate" 2>/dev/null; then
+              raw_env_containers+=("$candidate")
+            fi
+          done
+        fi
+      done < "$SCRIPT_DIR/../.env"
+    fi
+
+    # 3. Otsime otse Podman daemonist KÕIK selle projektiga seotud jooksevad või peatunud konteinerid (nii etikettide kui eesliidete järgi)
     live_containers=$(podman ps -a --filter "label=com.docker.compose.project=$PROJECT_NAME" --format "{{.Names}}" 2>/dev/null || true)
+    profile_containers=$(get_all_profile_container_names 2>/dev/null || true)
     prefix_containers=$(podman ps -a --format "{{.Names}}" 2>/dev/null | grep -E "^(db-|oracle-|ords-|web-ide-|pub-db)" || true)
-    all_target_containers=$(echo -e "${live_containers}\n${prefix_containers}" | sort -u)
+    
+    # Liidame kõik 4 allikat unikaalseks loeteluks
+    all_target_containers=$(printf "%s\n" "${raw_env_containers[@]}" "${live_containers}" "${profile_containers}" "${prefix_containers}" | sort -u)
 
     for c in $all_target_containers; do
       [ -n "$c" ] && cleanup_container "$c"
