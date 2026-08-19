@@ -9,7 +9,7 @@ According to **Rule 3 (Directory Layout Rule for Scripts)**, this directory cont
 ### 📦 1. Profile Engine & Topology Management
 | Script | Description |
 | :--- | :--- |
-| **[load-db-profile.sh](load-db-profile.sh)** | Dynamic YAML Profile parser (`config/profiles/*.yaml`). Enforces 3-level precedence hierarchy for container images and ZIP URLs. |
+| **[load-profile.sh](load-profile.sh)** | Dynamic YAML Profile parser (`config/profiles/*/*.yaml`). Enforces 3-level precedence hierarchy for container images and ZIP URLs. |
 | **[resolve-topology.sh](resolve-topology.sh)** | Multi-instance topology manager (`config/topology.yaml`). Resolves non-clashing ports (`1532`, `1533`, `8443`, `8444`). |
 | **[apply-profile-users.sh](apply-profile-users.sh)** | Dynamic DB user provisioning, role assignments (`DB_DEVELOPER_ROLE`, `CONSOLE_DEVELOPER`), ORDS REST mapping, and APEX workspace user creation. |
 

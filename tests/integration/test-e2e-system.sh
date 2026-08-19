@@ -35,7 +35,7 @@ echo -e "${GREEN}✅ E2E Samm 1 Edukas: Kõik 5 põhisüsteemi skripti on valmis
 
 # Step 2: Validate Internal Subsystem Scripts
 echo -e "\n${YELLOW}[E2E Samm 2] Kontrollin internal abiskriptide ja SQL algseadistajate olemasolu...${NC}"
-INTERNAL_SCRIPTS=("load-db-profile.sh" "resolve-topology.sh" "init-db-instance.sh" "init-db-instance.sql" "apply-profile-users.sh" "generate-passwords.sh" "generate-local-certs.sh" "register-connections-sqlcl.sh")
+INTERNAL_SCRIPTS=("load-profile.sh" "resolve-topology.sh" "init-db-instance.sh" "init-db-instance.sql" "apply-profile-users.sh" "generate-passwords.sh" "generate-local-certs.sh" "register-connections-sqlcl.sh")
 
 for script in "${INTERNAL_SCRIPTS[@]}"; do
   if [ -f "$WORKSPACE_DIR/scripts/internal/$script" ]; then

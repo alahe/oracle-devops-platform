@@ -1,0 +1,31 @@
+profile:
+  id: web-ide-minimal
+  name: "Web IDE Minimal"
+  description: "Minimal browser-based VS Code environment without additional tools or extensions."
+  type: service
+
+web_ide:
+  enabled: true
+  container_name: web-ide-dev
+  container_image: lscr.io/linuxserver/code-server:latest
+  build_local: false
+  ports:
+    http_port: 8090
+    https_port: 8449
+    cicd_ui_port: 8091
+  workspace_dir: /workspace
+
+  tools:
+    antigravity:
+      enabled: false
+    sqlcl:
+      enabled: false
+    github_cli:
+      enabled: false
+    act_cli:
+      enabled: false
+    openjdk:
+      enabled: true
+      version: 21
+
+  extensions: []

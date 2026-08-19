@@ -38,8 +38,8 @@ if [ -f "$SCRIPT_DIR/../.env" ]; then
 fi
 
 # Kaasame profiili laadimise funktsioonid
-if [ -f "$SCRIPT_DIR/internal/load-db-profile.sh" ]; then
-  source "$SCRIPT_DIR/internal/load-db-profile.sh"
+if [ -f "$SCRIPT_DIR/internal/load-profile.sh" ]; then
+  source "$SCRIPT_DIR/internal/load-profile.sh"
 fi
 
 # Argumendid: vaikimisi kustutatakse KÕIK komponendid (COMPONENT="all")
@@ -137,6 +137,11 @@ if [ "$COMPONENT" = "all" ]; then
       echo -e "     └─ Volume: ${CYAN}${PROJECT_NAME}_${c_vol}_oradata${NC}"
     )
   done < <(get_active_db_instances 2>/dev/null || true)
+  load_web_ide_profile >/dev/null 2>&1 || true
+  if [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+    echo -e "   - ${CYAN}${WEB_IDE_CONTAINER_NAME:-web-ide-dev}${NC} (Web IDE Profiil: ${YELLOW}${WEB_IDE_PROFILE:-web-ide-standard}${NC})"
+    echo -e "     └─ Volume: ${CYAN}${PROJECT_NAME}_web_ide_data${NC}"
+  fi
   echo -e "   - Võrk: ${CYAN}${PROJECT_NAME}_default${NC}"
 else
   c_vol=$(echo "$COMPONENT" | sed 's/^db-//' | tr '-' '_')

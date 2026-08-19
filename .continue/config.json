@@ -1,0 +1,35 @@
+{
+  "models": [
+    {
+      "title": "Google Gemini 1.5 Pro (Google AI / Antigravity)",
+      "provider": "gemini",
+      "model": "gemini-1.5-pro-latest",
+      "apiKey": "${GEMINI_API_KEY}"
+    },
+    {
+      "title": "Google Gemini 1.5 Flash (Google AI / Antigravity)",
+      "provider": "gemini",
+      "model": "gemini-1.5-flash-latest",
+      "apiKey": "${GEMINI_API_KEY}"
+    }
+  ],
+  "customCommands": [
+    {
+      "name": "explain",
+      "prompt": "Selgita antud koodiosa eesti keeles ja loetle võimalused selle optimeerimiseks.",
+      "description": "Selgita koodi eesti keeles"
+    },
+    {
+      "name": "sql",
+      "prompt": "Genereeri Oracle SQL 23ai päring vastavalt järgmisele kirjeldusele.",
+      "description": "Genereeri Oracle SQL päring"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Google Gemini Autocomplete",
+    "provider": "gemini",
+    "model": "gemini-1.5-flash-latest",
+    "apiKey": "${GEMINI_API_KEY}"
+  },
+  "allowAnonymousTelemetry": false
+}

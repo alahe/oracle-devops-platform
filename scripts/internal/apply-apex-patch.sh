@@ -55,8 +55,8 @@ if [ "$MASTER_SETUP" != "true" ]; then
   echo -e "${CYAN}==================================================================${NC}"
 fi
 
-if [ -f "$SCRIPT_DIR/load-db-profile.sh" ]; then
-  source "$SCRIPT_DIR/load-db-profile.sh"
+if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
+  source "$SCRIPT_DIR/load-profile.sh"
   load_db_profile >/dev/null 2>&1 || true
 fi
 

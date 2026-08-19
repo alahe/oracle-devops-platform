@@ -23,7 +23,7 @@ if [ -f ".env" ]; then
   set +a
 fi
 
-PROFILE="dev-ords"
+PROFILE=""
 SKIP_PUBLISHER=false
 
 if [ -z "$DB_PUBLISHER" ] && [ -z "$PUBLISHER_DB_HOST" ]; then
@@ -64,8 +64,18 @@ else
 fi
 echo "=================================================================="
 
+if [ -f "$SCRIPT_DIR/internal/load-profile.sh" ]; then
+  source "$SCRIPT_DIR/internal/load-profile.sh"
+  load_db_profile >/dev/null 2>&1 || true
+  load_web_ide_profile >/dev/null 2>&1 || true
+fi
+
 PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
-PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-dev-full}"
+PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-pub-db}"
+
+if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+  COMPOSE_ARGS+=(--profile web-ide)
+fi
 
 # Käivitame compose
 if [ "$SKIP_PUBLISHER" = "true" ]; then
@@ -80,10 +90,6 @@ else
   else
     podman-compose "${COMPOSE_ARGS[@]}" up -d
   fi
-fi
-
-if [ -f "$SCRIPT_DIR/internal/load-db-profile.sh" ]; then
-  source "$SCRIPT_DIR/internal/load-db-profile.sh"
 fi
 
 # Ootame kuni andmebaasid on valmis (healthy)

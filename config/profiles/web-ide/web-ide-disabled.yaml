@@ -1,0 +1,8 @@
+profile:
+  id: web-ide-disabled
+  name: "Web IDE Disabled"
+  description: "Web IDE service disabled."
+  type: service
+
+web_ide:
+  enabled: false

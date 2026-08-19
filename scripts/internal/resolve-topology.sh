@@ -10,7 +10,7 @@ _LOCAL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$_LOCAL_SCRIPT_DIR/../.." && pwd)"
 
 # Source load-db-profile helper
-source "$_LOCAL_SCRIPT_DIR/load-db-profile.sh"
+source "$_LOCAL_SCRIPT_DIR/load-profile.sh"
 
 TOPOLOGY_FILE="$WORKSPACE_DIR/config/topology.yaml"
 

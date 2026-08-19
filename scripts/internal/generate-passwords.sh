@@ -86,8 +86,8 @@ generate_all_passwords() {
   create_podman_secret "test_dev_password" "$TEST_DEV_PWD"
   create_podman_secret "test_web_password" "$TEST_WEB_PWD"
 
-  if [ -f "$WORKSPACE_DIR/scripts/internal/load-db-profile.sh" ]; then
-    source "$WORKSPACE_DIR/scripts/internal/load-db-profile.sh"
+  if [ -f "$WORKSPACE_DIR/scripts/internal/load-profile.sh" ]; then
+    source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
     for secret in $(get_required_secret_names 2>/dev/null); do
       if ! podman secret exists "$secret" 2>/dev/null; then
         DB_PWD=$(gen_random_password)

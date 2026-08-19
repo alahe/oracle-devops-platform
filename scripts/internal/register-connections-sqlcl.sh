@@ -19,8 +19,8 @@ elif [ -f "$WORKSPACE_DIR/config/repository.env" ]; then
   set +a
 fi
 
-if [ -f "$SCRIPT_DIR/load-db-profile.sh" ]; then
-  source "$SCRIPT_DIR/load-db-profile.sh"
+if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
+  source "$SCRIPT_DIR/load-profile.sh"
 fi
 
 get_container_secret() {

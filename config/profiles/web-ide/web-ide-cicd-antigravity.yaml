@@ -1,0 +1,57 @@
+profile:
+  id: web-ide-cicd-antigravity
+  name: "Web IDE CI/CD & Antigravity Testing"
+  description: "Web IDE environment focused on Google Antigravity AI assistant, GitHub CLI (gh), and Nektos 'act' for testing GitHub Actions workflows locally."
+  type: service
+
+web_ide:
+  enabled: true
+  container_name: web-ide-dev
+  container_image: lscr.io/linuxserver/code-server:latest
+  build_local: true
+  ports:
+    http_port: 8090
+    https_port: 8449
+    cicd_ui_port: 8091
+  workspace_dir: /workspace
+
+  # 🛠️ Tools for GitHub Actions & Antigravity Testing
+  tools:
+    antigravity:
+      enabled: true
+      install_url: "https://antigravity.google/install.sh"
+      binary_name: "antigravity"
+    github_cli:
+      enabled: true
+      binary_name: "gh"
+    act_cli:
+      enabled: true
+      install_url: "https://raw.githubusercontent.com/nektos/act/master/install.sh"
+      binary_name: "act"
+    sqlcl:
+      enabled: true
+      download_url: "https://download.oracle.com/otn_sqldev/sqlcl/sqlcl-latest.zip"
+      install_dir: "/opt/sqlcl"
+    openjdk:
+      enabled: true
+      version: 21
+
+  # 📦 Configurable VS Code Extensions
+  extensions:
+    - id: "google.antigravity"
+      enabled: true
+      name: "Google Antigravity AI Assistant"
+      download_url: "https://antigravity.google/download/antigravity.vsix"
+      vsix_path: "binaries/extensions/antigravity.vsix"
+
+    - id: "github.vscode-github-actions"
+      enabled: true
+      name: "GitHub Actions Extension"
+      download_url: ""
+      vsix_path: ""
+
+    - id: "oracle.sql-developer-for-vscode"
+      enabled: true
+      name: "Oracle SQL Developer for VS Code"
+      download_url: ""
+      vsix_path: "binaries/extensions/oracle.sql-developer-for-vscode.vsix"

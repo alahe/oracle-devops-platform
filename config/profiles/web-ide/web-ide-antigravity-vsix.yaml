@@ -1,0 +1,46 @@
+profile:
+  id: web-ide-antigravity-vsix
+  name: "Web IDE Antigravity & VSIX Extensions"
+  description: "Web IDE environment containing Google Antigravity AI Assistant CLI application and auto-installing VS Code extensions from local .vsix files."
+  type: service
+
+web_ide:
+  enabled: true
+  container_name: web-ide-dev
+  container_image: lscr.io/linuxserver/code-server:latest
+  build_local: true
+  ports:
+    http_port: 8090
+    https_port: 8449
+    cicd_ui_port: 8091
+  workspace_dir: /workspace
+  extensions_dir: binaries/extensions
+
+  # 🤖 Google Antigravity AI Assistant CLI Application
+  tools:
+    antigravity:
+      enabled: true
+      install_url: "https://antigravity.google/install.sh"
+      binary_name: "antigravity"
+    github_cli:
+      enabled: true
+      binary_name: "gh"
+    sqlcl:
+      enabled: false
+    act_cli:
+      enabled: false
+    openjdk:
+      enabled: true
+      version: 21
+
+  # 📦 VS Code Extensions loaded from local .vsix files in binaries/extensions/
+  extensions:
+    - id: "google.antigravity"
+      enabled: true
+      name: "Google Antigravity AI Assistant Extension"
+      vsix_path: "binaries/extensions/antigravity.vsix"
+
+    - id: "oracle.sql-developer-for-vscode"
+      enabled: true
+      name: "Oracle SQL Developer for VS Code"
+      vsix_path: "binaries/extensions/oracle.sql-developer-for-vscode.vsix"

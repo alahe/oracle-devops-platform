@@ -15,11 +15,11 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-echo -e "${CYAN}🧪 DEDICATED UNIT TEST: internal/load-db-profile.sh${NC}"
-TARGET_SCRIPT="$WORKSPACE_DIR/scripts/internal/load-db-profile.sh"
+echo -e "${CYAN}🧪 DEDICATED UNIT TEST: internal/load-profile.sh${NC}"
+TARGET_SCRIPT="$WORKSPACE_DIR/scripts/internal/load-profile.sh"
 
 if [ ! -f "$TARGET_SCRIPT" ]; then
-  echo -e "${RED}❌ Test Ebaõnnestus: scripts/internal/load-db-profile.sh puudub!${NC}"
+  echo -e "${RED}❌ Test Ebaõnnestus: scripts/internal/load-profile.sh puudub!${NC}"
   exit 1
 fi
 

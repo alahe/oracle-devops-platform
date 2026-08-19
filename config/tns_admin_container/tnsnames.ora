@@ -1,62 +1,53 @@
-# TNS Names Configuration for Container (Auto-generated: Mon Aug 17 18:49:47 EEST 2026)
+# TNS Names Configuration for Container (Auto-generated: Tue Aug 18 22:50:39 EEST 2026)
 
-DB_APEX_PROXY_SYS =
+DB_SYS =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = db-dev-full)(PORT = 1521))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = pub-db)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = FREEPDB1)
     )
   )
 
-DB_APEX_PROXY_SCHEMA =
+DB_APP_SCHEMA =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = db-dev-full)(PORT = 1521))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = pub-db)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = FREEPDB1)
     )
   )
 
-DB_TEST_DEV =
+DB_APP_DEV =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = db-dev-full)(PORT = 1521))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = pub-db)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = FREEPDB1)
     )
   )
 
-TEST_WEB_USER =
+DB_PUB_DB_SYS =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = db-dev-full)(PORT = 1521))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = pub-db)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = FREEPDB1)
     )
   )
 
-DB_DB_DEV_FULL_SYS =
+DB_PUB_DB_SCHEMA =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = db-dev-full)(PORT = 1521))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = pub-db)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = FREEPDB1)
     )
   )
 
-DB_DB_DEV_FULL_SCHEMA =
+DB_PUB_DB_DEV =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = db-dev-full)(PORT = 1521))
-    (CONNECT_DATA =
-      (SERVER = DEDICATED)
-      (SERVICE_NAME = FREEPDB1)
-    )
-  )
-
-DB_DB_DEV_FULL_DEV =
-  (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = db-dev-full)(PORT = 1521))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = pub-db)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = FREEPDB1)

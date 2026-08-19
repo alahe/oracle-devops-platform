@@ -10,7 +10,7 @@ Skript `./scripts/setup-all.sh` teostab kogu keskkonna täieliku paigalduse: lae
 
 > 🏛️ **Modulaarne & Profiilipõhine Arhitektuur:**
 > Skript `setup-all.sh` on ehitatud **peamise orkestreerijana**, mis koondab interaktiivse CLI liidese, sammude mõõtmise (Reegel 1) ja logimise (`install_logs/`), delegeerides kõik spetsiifilised alamprotsessid modulaarsetele abiskriptidele kaustas `scripts/internal/`:
-> - 📦 **Profiilid & Topoloogia:** `load-db-profile.sh` & `resolve-topology.sh`
+> - 📦 **Profiilid & Topoloogia:** `load-profile.sh` & `resolve-topology.sh`
 > - 🔌 **Instantsi algseadistus:** `init-db-instance.sh`
 > - 👤 **Kasutajad & Rollid:** `apply-profile-users.sh`
 > - 🔒 **Sertifikaatide usaldamine:** `generate-local-certs.sh`
@@ -105,7 +105,7 @@ Skript `./scripts/start-containers.sh` käivitab lokaalsed andmebaasi ja ORDS-i 
 Skript `./scripts/reset-all.sh` on **modulaarne profiilipõhine puhastaja**, mis peatab ja kustutab valitud komponendid, profiilid (`config/profiles/*.yaml`), persistentse salvestusruumi (volumes) ja võrgud.
 
 > 🏛️ **Profiilipõhine Puhastusmootor:**
-> Skript `reset-all.sh` kaasab profiililaaduri `load-db-profile.sh` ning tagab, et profiili vahetamisel (nt 23c -> ADB 19c) puhastatakse automaatselt kõik selle profiiliga seotud andmemahud (`apex_proxy_oradata`, `apex_proxy_data`, `publisher_oradata`, `apex_images`), vältides andmete ristsaastumist ja `ORA-65156` konflikte.
+> Skript `reset-all.sh` kaasab profiililaaduri `load-profile.sh` ning tagab, et profiili vahetamisel (nt 23c -> ADB 19c) puhastatakse automaatselt kõik selle profiiliga seotud andmemahud (`apex_proxy_oradata`, `apex_proxy_data`, `publisher_oradata`, `apex_images`), vältides andmete ristsaastumist ja `ORA-65156` konflikte.
 
 **Süntaks:**
 ```bash
@@ -341,6 +341,24 @@ sql /@DB_TEST_DEV
 *   **Kogu keskkonna eemaldamiseks:** Kui soovid vabastada oma arvutist kettaruumi (säästab ~15GB+ ruumi) või alustada täiesti puhtalt lehelt.
 *   **Üksikute komponentide puhastamiseks:** Kui soovid näiteks nullida ainult ühe andmebaasi (nt `db-publisher`), kuid soovid säilitada teise andmebaasi ja ORDS-i.
 *   **Podman süsteemi parandamiseks (`--system` lüliti):** Kui Podman VM on kettaruumist tühi või läinud lukku ja vajab süvapuhastust (prune).
+
+---
+
+## 🚀 Google Antigravity Desktop GUI Sandbox (`run-antigravity-sandbox.sh`)
+
+Skript `./scripts/run-antigravity-sandbox.sh` paigaldab ja käivitab **Google Antigravity IDE natiivse töölauarakenduse (GUI)** täielikult isoleeritud **Podman liivakastis** (`antigravity-sandbox`), suunates graafilise akna macOS ekraanile läbi XQuartz X11 protokolli.
+
+**Kasutamine:**
+```bash
+# 1. Käivita töölauarakendus Podman konteineris:
+./scripts/run-antigravity-sandbox.sh
+
+# 2. Ehita konteineri pilt uuesti:
+./scripts/run-antigravity-sandbox.sh --build
+
+# 3. Peata ja kustuta liivakast:
+./scripts/run-antigravity-sandbox.sh --stop
+```
 
 ---
 

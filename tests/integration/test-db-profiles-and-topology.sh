@@ -19,7 +19,7 @@ echo -e "🧪 DÜNAAMILISTE PROFIILIDE JA TOPOLOOGIA TESTIMINE"
 echo -e "${CYAN}==================================================================${NC}"
 
 # Source profile loader
-source "$WORKSPACE_DIR/scripts/internal/load-db-profile.sh"
+source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
 
 # Test 1: Load proxy-adb-oracle profile
 echo -e "\n${YELLOW}[Test 1] Laen ADB profiili (proxy-adb-oracle)...${NC}"

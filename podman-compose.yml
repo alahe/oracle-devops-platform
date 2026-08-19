@@ -97,7 +97,6 @@ services:
     volumes:
       - ./:/workspace
       - ./config/tns_admin_container:/config/.oracle/tns_admin
-      - /run/user/1000/podman/podman.sock:/var/run/docker.sock
       - web_ide_data:/config
     restart: unless-stopped
 

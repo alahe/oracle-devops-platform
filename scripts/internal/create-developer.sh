@@ -20,8 +20,8 @@ elif [ -f "$WORKSPACE_DIR/config/repository.env" ]; then
   set +a
 fi
 
-if [ -f "$SCRIPT_DIR/load-db-profile.sh" ]; then
-  source "$SCRIPT_DIR/load-db-profile.sh"
+if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
+  source "$SCRIPT_DIR/load-profile.sh"
   load_db_profile >/dev/null 2>&1 || true
 fi
 
@@ -155,10 +155,17 @@ END;
 -- 2. Loo/uuenda APEX arendaja
 DECLARE
   v_workspace_id NUMBER;
+  v_target_ws VARCHAR2(100) := '${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}';
 BEGIN
-  v_workspace_id := APEX_UTIL.find_security_group_id('PROXY_WORKSPACE');
+  v_workspace_id := APEX_UTIL.find_security_group_id(v_target_ws);
   IF v_workspace_id IS NULL OR v_workspace_id = 0 THEN
-    DBMS_OUTPUT.PUT_LINE('❌ Viga: Tööruumi PROXY_WORKSPACE ei leitud! Kas APEX on paigaldatud?');
+    BEGIN
+      SELECT workspace_id INTO v_workspace_id FROM apex_workspaces WHERE ROWNUM = 1;
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+  IF v_workspace_id IS NULL OR v_workspace_id = 0 THEN
+    DBMS_OUTPUT.PUT_LINE('❌ Viga: Tööruumi ' || v_target_ws || ' ei leitud! Kas APEX on paigaldatud?');
   ELSE
     APEX_UTIL.set_security_group_id(v_workspace_id);
     
@@ -214,10 +221,17 @@ END;
 -- 2. Loo/uuenda APEX arendaja
 DECLARE
   v_workspace_id NUMBER;
+  v_target_ws VARCHAR2(100) := '${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}';
 BEGIN
-  v_workspace_id := APEX_UTIL.find_security_group_id('PROXY_WORKSPACE');
+  v_workspace_id := APEX_UTIL.find_security_group_id(v_target_ws);
   IF v_workspace_id IS NULL OR v_workspace_id = 0 THEN
-    DBMS_OUTPUT.PUT_LINE('❌ Viga: Tööruumi PROXY_WORKSPACE ei leitud! Kas APEX on paigaldatud?');
+    BEGIN
+      SELECT workspace_id INTO v_workspace_id FROM apex_workspaces WHERE ROWNUM = 1;
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+  END IF;
+  IF v_workspace_id IS NULL OR v_workspace_id = 0 THEN
+    DBMS_OUTPUT.PUT_LINE('❌ Viga: Tööruumi ' || v_target_ws || ' ei leitud! Kas APEX on paigaldatud?');
   ELSE
     APEX_UTIL.set_security_group_id(v_workspace_id);
     

@@ -1,0 +1,56 @@
+profile:
+  id: web-ide-standard
+  name: "Web IDE Standard (code-server + Antigravity + Oracle Tools)"
+  description: "Browser-based VS Code environment configured with dynamic tools, extensions, and download URLs."
+  type: service
+
+web_ide:
+  enabled: true
+  container_name: web-ide-dev
+  container_image: lscr.io/linuxserver/code-server:latest
+  build_local: true
+  ports:
+    http_port: 8090
+    https_port: 8449
+    cicd_ui_port: 8091
+  workspace_dir: /workspace
+
+  # 🛠️ Configurable CLI Tools (enable/disable, set download URLs & installation paths)
+  tools:
+    antigravity:
+      enabled: true
+      install_url: "https://antigravity.google/install.sh"
+      binary_name: "antigravity"
+    sqlcl:
+      enabled: true
+      download_url: "https://download.oracle.com/otn_sqldev/sqlcl/sqlcl-latest.zip"
+      install_dir: "/opt/sqlcl"
+    github_cli:
+      enabled: true
+      install_url: "https://cli.github.com/packages"
+    act_cli:
+      enabled: true
+      install_url: "https://raw.githubusercontent.com/nektos/act/master/install.sh"
+    openjdk:
+      enabled: true
+      version: 21
+
+  # 📦 Configurable VS Code Extensions (.vsix file paths, download URLs, or marketplace IDs)
+  extensions:
+    - id: "oracle.sql-developer-for-vscode"
+      enabled: true
+      name: "Oracle SQL Developer for VS Code"
+      download_url: ""
+      vsix_path: "binaries/extensions/oracle.sql-developer-for-vscode.vsix"
+
+    - id: "google.antigravity"
+      enabled: true
+      name: "Google Antigravity AI Assistant"
+      download_url: "https://antigravity.google/download/antigravity.vsix"
+      vsix_path: "binaries/extensions/antigravity.vsix"
+
+    - id: "github.vscode-github-actions"
+      enabled: true
+      name: "GitHub Actions Extension"
+      download_url: ""
+      vsix_path: ""

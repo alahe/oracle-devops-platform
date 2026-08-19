@@ -29,8 +29,8 @@ if [ -f "$WORKSPACE_DIR/.env" ]; then
   set +a
 fi
 
-if [ -f "$WORKSPACE_DIR/scripts/internal/load-db-profile.sh" ]; then
-  source "$WORKSPACE_DIR/scripts/internal/load-db-profile.sh"
+if [ -f "$WORKSPACE_DIR/scripts/internal/load-profile.sh" ]; then
+  source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
   load_db_profile >/dev/null 2>&1 || true
 fi
 

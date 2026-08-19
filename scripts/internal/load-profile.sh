@@ -27,11 +27,14 @@ load_db_profile() {
   # Strip path or extension if provided
   profile_name=$(basename "$profile_name" .yaml)
 
-  local profile_file="$WORKSPACE_DIR/config/profiles/${profile_name}.yaml"
+  local profile_file="$WORKSPACE_DIR/config/profiles/databases/${profile_name}.yaml"
   if [ ! -f "$profile_file" ]; then
-    echo "⚠️  Hoiatus: Profiilifaili '${profile_file}' ei leitud. Kasutan vaike-profiili 'proxy-adb-oracle'."
+    profile_file="$WORKSPACE_DIR/config/profiles/${profile_name}.yaml"
+  fi
+  if [ ! -f "$profile_file" ]; then
+    echo "⚠️  Hoiatus: Profiilifaili '${profile_name}.yaml' ei leitud kaustast config/profiles/databases/. Kasutan vaike-profiili 'proxy-adb-oracle'."
     profile_name="proxy-adb-oracle"
-    profile_file="$WORKSPACE_DIR/config/profiles/proxy-adb-oracle.yaml"
+    profile_file="$WORKSPACE_DIR/config/profiles/databases/proxy-adb-oracle.yaml"
   fi
 
   # 1. Profiili põhiatribuudid
@@ -226,15 +229,19 @@ get_active_db_instances() {
         local key="${BASH_REMATCH[1]}"
         local profile="${BASH_REMATCH[2]}"
         
-        # Filtreerime välja tavalised keskkonnamuutujad (pordid, URL-id, saladused, hostid)
-        [[ "$key" == *"_PORT"* || "$key" == *"_URL"* || "$key" == *"_IMAGE"* || "$key" == *"_PASSWORD"* || "$key" == *"_HOST"* || "$key" == *"_SERVICE"* || "$key" == *"MAIN_DB_PROFILE"* || "$key" == *"ADDITIONAL_DATABASES"* ]] && continue
-        
-        local container_name=$(echo "$key" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
-        if [ "$container_name" = "db-proxy" ] || [ "$container_name" = "proxy-db" ]; then
-          found_proxy=true
+        # 1. Kontrollime, et võtme nimi viitab andmebaasile (algab DB_ või lõppeb _DB / _PROFILE)
+        if [[ "$key" =~ ^DB_ ]] || [[ "$key" =~ _DB$ ]] || [[ "$key" == "MAIN_DB_PROFILE" ]] || [[ "$key" == "PROXY_DB" ]] || [[ "$key" == "PUB_DB" ]]; then
+          # 2. Kontrollime, et väärtusele vastav profiili YAML fail on tõesti olemas kaustas config/profiles/databases/
+          local check_profile_file="$WORKSPACE_DIR/config/profiles/databases/${profile}.yaml"
+          [ ! -f "$check_profile_file" ] && check_profile_file="$WORKSPACE_DIR/config/profiles/${profile}.yaml"
+          if [ -f "$check_profile_file" ]; then
+            local container_name=$(echo "$key" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+            if [ "$container_name" = "db-proxy" ] || [ "$container_name" = "proxy-db" ]; then
+              found_proxy=true
+            fi
+            raw_instances+=("${container_name}|${profile}|${key}")
+          fi
         fi
-        
-        raw_instances+=("${container_name}|${profile}|${key}")
       fi
     done < "$env_file"
   fi
@@ -298,7 +305,57 @@ ensure_unique_name() {
   echo "$resolved_name"
 }
 
+# Web IDE Service Profile Loader
+load_web_ide_profile() {
+  local profile_name="${1:-${WEB_IDE_PROFILE:-web-ide-standard}}"
+  profile_name=$(basename "$profile_name" .yaml)
+
+  local profile_file="$WORKSPACE_DIR/config/profiles/web-ide/${profile_name}.yaml"
+  if [ ! -f "$profile_file" ]; then
+    profile_file="$WORKSPACE_DIR/config/profiles/${profile_name}.yaml"
+  fi
+  if [ ! -f "$profile_file" ]; then
+    profile_name="web-ide-standard"
+    profile_file="$WORKSPACE_DIR/config/profiles/web-ide/web-ide-standard.yaml"
+  fi
+
+  export WEB_IDE_PROFILE_YAML="$profile_file"
+
+  local raw_enabled=$(parse_yaml_key "$profile_file" "enabled")
+  export WEB_IDE_ENABLED="${WEB_IDE_ENABLED:-${raw_enabled:-true}}"
+
+  local raw_image=$(parse_yaml_key "$profile_file" "container_image")
+  export WEB_IDE_CONTAINER_IMAGE="${WEB_IDE_CONTAINER_IMAGE:-${raw_image:-lscr.io/linuxserver/code-server:latest}}"
+
+  local raw_build_local=$(parse_yaml_key "$profile_file" "build_local")
+  export WEB_IDE_BUILD_LOCAL="${WEB_IDE_BUILD_LOCAL:-${raw_build_local:-true}}"
+
+  local raw_http=$(parse_yaml_key "$profile_file" "http_port")
+  export WEB_IDE_HTTP_PORT="${WEB_IDE_HTTP_PORT:-${raw_http:-8090}}"
+
+  local raw_https=$(parse_yaml_key "$profile_file" "https_port")
+  export WEB_IDE_HTTPS_PORT="${WEB_IDE_HTTPS_PORT:-${raw_https:-8449}}"
+
+  local raw_cicd=$(parse_yaml_key "$profile_file" "cicd_ui_port")
+  export CICD_WEB_UI_PORT="${CICD_WEB_UI_PORT:-${raw_cicd:-8091}}"
+
+  # Parse Antigravity tool settings
+  local ag_block=$(awk '/antigravity:/{flag=1;next}/sqlcl:|github_cli:|act_cli:|openjdk:|extensions:/{flag=0}flag' "$profile_file" 2>/dev/null)
+  local ag_enabled=$(echo "$ag_block" | parse_yaml_key "/dev/stdin" "enabled" | head -n 1)
+  local ag_url=$(echo "$ag_block" | parse_yaml_key "/dev/stdin" "install_url" | head -n 1)
+  export WEB_IDE_ANTIGRAVITY_ENABLED="${ag_enabled:-true}"
+  export WEB_IDE_ANTIGRAVITY_INSTALL_URL="${ag_url:-https://antigravity.google/install.sh}"
+
+  # Parse SQLcl tool settings
+  local sqlcl_block=$(awk '/sqlcl:/{flag=1;next}/github_cli:|act_cli:|openjdk:|extensions:/{flag=0}flag' "$profile_file" 2>/dev/null)
+  local sqlcl_enabled=$(echo "$sqlcl_block" | parse_yaml_key "/dev/stdin" "enabled" | head -n 1)
+  local sqlcl_url=$(echo "$sqlcl_block" | parse_yaml_key "/dev/stdin" "download_url" | head -n 1)
+  export WEB_IDE_SQLCL_ENABLED="${sqlcl_enabled:-true}"
+  export WEB_IDE_SQLCL_DOWNLOAD_URL="${sqlcl_url:-https://download.oracle.com/otn_sqldev/sqlcl/sqlcl-latest.zip}"
+}
+
 # If executed directly, run load_db_profile
 if [ "${BASH_SOURCE[0]}" -ef "$0" ]; then
   load_db_profile "$1"
+  load_web_ide_profile
 fi

@@ -9,7 +9,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-source "$SCRIPT_DIR/load-db-profile.sh"
+source "$SCRIPT_DIR/load-profile.sh"
 
 init_db_instance() {
   local target_profile="${1:-${PROXY_DB:-${MAIN_DB_PROFILE:-proxy-adb-oracle}}}"

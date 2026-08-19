@@ -37,7 +37,7 @@ fi
 PROXY_CONTAINER="$PRIMARY_CONTAINER"
 PRIMARY_UPPER=$(echo "$PRIMARY_CONTAINER" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
 
-source "$SCRIPT_DIR/load-db-profile.sh"
+source "$SCRIPT_DIR/load-profile.sh"
 load_db_profile >/dev/null 2>&1 || true
 
 # Dynamic alias resolution using active container name from .env and profile

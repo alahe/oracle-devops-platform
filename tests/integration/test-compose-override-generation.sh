@@ -19,7 +19,7 @@ echo -e "🧪 PODMAN-COMPOSE OVERRIDE & ADB KESKKONNAMUUTUJATE TESTIMINE"
 echo -e "${CYAN}==================================================================${NC}"
 
 # Source profile loader
-source "$WORKSPACE_DIR/scripts/internal/load-db-profile.sh"
+source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
 
 # Test 1: Verify IS_ADB export when sourcing and calling load_db_profile
 echo -e "\n${YELLOW}[Test 1] Kontrollin IS_ADB lipu eksporti (proxy-adb-oracle)...${NC}"

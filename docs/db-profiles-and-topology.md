@@ -1,33 +1,30 @@
 # Dynamic Database Profiles & Topology Manager Guide
 
-This document explains the architecture, usage, and configuration of the **Dynamic YAML Database Profile Engine** (`config/profiles/*.yaml`) and **Topology Manager** (`config/topology.yaml` / `resolve-topology.sh`) in `oracle-free-db-in-prod`.
+This document explains the architecture, usage, and configuration of the **Dynamic YAML Profile Engine** (`config/profiles/databases/*.yaml` and `config/profiles/web-ide/*.yaml`) and **Topology Manager** (`config/topology.yaml` / `resolve-topology.sh`) in `oracle-free-db-in-prod`.
 
 ---
 
 ## 🏛️ Architecture Overview
 
-The Database Profile Engine completely decouples container image parameters, DB initialization settings, user roles, ORDS REST configurations, and SEPS Wallet aliases from code scripts into structured YAML definitions.
+The Profile Engine completely decouples container image parameters, DB initialization settings, user roles, ORDS REST configurations, and SEPS Wallet aliases from code scripts into structured YAML definitions.
 
 ```mermaid
 flowchart TD
     subgraph UserConfig [".env Configuration"]
-        U1["MAIN_DB_PROFILE=proxy-adb-oracle"]
-        U2["# Optional Enterprise Mirror: ARTIFACTORY_DOCKER_REGISTRY=artifactory.company.local"]
+        U1["PUB_DB=bizapp-standard-oracle"]
+        U2["WEB_IDE_PROFILE=web-ide-standard"]
     end
 
     subgraph ProfileEngine ["Profile Engine & Precedence Resolver"]
-        E1["load-db-profile.sh"]
+        E1["load-profile.sh"]
         E2["resolve-topology.sh"]
     end
 
-    subgraph YAMLProfiles ["config/profiles/*.yaml Matrix"]
-        P1["proxy-adb-oracle.yaml"]
-        P2["proxy-standard-oracle.yaml"]
-        P3["proxy-standard-gvenzl.yaml"]
-        P4["bizapp-standard-oracle.yaml"]
-        P5["bizapp-adb-oracle.yaml"]
-        P6["appinfra-standard-gvenzl.yaml"]
-        P7["cicd-standard-oracle.yaml"]
+    subgraph YAMLProfiles ["config/profiles/ Subdirectories Matrix"]
+        P1["databases/proxy-adb-oracle.yaml"]
+        P2["databases/proxy-standard-oracle.yaml"]
+        P3["databases/bizapp-standard-oracle.yaml"]
+        P4["web-ide/web-ide-standard.yaml"]
     end
 
     UserConfig --> ProfileEngine

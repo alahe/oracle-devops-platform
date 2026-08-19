@@ -53,14 +53,44 @@ fi
 echo "🔌 Registreerin SQL Developer ühendused Web IDE sisse..."
 "$SCRIPT_DIR/register-connections-sqlcl.sh" >/dev/null 2>&1 || true
 
-# 3. Auto-install custom VSIX extensions (e.g. Google Antigravity)
+# 3. Dynamic Profile-Driven Extension & Tool Initializer
+if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
+  source "$SCRIPT_DIR/load-profile.sh"
+  load_web_ide_profile >/dev/null 2>&1 || true
+fi
+
+# A. Handle Google Antigravity Tool
+if [ "${WEB_IDE_ANTIGRAVITY_ENABLED:-true}" = "true" ]; then
+  echo "🤖 Kontrollin Google Antigravity olemasolu Web IDE konteineris..."
+  podman exec -i "$WEB_IDE_CONTAINER" bash -c "command -v antigravity || command -v agy || curl -fsSL ${WEB_IDE_ANTIGRAVITY_INSTALL_URL:-https://antigravity.google/install.sh} | bash" 2>/dev/null || true
+fi
+
+# B. Download & Auto-install VSIX extensions configured in profile or local directory
 EXT_DIR="$WORKSPACE_DIR/binaries/extensions"
+mkdir -p "$EXT_DIR"
+
+if [ -f "$WEB_IDE_PROFILE_YAML" ]; then
+  echo "📦 Parsin VS Code laiendusi profiilist: $(basename "$WEB_IDE_PROFILE_YAML")..."
+  # Download extensions with explicit download_url if not present
+  awk '/extensions:/{flag=1;next}flag' "$WEB_IDE_PROFILE_YAML" 2>/dev/null | grep -E "vsix_path|download_url|id" | while read -r line; do
+    if [[ "$line" =~ download_url:[[:space:]]*\"?([^\"]+)\"? ]] && [ -n "${BASH_REMATCH[1]}" ]; then
+      url="${BASH_REMATCH[1]}"
+      fname=$(basename "$url")
+      if [ ! -f "$EXT_DIR/$fname" ]; then
+        echo "⬇️  Laen alla laienduse URL-ilt: $url..."
+        curl -sL "$url" -o "$EXT_DIR/$fname" 2>/dev/null || true
+      fi
+    fi
+  done
+fi
+
 if [ -d "$EXT_DIR" ]; then
   for vsix in "$EXT_DIR/"*.vsix; do
     if [ -f "$vsix" ]; then
       vsix_name=$(basename "$vsix")
-      echo "📦 Paigaldan VS Code laiendust (sh Antigravity): $vsix_name..."
-      podman exec -i "$WEB_IDE_CONTAINER" code-server --install-extension "/workspace/binaries/extensions/$vsix_name" 2>/dev/null || true
+      CODE_SERVER_BIN="/app/code-server/bin/code-server"
+      echo "📦 Paigaldan VS Code laiendust: $vsix_name..."
+      podman exec -i "$WEB_IDE_CONTAINER" $CODE_SERVER_BIN --install-extension "/workspace/binaries/extensions/$vsix_name" 2>/dev/null || true
     fi
   done
 fi

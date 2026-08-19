@@ -1,10 +1,17 @@
-# 🗄️ Database Profiles Matrix (`config/profiles/`)
+# 🗄️ Service & Database Profiles Matrix (`config/profiles/`)
 
-This directory contains the YAML profile configurations used by the **Dynamic Database Profile Engine** (`load-db-profile.sh`, `apply-profile-users.sh`, `create-wallet.sh`, `register-connections.sh`).
+This directory contains domain-isolated YAML profile configurations used by the **Dynamic Profile Engine** (`load-profile.sh`, `apply-profile-users.sh`, `create-wallet.sh`, `register-connections.sh`).
 
 ---
 
-## 📂 Pre-Configured Profiles
+## 📂 Subdirectories Architecture
+
+* **[`config/profiles/databases/`](databases/README.md)**: Oracle Database profiles (`proxy-adb-oracle.yaml`, `bizapp-standard-oracle.yaml` etc.).
+* **[`config/profiles/web-ide/`](web-ide/README.md)**: Web IDE service profiles (`web-ide-cicd-only.yaml`, `web-ide-cicd-antigravity.yaml`, `web-ide-standard.yaml`, `web-ide-minimal.yaml`, `web-ide-disabled.yaml`).
+
+---
+
+## 🗄️ Pre-Configured Database Profiles (`config/profiles/databases/`)
 
 | Profile Filename | Description | DB Type | Use Case |
 | :--- | :--- | :--- | :--- |

@@ -19,20 +19,35 @@ Web IDE koondab täieliku Oracle ja CI/CD arenduskeskkonna ühte brauseripõhise
 Selleks, et kasutada ettevõtte sisest Artifactory registrit avalike Docker Hub või GitHub registrite asemel (Rule 4), seadista failis `.env`:
 
 ```bash
-# Sisse/välja lülitamine:
-WEB_IDE_ENABLED=true
+# Web IDE teenuse profiilid (config/profiles/web-ide/*.yaml):
+#   - web-ide-cicd-only        (Ainult GitHub CLI + act runner GitHub Actions testimiseks)
+#   - web-ide-cicd-antigravity (Antigravity + GitHub CLI + act runner)
+#   - web-ide-standard         (Täielik VS Code + SQL Developer + Liquibase + Antigravity)
+WEB_IDE_PROFILE=web-ide-cicd-only
 
-# Ettevõtte Artifactory peegeldusregistri aadress:
+# Ettevõtte Artifactory peegeldusregistri aadress (valikuline):
 ARTIFACTORY_DOCKER_REGISTRY=artifactory.corp.internal
-
-# Suuna Web IDE konteineri pilt Artifactory peegeldusse:
-WEB_IDE_CONTAINER_IMAGE=artifactory.corp.internal/docker-remote/linuxserver/code-server:latest
-
-# Määratud pordid:
-WEB_IDE_HTTP_PORT=8090
-WEB_IDE_HTTPS_PORT=8449
-CICD_WEB_UI_PORT=8091
 ```
+
+---
+
+## 3. GitHub Actions Töövoogude Lokaalne Testimine (`act` ja `gh`)
+
+Web IDE konteiner võimaldab testida repositooriumi GitHub Actions töövooge (`.github/workflows/*.yml`) **lokaalselt ilma GitHubi pushimata**:
+
+1. Vali `.env` failis profiil `WEB_IDE_PROFILE=web-ide-cicd-only` või `web-ide-cicd-antigravity`.
+2. Ava brauseri terminal aadressil `http://localhost:8090`.
+3. Käivita lokaalne GitHub Actions simulaator:
+   ```bash
+   # Testi kõiki repositooriumi töövooge:
+   act
+
+   # Testi konkreetset sündmust (nt push):
+   act push
+
+   # Kontrolli GitHub CLI staatust:
+   gh workflow list
+   ```
 
 ---
 

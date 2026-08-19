@@ -72,9 +72,10 @@ if [ -f "$ENV_PATH" ]; then
   set +a
 fi
 
-if [ -f "$SCRIPT_DIR/internal/load-db-profile.sh" ]; then
-  source "$SCRIPT_DIR/internal/load-db-profile.sh"
+if [ -f "$SCRIPT_DIR/internal/load-profile.sh" ]; then
+  source "$SCRIPT_DIR/internal/load-profile.sh"
   load_db_profile
+  load_web_ide_profile
 fi
 
 if [ "$IS_ADB" = "true" ]; then
@@ -220,10 +221,6 @@ EOF
         mkdir -p "$SCRIPT_DIR/../config/ords/$db"
         raw_svc_name="${PROFILE_ORDS_SERVICE_NAME:-ords-$db}"
         raw_c_name="${PROFILE_ORDS_CONTAINER_NAME:-oracle-ords-$db}"
-        if [ "$item" = "${active_instances[0]}" ]; then
-          raw_svc_name="${PROFILE_ORDS_SERVICE_NAME:-dev-ords}"
-          raw_c_name="${PROFILE_ORDS_CONTAINER_NAME:-oracle-ords-dev}"
-        fi
 
         ords_svc_name=$(ensure_unique_name "$raw_svc_name" "ORDS teenus")
         ords_c_name=$(ensure_unique_name "$raw_c_name" "ORDS konteiner")
@@ -391,6 +388,13 @@ while IFS='|' read -r container prof env_key; do
     fi
   )
 done < <(get_active_db_instances)
+
+load_web_ide_profile >/dev/null 2>&1 || true
+if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+  echo -e "   - ${CYAN}${WEB_IDE_CONTAINER_NAME:-web-ide-dev}${NC} (Web IDE Profiil: ${YELLOW}${WEB_IDE_PROFILE:-web-ide-standard}${NC})"
+  echo -e "     ├─ Brauseri liides (HTTP): ${CYAN}http://localhost:${WEB_IDE_HTTP_PORT:-8090}${NC}"
+  echo -e "     └─ Turvatud liides (HTTPS): ${CYAN}https://localhost:${WEB_IDE_HTTPS_PORT:-8449}${NC}"
+fi
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${YELLOW}💡 Seadistuse muutmine:${NC}"
 echo -e "   - Lokaalne seadistus: [.env](file://${SCRIPT_DIR}/../.env) (loo koopia failist [.env.example](file://${SCRIPT_DIR}/../.env.example))"
@@ -808,8 +812,14 @@ if [ "$IS_LOCAL" = "true" ]; then
     sname="${cname#oracle-}"
     UP_SERVICES+=("$sname")
   done < <(get_active_db_instances)
+  
+  LOCAL_COMPOSE_ARGS=("${COMPOSE_ARGS[@]}")
+  load_web_ide_profile >/dev/null 2>&1 || true
+  if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+    LOCAL_COMPOSE_ARGS+=(--profile web-ide)
+  fi
 
-  podman-compose "${COMPOSE_ARGS[@]}" up -d >> "$LOG_FILE" 2>&1 &
+  podman-compose "${LOCAL_COMPOSE_ARGS[@]}" up -d >> "$LOG_FILE" 2>&1 &
 
   COMPOSE_PID=$!
 
@@ -853,7 +863,7 @@ if [ "$IS_LOCAL" = "true" ]; then
           ords_c_name="${PROFILE_ORDS_CONTAINER_NAME:-oracle-ords-${cname#db-}}"
           ords_s_name="${PROFILE_ORDS_SERVICE_NAME:-ords-${cname#db-}}"
           if [ "$(podman inspect --format='{{.State.Status}}' "$ords_c_name" 2>/dev/null)" != "running" ]; then
-            podman start "$ords_c_name" >/dev/null 2>&1 || podman-compose "${COMPOSE_ARGS[@]}" up -d "$ords_s_name" >/dev/null 2>&1 || true
+            podman start "$ords_c_name" >/dev/null 2>&1 || podman-compose "${LOCAL_COMPOSE_ARGS[@]}" up -d "$ords_s_name" >/dev/null 2>&1 || true
           fi
           WAIT_COUNT=0
           while [ "$(podman inspect --format='{{.State.Status}}' "$ords_c_name" 2>/dev/null)" != "running" ]; do
@@ -861,18 +871,22 @@ if [ "$IS_LOCAL" = "true" ]; then
             WAIT_COUNT=$((WAIT_COUNT + 2))
             print_progress "   Ootan ORDS konteinerit ${CYAN}$ords_c_name${NC}... ${ORANGE}$(format_duration $WAIT_COUNT)${NC}\r"
             if [ $WAIT_COUNT -ge 60 ]; then
-              break
+              echo ""
+              echo "❌ Viga: ORDS konteiner $ords_c_name ei käivitunud 60 sekundi jooksul!"
+              exit 1
             fi
           done
-          if [ "$(podman inspect --format='{{.State.Status}}' "$ords_c_name" 2>/dev/null)" = "running" ]; then
-            echo -e "\n   ✅ ORDS konteiner ${GREEN}$ords_c_name${NC} on KÄIVITATUD (running)!"
-          else
-            echo -e "\n   ⚠️  HOIATUS: ORDS konteiner ${YELLOW}$ords_c_name${NC} ei saavutanud 'running' olekut!"
-          fi
+          echo -e "\n   ✅ ORDS teenuse konteiner ${GREEN}$ords_c_name${NC} on KÄIVITATUD!"
         fi
       )
     done < <(get_active_db_instances)
   fi
+
+  if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+    echo -e "   🚀 Käivitan Konteineriseeritud Web IDE (${CYAN}${WEB_IDE_CONTAINER_NAME:-web-ide-dev}${NC})..."
+    podman-compose "${LOCAL_COMPOSE_ARGS[@]}" --profile web-ide up -d web-ide >> "$LOG_FILE" 2>&1 || true
+  fi
+
   STEP4_CONTAINER_SECS=$(( $(date +%s) - STEP4_START ))
   STEP4_TIME=$(format_duration $STEP4_CONTAINER_SECS)
   echo -e "⏱  [Samm 4 valmis (Konteinerite käivitamine & DB Healthcheck): ${YELLOW}$STEP4_TIME${NC}]"
@@ -1481,8 +1495,9 @@ if [ "$IS_LOCAL" = "true" ] && [ -f "$SCRIPT_DIR/internal/register-connections-s
 fi
 if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
   "$SCRIPT_DIR/internal/init-web-ide.sh" >/dev/null 2>&1 || true
-  echo -e "   - Konteineriseeritud Web IDE (VS Code): ${GREEN}http://localhost:${WEB_IDE_HTTP_PORT:-8090}${NC}"
-  echo -e "   - Lokaalne CI/CD Web UI Dashboard:     ${GREEN}http://localhost:${CICD_WEB_UI_PORT:-8091}${NC}"
+  echo -e "   - Konteineriseeritud Web IDE (VS Code): ${GREEN}http://localhost:${WEB_IDE_HTTP_PORT:-8090}${NC} (Profiil: ${YELLOW}${WEB_IDE_PROFILE:-web-ide-standard}${NC})"
+  echo -e "     ├─ Turvatud mTLS/HTTPS liides:       ${GREEN}https://localhost:${WEB_IDE_HTTPS_PORT:-8449}${NC}"
+  echo -e "     └─ Lokaalne CI/CD Web UI Dashboard:     ${GREEN}http://localhost:${CICD_WEB_UI_PORT:-8091}${NC}"
 fi
 echo -e "   - [connections/README.md](file://${SCRIPT_DIR}/../connections/README.md)"
 

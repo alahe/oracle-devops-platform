@@ -167,8 +167,8 @@ exec > >(tee -a "$LOG_FILE") 2>&1
 
 START_RESTORE=$(date +%s)
 
-if [ -f "$SCRIPT_DIR/internal/load-db-profile.sh" ]; then
-  source "$SCRIPT_DIR/internal/load-db-profile.sh"
+if [ -f "$SCRIPT_DIR/internal/load-profile.sh" ]; then
+  source "$SCRIPT_DIR/internal/load-profile.sh"
   load_db_profile >/dev/null 2>&1 || true
 fi
 

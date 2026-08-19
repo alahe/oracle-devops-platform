@@ -144,7 +144,9 @@ Kogu detailne teave ja juhendid on jaotatud teemakohastesse failidesse. Kasuta a
 | Dokument | Kirjeldus |
 | :--- | :--- |
 | 🔌 **[connections/README.md](connections/README.md)** | VS Code SQL Developer ühenduste importimine ja SSL/TLS seadistused. |
-| 🗄️ **[docs/db-profiles-and-topology.md](docs/db-profiles-and-topology.md)** | Dünaamiliste YAML Profiilide (adb-free, standard-free jne) ja topoloogia juhend. |
+| 🗄️ **[docs/db-profiles-and-topology.md](docs/db-profiles-and-topology.md)** | Dünaamiliste YAML Profiilide (`config/profiles/databases/` & `config/profiles/web-ide/`) juhend. |
+| 💻 **[docs/web-ide-artifactory.md](docs/web-ide-artifactory.md)** | Konteineriseeritud Web IDE (`code-server`), Google Antigravity AI CLI ja GitHub Actions lokaalne testimine (`act`). |
+| 🪟 **[docs/windows-enterprise-setup.md](docs/windows-enterprise-setup.md)** | Windows Enterprise (Zero Trust) turvatud Podman liivakast Google Antigravity jaoks. |
 | 🛡️ **[docs/turvalisus.md](docs/turvalisus.md)** | Paroolihaldus, andmebaasi rollid (`DB_DEVELOPER_ROLE`) ja Azure Entra-ID (SSO). |
 | 🔑 **[docs/oracle-wallet-architecture-plan.md](docs/oracle-wallet-architecture-plan.md)** | Oracle Walleti (SEPS & TLS) arhitektuur ja tehniline realiseerimise plaan. |
 | ⚙️ **[scripts/README.md](scripts/README.md)** | Kõikide käsurea skriptide ja abiskriptide detailne kasutusjuhend. |

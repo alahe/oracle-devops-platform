@@ -18,8 +18,8 @@ if [ -f "$WORKSPACE_DIR/.env" ]; then
   set +a
 fi
 
-if [ -f "$SCRIPT_DIR/load-db-profile.sh" ]; then
-  source "$SCRIPT_DIR/load-db-profile.sh"
+if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
+  source "$SCRIPT_DIR/load-profile.sh"
   load_db_profile >/dev/null 2>&1 || true
 fi
 

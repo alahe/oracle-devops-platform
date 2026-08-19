@@ -9,7 +9,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-source "$SCRIPT_DIR/load-db-profile.sh"
+source "$SCRIPT_DIR/load-profile.sh"
 
 apply_profile_users() {
   export TNS_ADMIN="$WORKSPACE_DIR/config/tns_admin"
@@ -134,11 +134,30 @@ BEGIN
 END;
 /
 
+  -- Unlock APEX_PUBLIC_USER and APEX REST accounts for ORDS proxying
+  BEGIN
+    FOR u IN (SELECT username FROM dba_users WHERE username IN ('APEX_PUBLIC_USER', 'APEX_PUBLIC_ROUTER', 'APEX_LISTENER', 'APEX_REST_PUBLIC_USER')) LOOP
+      BEGIN
+        EXECUTE IMMEDIATE 'ALTER USER ' || u.username || ' ACCOUNT UNLOCK';
+        EXECUTE IMMEDIATE 'ALTER USER ' || u.username || ' IDENTIFIED BY "Oracle12345678#"';
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END;
+    END LOOP;
+  END;
+  /
+
 -- 2. Luuakse APEX kasutajad
 DECLARE
   v_workspace_id NUMBER;
+  v_target_ws VARCHAR2(100) := '${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}';
 BEGIN
-  v_workspace_id := APEX_UTIL.find_security_group_id('PROXY_WORKSPACE');
+  v_workspace_id := APEX_UTIL.find_security_group_id(v_target_ws);
+  IF v_workspace_id IS NULL OR v_workspace_id = 0 THEN
+    v_workspace_id := APEX_UTIL.find_security_group_id('PROXY_WORKSPACE');
+  END IF;
+  IF v_workspace_id IS NULL OR v_workspace_id = 0 THEN
+    v_workspace_id := APEX_UTIL.find_security_group_id('BIZAPP_WORKSPACE');
+  END IF;
   IF v_workspace_id IS NOT NULL AND v_workspace_id != 0 THEN
     APEX_UTIL.set_security_group_id(v_workspace_id);
     
