@@ -1,4 +1,4 @@
-# SQL*Net Client Profile for Container (Auto-generated: Wed Aug 19 15:18:00 EEST 2026)
+# SQL*Net Client Profile for Container (Auto-generated: Wed Aug 19 17:00:32 EEST 2026)
 WALLET_LOCATION =
   (SOURCE =
     (METHOD = FILE)

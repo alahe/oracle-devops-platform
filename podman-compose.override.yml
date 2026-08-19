@@ -1,9 +1,49 @@
 version: '3.8'
 
 services:
-  db-apex-proxy:
-    image: container-registry.oracle.com/database/adb-free:latest
+  pub-db:
+    image: container-registry.oracle.com/database/free:latest
+    container_name: pub-db
+    hostname: pub-db
+    shm_size: 2g
+    ports:
+      - "1533:1521"
     environment:
-      - WORKLOAD_TYPE=ATP
-      - ADMIN_PASSWORD=MWVFonlrprwc73599tOO
-      - WALLET_PASSWORD=IGNLipkffgkt6640AlYo
+      - ORACLE_PASSWORD_FILE=/run/secrets/oracle_pwd
+      - ORACLE_SID=FREE
+      - ORACLE_PDB=FREEPDB1
+      - TNS_ADMIN=/opt/oracle/admin/FREE/wallet
+      - CONFIGURE_TDE=true
+      - ENCRYPT_TABLESPACES=ALL
+    volumes:
+      - pub_db_oradata:/opt/oracle/oradata
+      - ./config/tns_admin:/opt/oracle/admin/FREE/wallet:rw
+      - apex_images_24_1:/opt/oracle/apex_images
+    secrets:
+      - source: apex_db_sys_password
+        target: oracle_pwd
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 3072M
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - echo "SELECT 'ALIVE' FROM DUAL;" | sqlplus -L -S / as sysdba | grep -q 'ALIVE' || exit 1
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+
+volumes:
+  pub_db_oradata:
+  apex_images_24_1:
+
+secrets:
+  apex_db_sys_password:
+    external: true
+  ords_listener_password:
+    external: true

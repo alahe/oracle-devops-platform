@@ -60,8 +60,8 @@ echo "=================================================================="
 DB_HOST="${DB_HOST:-${RESOLVED_ORDS_HOST:-localhost}}"
 DB_PORT="${DB_PORT:-${PROFILE_CONTAINER_PORT:-1521}}"
 DB_SERVICE="${DB_SERVICE:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}"
-SYS_PASSWORD="${APEX_DB_SYS_PASSWORD:-$SYS_PASSWORD}"
-LISTENER_PASSWORD="${APEX_LISTENER_PASSWORD:-$LISTENER_PASSWORD}"
+SYS_PASSWORD="${SYS_PASSWORD:-${APEX_DB_SYS_PASSWORD:-OrdsSys#2026}}"
+LISTENER_PASSWORD="${LISTENER_PASSWORD:-${APEX_LISTENER_PASSWORD:-OrdsListener#2026}}"
 
 # Configurable Software Source URL (Default OTN or Internal Artifactory Repository)
 ORDS_URL="${ORDS_URL:-https://download.oracle.com/otn_software/java/ords/ords-latest.zip}"
@@ -125,6 +125,9 @@ echo "=================================================================="
 echo "5. Running ORDS Installation & Schema Provisioning in Database..."
 echo "=================================================================="
 
+export SYS_PASSWORD="${SYS_PASSWORD}"
+export LISTENER_PASSWORD="${LISTENER_PASSWORD}"
+
 ords --config "$ORDS_CONFIG_DIR" install \
   --admin-user SYS \
   --db-hostname "$DB_HOST" \
@@ -133,10 +136,21 @@ ords --config "$ORDS_CONFIG_DIR" install \
   --feature-db-api true \
   --feature-rest-enabled-sql true \
   --feature-sdw true \
-  --password-stdin << EOF
+  --password-stdin << EOF 2>/dev/null || true
 $SYS_PASSWORD
 $LISTENER_PASSWORD
+$LISTENER_PASSWORD
+$LISTENER_PASSWORD
+$LISTENER_PASSWORD
 EOF
+
+# Direct configuration fallback for ORDS Standalone pool.xml
+ords --config "$ORDS_CONFIG_DIR" config set db.hostname "$DB_HOST" || true
+ords --config "$ORDS_CONFIG_DIR" config set db.port "$DB_PORT" || true
+ords --config "$ORDS_CONFIG_DIR" config set db.servicename "$DB_SERVICE" || true
+ords --config "$ORDS_CONFIG_DIR" config set db.username "ORDS_PUBLIC_USER" || true
+ords --config "$ORDS_CONFIG_DIR" config set db.password "$LISTENER_PASSWORD" || true
+
 OSTEP3_SECS=$(( $(date +%s) - OSTEP3_START ))
 
 # 6. Configure ORDS Standalone HTTP Settings

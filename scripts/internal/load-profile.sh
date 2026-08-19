@@ -122,11 +122,24 @@ load_db_profile() {
   local profile_ords_https=$(echo "$ords_block" | parse_yaml_key "/dev/stdin" "https_port" | head -n 1)
   local profile_ords_c_name=$(echo "$ords_block" | parse_yaml_key "/dev/stdin" "container_name" | head -n 1)
   local profile_ords_s_name=$(echo "$ords_block" | parse_yaml_key "/dev/stdin" "service_name" | head -n 1)
+  local profile_ords_mode=$(echo "$ords_block" | parse_yaml_key "/dev/stdin" "mode" | head -n 1)
+  local profile_ords_ext_url=$(echo "$ords_block" | parse_yaml_key "/dev/stdin" "external_ords_url" | head -n 1)
+  local profile_ords_ext_host=$(echo "$ords_block" | parse_yaml_key "/dev/stdin" "external_ords_host" | head -n 1)
+  local profile_ords_ext_port=$(echo "$ords_block" | parse_yaml_key "/dev/stdin" "external_ords_port" | head -n 1)
+  local profile_ords_ext_user=$(echo "$ords_block" | parse_yaml_key "/dev/stdin" "external_ords_user" | head -n 1)
+  local profile_ords_w_alias=$(echo "$ords_block" | parse_yaml_key "/dev/stdin" "wallet_alias" | head -n 1)
 
   local profile_apex_url=$(echo "$apex_block" | parse_yaml_key "/dev/stdin" "download_url" | head -n 1)
   local profile_apex_ver=$(echo "$apex_block" | parse_yaml_key "/dev/stdin" "version" | head -n 1)
   local profile_apex_enabled=$(echo "$apex_block" | parse_yaml_key "/dev/stdin" "enabled" | head -n 1)
   local profile_apex_ws=$(echo "$apex_block" | parse_yaml_key "/dev/stdin" "workspace" | head -n 1)
+
+  export PROFILE_ORDS_MODE="${profile_ords_mode:-local}"
+  export PROFILE_ORDS_EXTERNAL_URL="${profile_ords_ext_url:-}"
+  export PROFILE_ORDS_EXTERNAL_HOST="${profile_ords_ext_host:-}"
+  export PROFILE_ORDS_EXTERNAL_PORT="${profile_ords_ext_port:-}"
+  export PROFILE_ORDS_EXTERNAL_USER="${profile_ords_ext_user:-}"
+  export PROFILE_ORDS_WALLET_ALIAS="${profile_ords_w_alias:-}"
 
   export PROFILE_ORDS_DOWNLOAD_URL="${profile_ords_url:-https://download.oracle.com/otn_software/java/ords/ords-latest.zip}"
   export PROFILE_ORDS_HTTP_PORT="${profile_ords_http:-8088}"
@@ -148,11 +161,13 @@ load_db_profile() {
   fi
 
   # ORDS Base URL resolution (.env ORDS_URL / ORDS_HOST override or YAML profile)
-  export RESOLVED_ORDS_HOST="${ORDS_HOST:-${PROFILE_ORDS_HOST:-localhost}}"
-  local ords_port="${ORDS_HTTPS_PORT:-${ORDS_SSL_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8448}}}"
+  export RESOLVED_ORDS_HOST="${ORDS_HOST:-${PROFILE_ORDS_EXTERNAL_HOST:-${PROFILE_ORDS_HOST:-localhost}}}"
+  local ords_port="${ORDS_HTTPS_PORT:-${ORDS_SSL_PORT:-${PROFILE_ORDS_EXTERNAL_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8448}}}}"
 
   if [ -n "$ORDS_URL" ]; then
     export RESOLVED_ORDS_BASE_URL="$ORDS_URL"
+  elif [ -n "$PROFILE_ORDS_EXTERNAL_URL" ]; then
+    export RESOLVED_ORDS_BASE_URL="$PROFILE_ORDS_EXTERNAL_URL"
   else
     export RESOLVED_ORDS_BASE_URL="https://${RESOLVED_ORDS_HOST}:${ords_port}"
   fi

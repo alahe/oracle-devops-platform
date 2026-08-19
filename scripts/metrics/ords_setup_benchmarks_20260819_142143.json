@@ -1,0 +1,10 @@
+{
+  "last_updated": "2026-08-19T14:21:59Z",
+  "total_duration_seconds": 16,
+  "total_duration_formatted": "16s",
+  "steps": {
+    "java_check_seconds": 0,
+    "ords_binary_install_seconds": 1,
+    "ords_schema_provisioning_seconds": 9
+  }
+}
