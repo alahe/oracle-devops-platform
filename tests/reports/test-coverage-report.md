@@ -5,7 +5,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ---
 
-## 📅 Genereeritud: 2026-08-19 16:52:23
+## 📅 Genereeritud: 2026-08-19 16:59:48
 
 ---
 
@@ -24,6 +24,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 | **`sqlcl.sh`** | ✅ Kaetud | [`test-script-register-connections-sqlcl.sh`](test-script-register-connections-sqlcl.sh),[`test-e2e-system.sh`](test-e2e-system.sh),[`test-sqlcl-passwordless-connections.sh`](test-sqlcl-passwordless-connections.sh) |
 | **`start-containers.sh`** | ✅ Kaetud | [`test-script-start-containers.sh`](test-script-start-containers.sh),[`test-e2e-system.sh`](test-e2e-system.sh) |
 | **`test-local-ci.sh`** | ✅ Kaetud | [`test-script-test-local-ci.sh`](test-script-test-local-ci.sh),[`test-github-actions-local.sh`](test-github-actions-local.sh) |
+| **`test-standalone-ords-emulation.sh`** | ✅ Kaetud | [`test-script-test-standalone-ords-emulation.sh`](test-script-test-standalone-ords-emulation.sh) |
 
 ---
 
@@ -53,7 +54,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ## 📈 Kokkuvõttev Mõõdik (Summary Metrics)
 
-- **Kogu skriptide arv (Total Scripts):** 28
-- **Testidega kaetud skripte (Covered Scripts):** 28
+- **Kogu skriptide arv (Total Scripts):** 29
+- **Testidega kaetud skripte (Covered Scripts):** 29
 - **Automaattestide kaetus (Test Coverage):** **100%**
 

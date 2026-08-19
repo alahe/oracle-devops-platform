@@ -25,6 +25,6 @@
     "step10_deploy_apex_apps_seconds": 0,
     "step11_snapshot_seconds": 14
   },
-  "init_web_ide_duration_seconds": 13,
+  "init_web_ide_duration_seconds": 12,
   "test_local_ci_duration_seconds": 0
 }

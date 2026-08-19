@@ -8,13 +8,13 @@
 
 | Parameeter | Väärtus |
 | :--- | :--- |
-| **Käivitamise Kellaaeg** | `2026-08-19 16:52:27 EEST` |
+| **Käivitamise Kellaaeg** | `2026-08-19 16:59:52 EEST` |
 | **Käivitaja Kasutaja** | `allanlahe` |
 | **Aktiivne Profiil** | `proxy-standard-gvenzl` |
 | **Integratsioonitestid** | ✅ 7 / 7 Läbitud |
-| **Ühikutestid (Unit Tests)** | ✅ 26 / 22 Läbitud |
+| **Ühikutestid (Unit Tests)** | ✅ 27 / 22 Läbitud |
 | **Skriptide Kaetus** | 🟢 100% (22/22 skripti kaetud) |
-| **Kogu Testi Kestus** | `69s` |
+| **Kogu Testi Kestus** | `67s` |
 | **Kõikide Testide Olek** | ✅ **PASSED (100%)** |
 
 ---
@@ -28,7 +28,7 @@
 5. **Podman Compose Override:** `tests/integration/test-compose-override-generation.sh` (✅ PASSED)
 6. **Teenused & SSL/TLS Infrastructure:** `tests/integration/test-subcomponent-services.sh` (✅ PASSED)
 7. **E2E Süsteemitest:** `tests/integration/test-e2e-system.sh` (✅ PASSED)
-8. **Eraldiseisvad Ühikutestid:** `tests/unit/test-script-*.sh` (26 testi - ✅ PASSED)
+8. **Eraldiseisvad Ühikutestid:** `tests/unit/test-script-*.sh` (27 testi - ✅ PASSED)
 
 ---
 
