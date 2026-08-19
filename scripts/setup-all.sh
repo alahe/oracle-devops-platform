@@ -1520,7 +1520,6 @@ fi
 if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
   "$SCRIPT_DIR/internal/init-web-ide.sh" >/dev/null 2>&1 || true
   echo -e "   - Konteineriseeritud Web IDE (VS Code): ${GREEN}http://localhost:${WEB_IDE_HTTP_PORT:-8090}${NC} (Profiil: ${YELLOW}${WEB_IDE_PROFILE:-web-ide-standard}${NC})"
-  echo -e "     └─ Lokaalne CI/CD Web UI Dashboard:     ${GREEN}http://localhost:${CICD_WEB_UI_PORT:-8091}${NC}"
 fi
 echo -e "   - [connections/README.md](file://${SCRIPT_DIR}/../connections/README.md)"
 
