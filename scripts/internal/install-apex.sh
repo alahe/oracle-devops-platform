@@ -169,10 +169,22 @@ format_duration() {
 copy_static_images_to_volume() {
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
     echo "📦 Kopeerin APEX staatilised pildid ühisesse volume-i (/opt/oracle/apex_images/)..."
-    podman exec -u root "$CONTAINER_NAME" mkdir -p /opt/oracle/apex_images
+    podman exec -u root "$CONTAINER_NAME" mkdir -p /opt/oracle/apex_images /tmp/apex_install
+    podman exec -u root "$CONTAINER_NAME" chown -R oracle:oinstall /opt/oracle/apex_images /tmp/apex_install || true
+    
+    # If /tmp/apex_install is empty or missing images, copy and unzip APEX_ZIP into /tmp/apex_install
+    if ! podman exec "$CONTAINER_NAME" test -d /tmp/apex_install/apex/images 2>/dev/null && ! podman exec "$CONTAINER_NAME" test -d /tmp/apex_install/images 2>/dev/null; then
+      if [ -f "$APEX_ZIP" ]; then
+        podman cp "$APEX_ZIP" "$CONTAINER_NAME":/tmp/apex-latest.zip
+        podman exec -u root "$CONTAINER_NAME" chmod 644 /tmp/apex-latest.zip || true
+        podman exec -u root "$CONTAINER_NAME" chown -R oracle:oinstall /tmp/apex-latest.zip || true
+        podman exec -u root "$CONTAINER_NAME" unzip -o -q /tmp/apex-latest.zip -d /tmp/apex_install/ || true
+      fi
+    fi
+
+    podman exec -u root "$CONTAINER_NAME" rm -rf /opt/oracle/apex_images/images || true
+    podman exec -u root "$CONTAINER_NAME" sh -c 'if [ -d /tmp/apex_install/apex/images ]; then cp -R /tmp/apex_install/apex/images /opt/oracle/apex_images/; elif [ -d /tmp/apex_install/images ]; then cp -R /tmp/apex_install/images /opt/oracle/apex_images/; fi'
     podman exec -u root "$CONTAINER_NAME" chown -R oracle:oinstall /opt/oracle/apex_images || true
-    podman exec "$CONTAINER_NAME" rm -rf /opt/oracle/apex_images/images || true
-    podman exec "$CONTAINER_NAME" sh -c 'if [ -d /tmp/apex_install/apex/images ]; then cp -R /tmp/apex_install/apex/images /opt/oracle/apex_images/; elif [ -d /tmp/apex_install/images ]; then cp -R /tmp/apex_install/images /opt/oracle/apex_images/; fi'
     echo "$APEX_ZIP_NAME" | podman exec -i "$CONTAINER_NAME" tee /opt/oracle/apex_images/.unzipped_source >/dev/null
     podman exec -u root "$CONTAINER_NAME" rm -rf /tmp/apex-latest.zip /tmp/apex_install || true
   fi
