@@ -298,13 +298,15 @@ case $COMPONENT in
     done
     # Kustutame Podman Podid
     echo "   Kustutame Podman Podid..."
-    for pod in $(podman pod ls --format "{{.Name}}" 2>/dev/null | grep "$PROJECT_NAME" || true); do
+    folder_basename=$(basename "$(cd "$SCRIPT_DIR/.." && pwd)")
+    for pod in $(podman pod ls --format "{{.Name}}" 2>/dev/null | grep -E "${PROJECT_NAME}|${folder_basename}|pod_" || true); do
       if [ -n "$pod" ]; then
         echo "   Peatame ja kustutame podi: $pod"
         podman pod stop "$pod" 2>/dev/null || true
         podman pod rm -f "$pod" 2>/dev/null || true
       fi
     done
+    podman pod prune -f 2>/dev/null || true
 
     # Kustutame võrgu
     NETWORK="${PROJECT_NAME}_default"
