@@ -47,6 +47,14 @@ DB_SERVICE="FREEPDB1" \
 5. **Seadistus (`/etc/ords/config`):** Loob ühenduse konfiguratsiooni sihtandmebaasiga (`pool.xml`) ning teostab vajadusel `ORDS_METADATA` skeemi paigalduse.
 6. **Linux Systemd Teenus:** Registreerib ORDS-i Linuxi systemd teenusena (`ords.service`), mis tagab automaatse käivitumise serveri taaskäivitusel.
 
+#### 4. Lokaalne Emuleerimine ilma eraldi serverita (`test-standalone-ords-emulation.sh`):
+
+Kui sul ei ole praegu eraldi Linux serverit, kuid soovid Standalone ORDS-i paigaldust reaalajas testida, käivita emuleerimise skript:
+```bash
+./scripts/test-standalone-ords-emulation.sh
+```
+* **Mis juhtub?** Skript käivitab isoleeritud Linux konteineri (`ords-standalone-emulator`), paigaldab sinna Java 17 ja ORDS-i ning ühendab selle lokaalse `db-apex-proxy` andmebaasiga samamoodi nagu päris eraldiseisev server.
+
 ---
 
 ## 🛠️ Konfigureerimine ja Haldus Käsurealt
