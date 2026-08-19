@@ -59,13 +59,7 @@ if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
   load_web_ide_profile >/dev/null 2>&1 || true
 fi
 
-# A. Handle Google Antigravity Tool
-if [ "${WEB_IDE_ANTIGRAVITY_ENABLED:-true}" = "true" ]; then
-  echo "🤖 Kontrollin Google Antigravity olemasolu Web IDE konteineris..."
-  podman exec -i "$WEB_IDE_CONTAINER" bash -c "command -v antigravity || command -v agy || curl -fsSL ${WEB_IDE_ANTIGRAVITY_INSTALL_URL:-https://antigravity.google/install.sh} | bash" 2>/dev/null || true
-fi
-
-# B. Download & Auto-install VSIX extensions configured in profile or local directory
+# A. Download & Auto-install VSIX extensions configured in profile or local directory
 EXT_DIR="$WORKSPACE_DIR/binaries/extensions"
 mkdir -p "$EXT_DIR"
 

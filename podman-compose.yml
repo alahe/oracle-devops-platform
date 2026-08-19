@@ -86,6 +86,7 @@ services:
     container_name: web-ide-dev
     ports:
       - "${WEB_IDE_HTTP_PORT:-8090}:8443"
+      - "${WEB_IDE_HTTPS_PORT:-8449}:8443"
       - "${CICD_WEB_UI_PORT:-8091}:8091"
     env_file:
       - .env
