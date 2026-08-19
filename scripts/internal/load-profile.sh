@@ -244,8 +244,8 @@ get_active_db_instances() {
         local key="${BASH_REMATCH[1]}"
         local profile="${BASH_REMATCH[2]}"
         
-        # 1. Kontrollime, et võtme nimi viitab andmebaasile (algab DB_ või lõppeb _DB / _PROFILE)
-        if [[ "$key" =~ ^DB_ ]] || [[ "$key" =~ _DB$ ]] || [[ "$key" == "MAIN_DB_PROFILE" ]] || [[ "$key" == "PROXY_DB" ]] || [[ "$key" == "PUB_DB" ]]; then
+        # 1. Kontrollime, et võtme nimi viitab andmebaasile või profiilile (algab DB_/ORDS_/PROXY_ või lõppeb _DB/_PROXY/_PROFILE)
+        if [[ "$key" =~ ^DB_ ]] || [[ "$key" =~ _DB$ ]] || [[ "$key" =~ ^ORDS_ ]] || [[ "$key" =~ _ORDS$ ]] || [[ "$key" =~ ^PROXY_ ]] || [[ "$key" =~ _PROXY$ ]] || [[ "$key" == "MAIN_DB_PROFILE" ]] || [[ "$key" == "PUB_DB" ]]; then
           # 2. Kontrollime, et väärtusele vastav profiili YAML fail on tõesti olemas kaustas config/profiles/databases/
           local check_profile_file="$WORKSPACE_DIR/config/profiles/databases/${profile}.yaml"
           [ ! -f "$check_profile_file" ] && check_profile_file="$WORKSPACE_DIR/config/profiles/${profile}.yaml"
@@ -284,6 +284,18 @@ get_active_db_instances() {
   done
 
   printf "%s\n" "${final_instances[@]}"
+}
+
+# Helper function to extract ALL container names declared inside profile YAML files
+get_all_profile_container_names() {
+  local names=()
+  for p in "$WORKSPACE_DIR"/config/profiles/databases/*.yaml; do
+    if [ -f "$p" ]; then
+      local c1=$(parse_yaml_key "$p" "container_name")
+      [ -n "$c1" ] && names+=("$c1")
+    fi
+  done
+  printf "%s\n" "${names[@]}" | sort -u
 }
 
 get_required_secret_names() {
