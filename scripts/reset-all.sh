@@ -257,10 +257,10 @@ case $COMPONENT in
     cleanup_volume "${PROJECT_NAME}_web_ide_data"
 
 
-    # 2. Otsime otse Podman daemonist KÕIK selle projektiga seotud jooksevad või peatunud konteinerid
+    # 2. Otsime otse Podman daemonist KÕIK selle projektiga seotud jooksevad või peatunud konteinerid (üldine dynaamiline tuvastus)
     live_containers=$(podman ps -a --filter "label=com.docker.compose.project=$PROJECT_NAME" --format "{{.Names}}" 2>/dev/null || true)
     if [ -z "$live_containers" ]; then
-      live_containers=$(podman ps -a --format "{{.Names}}" 2>/dev/null | grep -E "^(db-|oracle-)" || true)
+      live_containers=$(podman ps -a --format "{{.Names}}" 2>/dev/null | grep -E "^(db-|oracle-|ords-|web-ide-)" || true)
     fi
     for c in $live_containers; do
       [ -n "$c" ] && cleanup_container "$c"
