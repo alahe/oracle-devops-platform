@@ -73,7 +73,7 @@ fi
 PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
 PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-pub-db}"
 
-if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
   COMPOSE_ARGS+=(--profile web-ide)
 fi
 
@@ -133,7 +133,7 @@ if [ -n "$PROFILE" ] && podman container exists "oracle-ords-dev" 2>/dev/null; t
   echo -e "\n✅ oracle-ords-dev on käivitatud ja töötab!"
 fi
 
-if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
   echo "🚀 Käivitan Web IDE konteineri..."
   podman-compose "${COMPOSE_ARGS[@]}" --profile web-ide up -d >> /dev/null 2>&1 || true
   if [ -f "$SCRIPT_DIR/internal/init-web-ide.sh" ]; then

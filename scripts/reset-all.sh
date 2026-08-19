@@ -138,7 +138,7 @@ if [ "$COMPONENT" = "all" ]; then
     )
   done < <(get_active_db_instances 2>/dev/null || true)
   load_web_ide_profile >/dev/null 2>&1 || true
-  if [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+  if [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
     echo -e "   - ${CYAN}${WEB_IDE_CONTAINER_NAME:-web-ide-dev}${NC} (Web IDE Profiil: ${YELLOW}${WEB_IDE_PROFILE:-web-ide-standard}${NC})"
     echo -e "     └─ Volume: ${CYAN}${PROJECT_NAME}_web_ide_data${NC}"
   fi

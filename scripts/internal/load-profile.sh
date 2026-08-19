@@ -347,7 +347,7 @@ ensure_unique_name() {
 
 # Web IDE Service Profile Loader
 load_web_ide_profile() {
-  local profile_name="${1:-${WEB_IDE_PROFILE:-web-ide-standard}}"
+  local profile_name="${1:-${WEB_IDE_PROFILE:-web-ide-disabled}}"
   profile_name=$(basename "$profile_name" .yaml)
 
   local profile_file="$WORKSPACE_DIR/config/profiles/web-ide/${profile_name}.yaml"
@@ -355,14 +355,14 @@ load_web_ide_profile() {
     profile_file="$WORKSPACE_DIR/config/profiles/${profile_name}.yaml"
   fi
   if [ ! -f "$profile_file" ]; then
-    profile_name="web-ide-standard"
-    profile_file="$WORKSPACE_DIR/config/profiles/web-ide/web-ide-standard.yaml"
+    profile_name="web-ide-disabled"
+    profile_file="$WORKSPACE_DIR/config/profiles/web-ide/web-ide-disabled.yaml"
   fi
 
   export WEB_IDE_PROFILE_YAML="$profile_file"
 
   local raw_enabled=$(parse_yaml_key "$profile_file" "enabled")
-  export WEB_IDE_ENABLED="${WEB_IDE_ENABLED:-${raw_enabled:-true}}"
+  export WEB_IDE_ENABLED="${WEB_IDE_ENABLED:-${raw_enabled:-false}}"
 
   local raw_image=$(parse_yaml_key "$profile_file" "container_image")
   export WEB_IDE_CONTAINER_IMAGE="${WEB_IDE_CONTAINER_IMAGE:-${raw_image:-lscr.io/linuxserver/code-server:latest}}"

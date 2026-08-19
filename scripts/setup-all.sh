@@ -390,7 +390,7 @@ while IFS='|' read -r container prof env_key; do
 done < <(get_active_db_instances)
 
 load_web_ide_profile >/dev/null 2>&1 || true
-if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
   echo -e "   - ${CYAN}${WEB_IDE_CONTAINER_NAME:-web-ide-dev}${NC} (Web IDE Profiil: ${YELLOW}${WEB_IDE_PROFILE:-web-ide-standard}${NC})"
   echo -e "     ├─ Brauseri liides (HTTP): ${CYAN}http://localhost:${WEB_IDE_HTTP_PORT:-8090}${NC}"
   echo -e "     └─ Turvatud liides (HTTPS): ${CYAN}https://localhost:${WEB_IDE_HTTPS_PORT:-8449}${NC}"
@@ -815,7 +815,7 @@ if [ "$IS_LOCAL" = "true" ]; then
   
   LOCAL_COMPOSE_ARGS=("${COMPOSE_ARGS[@]}")
   load_web_ide_profile >/dev/null 2>&1 || true
-  if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+  if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
     LOCAL_COMPOSE_ARGS+=(--profile web-ide)
   fi
 
@@ -882,7 +882,7 @@ if [ "$IS_LOCAL" = "true" ]; then
     done < <(get_active_db_instances)
   fi
 
-  if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+  if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
     echo -e "   🚀 Käivitan Konteineriseeritud Web IDE (${CYAN}${WEB_IDE_CONTAINER_NAME:-web-ide-dev}${NC})..."
     podman-compose "${LOCAL_COMPOSE_ARGS[@]}" --profile web-ide up -d web-ide >> "$LOG_FILE" 2>&1 || true
   fi
@@ -1383,7 +1383,7 @@ else
   fi
 fi
 
-if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
   WEB_IDE_CHECK_URL="http://localhost:${WEB_IDE_HTTP_PORT:-8090}/?folder=/config/workspace"
   echo -e "${YELLOW}🔍 Kontrollin Web IDE (VS Code) kättesaadavust aadressil ${CYAN}$WEB_IDE_CHECK_URL${NC}...${NC}"
   echo -e "   ℹ️  Kontrollitakse: Kas brauseripõhine VS Code liides vastab päringule (HTTP 200/301/302)."
@@ -1517,7 +1517,7 @@ if [ "$IS_LOCAL" = "true" ] && [ -f "$SCRIPT_DIR/internal/register-connections-s
   "$SCRIPT_DIR/internal/register-connections-sqlcl.sh" >/dev/null 2>&1 || true
   echo -e "   - VS Code ühendused registreeriti automaatselt (/APEX või /MYATP ja /Publisher)!"
 fi
-if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
   "$SCRIPT_DIR/internal/init-web-ide.sh" >/dev/null 2>&1 || true
   echo -e "   - Konteineriseeritud Web IDE (VS Code): ${GREEN}http://localhost:${WEB_IDE_HTTP_PORT:-8090}${NC} (Profiil: ${YELLOW}${WEB_IDE_PROFILE:-web-ide-standard}${NC})"
 fi

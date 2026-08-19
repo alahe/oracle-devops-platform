@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  db-apex-proxy:
+    image: container-registry.oracle.com/database/adb-free:latest
+    environment:
+      - WORKLOAD_TYPE=ATP
+      - ADMIN_PASSWORD=OraclePass2026Admin
+      - WALLET_PASSWORD=OraclePass2026Wallet
