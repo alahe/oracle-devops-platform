@@ -251,6 +251,9 @@ case $COMPONENT in
     done < <(get_active_db_instances 2>/dev/null || true)
 
     cleanup_container "web-ide-dev"
+    cleanup_container "ords-standalone-emulator"
+    cleanup_container "ords-standalone-dev"
+    cleanup_container "oracle-ords-standalone-test"
     cleanup_volume "${PROJECT_NAME}_web_ide_data"
 
 
