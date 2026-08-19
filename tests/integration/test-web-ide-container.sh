@@ -51,6 +51,20 @@ fi
 echo "  ✅ init-web-ide.sh ja binaries/extensions VSIX laienduste tugi toimib puhtalt."
 
 
+# 4. Kontrolli elavat Web IDE veebiliidest HTTP pordil 8090
+echo "▶️ [Test 4]: Kontrollin elavat Web IDE veebiliidest (http://localhost:8090)..."
+if podman container exists web-ide-dev 2>/dev/null; then
+  HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8090/?folder=/config/workspace" || true)
+  if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "302" ]; then
+    echo "  ✅ Web IDE vastab edukalt päringule aadressil http://localhost:8090 (HTTP $HTTP_STATUS)."
+  else
+    echo "❌ Viga: Web IDE veebiliides (http://localhost:8090) ei vasta oodatud HTTP 200/302 koodiga (Vastus: $HTTP_STATUS)!"
+    exit 1
+  fi
+else
+  echo "  ℹ️  web-ide-dev konteiner ei jookse hetkel. Testiti staatilist seadistust."
+fi
+
 echo "=================================================================="
 echo "🎉 KÕIK WEB IDE & ARTIFACTORY MOODULITESTID LÄBITUD EDUKALT!"
 echo "=================================================================="

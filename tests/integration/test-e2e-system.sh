@@ -48,14 +48,14 @@ done
 echo -e "${GREEN}✅ E2E Samm 2 Edukas: Kõik 8 sisemist abiskripti ja SQL-i on omal kohal!${NC}"
 
 # Step 3: Validate Dynamic Profiles Matrix
-echo -e "\n${YELLOW}[E2E Samm 3] Kontrollin profiilide maatriksit (config/profiles/*.yaml)...${NC}"
+echo -e "\n${YELLOW}[E2E Samm 3] Kontrollin profiilide maatriksit (config/profiles/databases/*.yaml)...${NC}"
 PROFILES=("proxy-adb-oracle" "proxy-standard-oracle" "proxy-standard-gvenzl" "bizapp-standard-oracle" "bizapp-adb-oracle" "appinfra-standard-gvenzl" "cicd-standard-oracle")
 
 for profile in "${PROFILES[@]}"; do
-  if [ -f "$WORKSPACE_DIR/config/profiles/${profile}.yaml" ]; then
-    echo -e "   ${GREEN}✓ Profiil ${profile}.yaml kontrollitud.${NC}"
+  if [ -f "$WORKSPACE_DIR/config/profiles/databases/${profile}.yaml" ]; then
+    echo -e "   ${GREEN}✓ Profiil databases/${profile}.yaml kontrollitud.${NC}"
   else
-    echo -e "${RED}❌ E2E Samm 3 Ebaõnnestus: Profiil ${profile}.yaml puudub!${NC}"
+    echo -e "${RED}❌ E2E Samm 3 Ebaõnnestus: Profiil databases/${profile}.yaml puudub!${NC}"
     exit 1
   fi
 done

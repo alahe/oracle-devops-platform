@@ -5,7 +5,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ---
 
-## 📅 Genereeritud: 2026-08-18 12:01:40
+## 📅 Genereeritud: 2026-08-19 16:35:39
 
 ---
 
@@ -16,6 +16,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 | **`clean-golden-snapshots.sh`** | ✅ Kaetud | [`test-script-clean-golden-snapshots.sh`](test-script-clean-golden-snapshots.sh),[`test-e2e-system.sh`](test-e2e-system.sh) |
 | **`clean-logs.sh`** | ✅ Kaetud | [`test-script-clean-logs.sh`](test-script-clean-logs.sh),[`test-e2e-system.sh`](test-e2e-system.sh) |
 | **`create-golden-snapshots.sh`** | ✅ Kaetud | [`test-script-create-golden-snapshots.sh`](test-script-create-golden-snapshots.sh),[`test-e2e-system.sh`](test-e2e-system.sh) |
+| **`install-web-ide-extensions.sh`** | ✅ Kaetud | [`test-script-install-web-ide-extensions.sh`](test-script-install-web-ide-extensions.sh) |
 | **`register-connections.sh`** | ✅ Kaetud | [`test-script-register-connections.sh`](test-script-register-connections.sh),[`test-internal-installers-and-helpers.sh`](test-internal-installers-and-helpers.sh) |
 | **`reset-all.sh`** | ✅ Kaetud | [`test-script-reset-all.sh`](test-script-reset-all.sh),[`test-e2e-system.sh`](test-e2e-system.sh) |
 | **`restore-golden-snapshots.sh`** | ✅ Kaetud | [`test-script-restore-golden-snapshots.sh`](test-script-restore-golden-snapshots.sh),[`test-e2e-system.sh`](test-e2e-system.sh) |
@@ -42,7 +43,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 | **`internal/init-web-ide.sh`** | ✅ Kaetud | [`test-script-init-web-ide.sh`](test-script-init-web-ide.sh),[`test-web-ide-container.sh`](test-web-ide-container.sh) |
 | **`internal/install-apex.sh`** | ✅ Kaetud | [`test-script-install-apex.sh`](test-script-install-apex.sh),[`test-internal-installers-and-helpers.sh`](test-internal-installers-and-helpers.sh) |
 | **`internal/install-ords-standalone.sh`** | ✅ Kaetud | [`test-script-install-ords-standalone.sh`](test-script-install-ords-standalone.sh),[`test-internal-installers-and-helpers.sh`](test-internal-installers-and-helpers.sh) |
-| **`internal/load-db-profile.sh`** | ✅ Kaetud | [`test-script-load-db-profile.sh`](test-script-load-db-profile.sh),[`test-compose-override-generation.sh`](test-compose-override-generation.sh),[`test-db-profiles-and-topology.sh`](test-db-profiles-and-topology.sh),[`test-e2e-system.sh`](test-e2e-system.sh),[`test-browser-login.sh`](test-browser-login.sh) |
+| **`internal/load-profile.sh`** | ✅ Kaetud | [`test-script-load-profile.sh`](test-script-load-profile.sh),[`test-compose-override-generation.sh`](test-compose-override-generation.sh),[`test-db-profiles-and-topology.sh`](test-db-profiles-and-topology.sh),[`test-e2e-system.sh`](test-e2e-system.sh),[`test-browser-login.sh`](test-browser-login.sh) |
 | **`internal/register-connections-sqlcl.sh`** | ✅ Kaetud | [`test-script-register-connections-sqlcl.sh`](test-script-register-connections-sqlcl.sh),[`test-e2e-system.sh`](test-e2e-system.sh) |
 | **`internal/register-connections.sh`** | ✅ Kaetud | [`test-script-register-connections.sh`](test-script-register-connections.sh),[`test-internal-installers-and-helpers.sh`](test-internal-installers-and-helpers.sh) |
 | **`internal/resolve-topology.sh`** | ✅ Kaetud | [`test-script-resolve-topology.sh`](test-script-resolve-topology.sh),[`test-db-profiles-and-topology.sh`](test-db-profiles-and-topology.sh),[`test-e2e-system.sh`](test-e2e-system.sh) |
@@ -52,7 +53,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ## 📈 Kokkuvõttev Mõõdik (Summary Metrics)
 
-- **Kogu skriptide arv (Total Scripts):** 27
-- **Testidega kaetud skripte (Covered Scripts):** 27
+- **Kogu skriptide arv (Total Scripts):** 28
+- **Testidega kaetud skripte (Covered Scripts):** 28
 - **Automaattestide kaetus (Test Coverage):** **100%**
 
