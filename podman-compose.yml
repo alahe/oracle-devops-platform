@@ -82,7 +82,7 @@ services:
       context: ./docker/web-ide
       args:
         ARTIFACTORY_REGISTRY: ${ARTIFACTORY_DOCKER_REGISTRY:-""}
-    image: ${WEB_IDE_CONTAINER_IMAGE:-lscr.io/linuxserver/code-server:latest}
+    image: ${WEB_IDE_CONTAINER_IMAGE:-web-ide-image:latest}
     container_name: web-ide-dev
     ports:
       - "${WEB_IDE_HTTP_PORT:-8090}:8443"

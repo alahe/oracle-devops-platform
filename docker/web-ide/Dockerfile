@@ -34,11 +34,7 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
 # 3. Install Nektos 'act' CLI for local offline GitHub Actions simulation
 RUN curl -s https://raw.githubusercontent.com/nektos/act/master/install.sh | bash -s -- -b /usr/local/bin || true
 
-# 5. Install Standalone Google Antigravity AI Coding Assistant CLI
-RUN curl -fsSL https://antigravity.google/install.sh | bash || \
-    (curl -fsSL https://raw.githubusercontent.com/google/antigravity/main/install.sh | bash || true)
-
-# 6. Download and Install Oracle SQLcl
+# 4. Download and Install Oracle SQLcl
 RUN mkdir -p /opt/sqlcl && \
     curl -sL "https://download.oracle.com/otn_sqldev/sqlcl/sqlcl-latest.zip" -o /tmp/sqlcl.zip && \
     unzip -q /tmp/sqlcl.zip -d /opt/ && \
