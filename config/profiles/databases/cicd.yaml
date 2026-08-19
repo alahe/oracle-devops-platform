@@ -1,6 +1,6 @@
 profile:
   id: cicd
-  name: "CI/CD Pipeline Ephemeral DB (Oracle Registry)"
+  name: cicd
   description: "Fast ephemeral CI/CD testing database for automated Liquibase schema migrations and pipeline unit tests."
   functionality: cicd
   db_type: standard

@@ -1,6 +1,6 @@
 profile:
   id: appinfra
-  name: "Application Infrastructure (Oracle Publisher / Forms)"
+  name: appinfra
   description: "Oracle Infrastructure DB for Oracle Analytics Publisher and Oracle Forms (RCU schemas, high processes=1000)."
   functionality: appinfra
   db_type: standard

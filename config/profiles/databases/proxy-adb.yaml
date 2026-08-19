@@ -1,6 +1,6 @@
 profile:
   id: proxy-adb
-  name: "APEX Proxy ADB (Oracle Registry)"
+  name: proxy-adb
   description: "APEX Outbound Proxy database running on Oracle Autonomous Database Free container with ORDS and APEX enabled."
   functionality: proxy
   db_type: adb

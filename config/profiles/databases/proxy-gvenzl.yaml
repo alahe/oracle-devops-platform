@@ -1,6 +1,6 @@
 profile:
   id: proxy-gvenzl
-  name: "APEX Proxy Standard (Gvenzl Docker Hub)"
+  name: proxy-gvenzl
   description: "APEX Outbound Proxy database running on Gerald Venzl Oracle Free 23c Faststart container with pre-installed ORDS/APEX."
   functionality: proxy
   db_type: standard

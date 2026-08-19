@@ -1,6 +1,6 @@
 profile:
   id: proxy-ords-external
-  name: "Oracle APEX Proxy DB (External Corporate ORDS)"
+  name: proxy-ords-external
   description: "Oracle AI Database 26ai Free configured for an external corporate ORDS server running outside Podman."
   type: database
 

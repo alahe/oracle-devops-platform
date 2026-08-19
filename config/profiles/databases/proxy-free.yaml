@@ -1,6 +1,6 @@
 profile:
   id: proxy-free
-  name: "APEX Proxy Standard (Oracle Registry)"
+  name: proxy-free
   description: "APEX Outbound Proxy database running on official Oracle Free DB 23ai container with ORDS and APEX enabled."
   functionality: proxy
   db_type: standard

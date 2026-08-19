@@ -1,6 +1,6 @@
 profile:
   id: app-adb
-  name: "Primary Application ADB (Oracle Registry)"
+  name: app-adb
   description: "General purpose Primary Application database running on Oracle Autonomous Database Free container."
   functionality: app
   db_type: adb

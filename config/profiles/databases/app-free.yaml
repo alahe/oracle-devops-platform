@@ -1,6 +1,6 @@
 profile:
   id: app-free
-  name: "Primary Application DB (Oracle Free DB)"
+  name: app-free
   description: "General purpose Primary Application database running on official Oracle Free DB 23ai container with ORDS and Database Actions."
   functionality: app
   db_type: standard
