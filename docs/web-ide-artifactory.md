@@ -20,10 +20,10 @@ Selleks, et kasutada ettevõtte sisest Artifactory registrit avalike Docker Hub 
 
 ```bash
 # Web IDE teenuse profiilid (config/profiles/web-ide/*.yaml):
-#   - web-ide-cicd-only        (Ainult GitHub CLI + act runner GitHub Actions testimiseks)
-#   - web-ide-cicd-antigravity (Antigravity + GitHub CLI + act runner)
-#   - web-ide-standard         (Täielik VS Code + SQL Developer + Liquibase + Antigravity)
-WEB_IDE_PROFILE=web-ide-cicd-only
+#   - web-ide-cicd-standard        (GitHub CLI + act runner GitHub Actions testimiseks)
+#   - web-ide-artifactory-vsix     (VSIX laiendused lokaalsest kaustast)
+#   - web-ide-standard             (Täielik VS Code + SQL Developer + Liquibase)
+WEB_IDE_PROFILE=web-ide-standard
 
 # Ettevõtte Artifactory peegeldusregistri aadress (valikuline):
 ARTIFACTORY_DOCKER_REGISTRY=artifactory.corp.internal
@@ -35,7 +35,7 @@ ARTIFACTORY_DOCKER_REGISTRY=artifactory.corp.internal
 
 Web IDE konteiner võimaldab testida repositooriumi GitHub Actions töövooge (`.github/workflows/*.yml`) **lokaalselt ilma GitHubi pushimata**:
 
-1. Vali `.env` failis profiil `WEB_IDE_PROFILE=web-ide-cicd-only` või `web-ide-cicd-antigravity`.
+1. Vali `.env` failis profiil `WEB_IDE_PROFILE=web-ide-cicd-standard`.
 2. Ava brauseri terminal aadressil `http://localhost:8090`.
 3. Käivita lokaalne GitHub Actions simulaator:
    ```bash
@@ -51,14 +51,8 @@ Web IDE konteiner võimaldab testida repositooriumi GitHub Actions töövooge (`
 
 ---
 
-## 4. Google Antigravity Eraldiseisev Paigaldamine & VSIX Laiendused
+## 4. Kohalikud VS Code (.vsix) Laiendused
 
-### 🤖 Google Antigravity Paigaldus
-Google Antigravity on eraldiseisev tehisintellekti koodiassistent (Standalone Agent), mida ei paigaldata tavalise VS Code laiendusena:
-1. Google Antigravity paigaldatakse automaatselt otse Web IDE konteineri sisse (`https://antigravity.google/`).
-2. Arendaja saab seda käivitada Web IDE brauseripõhisest terminalist käsuga `antigravity`.
-
-### 📦 Kohalikud VS Code (.vsix) Laiendused
 Tavaliste VS Code `.vsix` laienduste paigaldamiseks:
 1. Aseta `.vsix` fail kausta **`binaries/extensions/`**.
 2. Käivita paigaldus või taaskäivita konteinerid:

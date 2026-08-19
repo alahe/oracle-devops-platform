@@ -1,7 +1,7 @@
 profile:
-  id: web-ide-cicd-antigravity
-  name: "Web IDE CI/CD & Antigravity Testing"
-  description: "Web IDE environment focused on Google Antigravity AI assistant, GitHub CLI (gh), and Nektos 'act' for testing GitHub Actions workflows locally."
+  id: web-ide-cicd-standard
+  name: "Web IDE CI/CD & Standard Testing"
+  description: "Web IDE environment focused on GitHub CLI (gh), Oracle SQLcl, and Nektos 'act' for testing GitHub Actions workflows locally."
   type: service
 
 web_ide:
@@ -15,12 +15,8 @@ web_ide:
     cicd_ui_port: 8091
   workspace_dir: /workspace
 
-  # 🛠️ Tools for GitHub Actions & Antigravity Testing
+  # 🛠️ Tools for GitHub Actions & CI/CD Testing
   tools:
-    antigravity:
-      enabled: true
-      install_url: "https://antigravity.google/install.sh"
-      binary_name: "antigravity"
     github_cli:
       enabled: true
       binary_name: "gh"
@@ -38,12 +34,6 @@ web_ide:
 
   # 📦 Configurable VS Code Extensions
   extensions:
-    - id: "google.antigravity"
-      enabled: true
-      name: "Google Antigravity AI Assistant"
-      download_url: "https://antigravity.google/download/antigravity.vsix"
-      vsix_path: "binaries/extensions/antigravity.vsix"
-
     - id: "github.vscode-github-actions"
       enabled: true
       name: "GitHub Actions Extension"

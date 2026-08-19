@@ -93,7 +93,8 @@ services:
       - PWD=/workspace
       - TNS_ADMIN=/config/.oracle/tns_admin
       - JAVA_TOOL_OPTIONS=-Doracle.net.tns_admin=/config/.oracle/tns_admin
-      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AUTH=none
+      - PASSWORD=
     volumes:
       - ./:/workspace
       - ./config/tns_admin_container:/config/.oracle/tns_admin

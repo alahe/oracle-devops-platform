@@ -1,17 +1,17 @@
 # 🏢 Windows Enterprise Podman Liivakasti Juhend (Zero Trust)
 
-See juhend kirjeldab, kuidas käivitada **Google Antigravity tehisintellekti ja Web IDE keskkonda Windows Enterprise sülearvutites**, mille puhul ettevõtte turvareeglid ei luba lokaalsesse Windows operatsioonisüsteemi tarkvara ega utiliite paigaldada.
+See juhend kirjeldab, kuidas käivitada **konteineriseeritud Web IDE (`code-server`) keskkonda Windows Enterprise sülearvutites**, mille puhul ettevõtte turvareeglid ei luba lokaalsesse Windows operatsioonisüsteemi tarkvara ega utiliite paigaldada.
 
 ---
 
 ## 🔒 Miks see lahendus vastab ettevõtte turvanõuetele (Firm Rules)?
 
 1. **Host OS (Windows) jääb 100% puhtaks:**
-   * Ühtegi koodiredaktorit, Pythoni, Javat, Git-i ega AI agenti **ei paigaldata Windowsi operatsioonisüsteemi**.
+   * Ühtegi koodiredaktorit, Pythoni, Javat ega Git-i **ei paigaldata Windowsi operatsioonisüsteemi**.
    * Kogu keskkond jookseb isoleeritud **Podman konteineris**.
-2. **Liides brauseris (Edge / Chrome / Chrome Enterprise):**
+2. **Liides brauseris (Edge / Chrome Enterprise):**
    * Arenduskeskkond avaneb turvaliselt brauseris aadressil **`http://localhost:8090`**.
-   * Windows ei vaja X11, XQuartz ega mingeid keerulisi graafikaedastuse dreenusid.
+   * Windows ei vaja graafikaedastuse teenuseid ega lisatarkvara.
 3. **Ettevõtte Artifactory peegeldusregister (Rule 4):**
    * Kui ettevõte blokeerib avaliku interneti hoidlad, saab `.env` failis määrata sisevõrgu peegeldusregistri:
      ```bash
@@ -20,34 +20,29 @@ See juhend kirjeldab, kuidas käivitada **Google Antigravity tehisintellekti ja 
 
 ---
 
-## 🚀 Käivitamine Windows Masinas (1-Klikiga)
+## 🚀 Käivitamine Windows Masinas
 
-### Variant 1: Hiireklõpsuga (.bat fail)
-Tee oma Windows sülearvutis kaustas `scripts/` dubleeritud klõps failil:
-👉 **`scripts/run-antigravity-windows.bat`**
-
-### Variant 2: Windows PowerShellist
-Ava PowerShell projekti kaustas ja käivita:
+Ava PowerShell projekti kaustas ja käivita konteinerid:
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\run-antigravity-windows.ps1
+podman-compose -f podman-compose.yml --profile web-ide up -d
 ```
 
 ---
 
 ## 🖥️ Kasutamine brauseris
 
-1. Pärast skripti käivitamist avaneb brauseris automaatselt aadress:
+1. Ava oma arvuti brauseris aadress:
    **`http://localhost:8090`**
 2. Brauseris ootab täielik brauseripõhine VS Code, mille sees on:
-   * **Google Antigravity / Gemini AI Chat**
    * **Oracle SQLcl** (paroolivaba SEPS Wallet ühendus)
    * **Git ja terminali tööriistad**
+   * **VS Code laienduste tugi (.vsix)**
 
 ---
 
 ## 🛑 Puhastamine ja peatamine
 
-Konteineri ja kõigi taustaprotsesside täielikuks sulgemiseks ja vabastamiseks:
+Konteineri sulgemiseks ja mälu vabastamiseks:
 ```powershell
 podman-compose down
 ```

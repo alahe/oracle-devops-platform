@@ -344,24 +344,6 @@ sql /@DB_TEST_DEV
 
 ---
 
-## 🚀 Google Antigravity Desktop GUI Sandbox (`run-antigravity-sandbox.sh`)
-
-Skript `./scripts/run-antigravity-sandbox.sh` paigaldab ja käivitab **Google Antigravity IDE natiivse töölauarakenduse (GUI)** täielikult isoleeritud **Podman liivakastis** (`antigravity-sandbox`), suunates graafilise akna macOS ekraanile läbi XQuartz X11 protokolli.
-
-**Kasutamine:**
-```bash
-# 1. Käivita töölauarakendus Podman konteineris:
-./scripts/run-antigravity-sandbox.sh
-
-# 2. Ehita konteineri pilt uuesti:
-./scripts/run-antigravity-sandbox.sh --build
-
-# 3. Peata ja kustuta liivakast:
-./scripts/run-antigravity-sandbox.sh --stop
-```
-
----
-
 ## 🛠️ Sisemised Abiskriptid (`scripts/internal/`)
 
 Kõik sisemised paigaldus-, profiili-, SQL- ja abiskriptid asuvad alamkataloogis `scripts/internal/`. Nende detailse kirjeldustabeli leiad eraldi juhendist:
