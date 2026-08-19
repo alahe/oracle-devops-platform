@@ -39,11 +39,11 @@ else
 fi
 
 # Test 3: Dry-run user provisioning logic for Business App profile
-echo -e "\n${YELLOW}[Test 3] Testin kasutajate ja rollide loogikat (bizapp-standard-oracle)...${NC}"
-if apply_profile_users "bizapp-standard-oracle" >/dev/null 2>&1; then
-  echo -e "${GREEN}✅ Test 3 Edukas: bizapp-standard-oracle kasutajate mootor käivitus edukalt!${NC}"
+echo -e "\n${YELLOW}[Test 3] Testin kasutajate ja rollide loogikat (app-free)...${NC}"
+if apply_profile_users "app-free" >/dev/null 2>&1; then
+  echo -e "${GREEN}✅ Test 3 Edukas: app-free kasutajate mootor käivitus edukalt!${NC}"
 else
-  echo -e "${RED}❌ Test 3 Ebaõnnestus: bizapp-standard-oracle kasutajate mootor ebaõnnestus!${NC}"
+  echo -e "${RED}❌ Test 3 Ebaõnnestus: app-free kasutajate mootor ebaõnnestus!${NC}"
   exit 1
 fi
 

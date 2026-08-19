@@ -1,5 +1,5 @@
 profile:
-  id: proxy-standalone-ords
+  id: proxy-ords-standalone
   name: "Oracle APEX Proxy DB (Podman Standalone ORDS)"
   description: "Oracle AI Database 26ai Free configured with dedicated Podman Standalone ORDS service running on non-colliding ports 8085/8445."
   type: database

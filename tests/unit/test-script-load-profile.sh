@@ -69,7 +69,7 @@ TEST_ENV_TEMP="$WORKSPACE_DIR/.env.test_tmp"
 cat <<EOF > "$TEST_ENV_TEMP"
 # Ajutine testkeskkonna fail
 DB_DEV_FULL=proxy-standard-gvenzl
-DB_CUSTOM_TEST=bizapp-standard-oracle
+DB_CUSTOM_TEST=app-free
 EOF
 
 # Temporarily point WORKSPACE_DIR .env to test file logic

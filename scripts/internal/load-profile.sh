@@ -21,20 +21,33 @@ load_db_profile() {
   local profile_name="$1"
   if [ -z "$profile_name" ]; then
     local first_inst=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f2)
-    profile_name="${MAIN_DB_PROFILE:-${first_inst:-proxy-adb-oracle}}"
+    profile_name="${MAIN_DB_PROFILE:-${first_inst:-app-free}}"
   fi
 
   # Strip path or extension if provided
   profile_name=$(basename "$profile_name" .yaml)
+
+  # Legacy backwards compatibility alias mapping
+  case "$profile_name" in
+    "bizapp-standard-oracle"|"bizapp-free"|"bizapp") profile_name="app-free" ;;
+    "bizapp-adb-oracle"|"bizapp-adb") profile_name="app-adb" ;;
+    "proxy-standard-oracle") profile_name="proxy-free" ;;
+    "proxy-adb-oracle") profile_name="proxy-adb" ;;
+    "proxy-standard-gvenzl") profile_name="proxy-gvenzl" ;;
+    "proxy-standalone-ords") profile_name="proxy-ords-standalone" ;;
+    "proxy-external-ords") profile_name="proxy-ords-external" ;;
+    "appinfra-standard-gvenzl") profile_name="appinfra" ;;
+    "cicd-standard-oracle") profile_name="cicd" ;;
+  esac
 
   local profile_file="$WORKSPACE_DIR/config/profiles/databases/${profile_name}.yaml"
   if [ ! -f "$profile_file" ]; then
     profile_file="$WORKSPACE_DIR/config/profiles/${profile_name}.yaml"
   fi
   if [ ! -f "$profile_file" ]; then
-    echo "⚠️  Hoiatus: Profiilifaili '${profile_name}.yaml' ei leitud kaustast config/profiles/databases/. Kasutan vaike-profiili 'proxy-adb-oracle'."
-    profile_name="proxy-adb-oracle"
-    profile_file="$WORKSPACE_DIR/config/profiles/databases/proxy-adb-oracle.yaml"
+    echo "⚠️  Hoiatus: Profiilifaili '${profile_name}.yaml' ei leitud kaustast config/profiles/databases/. Kasutan vaike-profiili 'app-free'."
+    profile_name="app-free"
+    profile_file="$WORKSPACE_DIR/config/profiles/databases/app-free.yaml"
   fi
 
   # 1. Profiili põhiatribuudid

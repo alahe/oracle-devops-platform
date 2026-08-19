@@ -74,8 +74,10 @@ generate_all_passwords() {
   create_podman_secret() {
     local name="$1"
     local val="$2"
-    podman secret rm "$name" >/dev/null 2>&1 || true
-    echo -n "$val" | podman secret create "$name" - >/dev/null 2>&1
+    if [ "$FORCE" = "true" ] || ! podman secret exists "$name" 2>/dev/null; then
+      podman secret rm "$name" >/dev/null 2>&1 || true
+      echo -n "$val" | podman secret create "$name" - >/dev/null 2>&1
+    fi
   }
 
   create_podman_secret "publisher_db_sys_password" "$PUB_SYS_PWD"

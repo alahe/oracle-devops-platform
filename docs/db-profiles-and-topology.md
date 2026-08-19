@@ -74,13 +74,15 @@ flowchart TD
 
 | Profile Filename | Description | Repository | DB Type | Use Case | ORDS | APEX |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`proxy-adb-oracle.yaml`** | APEX Proxy DB on Oracle Autonomous DB Free | `container-registry.oracle.com/database/adb-free:latest` | `adb` | Proxy | Yes (8443) | Yes |
-| **`proxy-standard-oracle.yaml`** | APEX Proxy DB on Official Oracle Free DB 23ai | `container-registry.oracle.com/database/free:latest` | `standard` | Proxy | Yes (8448) | Yes |
-| **`proxy-standard-gvenzl.yaml`** | APEX Proxy DB on Gvenzl 23c Faststart | `gvenzl/oracle-free:23-full-faststart` | `standard` | Proxy | Yes (8448) | Yes |
-| **`bizapp-standard-oracle.yaml`** | General Business App DB on Official Oracle Free DB | `container-registry.oracle.com/database/free:latest` | `standard` | Business App | Yes | No |
-| **`bizapp-adb-oracle.yaml`** | General Business App DB on Oracle Autonomous DB | `container-registry.oracle.com/database/adb-free:latest` | `adb` | Business App | Yes | No |
-| **`appinfra-standard-gvenzl.yaml`** | Infrastructure DB for Publisher & Forms (RCU) | `gvenzl/oracle-free:23-slim-faststart` | `standard` | App Infra | No | No |
-| **`cicd-standard-oracle.yaml`** | Ephemeral DB for CI/CD Automated Testing | `container-registry.oracle.com/database/free:latest` | `standard` | CI/CD | No | No |
+| **`app-free.yaml`** | Primary Application DB on Official Oracle Free DB 23ai | `container-registry.oracle.com/database/free:latest` | `standard` | Primary App | Yes (8448) | Yes |
+| **`app-adb.yaml`** | Primary Application DB on Oracle Autonomous DB | `container-registry.oracle.com/database/adb-free:latest` | `adb` | Primary App | Yes (8443) | No |
+| **`proxy-adb.yaml`** | APEX Proxy DB on Oracle Autonomous DB Free | `container-registry.oracle.com/database/adb-free:latest` | `adb` | Proxy | Yes (8443) | Yes |
+| **`proxy-free.yaml`** | APEX Proxy DB on Official Oracle Free DB 23ai | `container-registry.oracle.com/database/free:latest` | `standard` | Proxy | Yes (8448) | Yes |
+| **`proxy-gvenzl.yaml`** | APEX Proxy DB on Gvenzl 23c Faststart | `gvenzl/oracle-free:23-full-faststart` | `standard` | Proxy | Yes (8448) | Yes |
+| **`proxy-ords-standalone.yaml`** | APEX Proxy DB + Dedicated Standalone ORDS | `container-registry.oracle.com/database/free:latest` | `standard` | Standalone ORDS | Yes (8085) | Yes |
+| **`proxy-ords-external.yaml`** | APEX Proxy DB + External Corporate ORDS | `container-registry.oracle.com/database/free:latest` | `standard` | External ORDS | External | Yes |
+| **`appinfra.yaml`** | Infrastructure DB for Publisher & Forms (RCU) | `gvenzl/oracle-free:23-slim-faststart` | `standard` | App Infra | No | No |
+| **`cicd.yaml`** | Ephemeral DB for CI/CD Automated Testing | `container-registry.oracle.com/database/free:latest` | `standard` | CI/CD | No | No |
 
 ---
 
@@ -91,10 +93,10 @@ To set or change the main database profile, edit `.env`:
 
 ```bash
 # Select the desired profile:
-MAIN_DB_PROFILE=proxy-adb-oracle
+PUB_DB=app-free
 
-# Or select a Standard Free DB profile:
-# MAIN_DB_PROFILE=proxy-standard-oracle
+# Or select an Autonomous DB profile:
+# PUB_DB=proxy-adb
 ```
 
 ### 2. Enterprise Artifactory Mirroring (Restricted Networks)

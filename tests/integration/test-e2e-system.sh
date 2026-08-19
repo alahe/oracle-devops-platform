@@ -49,7 +49,7 @@ echo -e "${GREEN}✅ E2E Samm 2 Edukas: Kõik 8 sisemist abiskripti ja SQL-i on 
 
 # Step 3: Validate Dynamic Profiles Matrix
 echo -e "\n${YELLOW}[E2E Samm 3] Kontrollin profiilide maatriksit (config/profiles/databases/*.yaml)...${NC}"
-PROFILES=("proxy-adb-oracle" "proxy-standard-oracle" "proxy-standard-gvenzl" "proxy-standalone-ords" "proxy-external-ords" "bizapp-standard-oracle" "bizapp-adb-oracle" "appinfra-standard-gvenzl" "cicd-standard-oracle")
+PROFILES=("proxy-adb" "proxy-free" "proxy-gvenzl" "proxy-ords-standalone" "proxy-ords-external" "app-free" "app-adb" "appinfra" "cicd")
 
 for profile in "${PROFILES[@]}"; do
   if [ -f "$WORKSPACE_DIR/config/profiles/databases/${profile}.yaml" ]; then

@@ -1,21 +1,18 @@
 profile:
-  id: proxy-adb-oracle
-  name: "APEX Proxy ADB (Oracle Registry)"
-  description: "APEX Outbound Proxy database running on Oracle Autonomous Database Free container with ORDS and APEX enabled."
-  functionality: proxy
+  id: app-adb
+  name: "Primary Application ADB (Oracle Registry)"
+  description: "General purpose Primary Application database running on Oracle Autonomous Database Free container."
+  functionality: app
   db_type: adb
   image_vendor: oracle
 
 database:
   container_image: container-registry.oracle.com/database/adb-free:latest
   workload_type: ATP
-  db_sid: FREE
-  db_pdb: MYATP
   admin_user: admin
   admin_role: NORMAL
   default_service: MYATP_low.adb.oraclecloud.com
-  db_port: 1532
-  container_port: 1522
+  db_port: 1533
   wallet_required: true
   configure_tde: true
   encrypt_tablespaces: ALL
@@ -24,20 +21,16 @@ database:
 components:
   ords:
     enabled: true
-    container_name: oracle-ords-proxy
-    service_name: ords-proxy
+    container_name: oracle-ords-app
+    service_name: ords-app
     container_image: container-registry.oracle.com/database/ords:latest
     download_url: "https://download.oracle.com/otn_software/java/ords/ords-latest.zip"
     local_dir: "ords"
     https_port: 8443
     http_port: 8088
-    schema_alias: test_dev
+    schema_alias: app_dev
   apex:
-    enabled: true
-    download_url: "https://download.oracle.com/otn_software/apex/apex_24.1.zip"
-    local_dir: "apex"
-    workspace: PROXY_WORKSPACE
-    version: 24.1
+    enabled: false
   sqlcl:
     container_image: container-registry.oracle.com/database/sqlcl:latest
 
@@ -46,18 +39,14 @@ users:
     role: NORMAL
     wallet_alias: ADMIN
     color: "#E74C3C"
-  - username: APEX_PROXY_SCHEMA
+  - username: APP_SCHEMA
     role: NORMAL
-    wallet_alias: DB_APEX_PROXY_SCHEMA
+    wallet_alias: DB_APP_SCHEMA
     color: "#2980B9"
-  - username: TEST_DEV
+  - username: APP_DEV
     role: NORMAL
     ords_enabled: true
-    ords_alias: test_dev
+    ords_alias: app_dev
     roles: [CONSOLE_DEVELOPER, DWROLE, RESOURCE, DB_DEVELOPER_ROLE]
-    wallet_alias: DB_TEST_DEV
+    wallet_alias: DB_APP_DEV
     color: "#F39C12"
-  - username: TEST_WEB_USER
-    role: NORMAL
-    wallet_alias: TEST_WEB_USER
-    color: "#8E44AD"

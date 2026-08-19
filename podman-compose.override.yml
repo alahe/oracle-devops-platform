@@ -1,9 +1,0 @@
-version: '3.8'
-
-services:
-  db-apex-proxy:
-    image: container-registry.oracle.com/database/adb-free:latest
-    environment:
-      - WORKLOAD_TYPE=ATP
-      - ADMIN_PASSWORD=MWVFonlrprwc73599tOO
-      - WALLET_PASSWORD=IGNLipkffgkt6640AlYo

@@ -1,19 +1,22 @@
 profile:
-  id: proxy-standard-oracle
-  name: "APEX Proxy Standard (Oracle Registry)"
-  description: "APEX Outbound Proxy database running on official Oracle Free DB 23ai container with ORDS and APEX enabled."
+  id: proxy-adb
+  name: "APEX Proxy ADB (Oracle Registry)"
+  description: "APEX Outbound Proxy database running on Oracle Autonomous Database Free container with ORDS and APEX enabled."
   functionality: proxy
-  db_type: standard
+  db_type: adb
   image_vendor: oracle
 
 database:
-  container_image: container-registry.oracle.com/database/free:latest
-  workload_type: NONE
-  admin_user: sys
-  admin_role: SYSDBA
-  default_service: FREEPDB1
+  container_image: container-registry.oracle.com/database/adb-free:latest
+  workload_type: ATP
+  db_sid: FREE
+  db_pdb: MYATP
+  admin_user: admin
+  admin_role: NORMAL
+  default_service: MYATP_low.adb.oraclecloud.com
   db_port: 1532
-  wallet_required: false
+  container_port: 1522
+  wallet_required: true
   configure_tde: true
   encrypt_tablespaces: ALL
   kafka_bootstrap_servers: "localhost:9092"
@@ -26,7 +29,7 @@ components:
     container_image: container-registry.oracle.com/database/ords:latest
     download_url: "https://download.oracle.com/otn_software/java/ords/ords-latest.zip"
     local_dir: "ords"
-    https_port: 8448
+    https_port: 8443
     http_port: 8088
     schema_alias: test_dev
   apex:
@@ -39,9 +42,9 @@ components:
     container_image: container-registry.oracle.com/database/sqlcl:latest
 
 users:
-  - username: sys
-    role: SYSDBA
-    wallet_alias: DB_APEX_PROXY_SYS
+  - username: admin
+    role: NORMAL
+    wallet_alias: ADMIN
     color: "#E74C3C"
   - username: APEX_PROXY_SCHEMA
     role: NORMAL
@@ -51,7 +54,7 @@ users:
     role: NORMAL
     ords_enabled: true
     ords_alias: test_dev
-    roles: [DB_DEVELOPER_ROLE]
+    roles: [CONSOLE_DEVELOPER, DWROLE, RESOURCE, DB_DEVELOPER_ROLE]
     wallet_alias: DB_TEST_DEV
     color: "#F39C12"
   - username: TEST_WEB_USER

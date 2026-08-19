@@ -8,22 +8,25 @@ This directory contains domain-isolated YAML profiles for configuring **Oracle D
 
 | Profile Filename | Description | DB Type | Wallet Required | Use Case |
 | :--- | :--- | :--- | :--- | :--- |
-| **`proxy-standard-gvenzl.yaml`** | APEX Proxy DB on Gvenzl 23c Faststart | `standard` | Yes | APEX Proxy |
-| **`proxy-adb-oracle.yaml`** | APEX Proxy DB on Autonomous DB Free | `adb` | Yes | APEX Proxy |
-| **`proxy-standard-oracle.yaml`** | APEX Proxy DB on Official Oracle Free DB 23ai | `standard` | Yes | APEX Proxy |
-| **`bizapp-standard-oracle.yaml`** | General Business App DB on Official Oracle Free DB | `standard` | Yes | Business App |
-| **`bizapp-adb-oracle.yaml`** | General Business App DB on Autonomous DB Free | `adb` | Yes | Business App |
-| **`appinfra-standard-gvenzl.yaml`** | Infrastructure DB for Publisher & Forms (RCU) | `standard` | Yes | App Infra |
-| **`cicd-standard-oracle.yaml`** | Ephemeral DB for CI/CD Automated Testing | `standard` | No | CI/CD Testing |
+| **`app-free.yaml`** | Primary Application DB on Official Oracle Free DB 23ai/26ai | `standard` | Yes | Primary Application |
+| **`app-adb.yaml`** | Primary Application DB on Autonomous DB Free | `adb` | Yes | Primary Application |
+| **`proxy-free.yaml`** | APEX Proxy DB on Official Oracle Free DB 23ai/26ai | `standard` | Yes | APEX Proxy |
+| **`proxy-adb.yaml`** | APEX Proxy DB on Autonomous DB Free | `adb` | Yes | APEX Proxy |
+| **`proxy-gvenzl.yaml`** | APEX Proxy DB on Gvenzl 23c Faststart | `standard` | Yes | APEX Proxy |
+| **`proxy-ords-standalone.yaml`** | APEX Proxy DB + Dedicated Standalone ORDS (Ports 8085/8445) | `standard` | Yes | Standalone ORDS |
+| **`proxy-ords-external.yaml`** | APEX Proxy DB + External Corporate ORDS Server | `standard` | Yes | External Corporate ORDS |
+| **`appinfra.yaml`** | Infrastructure DB for Publisher & Forms (RCU) | `standard` | Yes | App Infra |
+| **`cicd.yaml`** | Ephemeral DB for CI/CD Automated Testing | `standard` | No | CI/CD Testing |
 
 ---
 
 ## ⚙️ Configuration in `.env`
 
-Map active database instances in `.env` using `<NAME>_DB=<profile-name>` or `DB_<NAME>=<profile-name>`:
+Map active database instances in `.env` using `<NAME>_DB=<profile-name>`, `DB_<NAME>=<profile-name>`, or `<NAME>_PROXY=<profile-name>`:
 
 ```bash
-# Primary APEX Outbound Proxy Database Container
-PUB_DB=bizapp-standard-oracle
-# DB_PROXY=proxy-adb-oracle
+# Primary Application Database Container
+PUB_DB=app-free
+# DB_PROXY=proxy-adb
+# ords_proxy=proxy-ords-standalone
 ```
