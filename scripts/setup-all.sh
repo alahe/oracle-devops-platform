@@ -1382,6 +1382,30 @@ else
     exit 1
   fi
 fi
+
+if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-true}" = "true" ]; then
+  WEB_IDE_CHECK_URL="http://localhost:${WEB_IDE_HTTP_PORT:-8090}/?folder=/config/workspace"
+  echo -e "${YELLOW}🔍 Kontrollin Web IDE (VS Code) kättesaadavust aadressil ${CYAN}$WEB_IDE_CHECK_URL${NC}...${NC}"
+  echo -e "   ℹ️  Kontrollitakse: Kas brauseripõhine VS Code liides vastab päringule (HTTP 200/301/302)."
+  WEB_IDE_STATUS="000"
+  WEB_IDE_WAIT=0
+  for i in {1..20}; do
+    WEB_IDE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$WEB_IDE_CHECK_URL" 2>/dev/null || echo "000")
+    if [ "$WEB_IDE_STATUS" = "200" ] || [ "$WEB_IDE_STATUS" = "301" ] || [ "$WEB_IDE_STATUS" = "302" ]; then
+      break
+    fi
+    sleep 2
+    WEB_IDE_WAIT=$((WEB_IDE_WAIT + 2))
+    print_progress "   Ootan Web IDE veebiliidest... kestus: ${ORANGE}$(format_duration $WEB_IDE_WAIT)${NC}\r"
+  done
+  echo ""
+
+  if [ "$WEB_IDE_STATUS" = "200" ] || [ "$WEB_IDE_STATUS" = "301" ] || [ "$WEB_IDE_STATUS" = "302" ]; then
+    echo -e "   ✅ Web IDE veebiliides (${CYAN}$WEB_IDE_CHECK_URL${NC}) vastab edukalt: ${GREEN}HTTP $WEB_IDE_STATUS (Kättesaadav)${NC}"
+  else
+    echo -e "   ⚠️  HOIATUS: Web IDE veebiliides (${CYAN}$WEB_IDE_CHECK_URL${NC}) ei vastanud 40s jooksul (HTTP $WEB_IDE_STATUS)."
+  fi
+fi
 echo ""
 echo -e "${YELLOW}🌐 APEX / ORDS TEENUSTE LINGID (Kasuta turvalist HTTPS linki):${NC}"
 echo -e "   - ORDS Landing Page:             ${GREEN}https://localhost:${ACTIVE_SSL_PORT}/ords/${NC}"
