@@ -5,7 +5,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ---
 
-## 📅 Genereeritud: 2026-08-19 23:45:37
+## 📅 Genereeritud: 2026-08-20 00:18:56
 
 ---
 

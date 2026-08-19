@@ -28,10 +28,10 @@ bash -n "$TARGET_SCRIPT"
 source "$TARGET_SCRIPT"
 
 # ----------------------------------------------------------------------------
-# Test 1: Load proxy-adb-oracle Profile & Verify Attributes
+# Test 1: Load proxy-adb Profile & Verify Attributes
 # ----------------------------------------------------------------------------
-echo -e "${YELLOW}[Test 1] Kontrollin proxy-adb-oracle profiili laadimist ja APEX/ORDS parameetreid...${NC}"
-load_db_profile "proxy-adb-oracle"
+echo -e "${YELLOW}[Test 1] Kontrollin proxy-adb profiili laadimist ja APEX/ORDS parameetreid...${NC}"
+load_db_profile "proxy-adb"
 
 if [ "$PROFILE_DB_TYPE" = "adb" ] && [ "$IS_ADB" = "true" ] && [ "$PROFILE_CONTAINER_PORT" = "1522" ]; then
   echo -e "   ├─ ${GREEN}ADB profiil tuvastati korrektselt (IS_ADB=true, container_port=1522)${NC}"
@@ -48,10 +48,10 @@ else
 fi
 
 # ----------------------------------------------------------------------------
-# Test 2: Load proxy-standard-gvenzl Profile
+# Test 2: Load proxy-gvenzl Profile & Verify Image Resolution
 # ----------------------------------------------------------------------------
-echo -e "${YELLOW}[Test 2] Kontrollin proxy-standard-gvenzl profiili laadimist...${NC}"
-load_db_profile "proxy-standard-gvenzl"
+echo -e "${YELLOW}[Test 2] Kontrollin proxy-gvenzl profiili laadimist...${NC}"
+load_db_profile "proxy-gvenzl"
 
 if [ "$PROFILE_VENDOR" = "gvenzl" ] && [ "$IS_ADB" = "false" ] && [[ "$RESOLVED_DB_IMAGE" == *"gvenzl"* ]]; then
   echo -e "   └─ ${GREEN}Gvenzl profiil laeti korrektselt (RESOLVED_DB_IMAGE=$RESOLVED_DB_IMAGE)${NC}"
@@ -61,14 +61,14 @@ else
 fi
 
 # ----------------------------------------------------------------------------
-# Test 3: Test Dynamic .env Key Parsing with Hyphenated Names (e.g. DB_DEV_FULL=proxy-standard-gvenzl)
+# Test 3: Test Dynamic .env Key Parsing with Hyphenated Names (e.g. DB_DEV_FULL=proxy-gvenzl)
 # ----------------------------------------------------------------------------
 echo -e "${YELLOW}[Test 3] Testin get_active_db_instances sidekriipsudega võtmete ja profiilide tuletamist...${NC}"
 
 TEST_ENV_TEMP="$WORKSPACE_DIR/.env.test_tmp"
 cat <<EOF > "$TEST_ENV_TEMP"
 # Ajutine testkeskkonna fail
-DB_DEV_FULL=proxy-standard-gvenzl
+DB_DEV_FULL=proxy-gvenzl
 DB_CUSTOM_TEST=app-free
 EOF
 
@@ -87,8 +87,8 @@ if [ -f "${saved_env}.bak_unittest" ]; then
   mv "${saved_env}.bak_unittest" "$saved_env"
 fi
 
-if [ "${#active_instances[@]}" -eq 2 ] && [[ "${active_instances[0]}" == *"db-dev-full|proxy-standard-gvenzl|DB_DEV_FULL"* ]]; then
-  echo -e "   └─ ${GREEN}Sidekriipsudega võti DB_DEV_FULL ja profiil proxy-standard-gvenzl tuletati puhtalt!${NC}"
+if [ "${#active_instances[@]}" -eq 2 ] && [[ "${active_instances[0]}" == *"db-dev-full|proxy-gvenzl|DB_DEV_FULL"* ]]; then
+  echo -e "   └─ ${GREEN}Sidekriipsudega võti DB_DEV_FULL ja profiil proxy-gvenzl tuletati puhtalt!${NC}"
 else
   echo -e "${RED}❌ Test 3 Ebaõnnestus: get_active_db_instances ei parsitud korrektselt! Saadud: ${active_instances[*]}${NC}"
   exit 1
