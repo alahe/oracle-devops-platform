@@ -252,8 +252,11 @@ else:
     fi
     [ -z "$dev_pwd_val" ] && continue
 
-    pretty_dev_name="${idx}. Dev ${dev_u_upper}"
-    [ "$dev_u_upper" = "TEST_DEV" ] && pretty_dev_name="3. TEST_DEV"
+    if [ "$dev_u_upper" = "TEST_DEV" ]; then
+      pretty_dev_name="${idx}. TEST_DEV"
+    else
+      pretty_dev_name="${idx}. Dev ${dev_u_upper}"
+    fi
 
     conn_dev_str="${dev_u_upper}/${dev_pwd_val}@localhost:${port}/${service}"
     SQL_COMMANDS+=("connect -save \"${pretty_dev_name}\" -savepwd -replace ${conn_dev_str}")
@@ -310,16 +313,25 @@ EOF
     done < <(echo "$CONNS_ARRAY_JSON" | jq -c '.[]')
   fi
 
-  # Synchronize ~/.sqldev/connections.json and ~/.dbtools/connections.json with colors and folder
+  # Synchronize ~/.sqldev/connections.json, ~/.dbtools/connections.json, and native ~/.dbtools/connections/*/dbtools.properties
   CONNS_JSON="$CONNS_ARRAY_JSON" FOLDER_NAME="$folder_name" PORT_VAL="$port" SERVICE_VAL="$service" python3 -c "
-import json, os, sys
+import json, os, sys, secrets, shutil
 
 conns_in = json.loads(os.environ.get('CONNS_JSON', '[]'))
-folder = os.environ.get('FOLDER_NAME', '')
-port = os.environ.get('PORT_VAL', '1532')
+folder = os.environ.get('FOLDER_NAME', 'pub-db')
+port = os.environ.get('PORT_VAL', '1533')
 service = os.environ.get('SERVICE_VAL', 'FREEPDB1')
 
 conns = []
+dbtools_dir = os.path.expanduser('~/.dbtools/connections')
+folders_dir = os.path.expanduser('~/.dbtools/connection_folders')
+
+if os.path.exists(dbtools_dir):
+    shutil.rmtree(dbtools_dir)
+os.makedirs(dbtools_dir, exist_ok=True)
+os.makedirs(folders_dir, exist_ok=True)
+
+created_folder_conn_ids = []
 
 for u in conns_in:
     uname = u.get('username')
@@ -328,6 +340,22 @@ for u in conns_in:
     color = u.get('color', '#2980B9')
     pretty_name = u.get('pretty_name', uname)
     
+    conn_id = secrets.token_urlsafe(16).replace('-', 'A').replace('_', 'B')[:22]
+    conn_folder_path = os.path.join(dbtools_dir, conn_id)
+    os.makedirs(conn_folder_path, exist_ok=True)
+    
+    prop_path = os.path.join(conn_folder_path, 'dbtools.properties')
+    with open(prop_path, 'w', encoding='utf-8') as pf:
+        pf.write(f'name={pretty_name}\n')
+        pf.write('type=ORACLE_DATABASE\n')
+        pf.write(f'connectionString=localhost\\:{port}/{service}\n')
+        pf.write(f'userName={uname}\n')
+        pf.write(f'color={color}\n')
+        if role == 'SYSDBA':
+            pf.write('role=SYSDBA\n')
+    
+    created_folder_conn_ids.append(conn_id)
+
     c_obj = {
         'name': pretty_name,
         'folder': f'/{folder}',
@@ -344,29 +372,23 @@ for u in conns_in:
     }
     conns.append(c_obj)
 
-data = {'connections': conns}
+# Update folders.json
+folders_file = os.path.join(folders_dir, 'folders.json')
+folder_data = {'folders': [{'name': folder, 'connections': created_folder_conn_ids, 'folders': []}]}
+with open(folders_file, 'w', encoding='utf-8') as ff:
+    json.dump(folder_data, ff, indent=2)
 
+data = {'connections': conns}
 for json_path in [os.path.expanduser('~/.sqldev/connections.json'), os.path.expanduser('~/.dbtools/connections.json')]:
     os.makedirs(os.path.dirname(json_path), exist_ok=True)
-    with open(json_path, 'w') as f:
+    with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2)
 "
 
 
 
-  # Clean up orphaned connection IDs in folders.json to prevent DBTU-03001 errors in VS Code
-  FOLDERS_FILE="$HOME/.dbtools/connection_folders/folders.json"
-  if [ -f "$FOLDERS_FILE" ] && command -v jq &>/dev/null; then
-    valid_ids=($(find "$DBTOOLS_CONNS_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2>/dev/null || true))
-    VALID_IDS_JSON=$(printf '%s\n' "${valid_ids[@]}" | jq -R . | jq -s .)
-    jq --argjson valid "$VALID_IDS_JSON" '
-      .folders = [
-        .folders[]? |
-        .connections = [ .connections[]? | select(. as $c | $valid | index($c)) ]
-      ] |
-      .folders = [ .folders[]? | select((.connections | length) > 0) ]
-    ' "$FOLDERS_FILE" > "${FOLDERS_FILE}.tmp" 2>/dev/null && mv "${FOLDERS_FILE}.tmp" "$FOLDERS_FILE" 2>/dev/null || true
-  fi
+  # folders.json is accurately maintained by python above
+  true
 done
 
 echo "✅ Database connections with custom colors and folder '${folder_name}' successfully registered in VS Code SQL Developer!"
