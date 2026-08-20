@@ -1,6 +1,6 @@
-# TNS Names Configuration for Container (Auto-generated: Thu Aug 20 00:24:22 EEST 2026)
+# TNS Names Configuration for Container (Auto-generated: Thu Aug 20 08:04:53 EEST 2026)
 
-DB_SYS =
+DB_APEX_PROXY_SYS =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = pub-db)(PORT = 1521))
     (CONNECT_DATA =
@@ -9,7 +9,7 @@ DB_SYS =
     )
   )
 
-DB_APP_SCHEMA =
+DB_APEX_PROXY_SCHEMA =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = pub-db)(PORT = 1521))
     (CONNECT_DATA =
@@ -18,7 +18,16 @@ DB_APP_SCHEMA =
     )
   )
 
-DB_APP_DEV =
+DB_TEST_DEV =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = pub-db)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = FREEPDB1)
+    )
+  )
+
+TEST_WEB_USER =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = pub-db)(PORT = 1521))
     (CONNECT_DATA =

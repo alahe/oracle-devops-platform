@@ -291,7 +291,8 @@ case $COMPONENT in
     # 3. Otsime otse Podman daemonist KÕIK selle projektiga seotud mahud (volumed)
     live_vols=$(podman volume ls --filter "label=com.docker.compose.project=$PROJECT_NAME" --format "{{.Name}}" 2>/dev/null || true)
     if [ -z "$live_vols" ]; then
-      live_vols=$(podman volume ls --format "{{.Name}}" 2>/dev/null | grep "^${PROJECT_NAME}_" || true)
+      folder_basename=$(basename "$(cd "$SCRIPT_DIR/.." && pwd)")
+      live_vols=$(podman volume ls --format "{{.Name}}" 2>/dev/null | grep -E "^(${PROJECT_NAME}|${folder_basename}|apex_images)" || true)
     fi
     for v in $live_vols; do
       [ -n "$v" ] && cleanup_volume "$v"

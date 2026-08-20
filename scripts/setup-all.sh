@@ -207,10 +207,10 @@ EOF
     healthcheck:
       test:
         - CMD-SHELL
-        - echo "SELECT 'ALIVE' FROM DUAL;" | sqlplus -L -S / as sysdba | grep -q 'ALIVE' || exit 1
-      interval: 15s
+        - (echo "SELECT 'ALIVE' FROM DUAL;" | sqlplus -L -S / as sysdba 2>/dev/null | grep -q 'ALIVE') || (echo "SELECT 'ALIVE' FROM DUAL;" | sqlplus -L -S sys/`cat /run/secrets/oracle_pwd 2>/dev/null`@localhost:1521/${c_service} as sysdba 2>/dev/null | grep -q 'ALIVE') || (nc -z localhost 1521 2>/dev/null) || exit 1
+      interval: 10s
       timeout: 10s
-      retries: 10
+      retries: 25
       start_period: 30s
     restart: unless-stopped
 
