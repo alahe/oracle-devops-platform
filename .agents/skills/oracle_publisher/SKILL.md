@@ -132,6 +132,11 @@ curl -s -u weblogic:"${PUBLISHER_PWD}" \
 
 ## 5. Kasulikud Viited & Videoõpetused (Useful Resources)
 
+- ⬇️ **Vajalikud Tarkvara Allalaadimise Lingid (Software Downloads):**
+  - ☕ **Java JDK Allalaadimine:** [Oracle Java Downloads](https://www.oracle.com/java/technologies/downloads/)
+  - 🏢 **Fusion Middleware / WebLogic Server Allalaadimine:** [Oracle WebLogic Server & FMW Installers](https://www.oracle.com/middleware/technologies/weblogic-server-installers-downloads.html)
+  - 📊 **Analytics Publisher Allalaadimine:** [Oracle Software Delivery Cloud (eDelivery)](https://edelivery.oracle.com/osdc/faces/SoftwareDelivery)
+
 - 🎥 **YouTube Koolitus / Video Tutorial:** [Developer Coaching - Pixel-Perfect Printing in Oracle APEX with Analytics Publisher](https://www.youtube.com/watch?v=EyJ_fjzFy3s&t=28s)
 - 📕 **Ametlik Täielik Kasutusjuhend (PDF):** [Using Oracle Analytics Publisher in Oracle Analytics Server (PDF)](https://docs.oracle.com/en/middleware/bi/analytics-server/user-publisher-oas/using-oracle-analytics-publisher-oracle-analytics-server.pdf)
 - 🏗️ **Oracle Fusion Middleware 14.1.2 Infrastruktuuri Juhend:** [Oracle Fusion Middleware 14.1.2 Download, Installation, and Configuration Readme](https://docs.oracle.com/en/middleware/fusion-middleware/14.1.2/mstrd/download-installation-and-configuration-readme.html)
