@@ -128,6 +128,16 @@ curl -s -u weblogic:"${PUBLISHER_PWD}" \
 - **Ajamõõdikud:** `metrics/setup_benchmarks.json`
 - **Automaattestid:** `./tests/unit/test-script-install-publisher.sh` ja `./tests/test-all-components.sh`
 
+### 🔑 Ettevõtte Litsentsid (Enterprise Licenses)
+
+Tarkvara allalaadimiseks ja kasutamiseks kehtivad järgmised Oracle litsentsitingimused:
+- Oracle Analytics Publisher for Oracle Applications or OBI Publisher for Oracle Applications
+- **Oracle Analytics Publisher or Oracle Business Intelligence Publisher** *(Ettevõttes aktiivne litsents)*
+- Oracle Analytics Server Administrator or Oracle Business Intelligence Server Administrator
+- Oracle Analytics Server for Oracle Applications or OBI Suite Extended Edition for Oracle Applications
+- Oracle Analytics Server or Oracle Business Intelligence Suite Extended Edition
+- Oracle Analytics Standard Edition One or Oracle Business Intelligence Standard Edition One
+
 ---
 
 ## 5. Kasulikud Viited & Videoõpetused (Useful Resources)

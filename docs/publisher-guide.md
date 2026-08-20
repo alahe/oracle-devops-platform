@@ -76,12 +76,22 @@ Execution output is logged to `install_logs/publisher_patch_YYYYMMDD_HHMMSS.log`
 
 ### 📦 Oracle eDelivery Package Reference & Checksums
 
-| Package Name | File Name | Size | SHA-256 Checksum |
-| :--- | :--- | :--- | :--- |
-| **Oracle Analytics Server 26.01.0.0.0 for Linux x86-64** | `V1055080-01.zip` (`Oracle_Analytics_Server_2026_Linux`) | 4.2 GB | `A71C69A4CB0360B1D70AB26559018DD1487C37F5BA28F5DA3EF924D9B351B711` |
-| **Oracle Fusion Middleware 14c (14.1.2.0.0) Infrastructure** | `V1045135-01.zip` | 2.1 GB | `1AAE35167BDED101E7194AA3D75C26B292010035A36C289A3F90B663D84E68BD` |
+### 🔑 Enterprise Licensing & Compliance (Oracle eDelivery Licenses)
 
-- 🎥 **YouTube Tutorial:** [Developer Coaching - Pixel-Perfect Printing in Oracle APEX with Analytics Publisher](https://www.youtube.com/watch?v=EyJ_fjzFy3s&t=28s)
+Downloading and using Oracle Analytics Publisher software requires one of the following official Oracle enterprise licenses:
+- Oracle Analytics Publisher for Oracle Applications or OBI Publisher for Oracle Applications
+- **Oracle Analytics Publisher or Oracle Business Intelligence Publisher** *(Active Enterprise License)*
+- Oracle Analytics Server Administrator or Oracle Business Intelligence Server Administrator
+- Oracle Analytics Server for Oracle Applications or OBI Suite Extended Edition for Oracle Applications
+- Oracle Analytics Server or Oracle Business Intelligence Suite Extended Edition
+- Oracle Analytics Standard Edition One or Oracle Business Intelligence Standard Edition One
+
+> [!NOTE]
+> Active Corporate License: **Oracle Business Intelligence Publisher**.
+
+---
+
+## 6. Useful Resources & Video Tutorials
 - 📕 **Official Complete PDF User Guide:** [Using Oracle Analytics Publisher in Oracle Analytics Server (PDF)](https://docs.oracle.com/en/middleware/bi/analytics-server/user-publisher-oas/using-oracle-analytics-publisher-oracle-analytics-server.pdf)
 - 🏗️ **Oracle Fusion Middleware 14.1.2 Infrastructure Readme:** [Oracle Fusion Middleware 14.1.2 Download, Installation, and Configuration Readme](https://docs.oracle.com/en/middleware/fusion-middleware/14.1.2/mstrd/download-installation-and-configuration-readme.html)
 - 📦 **Official Software Installation Chapter:** [Installing the Oracle Analytics Server Software](https://docs.oracle.com/en/middleware/bi/analytics-server/install-config-oas/installing-product-software.html#GUID-D5AFD830-8A7D-42CC-8C22-CE68C452CF4A)
