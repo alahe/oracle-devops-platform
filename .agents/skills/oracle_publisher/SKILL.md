@@ -127,3 +127,11 @@ curl -s -u weblogic:"${PUBLISHER_PWD}" \
 - **Patchimise logi:** `install_logs/publisher_patch_*.log`
 - **Ajamõõdikud:** `metrics/setup_benchmarks.json`
 - **Automaattestid:** `./tests/unit/test-script-install-publisher.sh` ja `./tests/test-all-components.sh`
+
+---
+
+## 5. Kasulikud Viited & Videoõpetused (Useful Resources)
+
+- 🎥 **YouTube Koolitus / Video Tutorial:** [Developer Coaching - Pixel-Perfect Printing in Oracle APEX with Analytics Publisher](https://www.youtube.com/watch?v=EyJ_fjzFy3s&t=28s)
+- 📖 **Ametlik REST API Dokumentatsioon:** [Oracle Analytics Server REST API Endpoints](https://docs.oracle.com/en/middleware/bi/analytics-server/oap_rest_api/rest-endpoints.html)
+

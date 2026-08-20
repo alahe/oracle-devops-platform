@@ -64,3 +64,11 @@ Place Oracle OPatch ZIP files (e.g., `p39179920_publisher.zip`) into the `patche
 ```
 
 Execution output is logged to `install_logs/publisher_patch_YYYYMMDD_HHMMSS.log` and duration metrics are recorded in `metrics/setup_benchmarks.json`.
+
+---
+
+## 6. Useful Resources & Video Tutorials
+
+- 🎥 **YouTube Tutorial:** [Developer Coaching - Pixel-Perfect Printing in Oracle APEX with Analytics Publisher](https://www.youtube.com/watch?v=EyJ_fjzFy3s&t=28s)
+- 📖 **Official REST API Endpoints:** [Oracle Analytics Server REST API Documentation](https://docs.oracle.com/en/middleware/bi/analytics-server/oap_rest_api/rest-endpoints.html)
+- 📄 **Custom Skill Instructions:** [.agents/skills/oracle_publisher/SKILL.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/.agents/skills/oracle_publisher/SKILL.md)
