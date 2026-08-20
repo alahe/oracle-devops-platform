@@ -772,7 +772,9 @@ print_header "3" "Checking / Downloading APEX Software Packages..." "step3_apex_
 
 # Kogume kokku kõik aktiivsed APEX versioonid, mida andmebaasid vajavad
 APEX_VERSIONS=()
-get_active_db_instances 2>/dev/null | while IFS='|' read -r container prof env_key; do
+for inst in $(get_active_db_instances 2>/dev/null); do
+  container=$(echo "$inst" | cut -d'|' -f1)
+  prof=$(echo "$inst" | cut -d'|' -f2)
   [ -z "$container" ] && continue
   ver=$(
     load_db_profile "$prof" >/dev/null 2>&1 || true
@@ -833,7 +835,8 @@ if [ "$IS_LOCAL" = "true" ]; then
   print_header "4" "Käivitan konteinerid ja ootan andmebaaside valmisolekut (Healthcheck)..." "step4_container_startup_seconds" "45s"
   UP_SERVICES=()
   CONTAINERS_TO_CHECK=()
-  get_active_db_instances | while IFS='|' read -r cname prof env_key; do
+  for inst in $(get_active_db_instances 2>/dev/null); do
+    cname=$(echo "$inst" | cut -d'|' -f1)
     [ -z "$cname" ] && continue
     CONTAINERS_TO_CHECK+=("$cname")
     sname="${cname#oracle-}"
