@@ -31,18 +31,18 @@ if [ -f "$WORKSPACE_DIR/scripts/internal/download-publisher-binary.sh" ]; then
   "$WORKSPACE_DIR/scripts/internal/download-publisher-binary.sh" || true
 fi
 
-# Check if installer binaries exist in binaries/publisher/ or target directory
-ZIP_FILE=$(find "$WORKSPACE_DIR/binaries/publisher" "$TARGET_DIR" \( -name "Oracle_Analytics_Server*.zip" -o -name "V1055080-01.zip" -o -name "V1045135-01.zip" \) 2>/dev/null | head -n 1 || true)
-
-if [ -n "$ZIP_FILE" ] && [ -f "$ZIP_FILE" ]; then
-  echo "ℹ️  Found Publisher installation package: $ZIP_FILE"
-  if [ "$(dirname "$ZIP_FILE")" != "$TARGET_DIR" ]; then
-    cp "$ZIP_FILE" "$TARGET_DIR/"
+# Copy all downloaded installer binaries from binaries/publisher/ to build directory
+for zip_path in "$WORKSPACE_DIR/binaries/publisher"/*.zip; do
+  [ -f "$zip_path" ] || continue
+  bname=$(basename "$zip_path")
+  echo "ℹ️  Found installer package: $bname ($(du -h "$zip_path" | awk '{print $1}'))"
+  cp -f "$zip_path" "$TARGET_DIR/"
+  
+  # Auto-alias V1055080-01.zip to standard filename expected by Dockerfile if needed
+  if [ "$bname" = "V1055080-01.zip" ]; then
+    cp -f "$zip_path" "$TARGET_DIR/Oracle_Analytics_Server_Linux_2025(8.2).zip"
   fi
-else
-  echo "⚠️  WARNING: Oracle Analytics Server installer ZIP (e.g. V1055080-01.zip / Oracle_Analytics_Server_2026_Linux) not found in binaries/publisher/ or $TARGET_DIR!"
-  echo "    Please place the Oracle Analytics Server installer ZIP file in binaries/publisher/ before building."
-fi
+done
 
 cd "$TARGET_DIR"
 BUILD_START=$(date '+%s')
