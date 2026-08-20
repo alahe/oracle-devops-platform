@@ -331,7 +331,12 @@ export TNS_ADMIN="$SCRIPT_DIR/../config/tns_admin"
 
 # Parameetrite parsimine ja IS_ADB tuvastamine on sooritatud skripti alguses.
 
-if [ -z "$DB_PUBLISHER" ] && [ -z "$PUBLISHER_DB_HOST" ]; then
+if [ "${PUBLISHER_ENABLED:-false}" = "true" ] || [ "$MAIN_DB_PROFILE" = "publisher-free" ] || [ "$MAIN_DB_PROFILE" = "appinfra" ]; then
+  if [ "$SKIP_PUBLISHER" != "true" ]; then
+    SKIP_PUBLISHER=false
+    PUBLISHER_DB_HOST="${PUBLISHER_DB_HOST:-pub-db}"
+  fi
+elif [ -z "$DB_PUBLISHER" ] && [ -z "$PUBLISHER_DB_HOST" ]; then
   SKIP_PUBLISHER=true
 fi
 
@@ -351,7 +356,7 @@ elif [ "$IS_LOCAL" = "false" ]; then
 fi
 
 START_LOCAL_PUBLISHER=true
-if [ "$SKIP_PUBLISHER" = "true" ] || [ -z "$PUBLISHER_DB_HOST" ] || { [ "$PUBLISHER_DB_HOST" != "localhost" ] && [ "$PUBLISHER_DB_HOST" != "127.0.0.1" ]; }; then
+if [ "$SKIP_PUBLISHER" = "true" ]; then
   START_LOCAL_PUBLISHER=false
 fi
 
@@ -395,6 +400,13 @@ if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; th
   echo -e "     ├─ Brauseri liides (HTTP): ${CYAN}http://localhost:${WEB_IDE_HTTP_PORT:-8090}${NC}"
   echo -e "     └─ Turvatud liides (HTTPS): ${CYAN}https://localhost:${WEB_IDE_HTTPS_PORT:-8449}${NC}"
 fi
+if [ "$SKIP_PUBLISHER" = "false" ] && { [ "${PUBLISHER_ENABLED:-false}" = "true" ] || [ "$MAIN_DB_PROFILE" = "publisher-free" ] || [ "$MAIN_DB_PROFILE" = "appinfra" ]; }; then
+  echo -e "   - ${CYAN}${PUBLISHER_CONTAINER_NAME:-oracle-publisher-dev}${NC} (Analytics Publisher & Fusion Middleware)"
+  echo -e "     ├─ Sihtbaas: ${CYAN}${PUBLISHER_DB_HOST:-pub-db}${NC} (${PUBLISHER_DB_SERVICE:-FREEPDB1})"
+  echo -e "     ├─ Veebiliides (HTTP): ${CYAN}http://localhost:${PUBLISHER_HTTP_PORT:-9502}/xmlpserver${NC}"
+  echo -e "     └─ Turvatud liides (HTTPS): ${CYAN}https://localhost:${PUBLISHER_HTTPS_PORT:-9503}/xmlpserver${NC}"
+fi
+
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${YELLOW}💡 Seadistuse muutmine:${NC}"
 echo -e "   - Lokaalne seadistus: [.env](file://${SCRIPT_DIR}/../.env) (loo koopia failist [.env.example](file://${SCRIPT_DIR}/../.env.example))"
