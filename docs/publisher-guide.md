@@ -70,6 +70,7 @@ Execution output is logged to `install_logs/publisher_patch_YYYYMMDD_HHMMSS.log`
 ## 6. Useful Resources & Video Tutorials
 
 - 🎥 **YouTube Tutorial:** [Developer Coaching - Pixel-Perfect Printing in Oracle APEX with Analytics Publisher](https://www.youtube.com/watch?v=EyJ_fjzFy3s&t=28s)
+- ⚙️ **Official Silent Installation Guide:** [Installing Oracle Analytics Server Software in Silent Mode](https://docs.oracle.com/en/middleware/bi/analytics-server/install-config-oas/oracle-analytics-server-installation.html#GUID-FA987D32-0E3B-40AF-AB81-2196F823C667)
 - 📖 **Official REST API Endpoints:** [Oracle Analytics Server REST API Documentation](https://docs.oracle.com/en/middleware/bi/analytics-server/oap_rest_api/rest-endpoints.html)
 - 📘 **Official Report Design Guide:** [Create Pixel-Perfect Reports in Oracle Analytics Server](https://docs.oracle.com/en/middleware/bi/analytics-server/create-pixel-perfect-reports.html)
 - 📜 **Official Introduction to Pixel-Perfect Publishing:** [Introduction to Pixel-Perfect Publishing](https://docs.oracle.com/en/middleware/bi/analytics-server/user-publisher-oas/introduction-pixel-perfect-publishing.html)
