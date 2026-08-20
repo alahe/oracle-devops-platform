@@ -126,9 +126,10 @@ load_db_profile() {
     export IS_ADB="false"
   fi
 
-  # 3. Komponentide ZIP resolution & 3-tasemeline prioriteet (ORDS & APEX)
-  local ords_block=$(awk '/ords:/{flag=1;next}/apex:|sqlcl:|users:/{flag=0}flag' "$profile_file" 2>/dev/null)
-  local apex_block=$(awk '/apex:/{flag=1;next}/sqlcl:|users:/{flag=0}flag' "$profile_file" 2>/dev/null)
+  # 3. Komponentide ZIP resolution & 3-tasemeline prioriteet (ORDS, APEX, Publisher)
+  local ords_block=$(awk '/ords:/{flag=1;next}/apex:|publisher:|sqlcl:|users:/{flag=0}flag' "$profile_file" 2>/dev/null)
+  local apex_block=$(awk '/apex:/{flag=1;next}/publisher:|sqlcl:|users:/{flag=0}flag' "$profile_file" 2>/dev/null)
+  local pub_block=$(awk '/publisher:/{flag=1;next}/sqlcl:|users:/{flag=0}flag' "$profile_file" 2>/dev/null)
 
   local profile_ords_url=$(echo "$ords_block" | parse_yaml_key "/dev/stdin" "download_url" | head -n 1)
   local profile_ords_http=$(echo "$ords_block" | parse_yaml_key "/dev/stdin" "http_port" | head -n 1)
@@ -146,6 +147,13 @@ load_db_profile() {
   local profile_apex_ver=$(echo "$apex_block" | parse_yaml_key "/dev/stdin" "version" | head -n 1)
   local profile_apex_enabled=$(echo "$apex_block" | parse_yaml_key "/dev/stdin" "enabled" | head -n 1)
   local profile_apex_ws=$(echo "$apex_block" | parse_yaml_key "/dev/stdin" "workspace" | head -n 1)
+
+  local profile_pub_enabled=$(echo "$pub_block" | parse_yaml_key "/dev/stdin" "enabled" | head -n 1)
+  local profile_pub_c_name=$(echo "$pub_block" | parse_yaml_key "/dev/stdin" "container_name" | head -n 1)
+  local profile_pub_http=$(echo "$pub_block" | parse_yaml_key "/dev/stdin" "http_port" | head -n 1)
+  local profile_pub_https=$(echo "$pub_block" | parse_yaml_key "/dev/stdin" "https_port" | head -n 1)
+  local profile_pub_rcu=$(echo "$pub_block" | parse_yaml_key "/dev/stdin" "rcu_prefix" | head -n 1)
+  local profile_pub_domain=$(echo "$pub_block" | parse_yaml_key "/dev/stdin" "domain_name" | head -n 1)
 
   export PROFILE_ORDS_MODE="${profile_ords_mode:-local}"
   export PROFILE_ORDS_EXTERNAL_URL="${profile_ords_ext_url:-}"
@@ -165,6 +173,18 @@ load_db_profile() {
   export PROFILE_APEX_ENABLED="${profile_apex_enabled:-true}"
   export PROFILE_APEX_WORKSPACE="${profile_apex_ws:-PROXY_WORKSPACE}"
   export APEX_WORKSPACE="${APEX_WORKSPACE:-$PROFILE_APEX_WORKSPACE}"
+
+  export PROFILE_PUBLISHER_ENABLED="${profile_pub_enabled:-false}"
+  export PROFILE_PUBLISHER_CONTAINER_NAME="${profile_pub_c_name:-oracle-publisher-dev}"
+  export PROFILE_PUBLISHER_HTTP_PORT="${profile_pub_http:-9502}"
+  export PROFILE_PUBLISHER_HTTPS_PORT="${profile_pub_https:-9503}"
+  export PROFILE_PUBLISHER_RCU_PREFIX="${profile_pub_rcu:-OAS}"
+  export PROFILE_PUBLISHER_DOMAIN_NAME="${profile_pub_domain:-bi}"
+
+  export PUBLISHER_ENABLED="${PUBLISHER_ENABLED:-$PROFILE_PUBLISHER_ENABLED}"
+  export PUBLISHER_CONTAINER_NAME="${PUBLISHER_CONTAINER_NAME:-$PROFILE_PUBLISHER_CONTAINER_NAME}"
+  export PUBLISHER_HTTP_PORT="${PUBLISHER_HTTP_PORT:-$PROFILE_PUBLISHER_HTTP_PORT}"
+  export PUBLISHER_HTTPS_PORT="${PUBLISHER_HTTPS_PORT:-$PROFILE_PUBLISHER_HTTPS_PORT}"
 
   # ORDS URL resolution
   if [ -n "$ORDS_DOWNLOAD_URL" ]; then

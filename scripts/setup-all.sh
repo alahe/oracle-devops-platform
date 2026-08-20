@@ -331,12 +331,27 @@ export TNS_ADMIN="$SCRIPT_DIR/../config/tns_admin"
 
 # Parameetrite parsimine ja IS_ADB tuvastamine on sooritatud skripti alguses.
 
-if [ "${PUBLISHER_ENABLED:-false}" = "true" ] || [ "$MAIN_DB_PROFILE" = "publisher-free" ] || [ "$MAIN_DB_PROFILE" = "appinfra" ]; then
+# Dynamically evaluate active DB profiles to check if components.publisher.enabled=true
+ANY_PUB_ENABLED=false
+for inst in $(get_active_db_instances 2>/dev/null); do
+  pname=$(echo "$inst" | cut -d'|' -f2)
+  pfile="$SCRIPT_DIR/../config/profiles/databases/${pname}.yaml"
+  [ ! -f "$pfile" ] && pfile="$SCRIPT_DIR/../config/profiles/${pname}.yaml"
+  if [ -f "$pfile" ]; then
+    pub_en=$(awk '/publisher:/{flag=1;next}/sqlcl:|users:/{flag=0}flag' "$pfile" | parse_yaml_key "/dev/stdin" "enabled")
+    if [ "$pub_en" = "true" ]; then
+      ANY_PUB_ENABLED=true
+      break
+    fi
+  fi
+done
+
+if [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ]; then
   if [ "$SKIP_PUBLISHER" != "true" ]; then
     SKIP_PUBLISHER=false
     PUBLISHER_DB_HOST="${PUBLISHER_DB_HOST:-pub-db}"
   fi
-elif [ -z "$DB_PUBLISHER" ] && [ -z "$PUBLISHER_DB_HOST" ]; then
+else
   SKIP_PUBLISHER=true
 fi
 
@@ -400,7 +415,7 @@ if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; th
   echo -e "     ├─ Brauseri liides (HTTP): ${CYAN}http://localhost:${WEB_IDE_HTTP_PORT:-8090}${NC}"
   echo -e "     └─ Turvatud liides (HTTPS): ${CYAN}https://localhost:${WEB_IDE_HTTPS_PORT:-8449}${NC}"
 fi
-if [ "$SKIP_PUBLISHER" = "false" ] && { [ "${PUBLISHER_ENABLED:-false}" = "true" ] || [ "$MAIN_DB_PROFILE" = "publisher-free" ] || [ "$MAIN_DB_PROFILE" = "appinfra" ]; }; then
+if [ "$SKIP_PUBLISHER" = "false" ] && { [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ]; }; then
   echo -e "   - ${CYAN}${PUBLISHER_CONTAINER_NAME:-oracle-publisher-dev}${NC} (Analytics Publisher & Fusion Middleware)"
   echo -e "     ├─ Sihtbaas: ${CYAN}${PUBLISHER_DB_HOST:-pub-db}${NC} (${PUBLISHER_DB_SERVICE:-FREEPDB1})"
   echo -e "     ├─ Veebiliides (HTTP): ${CYAN}http://localhost:${PUBLISHER_HTTP_PORT:-9502}/xmlpserver${NC}"
@@ -1342,7 +1357,7 @@ echo -e "  7. Andmebaasi skeemi installeerimine: ${YELLOW}$STEP5_5_TIME (${STEP5
 echo -e "  8. APEX rakenduste paigaldus:         ${YELLOW}$STEP8_DEPLOY_TIME (${STEP8_DEPLOY_SECS:-0}s)${NC}"
 echo -e "  9. Hetktõmmise (Golden Snapshot) loomine:     ${YELLOW}$STEP9_TIME (${STEP9_SECS:-0}s)${NC}"
 
-if [ "$SKIP_PUBLISHER" = "false" ] && { [ "$PUBLISHER_ENABLED" = "true" ] || [ "$MAIN_DB_PROFILE" = "publisher-free" ] || [ "$MAIN_DB_PROFILE" = "appinfra" ]; }; then
+if [ "$SKIP_PUBLISHER" = "false" ] && { [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ]; }; then
   echo -e "\n${YELLOW}🚀 Paigaldan ja initsialiseerin Oracle Analytics Publisheri...${NC}"
   if [ -x "$SCRIPT_DIR/install-publisher.sh" ]; then
     "$SCRIPT_DIR/install-publisher.sh" || true
