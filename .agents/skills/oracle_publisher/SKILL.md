@@ -135,4 +135,5 @@ curl -s -u weblogic:"${PUBLISHER_PWD}" \
 - 🎥 **YouTube Koolitus / Video Tutorial:** [Developer Coaching - Pixel-Perfect Printing in Oracle APEX with Analytics Publisher](https://www.youtube.com/watch?v=EyJ_fjzFy3s&t=28s)
 - 📖 **Ametlik REST API Dokumentatsioon:** [Oracle Analytics Server REST API Endpoints](https://docs.oracle.com/en/middleware/bi/analytics-server/oap_rest_api/rest-endpoints.html)
 - 📘 **Ametlik Raportite Loogika & Disaini Juhend:** [Create Pixel-Perfect Reports in Oracle Analytics Server](https://docs.oracle.com/en/middleware/bi/analytics-server/create-pixel-perfect-reports.html)
+- 💻 **Töölaua Tööriistade Allalaadimise Juhend (Template Builder for Word/Excel):** [Download Desktop Tools for Publisher](https://docs.oracle.com/en/middleware/bi/analytics-server/user-publisher-oas/download-desktop-tools.html)
 
