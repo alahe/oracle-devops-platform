@@ -64,12 +64,11 @@ if [ -z "$BACKUP_FILE_NAME" ] && [ "$FORCE" = "false" ]; then
   fi
 
   # Lugege failid massiivi viisil, mis ühildub ka Bash 3-ga (macOS vaikimisi bash)
-  BACKUP_FILES=()
-  while IFS= read -r line; do
+  (cd "$BACKUP_DIR" && ls -t apex_proxy_oradata_*.tar.gz 2>/dev/null || true) | while IFS= read -r line; do
     if [ -n "$line" ]; then
       BACKUP_FILES+=("$line")
     fi
-  done < <(cd "$BACKUP_DIR" && ls -t apex_proxy_oradata_*.tar.gz 2>/dev/null || true)
+  done
 
   NUM_FILES=${#BACKUP_FILES[@]}
 

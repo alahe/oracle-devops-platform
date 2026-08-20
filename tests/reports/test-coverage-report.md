@@ -5,7 +5,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ---
 
-## 📅 Genereeritud: 2026-08-20 10:57:35
+## 📅 Genereeritud: 2026-08-20 15:28:21
 
 ---
 
@@ -27,6 +27,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 | **`start-containers.sh`** | ✅ Kaetud | [`test-script-start-containers.sh`](test-script-start-containers.sh),[`test-e2e-system.sh`](test-e2e-system.sh) |
 | **`test-local-ci.sh`** | ✅ Kaetud | [`test-script-test-local-ci.sh`](test-script-test-local-ci.sh),[`test-github-actions-local.sh`](test-github-actions-local.sh) |
 | **`test-standalone-ords-emulation.sh`** | ✅ Kaetud | [`test-script-test-standalone-ords-emulation.sh`](test-script-test-standalone-ords-emulation.sh) |
+| **`wget.sh`** | ✅ Kaetud | [`test-script-wget.sh`](test-script-wget.sh) |
 
 ---
 
@@ -62,7 +63,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ## 📈 Kokkuvõttev Mõõdik (Summary Metrics)
 
-- **Kogu skriptide arv (Total Scripts):** 37
-- **Testidega kaetud skripte (Covered Scripts):** 37
+- **Kogu skriptide arv (Total Scripts):** 38
+- **Testidega kaetud skripte (Covered Scripts):** 38
 - **Automaattestide kaetus (Test Coverage):** **100%**
 

@@ -123,9 +123,8 @@ else
 fi
 echo -e "   Profiil:   ${CYAN}${PROFILE_NAME:-$TARGET_PROFILE}${NC}"
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "${YELLOW}🎯 KUSTUTAMISELE SUUNATUD SIHTSEADISTUSED:${NC}"
 if [ "$COMPONENT" = "all" ]; then
-  while IFS='|' read -r container prof env_key; do
+  get_active_db_instances 2>/dev/null | while IFS='|' read -r container prof env_key; do
     [ -z "$container" ] && continue
     (
       load_db_profile "$prof" >/dev/null 2>&1 || true
@@ -136,7 +135,7 @@ if [ "$COMPONENT" = "all" ]; then
       echo -e "     ├─ Andmebaas: ${CYAN}localhost:${p_port}/${p_service}${NC}"
       echo -e "     └─ Volume: ${CYAN}${PROJECT_NAME}_${c_vol}_oradata${NC}"
     )
-  done < <(get_active_db_instances 2>/dev/null || true)
+  done
   load_web_ide_profile >/dev/null 2>&1 || true
   if [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
     echo -e "   - ${CYAN}${WEB_IDE_CONTAINER_NAME:-web-ide-dev}${NC} (Web IDE Profiil: ${YELLOW}${WEB_IDE_PROFILE:-web-ide-standard}${NC})"
@@ -239,7 +238,7 @@ case $COMPONENT in
     podman-compose "${COMPOSE_ARGS[@]}" --profile dev-ords down -v >> "$LOG_FILE" 2>&1 || true
     
     # 1. Kustutame dünaamiliselt kõik .env failis määratud aktiivsed konteinerid ja mahud
-    while IFS='|' read -r container prof env_key; do
+    get_active_db_instances 2>/dev/null | while IFS='|' read -r container prof env_key; do
       [ -z "$container" ] && continue
       cleanup_container "$container"
       cleanup_container "oracle-$container"
@@ -248,7 +247,7 @@ case $COMPONENT in
       cleanup_volume "${PROJECT_NAME}_${c_vol}_oradata"
       cleanup_volume "${PROJECT_NAME}_${c_vol}_data"
       rm -rf "$SCRIPT_DIR/../config/ords/${container}"
-    done < <(get_active_db_instances 2>/dev/null || true)
+    done
 
     cleanup_container "web-ide-dev"
     cleanup_container "ords-standalone-emulator"

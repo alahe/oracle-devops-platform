@@ -222,7 +222,7 @@ done
 echo -e "${CYAN}├─${NC} ${YELLOW}[Alamsamm 4.5.2]: Lisanduvad ühenduse andmed Walletisse (SEPS)...${NC}"
 echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}ootusaeg ~2s${NC}"
 
-while IFS='|' read -r cname prof env_key; do
+get_active_db_instances 2>/dev/null | while IFS='|' read -r cname prof env_key; do
   [ -z "$cname" ] && continue
   UPPER_NAME=$(echo "$cname" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
   
@@ -248,8 +248,9 @@ DB_${UPPER_NAME}_DEV|TEST_DEV|NORMAL"
 
     while IFS='|' read -r alias uname urole; do
       [ -z "$alias" ] && continue
+      
       pwd_var=""
-      if [ "$urole" = "SYSDBA" ] || [ "$uname" = "sys" ]; then
+      if [ "$uname" = "sys" ] || [ "$uname" = "SYS" ]; then
         pwd_var="$SYS_PWD"
       elif [ "$uname" = "APEX_PROXY_SCHEMA" ]; then
         pwd_var="$SCH_PWD"
@@ -330,7 +331,7 @@ cat << EOF > "$TNS_DIR/tnsnames.ora"
 # TNS Names Configuration for Host (Auto-generated: $(date))
 EOF
 
-while IFS='|' read -r cname prof env_key; do
+get_active_db_instances 2>/dev/null | while IFS='|' read -r cname prof env_key; do
   [ -z "$cname" ] && continue
   UPPER_NAME=$(echo "$cname" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
   (
@@ -413,7 +414,7 @@ APEX_PROXY_SCHEMA =
 
 EOF
   )
-done < <(get_active_db_instances 2>/dev/null)
+done
 
 CONTAINER_TNS_DIR="${TNS_DIR}_container"
 mkdir -p "$CONTAINER_TNS_DIR"

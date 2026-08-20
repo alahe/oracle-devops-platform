@@ -383,7 +383,7 @@ DB_SERVICE="${APEX_DB_SERVICE:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}"
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${CYAN}🚀 Oracle Free DB & APEX Full Automated Setup${NC}"
 echo -e "${YELLOW}🎯 TARGET CONFIGURATIONS (Aktiivsed Profiilid ja Sihtseadistused):${NC}"
-while IFS='|' read -r container prof env_key; do
+get_active_db_instances | while IFS='|' read -r container prof env_key; do
   [ -z "$container" ] && continue
   (
     load_db_profile "$prof" >/dev/null 2>&1 || true
@@ -407,7 +407,7 @@ while IFS='|' read -r container prof env_key; do
       fi
     fi
   )
-done < <(get_active_db_instances)
+done
 
 load_web_ide_profile >/dev/null 2>&1 || true
 if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
@@ -772,7 +772,7 @@ print_header "3" "Checking / Downloading APEX Software Packages..." "step3_apex_
 
 # Kogume kokku kõik aktiivsed APEX versioonid, mida andmebaasid vajavad
 APEX_VERSIONS=()
-while IFS='|' read -r container prof env_key; do
+get_active_db_instances 2>/dev/null | while IFS='|' read -r container prof env_key; do
   [ -z "$container" ] && continue
   ver=$(
     load_db_profile "$prof" >/dev/null 2>&1 || true
@@ -781,7 +781,7 @@ while IFS='|' read -r container prof env_key; do
     fi
   )
   [ -n "$ver" ] && APEX_VERSIONS+=("$ver")
-done < <(get_active_db_instances 2>/dev/null)
+done
 
 # Eemaldame duplikaadid
 UNIQUE_APEX_VERSIONS=($(echo "${APEX_VERSIONS[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
@@ -833,12 +833,12 @@ if [ "$IS_LOCAL" = "true" ]; then
   print_header "4" "Käivitan konteinerid ja ootan andmebaaside valmisolekut (Healthcheck)..." "step4_container_startup_seconds" "45s"
   UP_SERVICES=()
   CONTAINERS_TO_CHECK=()
-  while IFS='|' read -r cname prof env_key; do
+  get_active_db_instances | while IFS='|' read -r cname prof env_key; do
     [ -z "$cname" ] && continue
     CONTAINERS_TO_CHECK+=("$cname")
     sname="${cname#oracle-}"
     UP_SERVICES+=("$sname")
-  done < <(get_active_db_instances)
+  done
   
   LOCAL_COMPOSE_ARGS=("${COMPOSE_ARGS[@]}")
   load_web_ide_profile >/dev/null 2>&1 || true
@@ -882,7 +882,7 @@ if [ "$IS_LOCAL" = "true" ]; then
   done
 
   if [ "$SKIP_ORDS" = "false" ] && [ "$IS_ADB" = "false" ]; then
-    while IFS='|' read -r cname prof env_key; do
+    get_active_db_instances | while IFS='|' read -r cname prof env_key; do
       [ -z "$cname" ] && continue
       (
         load_db_profile "$prof" >/dev/null 2>&1 || true
@@ -906,7 +906,7 @@ if [ "$IS_LOCAL" = "true" ]; then
           echo -e "\n   ✅ ORDS teenuse konteiner ${GREEN}$ords_c_name${NC} on KÄIVITATUD!"
         fi
       )
-    done < <(get_active_db_instances)
+    done
   fi
 
   if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
@@ -1016,14 +1016,18 @@ while IFS='|' read -r c_name prof env_key; do
       echo -e "   ℹ️  Andmebaasil ${c_name} (Profiil: ${prof}) ei ole APEX paigaldus aktiivne."
     else
       echo -e "   🚀 [${c_name}]: Käivitan APEX ${PROFILE_APEX_VERSION:-26.1} paigalduse..."
-      INSTALL_ARGS=("--db" "$db_suffix" "--version" "${PROFILE_APEX_VERSION:-26.1}" "--port" "${PROFILE_DB_PORT}" "--service" "${PROFILE_DEFAULT_SERVICE}")
+      INSTALL_ARGS=()
+      if [ "$FORCE" = "true" ]; then
+        INSTALL_ARGS+=("--force")
+      fi
+      INSTALL_ARGS+=("--db" "$(echo "$c_name" | sed 's/^db-//' | tr '-' '_')" "--version" "${PROFILE_APEX_VERSION:-26.1}" "--port" "${PROFILE_DB_PORT}" "--service" "${PROFILE_DEFAULT_SERVICE}")
       if [ "${PROFILE_ORDS_ENABLED:-true}" = "false" ] || [ "$SKIP_ORDS" = "true" ]; then
         INSTALL_ARGS+=("--no-ords")
       fi
       "$SCRIPT_DIR/internal/install-apex.sh" "${INSTALL_ARGS[@]}"
     fi
   )
-done < <(get_active_db_instances 2>/dev/null)
+done
 
 # Konfiguratsiooni sünkroniseerimine ja REST-aktiveerimine on viidud üle SQLcl Projects (Database Application CI/CD) alla.
 
@@ -1040,10 +1044,10 @@ STEP5_5_LOG="$LOG_DIR/liquibase_migration_$(date +%Y%m%d_%H%M%S).log"
 T7_1_START=$(date +%s)
 echo -e "${CYAN}├─${NC} ${YELLOW}[Alamsamm 7.1]: Algseadistan aktiivsete andmebaaside skeemid ja kasutajad...${NC}"
 
-while IFS='|' read -r c_name prof env_key; do
+get_active_db_instances 2>/dev/null | while IFS='|' read -r c_name prof env_key; do
   [ -z "$c_name" ] && continue
   "$SCRIPT_DIR/internal/init-db-instance.sh" "$prof" "$c_name" >> "$STEP5_5_LOG" 2>&1
-done < <(get_active_db_instances 2>/dev/null)
+done
 
 T7_1_SECS=$(($(date +%s) - T7_1_START))
 echo -e "${CYAN}│${NC}  ⏱  [Alamsamm 7.1 valmis: ${GREEN}$(format_duration $T7_1_SECS)${NC}]"
@@ -1052,7 +1056,7 @@ T7_3_START=$(date +%s)
 echo -e "${CYAN}├─${NC} ${YELLOW}[Alamsamm 7.3]: Käivitan Liquibase skeemi migratsioonid...${NC}"
 
 HAS_MIGRATION=false
-while IFS='|' read -r c_name prof env_key; do
+get_active_db_instances 2>/dev/null | while IFS='|' read -r c_name prof env_key; do
   [ -z "$c_name" ] && continue
   db_suffix=$(echo "$c_name" | sed 's/^db-//' | tr '-' '_')
   UPPER_NAME=$(echo "$c_name" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
@@ -1081,7 +1085,7 @@ EOF
       exit $RC
     fi
   fi
-done < <(get_active_db_instances 2>/dev/null)
+done
 
 if [ "$HAS_MIGRATION" = "false" ]; then
   echo "📊 Liquibase migratsiooni asukohad ei leitud. Jätan vahele."
@@ -1532,7 +1536,7 @@ EOF
   echo -e "   - Kesta seadistus: ${GREEN}✅ Lisatud kesta integratsioon macOS (zsh) ja Linux (bash) kesta profiilidesse${NC}"
 
 else
-  while IFS='|' read -r container prof env_key; do
+  get_active_db_instances 2>/dev/null | while IFS='|' read -r container prof env_key; do
     [ -z "$container" ] && continue
     (
       load_db_profile "$prof" >/dev/null 2>&1 || true
@@ -1544,7 +1548,7 @@ else
       [ "$p_role" = "SYSDBA" ] && r_suffix=" as sysdba"
       echo -e "   - ${container}:   ${GREEN}sql ${p_admin}@localhost:${p_port}/${p_service}${r_suffix}${NC}"
     )
-  done < <(get_active_db_instances 2>/dev/null)
+  done
 fi
 echo ""
 echo -e "${YELLOW}📂 VS Code ühenduse manager (SQL Developer Connection):${NC}"

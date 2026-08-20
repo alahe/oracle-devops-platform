@@ -97,7 +97,7 @@ echo ""
 echo "⌛ Ootan andmebaaside käivitumist ja valmisolekut (Healthcheck)..."
 MAX_WAIT=600
 
-while IFS='|' read -r container prof env_key; do
+get_active_db_instances | while IFS='|' read -r container prof env_key; do
   [ -z "$container" ] && continue
   if podman container exists "$container" 2>/dev/null; then
     echo "Ootan konteinerit: $container..."
@@ -114,7 +114,7 @@ while IFS='|' read -r container prof env_key; do
     done
     echo -e "\n✅ $container on valmis (healthy)!"
   fi
-done < <(get_active_db_instances)
+done
 
 # 3. Kontrollime ORDS-i käivitumist (kui profiil on aktiivne)
 if [ -n "$PROFILE" ] && podman container exists "oracle-ords-dev" 2>/dev/null; then
