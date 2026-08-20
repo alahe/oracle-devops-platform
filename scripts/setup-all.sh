@@ -1329,6 +1329,14 @@ echo -e "     └─ APEX Patchi install (DB):       ${YELLOW}$(format_duration 
 echo -e "  7. Andmebaasi skeemi installeerimine: ${YELLOW}$STEP5_5_TIME (${STEP5_5_SECS}s)${NC}"
 echo -e "  8. APEX rakenduste paigaldus:         ${YELLOW}$STEP8_DEPLOY_TIME (${STEP8_DEPLOY_SECS:-0}s)${NC}"
 echo -e "  9. Hetktõmmise (Golden Snapshot) loomine:     ${YELLOW}$STEP9_TIME (${STEP9_SECS:-0}s)${NC}"
+
+if [ "$SKIP_PUBLISHER" = "false" ] && { [ "$PUBLISHER_ENABLED" = "true" ] || [ "$MAIN_DB_PROFILE" = "publisher-free" ] || [ "$MAIN_DB_PROFILE" = "appinfra" ]; }; then
+  echo -e "\n${YELLOW}🚀 Paigaldan ja initsialiseerin Oracle Analytics Publisheri...${NC}"
+  if [ -x "$SCRIPT_DIR/install-publisher.sh" ]; then
+    "$SCRIPT_DIR/install-publisher.sh" || true
+  fi
+fi
+
 echo "  ------------------------------------------------------------"
 echo -e "  ⌛ KOGU ÜLESSEADISTAMISE KESTUS:     ${GREEN}$TOTAL_MASTER_TIME (${TOTAL_MASTER_SECS}s)${NC}"
 echo -e "  📦 PAIGALDATUD TARKVARA VERSIOONID (DB QUERY):"
