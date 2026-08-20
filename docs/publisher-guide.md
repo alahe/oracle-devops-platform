@@ -69,10 +69,17 @@ Execution output is logged to `install_logs/publisher_patch_YYYYMMDD_HHMMSS.log`
 
 ## 6. Useful Resources & Video Tutorials
 
-- ⬇️ **Required Software Downloads:**
+- ⬇️ **Required Software Downloads (Oracle eDelivery):**
   - ☕ **Java JDK Download:** [Oracle Java Downloads](https://www.oracle.com/java/technologies/downloads/)
   - 🏢 **Fusion Middleware / WebLogic Server Download:** [Oracle WebLogic Server & FMW Installers](https://www.oracle.com/middleware/technologies/weblogic-server-installers-downloads.html)
   - 📊 **Analytics Publisher Download:** [Oracle Software Delivery Cloud (eDelivery)](https://edelivery.oracle.com/osdc/faces/SoftwareDelivery)
+
+### 📦 Oracle eDelivery Package Reference & Checksums
+
+| Package Name | File Name | Size | SHA-256 Checksum |
+| :--- | :--- | :--- | :--- |
+| **Oracle Analytics Server 26.01.0.0.0 for Linux x86-64** | `V1055080-01.zip` (`Oracle_Analytics_Server_2026_Linux`) | 4.2 GB | `A71C69A4CB0360B1D70AB26559018DD1487C37F5BA28F5DA3EF924D9B351B711` |
+| **Oracle Fusion Middleware 14c (14.1.2.0.0) Infrastructure** | `V1045135-01.zip` | 2.1 GB | `1AAE35167BDED101E7194AA3D75C26B292010035A36C289A3F90B663D84E68BD` |
 
 - 🎥 **YouTube Tutorial:** [Developer Coaching - Pixel-Perfect Printing in Oracle APEX with Analytics Publisher](https://www.youtube.com/watch?v=EyJ_fjzFy3s&t=28s)
 - 📕 **Official Complete PDF User Guide:** [Using Oracle Analytics Publisher in Oracle Analytics Server (PDF)](https://docs.oracle.com/en/middleware/bi/analytics-server/user-publisher-oas/using-oracle-analytics-publisher-oracle-analytics-server.pdf)

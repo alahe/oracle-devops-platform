@@ -27,7 +27,7 @@ fi
 echo "🚀 Building Oracle Analytics Publisher Image (${IMAGE_NAME}) using ${CONTAINER_CLI}..."
 
 # Check if installer binaries exist in binaries/publisher/ or target directory
-ZIP_FILE=$(find "$WORKSPACE_DIR/binaries/publisher" "$TARGET_DIR" -name "Oracle_Analytics_Server_Linux*.zip" 2>/dev/null | head -n 1 || true)
+ZIP_FILE=$(find "$WORKSPACE_DIR/binaries/publisher" "$TARGET_DIR" \( -name "Oracle_Analytics_Server*.zip" -o -name "V1055080-01.zip" -o -name "V1045135-01.zip" \) 2>/dev/null | head -n 1 || true)
 
 if [ -n "$ZIP_FILE" ] && [ -f "$ZIP_FILE" ]; then
   echo "ℹ️  Found Publisher installation package: $ZIP_FILE"
@@ -35,7 +35,7 @@ if [ -n "$ZIP_FILE" ] && [ -f "$ZIP_FILE" ]; then
     cp "$ZIP_FILE" "$TARGET_DIR/"
   fi
 else
-  echo "⚠️  WARNING: Oracle_Analytics_Server_Linux_${VERSION}.zip not found in binaries/publisher/ or $TARGET_DIR!"
+  echo "⚠️  WARNING: Oracle Analytics Server installer ZIP (e.g. V1055080-01.zip / Oracle_Analytics_Server_2026_Linux) not found in binaries/publisher/ or $TARGET_DIR!"
   echo "    Please place the Oracle Analytics Server installer ZIP file in binaries/publisher/ before building."
 fi
 

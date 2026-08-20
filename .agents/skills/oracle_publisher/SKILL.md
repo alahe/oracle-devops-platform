@@ -137,6 +137,13 @@ curl -s -u weblogic:"${PUBLISHER_PWD}" \
   - 🏢 **Fusion Middleware / WebLogic Server Allalaadimine:** [Oracle WebLogic Server & FMW Installers](https://www.oracle.com/middleware/technologies/weblogic-server-installers-downloads.html)
   - 📊 **Analytics Publisher Allalaadimine:** [Oracle Software Delivery Cloud (eDelivery)](https://edelivery.oracle.com/osdc/faces/SoftwareDelivery)
 
+### 📦 Oracle eDelivery Pakettide Kontrollsummad (Checksums & Files)
+
+| Paketi Nimi | Faili Nimi | Suurus | SHA-256 Kontrollsumma |
+| :--- | :--- | :--- | :--- |
+| **Oracle Analytics Server 26.01.0.0.0 for Linux x86-64** | `V1055080-01.zip` (`Oracle_Analytics_Server_2026_Linux`) | 4.2 GB | `A71C69A4CB0360B1D70AB26559018DD1487C37F5BA28F5DA3EF924D9B351B711` |
+| **Oracle Fusion Middleware 14c (14.1.2.0.0) Infrastructure** | `V1045135-01.zip` | 2.1 GB | `1AAE35167BDED101E7194AA3D75C26B292010035A36C289A3F90B663D84E68BD` |
+
 - 🎥 **YouTube Koolitus / Video Tutorial:** [Developer Coaching - Pixel-Perfect Printing in Oracle APEX with Analytics Publisher](https://www.youtube.com/watch?v=EyJ_fjzFy3s&t=28s)
 - 📕 **Ametlik Täielik Kasutusjuhend (PDF):** [Using Oracle Analytics Publisher in Oracle Analytics Server (PDF)](https://docs.oracle.com/en/middleware/bi/analytics-server/user-publisher-oas/using-oracle-analytics-publisher-oracle-analytics-server.pdf)
 - 🏗️ **Oracle Fusion Middleware 14.1.2 Infrastruktuuri Juhend:** [Oracle Fusion Middleware 14.1.2 Download, Installation, and Configuration Readme](https://docs.oracle.com/en/middleware/fusion-middleware/14.1.2/mstrd/download-installation-and-configuration-readme.html)
