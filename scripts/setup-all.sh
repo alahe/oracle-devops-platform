@@ -338,7 +338,7 @@ for inst in $(get_active_db_instances 2>/dev/null); do
   pfile="$SCRIPT_DIR/../config/profiles/databases/${pname}.yaml"
   [ ! -f "$pfile" ] && pfile="$SCRIPT_DIR/../config/profiles/${pname}.yaml"
   if [ -f "$pfile" ]; then
-    pub_en=$(awk '/publisher:/{flag=1;next}/sqlcl:|users:/{flag=0}flag' "$pfile" | parse_yaml_key "/dev/stdin" "enabled")
+    pub_en=$(awk '/publisher:/{flag=1;next}/ords:|apex:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
     if [ "$pub_en" = "true" ]; then
       ANY_PUB_ENABLED=true
       break
