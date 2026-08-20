@@ -77,19 +77,17 @@ Et arendaja saaks GitHub Action töövoogusid testida oma masinas ja sisevõrgus
 
 ## 3. Oracle Analytics Publisher (Pixel Perfect) Kohalik Käivitamine
 
-Analytics Publisheri (endise nimega BI Publisher / XML Publisher) kohalikuks testimiseks mõeldud konteiner ja haldusskriptid.
+**Staatus:** Teostatud & Valideeritud ✅  
+Detailne kasutusjuhend asub failis: 📄 **[docs/publisher-guide.md](publisher-guide.md)**.
 
 ### Tehniline teostus
-*   Kuna Oracle ei jaga Analytics Publisherist valmis avalikku Docker pilti, kasutatakse ehitamiseks [oracle/docker-images](https://github.com/oracle/docker-images) malle.
-*   Arendaja peab ühekorraselt alla laadima WebLogic ja OAS/Publisher binaries (ZIP), asetama need kausta ja käivitama ehitusskripti.
-*   Konteiner ühendub stardil meie olemasoleva `db-publisher` andmebaasiga (mis initsialiseeritakse RCU tööriista abil).
-*   Kasutajaliides on kättesaadav aadressil `http://localhost:9502/xmlpserver`.
-
-### Plussid ja miinused
-| Plussid | Miinused |
-| :--- | :--- |
-| **Lokaalne raportite disainimine:** Arendaja saab luua, testida ja muuta Pixel Perfect raporteid otse oma arvutis ilma ühise serveri koormamiseta. | **Äärmiselt suur ressursikulu:** OAS/Publisher konteiner vajab stabiilseks tööks **vähemalt 4 GB (soovitavalt 8 GB) vaba RAM-i**. |
-| **Offline ja VPN-vaba töö:** Võimalik töötada ja testida ilma võrguühenduseta ja täiesti sisevõrgu väliselt. | **Keeruline ehitus ja pikad stardiajad:** Pildi ehitamine võtab ca 20-30 minutit ja konteineri käivitumine ca 3-5 minutit. |
+*   **Kahekäivituse Mootor (Dual Execution Engine):**
+    - *Konteiner-režiim (Podman / Docker):* Kasutab ehitamiseks repositooriumi malli `docker/publisher/build-publisher-image.sh` (`oracle/analyticsserver:2025`, pordid `9502:9502`, `9503:9503`).
+    - *Natiivne Linux Server Režiim (Non-Podman VM):* Vaikne vastusefailiga paigaldus `./scripts/install-publisher.sh` ilma Podmanita toodanguserveritel (RHEL/Oracle Linux).
+*   **Eraldi Publisher DB & RCU skeemid:** Initsialiseerib RCU skeemid (`OAS_STB`, `OAS_CONFIG` jne) andmebaasis `db-publisher` (port `1533`).
+*   **ORDS & SQL Developer Web tugi:** Konfigureerib ORDS teenuse (`ords-publisher`, pordid `8089/8449`) andmebaasiliidesele, võimaldades SQL Developer Web (`_sdw`) kaudu hallata Publisheri andmemudeleid otse brauserist.
+*   **Automaatne Patchimine (`apply-publisher-patch.sh`):** Otsib kaustast `patches/` OPatch zip pakette ja rakendab need automaatselt nii konteineris kui ka natiivsel serveril.
+*   **Mõõdikud & Logimine:** Ajamõõtmine (`metrics/setup_benchmarks.json`) ja logid (`install_logs/publisher_install_*.log`).
 
 ---
 

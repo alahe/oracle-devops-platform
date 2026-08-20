@@ -1,7 +1,7 @@
 profile:
-  id: appinfra
-  name: appinfra
-  description: "Oracle Infrastructure DB for Oracle Analytics Publisher and Oracle Forms (RCU schemas, high processes=1000)."
+  id: publisher-free
+  name: publisher-free
+  description: "Dedicated Oracle Database & Analytics Publisher (Pixel Perfect) with RCU schemas and ORDS REST management."
   functionality: appinfra
   db_type: standard
   image_vendor: gvenzl
@@ -12,11 +12,10 @@ database:
   admin_user: sys
   admin_role: SYSDBA
   default_service: FREEPDB1
-  db_port: 1534
+  db_port: 1533
   wallet_required: false
   configure_tde: true
   encrypt_tablespaces: ALL
-  kafka_bootstrap_servers: "localhost:9092"
 
 components:
   ords:

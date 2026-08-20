@@ -99,8 +99,31 @@ services:
       - web_ide_data:/config
     restart: unless-stopped
 
+  # ---------------------------------------------------------------------------
+  # 6. Containerized Oracle Analytics Publisher (Pixel Perfect / BI Publisher)
+  # ---------------------------------------------------------------------------
+  publisher:
+    profiles:
+      - publisher
+    image: ${PUBLISHER_CONTAINER_IMAGE:-oracle/analyticsserver:2025}
+    container_name: ${PUBLISHER_CONTAINER_NAME:-oracle-publisher-dev}
+    ports:
+      - "${PUBLISHER_HTTP_PORT:-9502}:9502"
+      - "${PUBLISHER_HTTPS_PORT:-9503}:9503"
+    env_file:
+      - .env
+    environment:
+      - BI_DOMAIN_NAME=${PUBLISHER_DOMAIN_NAME:-bi}
+      - DB_HOST=${PUBLISHER_DB_HOST:-db-publisher}
+      - DB_PORT=${PUBLISHER_DB_PORT:-1533}
+      - DB_SERVICE=${PUBLISHER_DB_SERVICE:-FREEPDB1}
+    volumes:
+      - publisher_data:/u01/oracle/user_projects
+    restart: unless-stopped
+
 volumes:
   publisher_oradata:
+  publisher_data:
   apex_proxy_oradata:
   apex_images:
   apex_proxy_data:
