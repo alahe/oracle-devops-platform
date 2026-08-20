@@ -26,6 +26,11 @@ fi
 
 echo "🚀 Building Oracle Analytics Publisher Image (${IMAGE_NAME}) using ${CONTAINER_CLI}..."
 
+# Attempt automatic binary download if configured
+if [ -f "$WORKSPACE_DIR/scripts/internal/download-publisher-binary.sh" ]; then
+  "$WORKSPACE_DIR/scripts/internal/download-publisher-binary.sh" || true
+fi
+
 # Check if installer binaries exist in binaries/publisher/ or target directory
 ZIP_FILE=$(find "$WORKSPACE_DIR/binaries/publisher" "$TARGET_DIR" \( -name "Oracle_Analytics_Server*.zip" -o -name "V1055080-01.zip" -o -name "V1045135-01.zip" \) 2>/dev/null | head -n 1 || true)
 

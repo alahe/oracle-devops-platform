@@ -5,7 +5,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ---
 
-## 📅 Genereeritud: 2026-08-20 09:02:36
+## 📅 Genereeritud: 2026-08-20 10:57:35
 
 ---
 
@@ -40,6 +40,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 | **`internal/create-developer.sh`** | ✅ Kaetud | [`test-script-create-developer.sh`](test-script-create-developer.sh),[`test-internal-installers-and-helpers.sh`](test-internal-installers-and-helpers.sh) |
 | **`internal/create-wallet.sh`** | ✅ Kaetud | [`test-script-create-wallet.sh`](test-script-create-wallet.sh),[`test-internal-installers-and-helpers.sh`](test-internal-installers-and-helpers.sh),[`test-browser-login.sh`](test-browser-login.sh) |
 | **`internal/deploy-apex-apps.sh`** | ✅ Kaetud | [`test-script-deploy-apex-apps.sh`](test-script-deploy-apex-apps.sh),[`test-internal-installers-and-helpers.sh`](test-internal-installers-and-helpers.sh) |
+| **`internal/download-publisher-binary.sh`** | ✅ Kaetud | [`test-script-download-publisher-binary.sh`](test-script-download-publisher-binary.sh) |
 | **`internal/export-ci-secrets.sh`** | ✅ Kaetud | [`test-script-export-ci-secrets.sh`](test-script-export-ci-secrets.sh),[`test-github-actions-local.sh`](test-github-actions-local.sh) |
 | **`internal/generate-local-certs.sh`** | ✅ Kaetud | [`test-script-generate-local-certs.sh`](test-script-generate-local-certs.sh),[`test-e2e-system.sh`](test-e2e-system.sh) |
 | **`internal/generate-passwords.sh`** | ✅ Kaetud | [`test-script-generate-passwords.sh`](test-script-generate-passwords.sh),[`test-e2e-system.sh`](test-e2e-system.sh),[`test-password-generator.sh`](test-password-generator.sh) |
@@ -61,7 +62,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ## 📈 Kokkuvõttev Mõõdik (Summary Metrics)
 
-- **Kogu skriptide arv (Total Scripts):** 36
-- **Testidega kaetud skripte (Covered Scripts):** 36
+- **Kogu skriptide arv (Total Scripts):** 37
+- **Testidega kaetud skripte (Covered Scripts):** 37
 - **Automaattestide kaetus (Test Coverage):** **100%**
 

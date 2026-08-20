@@ -25,6 +25,7 @@ Analytics Publisher on integreeritud meie profiilipõhisesse süsteemi (`config/
 
 | Skript | Kirjeldus |
 | :--- | :--- |
+| **`./scripts/internal/download-publisher-binary.sh`** | Laadib automaatselt `V1055080-01.zip` / `V1045135-01.zip` (ettevõtte Artifactory peegeldusest `PUBLISHER_BINARY_URL` või eDelivery žetooniga `PUBLISHER_DOWNLOAD_TOKEN`). |
 | **`./docker/publisher/build-publisher-image.sh`** | Ehitab kohaliku konteineri pildi `oracle/analyticsserver:2025` repositooriumi mallidest. |
 | **`./scripts/install-publisher.sh`** | Algseadistab RCU skeemid (`init-publisher-rcu.sh`), ORDS liidesed (`init-publisher-ords.sh`) ja käivitab Publisheri. |
 | **`./scripts/apply-publisher-patch.sh`** | Otsib kaustast `patches/` OPatch zip pakette (nt `p39179920_publisher.zip`) ja rakendab need automaatselt. |

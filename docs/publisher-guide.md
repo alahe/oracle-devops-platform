@@ -39,7 +39,22 @@ components:
 
 ---
 
-## 3. Building the Container Image
+## 3. Automated Binary Downloads & Image Building
+
+The build system includes an automated binary downloader (`./scripts/internal/download-publisher-binary.sh`) that fetches `V1055080-01.zip` / `V1045135-01.zip` automatically before building:
+
+1. **Option 1: Corporate Artifactory / Mirror (Recommended for Enterprises)**  
+   Set the binary download URL in `.env`:
+   ```bash
+   PUBLISHER_BINARY_URL=https://artifactory.internal.repo/oracle/publisher/V1055080-01.zip
+   ```
+2. **Option 2: Oracle eDelivery Download Token**  
+   Set your session download token in `.env`:
+   ```bash
+   PUBLISHER_DOWNLOAD_TOKEN=U2NVaDRzTVJITUF5bWky...
+   ```
+3. **Option 3: Manual Placement**  
+   Place `V1055080-01.zip` or `Oracle_Analytics_Server_2026_Linux*.zip` directly in `binaries/publisher/`.
 
 Build the container image using the imported Oracle build templates:
 
