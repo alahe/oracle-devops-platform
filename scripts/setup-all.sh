@@ -525,21 +525,42 @@ if [ "${#APEX_VERSIONS[@]}" -gt 0 ]; then
 fi
 
 if [ "${#UNIQUE_APEX_VERSIONS[@]}" -gt 0 ]; then
-  mkdir -p "$WORKSPACE_DIR/binaries"
+  APEX_BIN_DIR="$WORKSPACE_DIR/binaries/apex"
+  mkdir -p "$APEX_BIN_DIR"
   for ver in "${UNIQUE_APEX_VERSIONS[@]}"; do
     VER_URL="${RESOLVED_APEX_URL}"
     ZIP_NAME=$(basename "$VER_URL")
-    ZIP_PATH="$WORKSPACE_DIR/binaries/$ZIP_NAME"
+    ZIP_PATH="$APEX_BIN_DIR/$ZIP_NAME"
 
-    if [ ! -f "$ZIP_PATH" ] || ! unzip -t "$ZIP_PATH" &>/dev/null; then
+    FOUND_APEX_ZIP=""
+    if [ -f "$ZIP_PATH" ] && unzip -t "$ZIP_PATH" &>/dev/null; then
+      FOUND_APEX_ZIP="$ZIP_PATH"
+    elif [ -f "$APEX_BIN_DIR/apex-latest.zip" ] && unzip -t "$APEX_BIN_DIR/apex-latest.zip" &>/dev/null; then
+      FOUND_APEX_ZIP="$APEX_BIN_DIR/apex-latest.zip"
+    elif [ -f "$APEX_BIN_DIR/apex_${ver}.zip" ] && unzip -t "$APEX_BIN_DIR/apex_${ver}.zip" &>/dev/null; then
+      FOUND_APEX_ZIP="$APEX_BIN_DIR/apex_${ver}.zip"
+    elif [ -f "$APEX_BIN_DIR/apex_${ver}_en.zip" ] && unzip -t "$APEX_BIN_DIR/apex_${ver}_en.zip" &>/dev/null; then
+      FOUND_APEX_ZIP="$APEX_BIN_DIR/apex_${ver}_en.zip"
+    elif [ -f "$WORKSPACE_DIR/binaries/$ZIP_NAME" ] && unzip -t "$WORKSPACE_DIR/binaries/$ZIP_NAME" &>/dev/null; then
+      FOUND_APEX_ZIP="$WORKSPACE_DIR/binaries/$ZIP_NAME"
+    elif [ -f "$WORKSPACE_DIR/binaries/apex-latest.zip" ] && unzip -t "$WORKSPACE_DIR/binaries/apex-latest.zip" &>/dev/null; then
+      FOUND_APEX_ZIP="$WORKSPACE_DIR/binaries/apex-latest.zip"
+    fi
+
+    if [ -n "$FOUND_APEX_ZIP" ]; then
+      echo "   ✅ Leitud olemasolev kohalik APEX tarkvarapakett: $(basename "$FOUND_APEX_ZIP")"
+      ZIP_PATH="$FOUND_APEX_ZIP"
+    else
       echo "   Laadin alla APEX $ver ($ZIP_NAME)..."
       rm -f "$ZIP_PATH"
       curl -sSL -k -o "$ZIP_PATH" "$VER_URL" || true
       if ! unzip -t "$ZIP_PATH" &>/dev/null; then
-        echo "   ⚠️  Allalaaditud fail ei ole kehtiv ZIP arhiiv. Kasutan kohalikku apex-latest.zip..."
+        echo "   ⚠️  Allalaaditud fail ei ole kehtiv ZIP arhiiv. Otsin kohalikku apex-latest.zip..."
         rm -f "$ZIP_PATH"
-        if [ -f "$WORKSPACE_DIR/binaries/apex-latest.zip" ] && unzip -t "$WORKSPACE_DIR/binaries/apex-latest.zip" &>/dev/null; then
-          cp "$WORKSPACE_DIR/binaries/apex-latest.zip" "$ZIP_PATH"
+        if [ -f "$APEX_BIN_DIR/apex-latest.zip" ] && unzip -t "$APEX_BIN_DIR/apex-latest.zip" &>/dev/null; then
+          ZIP_PATH="$APEX_BIN_DIR/apex-latest.zip"
+        elif [ -f "$WORKSPACE_DIR/binaries/apex-latest.zip" ] && unzip -t "$WORKSPACE_DIR/binaries/apex-latest.zip" &>/dev/null; then
+          ZIP_PATH="$WORKSPACE_DIR/binaries/apex-latest.zip"
         fi
       fi
     fi

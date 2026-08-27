@@ -116,7 +116,11 @@ fi
 
 APEX_URL="${APEX_DOWNLOAD_URL:-${RESOLVED_APEX_URL:-${PROFILE_APEX_DOWNLOAD_URL:-https://download.oracle.com/otn_software/apex/apex_26.1_en.zip}}}"
 APEX_ZIP_NAME=$(basename "$APEX_URL")
-APEX_ZIP="$SCRIPT_DIR/../../binaries/$APEX_ZIP_NAME"
+APEX_BIN_DIR="$SCRIPT_DIR/../../binaries/apex"
+APEX_ZIP="$APEX_BIN_DIR/$APEX_ZIP_NAME"
+[ ! -f "$APEX_ZIP" ] && [ -f "$SCRIPT_DIR/../../binaries/$APEX_ZIP_NAME" ] && APEX_ZIP="$SCRIPT_DIR/../../binaries/$APEX_ZIP_NAME"
+[ ! -f "$APEX_ZIP" ] && [ -f "$APEX_BIN_DIR/apex-latest.zip" ] && APEX_ZIP="$APEX_BIN_DIR/apex-latest.zip"
+[ ! -f "$APEX_ZIP" ] && [ -f "$SCRIPT_DIR/../../binaries/apex-latest.zip" ] && APEX_ZIP="$SCRIPT_DIR/../../binaries/apex-latest.zip"
 
 # 1. Lokaalsed paigalduse logid (ei lähe Git-i)
 LOG_DIR="$SCRIPT_DIR/../../install_logs"
@@ -355,7 +359,8 @@ get_apex_zip_version() {
   fi
 }
 
-BINARIES_DIR="$SCRIPT_DIR/../../binaries"
+BINARIES_DIR="$SCRIPT_DIR/../../binaries/apex"
+LEGACY_BIN_DIR="$SCRIPT_DIR/../../binaries"
 mkdir -p "$BINARIES_DIR"
 TARGET_APEX_ZIP=""
 
@@ -365,13 +370,19 @@ EXPECTED_ZIP="$BINARIES_DIR/$APEX_URL_ZIP_NAME"
 
 if [ -f "$EXPECTED_ZIP" ] && unzip -t "$EXPECTED_ZIP" &>/dev/null; then
   TARGET_APEX_ZIP="$EXPECTED_ZIP"
-  echo "Leitud olemasolev kohalik arhiiv $APEX_URL_ZIP_NAME."
+  echo "Leitud olemasolev kohalik arhiiv binaries/apex/$APEX_URL_ZIP_NAME."
 elif [ -f "$BINARIES_DIR/apex-latest.zip" ] && unzip -t "$BINARIES_DIR/apex-latest.zip" &>/dev/null; then
   TARGET_APEX_ZIP="$BINARIES_DIR/apex-latest.zip"
-  echo "Leitud olemasolev kohalik arhiiv apex-latest.zip."
+  echo "Leitud olemasolev kohalik arhiiv binaries/apex/apex-latest.zip."
 elif [ -f "$BINARIES_DIR/apex_latest.zip" ] && unzip -t "$BINARIES_DIR/apex_latest.zip" &>/dev/null; then
   TARGET_APEX_ZIP="$BINARIES_DIR/apex_latest.zip"
-  echo "Leitud olemasolev kohalik arhiiv apex_latest.zip."
+  echo "Leitud olemasolev kohalik arhiiv binaries/apex/apex_latest.zip."
+elif [ -f "$LEGACY_BIN_DIR/$APEX_URL_ZIP_NAME" ] && unzip -t "$LEGACY_BIN_DIR/$APEX_URL_ZIP_NAME" &>/dev/null; then
+  TARGET_APEX_ZIP="$LEGACY_BIN_DIR/$APEX_URL_ZIP_NAME"
+  echo "Leitud olemasolev kohalik arhiiv binaries/$APEX_URL_ZIP_NAME."
+elif [ -f "$LEGACY_BIN_DIR/apex-latest.zip" ] && unzip -t "$LEGACY_BIN_DIR/apex-latest.zip" &>/dev/null; then
+  TARGET_APEX_ZIP="$LEGACY_BIN_DIR/apex-latest.zip"
+  echo "Leitud olemasolev kohalik arhiiv binaries/apex-latest.zip."
 fi
 
 # 2. Kui lokaalselt sobivat zip faili ei ole, laadime alla profiili URL-ilt või apex-latest.zip URL-ilt
@@ -383,9 +394,9 @@ if [ -z "$TARGET_APEX_ZIP" ] || [ ! -f "$TARGET_APEX_ZIP" ]; then
     LATEST_URL="https://download.oracle.com/otn_software/apex/apex-latest.zip"
     TARGET_APEX_ZIP="$BINARIES_DIR/apex-latest.zip"
     if ! download_file "$LATEST_URL" "$TARGET_APEX_ZIP"; then
-      # 3. Kui ka latest URL ei toimi, otsime kaustast binaries/ kõrgeima versiooniga kehtivat zip-arhiivi
-      echo "⚠️  Eemalt allalaadimine ebaõnnestus. Otsin kaustast binaries/ kõrgeima versiooniga kehtivat ZIP-paketti..."
-      HIGHEST_ZIP=$(ls "$BINARIES_DIR"/apex*.zip 2>/dev/null | sort -rV | while read -r f; do unzip -t "$f" &>/dev/null && echo "$f" && break; done || true)
+      # 3. Kui ka latest URL ei toimi, otsime kaustast binaries/apex/ või binaries/ kõrgeima versiooniga kehtivat zip-arhiivi
+      echo "⚠️  Eemalt allalaadimine ebaõnnestus. Otsin kaustast binaries/apex/ kõrgeima versiooniga kehtivat ZIP-paketti..."
+      HIGHEST_ZIP=$(ls "$BINARIES_DIR"/apex*.zip "$LEGACY_BIN_DIR"/apex*.zip 2>/dev/null | sort -rV | while read -r f; do unzip -t "$f" &>/dev/null && echo "$f" && break; done || true)
       if [ -n "$HIGHEST_ZIP" ] && [ -f "$HIGHEST_ZIP" ]; then
         TARGET_APEX_ZIP="$HIGHEST_ZIP"
         echo "✅ Kasutan parimat kohalikku APEX paketti: $(basename "$HIGHEST_ZIP")"

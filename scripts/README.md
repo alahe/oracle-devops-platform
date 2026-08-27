@@ -121,7 +121,7 @@ Skript `./scripts/setup-all.sh` teostab kogu keskkonna täieliku paigalduse: lae
 ### 💡 Automaatne APEX ja ORDS tarkvarapakettide puhverdamine (`binaries/`)
 Skript `setup-all.sh` järgib tarkvarapakettide hankimisel nutikat lokaalse puhverdamise strateegiat:
 1. **ORDS pakett (`binaries/ords/`):** Kontrollitakse esmalt, kas kaustas `binaries/ords/` on olemas zip-fail (nt `ords-latest.zip`). Kui fail on olemas, kasutatakse seda otse. Kui fail puudub, laetakse vajalik versioon alla aktiivse YAML profiili parameetrist `PROFILE_ORDS_DOWNLOAD_URL` ja salvestatakse kausta `binaries/ords/`.
-2. **APEX pakett (`binaries/` ja `binaries/apex/`):** Tuvastatakse andmebaasi profiili nõutud APEX versioon. Kui sobilik zip-fail on lokaalselt olemas, kasutatakse seda; vastasel juhul laetakse see profiili URL-ilt alla.
+2. **APEX pakett (`binaries/apex/`):** Tuvastatakse andmebaasi profiili nõutud APEX versioon. Kontrollitakse esmalt kausta `binaries/apex/` (nt `apex-latest.zip`, `apex_26.1_en.zip`, `apex_24.2.zip`). Kui sobilik zip-fail on lokaalselt olemas, kasutatakse seda; vastasel juhul laetakse see profiili URL-ilt alla kausta `binaries/apex/`.
 3. Markerfaili `apex/.unzipped_source` abil jälgitakse, et vajadusel pakitaks lahti just uue versiooni failid.
 
 ### 🚀 Kiire paigaldus ja viirusetõrje (Microsoft Defender) optimeerimine

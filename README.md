@@ -315,7 +315,8 @@ Kogu detailne teave ja juhendid on jaotatud teemakohastesse failidesse. Kasuta a
 | 📊 **[tests/reports/scenario_benchmark_matrix.md](tests/reports/scenario_benchmark_matrix.md)** | 13 keskkonna stsenaariumi automaattestide võrdlusmaatriks. |
 | 📈 **[docs/oracle-free-db-monitoring.md](docs/oracle-free-db-monitoring.md)** | Andmebaasi kettamahu monitooring, Scheduler Jobid ja auditilogide hooldus. |
 | 📉 **[docs/oracle-free-db-initial-state.md](docs/oracle-free-db-initial-state.md)** | Andmebaasi kettamahu ja tablespace-ide mõõdetud algseis pärast paigaldust. |
-| 📦 **[docs/apex-apps-deployment.md](docs/apex-apps-deployment.md)** | APEX rakenduste automaatne järjestikuline importimine kaustast `binaries/`. |
+| 📦 **[binaries/README.md](binaries/README.md)** | Kohalike tarkvarapakettide (`apex/`, `ords/`, `extensions/`, `forms/`, `publisher/`) kataloog. |
+| 📦 **[docs/apex-apps-deployment.md](docs/apex-apps-deployment.md)** | APEX rakenduste automaatne järjestikuline importimine kaustast `binaries/apex_apps/`. |
 | 🌐 **[docs/standalone-ords.md](docs/standalone-ords.md)** | Eraldiseisva standalone ORDS-i paigaldusjuhend Linux serverisse. |
 | 🔌 **[docs/external-ords-publisher-setup.md](docs/external-ords-publisher-setup.md)** | Välise/olemasoleva ORDS serveri ja Publisher DB ühendusbasseini (pool) seadistus. |
 | 🗃️ **[docs/artifactory-setup.md](docs/artifactory-setup.md)** | Sisevõrgu Artifactory hoidla seadistamine tarkvara allalaadimiseks. |
