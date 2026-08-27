@@ -21,7 +21,7 @@ Kui soovid lisada ühenduse käsitsi `+` nupuga (nt DBeaver, IntelliJ, Basic-üh
     ```
 *   **APEX Proxy SYS parool:**
     ```bash
-    ./scripts/get-password.sh DB_APEX_PROXY_SYS
+    ./scripts/get-password.sh DB_PROXY_SYS
     ```
 *   **Publisher SYS parool:**
     ```bash
@@ -29,7 +29,7 @@ Kui soovid lisada ühenduse käsitsi `+` nupuga (nt DBeaver, IntelliJ, Basic-üh
     ```
 *   **Arendaja TEST_DEV parool:**
     ```bash
-    ./scripts/get-password.sh DB_TEST_DEV
+    ./scripts/get-password.sh DB_PROXY_DEV
     ```
 *   **Veebikasutaja TEST_WEB_USER parool:**
     ```bash
@@ -40,7 +40,7 @@ Kui soovid lisada ühenduse käsitsi `+` nupuga (nt DBeaver, IntelliJ, Basic-üh
     ```bash
     ./scripts/get-password.sh DB_LIS_SYS
     ```
-*   **LIS Arendaja LIS_DEV parool:**
+*   **LIS Arendaja TEST_DEV parool:**
     ```bash
     ./scripts/get-password.sh DB_LIS_DEV
     ```
@@ -111,17 +111,19 @@ Konteineri jaoks genereeritakse automaatselt isoleeritud konfiguratsiooni kaust 
 ### 🔌 Ühendamine SQLcl abil (Host-masinast)
 Kui `TNS_ADMIN` on seadistatud, saad andmebaasi sisse logida paroolivabalt kasutades järgmisi aliaseid:
 
-*   **APEX Proxy DB (SYS):**
+*   **APEX Proxy DB:**
     ```bash
-    sql /@db_apex_proxy_sys as sysdba
+    sql /@DB_PROXY_SYS as sysdba
+    sql /@DB_PROXY_DEV
     ```
-*   **Publisher DB (SYS):**
+*   **LIS Äribaas DB:**
     ```bash
-    sql /@db_publisher_sys as sysdba
+    sql /@DB_LIS_SYS as sysdba
+    sql /@DB_LIS_DEV
     ```
-*   **APEX Proxy DB (Test Arendaja `TEST_DEV`):**
+*   **Publisher DB:**
     ```bash
-    sql /@db_test_dev
+    sql /@DB_PUBLISHER_SYS as sysdba
     ```
 
 ### 📂 Ühendamine VS Code SQL Developer Extensionis (TNS & Wallet)

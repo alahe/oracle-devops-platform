@@ -123,7 +123,7 @@ Konteinerite käivituskiiruses ja esmases sooritusajas esineb oluline erinevus s
 | :--- | :--- | :--- |
 | **`docker.io/gvenzl/oracle-free:23-full-faststart`** | **~5 – 15 sekundit** | **FastStart:** Andmebaas (`FREEPDB1`) ja failisüsteem on pildi ehitamisel ette initsialiseeritud. Konteiner avab baasi koheselt mälus. |
 | **`container-registry.oracle.com/database/free:latest`** | **~3 – 6 minutit** | **Standard DBCA:** Esmakordsel käivitamisel ehitab ametlik Oracle pilt nullist andmebaasi (`CREATE DATABASE` / DBCA wizard). |
-| **APEX Mootori Paigaldus (`components.apex.enabled=true`)** | **+ 2 – 4 minutit** | APEX 24.2/26.2 paigaldamisel teostatakse täielik PL/SQL mootori DDL sisseõppimine (`@apexins.sql`). |
+| **APEX Mootori Paigaldus (`components.apex.enabled=true`)** | **+ 2 – 4 minutit** | APEX 26.1 paigaldamisel teostatakse täielik PL/SQL mootori DDL sisseõppimine (`@apexins.sql`). |
 
 > 💡 **Arendaja Soovitus:** Kiireks lokaalseks arenduseks ja automaattestideks eelistada `faststart` pilte (`gvenzl/oracle-free:23-full-faststart`). Ametlikku Oracle registri pilti (`container-registry.oracle.com/database/free:latest`) kasutada toodangulähedastes katsetes.
 

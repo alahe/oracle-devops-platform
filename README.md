@@ -121,7 +121,7 @@ graph TD
     end
 
     subgraph PODMAN_VORK ["Podman-Vork"]
-        ORDS_Dev --> DB_Proxy[db-apex-proxy: APEX 24.1]
+        ORDS_Dev --> DB_Proxy[db-apex-proxy: APEX 26.1]
         ORDS_Custom3 --> DB_Custom3[db-custom3: APEX 23.2]
     end
 
@@ -323,7 +323,7 @@ Kogu detailne teave ja juhendid on jaotatud teemakohastesse failidesse. Kasuta a
 | ☁️ **[docs/cloud-remote-deployment.md](docs/cloud-remote-deployment.md)** | Kaugpaigaldus OCI Always Free, Azure Free pilveserveritesse ning GitHub Actions CI/CD. |
 | 🔌 **[docs/components-and-remote-db.md](docs/components-and-remote-db.md)** | Komponentide eraldi käivitamise ja kaug-andmebaaside (Remote DB) seadistamise juhend. |
 | 📊 **[docs/setup-all-workflow.md](docs/setup-all-workflow.md)** | Paigaldusprotsessi voodiagramm ja arhitektuursed sammud (SQLcl fallback, idempotentsus). |
-| 📋 **[docs/backlog/README.md](docs/backlog/README.md)** | **Arenduse ja arhitektuuri modulaarne Backlog** (`todo/` ja `done/` ülesanded). |
+| 📋 **[backlog/README.md](backlog/README.md)** | **Arenduse ja arhitektuuri modulaarne Backlog** (`todo/` ja `done/` ülesanded). |
 | 🔮 **[docs/future-plans.md](docs/future-plans.md)** | Tulevaste laienduste, CI/CD, Web-IDE ja Analytics Publisheri analüüs ning plaanid. |
 
 > [!NOTE]

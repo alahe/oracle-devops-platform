@@ -2,10 +2,10 @@
 
 > [!NOTE]
 > **Tulevikuplaanid on reorganiseeritud modulaarseks Backlog süsteemiks:**
-> Kõik üksikud ülesanded, detailne arhitektuur ja elutsükkel asuvad nüüd kaustas **[`docs/backlog/`](backlog/README.md)**:
-> - 🟢 **Teostatud ülesanded:** [`docs/backlog/done/`](backlog/done/)
-> - 🟡 **Ootel / Kavandatavad ülesanded:** [`docs/backlog/todo/`](backlog/todo/)
-> - 📄 **Uue ülesande mall:** [`docs/backlog/template.md`](backlog/template.md)
+> Kõik üksikud ülesanded, detailne arhitektuur ja elutsükkel asuvad nüüd kaustas **[`backlog/`](../backlog/README.md)**:
+> - 🟢 **Teostatud ülesanded:** [`backlog/done/`](../backlog/done/)
+> - 🟡 **Ootel / Kavandatavad ülesanded:** [`backlog/todo/`](../backlog/todo/)
+> - 📄 **Uue ülesande mall:** [`backlog/template.md`](../backlog/template.md)
 
 See dokument koondab projekti **reaalse teostusauditi (Staatuse Kontroll)**, realiseeritud funktsionaalsuste nimekirja ning tegemata turvatäienduste ja toodangukeskkonna nõuete kava.
 
@@ -42,7 +42,7 @@ See dokument koondab projekti **reaalse teostusauditi (Staatuse Kontroll)**, rea
 | **2.10** | Keskne Auditilogi ja SIEM Integratsioon (Unified Auditing) | **❌ REALISEERIMATA** | Oracle Unified Auditing poliitikad ja logiforwarder |
 | **2.11** | WAF & OAuth2 / OIDC Entra-ID Lõiming REST API-dele | **🟡 OSALISELT REALISEERITUD** | Nginx WAF / ModSecurity ja ORDS REST OAuth2 Bearer kaitse |
 | **2.12** | Terminali Progressi ja Ajakulu Kompaktne Kuvamine | **🟡 PLAANIS (Disain)** | Töö edenemise näitamine ilma terminali ekraani risustamata ja skrollimiseta |
-| **2.13** | Future Plans Reorganiseerimine Modulaarseks Backlogiks | **🟡 PLAANIS** | Eraldi failid `docs/backlog/todo/` ja `docs/backlog/done/` kaustades |
+| **2.13** | Future Plans Reorganiseerimine Modulaarseks Backlogiks | **✅ REALISEERITUD** | Eraldi failid `backlog/todo/` ja `backlog/done/` kaustades |
 | **2.14** | `setup-all.sh` Blueprintide Nimekirja ja Info CLI Parameetrid | **🟡 PLAANIS** | `--list-blueprints` (`-lb`), `--show-blueprint` (`-sb`), `--search-blueprints` |
 
 ---
@@ -199,23 +199,23 @@ See dokument koondab projekti **reaalse teostusauditi (Staatuse Kontroll)**, rea
     Kuvada sammu alguses selge päis eeldatava ajaga ning mitte prindida ühtegi vahe-rida, vaid väljastada tulemus vahetult sammu lõppedes koos tegeliku ajakuluga (`⏱ Samm 6 valmis: 5m 12s`).  
     *Eelis:* Kõige puhtam terminali väljund.
 
-### 2.13 Future Plans Reorganiseerimine Modulaarseks Backlogiks (`docs/backlog/`)
-- **Staatus:** **🟡 PLAANIS (Kavandatud)**
+### 2.13 Future Plans Reorganiseerimine Modulaarseks Backlogiks (`backlog/`)
+- **Staatus:** **✅ REALISEERITUD**
 - **Eesmärk:** Asendada üksik pikk tulevikuplaanide fail modulaarse ja selgelt hallatava **Backlog süsteemiga**, kus igal arendusideel ja arhitektuursel täiendusel on oma spetsiifiline Markdown fail.
 - **Kataloogi struktuur:**
   ```text
-  docs/backlog/
+  backlog/
   ├── README.md               # Backlogi ülevaatemaatriks, reeglid ja indeks
   ├── todo/                   # Ootel / kavandatavad ideed ja ülesanded
-  │   ├── TASK-001-*.md
-  │   └── TASK-002-*.md
+  │   ├── TASK-018-*.md
+  │   └── TASK-019-*.md
   └── done/                   # Teostatud ja valideeritud ülesanded
-      ├── TASK-010-*.md
+      ├── TASK-001-*.md
       └── ...
   ```
 - **Elutsükkel & Automaatika:**
-  - Iga uus idee luuakse mallipõhiselt kausta `docs/backlog/todo/` (sisaldab probleemi kirjeldust, eesmärki, kavandatud lahendust, seoseid ja testimiskava).
-  - Kui funktsionaalsus realiseeritakse ja testid läbivad 100%, liigutatakse fail kausta `docs/backlog/done/`.
+  - Iga uus idee luuakse mallipõhiselt kausta `backlog/todo/` (sisaldab probleemi kirjeldust, eesmärki, kavandatud lahendust, seoseid ja testimiskava).
+  - Kui funktsionaalsus realiseeritakse ja testid läbivad 100%, liigutatakse fail kausta `backlog/done/`.
   - See tagab selge auditi ja versioonihalduse ajaloo iga funktsionaalsuse valmimise kohta.
 
 ### 2.14 `setup-all.sh` Blueprintide Nimekirja ja Info CLI Parameetrid

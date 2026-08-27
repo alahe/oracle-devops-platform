@@ -58,6 +58,82 @@ format_duration() {
 }
 
 # ----------------------------------------------------------------------------
+# 2.5 Custom Image Naming & In-DB Version Detection (Auto-Tagging)
+# ----------------------------------------------------------------------------
+format_custom_image_tag() {
+  local db_ver="${1:-23ai}"
+  local apex_ver="${2:-26.1}"
+  local ords_ver="${3:-}"
+  local flavor="${4:-}"
+
+  # Clean DB version (e.g. 23.4.0.24.05 -> 23ai or 23.4)
+  if [[ "$db_ver" =~ ^23\.[0-9] ]] || [ "$db_ver" = "23" ]; then
+    db_ver="23ai"
+  elif [[ "$db_ver" =~ ^19\.[0-9] ]] || [ "$db_ver" = "19" ]; then
+    db_ver="19c"
+  elif [[ "$db_ver" =~ ^21\.[0-9] ]] || [ "$db_ver" = "21" ]; then
+    db_ver="21c"
+  fi
+
+  # Clean APEX version (e.g. 26.1.0.123 -> 26.1)
+  if [[ "$apex_ver" =~ ^([0-9]+\.[0-9]+) ]]; then
+    apex_ver="${BASH_REMATCH[1]}"
+  fi
+
+  # Clean ORDS version (e.g. 26.2.2.r... -> 26.2)
+  if [ -n "$ords_ver" ] && [[ "$ords_ver" =~ ^([0-9]+\.[0-9]+) ]]; then
+    ords_ver="${BASH_REMATCH[1]}"
+  fi
+
+  local tag_result="$db_ver"
+  if [ -n "$flavor" ]; then
+    tag_result="${tag_result}-${flavor}"
+  fi
+
+  if [ -n "$apex_ver" ] && [ "$apex_ver" != "NONE" ]; then
+    tag_result="${tag_result}-apex${apex_ver}"
+  fi
+
+  if [ -n "$ords_ver" ] && [ "$ords_ver" != "NONE" ]; then
+    tag_result="${tag_result}-ords${ords_ver}"
+  fi
+
+  echo "$tag_result"
+}
+
+detect_container_db_versions() {
+  local c_name="$1"
+  [ -z "$c_name" ] && return 1
+
+  local cli="podman"
+  if ! command -v podman >/dev/null 2>&1 && command -v docker >/dev/null 2>&1; then
+    cli="docker"
+  fi
+
+  local db_info
+  db_info=$($cli exec -i "$c_name" sqlplus -s "sys/OraclePass2026Sys!@localhost:1521/FREEPDB1 as sysdba" << 'EOF' 2>/dev/null | grep -v -E "Connected to|Oracle Database|version" || echo ""
+SET FEEDBACK OFF
+SET HEADING OFF
+SET PAGESIZE 0
+SET VERIFY OFF
+SELECT (SELECT version_full FROM v$instance) || ':' ||
+       NVL((SELECT version FROM dba_registry WHERE comp_id = 'APEX'), 'NONE') || ':' ||
+       NVL((SELECT version FROM ords_metadata.ords_version WHERE ROWNUM = 1), 'NONE')
+FROM dual;
+EXIT;
+EOF
+  )
+
+  local raw_line
+  raw_line=$(echo "$db_info" | grep ":" | tr -d ' \r\n' | head -n 1)
+  if [ -z "$raw_line" ]; then
+    echo "23ai:26.1:NONE"
+  else
+    echo "$raw_line"
+  fi
+}
+
+# ----------------------------------------------------------------------------
 # 3. Benchmark Statistics Resolvers
 # ----------------------------------------------------------------------------
 get_step_stats() {
@@ -103,9 +179,109 @@ get_total_setup_stats() {
   get_step_stats "total_duration_seconds" "~15 minutit (kui pilte tõmmatakse esimest korda)" "setup_benchmarks_*.json"
 }
 
+get_blueprint_stats() {
+  local bp_id="$1"
+  local m_dir="$WORKSPACE_DIR/metrics"
+  local bp_file="$m_dir/blueprint_${bp_id}_benchmarks.json"
+  if [ ! -f "$bp_file" ]; then
+    echo ""
+    return 0
+  fi
+
+  python3 -c "
+import json, sys
+try:
+    data = json.load(open('$bp_file'))
+    avg = data.get('average_duration_seconds', 0)
+    min_d = data.get('min_duration_seconds', 0)
+    max_d = data.get('max_duration_seconds', 0)
+    cnt = data.get('runs_count', len(data.get('history', [])))
+    def fmt(s):
+        return f'{s}s' if s < 60 else f'{s//60}m {s%60}s'
+    if cnt > 0:
+        print(f'keskmine: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, mõõtmisi: {cnt})')
+except Exception:
+    pass
+" 2>/dev/null || echo ""
+}
+
+save_blueprint_benchmark() {
+  local bp_id="$1"
+  local duration_secs="$2"
+  [ -z "$bp_id" ] || [ -z "$duration_secs" ] && return 0
+  local m_dir="$WORKSPACE_DIR/metrics"
+  mkdir -p "$m_dir"
+  local bp_file="$m_dir/blueprint_${bp_id}_benchmarks.json"
+
+  python3 -c "
+import json, os, datetime
+p = '$bp_file'
+d = int('$duration_secs')
+now_str = datetime.datetime.now().isoformat()
+data = {'blueprint_id': int('$bp_id'), 'history': []}
+if os.path.exists(p):
+    try:
+        data = json.load(open(p))
+    except Exception:
+        pass
+hist = data.get('history', [])
+hist.append({'timestamp': now_str, 'duration_seconds': d})
+durations = [h.get('duration_seconds', 0) for h in hist if isinstance(h, dict) and 'duration_seconds' in h]
+data['history'] = hist
+data['runs_count'] = len(durations)
+if durations:
+    data['average_duration_seconds'] = int(sum(durations) / len(durations))
+    data['min_duration_seconds'] = min(durations)
+    data['max_duration_seconds'] = max(durations)
+with open(p, 'w') as f:
+    json.dump(data, f, indent=2)
+" 2>/dev/null || true
+}
+
 # ----------------------------------------------------------------------------
-# 4. Step Header & Progress Reporting
+# 3.5 Container Secret Helper (SEPS / Podman Secrets)
 # ----------------------------------------------------------------------------
+get_container_secret() {
+  local container="$1"
+  local name="$2"
+  local val=""
+
+  # 1. Otsene vaste saladuse nimele
+  val=$(podman secret inspect --showsecret "$name" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+
+  # 2. Konteineripõhised saladuste nimed (nt lis_db_sys_password, proxy_db_sys_password)
+  if [ -z "$val" ] && [ -n "$container" ]; then
+    local c_short=$(echo "$container" | sed 's/^db-//' | tr '-' '_')
+    val=$(podman secret inspect --showsecret "${c_short}_${name}" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+    [ -z "$val" ] && val=$(podman secret inspect --showsecret "${c_short}_db_${name}" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+    [ -z "$val" ] && val=$(podman secret inspect --showsecret "${container}_${name}" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+  fi
+
+  # 3. Käimasoleva konteineri /run/secrets/ failid
+  if [ -z "$val" ] && [ -n "$container" ] && podman container exists "$container" 2>/dev/null; then
+    val=$(podman exec "$container" cat "/run/secrets/$name" 2>/dev/null | tr -d '\r\n' || true)
+  fi
+
+  echo "$val"
+}
+
+# ----------------------------------------------------------------------------
+# 4. Terminal Cursor & Live Progress Engine
+# ----------------------------------------------------------------------------
+LIVE_TIMER_INTERVAL="${LIVE_TIMER_INTERVAL:-3}"
+
+hide_cursor() {
+  if [ -t 1 ] || [ -c /dev/tty ]; then
+    tput civis 2>/dev/null || printf "\033[?25l" 2>/dev/null || true
+  fi
+}
+
+restore_cursor() {
+  if [ -t 1 ] || [ -c /dev/tty ]; then
+    tput cnorm 2>/dev/null || printf "\033[?25h" 2>/dev/null || true
+  fi
+}
+
 print_header() {
   local step_num="$1"
   local title="$2"
@@ -159,15 +335,18 @@ print_progress() {
   elif [ -t 1 ] || [ -t 2 ]; then
     printf "\r\033[K   %s %-32s [%s] %-7s" "$spin" "$msg" "$bar" "$dur_str" >&2
   else
-    # Non-interactive / CI / piped: print progress at reasonable intervals
-    if [ $((count % 30)) -eq 0 ] && [ "$count" -gt 0 ]; then
+    # Non-interactive / CI / piped: print progress at interval
+    local int_val="${LIVE_TIMER_INTERVAL:-3}"
+    int_val="${int_val//[^0-9]/}"
+    [ -z "$int_val" ] || [ "$int_val" -le 0 ] && int_val=3
+    if [ $((count % (int_val * 10))) -eq 0 ] && [ "$count" -gt 0 ]; then
       echo "   ⏳ [Progress] ${msg}... kestus: ${dur_str}"
     fi
   fi
 }
 
 clear_progress_line() {
-  if [ -t 1 ] || [ -t 2 ]; then
+  if [ -t 1 ] || [ -t 2 ] || [ -c /dev/tty ]; then
     printf "\r\033[K" >&2
   fi
 }
@@ -179,7 +358,11 @@ run_with_live_timer() {
   shift 3
   
   local start_time=$(date +%s)
-  
+  local interval="${LIVE_TIMER_INTERVAL:-3}"
+  interval="${interval//[^0-9]/}"
+  [ -z "$interval" ] || [ "$interval" -le 0 ] && interval=3
+
+  hide_cursor
   if [ -n "$log_file" ]; then
     "$@" > "$log_file" 2>&1 &
   else
@@ -190,12 +373,61 @@ run_with_live_timer() {
   while kill -0 "$pid" 2>/dev/null; do
     local elapsed=$(( $(date +%s) - start_time ))
     print_progress "$msg" "$elapsed" "$est_max"
-    sleep 1
+    sleep "$interval"
   done
   
   wait "$pid"
   local exit_code=$?
   clear_progress_line
+  restore_cursor
+  return $exit_code
+}
+
+run_substep() {
+  local sub_id="$1"
+  local title="$2"
+  local is_last="${3:-false}"
+  local log_file="${4:-}"
+  local est_secs="${5:-15}"
+  shift 5
+
+  local branch="├─"
+  [ "$is_last" = "true" ] && branch="└─"
+
+  local start_t=$(date +%s)
+  hide_cursor
+  if [ -n "$log_file" ]; then
+    "$@" > "$log_file" 2>&1 &
+  else
+    "$@" > /dev/null 2>&1 &
+  fi
+  local pid=$!
+
+  local interval="${LIVE_TIMER_INTERVAL:-3}"
+  interval="${interval//[^0-9]/}"
+  [ -z "$interval" ] || [ "$interval" -le 0 ] && interval=3
+
+  while kill -0 "$pid" 2>/dev/null; do
+    local elapsed=$(( $(date +%s) - start_t ))
+    local dur_str=$(format_duration "$elapsed")
+    if [ -t 1 ] || [ -c /dev/tty ]; then
+      printf "\r\033[K   ${CYAN}%s${NC} [Alamsamm %s]: %s... ⏳ %s" "$branch" "$sub_id" "$title" "$dur_str" >&2
+    fi
+    sleep "$interval"
+  done
+
+  wait "$pid"
+  local exit_code=$?
+  local total_dur=$(( $(date +%s) - start_t ))
+  local total_str=$(format_duration "$total_dur")
+  clear_progress_line
+  restore_cursor
+
+  if [ $exit_code -eq 0 ]; then
+    echo -e "   ${CYAN}${branch}${NC} [Alamsamm ${sub_id}]: ${title}... ${GREEN}✅ [Valmis: ${total_str}]${NC}"
+  else
+    echo -e "   ${CYAN}${branch}${NC} [Alamsamm ${sub_id}]: ${title}... ${RED}❌ [Viga koodiga ${exit_code}]${NC}"
+  fi
   return $exit_code
 }
 
@@ -240,11 +472,14 @@ register_child_pid() {
 }
 
 cleanup_child_processes() {
-  for pid in "${_ORACLE_REGISTERED_PIDS[@]}"; do
-    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-      kill -TERM "$pid" 2>/dev/null || kill -KILL "$pid" 2>/dev/null || true
-    fi
-  done
+  restore_cursor
+  if [ -n "${_ORACLE_REGISTERED_PIDS+x}" ] && [ ${#_ORACLE_REGISTERED_PIDS[@]} -gt 0 ]; then
+    for pid in "${_ORACLE_REGISTERED_PIDS[@]}"; do
+      if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+        kill -TERM "$pid" 2>/dev/null || kill -KILL "$pid" 2>/dev/null || true
+      fi
+    done
+  fi
   _ORACLE_REGISTERED_PIDS=()
 }
 

@@ -313,7 +313,7 @@ echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "$ALIAS" "$UNAM
     APEX_ADMIN_PWD=$(get_container_secret "$cname" "apex_admin_password" 2>/dev/null || true)
     [ -z "$APEX_ADMIN_PWD" ] && APEX_ADMIN_PWD="$SYS_PWD"
 
-    # Always generate container-specific aliases (both short DB_<NAME>_* and full DB_<CONTAINER>_*)
+    # Always generate canonical container-specific aliases (DB_<NAME>_*)
     podman exec -i \
       -e WALLET_PWD="$WALLET_PWD" \
       -e SYS_PWD="$SYS_PWD" \
@@ -324,50 +324,32 @@ echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "$ALIAS" "$UNAM
       -e APEX_LISTENER_PWD="$APEX_LISTENER_PWD" \
       -e APEX_ADMIN_PWD="$APEX_ADMIN_PWD" \
       -e UPPER_NAME="$UPPER_NAME" \
-      -e CNAME_UPPER="$CNAME_UPPER" \
       "$PROXY_CONTAINER" sh -c '
 export JAVA_HOME=/usr/java/latest
 export PATH=$JAVA_HOME/bin:$PATH
 WALLET_PATH="/opt/oracle/admin/FREE/wallet"
 
-for pfx in "$UPPER_NAME" "$CNAME_UPPER"; do
-  [ -z "$pfx" ] && continue
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_SYS" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_SYS" sys "$SYS_PWD" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_DBA_ADMIN" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_DBA_ADMIN" DBA_ADMIN "$DBA_PWD" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_SCHEMA" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_SCHEMA" "${APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}" "$SCH_PWD" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_DEV" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_DEV" "${TEST_DEV_USER:-TEST_DEV}" "$DEV_PWD" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_VIEWER" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_VIEWER" TEST_VIEWER "$VIEWER_PWD" >/dev/null 2>&1 || true
+pfx="$UPPER_NAME"
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_SYS" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_SYS" sys "$SYS_PWD" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_DBA_ADMIN" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_DBA_ADMIN" DBA_ADMIN "$DBA_PWD" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_SCHEMA" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_SCHEMA" "${APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}" "$SCH_PWD" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_DEV" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_DEV" "${TEST_DEV_USER:-TEST_DEV}" "$DEV_PWD" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_VIEWER" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_VIEWER" TEST_VIEWER "$VIEWER_PWD" >/dev/null 2>&1 || true
 
-  # System & Web credentials per database
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_APEX_ADMIN" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_APEX_ADMIN" "ADMIN" "$APEX_ADMIN_PWD" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_APEX_PUBLIC_USER" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_APEX_PUBLIC_USER" "APEX_PUBLIC_USER" "$APEX_LISTENER_PWD" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_APEX_LISTENER" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_APEX_LISTENER" "APEX_LISTENER" "$APEX_LISTENER_PWD" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_ORDS_PUBLIC_USER" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_ORDS_PUBLIC_USER" "ORDS_PUBLIC_USER" "$APEX_LISTENER_PWD" >/dev/null 2>&1 || true
-done
-
-if [[ "$prof" == *"proxy"* ]] || [ "$cname" = "db-proxy" ] || [ "$cname" = "oracle-db-free" ]; then
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_APEX_PROXY_SYS" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_APEX_PROXY_SYS" sys "$SYS_PWD" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_DBA_ADMIN" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_DBA_ADMIN" DBA_ADMIN "$DBA_PWD" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_APEX_PROXY_SCHEMA" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_APEX_PROXY_SCHEMA" "${APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}" "$SCH_PWD" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "APEX_PROXY_SCHEMA" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "APEX_PROXY_SCHEMA" "${APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}" "$SCH_PWD" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_TEST_DEV" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_TEST_DEV" "${TEST_DEV_USER:-TEST_DEV}" "$DEV_PWD" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_TEST_VIEWER" >/dev/null 2>&1 || true
-  echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_TEST_VIEWER" TEST_VIEWER "$VIEWER_PWD" >/dev/null 2>&1 || true
-fi
+# System & Web credentials per database
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_APEX_ADMIN" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_APEX_ADMIN" "ADMIN" "$APEX_ADMIN_PWD" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_APEX_PUBLIC_USER" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_APEX_PUBLIC_USER" "APEX_PUBLIC_USER" "$APEX_LISTENER_PWD" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_APEX_LISTENER" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_APEX_LISTENER" "APEX_LISTENER" "$APEX_LISTENER_PWD" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_ORDS_PUBLIC_USER" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_ORDS_PUBLIC_USER" "ORDS_PUBLIC_USER" "$APEX_LISTENER_PWD" >/dev/null 2>&1 || true
 '
   )
 done
@@ -425,10 +407,9 @@ ${alias} =
 EOF
     done <<< "$USER_DEFS"
 
-    # Always generate container-specific aliases (both short DB_<NAME>_* and full DB_<CONTAINER>_*)
-    for pfx in "$UPPER_NAME" "$SHORT_NAME"; do
-      [ -z "$pfx" ] && continue
-      cat << EOF >> "$TNS_DIR/tnsnames.ora"
+    # Always generate canonical container-specific aliases (DB_<NAME>_*)
+    pfx="$SHORT_NAME"
+    cat << EOF >> "$TNS_DIR/tnsnames.ora"
 
 DB_${pfx}_SYS =
   (DESCRIPTION =
@@ -475,48 +456,6 @@ DB_${pfx}_VIEWER =
     )
   )
 EOF
-    done
-
-    if [[ "$prof" == *"proxy"* ]] || [ "$cname" = "db-proxy" ] || [ "$cname" = "oracle-db-free" ]; then
-      cat << EOF >> "$TNS_DIR/tnsnames.ora"
-
-DB_DBA_ADMIN =
-  (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = ${port}))
-    (CONNECT_DATA =
-      (SERVER = DEDICATED)
-      (SERVICE_NAME = ${service})
-    )
-  )
-
-DB_TEST_VIEWER =
-  (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = ${port}))
-    (CONNECT_DATA =
-      (SERVER = DEDICATED)
-      (SERVICE_NAME = ${service})
-    )
-  )
-
-DB_APEX_PROXY_SCHEMA =
-  (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = ${port}))
-    (CONNECT_DATA =
-      (SERVER = DEDICATED)
-      (SERVICE_NAME = ${service})
-    )
-  )
-
-APEX_PROXY_SCHEMA =
-  (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = ${port}))
-    (CONNECT_DATA =
-      (SERVER = DEDICATED)
-      (SERVICE_NAME = ${service})
-    )
-  )
-EOF
-    fi
   )
 done
 
@@ -557,8 +496,7 @@ EOF
 
 while IFS='|' read -r cname prof env_key; do
   [ -z "$cname" ] && continue
-  UPPER_NAME=$(echo "$cname" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
-  SHORT_NAME=$(echo "$cname" | sed 's/^db-//' | tr '-' '_' | tr '[:lower:]' '[:upper:]')
+  SHORT_NAME=$(echo "$cname" | sed 's/^db[-_]//' | tr '-' '_' | tr '[:lower:]' '[:upper:]')
   (
     load_db_profile "$prof" >/dev/null 2>&1 || true
     service="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
@@ -566,11 +504,10 @@ while IFS='|' read -r cname prof env_key; do
 
     USER_DEFS=$(python3 -c "import sys, yaml; data = yaml.safe_load(open('$yaml_file')); [print(f\"{u.get('wallet_alias')}|{u.get('username')}|{u.get('role','NORMAL')}\") for u in data.get('users',[]) if u.get('wallet_alias')]" 2>/dev/null || true)
 
-
     if [ -z "$USER_DEFS" ]; then
-      USER_DEFS="DB_${UPPER_NAME}_SYS|sys|SYSDBA
-DB_${UPPER_NAME}_SCHEMA|APEX_PROXY_SCHEMA|NORMAL
-DB_${UPPER_NAME}_DEV|TEST_DEV|NORMAL"
+      USER_DEFS="DB_${SHORT_NAME}_SYS|sys|SYSDBA
+DB_${SHORT_NAME}_SCHEMA|APEX_PROXY_SCHEMA|NORMAL
+DB_${SHORT_NAME}_DEV|TEST_DEV|NORMAL"
     fi
 
     while IFS='|' read -r alias uname urole; do
@@ -588,9 +525,8 @@ ${alias} =
 EOF
     done <<< "$USER_DEFS"
 
-    for pfx in "$UPPER_NAME" "$SHORT_NAME"; do
-      [ -z "$pfx" ] && continue
-      cat << EOF >> "$CONTAINER_TNS_DIR/tnsnames.ora"
+    pfx="$SHORT_NAME"
+    cat << EOF >> "$CONTAINER_TNS_DIR/tnsnames.ora"
 
 DB_${pfx}_SYS =
   (DESCRIPTION =
@@ -619,7 +555,6 @@ DB_${pfx}_DEV =
     )
   )
 EOF
-    done
   )
 done < <(get_active_db_instances 2>/dev/null)
 

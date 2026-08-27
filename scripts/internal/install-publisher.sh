@@ -144,9 +144,23 @@ if ! command -v podman >/dev/null 2>&1 && ! command -v docker >/dev/null 2>&1; t
 fi
 
 # Auto-resolve Pre-built Publisher Domain Image if available
+IS_PREBUILT_DOMAIN=false
 if [ -z "$PUBLISHER_CONTAINER_IMAGE" ]; then
-  if podman image exists "localhost/oracle-publisher-domain-prebuilt:2025" 2>/dev/null; then
+  if podman image exists "localhost/oracle-publisher-domain:2025-db23ai" 2>/dev/null; then
+    export PUBLISHER_CONTAINER_IMAGE="localhost/oracle-publisher-domain:2025-db23ai"
+    IS_PREBUILT_DOMAIN=true
+    echo -e "   ✅ Tuvastasin eel-konfigureeritud domeenipildi: ${CYAN}${PUBLISHER_CONTAINER_IMAGE}${NC}"
+  elif podman image exists "localhost/oracle-publisher-domain:2025" 2>/dev/null; then
+    export PUBLISHER_CONTAINER_IMAGE="localhost/oracle-publisher-domain:2025"
+    IS_PREBUILT_DOMAIN=true
+    echo -e "   ✅ Tuvastasin eel-konfigureeritud domeenipildi: ${CYAN}${PUBLISHER_CONTAINER_IMAGE}${NC}"
+  elif podman image exists "oracle-publisher-domain:2025" 2>/dev/null; then
+    export PUBLISHER_CONTAINER_IMAGE="oracle-publisher-domain:2025"
+    IS_PREBUILT_DOMAIN=true
+    echo -e "   ✅ Tuvastasin eel-konfigureeritud domeenipildi: ${CYAN}${PUBLISHER_CONTAINER_IMAGE}${NC}"
+  elif podman image exists "localhost/oracle-publisher-domain-prebuilt:2025" 2>/dev/null; then
     export PUBLISHER_CONTAINER_IMAGE="localhost/oracle-publisher-domain-prebuilt:2025"
+    IS_PREBUILT_DOMAIN=true
     echo -e "   ✅ Tuvastasin eel-konfigureeritud domeenipildi: ${CYAN}${PUBLISHER_CONTAINER_IMAGE}${NC}"
   elif podman image exists "localhost/oracle/analyticsserver:2025" 2>/dev/null; then
     export PUBLISHER_CONTAINER_IMAGE="localhost/oracle/analyticsserver:2025"
@@ -155,6 +169,8 @@ if [ -z "$PUBLISHER_CONTAINER_IMAGE" ]; then
     export PUBLISHER_CONTAINER_IMAGE="oracle/analyticsserver:2025"
     echo -e "   ✅ Tuvastasin olemasoleva Publisher konteineripildi: ${CYAN}${PUBLISHER_CONTAINER_IMAGE}${NC}"
   fi
+elif [[ "$PUBLISHER_CONTAINER_IMAGE" == *"domain"* ]] || [[ "$PUBLISHER_CONTAINER_IMAGE" == *"prebuilt"* ]]; then
+  IS_PREBUILT_DOMAIN=true
 fi
 
 ELAPSED_STEP3=0
@@ -190,8 +206,12 @@ if [ "$INSTALL_MODE" = "container" ]; then
 
   if ! podman ps --format "{{.Names}}" 2>/dev/null | grep -q "app-publisher"; then
     echo -e "🚀 Käivitan Analytics Publisher konteineri (${CYAN}app-publisher${NC})..."
-    # Free memory in Podman VM for WebLogic WLST domain creation
-    podman stop db-proxy db-lis 2>/dev/null || true
+    
+    # Conditional memory safeguard: only stop other DBs if NOT using prebuilt domain and parallel init is disabled
+    if [ "$IS_PREBUILT_DOMAIN" != "true" ] && [ "${ENABLE_PARALLEL_INIT:-false}" != "true" ]; then
+      echo -e "   🛡️  Säästan mälu WebLogic domeeni loomiseks (peatades ajutiselt lisa-andmebaasid)..."
+      podman stop db-proxy db-lis 2>/dev/null || true
+    fi
     podman rm -f app-publisher 2>/dev/null || true
     NET_NAME=$(podman network ls --format "{{.Name}}" 2>/dev/null | grep -v "bridge" | grep -v "host" | head -n 1)
     NET_NAME="${NET_NAME:-oracle-free-db-in-prod_default}"
@@ -244,8 +264,10 @@ if [ "$INSTALL_MODE" = "container" ]; then
   if [ -t 1 ] && [ -t 0 ] && [ -c /dev/tty ]; then
     printf "\r\033[K" >/dev/tty 2>/dev/null || true
   fi
-  # Restore non-essential DB containers after domain creation completes
-  podman start db-proxy db-lis 2>/dev/null || true
+  # Restore non-essential DB containers if they were stopped
+  if [ "$IS_PREBUILT_DOMAIN" != "true" ] && [ "${ENABLE_PARALLEL_INIT:-false}" != "true" ]; then
+    podman start db-proxy db-lis 2>/dev/null || true
+  fi
   END_STEP4=$(($(date +%s) - START_STEP4))
   ELAPSED_STEP4=$(( END_STEP4 - START_STEP4 ))
   echo -e "⏱  [Samm 10.4 valmis (WebLogic veebiliidese kättesaadavus): ${YELLOW}$(format_duration $ELAPSED_STEP4)${NC}]"

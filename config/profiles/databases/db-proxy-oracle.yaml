@@ -44,18 +44,18 @@ components:
 users:
   - username: sys
     role: SYSDBA
-    wallet_alias: DB_APEX_PROXY_SYS
+    wallet_alias: DB_PROXY_SYS
     color: "#E74C3C"
   - username: APEX_PROXY_SCHEMA
     role: NORMAL
-    wallet_alias: DB_APEX_PROXY_SCHEMA
+    wallet_alias: DB_PROXY_SCHEMA
     color: "#2980B9"
   - username: TEST_DEV
     role: NORMAL
     ords_enabled: true
     ords_alias: test_dev
     roles: [DB_DEVELOPER_ROLE]
-    wallet_alias: DB_TEST_DEV
+    wallet_alias: DB_PROXY_DEV
     color: "#F39C12"
   - username: TEST_WEB_USER
     role: NORMAL

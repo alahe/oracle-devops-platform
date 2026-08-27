@@ -24,6 +24,7 @@ scripts/
 │   ├── sqlcl.sh                     # Nutikas SQLcl CLI wrapper (SEPS Wallet /@ALIAS toega)
 │   ├── create-developer.sh          # Arendajakontode loomine ja paroolide taastamine
 │   ├── register-connections.sh      # VS Code Oracle SQL Developer ühenduste sünkroniseerimine
+│   ├── publish-image-to-artifactory.sh # Piltide avaldamine ettevõtte Artifactorysse & .env seadistus
 │   └── clean-logs.sh                # Paigalduslogide ja ajutiste failide puhastus
 │
 ├── 📁 snapshots/                    # 📸 Andmebaasi hetktõmmiste (Golden Snapshots) haldus
@@ -77,30 +78,41 @@ Skript `./scripts/setup-all.sh` teostab kogu keskkonna täieliku paigalduse: lae
 
 **Süntaks:**
 ```bash
-./scripts/setup-all.sh [-b <1-13>] [-tb <1-13|LIST|all>] [-l] [-i] [--force | -y] [--no-publisher] [--no-ords] [--no-monitor-app]
+./scripts/setup-all.sh [-b <1-13>] [-tb <1-13|LIST|all>] [-lb] [-sb <1-13>] [--search <QUERY>] [--dry-run] [-ltr] [-i] [--force | -y] [--no-publisher] [--no-ords] [--no-monitor-app]
 ```
 
 **Parameetrite valikud:**
 *   **`-b <N>` / `--blueprint <N>`:** Toodangu ja tavaarenduse režiim. Aktiveerib täpselt **ühe** valitud blueprinti (1–13) ja jätkab olemasoleva baasi pealt (No-Reset / Säilitab andmed).
 *   **`-tb <LIST|all>` / `--test-blueprints`:** Automaattestimise ja CI/CD režiim. Teeb enne iga testi `reset-all.sh -y` puhta algseisu tagamiseks ja testib valitud blueprinti, komaga eraldatud nimekirja (`-tb 1,5,8`) või kõiki (`-tb all`).
-*   **`-l` / `--list-blueprints`:** Kuvab kõigi 13 toetatud blueprinti ASCII ülevaatetabeli ilma midagi käivitamata.
+*   **`-lb` / `-l` / `--list-blueprints`:** Kuvab kõigi 13 toetatud blueprinti dünaamilise ASCII ülevaatetabeli ilma midagi käivitamata.
+*   **`-sb <N>` / `--show-blueprint <N>`:** Kuvab valitud blueprinti `<N>` detailse ülevaate (plaanitavad konteinerid, pordid, APEX/ORDS seaded, RAM eelarve ja TLS nõuded).
+*   **`--search <QUERY>` / `--search-blueprints`:** Otsib ja filtreerib blueprinte märksõna järgi (nt `publisher`, `gvenzl`, `adb`, `web-ide`).
+*   **`--dry-run`:** Simuleerib käivitust ja kontrollib konfiguratsioone ilma tegelikku paigaldust tegemata (töötab nii `-b <N> --dry-run` kui ka `-tb 1,3,7 --dry-run` režiimis).
+*   **`-ltr` / `--list-test-reports`:** Kuvab kõigi 13 blueprinti testiaruannete (scenario reports) olekut kaustas `tests/reports/scenarios/`.
 *   **`-i` / `--select`:** Avab terminalis interaktiivse valikumenüü koos 30s taimeriga.
 *   `--force` / `-y`: Jätab vahele paigalduseelse kinnituse ja kettaruumi kontrolli küsimused (sobib automaattestideks ja CI/CD tööriistadele).
 *   `--no-publisher`: Jätab lokaalse Publisher andmebaasi (`db-publisher`) käivitamata ja seadistamata (säästab mälu).
-*   `--no-ords`: Jätab lokaalse ORDS teenuse käivitamata ja konfigureerimata (paigaldab ainult APEX-i andmebaasi poolele).
-*   `--no-monitor-app`: Jätab kaustas `binaries/apex_apps/` asuvate APEX rakenduste automaatse paigaldamise vahele.
+*   **`--from-snapshot` (TASK-018):** Taastab andmebaasi andmemahud enne käivitust eelnevalt salvestatud Golden Snapshotist (**kiirkäivitus ~30s**).
+*   **`--build-image`:** Salvestab andmebaasi pärast edukat paigaldust automaatselt kanooniliseks eelkonfigureeritud konteineripildiks (`localhost/oracle-free-apex:<TAG>`). Kui pilt on juba olemas, jäetakse loomine vahele.
+*   **`--parallel` (TASK-019):** Lubab multi-DB ja Publisheri paralleelse initsialiseerimise (eeldab vaba RAM $\ge$ 8 GB).
+*   **`--sequential` (TASK-019):** Sunnib range järjestikuse samm-sammulise paigalduse (vaikimisi turvaline režiim).
 
 **Näidiskäsud:**
 ```bash
 # 1. TOODANG JA TAVAARENDUS (Idempotentne / Säilitab Andmed):
 ./scripts/setup-all.sh -b 3             # Aktiveeri soovitatud 2-kihiline tootmisblueprint
 ./scripts/setup-all.sh --blueprint 7    # Aktiveeri Full Enterprise 4-kihiline stack
-./scripts/setup-all.sh -l               # Vaata kõigi 13 blueprinti tabelit
+./scripts/setup-all.sh -lb              # Vaata kõigi 13 blueprinti tabelit
+./scripts/setup-all.sh -sb 3            # Vaata blueprinti 3 detailset puud ja konteinereid
+./scripts/setup-all.sh --search pub     # Otsi Publisheriga seotud kavandeid
+./scripts/setup-all.sh -b 3 --dry-run   # Simuleeri käivitust ilma paigalduseta
 
 # 2. AUTOMAATTESTIMINE JA CI/CD (Puhas Algseis koos reset-all.sh -y):
 ./scripts/setup-all.sh -tb 3            # Testi üksikut blueprinti puhtalt lehelt
 ./scripts/setup-all.sh -tb 1,5,8,10     # Testi valitud blueprintide jada
 ./scripts/setup-all.sh -tb all          # Testi KÕIKI 13 blueprinti järjest
+./scripts/setup-all.sh -tb 1,3,7 --dry-run # Simuleeri ja valideeri teste paari sekundiga
+./scripts/setup-all.sh -ltr             # Vaata kõigi testiraportite olekut
 
 # 3. Interaktiivne täispaigaldus:
 ./scripts/setup-all.sh

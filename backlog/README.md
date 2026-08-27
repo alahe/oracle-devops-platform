@@ -7,7 +7,7 @@ See kataloog sisaldab projekti tsentraalset ja modulaarset **Backlog süsteemi**
 ## 🧭 Backlogi Struktuur ja Elutsükli Reeglid
 
 ```text
-docs/backlog/
+backlog/
 ├── README.md               # Backlogi reeglid, elutsükkel ja staatuse koondmaatriks
 ├── template.md             # Standardne mall uute ülesannete lisamiseks
 ├── todo/                   # Ootel / kavandamisel / teostamisel olevad ülesanded
@@ -19,7 +19,7 @@ docs/backlog/
 2. **Teostamine:** Kui ülesanne võetakse töösse, märgitakse selle staatus faili päises: `IN_PROGRESS`.
 3. **Valmimine ja Arhiveerimine:** Kui kood on realiseeritud, dokumenteeritud ja kõik testid (`tests/unit/`, `tests/integration/`) läbivad 100%, liigutatakse fail kausta `done/` käsuga:
    ```bash
-   mv docs/backlog/todo/TASK-XXX-*.md docs/backlog/done/
+   mv backlog/todo/TASK-XXX-*.md backlog/done/
    ```
 4. **Indeksi uuendamine:** Märgi tabelis staatus `✅ REALISEERITUD` ja uuenda viidet.
 
@@ -48,6 +48,13 @@ docs/backlog/
 | **015** | Viivitatud Tsentraalne Tervisekontrolli Arhitektuur | `Architecture` | [`TASK-015-deferred-health-checks.md`](done/TASK-015-deferred-health-checks.md) | **✅ REALISEERITUD** |
 | **016** | LIS Süsteemi Üldine Põhiarhitektuur (4-Kihiline Mudel) | `Architecture` | [`TASK-016-lis-4-tier-architecture.md`](done/TASK-016-lis-4-tier-architecture.md) | **✅ REALISEERITUD** |
 | **017** | Automaatne Versiooni Tuvastamine (DB, APEX, ORDS) | `Tooling` | [`TASK-017-auto-version-detection.md`](done/TASK-017-auto-version-detection.md) | **✅ REALISEERITUD** |
+| **026** | `setup-all.sh` Blueprintide Nimekirja ja Info CLI Parameetrid | `Tooling` | [`TASK-026-blueprint-cli-params.md`](done/TASK-026-blueprint-cli-params.md) | **✅ REALISEERITUD** |
+| **027** | Multi-DB SEPS Walleti & TNS Aliaste Sünkroniseerimine ja Ülevaatus | `Security` | [`TASK-027-multi-db-seps-wallet-and-tns-alignment.md`](done/TASK-027-multi-db-seps-wallet-and-tns-alignment.md) | **✅ REALISEERITUD** |
+| **028** | VS Code SQL Developer Ühenduste Sünkroonimine Walletiga & Test | `Tooling` | [`TASK-028-vscode-wallet-all-users-sync.md`](done/TASK-028-vscode-wallet-all-users-sync.md) | **✅ REALISEERITUD** |
+| **030** | SEPS Walleti, Terminali Aruande ja VS Code Ühenduste Kanooniline Ühtlustamine | `Architecture` | [`TASK-030-canonical-container-prefix-wallets.md`](done/TASK-030-canonical-container-prefix-wallets.md) | **✅ REALISEERITUD** |
+| **025** | Terminali Progressi, Ajakulu ja Blueprintide Ajalooliste Mõõdikute Süsteem | `Tooling` | [`TASK-025-compact-terminal-ux.md`](done/TASK-025-compact-terminal-ux.md) | **✅ REALISEERITUD** |
+| **018** | Paigalduse Ajakulu Optimeerimine (APEX DB Kiirendus 15m ➔ 1–2m) | `Performance` | [`TASK-018-apex-install-speedup.md`](done/TASK-018-apex-install-speedup.md) | **✅ REALISEERITUD** |
+| **019** | Analytics Publisheri & Multi-DB Paigalduse Kiirendus | `Performance` | [`TASK-019-publisher-speedup.md`](done/TASK-019-publisher-speedup.md) | **✅ REALISEERITUD** |
 
 ---
 
@@ -55,12 +62,10 @@ docs/backlog/
 
 | ID | Teema / Funktsionaalsus | Valdkond | Fail | Staatus |
 | :--- | :--- | :--- | :--- | :--- |
-| **018** | Paigalduse Ajakulu Optimeerimine (APEX DB Kiirendus 15m ➔ 1-2m) | `Performance` | [`TASK-018-apex-install-speedup.md`](todo/TASK-018-apex-install-speedup.md) | **🟡 NÕUAB OTSUSTAMIST** |
-| **019** | Analytics Publisheri & Multi-DB Paigalduse Kiirendus | `Performance` | [`TASK-019-publisher-speedup.md`](todo/TASK-019-publisher-speedup.md) | **🟡 NÕUAB OTSUSTAMIST** |
 | **020** | Oracle Cloud (OCI) Always Free Kaug-Paigalduse Katse | `Orchestration` | [`TASK-020-cloud-oci-deployment.md`](todo/TASK-020-cloud-oci-deployment.md) | **🟡 OSALISELT VALMIS** |
 | **021** | Automaatne TDE (Transparent Data Encryption) Tugi | `Security` | [`TASK-021-tde-encryption.md`](todo/TASK-021-tde-encryption.md) | **🟡 OSALISELT VALMIS** |
 | **022** | Loetav Juurfailisüsteem ja Hardening (`--read-only`) | `Security` | [`TASK-022-readonly-hardening.md`](todo/TASK-022-readonly-hardening.md) | **🟡 OSALISELT VALMIS** |
 | **023** | Keskne Auditilogi ja SIEM Integratsioon (Unified Auditing) | `Security` | [`TASK-023-unified-auditing-siem.md`](todo/TASK-023-unified-auditing-siem.md) | **❌ OOTEL** |
 | **024** | WAF & OAuth2 / OIDC Entra-ID Lõiming REST API-dele | `Security` | [`TASK-024-waf-oauth2-entra-id.md`](todo/TASK-024-waf-oauth2-entra-id.md) | **🟡 OSALISELT VALMIS** |
-| **025** | Terminali Progressi ja Ajakulu Kompaktne Kuvamine | `Tooling` | [`TASK-025-compact-terminal-ux.md`](todo/TASK-025-compact-terminal-ux.md) | **🟡 DISAIN** |
-| **026** | `setup-all.sh` Blueprintide Nimekirja ja Info CLI Parameetrid | `Tooling` | [`TASK-026-blueprint-cli-params.md`](todo/TASK-026-blueprint-cli-params.md) | **🟡 KAVANDATUD** |
+| **029** | Oracle Forms 14c Konteiner, Metaandmete Baas ja Profiilid | `Architecture` | [`TASK-029-oracle-forms-container-and-profiles.md`](todo/TASK-029-oracle-forms-container-and-profiles.md) | **🟡 KAVANDATUD** |
+| **031** | Ettevõtte Sise-Artifactory Live-Ühenduse ja Piltide Pushimise Valideerimine | `Tooling` | [`TASK-031-enterprise-artifactory-live-testing.md`](todo/TASK-031-enterprise-artifactory-live-testing.md) | **🟡 OOTEL (Võrk)** |

@@ -1,7 +1,7 @@
 {
-  "last_updated": "2026-08-27T09:32:03Z",
-  "total_duration_seconds": 305,
-  "total_duration_formatted": "5m 5s",
+  "last_updated": "2026-08-27T11:34:02Z",
+  "total_duration_seconds": 289,
+  "total_duration_formatted": "4m 49s",
   "parameters": {
     "exec_mode": "CONTAINER",
     "db_host": "localhost",
@@ -11,9 +11,9 @@
   "steps": {
     "step1_ords_setup_seconds": 0,
     "step2_download_unzip_seconds": 4,
-    "step3_copy_container_seconds": 10,
-    "step4_apex_engine_install_seconds": 290,
-    "step4_1_ords_config_seconds": 1,
+    "step3_copy_container_seconds": 9,
+    "step4_apex_engine_install_seconds": 275,
+    "step4_1_ords_config_seconds": 0,
     "step5_apex_patch_install_seconds": 0
   }
 }

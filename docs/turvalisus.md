@@ -39,12 +39,12 @@ graph TD
 
 ### A. Lokaalne arendus (`DEV_LOCAL` arvutis)
 *   **Mugavus ja offline-tugi:** Arendaja saab töötada täielikult ilma võrguühenduseta ja VPN-ita.
-*   **Autonoomia ja vähimate õiguste printsiip:** Iga andmebaasi instantsi puhul luuakse automaatselt kolm ettevalmistatud kasutajakontot koos paroolivaba Oracle Wallet (SEPS) ühendusega:
-    *   **1. DBA Administraator (`DBA_ADMIN`):** Administratiivsete tegevuste ja DDL/DML halduse konto (`DBA` roll), mis ennetab `SYS` kasutaja igapäevast kasutamist ja tekitab turvalisi käitumisharjumusi. Ühendus: `sql /@DB_DBA_ADMIN` või `sql /@DB_PUBLISHER_DBA_ADMIN`.
-    *   **2. Arendaja kasutaja (`TEST_DEV` / isiklik kasutaja):** Rakenduste ja skeemide igapäevaseks arenduseks mõeldud konto, millele on omistatud ametlik Oracle 23c/23ai **`DB_DEVELOPER_ROLE`** (lisaks `RESOURCE` ja `CREATE SESSION`). Ühendus: `sql /@DB_TEST_DEV`.
-    *   **3. Tava/Test vaataja (`TEST_VIEWER`):** Piiratud õigustega teostus- ja testkonto, millel on rangelt ainult kõigi skeemide lugemisõigus (`SELECT ANY TABLE`, `SELECT ANY DICTIONARY`, `READ ANY TABLE`). Vajadusel saab sellele kontole lisada täiendavaid spetsiifilisi õigusi. Ühendus: `sql /@DB_TEST_VIEWER`.
-    *   **APEX kasutaja:** Tööruumis `PROXY_WORKSPACE` luuakse samanimeline arendajakonto APEX-i arendustöödeks.
-    *   **VS Code automaatne ühendus:** Ühenduse seaded salvestatakse SQLcl-i vahendusel otse arendaja VS Code seadistustesse, et vältida paroolide lekitamist või manuaalset salvestamist.
+*   **Autonoomia ja vähimate õiguste printsiip:** Iga andmebaasi instantsi puhul luuakse automaatselt ettevalmistatud kasutajakontod koos paroolivaba Oracle Wallet (SEPS) ühendusega:
+    *   **1. DBA Administraator (`DBA_ADMIN`):** Administratiivsete tegevuste ja DDL/DML halduse konto (`DBA` roll), mis ennetab `SYS` kasutaja igapäevast kasutamist ja tekitab turvalisi käitumisharjumusi. Ühendus: `sql /@DB_LIS_DBA_ADMIN` või `sql /@DB_DB_LIS_DBA_ADMIN`.
+    *   **2. Arendaja kasutaja (`TEST_DEV` / isiklik kasutaja):** Rakenduste ja skeemide igapäevaseks arenduseks mõeldud konto, millele on omistatud ametlik Oracle 23c/23ai **`DB_DEVELOPER_ROLE`** (lisaks `RESOURCE` ja `CREATE SESSION`). Ühendus: `sql /@DB_LIS_DEV` või `sql /@DB_DB_LIS_DEV`.
+    *   **3. Tava/Test vaataja (`TEST_VIEWER`):** Piiratud õigustega teostus- ja testkonto, millel on rangelt ainult kõigi skeemide lugemisõigus (`SELECT ANY TABLE`, `SELECT ANY DICTIONARY`, `READ ANY TABLE`). Ühendus: `sql /@DB_LIS_VIEWER` või `sql /@DB_DB_LIS_VIEWER`.
+    *   **4. Dual Alias Tug:** SEPS Wallet toetab paralleelselt nii lühikesi (`DB_LIS_*`, `DB_PROXY_*`) kui täisnimega aliaseid (`DB_DB_LIS_*`, `DB_DB_PROXY_*`).
+    *   **5. VS Code täielik sünkroonsus (`register-connections.sh`):** Kõik andmebaasi kontod (`SYS`, `DBA_ADMIN`, `SCHEMA`, `DEV`, `VIEWER`) registreeritakse automaatselt VS Code Oracle SQL Developer laienduse kaustadesse koos salvestatud krüpteeritud paroolidega.
 *   **SSO möödapääs (Bypass):** Kui arendaja soovib ajutiselt testida lokaalset SSO-d, kuid ühendust pole, saab kasutada möödapääsu parameetrit: `&fsp_sso_login_override=y`.
 
 ### B. Jagatud arenduskeskkond (`DEV` serveris)

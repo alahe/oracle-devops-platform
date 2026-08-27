@@ -20,6 +20,9 @@ OVERRIDE_FILE="$WORKSPACE_DIR/podman-compose.override.yml"
 if [ -f "$SCRIPT_DIR/internal/common.sh" ]; then
   source "$SCRIPT_DIR/internal/common.sh"
 fi
+if [ -f "$SCRIPT_DIR/internal/blueprint-info.sh" ]; then
+  source "$SCRIPT_DIR/internal/blueprint-info.sh"
+fi
 
 # Parameetrite parsimine
 export FORCE=false
@@ -32,31 +35,7 @@ export IS_TEST_MODE=false
 export SELECTED_BLUEPRINT=""
 export TEST_BLUEPRINTS=""
 export INTERACTIVE_SELECT=false
-
-list_blueprints() {
-  echo -e "\n${CYAN}=========================================================================================================${NC}"
-  echo -e "${BOLD}🏗️   ORACLE DEVOPS PLATFORM — AMETLIKUD ARHITEKTUURSED KAVANDID (BLUEPRINTS)${NC}"
-  echo -e "${CYAN}=========================================================================================================${NC}"
-  printf "┌────┬──────────────────────────────────────────┬─────────────────────────────┬──────────────────────────────────────────────┐\n"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" "Nr" "Blueprint (Kavandi Fail)" "Käivitatavad Konteinerid" "Otstarve ja Kirjeldus"
-  printf "├────┼──────────────────────────────────────────┼─────────────────────────────┼──────────────────────────────────────────────┤\n"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" " 1" ".env.1-only-db-lis" "db-lis" "Ainult LIS DB ilma veebiteenusteta"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" " 2" ".env.2-db-lis-with-apex-ords" "db-lis, app-ords" "LIS DB + APEX 26.1 + ORDS (Kõik-ühes)"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" " 3" ".env.3-db-lis-apex-ords-with-proxy" "db-proxy, db-lis, app-ords" "🌟 VAIKIMISI: 2-Kihiline (Proxy + LIS)"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" " 4" ".env.4-only-app-publisher" "db-publisher" "Eraldiseisev Analytics Publisheri DB"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" " 5" ".env.5-only-ords" "app-ords" "Standalone ORDS Gateway kaug-andmebaasiga"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" " 6" ".env.6-ords-with-apex" "db-proxy, app-ords" "Proxy andmebaas + APEX + ORDS gateway"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" " 7" ".env.7-all-services-together" "3 DB-d, ords, publisher" "Täielik 4-Kihiline Ettevõtte Tootmisstack"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" " 8" ".env.8-gvenzl-dev-light" "db-lis-gvenzl" "Kergekaaluline Gerald Venzl DB CI/CD testiks"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" " 9" ".env.9-dev-workstation-with-web-ide" "db-lis, app-ords, web-ide" "Zero-Install Arendaja Töōkoht (Web IDE)"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" "10" ".env.10-hybrid-multi-vendor-db" "db-proxy-oracle, db-lis-gv" "Hübriidne (Oracle 23ai + Gvenzl) klaster"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" "11" ".env.11-cloud-adb-with-web-ide" "db-proxy-adb, ords, web-ide" "Pilve Autonomous DB emuleerimine + Web IDE"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" "12" ".env.12-publisher-gvenzl-with-web-ide" "db-pub-gvenzl, pub, web-ide" "Pixel-Perfect aruandlus kergel Gvenzl DB-l"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" "13" ".env.13-full-enterprise-sandbox-web-ide" "3 DB-d, ords, pub, web-ide" "Täielik 5-konteineriline pilvelabor"
-  printf "└────┴──────────────────────────────────────────┴─────────────────────────────┴──────────────────────────────────────────────┘\n"
-  echo -e "💡 ${YELLOW}Käivitamine toodangus/arenduses (ilma resetita):${NC}  ./scripts/setup-all.sh -b <1-13>"
-  echo -e "🧪 ${YELLOW}Käivitamine automaattestimises (puhta algseisuga):${NC} ./scripts/setup-all.sh -tb <1-13|all>\n"
-}
+export DRY_RUN=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -64,9 +43,37 @@ while [[ $# -gt 0 ]]; do
       export FORCE=true
       shift
       ;;
-    -l|--list|--list-blueprints|--list-scenarios)
-      list_blueprints
+    -l|--list|-lb|--list-blueprints|--list-scenarios)
+      print_blueprints_table ""
       exit 0
+      ;;
+    -sb|--show-blueprint|-ib|--info-blueprint)
+      val="$2"
+      show_blueprint_details "$val"
+      exit 0
+      ;;
+    -sb=*|--show-blueprint=*|-ib=*|--info-blueprint=*)
+      val="${1#*=}"
+      show_blueprint_details "$val"
+      exit 0
+      ;;
+    -search|--search|--search-blueprints|--find-blueprint)
+      val="$2"
+      print_blueprints_table "$val"
+      exit 0
+      ;;
+    -search=*|--search=*|--search-blueprints=*|--find-blueprint=*)
+      val="${1#*=}"
+      print_blueprints_table "$val"
+      exit 0
+      ;;
+    -ltr|--list-test-reports|--test-reports)
+      list_blueprint_test_reports
+      exit 0
+      ;;
+    --dry-run)
+      export DRY_RUN=true
+      shift
       ;;
     -i|--select|--interactive)
       export INTERACTIVE_SELECT=true
@@ -126,18 +133,62 @@ while [[ $# -gt 0 ]]; do
       export SKIP_WEB_IDE=true
       shift
       ;;
+    --from-snapshot)
+      export RESTORE_FROM_SNAPSHOT=true
+      shift
+      ;;
+    --apex-runtime|--runtime-only)
+      export APEX_RUNTIME_ONLY=true
+      shift
+      ;;
+    --build-image|--create-image)
+      export BUILD_IMAGE=true
+      shift
+      ;;
+    --parallel)
+      export ENABLE_PARALLEL_INIT=true
+      shift
+      ;;
+    --sequential)
+      export ENABLE_PARALLEL_INIT=false
+      shift
+      ;;
     *)
       shift
       ;;
   esac
 done
 
+# Dry-run simulatsiooni käsitlemine
+if [ "$DRY_RUN" = "true" ]; then
+  if [ -n "$TEST_BLUEPRINTS" ]; then
+    bp_list_to_test=""
+    if [ "$TEST_BLUEPRINTS" = "all" ] || [ "$TEST_BLUEPRINTS" = "ALL" ]; then
+      bp_list_to_test="1 2 3 4 5 6 7 8 9 10 11 12 13"
+    elif [[ "$TEST_BLUEPRINTS" == *","* ]]; then
+      bp_list_to_test=$(echo "$TEST_BLUEPRINTS" | tr ',' ' ')
+    else
+      bp_list_to_test="$TEST_BLUEPRINTS"
+    fi
+    for bp in $bp_list_to_test; do
+      simulate_blueprint_dry_run "$bp" true
+    done
+    exit 0
+  elif [ -n "$SELECTED_BLUEPRINT" ]; then
+    simulate_blueprint_dry_run "$SELECTED_BLUEPRINT" false
+    exit 0
+  else
+    simulate_blueprint_dry_run "3" false
+    exit 0
+  fi
+fi
+
 ENV_PATH="$WORKSPACE_DIR/.env"
 [ ! -f "$ENV_PATH" ] && ENV_PATH=".env"
 
 # Interaktiivne Blueprintide valik (kui .env puudub või kasutaja kutsus -i/--select)
 if { [ ! -f "$ENV_PATH" ] || [ "$INTERACTIVE_SELECT" = "true" ]; } && [ -z "$SELECTED_BLUEPRINT" ] && [ -z "$TEST_BLUEPRINTS" ] && [ "$FORCE" != "true" ] && [ -t 0 ]; then
-  list_blueprints
+  print_blueprints_table ""
   read -t 30 -p "👉 Vali blueprint [1-13] (Vaikimisi: 3): " user_choice || true
   user_choice="${user_choice:-3}"
   if ! [[ "$user_choice" =~ ^[0-9]+$ ]] || [ "$user_choice" -lt 1 ] || [ "$user_choice" -gt 13 ]; then
@@ -173,7 +224,12 @@ if [ -n "$TEST_BLUEPRINTS" ]; then
 
   BP_FILE=$(ls "$WORKSPACE_DIR/config/blueprints/.env.${TEST_BLUEPRINTS}-"* 2>/dev/null | head -n 1)
   if [ -n "$BP_FILE" ] && [ -f "$BP_FILE" ]; then
+    ACTIVE_BP_ID="$TEST_BLUEPRINTS"
+    planned_c=$(extract_blueprint_containers "$TEST_BLUEPRINTS" 2>/dev/null || echo "")
+    bp_hist_stats=$(get_blueprint_stats "$TEST_BLUEPRINTS" 2>/dev/null || echo "")
     echo -e "${CYAN}🧪 Test-moodus: Laen blueprinti ${TEST_BLUEPRINTS}: $(basename "$BP_FILE")${NC}"
+    [ -n "$planned_c" ] && echo -e "   📦 Plaanitavad Konteinerid: ${GREEN}${planned_c}${NC}"
+    [ -n "$bp_hist_stats" ] && echo -e "   ⏱️  Ajalooline ooteaeg: ${YELLOW}${bp_hist_stats}${NC}"
     
     if [ "${ALREADY_RESET:-false}" != "true" ]; then
       echo -e "${YELLOW}🧹 Test-moodus: Puhastan eelmise keskkonna (reset-all.sh -y)...${NC}"
@@ -193,7 +249,12 @@ fi
 if [ -n "$SELECTED_BLUEPRINT" ] && [ -z "$TEST_BLUEPRINTS" ]; then
   BP_FILE=$(ls "$WORKSPACE_DIR/config/blueprints/.env.${SELECTED_BLUEPRINT}-"* 2>/dev/null | head -n 1)
   if [ -n "$BP_FILE" ] && [ -f "$BP_FILE" ]; then
+    ACTIVE_BP_ID="$SELECTED_BLUEPRINT"
+    planned_c=$(extract_blueprint_containers "$SELECTED_BLUEPRINT" 2>/dev/null || echo "")
+    bp_hist_stats=$(get_blueprint_stats "$SELECTED_BLUEPRINT" 2>/dev/null || echo "")
     echo -e "${CYAN}🏗️  Aktiveerin arhitektuurse kavandi (Blueprint ${SELECTED_BLUEPRINT}): $(basename "$BP_FILE")${NC}"
+    [ -n "$planned_c" ] && echo -e "   📦 Plaanitavad Konteinerid: ${GREEN}${planned_c}${NC}"
+    [ -n "$bp_hist_stats" ] && echo -e "   ⏱️  Ajalooline ooteaeg: ${YELLOW}${bp_hist_stats}${NC}"
     echo -e "${GREEN}ℹ️  Toodangurežiim: Säilitan olemasolevad andmebaasi andmed ja volumed (No Reset).${NC}"
     cp "$BP_FILE" "$WORKSPACE_DIR/.env"
     ENV_PATH="$WORKSPACE_DIR/.env"
@@ -506,6 +567,11 @@ if [ "$IS_LOCAL" = "true" ]; then
   mkdir -p "$WORKSPACE_DIR/config/tns_admin"
   print_header "4" "Käivitan konteinerid ja ootan andmebaaside valmisolekut (Healthcheck)..." "step4_container_startup_seconds" "45s"
 
+  if [ "${RESTORE_FROM_SNAPSHOT:-false}" = "true" ] && [ -f "$SCRIPT_DIR/snapshots/restore-golden-snapshots.sh" ]; then
+    echo -e "${CYAN}📸 [TASK-018]: Taastan andmemahud eelnevalt salvestatud Golden Snapshotist...${NC}"
+    "$SCRIPT_DIR/snapshots/restore-golden-snapshots.sh" || true
+  fi
+
   LOCAL_COMPOSE_ARGS=("${COMPOSE_ARGS[@]}")
   load_web_ide_profile >/dev/null 2>&1 || true
   if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
@@ -574,6 +640,7 @@ for inst in $ACTIVE_INST_LIST; do
       echo -e "   🚀 [${c_name}]: Käivitan APEX ${PROFILE_APEX_VERSION:-26.1} paigalduse..."
       INSTALL_ARGS=()
       [ "$FORCE" = "true" ] && INSTALL_ARGS+=("--force")
+      [ "${APEX_RUNTIME_ONLY:-false}" = "true" ] && INSTALL_ARGS+=("--runtime-only")
       INSTALL_ARGS+=("--db" "$(echo "$c_name" | sed 's/^db-//' | tr '-' '_')" "--version" "${PROFILE_APEX_VERSION:-26.1}" "--port" "${PROFILE_DB_PORT}" "--service" "${PROFILE_DEFAULT_SERVICE}")
       if [ "${PROFILE_ORDS_ENABLED:-true}" = "false" ] || [ "$SKIP_ORDS" = "true" ]; then
         INSTALL_ARGS+=("--no-ords")
@@ -767,13 +834,21 @@ for inst in $(get_active_db_instances 2>/dev/null); do
   fi
   c_port="${c_port:-1521}"
   c_svc="${c_svc:-FREEPDB1}"
-  c_upper=$(echo "$c_name" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
+  c_short=$(echo "$c_name" | sed -E 's/^db[-_]//' | tr '-' '_' | tr '[:lower:]' '[:upper:]')
   
   echo -e "   📁 ${BOLD}${c_name}${NC} (localhost:${c_port}/${c_svc})"
-  echo -e "   │  ├── 🟢 ${BOLD}DB_${c_upper}_DEV${NC} (Arendaja konto — kood & skeemid)"
-  echo -e "   │  ├── 🟡 ${BOLD}DB_${c_upper}_VIEWER${NC} (Ainult lugemisõigus)"
-  echo -e "   │  ├── 🔴 ${BOLD}DB_${c_upper}_SYS${NC} (SYSDBA Administraator)"
-  echo -e "   │  └── 🔵 ${BOLD}DB_${c_upper}_DBA_ADMIN${NC} (DBA Haldur)"
+  echo -e "   │  ├── 🔴 ${BOLD}1. Sys (${c_name})${NC}               (SYSDBA -> sql /@DB_${c_short}_SYS as sysdba)"
+  echo -e "   │  ├── 🔵 ${BOLD}2. DBA_ADMIN (${c_name})${NC}         (DBA     -> sql /@DB_${c_short}_DBA_ADMIN)"
+  if [[ "$prof" == *"proxy"* ]] || [ "$c_name" = "db-proxy" ]; then
+    echo -e "   │  ├── 🟣 ${BOLD}3. APEX_PROXY_SCHEMA (${c_name})${NC} (Skeem   -> sql /@DB_${c_short}_SCHEMA)"
+    echo -e "   │  ├── 🟢 ${BOLD}4. TEST_DEV (${c_name})${NC}          (Arendaja-> sql /@DB_${c_short}_DEV)"
+    echo -e "   │  └── 🟡 ${BOLD}5. TEST_VIEWER (${c_name})${NC}       (Vaataja -> sql /@DB_${c_short}_VIEWER)"
+  elif [ "$c_name" = "db-publisher" ]; then
+    echo -e "   │  └── 🟡 ${BOLD}3. PUBLISHER_READER (${c_name})${NC}  (Vaataja -> sql /@DB_${c_short}_READER)"
+  else
+    echo -e "   │  ├── 🟢 ${BOLD}3. TEST_DEV (${c_name})${NC}          (Arendaja-> sql /@DB_${c_short}_DEV)"
+    echo -e "   │  └── 🟡 ${BOLD}4. TEST_VIEWER (${c_name})${NC}       (Vaataja -> sql /@DB_${c_short}_VIEWER)"
+  fi
 done
 
 echo -e "\n${CYAN}🔑 PAROOLIDE PÄRIMINE SEPS WALLETIST (Credentials Helper):${NC}"
@@ -782,19 +857,19 @@ echo -e "   👉 ${YELLOW}./scripts/get-password.sh <ALIAS>${NC}\n"
 echo -e "   Peamised veebi ja süsteemi aliased:"
 for inst in $(get_active_db_instances 2>/dev/null); do
   c_name=$(echo "$inst" | cut -d'|' -f1)
-  c_upper=$(echo "$c_name" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
+  c_short=$(echo "$c_name" | sed -E 's/^db[-_]//' | tr '-' '_' | tr '[:lower:]' '[:upper:]')
   echo -e "   • ${BOLD}${c_name}${NC}:"
-  echo -e "     - APEX Admin (INTERNAL): ./scripts/get-password.sh DB_${c_upper}_APEX_ADMIN"
-  echo -e "     - DEV arendaja parool:   ./scripts/get-password.sh DB_${c_upper}_DEV"
-  echo -e "     - SYS DBA parool:        ./scripts/get-password.sh DB_${c_upper}_SYS"
+  echo -e "     - APEX Admin (INTERNAL): ./scripts/get-password.sh DB_${c_short}_APEX_ADMIN"
+  echo -e "     - DEV arendaja parool:   ./scripts/get-password.sh DB_${c_short}_DEV"
+  echo -e "     - SYS DBA parool:        ./scripts/get-password.sh DB_${c_short}_SYS"
 done
 
 echo -e "\n${CYAN}💾 KÄSUREA KIIRLIGIPÄÄSUD (SQLcl SEPS Wallet Aliases):${NC}"
 for inst in $(get_active_db_instances 2>/dev/null); do
   c_name=$(echo "$inst" | cut -d'|' -f1)
-  c_upper=$(echo "$c_name" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
-  echo -e "   • sql /@DB_${c_upper}_DEV"
-  echo -e "   • sql /@DB_${c_upper}_SYS as sysdba"
+  c_short=$(echo "$c_name" | sed -E 's/^db[-_]//' | tr '-' '_' | tr '[:lower:]' '[:upper:]')
+  echo -e "   • sql /@DB_${c_short}_DEV"
+  echo -e "   • sql /@DB_${c_short}_SYS as sysdba"
 done
 
 echo ""
@@ -802,4 +877,56 @@ echo -e "${CYAN}================================================================
 echo -e "⏱   KOGU PAIGALDUSE KULUNUD AEG: ${GREEN}$TOTAL_MASTER_TIME${NC} (${TOTAL_MASTER_SECS}s)"
 echo -e "📝  Täielik paigalduslogi: [Logi](file://$LOG_FILE)"
 echo -e "📊  Git mõõdikud: [Mõõdikud](file://$WORKSPACE_DIR/metrics/setup_benchmarks.json)"
+[ -n "${ACTIVE_BP_ID:-}" ] && save_blueprint_benchmark "$ACTIVE_BP_ID" "$TOTAL_MASTER_SECS"
 echo -e "${CYAN}==================================================================${NC}\n"
+
+# ----------------------------------------------------------------------------
+# Valikuline: Konteineripildi loomine ja sildistamine (--build-image)
+# ----------------------------------------------------------------------------
+if [ "${BUILD_IMAGE:-false}" = "true" ] && [ "$IS_LOCAL" = "true" ]; then
+  echo -e "${CYAN}==================================================================${NC}"
+  echo -e "${BOLD}📦 EELKONFIGUREERITUD PILDI LOOMINE (--build-image)${NC}"
+  echo -e "${CYAN}==================================================================${NC}"
+
+  TARGET_CONTAINER=$(get_active_db_instances 2>/dev/null | grep -v "publisher" | head -n 1 | cut -d'|' -f1 || echo "db-proxy")
+  CONTAINER_CLI="podman"
+  if ! command -v podman >/dev/null 2>&1 && command -v docker >/dev/null 2>&1; then
+    CONTAINER_CLI="docker"
+  fi
+
+  if $CONTAINER_CLI container exists "$TARGET_CONTAINER" 2>/dev/null || [ "$DRY_RUN" = "true" ]; then
+    echo -e "   1. Tuvastan andmebaasist (${TARGET_CONTAINER}) siseversioonid..."
+    DETECTED_INFO=$(detect_container_db_versions "$TARGET_CONTAINER" 2>/dev/null || echo "23ai:26.1:NONE")
+    RAW_DB_VER=$(echo "$DETECTED_INFO" | cut -d':' -f1)
+    RAW_APEX_VER=$(echo "$DETECTED_INFO" | cut -d':' -f2)
+    RAW_ORDS_VER=$(echo "$DETECTED_INFO" | cut -d':' -f3)
+    [ "$RAW_ORDS_VER" = "NONE" ] && RAW_ORDS_VER=""
+
+    SEMANTIC_TAG=$(format_custom_image_tag "$RAW_DB_VER" "$RAW_APEX_VER" "$RAW_ORDS_VER")
+    TARGET_IMAGE="localhost/oracle-free-apex:${SEMANTIC_TAG}"
+
+    echo -e "      ├── Tuvastatud DB:   ${GREEN}${RAW_DB_VER:-23ai}${NC}"
+    echo -e "      ├── Tuvastatud APEX: ${GREEN}${RAW_APEX_VER:-26.1}${NC}"
+    echo -e "      └── Sihtpildi Sildis: ${CYAN}${TARGET_IMAGE}${NC}"
+
+    if $CONTAINER_CLI image exists "$TARGET_IMAGE" 2>/dev/null && [ "$DRY_RUN" != "true" ]; then
+      echo -e "\n   ${YELLOW}ℹ️  Pilt ${TARGET_IMAGE} on juba süsteemis olemas! Jätan pildi loomise vahele.${NC}"
+      echo -e "   💡 ${BOLD}Soovitus:${NC} Kui soovid pilti uuesti ehitada, kustuta vana pilt käsuga:"
+      echo -e "      👉 ${YELLOW}$CONTAINER_CLI rmi ${TARGET_IMAGE}${NC}"
+    else
+      echo -e "\n   2. Salvestan konteineri oleku immutatavaks pildiks..."
+      if [ "$DRY_RUN" = "true" ]; then
+        echo -e "      ${YELLOW}[DRY-RUN]${NC} $CONTAINER_CLI commit \"$TARGET_CONTAINER\" \"$TARGET_IMAGE\""
+        echo -e "      ${YELLOW}[DRY-RUN]${NC} $CONTAINER_CLI tag \"$TARGET_IMAGE\" \"localhost/oracle-free-apex:latest\""
+      else
+        $CONTAINER_CLI commit "$TARGET_CONTAINER" "$TARGET_IMAGE" >/dev/null
+        $CONTAINER_CLI tag "$TARGET_IMAGE" "localhost/oracle-free-apex:latest" >/dev/null 2>&1 || true
+        echo -e "      ${GREEN}✅ Pilt loodud: ${TARGET_IMAGE}${NC}"
+      fi
+
+      echo -e "\n   🚀 ${BOLD}Artifactorysse laadimise käsk:${NC}"
+      echo -e "      👉 ${YELLOW}./scripts/publish-image-to-artifactory.sh --registry \"artifactory.firma.ee/docker-local/oracle\" --image \"${TARGET_IMAGE}\" --update-env${NC}"
+    fi
+  fi
+  echo -e "${CYAN}==================================================================${NC}\n"
+fi

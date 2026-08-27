@@ -1,14 +1,14 @@
-# Blueprinti custom Testiaruanne (2026-08-27 12:33:30)
+# Blueprinti custom Testiaruanne (2026-08-27 19:07:05)
 
-- **Aeg ja Kuupäev:** 2026-08-27 12:33:30
-- **Kogu Paigalduse Kestus:** 13m 20s
+- **Aeg ja Kuupäev:** 2026-08-27 19:07:05
+- **Kogu Paigalduse Kestus:** 13m 17s
 - **Blueprinti Fail:** `config/blueprints/.env.custom-*`
 
 ---
 
 ## 1. ⏱ Ajakulu ja Tervisekontroll (Duration & Health)
 - **Tulemus:** ✅ Paigaldus ja tervisekontrollid läbitud 100% korrektselt.
-- **Kestus kokku:** 13m 20s
+- **Kestus kokku:** 13m 17s
 
 ---
 
@@ -16,9 +16,9 @@
 
 | Konteineri Nimi | CPU % | Mälukasutus / Limiit | RAM % |
 | :--- | :--- | :--- | :--- |
-| db-proxy | 22.28% | 532MB / 3.221GB | 16.51% |
-| db-lis | 72.65% | 665.3MB / 3.221GB | 20.65% |
-| app-ords | 30.20% | 554.2MB / 1.074GB | 51.62% |
+| db-proxy | 25.69% | 597.5MB / 3.221GB | 18.55% |
+| db-lis | 75.05% | 731MB / 3.221GB | 22.69% |
+| app-ords | 42.45% | 553MB / 1.074GB | 51.50% |
 
 ---
 
@@ -37,8 +37,8 @@
 | Konteineri Nimi | Staatus | Pordid |
 | :--- | :--- | :--- |
 | db-proxy | Up About a minute (healthy) | 127.0.0.1:1532->1521/tcp |
-| db-lis | Up 7 minutes (healthy) | 127.0.0.1:1533->1521/tcp |
-| app-ords | Up About a minute (starting) | 127.0.0.1:8088->8088/tcp, 127.0.0.1:8448->8448/tcp |
+| db-lis | Up 6 minutes (healthy) | 127.0.0.1:1533->1521/tcp |
+| app-ords | Up 55 seconds (starting) | 127.0.0.1:8088->8088/tcp, 127.0.0.1:8448->8448/tcp |
 
 ---
 
@@ -49,11 +49,11 @@
 | ORDS Root HTTP | `http://localhost:8088/ords/` | `HTTP 302` | N/A | ✅ OK |
 | ORDS Root HTTPS | `https://localhost:8448/ords/` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
 | ORDS Database Actions (Default) | `https://localhost:8448/ords/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
-| APEX Builder (PROXY) | `https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in` | `HTTP 400` | ⚠️ Self-Signed | ✅ OK |
-| APEX Instance Admin (PROXY) | `https://localhost:8448/ords/proxy/apex_admin` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
+| APEX Builder (PROXY) | `https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
+| APEX Instance Admin (PROXY) | `https://localhost:8448/ords/proxy/apex_admin` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
 | ORDS Database Actions (PROXY) | `https://localhost:8448/ords/proxy/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
-| APEX Builder (LIS) | `https://localhost:8448/ords/lis/r/apex/workspace-sign-in/oracle-apex-sign-in` | `HTTP 400` | ⚠️ Self-Signed | ✅ OK |
-| APEX Instance Admin (LIS) | `https://localhost:8448/ords/lis/apex_admin` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
+| APEX Builder (LIS) | `https://localhost:8448/ords/lis/r/apex/workspace-sign-in/oracle-apex-sign-in` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
+| APEX Instance Admin (LIS) | `https://localhost:8448/ords/lis/apex_admin` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
 | ORDS Database Actions (LIS) | `https://localhost:8448/ords/lis/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
 
 ---
@@ -73,25 +73,18 @@
 
 | SEPS Walleti Alias | Ühenduse Staatus | Tuvastatud Kasutaja & Baas |
 | :--- | :--- | :--- |
-| `APEX_PROXY_SCHEMA` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_APEX_PROXY_SCHEMA` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_APEX_PROXY_SYS` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_DB_LIS_DBA_ADMIN` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_DB_LIS_DEV` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_DB_LIS_SCHEMA` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_DB_LIS_SYS` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_DB_LIS_VIEWER` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_DB_PROXY_DBA_ADMIN` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_DB_PROXY_DEV` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_DB_PROXY_SCHEMA` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_DB_PROXY_SYS` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_DB_PROXY_VIEWER` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_DBA_ADMIN` | ✅ Ühendus Õnnestus | `SYS@FREE` |
 | `DB_LIS_APP` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_LIS_SYS` | ✅ Ühendus Õnnestus | `SYS@FREE` |
+| `DB_LIS_DBA_ADMIN` | ✅ Ühendus Õnnestus | `DBA_ADMIN@FREEPDB1        ` |
+| `DB_LIS_DEV` | ✅ Ühendus Õnnestus | `TEST_DEV@FREEPDB1         ` |
+| `DB_LIS_SCHEMA` | ✅ Ühendus Õnnestus | `APEX_PROXY_SCHEMA@FREEPDB1    ` |
+| `DB_LIS_SYS` | ✅ Ühendus Õnnestus | `SYS@FREEPDB1              ` |
+| `DB_LIS_VIEWER` | ✅ Ühendus Õnnestus | `TEST_VIEWER@FREEPDB1      ` |
+| `DB_PROXY_DBA_ADMIN` | ✅ Ühendus Õnnestus | `SYS@FREE` |
+| `DB_PROXY_DEV` | ✅ Ühendus Õnnestus | `SYS@FREE` |
+| `DB_PROXY_SCHEMA` | ✅ Ühendus Õnnestus | `SYS@FREE` |
+| `DB_PROXY_SYS` | ✅ Ühendus Õnnestus | `SYS@FREEPDB1              ` |
+| `DB_PROXY_VIEWER` | ✅ Ühendus Õnnestus | `SYS@FREE` |
 | `DB_PUBLISHER_READER` | ℹ️ Vahele Jäetud | `Publisher profiil pole aktiivne` |
-| `DB_TEST_DEV` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_TEST_VIEWER` | ✅ Ühendus Õnnestus | `SYS@FREE` |
 
 ### 💡 Parooli Pärimine Walletist
 Kui arendajal või administraatoril on vaja tekstilist parooli (nt DBeaveri, DataGripi või välise tööriista jaoks), saab selle turvaliselt pärida käsuga:

@@ -46,6 +46,7 @@ fi
 
 # Parameetrite parsimine
 SKIP_ORDS=false
+RUNTIME_ONLY=false
 TARGET_DB=""
 TARGET_VER=""
 TARGET_PORT=""
@@ -54,6 +55,7 @@ TARGET_SERVICE=""
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     --no-ords) SKIP_ORDS=true ;;
+    --runtime-only|--apex-runtime) RUNTIME_ONLY=true ;;
     --db) TARGET_DB="$2"; shift ;;
     --version) TARGET_VER="$2"; shift ;;
     --port) TARGET_PORT="$2"; shift ;;
@@ -606,8 +608,17 @@ EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
 
--- Run main APEX installation: @apexins.sql tablespace_apex tablespace_files tablespace_temp images
-@apexins.sql SYSAUX SYSAUX TEMP /i/
+-- TASK-018: Optimize DB Memory and PL/SQL Compiler for fast installation
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER SYSTEM SET pga_aggregate_target = 2G SCOPE = MEMORY';
+    EXECUTE IMMEDIATE 'ALTER SYSTEM SET sga_target = 3G SCOPE = MEMORY';
+    EXECUTE IMMEDIATE 'ALTER SYSTEM SET plsql_optimize_level = 2 SCOPE = MEMORY';
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+
+-- Run main APEX installation (${APEX_INSTALL_SQL:-apexins.sql}): @script tablespace_apex tablespace_files tablespace_temp images
+@$([ "$RUNTIME_ONLY" = "true" ] && echo "apxrtins.sql" || echo "apexins.sql") SYSAUX SYSAUX TEMP /i/
 
 EXIT;
 EOF
@@ -635,15 +646,27 @@ END;
 /
 ALTER USER APEX_PUBLIC_USER GRANT CONNECT THROUGH APEX_LISTENER;
 ALTER USER APEX_PUBLIC_USER GRANT CONNECT THROUGH APEX_REST_PUBLIC_USER;
+
+-- Ensure ORDS_METADATA and ORDS_PUBLIC_USER exist with required privileges
 BEGIN
     DECLARE
         v_cnt NUMBER;
+        v_apex_schema VARCHAR2(30);
     BEGIN
+        SELECT username INTO v_apex_schema FROM dba_users WHERE username LIKE 'APEX_%' AND username NOT LIKE '%PUBLIC%' AND username NOT LIKE '%LISTENER%' AND username NOT LIKE '%ROUTER%' AND ROWNUM = 1;
+        
+        SELECT COUNT(*) INTO v_cnt FROM dba_users WHERE username = 'ORDS_METADATA';
+        IF v_cnt = 0 THEN
+            EXECUTE IMMEDIATE 'CREATE USER ORDS_METADATA IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" DEFAULT TABLESPACE SYSAUX TEMPORARY TABLESPACE TEMP QUOTA UNLIMITED ON SYSAUX';
+            EXECUTE IMMEDIATE 'GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE PROCEDURE, CREATE SEQUENCE TO ORDS_METADATA';
+            EXECUTE IMMEDIATE 'ALTER USER ORDS_METADATA ACCOUNT UNLOCK';
+        END IF;
+
         SELECT COUNT(*) INTO v_cnt FROM dba_users WHERE username = 'ORDS_PUBLIC_USER';
         IF v_cnt = 0 THEN
-            EXECUTE IMMEDIATE 'CREATE USER ORDS_PUBLIC_USER IDENTIFIED BY "' || '${APEX_LISTENER_PASSWORD}' || '" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP';
+            EXECUTE IMMEDIATE 'CREATE USER ORDS_PUBLIC_USER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP';
         ELSE
-            EXECUTE IMMEDIATE 'ALTER USER ORDS_PUBLIC_USER IDENTIFIED BY "' || '${APEX_LISTENER_PASSWORD}' || '" ACCOUNT UNLOCK';
+            EXECUTE IMMEDIATE 'ALTER USER ORDS_PUBLIC_USER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" ACCOUNT UNLOCK';
         END IF;
         EXECUTE IMMEDIATE 'GRANT CREATE SESSION TO ORDS_PUBLIC_USER';
         EXECUTE IMMEDIATE 'ALTER USER ORDS_PUBLIC_USER ACCOUNT UNLOCK';
@@ -651,22 +674,20 @@ BEGIN
         EXECUTE IMMEDIATE 'ALTER USER APEX_REST_PUBLIC_USER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
         EXECUTE IMMEDIATE 'ALTER USER APEX_LISTENER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
         EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_ROUTER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
-        EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_ROUTER GRANT CONNECT THROUGH APEX_LISTENER';
-        EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_ROUTER GRANT CONNECT THROUGH APEX_REST_PUBLIC_USER';
-        EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_ROUTER GRANT CONNECT THROUGH APEX_PUBLIC_USER';
-    END;
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
 
--- Ensure ORDS PL/SQL Gateway Configuration mapping exists
-BEGIN
-    EXECUTE IMMEDIATE 'CREATE OR REPLACE VIEW ORDS_METADATA.PLSQL_GATEWAY_CONFIG AS SELECT runtime_user, plsql_gateway_user, comments, created_by, created_on, updated_by, updated_on FROM ORDS_METADATA.CFG_PLSQL_GATEWAYS';
-    EXECUTE IMMEDIATE 'GRANT SELECT ON ORDS_METADATA.PLSQL_GATEWAY_CONFIG TO ORDS_PUBLIC_USER';
-    EXECUTE IMMEDIATE 'GRANT SELECT ON ORDS_METADATA.PLSQL_GATEWAY_CONFIG TO APEX_PUBLIC_USER';
-    EXECUTE IMMEDIATE 'GRANT SELECT ON ORDS_METADATA.PLSQL_GATEWAY_CONFIG TO APEX_LISTENER';
-    EXECUTE IMMEDIATE 'INSERT INTO ORDS_METADATA.CFG_PLSQL_GATEWAYS (id, runtime_user, plsql_gateway_user, created_by, created_on, updated_by, updated_on) VALUES (10000, ''ORDS_PUBLIC_USER'', ''APEX_PUBLIC_USER'', ''SYS'', SYSDATE, ''SYS'', SYSDATE)';
-EXCEPTION WHEN OTHERS THEN NULL;
+        -- INHERIT PRIVILEGES grants
+        EXECUTE IMMEDIATE 'GRANT INHERIT PRIVILEGES ON USER APEX_PUBLIC_USER TO ' || v_apex_schema;
+        EXECUTE IMMEDIATE 'GRANT INHERIT PRIVILEGES ON USER ORDS_PUBLIC_USER TO ' || v_apex_schema;
+        EXECUTE IMMEDIATE 'GRANT INHERIT PRIVILEGES ON USER APEX_PUBLIC_USER TO APEX_PUBLIC_ROUTER';
+        EXECUTE IMMEDIATE 'GRANT INHERIT PRIVILEGES ON USER ORDS_PUBLIC_USER TO APEX_PUBLIC_ROUTER';
+
+        -- PL/SQL Gateway Config View
+        EXECUTE IMMEDIATE 'CREATE OR REPLACE VIEW ORDS_METADATA.PLSQL_GATEWAY_CONFIG AS SELECT ''ORDS_PUBLIC_USER'' AS runtime_user, ''APEX_PUBLIC_USER'' AS plsql_gateway_user, ''APEX Gateway'' AS comments, ''SYS'' AS created_by, SYSDATE AS created_on, ''SYS'' AS updated_by, SYSDATE AS updated_on FROM dual';
+        EXECUTE IMMEDIATE 'GRANT SELECT ON ORDS_METADATA.PLSQL_GATEWAY_CONFIG TO ORDS_PUBLIC_USER';
+        EXECUTE IMMEDIATE 'GRANT SELECT ON ORDS_METADATA.PLSQL_GATEWAY_CONFIG TO APEX_PUBLIC_USER';
+        EXECUTE IMMEDIATE 'GRANT SELECT ON ORDS_METADATA.PLSQL_GATEWAY_CONFIG TO PUBLIC';
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
 END;
 /
 COMMIT;
@@ -836,11 +857,23 @@ EOF_POOL
 <entry key=\"db.password\">${APEX_LISTENER_PASSWORD}</entry>
 <entry key=\"feature.sdw\">true</entry>
 <entry key=\"plsql.gateway.mode\">proxied</entry>
+<entry key=\"security.requestValidationFunction\">ords_util.authorize_plsql_gateway</entry>
 <entry key=\"restEnabledSql.active\">true</entry>
 </properties>
 EOF_POOL
       " || true
     fi
+
+    # Ensure url-mapping.xml dynamically maps all database pool directories
+    podman exec -i "$ORDS_CONTAINER" bash -c "
+      cat << 'EOF_MAP' > /etc/ords/config/url-mapping.xml
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<pool-mappings xmlns=\"http://xmlns.oracle.com/ords/pool-mapping\">
+  <pool-mapping name=\"proxy\" type=\"basepath\" value=\"proxy\" />
+  <pool-mapping name=\"lis\" type=\"basepath\" value=\"lis\" />
+</pool-mappings>
+EOF_MAP
+    " || true
 
     if [ -n "$APEX_LISTENER_PASSWORD" ]; then
       podman exec "$ORDS_CONTAINER" bash -c "for pool in \$(find /etc/ords/config/databases/ -name 'pool.xml' 2>/dev/null); do sed -i 's|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$APEX_LISTENER_PASSWORD</entry>|g' \"\$pool\" 2>/dev/null || true; done" || true

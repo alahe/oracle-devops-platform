@@ -17,8 +17,17 @@ Vali ja aktiveeri täpselt üks ametlik blueprint:
 # Või pikema käsuga:
 ./scripts/setup-all.sh --blueprint 7
 
-# Kuvage kõigi kavandite tabel ilma käivitamata:
-./scripts/setup-all.sh -l
+# Kuva kõigi kavandite tabel ilma käivitamata:
+./scripts/setup-all.sh -lb
+
+# Vaata konkreetse blueprinti detailset konfiguratsiooni ja konteinereid:
+./scripts/setup-all.sh -sb 3
+
+# Otsi blueprinte märksõna järgi:
+./scripts/setup-all.sh --search publisher
+
+# Simuleeri käivitust ilma paigalduseta (Dry-Run):
+./scripts/setup-all.sh -b 3 --dry-run
 ```
 
 ### 2. Automaattestimine ja CI/CD (Puhas Algseis koos reset-all -y):
@@ -32,6 +41,12 @@ Käivita automatiseeritud testid ja mõõdikute kogumine:
 
 # Testi KÕIKI 13 blueprinti järjest:
 ./scripts/setup-all.sh -tb all
+
+# Simuleeri testimist paari sekundiga ilma andmebaase käivitamata:
+./scripts/setup-all.sh -tb 1,3,7 --dry-run
+
+# Kuva kõigi testiraportite olek:
+./scripts/setup-all.sh -ltr
 ```
 
 ---

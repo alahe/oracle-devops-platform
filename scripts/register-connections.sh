@@ -137,15 +137,44 @@ for c_entry in $ACTIVE_INSTANCES; do
     profile_file="$WORKSPACE_DIR/config/profiles/databases/proxy-adb-oracle.yaml"
   fi
 
-  # 3. Read Database Configuration dynamically from YAML profile
+  # 3. Read Database Configuration dynamically from YAML profile + ensure standard core users
   users_json=$(python3 -c "
 import yaml, json, os
 p = '$profile_file'
+users = []
 if os.path.exists(p):
     data = yaml.safe_load(open(p))
-    print(json.dumps(data.get('users', [])))
-else:
-    print('[]')
+    users = data.get('users', [])
+
+# Ensure core roles (SYS, DBA_ADMIN, SCHEMA, DEV, VIEWER) are in list if missing
+existing_names = [u.get('username', '').upper() for u in users if isinstance(u, dict)]
+
+if 'SYS' not in existing_names:
+    users.insert(0, {'username': 'SYS', 'role': 'SYSDBA', 'color': '#E74C3C', 'wallet_alias': 'SYS'})
+if 'DBA_ADMIN' not in existing_names:
+    users.append({'username': 'DBA_ADMIN', 'role': 'NORMAL', 'color': '#E67E22', 'wallet_alias': 'DBA_ADMIN'})
+if 'TEST_DEV' not in existing_names and 'APP_DEV' not in existing_names:
+    users.append({'username': 'TEST_DEV', 'role': 'NORMAL', 'color': '#27AE60', 'wallet_alias': 'DEV'})
+if 'TEST_VIEWER' not in existing_names:
+    users.append({'username': 'TEST_VIEWER', 'role': 'NORMAL', 'color': '#8E44AD', 'wallet_alias': 'VIEWER'})
+
+def sort_key(u):
+    uname = str(u.get('username', '')).upper()
+    role = str(u.get('role', '')).upper()
+    if uname == 'SYS' or role == 'SYSDBA':
+        return 1
+    if uname == 'DBA_ADMIN' or role == 'DBA':
+        return 2
+    if 'SCHEMA' in uname:
+        return 3
+    if 'DEV' in uname:
+        return 4
+    if 'VIEWER' in uname or 'READ' in uname:
+        return 5
+    return 6
+
+users = sorted(users, key=sort_key)
+print(json.dumps(users))
 " 2>/dev/null || echo "[]")
 
   SQL_COMMANDS=()
@@ -184,14 +213,14 @@ else:
       c_name_upper=$(echo "$c_name" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
       pwd_val=$(get_wallet_pwd "DB_${c_name_upper}_${real_db_user}" "$real_db_user" "$c_name" </dev/null)
     fi
+    if [ -z "$pwd_val" ]; then
+      c_short=$(echo "$c_name" | sed -E 's/^db[-_]//' | tr '[:lower:]' '[:upper:]')
+      pwd_val=$(get_wallet_pwd "DB_${c_short}_${real_db_user}" "$real_db_user" "$c_name" </dev/null)
+    fi
     [ -z "$pwd_val" ] && continue
 
     if [ "$real_db_user" = "sys" ] || [ "$real_db_user" = "SYS" ]; then
-      pretty_name="1. Sys (${folder_name})"
-    elif [ "$real_db_user" = "APEX_PROXY_SCHEMA" ]; then
-      pretty_name="2. APEX_PROXY_SCHEMA (${folder_name})"
-    elif [ "$real_db_user" = "TEST_DEV" ]; then
-      pretty_name="3. TEST_DEV (${folder_name})"
+      pretty_name="${idx}. Sys (${folder_name})"
     else
       pretty_name="${idx}. ${real_db_user} (${folder_name})"
     fi
@@ -227,7 +256,10 @@ else:
 
   PRIMARY_C="${c_name:-${PRIMARY_CONTAINER:-db-dev-full}}"
   WALLET_PWD=$(get_wallet_password 2>/dev/null || cat "$WORKSPACE_DIR/config/secrets/wallet_password.txt" 2>/dev/null || echo "CustomWalletPass123!")
-  WALLET_LIST=$(podman exec -i "$PRIMARY_C" sh -c 'export JAVA_HOME=/usr/java/latest; export PATH=$JAVA_HOME/bin:$PATH; echo "$1" | mkstore -wrl /opt/oracle/admin/FREE/wallet -listCredential' -- "$WALLET_PWD" 2>/dev/null || true)
+  WALLET_LIST=""
+  if podman container exists "$PRIMARY_C" 2>/dev/null; then
+    WALLET_LIST=$(podman exec "$PRIMARY_C" sh -c 'export JAVA_HOME=/usr/java/latest; export PATH=$JAVA_HOME/bin:$PATH; echo "$1" | mkstore -wrl /opt/oracle/admin/FREE/wallet -listCredential' -- "$WALLET_PWD" </dev/null 2>/dev/null || true)
+  fi
 
   while read -r w_line; do
     w_alias=$(echo "$w_line" | awk '{print $2}' | tr -d '\r ')
@@ -249,8 +281,8 @@ else:
     dev_u_upper=$(echo "$dev_u" | tr '[:lower:]' '[:upper:]' | tr -d ' ')
     [ -z "$dev_u_upper" ] && continue
     
-    # Skip system/schema accounts that are handled in step 3 or are web accounts
-    if [ "$dev_u_upper" = "SYS" ] || [ "$dev_u_upper" = "APEX_PROXY_SCHEMA" ] || [ "$dev_u_upper" = "ADMIN" ] || [[ "$dev_u_upper" == *"WEB"* ]]; then
+    # Skip system/schema accounts that are handled in step 3 or are web accounts or wallet alias names
+    if [ "$dev_u_upper" = "SYS" ] || [ "$dev_u_upper" = "APEX_PROXY_SCHEMA" ] || [ "$dev_u_upper" = "ADMIN" ] || [[ "$dev_u_upper" == *"WEB"* ]] || [[ "$dev_u_upper" == "DB_"* ]] || [ "$dev_u_upper" = "DEV" ] || [ "$dev_u_upper" = "VIEWER" ]; then
       continue
     fi
 
@@ -281,11 +313,7 @@ else:
     fi
     [ -z "$dev_pwd_val" ] && continue
 
-    if [ "$dev_u_upper" = "TEST_DEV" ]; then
-      pretty_dev_name="3. TEST_DEV"
-    else
-      pretty_dev_name="${idx}. Dev ${dev_u_upper}"
-    fi
+    pretty_dev_name="${idx}. ${dev_u_upper} (${folder_name})"
 
     conn_dev_str="${dev_u_upper}/${dev_pwd_val}@localhost:${port}/${service}"
     SQL_COMMANDS+=("connect -save \"${pretty_dev_name}\" -savepwd -replace ${conn_dev_str}")
@@ -311,13 +339,15 @@ else:
   SQL_COMMANDS+=("EXIT")
 
   # Run SQLcl batch commands (saves encrypted passwords to OS Keychain via SQLcl connect -save -savepwd)
-  if [ -n "$VSCODE_SQLCL" ] && { command -v "$VSCODE_SQLCL" &>/dev/null || [ -x "$VSCODE_SQLCL" ]; }; then
-    printf '%s\n' "${SQL_COMMANDS[@]}" | "$VSCODE_SQLCL" /nolog >/dev/null 2>&1 || true
-  else
-    # Fallback pattern for restricted environments via Ephemeral Container
-    podman run --rm -i --network=host container-registry.oracle.com/database/sqlcl:latest /nolog >/dev/null 2>&1 <<EOF || true
+  if [ "${SKIP_SQLCL_EXEC:-false}" != "true" ]; then
+    if [ -n "$VSCODE_SQLCL" ] && { command -v "$VSCODE_SQLCL" &>/dev/null || [ -x "$VSCODE_SQLCL" ]; }; then
+      printf '%s\n' "${SQL_COMMANDS[@]}" | "$VSCODE_SQLCL" /nolog >/dev/null 2>&1 || true
+    else
+      # Fallback pattern for restricted environments via Ephemeral Container
+      podman run --rm -i --network=host container-registry.oracle.com/database/sqlcl:latest /nolog >/dev/null 2>&1 <<EOF || true
 $(printf '%s\n' "${SQL_COMMANDS[@]}")
 EOF
+    fi
   fi
 
   # Combine built connections into JSON array
@@ -392,9 +422,24 @@ PYEOF
 
 
 
-  # folders.json is accurately maintained by python above
-  true
 done
+
+# 5. Sanitize folders.json to prevent DBTU-03001 error per skill vscode_sql_developer
+FOLDERS_FILE="$HOME/.dbtools/connection_folders/folders.json"
+DBTOOLS_CONNS_DIR="$HOME/.dbtools/connections"
+
+if [ -f "$FOLDERS_FILE" ] && command -v jq &>/dev/null && [ -d "$DBTOOLS_CONNS_DIR" ]; then
+  valid_ids=($(find "$DBTOOLS_CONNS_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2>/dev/null || true))
+  VALID_IDS_JSON=$(printf '%s\n' "${valid_ids[@]}" | jq -R . | jq -s .)
+
+  jq --argjson valid "$VALID_IDS_JSON" '
+    .folders = [
+      .folders[]? |
+      .connections = [ .connections[]? | select(. as $c | $valid | index($c)) ]
+    ] |
+    .folders = [ .folders[]? | select((.connections | length) > 0) ]
+  ' "$FOLDERS_FILE" > "${FOLDERS_FILE}.tmp" 2>/dev/null && mv "${FOLDERS_FILE}.tmp" "$FOLDERS_FILE" 2>/dev/null || true
+fi
 
 echo "✅ Database connections with custom colors and folder '${folder_name}' successfully registered in VS Code SQL Developer!"
 echo "👉 Refresh (🔄) Oracle SQL Developer extension in VS Code to view folder, colors & saved connections!"

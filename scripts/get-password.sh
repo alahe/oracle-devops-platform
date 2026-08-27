@@ -50,18 +50,18 @@ if ! podman container exists "$PRIMARY_CONTAINER" 2>/dev/null; then
     PRIMARY_CONTAINER="pub-db"
   fi
 fi
+PRIMARY_SHORT=$(echo "$PRIMARY_CONTAINER" | sed -E 's/^db[-_]//' | tr '-' '_' | tr '[:lower:]' '[:upper:]')
 PROXY_CONTAINER="$PRIMARY_CONTAINER"
-PRIMARY_UPPER=$(echo "$PRIMARY_CONTAINER" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
 
 # Dynamic alias resolution using active container name from .env and profile
 ALIAS_UPPER=$(echo "$ALIAS" | tr '[:lower:]' '[:upper:]')
 
 case "$ALIAS_UPPER" in
-  "ADMIN") ALIAS_SEARCH="APEX_ADMIN" ;;
-  "SYS"|"SYSDBA") ALIAS_SEARCH="DB_${PRIMARY_UPPER}_SYS" ;;
-  "DBA_ADMIN"|"DB_DBA_ADMIN") ALIAS_SEARCH="DB_${PRIMARY_UPPER}_DBA_ADMIN" ;;
-  "TEST_DEV"|"DB_TEST_DEV") ALIAS_SEARCH="DB_${PRIMARY_UPPER}_DEV" ;;
-  "TEST_VIEWER"|"DB_TEST_VIEWER") ALIAS_SEARCH="DB_${PRIMARY_UPPER}_VIEWER" ;;
+  "ADMIN"|"APEX_ADMIN") ALIAS_SEARCH="DB_${PRIMARY_SHORT}_APEX_ADMIN" ;;
+  "SYS"|"SYSDBA") ALIAS_SEARCH="DB_${PRIMARY_SHORT}_SYS" ;;
+  "DBA_ADMIN"|"DB_DBA_ADMIN") ALIAS_SEARCH="DB_${PRIMARY_SHORT}_DBA_ADMIN" ;;
+  "TEST_DEV"|"DB_TEST_DEV") ALIAS_SEARCH="DB_${PRIMARY_SHORT}_DEV" ;;
+  "TEST_VIEWER"|"DB_TEST_VIEWER") ALIAS_SEARCH="DB_${PRIMARY_SHORT}_VIEWER" ;;
   *) ALIAS_SEARCH="$ALIAS" ;;
 esac
 
@@ -129,12 +129,23 @@ if [ -z "$PWD_VAL" ] || [[ "$PWD_VAL" == *"?"* ]] || echo "$PWD_VAL" | grep -q '
       [ -z "$PWD_VAL" ] && PWD_VAL=$(podman exec "$PROXY_CONTAINER" cat /run/secrets/oracle_pwd 2>/dev/null | tr -d '\r\n' || true)
       [ -z "$PWD_VAL" ] && PWD_VAL=$(podman exec "$PROXY_CONTAINER" cat /run/secrets/apex_db_sys_password 2>/dev/null | tr -d '\r\n' || true)
       ;;
+    "DBA_ADMIN"|"DB_DBA_ADMIN"|*"_DBA_ADMIN")
+      target_c_prefix=$(echo "$ALIAS_UPPER" | sed -E 's/^DB_//; s/_DBA_ADMIN$//' | sed 's/^DB_//' | tr '[:upper:]' '[:lower:]')
+      [ -n "$target_c_prefix" ] && PWD_VAL=$(podman secret inspect --showsecret "${target_c_prefix}_dba_admin_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+      [ -z "$PWD_VAL" ] && [ -n "$target_c_prefix" ] && PWD_VAL=$(podman secret inspect --showsecret "${target_c_prefix}_db_sys_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+      [ -z "$PWD_VAL" ] && PWD_VAL=$(podman secret inspect --showsecret dba_admin_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || podman secret inspect --showsecret apex_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+      ;;
     "TEST_DEV"|"DB_TEST_DEV"|*"_DEV")
-      PWD_VAL=$(podman secret inspect --showsecret apex_db_dev_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+      target_c_prefix=$(echo "$ALIAS_UPPER" | sed -E 's/^DB_//; s/_DEV$//' | sed 's/^DB_//' | tr '[:upper:]' '[:lower:]')
+      [ -n "$target_c_prefix" ] && PWD_VAL=$(podman secret inspect --showsecret "${target_c_prefix}_db_dev_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+      [ -z "$PWD_VAL" ] && [ -n "$target_c_prefix" ] && PWD_VAL=$(podman secret inspect --showsecret "${target_c_prefix}_dev_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+      [ -z "$PWD_VAL" ] && PWD_VAL=$(podman secret inspect --showsecret test_dev_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || podman secret inspect --showsecret apex_db_dev_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
       [ -z "$PWD_VAL" ] && PWD_VAL=$(podman exec "$PROXY_CONTAINER" cat /run/secrets/apex_db_dev_password 2>/dev/null | tr -d '\r\n' || true)
       ;;
-    "ADMIN"|"APEX_ADMIN")
-      PWD_VAL=$(podman secret inspect --showsecret apex_admin_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+    "ADMIN"|"APEX_ADMIN"|*"_APEX_ADMIN")
+      target_c_prefix=$(echo "$ALIAS_UPPER" | sed -E 's/^DB_//; s/_APEX_ADMIN$//' | sed 's/^DB_//' | tr '[:upper:]' '[:lower:]')
+      [ -n "$target_c_prefix" ] && PWD_VAL=$(podman secret inspect --showsecret "${target_c_prefix}_apex_admin_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+      [ -z "$PWD_VAL" ] && PWD_VAL=$(podman secret inspect --showsecret apex_admin_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
       [ -z "$PWD_VAL" ] && PWD_VAL=$(podman exec "$PROXY_CONTAINER" cat /run/secrets/apex_admin_password 2>/dev/null | tr -d '\r\n' || true)
       ;;
     "TEST_WEB_USER")

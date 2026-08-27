@@ -74,8 +74,8 @@ REPORT_MD+="| :--- | :--- | :--- |\n"
 ACTIVE_PROFILES=$(get_active_db_instances 2>/dev/null | cut -d'|' -f2 || echo "")
 
 for alias in "${ALIASES[@]}"; do
-  # Skip APEX Web End-Users (non-database SQL accounts)
-  if [[ "$alias" == *"WEB_USER"* ]]; then
+  # Skip APEX Web End-Users & ORDS listeners (non-database SQL accounts)
+  if [[ "$alias" == *"WEB_USER"* ]] || [[ "$alias" == *"_APEX_ADMIN"* ]] || [[ "$alias" == *"_APEX_PUBLIC_USER"* ]] || [[ "$alias" == *"_APEX_LISTENER"* ]] || [[ "$alias" == *"_ORDS_PUBLIC_USER"* ]]; then
     continue
   fi
 

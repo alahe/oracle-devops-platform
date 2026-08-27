@@ -29,7 +29,7 @@ init_db_instance() {
 
   # Apply profile users and roles
   if [ -x "$SCRIPT_DIR/apply-profile-users.sh" ]; then
-    "$SCRIPT_DIR/apply-profile-users.sh" "$target_profile"
+    "$SCRIPT_DIR/apply-profile-users.sh" "$target_profile" "$container_name"
   fi
 
   echo "✅ Instants '${container_name}' (${PROFILE_NAME}) algseadistatud edukalt!"
