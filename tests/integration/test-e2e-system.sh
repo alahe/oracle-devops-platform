@@ -35,7 +35,7 @@ echo -e "${GREEN}✅ E2E Samm 1 Edukas: Kõik 5 põhisüsteemi skripti on valmis
 
 # Step 2: Validate Internal Subsystem Scripts
 echo -e "\n${YELLOW}[E2E Samm 2] Kontrollin internal abiskriptide ja SQL algseadistajate olemasolu...${NC}"
-INTERNAL_SCRIPTS=("load-profile.sh" "resolve-topology.sh" "init-db-instance.sh" "init-db-instance.sql" "apply-profile-users.sh" "generate-passwords.sh" "generate-local-certs.sh" "register-connections-sqlcl.sh")
+INTERNAL_SCRIPTS=("load-profile.sh" "resolve-topology.sh" "init-db-instance.sh" "init-db-instance.sql" "apply-profile-users.sh" "generate-passwords.sh" "generate-local-certs.sh" "register-connections.sh")
 
 for script in "${INTERNAL_SCRIPTS[@]}"; do
   if [ -f "$WORKSPACE_DIR/scripts/internal/$script" ]; then
@@ -49,7 +49,7 @@ echo -e "${GREEN}✅ E2E Samm 2 Edukas: Kõik 8 sisemist abiskripti ja SQL-i on 
 
 # Step 3: Validate Dynamic Profiles Matrix
 echo -e "\n${YELLOW}[E2E Samm 3] Kontrollin profiilide maatriksit (config/profiles/databases/*.yaml)...${NC}"
-PROFILES=("proxy-adb" "proxy-free" "proxy-gvenzl" "proxy-ords-standalone" "proxy-ords-external" "app-free" "app-adb" "appinfra" "cicd")
+PROFILES=("db-proxy-adb" "db-proxy-oracle" "db-proxy-gvenzl" "db-lis-oracle" "db-lis-adb" "db-infra-gvenzl" "db-cicd" "db-publisher-oracle" "db-publisher-gvenzl")
 
 for profile in "${PROFILES[@]}"; do
   if [ -f "$WORKSPACE_DIR/config/profiles/databases/${profile}.yaml" ]; then

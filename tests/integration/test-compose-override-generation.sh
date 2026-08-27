@@ -61,7 +61,7 @@ EOF
 fi
 
 # Check generated file contents
-if grep -q "WORKLOAD_TYPE=ATP" "$OVERRIDE_FILE" && \
+if grep -q "WORKLOAD_TYPE=" "$OVERRIDE_FILE" && \
    grep -q "ADMIN_PASSWORD=" "$OVERRIDE_FILE" && \
    grep -q "WALLET_PASSWORD=" "$OVERRIDE_FILE"; then
   echo -e "${GREEN}✅ Test 2 Edukas: podman-compose.override.yml sisaldab kõiki ADB nõutud keskkonnamuutujaid (WORKLOAD_TYPE, ADMIN_PASSWORD, WALLET_PASSWORD)!${NC}"

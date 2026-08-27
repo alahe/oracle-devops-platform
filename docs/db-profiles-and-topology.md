@@ -21,11 +21,11 @@ flowchart TD
     end
 
     subgraph YAMLProfiles ["config/profiles/ Subdirectories Matrix"]
-        P1["databases/proxy-adb-oracle.yaml"]
-        P2["databases/proxy-standard-oracle.yaml"]
-        P3["databases/proxy-standalone-ords.yaml"]
-        P4["databases/proxy-external-ords.yaml"]
-        P5["databases/bizapp-standard-oracle.yaml"]
+        P1["databases/db-proxy-adb.yaml"]
+        P2["databases/db-proxy-oracle.yaml"]
+        P3["databases/db-proxy-gvenzl.yaml"]
+        P4["databases/db-lis-oracle.yaml"]
+        P5["databases/db-lis-adb.yaml"]
         P6["web-ide/web-ide-standard.yaml"]
     end
 
@@ -70,19 +70,19 @@ flowchart TD
 
 ---
 
-## 📂 Pre-Configured Profile Matrix (`config/profiles/`)
+## 📂 Pre-Configured Profile Matrix (`config/profiles/databases/`)
 
 | Profile Filename | Description | Repository | DB Type | Use Case | ORDS | APEX |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`app-free.yaml`** | Primary Application DB on Official Oracle Free DB 23ai | `container-registry.oracle.com/database/free:latest` | `standard` | Primary App | Yes (8448) | Yes |
-| **`app-adb.yaml`** | Primary Application DB on Oracle Autonomous DB | `container-registry.oracle.com/database/adb-free:latest` | `adb` | Primary App | Yes (8443) | No |
-| **`proxy-adb.yaml`** | APEX Proxy DB on Oracle Autonomous DB Free | `container-registry.oracle.com/database/adb-free:latest` | `adb` | Proxy | Yes (8443) | Yes |
-| **`proxy-free.yaml`** | APEX Proxy DB on Official Oracle Free DB 23ai | `container-registry.oracle.com/database/free:latest` | `standard` | Proxy | Yes (8448) | Yes |
-| **`proxy-gvenzl.yaml`** | APEX Proxy DB on Gvenzl 23c Faststart | `gvenzl/oracle-free:23-full-faststart` | `standard` | Proxy | Yes (8448) | Yes |
-| **`proxy-ords-standalone.yaml`** | APEX Proxy DB + Dedicated Standalone ORDS | `container-registry.oracle.com/database/free:latest` | `standard` | Standalone ORDS | Yes (8085) | Yes |
-| **`proxy-ords-external.yaml`** | APEX Proxy DB + External Corporate ORDS | `container-registry.oracle.com/database/free:latest` | `standard` | External ORDS | External | Yes |
-| **`appinfra.yaml`** | Infrastructure DB for Publisher & Forms (RCU) | `gvenzl/oracle-free:23-slim-faststart` | `standard` | App Infra | No | No |
-| **`cicd.yaml`** | Ephemeral DB for CI/CD Automated Testing | `container-registry.oracle.com/database/free:latest` | `standard` | CI/CD | No | No |
+| **`db-lis-oracle.yaml`** | Primary Application DB on Official Oracle Free DB 23ai | `container-registry.oracle.com/database/free:latest` | `standard` | Primary App | Yes (8448) | Yes |
+| **`db-lis-adb.yaml`** | Primary Application DB on Oracle Autonomous DB | `container-registry.oracle.com/database/adb-free:latest` | `adb` | Primary App | Yes (8443) | No |
+| **`db-proxy-oracle.yaml`** | APEX Outbound Proxy DB on Official Oracle Free DB 23ai | `container-registry.oracle.com/database/free:latest` | `standard` | Proxy | Yes (8448) | Yes |
+| **`db-proxy-adb.yaml`** | APEX Proxy DB on Oracle Autonomous DB Free | `container-registry.oracle.com/database/adb-free:latest` | `adb` | Proxy | Yes (8443) | Yes |
+| **`db-proxy-gvenzl.yaml`** | APEX Proxy DB on Gvenzl 23c Faststart | `gvenzl/oracle-free:23-full-faststart` | `standard` | Proxy | Yes (8448) | Yes |
+| **`db-infra-gvenzl.yaml`** | Infrastructure DB for Publisher & Forms (RCU) | `gvenzl/oracle-free:23-slim-faststart` | `standard` | App Infra | No | No |
+| **`db-publisher-oracle.yaml`** | Dedicated DB & Analytics Publisher with RCU schemas | `container-registry.oracle.com/database/free:latest` | `standard` | Publisher + ORDS | Yes (8089) | No |
+| **`db-publisher-gvenzl.yaml`** | Standalone DB & Analytics Publisher (Pixel Perfect) environment | `gvenzl/oracle-free:23-full-faststart` | `standard` | Publisher Standalone | No | No |
+| **`db-cicd.yaml`** | Ephemeral DB for CI/CD Automated Testing | `container-registry.oracle.com/database/free:latest` | `standard` | CI/CD | No | No |
 
 ---
 
@@ -93,10 +93,10 @@ To set or change the main database profile, edit `.env`:
 
 ```bash
 # Select the desired profile:
-PUB_DB=app-free
+DB_LIS=db-lis-oracle
 
 # Or select an Autonomous DB profile:
-# PUB_DB=proxy-adb
+# DB_PROXY=db-proxy-adb
 ```
 
 ### 2. Enterprise Artifactory Mirroring (Restricted Networks)
@@ -162,3 +162,66 @@ When running multiple database instances (e.g. 3 x `proxy-adb-oracle`), `config/
 | **ORDS HTTPS Port** | `8443` | `8443` | `8444` | `8445` |
 | **Container Name** | - | `oracle-db-proxy` | `oracle-db-finance` | `oracle-db-hr` |
 | **VS Code Folder** | - | `/MYATP-proxy` | `/MYATP-finance` | `/MYATP-hr` |
+
+---
+
+## 🏆 LIS Primary Enterprise 4-Tier Profile Combination
+
+For the primary enterprise LIS application architecture, `.env` configures 3 distinct profiles:
+
+```bash
+# 1. Publisher Metadata DB (db-publisher - Port 1531)
+DB_PUBLISHER=publisher-free
+
+# 2. APEX Proxy & Outbound REST DB (db-proxy - Port 1532)
+DB_PROXY=proxy-gvenzl
+
+# 3. LIS Business App DB (db-lis - Port 1533)
+DB_LIS=app-free
+```
+
+### 🌐 ORDS Multi-Pool Ühendustee ja Konfiguratsioon (app_ords)
+
+Tsentraalne ORDS teenus (`app_ords`) kasuta andmebaaside ühendamiseks ORDS multi-pool XML konfiguratsioonifaile, mis pannakse paigaldusel automaatselt kokku kausta `/etc/ords/config/databases/`:
+
+| URL Marsruut (Prefix) | ORDS Pooli Nimi | Sihtbaas & Port | Suunamise Eesmärk |
+| :--- | :--- | :--- | :--- |
+| `https://localhost:8448/ords/proxy/` | `default.xml` / `proxy.xml` | `db-proxy:1521/FREEPDB1` | 🛡️ APEX Proxy, Outbound REST ja Azure Entra-ID OIDC SSO |
+| `https://localhost:8448/ords/lis/` | `lis.xml` | `db-lis:1521/FREEPDB1` | 🧪 LIS Ärirakendus & PL/SQL loogika (Restricted DB Zone) |
+| `https://localhost:8448/ords/pub/` | `pub.xml` | `db-publisher:1521/FREEPDB1` | 🗄️ Analytics Publisher RCU metaandmete hoidla |
+
+---
+
+### ⚡ Konteinerite Käivituskestuse Analüüs (FastStart vs Standard + APEX)
+
+Projekti erinevate andmebaasi profiilide käivituskestuses esineb teadlik vahe vastavalt pildi arhitektuurile ja APEX-i paigaldusele:
+
+| Profiil / Pilt | Käivituskestus | Põhjus & Teostus |
+| :--- | :--- | :--- |
+| **`db-publisher-gvenzl`** (`gvenzl/oracle-free:23-full-faststart`) | **~5 – 15 sek** | **FastStart:** Andmebaas on pildi sees valmis initsialiseeritud. APEX on välja lülitatud. |
+| **`db-lis-oracle` / `db-proxy-oracle`** (`container-registry.oracle.com/database/free:latest`) | **~3 – 6 min** | **Standard DBCA:** Ametlik Oracle pilt teostab esmakordsel käivitamisel `CREATE DATABASE` / DBCA protsessi. |
+| **APEX Mootori Paigaldus** | **+ 2 – 4 min** | Sisse lülitatud APEX mootori (`components.apex.enabled=true`) paigaldamisel teostatakse `@apexins.sql` DDL skriptid. |
+
+---
+
+### 🔌 Outbound REST & Inbound Push Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant ExtREST as "Valine REST API"
+    participant ProxyDB as "Proxy DB (db-proxy)"
+    participant LisORDS as "LIS ORDS Inbound Endpoint"
+    participant LisDB as "LIS DB (db-lis)"
+    participant LisAPEX as "LIS APEX App (db-lis)"
+
+    ProxyDB->>ExtREST: Proxy DB teeb valjuva HTTPS paringu valisele API-le
+    ExtREST-->>ProxyDB: Tagastab JSON vastuse
+    ProxyDB->>LisORDS: Proxy DB algatab sissetuleva paringu LIS sise-ORDSi
+    LisORDS->>LisDB: Salvestab vastuvoetud andmed LIS kohalikku puhvertabelisse
+    LisDB-->>LisORDS: Kinnitus HTTP 200 OK
+    LisORDS-->>ProxyDB: Sunkroniseerimine lopetatud
+    LisAPEX->>LisDB: LIS APEX rakendus luges kohalikust tabelist andmed
+```
+
+

@@ -51,7 +51,7 @@ fi
 
 # 2. Register VS Code SQL Developer Connections inside Web IDE
 echo "🔌 Registreerin SQL Developer ühendused Web IDE sisse..."
-"$SCRIPT_DIR/register-connections-sqlcl.sh" >/dev/null 2>&1 || true
+"$SCRIPT_DIR/register-connections.sh" >/dev/null 2>&1 || true
 
 # 3. Dynamic Profile-Driven Extension & Tool Initializer
 if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then

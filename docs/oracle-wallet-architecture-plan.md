@@ -72,10 +72,10 @@ Lokaalses arenduses (DEV_LOCAL) on Walleti parool salvestatud sinu `.env` faili 
 ### 1. Soovituslik viis: Automaatne abiskript
 Oleme loonud mugava ja automaatse abiskripti, mis teostab indeksi otsingu ja parooli dekrüpteerimise sinu eest:
 ```bash
-./scripts/internal/view-wallet-credential.sh <alias>
+./scripts/get-password.sh <alias>
 # Näited:
-# ./scripts/internal/view-wallet-credential.sh DB_TEST_DEV
-# ./scripts/internal/view-wallet-credential.sh DB_APEX_PROXY_SYS
+# ./scripts/get-password.sh DB_TEST_DEV
+# ./scripts/get-password.sh DB_APEX_PROXY_SYS
 ```
 
 ### 2. Manuaalne viis: Konteineris mkstore käivitamine

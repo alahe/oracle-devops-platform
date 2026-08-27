@@ -6,21 +6,21 @@ Sellesse kataloogi saab panna Oracle APEXi paigalduspakettide (Bundle Patch / PS
 
 ```
 patches/
-├── README.md               # Käesolev juhend
-└── <patch_id>.zip          # Näiteks p36000000_2610_Generic.zip
+├── README.md                     # Käesolev juhend
+└── p39179920_261_Generic.zip     # APEX 26.1.4 PSE Bundle Patch (Bug 39179920)
 ```
 
 ## APEXi Patchi Paigaldamise Juhend
 
-1. Pane APEXi patchi `.zip` fail sellesse `./patches` kataloogi.
-2. Lahtipaki `.zip` fail samasse kataloogi või käivita automaatne paigaldusskript:
+1. Pane APEXi patchi `.zip` fail sellesse `./patches` kataloogi (nt `patches/p39179920_261_Generic.zip`).
+2. Käivita automaatne paigaldusskript või lase sellel käivituda automaatselt `setup-all.sh` käigus:
 
 ```bash
-./scripts/internal/apply-apex-patch.sh patches/<patch_filename>.zip
+./scripts/internal/apply-apex-patch.sh patches/p39179920_261_Generic.zip
 ```
 
 Skript teostab automaatselt järgmised sammud:
-- Tuvastab dünaamiliselt profiilipõhise primaarse andmebaasikonteineri (nt `db-dev-full`).
-- Kopeerib patchi paigaldusfailid konteinerisse ja käivitab `@catpatch.sql` / `@apxpatch.sql` andmebaasis `SYSDBA` õigustes.
-- Uuendab automaatselt `apex_images` volume-is asuvad staatilised pildid (nt versioon 26.1.2) ja stiilid (sünkroniseerimine toimub ka juhul, kui SQL patch on andmebaasis juba varasemalt rakendatud).
+- Tuvastab dünaamiliselt profiilipõhise primaarse andmebaasikonteineri (nt `db-lis`, `db-proxy`).
+- Kopeerib patchi paigaldusfailid konteinerisse ja käivitab `@catpatch.sql` / `@apxpatch.sql` andmebaasis `SYSDBA` õigustes (tõstab APEX versiooni 26.1.0 -> 26.1.4).
+- Uuendab automaatselt `apex_images` volume-is asuvad staatilised pildid ja stiilid (sünkroniseerimine toimub ka juhul, kui SQL patch on andmebaasis juba varasemalt rakendatud).
 - Taaskäivitab dünaamiliselt ORDS teenuse konteineri uute failide ja lahenduste rakendamiseks.

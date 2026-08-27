@@ -17,27 +17,37 @@ Oracle SQL Developer Extension for VS Code laienduses saab kõik 4 ühendust kor
 Kui soovid lisada ühenduse käsitsi `+` nupuga (nt DBeaver, IntelliJ, Basic-ühendus), saad jooksvad paroolid turvaliselt teada abiskriptiga:
 *   **APEX Admin (ADMIN) parool:**
     ```bash
-    ./scripts/internal/view-wallet-credential.sh APEX_ADMIN
+    ./scripts/get-password.sh APEX_ADMIN
     ```
 *   **APEX Proxy SYS parool:**
     ```bash
-    ./scripts/internal/view-wallet-credential.sh DB_APEX_PROXY_SYS
+    ./scripts/get-password.sh DB_APEX_PROXY_SYS
     ```
 *   **Publisher SYS parool:**
     ```bash
-    ./scripts/internal/view-wallet-credential.sh DB_PUBLISHER_SYS
+    ./scripts/get-password.sh DB_PUBLISHER_SYS
     ```
 *   **Arendaja TEST_DEV parool:**
     ```bash
-    ./scripts/internal/view-wallet-credential.sh DB_TEST_DEV
+    ./scripts/get-password.sh DB_TEST_DEV
     ```
 *   **Veebikasutaja TEST_WEB_USER parool:**
     ```bash
-    ./scripts/internal/view-wallet-credential.sh TEST_WEB_USER
+    ./scripts/get-password.sh TEST_WEB_USER
+    ```
+
+*   **LIS SYS parool:**
+    ```bash
+    ./scripts/get-password.sh DB_LIS_SYS
+    ```
+*   **LIS Arendaja LIS_DEV parool:**
+    ```bash
+    ./scripts/get-password.sh DB_LIS_DEV
     ```
 
 - **Publisher DB (SYS):** Host `localhost`, Port `1531`, Service `FREEPDB1`, User `sys` (Role: `SYSDBA`), Password `<Skripti_Väljund>`
 - **APEX Proxy DB (SYS):** Host `localhost`, Port `1532`, Service `FREEPDB1`, User `sys` (Role: `SYSDBA`), Password `<Skripti_Väljund>`
+- **LIS Äribaas DB (SYS):** Host `localhost`, Port `1533`, Service `FREEPDB1`, User `sys` (Role: `SYSDBA`), Password `<Skripti_Väljund>`
 - **APEX Proxy DB (Developer User):** Host `localhost`, Port `1532`, Service `FREEPDB1`, User `TEST_DEV` (Role: `NORMAL`), Password `<Skripti_Väljund>`
   *Märkus: Kasutajale on määratud süsteemne roll **`DB_DEVELOPER_ROLE`**, mis tagab vajalikud õigused arendustöödeks.*
 
@@ -49,7 +59,7 @@ Projekti juurest leiad abiskriptid, mis registreerivad andmebaasi ühendused aut
 
 1.  **Süsteemsed ühendused (`sys`/`admin` ja skeemid):**
     ```bash
-    ./scripts/internal/register-connections-sqlcl.sh
+    ./scripts/internal/register-connections.sh
     ```
     See tuvastab automaatselt VS Code laienduse sees asuva SQLcl binääri ja registreerib ühendused kaustapõhiselt (`/APEX` või `/MYATP` ning `/Publisher`).
 
@@ -67,7 +77,7 @@ Et ühendused tekitataks automaatselt iga kord, kui projekti kaust VS Code-is av
     {
       "label": "Auto-Register Oracle Connections",
       "type": "shell",
-      "command": "./scripts/internal/register-connections-sqlcl.sh",
+      "command": "./scripts/internal/register-connections.sh",
       "runOptions": {
         "runOn": "folderOpen"
       },

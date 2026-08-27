@@ -1,0 +1,19 @@
+{
+  "last_updated": "2026-08-27T08:58:30Z",
+  "total_duration_seconds": 295,
+  "total_duration_formatted": "4m 55s",
+  "parameters": {
+    "exec_mode": "CONTAINER",
+    "db_host": "localhost",
+    "db_port": "1532",
+    "db_service": "FREEPDB1"
+  },
+  "steps": {
+    "step1_ords_setup_seconds": 0,
+    "step2_download_unzip_seconds": 3,
+    "step3_copy_container_seconds": 10,
+    "step4_apex_engine_install_seconds": 280,
+    "step4_1_ords_config_seconds": 1,
+    "step5_apex_patch_install_seconds": 0
+  }
+}

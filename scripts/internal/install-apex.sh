@@ -23,6 +23,10 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+if [ -f "$SCRIPT_DIR/common.sh" ]; then
+  source "$SCRIPT_DIR/common.sh"
+fi
+
 # Värvide seadistamine (ainult siis kui terminal seda toetab)
 if [ -t 0 ] || { [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; }; then
   GREEN='\033[1;32m'
@@ -59,50 +63,50 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # Dünaamiline instantsi ja konteineri tuvastamine profiilide ja topoloogia põhjal
-local_primary=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
-PRIMARY_CONTAINER="${local_primary:-db-dev-full}"
-
-if [ -z "$TARGET_DB" ] || [ "$TARGET_DB" = "apex-proxy" ] || [ "$TARGET_DB" = "proxy" ] || [ "$TARGET_DB" = "$PRIMARY_CONTAINER" ]; then
-  CONTAINER_NAME="$PRIMARY_CONTAINER"
-  if ! podman container exists "$CONTAINER_NAME" 2>/dev/null; then
-    c_found=$(podman ps --format '{{.Names}}' | grep -E '^db-|^oracle-db-' | head -n 1 || echo "")
-    [ -n "$c_found" ] && CONTAINER_NAME="$c_found"
+if [ -n "$TARGET_DB" ]; then
+  raw_target=$(echo "$TARGET_DB" | sed 's/^db-//' | tr '_' '-')
+  if podman container exists "db-$raw_target" 2>/dev/null; then
+    CONTAINER_NAME="db-$raw_target"
+  elif podman container exists "$TARGET_DB" 2>/dev/null; then
+    CONTAINER_NAME="$TARGET_DB"
+  elif podman container exists "oracle-db-$raw_target" 2>/dev/null; then
+    CONTAINER_NAME="oracle-db-$raw_target"
+  else
+    CONTAINER_NAME="db-$raw_target"
   fi
-  DB_SUFFIX="${CONTAINER_NAME#db-}"
-  DB_PORT="${TARGET_PORT:-${APEX_DB_PORT:-${PROFILE_DB_PORT:-1532}}}"
-  DB_SERVICE="${TARGET_SERVICE:-${APEX_DB_SERVICE:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}}"
-  APEX_VER="${TARGET_VER:-${APEX_DB_APEX_VERSION:-${PROFILE_APEX_VERSION:-26.1}}}"
-  SYS_PWD_SECRET="apex_db_sys_password"
 else
-  DB_SUFFIX="$TARGET_DB"
-  c_suffix_hyphen=$(echo "$DB_SUFFIX" | tr '_' '-')
-  CONTAINER_NAME="$DB_SUFFIX"
-  if ! podman container exists "$CONTAINER_NAME" 2>/dev/null; then
-    if podman container exists "db-$c_suffix_hyphen" 2>/dev/null; then
-      CONTAINER_NAME="db-$c_suffix_hyphen"
-    elif podman container exists "oracle-db-$c_suffix_hyphen" 2>/dev/null; then
-      CONTAINER_NAME="oracle-db-$c_suffix_hyphen"
-    fi
-  fi
-  DB_PORT="${TARGET_PORT:-}"
-  if [ -z "$DB_PORT" ]; then
-    PORT_VAR="DB_${DB_SUFFIX}_PORT"
-    DB_PORT="${!PORT_VAR:-${PROFILE_DB_PORT:-1532}}"
-  fi
-  DB_SERVICE="${TARGET_SERVICE:-}"
-  if [ -z "$DB_SERVICE" ]; then
-    SERVICE_VAR="DB_${DB_SUFFIX}_SERVICE"
-    DB_SERVICE="${!SERVICE_VAR:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}"
-  fi
-  APEX_VER="${TARGET_VER:-}"
-  if [ -z "$APEX_VER" ]; then
-    APEX_VER_VAR="DB_${DB_SUFFIX}_APEX_VERSION"
-    APEX_VER="${!APEX_VER_VAR:-${PROFILE_APEX_VERSION:-26.1}}"
-  fi
-  SYS_PWD_SECRET="${DB_SUFFIX}_db_sys_password"
+  c_found=$(get_active_db_instances 2>/dev/null | grep -v "publisher" | head -n 1 | cut -d'|' -f1 || echo "")
+  CONTAINER_NAME="${c_found:-db-proxy}"
 fi
 
-# Kui APEX-i versioon on NONE või tühi, siis siia andmebaasi APEX-it ei paigaldata!
+DB_SUFFIX=$(echo "$CONTAINER_NAME" | sed 's/^db-//' | tr '-' '_')
+DB_PORT="${TARGET_PORT:-}"
+if [ -z "$DB_PORT" ]; then
+  PORT_VAR="DB_${DB_SUFFIX}_PORT"
+  DB_PORT="${!PORT_VAR:-${PROFILE_DB_PORT:-1532}}"
+fi
+DB_SERVICE="${TARGET_SERVICE:-}"
+if [ -z "$DB_SERVICE" ]; then
+  SERVICE_VAR="DB_${DB_SUFFIX}_SERVICE"
+  DB_SERVICE="${!SERVICE_VAR:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}"
+fi
+APEX_VER="${TARGET_VER:-}"
+if [ -z "$APEX_VER" ]; then
+  APEX_VER_VAR="DB_${DB_SUFFIX}_APEX_VERSION"
+  APEX_VER="${!APEX_VER_VAR:-${PROFILE_APEX_VERSION:-26.1}}"
+fi
+SYS_PWD_SECRET="${DB_SUFFIX}_db_sys_password"
+
+if declare -f ensure_db_instance_open >/dev/null 2>&1; then
+  ensure_db_instance_open "$CONTAINER_NAME" || true
+fi
+
+# Kui andmebaas on ADB või APEX_VER on NONE, siis siia andmebaasi APEX-it ei paigaldata!
+if [ "${IS_ADB:-false}" = "true" ] || [ "${PROFILE_APEX_INSTALL_REQUIRED:-true}" = "false" ] || [ "${PROFILE_APEX_PREINSTALLED:-false}" = "true" ]; then
+  echo "ℹ️  Andmebaas $DB_SUFFIX on Autonomous Database (ADB), kus APEX on juba eelinstalleeritud (Pre-installed). Jätan mootori paigaldamise vahele."
+  exit 0
+fi
+
 if [ "$APEX_VER" = "NONE" ]; then
   echo "ℹ️  APEX_VERSION on määratud NONE andmebaasile $DB_SUFFIX — Jätan APEX paigaldamise vahele."
   exit 0
@@ -149,6 +153,18 @@ if [ -z "$SYS_PASSWORD" ]; then
   fi
   SYS_PASSWORD="${SYS_PASSWORD:-$APEX_DB_SYS_PASSWORD}"
 fi
+
+APEX_LISTENER_PASSWORD="${APEX_LISTENER_PASSWORD:-}"
+if [ -z "$APEX_LISTENER_PASSWORD" ]; then
+  if [ -n "$CONTAINER_NAME" ] && podman container exists "$CONTAINER_NAME" 2>/dev/null; then
+    APEX_LISTENER_PASSWORD=$(podman exec "$CONTAINER_NAME" cat "/run/secrets/ords_listener_password" 2>/dev/null || podman exec "$CONTAINER_NAME" cat "/run/secrets/apex_schema_password" 2>/dev/null || true)
+  fi
+  if [ -z "$APEX_LISTENER_PASSWORD" ]; then
+    APEX_LISTENER_PASSWORD=$(podman secret inspect --showsecret ords_listener_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || podman secret inspect --showsecret apex_schema_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+  fi
+  APEX_LISTENER_PASSWORD="${APEX_LISTENER_PASSWORD:-$SYS_PASSWORD}"
+fi
+APEX_ADMIN_PASSWORD="${APEX_ADMIN_PASSWORD:-$SYS_PASSWORD}"
 DB_HOST="${APEX_DB_HOST:-${PROFILE_DB_HOST:-localhost}}"
 DB_PORT="${APEX_DB_PORT:-${PROFILE_DB_PORT:-1532}}"
 DB_SERVICE="${APEX_DB_SERVICE:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}"
@@ -205,9 +221,18 @@ version_to_int() {
   printf "%02d%02d%02d\n" "$major" "$minor" "${patch:-0}"
 }
 
+if [ -f "$SCRIPT_DIR/sanitize-logs.sh" ]; then
+  source "$SCRIPT_DIR/sanitize-logs.sh"
+fi
+
 if ! command -v print_progress &> /dev/null; then
   print_progress() {
-    echo -ne "$@"
+    local msg="$1"
+    local elapsed="$2"
+    local interval="${3:-15}"
+    if declare -f print_step_progress > /dev/null 2>&1; then
+      print_step_progress "$msg" "$elapsed" "$interval"
+    fi
   }
 fi
 
@@ -233,7 +258,17 @@ download_file() {
     echo "PowerShell allalaadimine ebaõnnestus, proovin kohalikku curl-i..."
   fi
   
-  curl -L -o "$dest" "$url"
+  if ! curl -fL -o "$dest" "$url"; then
+    echo "❌ VIGA: Allalaadimine ebaõnnestus (HTTP 404 või võrguviga: $url)"
+    rm -f "$dest"
+    return 1
+  fi
+
+  if [[ "$dest" == *.zip ]] && ! unzip -t "$dest" &>/dev/null; then
+    echo "❌ VIGA: Allalaaditud fail $dest ei ole kehtiv ZIP arhiiv (URL $url tagastas vigase sisu)."
+    rm -f "$dest"
+    return 1
+  fi
 }
 
 get_step_stats() {
@@ -322,34 +357,39 @@ BINARIES_DIR="$SCRIPT_DIR/../../binaries"
 mkdir -p "$BINARIES_DIR"
 TARGET_APEX_ZIP=""
 
-# 1. Kui apex-latest.zip on olemas ja tema versioon vastab nõutud APEX_VER versioonile, siis kasutatakse seda
-if [ -f "$BINARIES_DIR/apex-latest.zip" ]; then
-  LATEST_VER=$(get_apex_zip_version "$BINARIES_DIR/apex-latest.zip")
-  if [ -n "$LATEST_VER" ] && [[ "$LATEST_VER" == "$APEX_VER"* ]]; then
-    TARGET_APEX_ZIP="$BINARIES_DIR/apex-latest.zip"
-    echo "Leitud olemasolev apex-latest.zip versiooniga $LATEST_VER (sobib nõutud APEX $APEX_VER versiooniga)."
-  fi
+# 1. Kontrollime kas lokaalselt on olemas nõutud versiooni zip või apex-latest.zip
+APEX_URL_ZIP_NAME=$(basename "$APEX_URL")
+EXPECTED_ZIP="$BINARIES_DIR/$APEX_URL_ZIP_NAME"
+
+if [ -f "$EXPECTED_ZIP" ] && unzip -t "$EXPECTED_ZIP" &>/dev/null; then
+  TARGET_APEX_ZIP="$EXPECTED_ZIP"
+  echo "Leitud olemasolev kohalik arhiiv $APEX_URL_ZIP_NAME."
+elif [ -f "$BINARIES_DIR/apex-latest.zip" ] && unzip -t "$BINARIES_DIR/apex-latest.zip" &>/dev/null; then
+  TARGET_APEX_ZIP="$BINARIES_DIR/apex-latest.zip"
+  echo "Leitud olemasolev kohalik arhiiv apex-latest.zip."
+elif [ -f "$BINARIES_DIR/apex_latest.zip" ] && unzip -t "$BINARIES_DIR/apex_latest.zip" &>/dev/null; then
+  TARGET_APEX_ZIP="$BINARIES_DIR/apex_latest.zip"
+  echo "Leitud olemasolev kohalik arhiiv apex_latest.zip."
 fi
 
-# 2. Kui apex-latest.zip ei sobi või puudub, kontrollime profiili URL-i kohast zip-faili
-if [ -z "$TARGET_APEX_ZIP" ]; then
-  APEX_URL_ZIP_NAME=$(basename "$APEX_URL")
-  EXPECTED_ZIP="$BINARIES_DIR/$APEX_URL_ZIP_NAME"
-  if [ -f "$EXPECTED_ZIP" ]; then
-    EXPECTED_VER=$(get_apex_zip_version "$EXPECTED_ZIP")
-    if [ -n "$EXPECTED_VER" ] && [[ "$EXPECTED_VER" == "$APEX_VER"* ]]; then
-      TARGET_APEX_ZIP="$EXPECTED_ZIP"
-      echo "Leitud olemasolev $APEX_URL_ZIP_NAME versiooniga $EXPECTED_VER (sobib nõutud APEX $APEX_VER versiooniga)."
+# 2. Kui lokaalselt sobivat zip faili ei ole, laadime alla profiili URL-ilt või apex-latest.zip URL-ilt
+if [ -z "$TARGET_APEX_ZIP" ] || [ ! -f "$TARGET_APEX_ZIP" ]; then
+  TARGET_APEX_ZIP="$EXPECTED_ZIP"
+  echo "Lokaalsest kataloogist ei leitud nõutud APEX versiooni $APEX_VER ($APEX_URL_ZIP_NAME). Laadin alla aadressilt: $APEX_URL..."
+  if ! download_file "$APEX_URL" "$TARGET_APEX_ZIP"; then
+    echo "⚠️  Hoiatus: $APEX_URL allalaadimine ebaõnnestus. Proovin teist allalaadimisliidest (apex-latest.zip)..."
+    LATEST_URL="https://download.oracle.com/otn_software/apex/apex-latest.zip"
+    TARGET_APEX_ZIP="$BINARIES_DIR/apex-latest.zip"
+    if ! download_file "$LATEST_URL" "$TARGET_APEX_ZIP"; then
+      # 3. Kui ka latest URL ei toimi, otsime kaustast binaries/ kõrgeima versiooniga kehtivat zip-arhiivi
+      echo "⚠️  Eemalt allalaadimine ebaõnnestus. Otsin kaustast binaries/ kõrgeima versiooniga kehtivat ZIP-paketti..."
+      HIGHEST_ZIP=$(ls "$BINARIES_DIR"/apex*.zip 2>/dev/null | sort -rV | while read -r f; do unzip -t "$f" &>/dev/null && echo "$f" && break; done || true)
+      if [ -n "$HIGHEST_ZIP" ] && [ -f "$HIGHEST_ZIP" ]; then
+        TARGET_APEX_ZIP="$HIGHEST_ZIP"
+        echo "✅ Kasutan parimat kohalikku APEX paketti: $(basename "$HIGHEST_ZIP")"
+      fi
     fi
   fi
-fi
-
-# 3. Kui vajalikku versiooni lokaalselt ei ole, laadime selle alla profiili URL-ilt
-if [ -z "$TARGET_APEX_ZIP" ]; then
-  APEX_URL_ZIP_NAME=$(basename "$APEX_URL")
-  TARGET_APEX_ZIP="$BINARIES_DIR/$APEX_URL_ZIP_NAME"
-  echo "Lokaalsest kataloogist ei leitud nõutud APEX versiooni $APEX_VER. Laadin alla aadressilt: $APEX_URL..."
-  download_file "$APEX_URL" "$TARGET_APEX_ZIP"
 fi
 
 APEX_ZIP="$TARGET_APEX_ZIP"
@@ -373,7 +413,7 @@ if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ] || [ "$DB_HOST" 
     STATUS=$(podman container inspect --format='{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null || echo "stopped")
     if [ "$STATUS" != "running" ]; then
       echo "Lokaalne andmebaas ($CONTAINER_NAME) ei tööta. Käivitan..."
-      podman compose up -d "$CONTAINER_NAME"
+      podman start "$CONTAINER_NAME" || true
     fi
     echo "Ootan kuni andmebaas ($CONTAINER_NAME) on valmis (healthy)..."
     until [ "$(podman inspect --format='{{.State.Health.Status}}' "$CONTAINER_NAME" 2>/dev/null)" == "healthy" ]; do
@@ -390,16 +430,16 @@ if [ "$IS_CONTAINER_AVAIL" = "true" ]; then
   EXEC_MODE="CONTAINER"
   
   # 1. Kopeerime ZIP-faili konteinerisse (üks suur fail, kopeerub sekundiga)
-  echo "Kopeerin APEX zip-faili konteinerisse..."
-  podman exec -u root "$CONTAINER_NAME" rm -rf /tmp/apex_install /tmp/apex-latest.zip || true
-  podman exec -u root "$CONTAINER_NAME" mkdir -p /tmp/apex_install
+  print_progress "Kopeerin APEX tarkvara konteinerisse (${CONTAINER_NAME})" 0 1
+  podman exec -u root "$CONTAINER_NAME" rm -rf /tmp/apex_install /tmp/apex-latest.zip >/dev/null 2>&1 || true
+  podman exec -u root "$CONTAINER_NAME" mkdir -p /tmp/apex_install >/dev/null 2>&1 || true
   podman cp "$APEX_ZIP" "$CONTAINER_NAME":/tmp/apex-latest.zip
-  podman exec -u root "$CONTAINER_NAME" chmod 644 /tmp/apex-latest.zip || true
-  podman exec -u root "$CONTAINER_NAME" chown -R oracle:oinstall /tmp/apex-latest.zip /tmp/apex_install || true
+  podman exec -u root "$CONTAINER_NAME" chmod 644 /tmp/apex-latest.zip >/dev/null 2>&1 || true
   
   # 2. Pakime lahti konteineri sees (host-süsteemi viirusetõrje seda ei kontrolli)
-  echo "Pakin APEX-i lahti konteineri sees..."
-  podman exec "$CONTAINER_NAME" unzip -o -q /tmp/apex-latest.zip -d /tmp/apex_install/ || true
+  print_progress "Pakin APEX tarkvara lahti konteineris (${CONTAINER_NAME})" 0 1
+  podman exec -u root "$CONTAINER_NAME" unzip -o -q /tmp/apex-latest.zip -d /tmp/apex_install/ >/dev/null 2>&1 || true
+  podman exec -u root "$CONTAINER_NAME" chown -R oracle:oinstall /tmp/apex_install >/dev/null 2>&1 || true
   
   APEX_SOURCE_DIR="/tmp/apex_install/apex"
   REST_PATH="/tmp/apex_install/apex"
@@ -496,6 +536,48 @@ fi
 if [ "$SKIP_APEX_ENGINE_INSTALL" = "true" ]; then
   echo "✅ Andmebaasis on juba paigaldatud ja kehtiv APEX versioon $DB_APEX_VER (soovitud: $TARGET_APEX_VER). Jätan mootori installeerimise vahele."
   copy_static_images_to_volume
+  # Sünkroniseerime APEX_PUBLIC_USER ja REST liideste paroolid
+  LOCAL_POST_SQL_SCRIPT="$SCRIPT_DIR/../../install_logs/run_apex_post_install_${DB_SUFFIX}.sql"
+  cat << EOF > "$LOCAL_POST_SQL_SCRIPT"
+SET ECHO ON;
+SET SERVEROUTPUT ON;
+
+ALTER SESSION SET CONTAINER = ${DB_SERVICE};
+ALTER SESSION SET "_oracle_script" = TRUE;
+
+ALTER USER APEX_PUBLIC_USER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" ACCOUNT UNLOCK;
+ALTER USER APEX_LISTENER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" ACCOUNT UNLOCK;
+ALTER USER APEX_REST_PUBLIC_USER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" ACCOUNT UNLOCK;
+ALTER USER APEX_PUBLIC_USER GRANT CONNECT THROUGH APEX_LISTENER;
+ALTER USER APEX_PUBLIC_USER GRANT CONNECT THROUGH APEX_REST_PUBLIC_USER;
+BEGIN
+    DECLARE
+        v_cnt NUMBER;
+    BEGIN
+        SELECT COUNT(*) INTO v_cnt FROM dba_users WHERE username = 'ORDS_PUBLIC_USER';
+        IF v_cnt = 0 THEN
+            EXECUTE IMMEDIATE 'CREATE USER ORDS_PUBLIC_USER IDENTIFIED BY "' || '${APEX_LISTENER_PASSWORD}' || '" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP';
+        ELSE
+            EXECUTE IMMEDIATE 'ALTER USER ORDS_PUBLIC_USER IDENTIFIED BY "' || '${APEX_LISTENER_PASSWORD}' || '" ACCOUNT UNLOCK';
+        END IF;
+        EXECUTE IMMEDIATE 'GRANT CREATE SESSION TO ORDS_PUBLIC_USER';
+        EXECUTE IMMEDIATE 'ALTER USER ORDS_PUBLIC_USER ACCOUNT UNLOCK';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_USER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_REST_PUBLIC_USER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_LISTENER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_ROUTER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
+    END;
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+EXIT;
+EOF
+  if [ "$EXEC_MODE" = "CONTAINER" ]; then
+    podman cp "$LOCAL_POST_SQL_SCRIPT" "$CONTAINER_NAME":/tmp/apex_post.sql 2>/dev/null || true
+    podman exec -i "$CONTAINER_NAME" sqlplus -s "sys/${SYS_PASSWORD}@localhost:1521/${DB_SERVICE} as sysdba" @/tmp/apex_post.sql >/dev/null 2>&1 || true
+  else
+    $DB_CLI "$CONN_STR" @"$LOCAL_POST_SQL_SCRIPT" >/dev/null 2>&1 || true
+  fi
   STEP4_SECS=0
 else
   # Kui käivitatakse kliendi-režiimis, peame minema apex kataloogi sisse
@@ -503,7 +585,9 @@ else
     cd "$APEX_SOURCE_DIR"
   fi
 
-  $DB_CLI "$CONN_STR" > "$SQL_LOG_FILE" 2>&1 << EOF &
+  # Valmistame ette täpse SQL skriptifaili
+  LOCAL_SQL_SCRIPT="$SCRIPT_DIR/../../install_logs/run_apex_install_${DB_SUFFIX}.sql"
+  cat << EOF > "$LOCAL_SQL_SCRIPT"
 -- Drop partial APEX schemas if present to allow clean fresh installation
 ALTER SESSION SET "_oracle_script" = TRUE;
 BEGIN
@@ -524,70 +608,166 @@ END;
 
 -- Run main APEX installation: @apexins.sql tablespace_apex tablespace_files tablespace_temp images
 @apexins.sql SYSAUX SYSAUX TEMP /i/
-YES
+
+EXIT;
+EOF
+
+  LOCAL_POST_SQL_SCRIPT="$SCRIPT_DIR/../../install_logs/run_apex_post_install_${DB_SUFFIX}.sql"
+  cat << EOF > "$LOCAL_POST_SQL_SCRIPT"
+SET ECHO ON;
+SET SERVEROUTPUT ON;
+
+ALTER SESSION SET CONTAINER = ${DB_SERVICE};
+ALTER SESSION SET "_oracle_script" = TRUE;
 
 -- Set up APEX REST users (APEX_LISTENER and APEX_REST_PUBLIC_USER)
-@apex_rest_config_core.sql "${REST_PATH}" "${APEX_LISTENER_PASSWORD}" "${APEX_LISTENER_PASSWORD}"
+@core/scripts/apxpreins.sql
+@apex_rest_config_core.sql @ "${APEX_LISTENER_PASSWORD}" "${APEX_LISTENER_PASSWORD}"
 
--- Set APEX Instance Admin Password
+-- Unlock and sync passwords for ORDS & APEX public users
+ALTER USER APEX_PUBLIC_USER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" ACCOUNT UNLOCK;
+ALTER USER APEX_LISTENER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" ACCOUNT UNLOCK;
+ALTER USER APEX_REST_PUBLIC_USER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" ACCOUNT UNLOCK;
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_ROUTER IDENTIFIED BY "' || '${APEX_LISTENER_PASSWORD}' || '" ACCOUNT UNLOCK';
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+ALTER USER APEX_PUBLIC_USER GRANT CONNECT THROUGH APEX_LISTENER;
+ALTER USER APEX_PUBLIC_USER GRANT CONNECT THROUGH APEX_REST_PUBLIC_USER;
+BEGIN
+    DECLARE
+        v_cnt NUMBER;
+    BEGIN
+        SELECT COUNT(*) INTO v_cnt FROM dba_users WHERE username = 'ORDS_PUBLIC_USER';
+        IF v_cnt = 0 THEN
+            EXECUTE IMMEDIATE 'CREATE USER ORDS_PUBLIC_USER IDENTIFIED BY "' || '${APEX_LISTENER_PASSWORD}' || '" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP';
+        ELSE
+            EXECUTE IMMEDIATE 'ALTER USER ORDS_PUBLIC_USER IDENTIFIED BY "' || '${APEX_LISTENER_PASSWORD}' || '" ACCOUNT UNLOCK';
+        END IF;
+        EXECUTE IMMEDIATE 'GRANT CREATE SESSION TO ORDS_PUBLIC_USER';
+        EXECUTE IMMEDIATE 'ALTER USER ORDS_PUBLIC_USER ACCOUNT UNLOCK';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_USER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_REST_PUBLIC_USER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_LISTENER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_ROUTER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_ROUTER GRANT CONNECT THROUGH APEX_LISTENER';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_ROUTER GRANT CONNECT THROUGH APEX_REST_PUBLIC_USER';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_ROUTER GRANT CONNECT THROUGH APEX_PUBLIC_USER';
+    END;
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+
+-- Ensure ORDS PL/SQL Gateway Configuration mapping exists
+BEGIN
+    EXECUTE IMMEDIATE 'CREATE OR REPLACE VIEW ORDS_METADATA.PLSQL_GATEWAY_CONFIG AS SELECT runtime_user, plsql_gateway_user, comments, created_by, created_on, updated_by, updated_on FROM ORDS_METADATA.CFG_PLSQL_GATEWAYS';
+    EXECUTE IMMEDIATE 'GRANT SELECT ON ORDS_METADATA.PLSQL_GATEWAY_CONFIG TO ORDS_PUBLIC_USER';
+    EXECUTE IMMEDIATE 'GRANT SELECT ON ORDS_METADATA.PLSQL_GATEWAY_CONFIG TO APEX_PUBLIC_USER';
+    EXECUTE IMMEDIATE 'GRANT SELECT ON ORDS_METADATA.PLSQL_GATEWAY_CONFIG TO APEX_LISTENER';
+    EXECUTE IMMEDIATE 'INSERT INTO ORDS_METADATA.CFG_PLSQL_GATEWAYS (id, runtime_user, plsql_gateway_user, created_by, created_on, updated_by, updated_on) VALUES (10000, ''ORDS_PUBLIC_USER'', ''APEX_PUBLIC_USER'', ''SYS'', SYSDATE, ''SYS'', SYSDATE)';
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+COMMIT;
+
+-- Set APEX Instance Admin Password (Idempotent)
 BEGIN
     APEX_UTIL.set_security_group_id( 10 );
-    APEX_UTIL.create_user(
-        p_user_name                    => '${APEX_ADMIN_USER:-ADMIN}',
-        p_email_address                => '${APEX_ADMIN_EMAIL:-${PROFILE_APEX_ADMIN_EMAIL:-admin@company.com}}',
-        p_web_password                 => '${APEX_ADMIN_PASSWORD}',
-        p_developer_privs              => 'ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE',
-        p_change_password_on_first_use => 'N'
-    );
+    IF APEX_UTIL.get_user_id('${APEX_ADMIN_USER:-ADMIN}') IS NULL THEN
+        APEX_UTIL.create_user(
+            p_user_name                    => '${APEX_ADMIN_USER:-ADMIN}',
+            p_email_address                => '${APEX_ADMIN_EMAIL:-${PROFILE_APEX_ADMIN_EMAIL:-admin@company.com}}',
+            p_web_password                 => '${APEX_ADMIN_PASSWORD}',
+            p_developer_privs              => 'ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE',
+            p_change_password_on_first_use => 'N'
+        );
+    ELSE
+        APEX_UTIL.change_password_by_developer(
+            p_user_name => '${APEX_ADMIN_USER:-ADMIN}',
+            p_password  => '${APEX_ADMIN_PASSWORD}'
+        );
+    END IF;
     COMMIT;
+EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
 
--- Create APEX Workspace for Application
+-- Create APEX Workspace for Application (Idempotent)
 BEGIN
-    APEX_INSTANCE_ADMIN.add_workspace(
-        p_workspace_id   => NULL,
-        p_workspace      => '${APEX_WORKSPACE:-${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}}',
-        p_primary_schema => '${APEX_SCHEMA_USER:-${PROFILE_APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}}'
-    );
-    COMMIT;
+    IF APEX_UTIL.find_security_group_id('${APEX_WORKSPACE:-${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}}') IS NULL THEN
+        APEX_INSTANCE_ADMIN.add_workspace(
+            p_workspace_id   => NULL,
+            p_workspace      => '${APEX_WORKSPACE:-${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}}',
+            p_primary_schema => '${APEX_SCHEMA_USER:-${PROFILE_APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}}'
+        );
+        COMMIT;
+    END IF;
+EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
 
--- Create Developer user ADMIN inside Workspace
+-- Create Developer user ADMIN inside Workspace (Idempotent)
 DECLARE
     v_workspace_id NUMBER;
 BEGIN
     v_workspace_id := APEX_UTIL.find_security_group_id('${APEX_WORKSPACE:-${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}}');
-    APEX_UTIL.set_security_group_id(v_workspace_id);
-    APEX_UTIL.create_user(
-        p_user_name                    => '${APEX_ADMIN_USER:-ADMIN}',
-        p_email_address                => '${APEX_ADMIN_EMAIL:-${PROFILE_APEX_ADMIN_EMAIL:-admin@company.com}}',
-        p_web_password                 => '${APEX_ADMIN_PASSWORD}',
-        p_developer_privs              => 'ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE',
-        p_change_password_on_first_use => 'N'
-    );
-    COMMIT;
-END;
-/
-    COMMIT;
+    IF v_workspace_id IS NOT NULL THEN
+        APEX_UTIL.set_security_group_id(v_workspace_id);
+        IF APEX_UTIL.get_user_id('${APEX_ADMIN_USER:-ADMIN}') IS NULL THEN
+            APEX_UTIL.create_user(
+                p_user_name                    => '${APEX_ADMIN_USER:-ADMIN}',
+                p_email_address                => '${APEX_ADMIN_EMAIL:-${PROFILE_APEX_ADMIN_EMAIL:-admin@company.com}}',
+                p_web_password                 => '${APEX_ADMIN_PASSWORD}',
+                p_developer_privs              => 'ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE',
+                p_change_password_on_first_use => 'N'
+            );
+        ELSE
+            APEX_UTIL.change_password_by_developer(
+                p_user_name => '${APEX_ADMIN_USER:-ADMIN}',
+                p_password  => '${APEX_ADMIN_PASSWORD}'
+            );
+        END IF;
+        COMMIT;
+    END IF;
+EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
 
 EXIT;
 EOF
 
+  OTHER_CONTAINERS=$(podman ps --format '{{.Names}}' 2>/dev/null | grep -E '^db-|^oracle-db-' | grep -v "^${CONTAINER_NAME}$" || echo "")
+  if [ -n "$OTHER_CONTAINERS" ]; then
+    echo "ℹ️ Vabastan mälumahtu APEX paigalduse ajaks: peatan ajutiselt konteinerid: $OTHER_CONTAINERS..."
+    podman stop $OTHER_CONTAINERS >/dev/null 2>&1 || true
+  fi
+
+  if [ "$EXEC_MODE" = "CONTAINER" ]; then
+    podman exec "$CONTAINER_NAME" mkdir -p /tmp/apex_install/apex 2>/dev/null || true
+    podman cp "$LOCAL_SQL_SCRIPT" "$CONTAINER_NAME":/tmp/apex_install/apex/run_install.sql
+    podman cp "$LOCAL_POST_SQL_SCRIPT" "$CONTAINER_NAME":/tmp/apex_install/apex/run_post_install.sql
+    podman exec "$CONTAINER_NAME" chmod 644 /tmp/apex_install/apex/run_install.sql /tmp/apex_install/apex/run_post_install.sql 2>/dev/null || true
+    podman exec -i -w /tmp/apex_install/apex "$CONTAINER_NAME" sh -c "sqlplus -s 'sys/${SYS_PASSWORD}@localhost:1521/${DB_SERVICE} as sysdba' @run_install.sql && sqlplus -s 'sys/${SYS_PASSWORD}@localhost:1521/${DB_SERVICE} as sysdba' @run_post_install.sql" > "$SQL_LOG_FILE" 2>&1 &
+  else
+    $DB_CLI "$CONN_STR" @"$LOCAL_SQL_SCRIPT" >> "$SQL_LOG_FILE" 2>&1 && $DB_CLI "$CONN_STR" @"$LOCAL_POST_SQL_SCRIPT" >> "$SQL_LOG_FILE" 2>&1 &
+  fi
   SQL_PID=$!
 
-  # Kuvame sekundite tiksujat teatud intervalliga
+  # Kuvame sekundite tiksujat teatud intervalliga (vaikimisi iga 2s tagant)
   ELAPSED=0
+  POLL_INTERVAL="${PROGRESS_INTERVAL:-2}"
+  print_progress "Paigaldan APEX mootorit (${CONTAINER_NAME})" 0 "$POLL_INTERVAL"
   while kill -0 $SQL_PID 2>/dev/null; do
-    sleep 3
-    ELAPSED=$((ELAPSED + 3))
-    print_progress "   Paigaldan APEX mootorit... kestus: ${ORANGE}$(format_duration $ELAPSED)${NC}\r"
+    sleep "$POLL_INTERVAL"
+    ELAPSED=$((ELAPSED + POLL_INTERVAL))
+    print_progress "Paigaldan APEX mootorit (${CONTAINER_NAME})" "$ELAPSED" "$POLL_INTERVAL"
   done
   wait $SQL_PID
-  echo ""
+  clear_progress_line
+
+
+
   echo "✅ APEX mootori paigaldamine lõpetatud!"
 
   copy_static_images_to_volume
@@ -608,23 +788,75 @@ echo -e "⏱  [Samm 4 valmis (APEX mootor): ${YELLOW}$STEP4_TIME${NC}]"
 # ----------------------------------------------------------------------------
 ORDS_CONF_START=$(date +%s)
 
-ords_found=$(podman ps --format '{{.Names}}' | grep -E '^oracle-ords-dev|^ords-|^oracle-ords-' | head -n 1 || echo "oracle-ords-dev")
+ords_found=$(podman ps --format '{{.Names}}' | grep -E '^app-ords|^oracle-ords-dev|^ords-|^oracle-ords-' | head -n 1 || echo "app-ords")
 ORDS_CONTAINER="${PROFILE_ORDS_CONTAINER_NAME:-$ords_found}"
 ORDS_CONF_LOG="$LOG_DIR/ords_configure_${DB_SUFFIX}_${TIMESTAMP}.log"
 
 if [ "$SKIP_ORDS" = "false" ] && podman container exists "$ORDS_CONTAINER" 2>/dev/null; then
   echo "=================================================================="
-  echo "Kontrollin ORDS ($ORDS_CONTAINER) gateway režiimi (plsql.gateway.mode = proxied)..."
+  echo "Kontrollin ja sünkroniseerin ORDS serveri ($ORDS_CONTAINER) seadistused..."
   echo "📝 Logifail: [Logi](file://$ORDS_CONF_LOG)"
   echo "=================================================================="
   {
-    podman exec "$ORDS_CONTAINER" ords --config /etc/ords/config config --db-pool default set plsql.gateway.mode proxied 2>/dev/null || true
+    pool_suffix=$(echo "$CONTAINER_NAME" | sed 's/^db-//' | tr '-' '_')
+    
+    # Configure default pool
+    podman exec -i "$ORDS_CONTAINER" bash -c "
+      mkdir -p /etc/ords/config/databases/default
+      cat << 'EOF_POOL' > /etc/ords/config/databases/default/pool.xml
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">
+<properties>
+<entry key=\"db.connectionType\">basic</entry>
+<entry key=\"db.hostname\">${CONTAINER_NAME}</entry>
+<entry key=\"db.port\">1521</entry>
+<entry key=\"db.servicename\">${DB_SERVICE_NAME:-FREEPDB1}</entry>
+<entry key=\"db.username\">ORDS_PUBLIC_USER</entry>
+<entry key=\"db.password\">${APEX_LISTENER_PASSWORD}</entry>
+<entry key=\"feature.sdw\">true</entry>
+<entry key=\"plsql.gateway.mode\">proxied</entry>
+<entry key=\"restEnabledSql.active\">true</entry>
+</properties>
+EOF_POOL
+    " || true
+
+    # If container is specific pool (proxy, lis, etc.), configure mapped pool as well
+    if [ -n "$pool_suffix" ] && [ "$pool_suffix" != "default" ]; then
+      podman exec -i "$ORDS_CONTAINER" bash -c "
+        mkdir -p /etc/ords/config/databases/${pool_suffix}
+        cat << 'EOF_POOL' > /etc/ords/config/databases/${pool_suffix}/pool.xml
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">
+<properties>
+<entry key=\"db.connectionType\">basic</entry>
+<entry key=\"db.hostname\">${CONTAINER_NAME}</entry>
+<entry key=\"db.port\">1521</entry>
+<entry key=\"db.servicename\">${DB_SERVICE_NAME:-FREEPDB1}</entry>
+<entry key=\"db.username\">ORDS_PUBLIC_USER</entry>
+<entry key=\"db.password\">${APEX_LISTENER_PASSWORD}</entry>
+<entry key=\"feature.sdw\">true</entry>
+<entry key=\"plsql.gateway.mode\">proxied</entry>
+<entry key=\"restEnabledSql.active\">true</entry>
+</properties>
+EOF_POOL
+      " || true
+    fi
+
+    if [ -n "$APEX_LISTENER_PASSWORD" ]; then
+      podman exec "$ORDS_CONTAINER" bash -c "for pool in \$(find /etc/ords/config/databases/ -name 'pool.xml' 2>/dev/null); do sed -i 's|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$APEX_LISTENER_PASSWORD</entry>|g' \"\$pool\" 2>/dev/null || true; done" || true
+    fi
+    podman restart "$ORDS_CONTAINER" >/dev/null 2>&1 || true
   } > "$ORDS_CONF_LOG" 2>&1 || true
 fi
 
 ORDS_CONF_SECS=$(( $(date +%s) - ORDS_CONF_START ))
 ORDS_CONF_TIME=$(format_duration $ORDS_CONF_SECS)
 echo -e "⏱  [ORDS konfigureerimine valmis: ${YELLOW}$ORDS_CONF_TIME${NC}]"
+
+if podman container exists app-ords 2>/dev/null; then
+  echo "🔄 Taaskäivitan ORDS teenuse (app-ords), et uued kasutajaandmed rakenduksid mälus..."
+  podman restart app-ords >/dev/null 2>&1 || true
+fi
 
 # ----------------------------------------------------------------------------
 # 5. Automaatne APEX Patchi paigaldamine (kui patches/ kataloogis on .zip fail)
@@ -641,9 +873,9 @@ if [ -d "$PATCHES_DIR" ] && [ -x "$PATCH_SCRIPT" ]; then
     echo ""
     print_sub_header "5" "Leitud APEX patch: $(basename "$LATEST_PATCH") - Käivitan automaatse paigalduse..." "step5_apex_patch_install_seconds" "step9_apex_patch_install_seconds" "30s"
     if [ "$SKIP_ORDS" = "true" ]; then
-      "$PATCH_SCRIPT" "$LATEST_PATCH" --no-ords
+      TARGET_CONTAINER="$CONTAINER_NAME" "$PATCH_SCRIPT" "$LATEST_PATCH" --no-ords
     else
-      "$PATCH_SCRIPT" "$LATEST_PATCH"
+      TARGET_CONTAINER="$CONTAINER_NAME" "$PATCH_SCRIPT" "$LATEST_PATCH"
     fi
     STEP5_SECS=$(( $(date +%s) - STEP5_START ))
     STEP5_TIME=$(format_duration $STEP5_SECS)
@@ -657,6 +889,11 @@ else
   STEP5_SECS=0
   STEP5_TIME="vahele jäetud"
   echo "5. Patches/ kataloog puudub — vahele jäetud."
+fi
+
+if [ -n "$OTHER_CONTAINERS" ]; then
+  echo "ℹ️ Taaskäivitan peatatud konteinerid: $OTHER_CONTAINERS..."
+  podman start $OTHER_CONTAINERS >/dev/null 2>&1 || true
 fi
 
 TOTAL_SECS=$(( $(date +%s) - START_TOTAL ))

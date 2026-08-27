@@ -25,9 +25,12 @@ DB_PORT="${PROFILE_DB_PORT:-1533}"
 DB_SERVICE="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
 SYS_PWD=$(podman exec "$PRIMARY_CONTAINER" cat /run/secrets/oracle_pwd 2>/dev/null || podman secret inspect --showsecret publisher_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || echo "")
 if [ -z "$SYS_PWD" ]; then
-  SYS_PWD=$("$SCRIPT_DIR/view-wallet-credential.sh" "DB_PUBLISHER_SYS" 2>/dev/null | grep "Password:" | awk '{print $3}' | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\r\n')
+  SYS_PWD=$("$SCRIPT_DIR/get-password.sh" "DB_PUBLISHER_SYS" 2>/dev/null | grep "Password:" | awk '{print $3}' | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\r\n' || echo "")
 fi
-SYS_PWD="${SYS_PWD:-OraclePass2026}"
+if [ -z "$SYS_PWD" ]; then
+  echo "❌ VIGA: Ei suutnud leida SYS parooli Walletist ega Podman Secrets store'ist!"
+  exit 1
+fi
 
 echo "🚀 Initializing RCU Schemas (${RCU_PREFIX}_*) on Database ${DB_HOST}:${DB_PORT}/${DB_SERVICE}..."
 
@@ -35,6 +38,7 @@ echo "🚀 Initializing RCU Schemas (${RCU_PREFIX}_*) on Database ${DB_HOST}:${D
 SQL_STATEMENT=$(cat <<EOF
 SET FEEDBACK OFF;
 SET SERVEROUTPUT ON;
+ALTER SESSION SET CONTAINER = FREEPDB1;
 
 DECLARE
   v_count NUMBER;
@@ -42,18 +46,20 @@ BEGIN
   -- Create OAS_CONFIG user if not existing
   SELECT COUNT(*) INTO v_count FROM dba_users WHERE username = '${RCU_PREFIX}_CONFIG';
   IF v_count = 0 THEN
-    EXECUTE IMMEDIATE 'CREATE USER ${RCU_PREFIX}_CONFIG IDENTIFIED BY "${SYS_PWD}" DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS';
-    EXECUTE IMMEDIATE 'GRANT CONNECT, RESOURCE, DBA TO ${RCU_PREFIX}_CONFIG';
+    EXECUTE IMMEDIATE 'CREATE USER ${RCU_PREFIX}_CONFIG IDENTIFIED BY ${SYS_PWD} DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS';
     DBMS_OUTPUT.PUT_LINE('Created user ${RCU_PREFIX}_CONFIG');
   END IF;
+  EXECUTE IMMEDIATE 'GRANT CREATE SESSION, CONNECT, RESOURCE, DBA TO ${RCU_PREFIX}_CONFIG';
+  EXECUTE IMMEDIATE 'ALTER USER ${RCU_PREFIX}_CONFIG IDENTIFIED BY ${SYS_PWD}';
 
   -- Create OAS_STB user
   SELECT COUNT(*) INTO v_count FROM dba_users WHERE username = '${RCU_PREFIX}_STB';
   IF v_count = 0 THEN
-    EXECUTE IMMEDIATE 'CREATE USER ${RCU_PREFIX}_STB IDENTIFIED BY "${SYS_PWD}" DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS';
-    EXECUTE IMMEDIATE 'GRANT CONNECT, RESOURCE, DBA TO ${RCU_PREFIX}_STB';
+    EXECUTE IMMEDIATE 'CREATE USER ${RCU_PREFIX}_STB IDENTIFIED BY ${SYS_PWD} DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS';
     DBMS_OUTPUT.PUT_LINE('Created user ${RCU_PREFIX}_STB');
   END IF;
+  EXECUTE IMMEDIATE 'GRANT CREATE SESSION, CONNECT, RESOURCE, DBA TO ${RCU_PREFIX}_STB';
+  EXECUTE IMMEDIATE 'ALTER USER ${RCU_PREFIX}_STB IDENTIFIED BY ${SYS_PWD}';
 END;
 /
 EXIT;
@@ -61,11 +67,11 @@ EOF
 )
 
 # Run SQL command using ephemeral container pattern or native sqlplus
-CONTAINER_IMAGE="${RESOLVED_DB_IMAGE:-docker.io/gvenzl/oracle-free:23-full-faststart}"
-PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1 || echo "pub-db")
+TARGET_PUB_CONTAINER=$(get_active_db_instances 2>/dev/null | grep -i "publisher" | head -n 1 | cut -d'|' -f1)
+TARGET_PUB_CONTAINER="${TARGET_PUB_CONTAINER:-main-db-profile}"
 
-if podman ps --format "{{.Names}}" 2>/dev/null | grep -q "$PRIMARY_CONTAINER"; then
-  echo "$SQL_STATEMENT" | podman exec -i "$PRIMARY_CONTAINER" sh -c "sqlplus -S / as sysdba" || true
+if podman ps --format "{{.Names}}" 2>/dev/null | grep -q "$TARGET_PUB_CONTAINER"; then
+  echo "$SQL_STATEMENT" | podman exec -i "$TARGET_PUB_CONTAINER" sh -c "sqlplus -S / as sysdba" || true
 fi
 
 echo "✅ RCU Schema Initialization completed for ${RCU_PREFIX}!"

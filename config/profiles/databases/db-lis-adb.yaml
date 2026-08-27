@@ -1,0 +1,42 @@
+profile:
+  id: db-lis-adb
+  name: db-lis-adb
+  description: "Primary Laboratory Information System (LIS) Business Application Database running on Autonomous Database (Free / OCI ADB Free Tier)."
+  functionality: app
+  db_type: autonomous
+  image_vendor: oracle
+
+database:
+  container_image: container-registry.oracle.com/database/adb-free:latest
+  workload_type: OLTP
+  admin_user: ADMIN
+  admin_role: NORMAL
+  default_service: MYATP_low
+  db_port: 1533
+  wallet_required: true
+
+components:
+  ords:
+    enabled: true
+    preinstalled: true
+    container_required: false
+    https_port: 8443
+    http_port: 8080
+  apex:
+    enabled: true
+    preinstalled: true
+    install_required: false
+    workspace: LIS_WORKSPACE
+
+users:
+  - username: ADMIN
+    role: ADMIN
+    wallet_alias: DB_LIS_SYS
+    color: "#E74C3C"
+  - username: LIS_APP
+    role: NORMAL
+    ords_enabled: true
+    ords_alias: lis_app
+    roles: [DB_DEVELOPER_ROLE]
+    wallet_alias: DB_LIS_APP
+    color: "#2980B9"

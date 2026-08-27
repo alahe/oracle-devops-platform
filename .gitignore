@@ -3,24 +3,46 @@
 .env.secrets
 config/secrets/
 config/tns_admin/
+config/tns_admin_container/
 config/cookies.txt
 config/oracle_db_wallet.zip
 config/wallet-*/
-config/ords/*/databases/*/wallet/
+config/ords/*/**
+config/certs/custom/**
+!config/certs/custom/README.md
+!config/certs/custom/.gitkeep
+config/certs/public/**
+!config/certs/public/README.md
+!config/certs/public/.gitkeep
+config/certs/corp/**
+!config/certs/corp/README.md
+!config/certs/corp/.gitkeep
+config/certs/user_ca/**
+!config/certs/user_ca/README.md
+!config/certs/user_ca/.gitkeep
+config/certs/self_signed/**
+!config/certs/self_signed/README.md
+!config/certs/self_signed/.gitkeep
 *.sso
 *.p12
 *.key
 *.lck
 
+# Dynamically generated Docker/Podman compose manifests
+podman-compose.override.yml
 
-
-# Local Installation Logs & Test History (Detailed logs remain local only)
+# Local Installation Logs, Debug Logs & Test History
 install_logs/
 golden-snapshots/
+backups/
 tests/reports/history/
+AdminServer.log
+biee_log*.txt
+config_logs*/
+*.log
+META-INF/
 
-
-# Temporary and Downloaded Archives & Binaries Kaustad
+# Temporary and Downloaded Archives & Binaries
 binaries/**
 !binaries/
 !binaries/**/
@@ -28,14 +50,15 @@ binaries/**
 !binaries/**/readme.md
 !binaries/**/.gitkeep
 
-
 apex-latest.zip
 patches/*.zip
 patches/unzipped_*
 db_install/
 db-install/
 
-
+# Large Docker Build Artifacts & Downloads
+docker/publisher/dockerfiles/*/*.rpm
+docker/publisher/dockerfiles/*/*.zip
 
 # OS / Editor Files
 .DS_Store

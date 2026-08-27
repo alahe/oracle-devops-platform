@@ -10,30 +10,20 @@ set -e
 # Vaigistame podman compose hoiatusteate välise teenusepakkuja kohta
 export PODMAN_COMPOSE_WARNING_LOGS=false
 
-# Värvide seadistamine (ainult siis kui terminal seda toetab)
-if [ -t 0 ] || { [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; }; then
-  GREEN='\033[1;32m'
-  YELLOW='\033[0;33m'
-  CYAN='\033[1;36m'
-  RED='\033[1;31m'
-  NC='\033[0m'
-else
-  GREEN=''
-  YELLOW=''
-  CYAN=''
-  RED=''
-  NC=''
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_NAME="oracle-devops-platform"
+COMPOSE_FILE="$WORKSPACE_DIR/podman-compose.yml"
+
+# Kaasame ühise abiteegi ja profiilimootori
+if [ -f "$SCRIPT_DIR/internal/common.sh" ]; then
+  source "$SCRIPT_DIR/internal/common.sh"
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_NAME="oracle-devops-platform"
-COMPOSE_FILE="$SCRIPT_DIR/../podman-compose.yml"
-
-
 # Laeme keskkonnamuutujad kui olemas
-if [ -f "$SCRIPT_DIR/../.env" ]; then
+if [ -f "$WORKSPACE_DIR/.env" ]; then
   set -a
-  source "$SCRIPT_DIR/../.env"
+  source "$WORKSPACE_DIR/.env"
   set +a
 fi
 
@@ -47,11 +37,16 @@ COMPONENT="all"
 TARGET_PROFILE="${PROXY_DB:-${MAIN_DB_PROFILE:-proxy-adb-oracle}}"
 FORCE=false
 SYSTEM_RESET=false
+CLEAN_LOGS=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    -y|--force)
+    -y|--force|--yes|-y*|--y*|-Y|--YES)
       FORCE=true
+      shift
+      ;;
+    -l|--logs)
+      CLEAN_LOGS=true
       shift
       ;;
     --system)
@@ -154,6 +149,12 @@ if [ "$FORCE" = "false" ]; then
   if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
     echo -e "${RED}❌ Puhastamine tühistatud kasutaja poolt.${NC}"
     exit 0
+  fi
+  if [ "$CLEAN_LOGS" = "false" ]; then
+    read -p "❓ Kas soovid puhastada ka paigalduslogid ja diagnostika-arhiivid (clean-logs.sh)? (y/N): " LOG_CONFIRM
+    if [[ "$LOG_CONFIRM" =~ ^[Yy]$ ]]; then
+      CLEAN_LOGS=true
+    fi
   fi
 fi
 
@@ -327,12 +328,19 @@ case $COMPONENT in
       podman secret rm "$sec" >> "$LOG_FILE" 2>&1 || true
     done
     
-    # Kustutame hosti failid
-    echo "   Kustutame TNS_ADMIN/Wallet kataloogi..."
+    # Kustutame hosti failid ja konteinerite ajutised paigaldusfailid
+    echo "   Kustutame TNS_ADMIN/Wallet kataloogi ja ajutised paigalduskaustad..."
     rm -rf "$SCRIPT_DIR/../config/tns_admin"
     rm -rf "$SCRIPT_DIR/../config/secrets"
     rm -f "$OVERRIDE_FILE"
     rm -rf "$SCRIPT_DIR/../db-install"
+
+    # Puhastame kõigist töötavatest konteineritest ajutise APEX paigalduse kausta /tmp/apex_install
+    for c in $(podman ps --format '{{.Names}}' 2>/dev/null | grep -E '^db-|^oracle-db-' || echo ""); do
+      if [ -n "$c" ]; then
+        podman exec -u root "$c" rm -rf /tmp/apex_install /tmp/apex-latest.zip >/dev/null 2>&1 || true
+      fi
+    done
 
     # Kustutame VS Code registreeritud ühenduste kausta ja konfiguratsiooni
     echo "   Kustutame VS Code ühenduste kausta..."
@@ -388,6 +396,11 @@ EOF
     rm -rf "$SCRIPT_DIR/../config/ords/${COMPONENT}"
     ;;
 esac
+
+if [ "$CLEAN_LOGS" = "true" ] && [ -x "$SCRIPT_DIR/clean-logs.sh" ]; then
+  echo -e "\n${YELLOW}🧹 Puhastan paigalduslogid ja diagnostikafailid (clean-logs.sh)...${NC}"
+  "$SCRIPT_DIR/clean-logs.sh" -y || true
+fi
 
 # Kontrollime tulemust
 echo ""

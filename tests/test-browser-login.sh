@@ -39,7 +39,7 @@ BASE_URL="${RESOLVED_ORDS_BASE_URL:-${ORDS_URL:-https://${RESOLVED_ORDS_HOST:-lo
 # Dynamic URLs from active profile configuration
 URL_ORDS_LANDING="${BASE_URL}/ords/"
 URL_APEX_ADMIN="${BASE_URL}/ords/apex_admin"
-URL_APEX_BUILDER="${BASE_URL}/ords/apex"
+URL_APEX_BUILDER="${BASE_URL}/ords/r/apex/workspace-sign-in/oracle-apex-sign-in"
 WORKSPACE_NAME="${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}"
 
 echo -e "🎯 Aktiivne Profiil: ${CYAN}${PROFILE_NAME:-${PROFILE_ID:-proxy-standard-gvenzl}}${NC}"
@@ -53,21 +53,33 @@ echo -e "\n${YELLOW}🔑 Pärin dünaamilised paroolid SEPS Walletist...${NC}"
 
 get_credential_pwd() {
   local alias_name="$1"
-  "$WORKSPACE_DIR/scripts/internal/view-wallet-credential.sh" "$alias_name" 2>/dev/null | grep "Password:" | awk '{print $3}' | tr -d '\r\n' || echo ""
+  "$WORKSPACE_DIR/scripts/get-password.sh" "$alias_name" 2>/dev/null | grep "Password:" | awk '{print $3}' | tr -d '\r\n' || echo ""
 }
 
-APEX_ADMIN_PWD=$(get_credential_pwd "APEX_ADMIN")
-DEV_PWD=$(get_credential_pwd "DB_TEST_DEV")
+PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
+PRIMARY_DB_PREFIX="DB_$(echo "${PRIMARY_CONTAINER:-app-db}" | tr '-' '_' | tr '[:lower:]' '[:upper:]')"
+
+APEX_ADMIN_PWD=$(get_credential_pwd "${PRIMARY_DB_PREFIX}_APEX_ADMIN")
+[ -z "$APEX_ADMIN_PWD" ] && APEX_ADMIN_PWD=$(get_credential_pwd "APEX_ADMIN")
+[ -z "$APEX_ADMIN_PWD" ] && APEX_ADMIN_PWD=$(get_credential_pwd "DB_APEX_ADMIN")
+[ -z "$APEX_ADMIN_PWD" ] && APEX_ADMIN_PWD=$(get_credential_pwd "${PRIMARY_DB_PREFIX}_SYS")
+[ -z "$APEX_ADMIN_PWD" ] && APEX_ADMIN_PWD=$(get_credential_pwd "DB_SYS")
+
+DEV_PWD=$(get_credential_pwd "${PRIMARY_DB_PREFIX}_DEV")
+[ -z "$DEV_PWD" ] && DEV_PWD=$(get_credential_pwd "APEX_PROXY_SCHEMA")
+[ -z "$DEV_PWD" ] && DEV_PWD=$(get_credential_pwd "DB_APEX_PROXY_SCHEMA")
+[ -z "$DEV_PWD" ] && DEV_PWD=$(get_credential_pwd "DB_DEV")
+[ -z "$DEV_PWD" ] && DEV_PWD=$(get_credential_pwd "DB_TEST_DEV")
 WEB_USER_PWD=$(get_credential_pwd "TEST_WEB_USER")
 
 if [ -z "$APEX_ADMIN_PWD" ]; then
-  echo -e "${RED}❌ Viga: APEX Admin (APEX_ADMIN) parooli ei leitud SEPS Walletist!${NC}"
+  echo -e "${RED}❌ Viga: APEX Admin (${PRIMARY_DB_PREFIX}_APEX_ADMIN) parooli ei leitud SEPS Walletist!${NC}"
   echo -e "   Palun veendu, et Oracle Wallet on loodud käsuga: ./scripts/internal/create-wallet.sh"
   exit 1
 fi
 
 if [ -z "$DEV_PWD" ]; then
-  echo -e "${RED}❌ Viga: Test arendaja (DB_TEST_DEV) parooli ei leitud SEPS Walletist!${NC}"
+  echo -e "${RED}❌ Viga: Test arendaja (${PRIMARY_DB_PREFIX}_DEV) parooli ei leitud SEPS Walletist!${NC}"
   echo -e "   Palun veendu, et Oracle Wallet on loodud käsuga: ./scripts/internal/create-wallet.sh"
   exit 1
 fi

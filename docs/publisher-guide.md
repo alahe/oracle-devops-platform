@@ -39,6 +39,24 @@ components:
 
 ---
 
+## 3.1 Automated JDBC Data Source & PUBLISHER_READER Wallet Setup
+
+Analytics Publisher connects automatically to the business application database (`db-lis` or remote DB) using a dedicated, least-privileged system account **`PUBLISHER_READER`**:
+
+1. **Oracle SEPS Wallet (`cwallet.sso`) Integration**:
+   - The password for `PUBLISHER_READER` is generated and stored securely in Oracle SEPS Wallet under alias `DB_PUBLISHER_READER`.
+   - Developers and CLI tools connect passwordlessly via SQLcl:
+     ```bash
+     sql /@DB_PUBLISHER_READER
+     ```
+   - Connection folder in VS Code SQL Developer extension: `/Publisher/DB_PUBLISHER_READER`.
+
+2. **Automated JDBC Data Source Registration (`LIS_APP_DB`)**:
+   - During setup (`./scripts/setup-all.sh`), script `scripts/internal/init-publisher-datasource.sh` generates the JDBC Data Source XML configuration `LIS_APP_DB.xml` inside Publisher repository.
+   - Works seamlessly for both **Local Container DBs (`db-lis:1521/FREEPDB1`)** and **Remote Enterprise DBs (`$DB_HOST:$DB_PORT/$DB_SERVICE`)**.
+
+---
+
 ## 3. Automated Binary Downloads & Image Building
 
 The build system includes an automated binary downloader (`./scripts/internal/download-publisher-binary.sh`) that fetches `V1055080-01.zip` / `V1045135-01.zip` automatically before building:
@@ -64,9 +82,20 @@ Build the container image using the imported Oracle build templates:
 
 ---
 
-## 4. Automated RCU & ORDS Integration
+## 4. Web UI URLs, Credentials & RCU Integration
 
-During environment setup, the RCU schemas (`OAS_STB`, `OAS_CONFIG`, etc.) are automatically provisioned in `db-publisher` (port `1533`), and ORDS is enabled on port `8089/8449` providing SQL Developer Web (`_sdw`) for direct browser administration.
+### 🌐 Access URLs & Credentials
+- **Publisher UI (Browser)**: `http://localhost:9502/xmlpserver`
+- **WebLogic Console**: `http://localhost:9500/console`
+- **Default Admin User**: `weblogic`
+- **Password Retrieval from Oracle Wallet**:
+  ```bash
+  ./scripts/get-password.sh DB_PUBLISHER_SYS
+  ```
+
+### 🗄️ Database Architecture & Roles
+1. **`db-publisher` (Port 1531 / SID: FREE / PDB: FREEPDB1)**: Dedicated Metadata Database storing WebLogic RCU schemas (`OAS_STB`, `OAS_CONFIG`, `OAS_BIPLATFORM`, `OAS_MDS`). Connect via `sql /@DB_PUBLISHER_SYS as sysdba`.
+2. **`db-apex-proxy` (Port 1532 / SID: FREE / PDB: FREEPDB1)**: Client Application, APEX Proxy, and ORDS REST API database. Connect via `sql /@DB_APEX_PROXY_SCHEMA` or `sql /@DB_APEX_PROXY_SYS as sysdba`.
 
 ---
 
@@ -115,4 +144,4 @@ Downloading and using Oracle Analytics Publisher software requires one of the fo
 - 📘 **Official Report Design Guide:** [Create Pixel-Perfect Reports in Oracle Analytics Server](https://docs.oracle.com/en/middleware/bi/analytics-server/create-pixel-perfect-reports.html)
 - 📜 **Official Introduction to Pixel-Perfect Publishing:** [Introduction to Pixel-Perfect Publishing](https://docs.oracle.com/en/middleware/bi/analytics-server/user-publisher-oas/introduction-pixel-perfect-publishing.html)
 - 💻 **Desktop Tools Download Guide (Word/Excel Template Builders):** [Download Desktop Tools for Publisher](https://docs.oracle.com/en/middleware/bi/analytics-server/user-publisher-oas/download-desktop-tools.html)
-- 📄 **Custom Skill Instructions:** [.agents/skills/oracle_publisher/SKILL.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/.agents/skills/oracle_publisher/SKILL.md)
+- 📄 **Custom Skill Instructions:** [.agents/skills/oracle_publisher/SKILL.md](../.agents/skills/oracle_publisher/SKILL.md)

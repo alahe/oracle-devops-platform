@@ -9,7 +9,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 echo -e "${CYAN}🧪 TEST: internal/create-developer.sh${NC}"
-TARGET_SCRIPT="$WORKSPACE_DIR/scripts/internal/create-developer.sh"
+TARGET_SCRIPT="$WORKSPACE_DIR/scripts/create-developer.sh"
 
 if [ -f "$TARGET_SCRIPT" ]; then
   bash -n "$TARGET_SCRIPT"
@@ -20,6 +20,6 @@ if [ -f "$TARGET_SCRIPT" ]; then
     exit 1
   fi
 else
-  echo -e "${RED}❌ Test Ebaõnnestus: scripts/internal/create-developer.sh puudub!${NC}"
+  echo -e "${RED}❌ Test Ebaõnnestus: scripts/create-developer.sh puudub!${NC}"
   exit 1
 fi

@@ -9,12 +9,12 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 echo -e "${CYAN}🧪 TEST: internal/register-connections.sh${NC}"
-TARGET_SCRIPT="$WORKSPACE_DIR/scripts/internal/register-connections.sh"
+TARGET_SCRIPT="$WORKSPACE_DIR/scripts/register-connections.sh"
 
 if [ -f "$TARGET_SCRIPT" ]; then
   bash -n "$TARGET_SCRIPT"
   echo -e "${GREEN}✅ Test Edukas: register-connections.sh on olemas ja BASH süntaks on korras!${NC}"
 else
-  echo -e "${RED}❌ Test Ebaõnnestus: scripts/internal/register-connections.sh puudub!${NC}"
+  echo -e "${RED}❌ Test Ebaõnnestus: scripts/register-connections.sh puudub!${NC}"
   exit 1
 fi

@@ -1,0 +1,12 @@
+{
+  "last_updated": "2026-08-25T07:30:33Z",
+  "publisher_install_seconds": 2208,
+  "steps": {
+    "step10_1_rcu_seconds": 1,
+    "step10_2_ords_seconds": 1,
+    "step10_3_build_seconds": 285,
+    "step10_4_wait_seconds": -1787640680,
+    "step10_5_reports_seconds": 1223,
+    "step10_6_url_test_seconds": 264
+  }
+}

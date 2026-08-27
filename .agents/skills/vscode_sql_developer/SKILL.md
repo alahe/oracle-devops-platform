@@ -74,12 +74,19 @@ fi
 
 ---
 
-## 4. Dünaamiline Sünkroniseerimine (`dbtools.properties` + `connections.json`)
+## 4. Dünaamiline Mitme Kausta Sünkroniseerimine (`dbtools.properties` + `folders.json` + `connections.json`)
 
-Toetmaks nii modernseid (`~/.dbtools`) kui ka teisi VS Code laienduse versioone (`~/.sqldev/connections.json` / `~/.dbtools/connections.json`), tagab skript `register-connections.sh` automaatse dubleeritud sünkroniseerimise:
-1. Natiivsed krüpteeritud Keychain paroolid ja kaustad: SQLcl `connect -save` ja `connmgr move`.
-2. HEX Värvikoodid: `$HOME/.dbtools/connections/*/dbtools.properties` (`color=#HEX`).
-3. Laienduse otsene JSON konfiguratsioon: `$HOME/.sqldev/connections.json` ja `$HOME/.dbtools/connections.json` uuendatakse täieliku kaustastruktuuri, paroolide ja värvidega.
+Toetmaks kõiki VS Code Oracle SQL Developer laienduse versioone (nii GUI natiivset kaustapuud kui ka JSON konfiguratsiooni), tagab skript `register-connections.sh` automaatse sünkroniseerimise üle kõigi aktiivsete andmebaaside (`db-publisher`, `db-proxy`, `db-lis`):
+
+1. **Kaustapõhised Natiivsed GUID Omadused:** `$HOME/.dbtools/connections/<GUID>/dbtools.properties` loob iga ühenduse jaoks eraldiseisva unikaalse GUID kausta koos parooli, pordi ja värviga (`color=#HEX`).
+2. **Natiivne Kaustapuu Nimekirjaga:** `$HOME/.dbtools/connection_folders/folders.json` sidustab GUID-id vastava kausta nimega (`db-publisher`, `db-proxy`, `db-lis`).
+3. **Universaalne JSON Konfiguratsioon:** `$HOME/.sqldev/connections.json` ja `$HOME/.dbtools/connections.json` uuendatakse säilitades kõigi kaustade ühendused ilma teisi kaustu üle kirjutamata.
+
+### Käsitsi või Automaatse Registreerimise Käsk:
+Eraldiseisva sünkroniseerimise teostamiseks käivita automaatskript:
+```bash
+./scripts/internal/register-connections.sh
+```
 
 ---
 
@@ -90,7 +97,7 @@ Süsteem toetab otseühendusi kasutaja käsurealt (nt `sql /@DB_APEX_PROXY_SYS a
 ### 6.1 Wrapperi Loogika (`scripts/sqlcl.sh`):
 1. **Puhas `JAVA_TOOL_OPTIONS`:** Seab AINULT `export JAVA_TOOL_OPTIONS="-Doracle.net.tns_admin=$TNS_DIR"`. Eemaldab varasemad dubleeritud lipud, et ennetada Java System Property parseri viga `Syntax error at column 14: '`.
 2. **`JAVA_HOME` Puhastamine:** Teeb `unset JAVA_HOME` enne SQLcl käivitamist, vältimaks vanade Java versioonide (nt SQL Developer Java 11) sekkumist VS Code SQLcl 26.2 (Java 21+) käivitusprotsessi.
-3. **Parooli fallback võimendus (`view-wallet-credential.sh`):** Kui `mkstore -viewEntry` tagastab krüpteeritud binaarbaidid (`.'???...` või `[[ "$PWD_VAL" == *"?"* ]]`), päritakse parool automaatselt Podman secret store'ist (`apex_db_sys_password`, `apex_db_dev_password` jne).
+3. **Parooli fallback võimendus (`get-password.sh`):** Kui `mkstore -viewEntry` tagastab krüpteeritud binaarbaidid (`.'???...` või `[[ "$PWD_VAL" == *"?"* ]]`), päritakse parool automaatselt Podman secret store'ist (`apex_db_sys_password`, `apex_db_dev_password` jne).
 4. **Süsteemne binary wrapper (`/Users/allanlahe/Applications/sqlcl/bin/sql` & `/opt/homebrew/Caskroom/sqlcl/.../bin/sql`):** Asendab või täiendab süsteemseid SQLcl binaare projekti wrapperiga, tagades et otsene käsk `sql` töötab sõltumata sellest, kas kasutaja kest laadis `alias sql` või mitte.
 
 ---
@@ -127,6 +134,6 @@ Kesta integratsioonil tuleb lisada `TNS_ADMIN` ja `alias sql` **kõikidesse kest
 ## 8. Projekti Reeglid ja Piirangud
 
 1. **Kausta nimi `.env` failist:** Kausta nimi pärineb dünaamiliselt `.env` / `repository.env` muutujatest (`VSCODE_FOLDER_NAME` -> `DB_CONN_NAME` -> `CONTAINER_NAME`).
-2. **Paroolid Oracle Walletist (SEPS):** Paroolid päritakse ALATI `./scripts/internal/view-wallet-credential.sh <alias>` kaudu.
+2. **Paroolid Oracle Walletist (SEPS):** Paroolid päritakse ALATI `./scripts/internal/get-password.sh <alias>` kaudu.
 3. **Konfiguratsioon YAML profiilist:** Kasutajad ja pordid loetakse `config/profiles/*.yaml` failist. Koodis ei ole ühtegi kõvakodeeritud kasutajat ega parooli.
 4. **Veebikasutajate välistamine:** APEX veebikontosid (nt `TEST_WEB_USER`) ei lisata andmebaasi SQL ühendusteks, kuna nende autentimine toimub läbi ORDS HTTP liidese (`ORA-01017` vältimine).

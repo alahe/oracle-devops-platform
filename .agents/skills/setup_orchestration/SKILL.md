@@ -76,7 +76,7 @@ load_db_profile "proxy-adb-oracle"
 ```
 
 ### D. Oracle Wallet (SEPS Credential Storage)
-Kogu paroolide ja turvaliste rekvisiitide pärimine toimub eelistatult keskse utiliidi `scripts/internal/view-wallet-credential.sh <alias>` kaudu. **Kõik Walleti aliased loetakse dünaamiliselt aktiivsest YAML profiilist (`config/profiles/*.yaml`)**, tagades et kood ega skriptid ei sisalda kõvakodeeritud aliaste stringe (nagu `DB_APEX_PROXY_SYS`) ega paroolimuutujaid.
+Kogu paroolide ja turvaliste rekvisiitide pärimine toimub eelistatult keskse utiliidi `scripts/internal/get-password.sh <alias>` kaudu. **Kõik Walleti aliased loetakse dünaamiliselt aktiivsest YAML profiilist (`config/profiles/*.yaml`)**, tagades et kood ega skriptid ei sisalda kõvakodeeritud aliaste stringe (nagu `DB_APEX_PROXY_SYS`) ega paroolimuutujaid.
 
 ### E. Dünaamiline Konteineri Nime ja Hosti Lugemine (`get_active_db_instances`)
 
@@ -97,7 +97,7 @@ PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-dev-full}"
 BASE_URL="${RESOLVED_ORDS_BASE_URL:-${ORDS_URL:-https://${RESOLVED_ORDS_HOST:-localhost}:${PROFILE_ORDS_HTTPS_PORT:-8448}}}"
 
 # 4. Pärime paroolid dünaamiliselt SEPS Walletist
-APEX_ADMIN_PWD=$("$WORKSPACE_DIR/scripts/internal/view-wallet-credential.sh" "APEX_ADMIN" 2>/dev/null | grep "Password:" | awk '{print $3}' | tr -d '\r\n')
+APEX_ADMIN_PWD=$("$WORKSPACE_DIR/scripts/internal/get-password.sh" "APEX_ADMIN" 2>/dev/null | grep "Password:" | awk '{print $3}' | tr -d '\r\n')
 ```
 
 ---
@@ -284,21 +284,76 @@ scripts/
 ## 8. CLI Shell Integratsioon ja SQLcl Wrapper (`scripts/sqlcl.sh`)
 
 1. **Automaatne kesta seadistus:** `setup-all.sh` kirjutab automaatselt `export TNS_ADMIN` ja `alias sql="$SCRIPT_DIR/sqlcl.sh"` kõikidesse kasutaja kesta profiilidesse (`~/.zshrc`, `~/.zshenv`, `~/.bashrc`, `~/.bash_profile`).
-2. **Dünaamiline Walleti/Secreti parsimine:** `scripts/sqlcl.sh` eraldab käsuliini parameetrist `/@ALIAS` aliase ning pärib vajadusel paroolid automaatselt `view-wallet-credential.sh` / Podman secrets utiliidist ilma ühegi kõvakodeeritud paroolita.
+2. **Dünaamiline Walleti/Secreti parsimine:** `scripts/sqlcl.sh` eraldab käsuliini parameetrist `/@ALIAS` aliase ning pärib vajadusel paroolid automaatselt `get-password.sh` / Podman secrets utiliidist ilma ühegi kõvakodeeritud paroolita.
 3. **Binaarparooli fallback:** Kui `mkstore` tagastab krüpteeritud binaarbaidid, loeb süsteem parooli automaatselt Podman secret store'ist, vältides SQLcl parseri viga `Syntax error at column 14: '`.
 
 ```
 
 ---
 
-## 8. Kontrollnimekiri Uue Sammu Lisamisel
+## 9. Universaalne Reaalaegne Progress ja Puhverdamata Väljund (Option C Dual-Stream Pattern)
+
+Kõik pikemalt kestvad oote- ja paigaldussilmused (`while` / `until` tsüklid kauem kui 3-5 sekundit) peavad kasutavad **Samm C Hübriidset Topeltvoo Progressimustrit** (`print_step_progress`):
+
+### A. Väljundvoo Puhverdamise Eemaldamine (`sanitize-logs.sh`)
+- Väljundvoo filtreerija `sanitize_text` käivitatakse režiimis `sed -u -E` (unbuffered).
+- See tagab, et teated ja logiread väljastatakse ekraanile **vahetult ilma mälupuhvri viivituseta**.
+
+### B. Topeltvoo Progressi Abifunktsioon (`print_step_progress`)
+Kuva kesta ja logide progress korduvkasutatava funktsiooniga `print_step_progress "$msg" "$elapsed" [interval]`:
+- **Interaktiivne terminal / brauser (`/dev/tty`)**: Uuendab loendurit **ühel ja samal real** koha peal koos rea puhtaks pühkimise sümboliga (`printf "\r\033[K..."`), vältides terminali reostamist korduvate ridadega.
+- **Mitte-TTY / Piped Logi (`install_logs/`)**: Väljastab puhta reavahetusega (`\n`) teate kord minutis (vaikimisi 60s), hoides logid puhtana.
+- **Silmuse lõppemisel**: Pühitakse ajutine TTY progressirida puhtaks (`printf "\r\033[K" >/dev/tty 2>/dev/null || true`), et järgmise sammu väljund oleks selge.
+
+```bash
+# Korduvkasutatava voortüki näide pikemas ootesilmuses:
+ELAPSED=0
+while kill -0 $PID 2>/dev/null; do
+  sleep 3
+  ELAPSED=$((ELAPSED + 3))
+  print_step_progress "Paigaldan komponente" "$ELAPSED" 60
+done
+if [ -t 1 ] || [ -c /dev/tty ]; then
+  printf "\r\033[K" >/dev/tty 2>/dev/null || true
+fi
+```
+
+---
+
+## 10. Kontrollnimekiri Uue Sammu Lisamisel
 
 Enne uue sammu lisamist `setup-all.sh` faili kontrolli järgmist:
 
 - [ ] Kas samm delegeeritakse `scripts/internal/*.sh` abiskripti?
 - [ ] Kas ükski väärtus (port, SID, PDB, pildi nimi, parool) pole koodis sisse kirjutatud?
 - [ ] Kas kõik parameetrid tulevad profiilist (`PROFILE_*`) või `.env` muutujatest?
+- [ ] Kas pikemate silmuste puhul on kasutusel `run_with_live_timer` ja reaalajas jooksev sekundimõõdik?
 - [ ] Kas sammu kestus mõõdetakse ja salvestatakse `metrics/` kausta?
 - [ ] Kas sammu logi salvestatakse `install_logs/` kausta?
 - [ ] Kas `get_required_secret_names` ja `get_active_db_instances` töötavad uue sammuga korrektselt?
 - [ ] Kas README.md on uuendatud vastavalt Mandatory Documentation Maintenance reeglile?
+
+---
+
+## 11. Standardiseeritud Terminali UX, Eristatud URL-id ja Ühenduste Puu
+
+`setup-all.sh` lõpparuanne peab alati genereerima selge, tabelina struktureeritud ja informatiivse ülevaate:
+
+1. **Veebiteenuste Tabel:** Eristatud täpsed sihtkohad (APEX Builder, APEX Instance Admin, Database Actions, Analytics Publisher, Web IDE).
+2. **VS Code Ühenduste Puudiagramm (ASCII):** Kaustade ja TNS aliaste loogiline hierarhia.
+3. **Paroolide Pärimise Spikker:** Selged `./scripts/internal/get-password.sh <ALIAS>` käsud.
+4. **Koguaeg Lõpus:** Kogu paigalduse kestus ja klikitavad viited logifailidele.
+
+---
+
+## 12. Blueprints Arhitektuur ja Toodangu Turvalukud (`config/blueprints/`)
+
+1. **Ainus Kanooniline Hoidla:** Kõik 13 ametlikku arhitektuurset kavandit asuvad kaustas `config/blueprints/.env.<N>-*`. Juurkataloogis ei hoita `.env.example` faili.
+2. **Toodangu / Arenduse Režiim (`-b <N>` / `--blueprint <N>`):**
+   - Lubatud on **AINULT üksik number [1-13]**.
+   - Skript ei tee kunagi `reset-all` puhastust, vaid säilitab andmed ja jätkab olemasoleva baasi pealt (idempotentsus).
+   - Katse valida nimekirju (`-b 1,3`) või `all` blokeeritakse toodangus veateatega.
+3. **Automaattestimise Režiim (`-tb <LIST|all>` / `--test-blueprints`):**
+   - Teeb alati enne iga testi `reset-all.sh -y`, tagades puhta algseisu, ja kogub benchmarkid.
+4. **Informatiivne tabel (`-l` / `--list-blueprints`):**
+   - Väljastab ASCII tabeli kõigist 13 blueprintist ilma keskkonda käivitamata.

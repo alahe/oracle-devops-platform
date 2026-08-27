@@ -1,86 +1,80 @@
-# 🧪 Automated & Manual Testing Framework
+# 🧪 Keskkonna Automaattestimise ja Blueprintide Juhend (Testing Suite)
 
-This directory contains automated test suites, manual testing guides, and historical execution reports for `oracle-free-db-in-prod`.
+Antud kaust koondab projekti kogu automaattestimise taristu: testiraportid, automaatsed mõõdikud ja ressursside auditid.
 
----
-
-## 🔍 Testing Methodology & Architecture
-
-The testing framework employs a 2-tier architecture balancing speed, safety, and functional accuracy:
-
-### 1. Unit & Syntax Integrity Level (`bash -n` & Structure)
-- Every shell script in `scripts/` and `scripts/internal/` has a dedicated 1-to-1 test script (`test-script-*.sh`).
-- Performs static syntax analysis and structure checks using `bash -n` to catch missing loops, broken conditionals, or missing files before deployment.
-- **Safety guarantee:** Fast execution without overwriting production wallets or mutating environment state.
-
-### 2. Functional Assertion Level (Outcome & Assertions)
-- **`test-script-create-wallet.sh`**: Validates that SEPS Wallet and TNS files (`cwallet.sso`, `ewallet.p12`, `tnsnames.ora`, `sqlnet.ora`) in `config/tns_admin/` exist, are non-empty, and structurally valid.
-- **`test-password-generator.sh`**: Executes 50 iterations testing pure alphanumeric password compliance against Oracle Autonomous Database (ADB) regex (`^[a-zA-Z0-9]{20}$`).
-- **`test-compose-override-generation.sh`**: Generates `podman-compose.override.yml` and verifies `IS_ADB="true"`, `WORKLOAD_TYPE=ATP`, and `ADMIN_PASSWORD` keys.
-- **`test-script-create-developer.sh`**: Asserts mandatory inclusion of `DB_DEVELOPER_ROLE`.
-- **`test-subcomponent-services.sh`**: Asserts SSL/TLS Root CA certificates, APEX images volume mounting, and ORDS HTTPS REST endpoint response codes.
+Kõik 13 ametlikku arhitektuurset kavandit (Blueprints) asuvad keskse tõeallikana kaustas **[`config/blueprints/`](../config/blueprints/)**.
 
 ---
 
-## 📂 Directory Files & Test Guides
+## 📁 Kataloogi Struktuur
 
-| File | Description |
-| :--- | :--- |
-| 🚀 **[test-all-components.sh](test-all-components.sh)** | **Master Automated Test Runner** executing all component test suites sequentially. |
-| 🧪 **[test-db-profiles-and-topology.sh](test-db-profiles-and-topology.sh)** | Automated test runner for DB Profiles, Artifactory overrides, and Topology port collision resolver. |
-| 🧪 **[test-instance-initializer.sh](test-instance-initializer.sh)** | Automated test runner for profile-driven DB instance initialization (`init-db-instance.sh`). |
-| 🧪 **[test-profile-users-and-roles.sh](test-profile-users-and-roles.sh)** | Automated test runner for user provisioning, ORDS REST enabling, and APEX accounts (`apply-profile-users.sh`). |
-| 🧪 **[test-password-generator.sh](test-password-generator.sh)** | Automated test runner for pure alphanumeric password generator (`generate-passwords.sh`). |
-| 🧪 **[test-compose-override-generation.sh](test-compose-override-generation.sh)** | Automated test runner for Podman Compose Override generation and ADB environment variables (`IS_ADB`, `WORKLOAD_TYPE`, `ADMIN_PASSWORD`). |
-| 🧪 **[test-subcomponent-services.sh](test-subcomponent-services.sh)** | Automated test runner for subcomponent services (SSL Root CA, Wallet credentials, APEX Images volume, ORDS HTTPS REST). |
-| 🌐 **[test-browser-login.sh](test-browser-login.sh)** | **E2E Browser & UI Login Test Suite** validating ORDS, APEX Admin, and APEX Builder authentication + direct DB session timestamp verification (`APEX_WORKSPACE_ACTIVITY_LOG`). |
-| 🚀 **[test-e2e-system.sh](test-e2e-system.sh)** | Full E2E System Integration Test Suite validating user scripts, internal scripts, profile matrix, and topology specifications. |
-| 📘 **[profiles-and-topology-testing.md](profiles-and-topology-testing.md)** | Step-by-step testing guide for Database Profiles, Artifactory mirroring, and Topology resolution. |
-| 📋 **[testing.md](testing.md)** | Complete functional and non-functional (NFR) testing methodology, including TDE encryption validation. |
-| 📊 **[test-report.md](test-report.md)** | Historical E2E and HTTPS test execution report. |
+- **`config/blueprints/`** ➔ 13 ametlikku arhitektuurset blueprinti (`.env.1-*` kuni `.env.13-*`).
+- **`tests/reports/`** ➔ Blueprintide koondmaatriks ([`scenario_benchmark_matrix.md`](reports/scenario_benchmark_matrix.md)).
+- **`tests/reports/scenarios/`** ➔ Automaatselt genereeritud ja Git-is jälgitavad testiaruanded (`scenario_1_report.md` kuni `scenario_13_report.md`).
 
 ---
 
-## ⚡ Quickstart: Running Automated Tests
+## 🚀 Käivitamine Käsuliinilt (Terminal)
 
-### Run All Automated Test Suites (Master Suite)
-Runs all component test suites sequentially and outputs a unified green success report:
+Testide käivitamiseks puhtalt lehelt (automaatse `reset-all -y` ja verifitseerimisega):
 
 ```bash
-./tests/test-all-components.sh
+# Automaatne ühe käsuga testimine (Üksik blueprint):
+./scripts/setup-all.sh -tb 3
+
+# Konkreetse nimekirja testimine (Koma eraldajaga):
+./scripts/setup-all.sh -tb 1,5,8,10
+
+# KÕIGI 13 blueprinti automaatne laus-testimine järjestikku:
+./scripts/setup-all.sh -tb all
 ```
 
-### Run Individual Test Suites
+---
+
+## 📊 Kõigi 13 Stsenaariumi Ülevaade
+
+| Stsenaarium | Nimi | Käivitatavad Konteinerid | Peamine Eesmärk |
+| :--- | :--- | :--- | :--- |
+| **1** | `.env.1-only-db-lis` | `db-lis` | Ainult LIS Andmebaas ilma veebiteenusteta. |
+| **2** | `.env.2-db-lis-with-apex-ords` | `db-lis`, `app-ords` | LIS Baas + APEX 26.2 + ORDS üheskoos. |
+| **3** | `.env.3-db-lis-apex-ords-with-proxy` | `db-proxy`, `db-lis`, `app-ords` | 2-Kihiline andmebaasi arhitektuur (Proxy + LIS). |
+| **4** | `.env.4-only-app-publisher` | `db-publisher` | Eraldiseisev Analytics Publisheri andmebaas. |
+| **5** | `.env.5-only-ords` | `app-ords` | Lokaalne ORDS Gateway kaug-andmebaasiga. |
+| **6** | `.env.6-ords-with-apex` | `db-proxy`, `app-ords` | Proxy andmebaas + APEX + ORDS gateway. |
+| **7** | `.env.7-all-services-together` | `db-publisher`, `db-proxy`, `db-lis`, `app-ords`, `app-publisher` | Täielik 4-Kihiline Ettevõtte Tootmiskeskkond. |
+| **8** | `.env.8-gvenzl-dev-light` | `db-lis-gvenzl` | Kergekaaluline Gerald Venzl DB CI/CD testideks. |
+| **9** | `.env.9-dev-workstation-with-web-ide` | `db-lis`, `app-ords`, `web-ide-dev` | **Zero-Install Arendaja Töōkoht** (VS Code Brauseris). |
+| **10** | `.env.10-hybrid-multi-vendor-db` | `db-proxy-oracle`, `db-lis-gvenzl`, `app-ords` | Mitme eri andmebaasi pildi (Oracle + Gvenzl) klaster. |
+| **11** | `.env.11-cloud-adb-with-web-ide` | `db-proxy-adb`, `app-ords`, `web-ide-dev` | Pilve Autonomous DB emuleerimine + Web IDE. |
+| **12** | `.env.12-publisher-gvenzl-with-web-ide` | `db-publisher-gvenzl`, `app-publisher`, `web-ide-dev` | Pixel-Perfect aruandlus kergel Gvenzl DB-l. |
+| **13** | `.env.13-full-enterprise-sandbox-web-ide` | 3 DB-d, `app-ords`, `app-publisher`, `web-ide-dev` | **Täielik ettevõtte pilvelabor (5 konteinerit).** |
+
+---
+
+## 🔍 Kuidas Automaatne Testimine Töötama Peab?
+
+Iga katse käivitamisel loetakse mälumaht, CPU kasutus, võrgupordid ning sooritatakse kaks kohustuslikku kontrolli:
+
+1. **🌐 Veebiteenuste HTTP Health Audit (`scripts/check-urls.sh`):**
+   Kontrollib reaalsete HTTP/HTTPS võrgupäringutega iga veebiteenuse vastust (HTTP 200/302).
+2. **🔑 SEPS Paroolivaba Oracle Walleti Audit (`scripts/check-wallet.sh`):**
+   Kontrollib paroolivabalt kõiki registreeritud TNS aliaseid (`/@ALIAS`) ilma ühegi paroolita.
+3. **🔒 TLS ja Sertifikaatide Poliitika Testikomplekt (`tests/test-tls-scenarios.sh`):**
+   Testib 5-astmelist TLS hierarhiat (`CUSTOM_CERT`, `PUBLIC_DNS`, `CORP_PKI`, `USER_LOCAL_CA`, `SELF_SIGNED`) ja Blueprinti rangusastmete kontrolli.
+4. **🌐 Brauseri ja UI Automaatne E2E Sisselogimise Test (`tests/test-browser-login.sh`):**
+   Teostab reaalse veebipõhise sisselogimise ja valideerib sessiooni andmebaasis (`apex_workspace_activity_log`).
+
+---
+
+## 🧪 Eraldiseisvad Testikäsud
+
 ```bash
-./tests/test-db-profiles-and-topology.sh
-./tests/test-instance-initializer.sh
-./tests/test-profile-users-and-roles.sh
-./tests/test-password-generator.sh
-./tests/test-compose-override-generation.sh
-./tests/test-subcomponent-services.sh
+# Käivita TLS ja poliitikate automaatne test:
+./tests/test-tls-scenarios.sh
+
+# Käivita brauseri ja UI E2E sisselogimise test:
 ./tests/test-browser-login.sh
-./tests/test-e2e-system.sh
+
+# Käivita kõik 55 ühiktesti:
+for t in tests/unit/test-*.sh; do bash "$t"; done
 ```
-
----
-
-## 🛠️ Summary of Key Test Scenarios
-
-### F0: Dynamic Database Profiles & Topology
-- **Profile Parsing:** Verifies parsing of `config/profiles/*.yaml` definitions.
-- **Enterprise Artifactory Mirroring:** Verifies global registry prefixing via `ARTIFACTORY_DOCKER_REGISTRY=artifactory.company.local`.
-- **Topology Port Allocator:** Verifies automatic port incrementation (`1532`, `1533`, `8443`, `8444`) when host ports are occupied.
-
-### F1: Multi-Version APEX & ORDS Parallel Execution
-- Verifies running APEX 24.1 (primary) and APEX 23.2 (secondary) in parallel without container port or static image conflicts.
-
-### NFR1: Transparent Data Encryption (TDE) Validation
-- Verifies tablespace encryption (`ENCRYPT_TABLESPACES=ALL`) and Oracle SEPS Wallet security.
-
-### NFR2: Zero-Prompt SSL Certificate Trust
-- Verifies automatic HTTPS certificate trust on macOS, Windows (`certutil -user -addstore Root`), and WSL.
-
----
-
-## 🔮 Future Testing Roadmap
-- **Item 7 ([docs/future-plans.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/future-plans.md#7-alamkomponentide--kogu-s%C3%BCsteemi-automaattestimise-raamistik)):** Full subcomponent & E2E system automated test suite (`tests/test-all-subcomponents.sh`).

@@ -60,6 +60,6 @@ unset ARTIFACTORY_DOCKER_REGISTRY
 
 ### Test Scenario 4: Registering VS Code Connection Profiles
 ```bash
-./scripts/internal/register-connections-sqlcl.sh
+./scripts/internal/register-connections.sh
 cat ~/.sqldev/connections.json
 ```

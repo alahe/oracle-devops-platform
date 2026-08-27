@@ -1,0 +1,32 @@
+profile:
+  id: db-cicd
+  name: db-cicd
+  description: "Ephemeral lightweight CI/CD automation test database running on official Oracle Free DB image."
+  functionality: cicd
+  db_type: standard
+  image_vendor: oracle
+
+database:
+  container_image: container-registry.oracle.com/database/free:latest
+  workload_type: NONE
+  admin_user: sys
+  admin_role: SYSDBA
+  default_service: FREEPDB1
+  db_port: 1535
+  wallet_required: false
+
+components:
+  ords:
+    enabled: false
+  apex:
+    enabled: false
+
+users:
+  - username: sys
+    role: SYSDBA
+    wallet_alias: DB_CICD_SYS
+    color: "#E74C3C"
+  - username: CICD_TESTER
+    role: NORMAL
+    wallet_alias: DB_CICD_TESTER
+    color: "#27AE60"

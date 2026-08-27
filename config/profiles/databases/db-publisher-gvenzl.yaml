@@ -1,0 +1,51 @@
+profile:
+  id: db-publisher-gvenzl
+  name: db-publisher-gvenzl
+  description: "Oracle Infrastructure DB for Oracle Analytics Publisher running on Gvenzl faststart container image."
+  functionality: publisher
+  db_type: standard
+  image_vendor: gvenzl
+
+database:
+  container_image: docker.io/gvenzl/oracle-free:23-full-faststart
+  workload_type: NONE
+  admin_user: sys
+  admin_role: SYSDBA
+  default_service: FREEPDB1
+  db_port: 1531
+  wallet_required: false
+  configure_tde: true
+  encrypt_tablespaces: ALL
+  kafka_bootstrap_servers: "localhost:9092"
+
+components:
+  ords:
+    enabled: true
+    version: "26.2.2"
+    pool_name: "pub"
+    url_mapping: "/ords/pub/"
+    container_name: app-ords
+    service_name: app-ords
+    http_port: 8088
+    https_port: 8448
+  apex:
+    enabled: false
+
+users:
+  - username: sys
+    role: SYSDBA
+    wallet_alias: DB_PUBLISHER_SYS
+    color: "#E74C3C"
+  - username: DEV_FULL
+    role: RCU_OWNER
+    wallet_alias: DB_PUBLISHER_RCU
+    color: "#2980B9"
+  - username: DEV_BIPLATFORM
+    role: RCU_OWNER
+    wallet_alias: DB_PUBLISHER_BIPLATFORM
+    color: "#8E44AD"
+  - username: PUBLISHER_READER
+    role: READONLY
+    roles: [CONNECT, RESOURCE]
+    wallet_alias: DB_PUBLISHER_READER
+    color: "#9B59B6"

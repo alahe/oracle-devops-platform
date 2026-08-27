@@ -1,0 +1,52 @@
+name: ☁️ Remote Cloud Deployment (OCI & Azure)
+
+on:
+  push:
+    branches:
+      - main
+      - release/*
+  workflow_dispatch:
+    inputs:
+      remote_host:
+        description: 'Target Cloud Server IP or Hostname'
+        required: true
+        default: ''
+      remote_user:
+        description: 'SSH User (opc for OCI / azureuser or ubuntu for Azure)'
+        required: true
+        default: 'opc'
+      profile_name:
+        description: 'Active Profile Name'
+        required: true
+        default: 'publisher-only'
+
+jobs:
+  deploy:
+    name: 🚀 Deploy to Remote Cloud Linux Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Configure SSH Key Authentication
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.REMOTE_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.REMOTE_HOST || inputs.remote_host }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: 🚀 Execute Remote Deployment via deploy-remote.sh
+        env:
+          TARGET_HOST: ${{ inputs.remote_host || secrets.REMOTE_HOST }}
+          TARGET_USER: ${{ inputs.remote_user || secrets.REMOTE_USER || 'opc' }}
+          TARGET_PROFILE: ${{ inputs.profile_name || secrets.MAIN_DB_PROFILE || 'publisher-only' }}
+        run: |
+          if [ -z "$TARGET_HOST" ]; then
+            echo "⚠️ No REMOTE_HOST secret or input provided. Running in dry-run verification mode..."
+            ./scripts/deploy-remote.sh --dry-run
+          else
+            chmod +x ./scripts/deploy-remote.sh
+            ./scripts/deploy-remote.sh --host "$TARGET_HOST" --user "$TARGET_USER" --key ~/.ssh/id_ed25519 --profile "$TARGET_PROFILE"
+          fi

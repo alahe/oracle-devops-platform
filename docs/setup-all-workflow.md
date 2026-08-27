@@ -88,7 +88,7 @@ flowchart TD
 
 1.  **Turvaline paroolihaldus (Podman Secrets Bootstrap -> Oracle SEPS Wallet Runtime):**
     *   **Esmakordne käivitus (Bootstrap):** Konteinerite esmasel püstitamisel genereerib `generate-passwords.sh` unikaalsed suure entroopiaga paroolid mälupõhisesse **Podman Secrets** hoidlasse (`/run/secrets/`). Koodifailides ja skriptides puuduvad igasugused kõvakodeeritud vaikeparoolid (*zero hardcoded fallback passwords*).
-    *   **Püsiv säilitamine ja ühendused (Runtime):** Sammu 4.5 käigus registreerib `create-wallet.sh` kõik tunnused (`ADMIN`, `DB_APEX_PROXY_SYS`, `DB_TEST_DEV`, `TEST_WEB_USER`) krüpteeritud **Oracle SEPS Walletisse** (`ewallet.p12` / `cwallet.sso`). Arendajad ja utiliidid loevad paroole ja teevad ühendusi otse Walletist (`./scripts/internal/view-wallet-credential.sh <ALIAS>`).
+    *   **Püsiv säilitamine ja ühendused (Runtime):** Sammu 4.5 käigus registreerib `create-wallet.sh` kõik tunnused (`ADMIN`, `DB_APEX_PROXY_SYS`, `DB_TEST_DEV`, `TEST_WEB_USER`) krüpteeritud **Oracle SEPS Walletisse** (`ewallet.p12` / `cwallet.sso`). Arendajad ja utiliidid loevad paroole ja teevad ühendusi otse Walletist (`./scripts/get-password.sh <ALIAS>`).
 2.  **Automaatne ORDS & SQL Developer Web aktiveerimine (`TEST_DEV`):**
     *   `TEST_DEV` kasutaja loomisel rakendatakse automaatselt Oracle ADB arendaja rollid (`CONSOLE_DEVELOPER`, `DWROLE`, `RESOURCE`, `DB_DEVELOPER_ROLE`) ja aktiveeritakse ORDS REST / Database Actions liides (`ORDS.ENABLE_SCHEMA` teekonnaga `test_dev`).
     *   `TEST_DEV` kasutajaga saab koheselt sisse logida otse aadressil `https://localhost:8443/ords/test_dev/_sdw/`.

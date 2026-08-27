@@ -9,12 +9,12 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 echo -e "${CYAN}🧪 TEST: internal/apply-apex-patch.sh${NC}"
-TARGET_SCRIPT="$WORKSPACE_DIR/scripts/internal/apply-apex-patch.sh"
+TARGET_SCRIPT="$WORKSPACE_DIR/scripts/patches/apply-apex-patch.sh"
 
 if [ -f "$TARGET_SCRIPT" ]; then
   bash -n "$TARGET_SCRIPT"
   echo -e "${GREEN}✅ Test Edukas: apply-apex-patch.sh on olemas ja BASH süntaks on korras!${NC}"
 else
-  echo -e "${RED}❌ Test Ebaõnnestus: scripts/internal/apply-apex-patch.sh puudub!${NC}"
+  echo -e "${RED}❌ Test Ebaõnnestus: scripts/patches/apply-apex-patch.sh puudub!${NC}"
   exit 1
 fi

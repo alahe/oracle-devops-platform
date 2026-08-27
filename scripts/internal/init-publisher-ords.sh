@@ -19,11 +19,15 @@ PRIMARY_PROFILE="${PRIMARY_PROFILE:-publisher-free}"
 
 load_db_profile "$PRIMARY_PROFILE" >/dev/null 2>&1 || true
 
+if [ "${SKIP_ORDS}" = "true" ] || [ "${PROFILE_ORDS_ENABLED}" = "false" ]; then
+  echo "ℹ️  ORDS is disabled. Skipping ORDS initialization for Publisher Database."
+  exit 0
+fi
+
 SYS_PWD=$(podman exec "$PRIMARY_CONTAINER" cat /run/secrets/oracle_pwd 2>/dev/null || podman secret inspect --showsecret publisher_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || echo "")
 if [ -z "$SYS_PWD" ]; then
-  SYS_PWD=$("$SCRIPT_DIR/view-wallet-credential.sh" "DB_PUBLISHER_SYS" 2>/dev/null | grep "Password:" | awk '{print $3}' | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\r\n')
+  SYS_PWD=$("$SCRIPT_DIR/get-password.sh" "DB_PUBLISHER_SYS" 2>/dev/null | grep "Password:" | awk '{print $3}' | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\r\n' || echo "")
 fi
-SYS_PWD="${SYS_PWD:-OraclePass2026}"
 
 DB_SERVICE="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
 

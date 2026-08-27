@@ -8,15 +8,15 @@ This directory contains domain-isolated YAML profiles for configuring **Oracle D
 
 | Profile Filename | Description | DB Type | Wallet Required | Use Case |
 | :--- | :--- | :--- | :--- | :--- |
-| **`app-free.yaml`** | Primary Application DB on Official Oracle Free DB 23ai/26ai | `standard` | Yes | Primary Application |
-| **`app-adb.yaml`** | Primary Application DB on Autonomous DB Free | `adb` | Yes | Primary Application |
-| **`proxy-free.yaml`** | APEX Proxy DB on Official Oracle Free DB 23ai/26ai | `standard` | Yes | APEX Proxy |
-| **`proxy-adb.yaml`** | APEX Proxy DB on Autonomous DB Free | `adb` | Yes | APEX Proxy |
-| **`proxy-gvenzl.yaml`** | APEX Proxy DB on Gvenzl 23c Faststart | `standard` | Yes | APEX Proxy |
-| **`proxy-ords-standalone.yaml`** | APEX Proxy DB + Dedicated Standalone ORDS (Ports 8085/8445) | `standard` | Yes | Standalone ORDS |
-| **`proxy-ords-external.yaml`** | APEX Proxy DB + External Corporate ORDS Server | `standard` | Yes | External Corporate ORDS |
-| **`appinfra.yaml`** | Infrastructure DB for Publisher & Forms (RCU) | `standard` | Yes | App Infra |
-| **`cicd.yaml`** | Ephemeral DB for CI/CD Automated Testing | `standard` | No | CI/CD Testing |
+| **`db-lis-oracle.yaml`** | Primary Application DB on Official Oracle Free DB 23ai/26ai | `standard` | Yes | Primary LIS Application |
+| **`db-lis-adb.yaml`** | Primary Application DB on Autonomous DB Free | `adb` | Yes | Primary LIS Cloud Emulation |
+| **`db-proxy-oracle.yaml`** | APEX Outbound Proxy DB on Official Oracle Free DB 23ai | `standard` | Yes | APEX Outbound Proxy |
+| **`db-proxy-adb.yaml`** | APEX Proxy DB on Autonomous DB Free | `adb` | Yes | APEX Proxy on ADB |
+| **`db-proxy-gvenzl.yaml`** | APEX Proxy DB on Gvenzl 23c Faststart | `standard` | Yes | APEX Proxy Lightweight |
+| **`db-infra-gvenzl.yaml`** | Infrastructure DB for Publisher & Forms (RCU) on Gvenzl | `standard` | Yes | App Infra & Publisher RCU |
+| **`db-publisher-oracle.yaml`** | Analytics Publisher Database on Official Oracle Free | `standard` | Yes | Analytics Publisher Dedicated |
+| **`db-publisher-gvenzl.yaml`** | Analytics Publisher Database on Gvenzl 23c Faststart | `standard` | Yes | Analytics Publisher Lightweight |
+| **`db-cicd.yaml`** | Ephemeral DB for CI/CD Automated Testing | `standard` | No | CI/CD Testing |
 
 ---
 
@@ -26,7 +26,7 @@ Map active database instances in `.env` using `<NAME>_DB=<profile-name>`, `DB_<N
 
 ```bash
 # Primary Application Database Container
-PUB_DB=app-free
-# DB_PROXY=proxy-adb
-# ords_proxy=proxy-ords-standalone
+DB_LIS=db-lis-oracle
+# DB_PROXY=db-proxy-oracle
+# DB_PUBLISHER=db-publisher-gvenzl
 ```

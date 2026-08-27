@@ -47,50 +47,57 @@ for arg in "$@"; do
 done
 
 
-echo "=================================================================="
-echo "🚀 Käivitan Podmani compose konteinerid..."
-if [ -n "$PROFILE" ]; then
-  if [ "$SKIP_PUBLISHER" = "true" ]; then
-    echo "   Kasutatav profiil: $PROFILE (APEX Proxy + ORDS, ilma Publisherita)"
-  else
-    echo "   Kasutatav profiil: $PROFILE (Andmebaasid + ORDS)"
-  fi
-else
-  if [ "$SKIP_PUBLISHER" = "true" ]; then
-    echo "   Vaikimisi profiil (Ainult APEX Proxy)"
-  else
-    echo "   Vaikimisi profiil (Mõlemad andmebaasid)"
-  fi
-fi
-echo "=================================================================="
-
 if [ -f "$SCRIPT_DIR/internal/load-profile.sh" ]; then
   source "$SCRIPT_DIR/internal/load-profile.sh"
   load_db_profile >/dev/null 2>&1 || true
   load_web_ide_profile >/dev/null 2>&1 || true
 fi
 
+# Dynamically check if any active profile enables publisher
+ANY_PUB_ENABLED=false
+for inst in $(get_active_db_instances 2>/dev/null); do
+  pname=$(echo "$inst" | cut -d'|' -f2)
+  pfile="$SCRIPT_DIR/../config/profiles/databases/${pname}.yaml"
+  [ ! -f "$pfile" ] && pfile="$SCRIPT_DIR/../config/profiles/${pname}.yaml"
+  if [ -f "$pfile" ]; then
+    pub_en=$(awk '/publisher:/{flag=1;next}/ords:|apex:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
+    if [ "$pub_en" = "true" ]; then
+      ANY_PUB_ENABLED=true
+      break
+    fi
+  fi
+done
+
+if [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ]; then
+  SKIP_PUBLISHER=false
+fi
+
+echo "=================================================================="
+echo "🚀 Käivitan Podmani compose konteinerid..."
+get_active_db_instances | while IFS='|' read -r container prof env_key; do
+  [ -z "$container" ] && continue
+  echo "   - Konteiner: $container (Profiil: $prof)"
+done
+echo "=================================================================="
+
+# Dynamic override file generation if missing or profile changed
+if [ -x "$SCRIPT_DIR/internal/generate-passwords.sh" ]; then
+  "$SCRIPT_DIR/internal/generate-passwords.sh" >/dev/null 2>&1 || true
+fi
+
 PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
-PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-pub-db}"
+PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-app-db}"
 
 if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
   COMPOSE_ARGS+=(--profile web-ide)
 fi
 
-# Käivitame compose
-if [ "$SKIP_PUBLISHER" = "true" ]; then
-  if [ -n "$PROFILE" ]; then
-    podman-compose "${COMPOSE_ARGS[@]}" --profile "$PROFILE" up -d "$PRIMARY_CONTAINER" dev-ords
-  else
-    podman-compose "${COMPOSE_ARGS[@]}" up -d "$PRIMARY_CONTAINER"
-  fi
-else
-  if [ -n "$PROFILE" ]; then
-    podman-compose "${COMPOSE_ARGS[@]}" --profile "$PROFILE" up -d
-  else
-    podman-compose "${COMPOSE_ARGS[@]}" up -d
-  fi
+# Käivitame meile teadaolevad compose teenused
+if [ "$SKIP_PUBLISHER" = "false" ]; then
+  COMPOSE_ARGS+=(--profile publisher)
 fi
+
+podman-compose "${COMPOSE_ARGS[@]}" up -d
 
 # Ootame kuni andmebaasid on valmis (healthy)
 echo ""
@@ -105,33 +112,24 @@ get_active_db_instances | while IFS='|' read -r container prof env_key; do
     until [ "$(podman inspect --format='{{.State.Health.Status}}' "$container" 2>/dev/null)" == "healthy" ]; do
       sleep 3
       WAIT_COUNT=$((WAIT_COUNT + 3))
-      echo -ne "   Kestus: ${WAIT_COUNT}s...\r"
+      if declare -f print_step_progress >/dev/null 2>&1; then
+        print_step_progress "Ootan konteinerit $container" "$WAIT_COUNT" 60
+      elif [ -c /dev/tty ]; then
+        printf "\r\033[K   ⏳ Ootan konteinerit %s... kestus: %ds" "$container" "$WAIT_COUNT" >/dev/tty 2>/dev/null || true
+      fi
       if [ $WAIT_COUNT -ge $MAX_WAIT ]; then
         echo ""
         echo "❌ Viga: $container ei saavutanud valmisolekut $MAX_WAIT sekundi jooksul!"
         exit 1
       fi
     done
-    echo -e "\n✅ $container on valmis (healthy)!"
+    if [ -c /dev/tty ]; then
+      printf "\r\033[K" >/dev/tty 2>/dev/null || true
+    fi
+    echo -e "✅ $container on valmis (healthy)!"
+    ensure_db_instance_open "$container" || true
   fi
 done
-
-# 3. Kontrollime ORDS-i käivitumist (kui profiil on aktiivne)
-if [ -n "$PROFILE" ] && podman container exists "oracle-ords-dev" 2>/dev/null; then
-  echo "Ootan konteinerit: oracle-ords-dev..."
-  WAIT_COUNT=0
-  until [ "$(podman inspect --format='{{.State.Status}}' "oracle-ords-dev" 2>/dev/null)" == "running" ]; do
-    sleep 3
-    WAIT_COUNT=$((WAIT_COUNT + 3))
-    echo -ne "   Kestus: ${WAIT_COUNT}s...\r"
-    if [ $WAIT_COUNT -ge 60 ]; then
-      echo ""
-      echo "❌ Viga: oracle-ords-dev ei käivitunud 60 sekundi jooksul!"
-      exit 1
-    fi
-  done
-  echo -e "\n✅ oracle-ords-dev on käivitatud ja töötab!"
-fi
 
 if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
   echo "🚀 Käivitan Web IDE konteineri..."
@@ -142,8 +140,12 @@ if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; th
   echo "✅ Web IDE (VS Code) käivitatud aadressil: http://localhost:${WEB_IDE_HTTP_PORT:-8090}"
 fi
 
+# 🌐 KOHUSTUSLIK URL TESTIMINE ENNE TÖÖKORRAS SÕNUMIT
+if [ -x "$SCRIPT_DIR/internal/test-urls.sh" ]; then
+  "$SCRIPT_DIR/internal/test-urls.sh" 15 4
+fi
 
 echo "=================================================================="
-echo "✅ Kõik valitud konteinerid on töökorras!"
+echo "✅ Kõik valitud konteinerid ja veebiteenuste URL-id on töökorras!"
 echo "   Kontrolli staatust: podman ps"
 echo "=================================================================="

@@ -55,8 +55,15 @@ for script in "$WORKSPACE_DIR"/scripts/*.sh; do
   for testfile in "$SCRIPT_DIR"/unit/*.sh "$SCRIPT_DIR"/integration/*.sh "$SCRIPT_DIR"/*.sh; do
     [ -e "$testfile" ] || continue
     testname=$(basename "$testfile")
+    if [[ "$testfile" == *"/unit/"* ]]; then
+      rel_link="../unit/$testname"
+    elif [[ "$testfile" == *"/integration/"* ]]; then
+      rel_link="../integration/$testname"
+    else
+      rel_link="../$testname"
+    fi
     if grep -q "$filename" "$testfile" 2>/dev/null; then
-      TEST_MATCHES+=("[\`${testname}\`](${testname})")
+      TEST_MATCHES+=("[\`${testname}\`](${rel_link})")
     fi
   done
 
@@ -92,8 +99,15 @@ for script in "$WORKSPACE_DIR"/scripts/internal/*.sh; do
   for testfile in "$SCRIPT_DIR"/unit/*.sh "$SCRIPT_DIR"/integration/*.sh "$SCRIPT_DIR"/*.sh; do
     [ -e "$testfile" ] || continue
     testname=$(basename "$testfile")
+    if [[ "$testfile" == *"/unit/"* ]]; then
+      rel_link="../unit/$testname"
+    elif [[ "$testfile" == *"/integration/"* ]]; then
+      rel_link="../integration/$testname"
+    else
+      rel_link="../$testname"
+    fi
     if grep -q "$filename" "$testfile" 2>/dev/null; then
-      TEST_MATCHES+=("[\`${testname}\`](${testname})")
+      TEST_MATCHES+=("[\`${testname}\`](${rel_link})")
     fi
   done
 

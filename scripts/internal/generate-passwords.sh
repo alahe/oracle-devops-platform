@@ -68,7 +68,9 @@ generate_all_passwords() {
   APEX_ADMIN_PWD=$(gen_random_password)
   APEX_LIST_PWD=$(gen_random_password)
   APEX_SCH_PWD=$(gen_random_password)
+  DBA_ADMIN_PWD=$(gen_random_password)
   TEST_DEV_PWD=$(gen_random_password)
+  TEST_VIEWER_PWD=$(gen_random_password)
   TEST_WEB_PWD=$(gen_random_password)
 
   create_podman_secret() {
@@ -81,11 +83,15 @@ generate_all_passwords() {
   }
 
   create_podman_secret "publisher_db_sys_password" "$PUB_SYS_PWD"
+  create_podman_secret "proxy_db_sys_password" "$APEX_SYS_PWD"
+  create_podman_secret "lis_db_sys_password" "$APEX_SYS_PWD"
   create_podman_secret "apex_db_sys_password" "$APEX_SYS_PWD"
   create_podman_secret "apex_admin_password" "$APEX_ADMIN_PWD"
   create_podman_secret "ords_listener_password" "$APEX_LIST_PWD"
   create_podman_secret "apex_schema_password" "$APEX_SCH_PWD"
+  create_podman_secret "dba_admin_password" "$DBA_ADMIN_PWD"
   create_podman_secret "test_dev_password" "$TEST_DEV_PWD"
+  create_podman_secret "test_viewer_password" "$TEST_VIEWER_PWD"
   create_podman_secret "test_web_password" "$TEST_WEB_PWD"
 
   if [ -f "$WORKSPACE_DIR/scripts/internal/load-profile.sh" ]; then

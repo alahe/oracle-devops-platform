@@ -23,6 +23,10 @@ init_db_instance() {
     run_sqlcl -s "$CONN_STR_SYS" @"$SCRIPT_DIR/init-db-instance.sql" >/dev/null 2>&1 || true
   fi
 
+  if [ -f "$SCRIPT_DIR/init-apex-outbound-acl.sql" ]; then
+    run_sqlcl -s "$CONN_STR_SYS" @"$SCRIPT_DIR/init-apex-outbound-acl.sql" >/dev/null 2>&1 || true
+  fi
+
   # Apply profile users and roles
   if [ -x "$SCRIPT_DIR/apply-profile-users.sh" ]; then
     "$SCRIPT_DIR/apply-profile-users.sh" "$target_profile"

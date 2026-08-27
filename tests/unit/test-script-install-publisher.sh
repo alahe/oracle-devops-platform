@@ -8,8 +8,8 @@ RED='\033[0;31m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-echo -e "${CYAN}🧪 TEST: scripts/install-publisher.sh${NC}"
-TARGET_SCRIPT="$WORKSPACE_DIR/scripts/install-publisher.sh"
+echo -e "${CYAN}🧪 TEST: internal/install-publisher.sh${NC}"
+TARGET_SCRIPT="$WORKSPACE_DIR/scripts/internal/install-publisher.sh"
 
 if [ -f "$TARGET_SCRIPT" ]; then
   bash -n "$TARGET_SCRIPT"

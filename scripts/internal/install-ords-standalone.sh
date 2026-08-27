@@ -60,8 +60,14 @@ echo "=================================================================="
 DB_HOST="${DB_HOST:-${RESOLVED_ORDS_HOST:-localhost}}"
 DB_PORT="${DB_PORT:-${PROFILE_CONTAINER_PORT:-1521}}"
 DB_SERVICE="${DB_SERVICE:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}"
-SYS_PASSWORD="${SYS_PASSWORD:-${APEX_DB_SYS_PASSWORD:-OrdsSys#2026}}"
-LISTENER_PASSWORD="${LISTENER_PASSWORD:-${APEX_LISTENER_PASSWORD:-OrdsListener#2026}}"
+SYS_PASSWORD="${SYS_PASSWORD:-${APEX_DB_SYS_PASSWORD:-}}"
+if [ -z "$SYS_PASSWORD" ]; then
+  SYS_PASSWORD=$(podman secret inspect --showsecret apex_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || echo "")
+fi
+LISTENER_PASSWORD="${LISTENER_PASSWORD:-${APEX_LISTENER_PASSWORD:-}}"
+if [ -z "$LISTENER_PASSWORD" ]; then
+  LISTENER_PASSWORD=$(podman secret inspect --showsecret ords_listener_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || echo "")
+fi
 
 # Configurable Software Source URL (Default OTN or Internal Artifactory Repository)
 ORDS_URL="${ORDS_URL:-https://download.oracle.com/otn_software/java/ords/ords-latest.zip}"
@@ -96,7 +102,7 @@ OSTEP2_START=$(date +%s)
 if ! command -v ords &> /dev/null; then
   echo "Installing ORDS CLI binaries from $ORDS_URL..."
   mkdir -p /opt/ords
-  LOCAL_BIN_ZIP=$(ls -1 "$SCRIPT_DIR/../../binaries/ords"/*.zip 2>/dev/null | head -n 1 || echo "")
+  LOCAL_BIN_ZIP=$(ls -1 "$SCRIPT_DIR/../../binaries/ords"/*.zip 2>/dev/null | sort -rV | head -n 1 || echo "")
   if [ -n "$LOCAL_BIN_ZIP" ] && [ -f "$LOCAL_BIN_ZIP" ]; then
     echo "Using existing ORDS binary from binaries/ords: $LOCAL_BIN_ZIP"
     cp "$LOCAL_BIN_ZIP" /opt/ords/ords-latest.zip
@@ -148,8 +154,6 @@ EOF
 ords --config "$ORDS_CONFIG_DIR" config set db.hostname "$DB_HOST" || true
 ords --config "$ORDS_CONFIG_DIR" config set db.port "$DB_PORT" || true
 ords --config "$ORDS_CONFIG_DIR" config set db.servicename "$DB_SERVICE" || true
-ords --config "$ORDS_CONFIG_DIR" config set db.username "ORDS_PUBLIC_USER" || true
-ords --config "$ORDS_CONFIG_DIR" config set db.password "$LISTENER_PASSWORD" || true
 
 OSTEP3_SECS=$(( $(date +%s) - OSTEP3_START ))
 

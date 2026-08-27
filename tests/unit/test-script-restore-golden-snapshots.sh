@@ -9,12 +9,12 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 echo -e "${CYAN}🧪 TEST: restore-golden-snapshots.sh${NC}"
-TARGET_SCRIPT="$WORKSPACE_DIR/scripts/restore-golden-snapshots.sh"
+TARGET_SCRIPT="$WORKSPACE_DIR/scripts/snapshots/restore-golden-snapshots.sh"
 
 if [ -x "$TARGET_SCRIPT" ]; then
   bash -n "$TARGET_SCRIPT"
   echo -e "${GREEN}✅ Test Edukas: restore-golden-snapshots.sh on olemas ja BASH süntaks on korras!${NC}"
 else
-  echo -e "${RED}❌ Test Ebaõnnestus: scripts/restore-golden-snapshots.sh puudub!${NC}"
+  echo -e "${RED}❌ Test Ebaõnnestus: scripts/snapshots/restore-golden-snapshots.sh puudub!${NC}"
   exit 1
 fi

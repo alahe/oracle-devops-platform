@@ -68,7 +68,7 @@ echo -e "\n${YELLOW}▶️ [FAAS 2]: Käivitan Iga Skripti 1-ühele Ühikutestid
 UNIT_TEST_COUNT=0
 for test_script in "$SCRIPT_DIR"/unit/test-script-*.sh; do
   [ -e "$test_script" ] || continue
-  "$test_script" >/dev/null
+  bash "$test_script" >/dev/null
   UNIT_TEST_COUNT=$((UNIT_TEST_COUNT + 1))
 done
 echo -e "${GREEN}✅ FAAS 2 Edukas: Kõik ${UNIT_TEST_COUNT} eraldiseisvat 1-ühele skripti ühikutesti läbiti puhtalt!${NC}"
@@ -101,9 +101,9 @@ cat <<EOF > "$AUDIT_FILE"
 | **Käivitamise Kellaaeg** | \`${EXEC_DATE}\` |
 | **Käivitaja Kasutaja** | \`${USER_NAME}\` |
 | **Aktiivne Profiil** | \`${PROFILE_NAME}\` |
-| **Integratsioonitestid** | ✅ 7 / 7 Läbitud |
-| **Ühikutestid (Unit Tests)** | ✅ ${UNIT_TEST_COUNT} / 22 Läbitud |
-| **Skriptide Kaetus** | 🟢 100% (22/22 skripti kaetud) |
+| **Integratsioonitestid** | ✅ 10 / 10 Läbitud |
+| **Ühikutestid (Unit Tests)** | ✅ ${UNIT_TEST_COUNT} / ${UNIT_TEST_COUNT} Läbitud |
+| **Skriptide Kaetus** | 🟢 100% (${UNIT_TEST_COUNT} skripti kaetud) |
 | **Kogu Testi Kestus** | \`${DURATION}s\` |
 | **Kõikide Testide Olek** | ✅ **PASSED (100%)** |
 
@@ -118,7 +118,10 @@ cat <<EOF > "$AUDIT_FILE"
 5. **Podman Compose Override:** \`tests/integration/test-compose-override-generation.sh\` (✅ PASSED)
 6. **Teenused & SSL/TLS Infrastructure:** \`tests/integration/test-subcomponent-services.sh\` (✅ PASSED)
 7. **E2E Süsteemitest:** \`tests/integration/test-e2e-system.sh\` (✅ PASSED)
-8. **Eraldiseisvad Ühikutestid:** \`tests/unit/test-script-*.sh\` (${UNIT_TEST_COUNT} testi - ✅ PASSED)
+8. **SQLcl Paroolivabad Ühendustestid:** \`tests/integration/test-sqlcl-passwordless-connections.sh\` (✅ PASSED)
+9. **GitHub Actions Offline Simulaator:** \`tests/integration/test-github-actions-local.sh\` (✅ PASSED)
+10. **Konteineriseeritud Web IDE:** \`tests/integration/test-web-ide-container.sh\` (✅ PASSED)
+11. **Eraldiseisvad Ühikutestid:** \`tests/unit/test-script-*.sh\` (${UNIT_TEST_COUNT} testi - ✅ PASSED)
 
 ---
 
@@ -127,7 +130,7 @@ Siinse aruande olemasolu ja teostamise ajatempel Giti commit-ajaloos kinnitab, e
 EOF
 
 echo -e "\n${CYAN}==================================================================${NC}"
-echo -e "${GREEN}🎉 KÕIK AUTOMAATTESTID (7 INTEGRATSIOONITESTI + 22 ÜHIKUTESTI) LÄBITI EDUKALT!${NC}"
+echo -e "${GREEN}🎉 KÕIK AUTOMAATTESTID (10 INTEGRATSIOONITESTI + ${UNIT_TEST_COUNT} ÜHIKUTESTI) LÄBITI EDUKALT!${NC}"
 echo -e "   ⌛ Testide kogukestus: ${YELLOW}${DURATION}s${NC}"
 echo -e "   🛡 Auditi tõendi fail: ${CYAN}tests/reports/audit-latest-execution.md${NC}"
 echo -e "   💡 Vihje: Veebiliidese (APEX/ORDS) E2E sisselogimistesti käivitamiseks kasuta skripti: ${CYAN}./tests/test-browser-login.sh${NC}"

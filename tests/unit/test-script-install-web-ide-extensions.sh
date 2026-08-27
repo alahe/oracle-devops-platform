@@ -8,7 +8,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-TARGET_SCRIPT="$WORKSPACE_DIR/scripts/install-web-ide-extensions.sh"
+TARGET_SCRIPT="$WORKSPACE_DIR/scripts/internal/install-web-ide-extensions.sh"
 
 echo "=================================================================="
 echo "🧪 UNIT TEST: install-web-ide-extensions.sh"

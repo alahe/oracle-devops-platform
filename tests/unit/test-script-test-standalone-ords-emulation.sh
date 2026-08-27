@@ -8,7 +8,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-TARGET_SCRIPT="$WORKSPACE_DIR/scripts/test-standalone-ords-emulation.sh"
+TARGET_SCRIPT="$WORKSPACE_DIR/scripts/internal/test-standalone-ords-emulation.sh"
 
 echo "=================================================================="
 echo "🧪 UNIT TEST: test-standalone-ords-emulation.sh"

@@ -39,8 +39,10 @@ graph TD
 
 ### A. Lokaalne arendus (`DEV_LOCAL` arvutis)
 *   **Mugavus ja offline-tugi:** Arendaja saab töötada täielikult ilma võrguühenduseta ja VPN-ita.
-*   **Autonoomia ja vähimate õiguste printsiip:** Iga arendaja saab luua endale isikliku arendajakonto utiliidiga `./scripts/internal/create-developer.sh` (või interaktiivselt `setup-all.sh` lõpus).
-    *   **Andmebaasi kasutaja (DB User):** Arendajale luuakse andmebaasi isiklik kasutaja, kellele määratakse süsteemne roll **`DB_DEVELOPER_ROLE`**. See väldib administraatori kontode (`SYS`) kasutamist igapäevases arendustöös, piirates arendaja õigused täpselt vajalike tegevustega (DDL/DML oma skeemis/tööruumis).
+*   **Autonoomia ja vähimate õiguste printsiip:** Iga andmebaasi instantsi puhul luuakse automaatselt kolm ettevalmistatud kasutajakontot koos paroolivaba Oracle Wallet (SEPS) ühendusega:
+    *   **1. DBA Administraator (`DBA_ADMIN`):** Administratiivsete tegevuste ja DDL/DML halduse konto (`DBA` roll), mis ennetab `SYS` kasutaja igapäevast kasutamist ja tekitab turvalisi käitumisharjumusi. Ühendus: `sql /@DB_DBA_ADMIN` või `sql /@DB_PUBLISHER_DBA_ADMIN`.
+    *   **2. Arendaja kasutaja (`TEST_DEV` / isiklik kasutaja):** Rakenduste ja skeemide igapäevaseks arenduseks mõeldud konto, millele on omistatud ametlik Oracle 23c/23ai **`DB_DEVELOPER_ROLE`** (lisaks `RESOURCE` ja `CREATE SESSION`). Ühendus: `sql /@DB_TEST_DEV`.
+    *   **3. Tava/Test vaataja (`TEST_VIEWER`):** Piiratud õigustega teostus- ja testkonto, millel on rangelt ainult kõigi skeemide lugemisõigus (`SELECT ANY TABLE`, `SELECT ANY DICTIONARY`, `READ ANY TABLE`). Vajadusel saab sellele kontole lisada täiendavaid spetsiifilisi õigusi. Ühendus: `sql /@DB_TEST_VIEWER`.
     *   **APEX kasutaja:** Tööruumis `PROXY_WORKSPACE` luuakse samanimeline arendajakonto APEX-i arendustöödeks.
     *   **VS Code automaatne ühendus:** Ühenduse seaded salvestatakse SQLcl-i vahendusel otse arendaja VS Code seadistustesse, et vältida paroolide lekitamist või manuaalset salvestamist.
 *   **SSO möödapääs (Bypass):** Kui arendaja soovib ajutiselt testida lokaalset SSO-d, kuid ühendust pole, saab kasutada möödapääsu parameetrit: `&fsp_sso_login_override=y`.
@@ -65,6 +67,34 @@ Süsteemsete andmebaasi paroolide (`SYS`, `SYSTEM`) hoidmine tekstifailides (`.e
     *   Toodangukeskkondades on andmebaasi kuulaja (Listener) konfigureeritud TLS režiimi (port `2484`, TCPS protokoll).
     *   Andmebaasi konteinerisse mountitakse kaust `/opt/oracle/admin/FREE/wallet`, mis sisaldab andmebaasi sertifikaati.
     *   ORDS ja SQLcl kliendid kasutavad usaldusväärse sertifitseerimiskeskuse (CA) juursertifikaadiga täidetud kliendi-walletit, tagades, et andmeliiklus on täielikult kaitstud pealtkuulamise eest (Man-in-the-Middle rünnakud).
+
+---
+
+## 2.6. Adaptiivne 5-Astmeline TLS/HTTPS Arhitektuur ja 0-Admin Usaldusväärsus
+
+Veebiteenuste (ORDS, APEX, Analytics Publisher) HTTPS krüpteerimiseks ja brauseri hoiatusteta (*Not Secure*) toimimiseks ilma lokaalsete administraatori/root õigusteta on välja töötatud **5-astmeline hierarhiline sertifikaatide mootor** (`scripts/internal/resolve-tls-mode.sh`):
+
+```text
+config/certs/
+├── custom/          # Samm 0: Arendaja käsitsi lisatud sertifikaadid (tls.crt, tls.key)
+├── public/          # Variant 1: Avalik FQDN & Let's Encrypt / Avalik CA
+├── corp/            # Variant 2: Ettevõtte Sise-PKI sertifikaadid (corp_cert.crt)
+├── user_ca/         # Variant 3: Lokaalne CA (usaldatud kasutajahoidlas, 0-admin)
+└── self_signed/     # Variant 4: Jooksvalt genereeritud iseallkirjastatud cert (Untrusted fallback)
+```
+
+### Sertifikaatide Tasemed ja Eesmärgid:
+1. **Samm 0 (`CUSTOM_CERT` - `config/certs/custom/`):** Arendaja poolt käsitsi kausta kopeeritud sertifikaat. Võetakse esmase prioriteedina kasutusse.
+2. **Samm 1 (`PUBLIC_DNS` - `config/certs/public/`):** Avalik domeen ja Let's Encrypt / DigiCert sertifikaat (`USE_PUBLIC_CA_CERTS=true`). Tagab 100% rohelise tabaluku kõigis seadmetes ilma lokaalse seadistuseta.
+3. **Samm 2 (`CORP_PKI` - `config/certs/corp/`):** Ettevõtte sise-PKI Wildcard sertifikaat (`CORP_PKI_ENABLED=true`), mida haldab ettevõtte IT.
+4. **Samm 3 (`USER_LOCAL_CA` - `config/certs/user_ca/`):** Lokaalne CA, mis usaldatakse kasutaja isiklikus hoidlas (`login.keychain-db` macOS-is või `Cert:\CurrentUser\Root` Windowsis) **ilma administraatori või root-õigusteta**.
+5. **Samm 4 (`SELF_SIGNED` - `config/certs/self_signed/`):** Jooksvalt genereeritud puhas iseallkirjastatud varusertifikaat. Ei muuda ühtegi truststore'i ja toimib tehnilise turvavõrguna suletud CI/CD keskkondades (kuvab brauseris *"Not Secure"*).
+
+### Blueprinti Rangusastme Kontroll (`TLS_ALLOWED_LEVEL`):
+* `strict_public`: Lubatud ainult 0 (Custom) ja 1 (Public CA).
+* `corporate_pki`: Lubatud 0, 1 ja 2 (Ettevõtte PKI).
+* `trusted_local`: Lubatud 0, 1, 2 ja 3 (Nõuab usaldatud sertifikaati, keelab Variant 4).
+* `permissive`: Lubatud kõik variandid 0–4 (Arendaja liivakast).
 
 ---
 
