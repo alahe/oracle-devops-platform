@@ -277,41 +277,7 @@ download_file() {
   fi
 }
 
-get_step_stats() {
-  local step_key1="$1"
-  local step_key2="$2"
-  local default_est="$3"
-  local values=()
-  if [ -d "$METRICS_DIR" ]; then
-    for f in "$METRICS_DIR"/setup_benchmarks_*.json; do
-      if [ -f "$f" ]; then
-        local val=$(grep -m1 -E "\"($step_key1|$step_key2)\":" "$f" | awk -F: '{print $2}' | tr -d ' ,"\r\n' || echo "")
-        if [[ "$val" =~ ^[0-9]+$ ]]; then
-          values+=($val)
-        fi
-      fi
-    done
-  fi
-  local count=${#values[@]}
-  if [ $count -eq 0 ]; then
-    echo "ootusaeg ~${default_est}"
-    return 0
-  fi
-  local sum=0
-  local min=${values[0]}
-  local max=${values[0]}
-  for val in "${values[@]}"; do
-    sum=$((sum + val))
-    if [ $val -lt $min ]; then
-      min=$val
-    fi
-    if [ $val -gt $max ]; then
-      max=$val
-    fi
-  done
-  local avg=$((sum / count))
-  echo "keskmine: $(format_duration $avg) (min: $(format_duration $min), max: $(format_duration $max))"
-}
+trap restore_cursor EXIT INT TERM
 
 print_sub_header() {
   local sub_num="$1"
@@ -320,10 +286,14 @@ print_sub_header() {
   local step_key2="$4"
   local default_est="$5"
   echo -e "${CYAN}├─${NC} ${YELLOW}[Alamsamm 6.${sub_num}]: ${title}${NC}"
+  local stats=""
   if [ -n "$step_key1" ]; then
-    echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}$(get_step_stats "$step_key1" "$step_key2" "$default_est")${NC}"
-  elif [ -n "$default_est" ]; then
-    echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}ootusaeg ~${default_est}${NC}"
+    stats=$(get_step_stats "$step_key1" "$default_est" 2>/dev/null || echo "")
+    [ -z "$stats" ] && [ -n "$step_key2" ] && stats=$(get_step_stats "$step_key2" "$default_est" 2>/dev/null || echo "")
+  fi
+  [ -z "$stats" ] && [ -n "$default_est" ] && stats="ootusaeg ~${default_est}"
+  if [ -n "$stats" ]; then
+    echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}${stats}${NC}"
   fi
 }
 
@@ -786,17 +756,20 @@ EOF
   fi
   SQL_PID=$!
 
-  # Kuvame sekundite tiksujat teatud intervalliga (vaikimisi iga 2s tagant)
+  hide_cursor
   ELAPSED=0
-  POLL_INTERVAL="${PROGRESS_INTERVAL:-2}"
-  print_progress "Paigaldan APEX mootorit (${CONTAINER_NAME})" 0 "$POLL_INTERVAL"
+  POLL_INTERVAL="${LIVE_TIMER_INTERVAL:-3}"
+  POLL_INTERVAL="${POLL_INTERVAL//[^0-9]/}"
+  [ -z "$POLL_INTERVAL" ] || [ "$POLL_INTERVAL" -le 0 ] && POLL_INTERVAL=3
+  print_progress "Paigaldan APEX mootorit (${CONTAINER_NAME})" 0 360
   while kill -0 $SQL_PID 2>/dev/null; do
     sleep "$POLL_INTERVAL"
     ELAPSED=$((ELAPSED + POLL_INTERVAL))
-    print_progress "Paigaldan APEX mootorit (${CONTAINER_NAME})" "$ELAPSED" "$POLL_INTERVAL"
+    print_progress "Paigaldan APEX mootorit (${CONTAINER_NAME})" "$ELAPSED" 360
   done
   wait $SQL_PID
   clear_progress_line
+  restore_cursor
 
 
 

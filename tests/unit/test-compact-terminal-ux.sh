@@ -16,6 +16,8 @@ source "$WORKSPACE_DIR/scripts/internal/common.sh"
 bash -n "$WORKSPACE_DIR/scripts/internal/common.sh"
 bash -n "$WORKSPACE_DIR/scripts/internal/blueprint-info.sh"
 bash -n "$WORKSPACE_DIR/scripts/setup-all.sh"
+bash -n "$WORKSPACE_DIR/scripts/internal/install-apex.sh"
+bash -n "$WORKSPACE_DIR/scripts/patches/apply-apex-patch.sh"
 
 # Test 2: Test save_blueprint_benchmark & get_blueprint_stats in temp directory
 mock_metrics_dir=$(mktemp -d)

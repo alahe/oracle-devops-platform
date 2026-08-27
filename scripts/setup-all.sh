@@ -24,6 +24,8 @@ if [ -f "$SCRIPT_DIR/internal/blueprint-info.sh" ]; then
   source "$SCRIPT_DIR/internal/blueprint-info.sh"
 fi
 
+trap restore_cursor EXIT INT TERM
+
 # Parameetrite parsimine
 export FORCE=false
 export SKIP_PUBLISHER=false
@@ -272,6 +274,8 @@ if [ -f "$ENV_PATH" ]; then
 fi
 [ -n "${SAVED_TEST_SCENARIO:-}" ] && export TEST_SCENARIO="$SAVED_TEST_SCENARIO"
 [ -n "${SAVED_TEST_MODE:-}" ] && export IS_TEST_MODE="$SAVED_TEST_MODE"
+ACTIVE_BP_ID="${ACTIVE_BP_ID:-${BLUEPRINT:-${TEST_SCENARIO:-}}}"
+ACTIVE_BP_ID="${ACTIVE_BP_ID//[^0-9]/}"
 
 if [ -f "$SCRIPT_DIR/internal/load-profile.sh" ]; then
   source "$SCRIPT_DIR/internal/load-profile.sh"
@@ -381,6 +385,11 @@ fi
 
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${CYAN}🚀 Oracle Free DB & APEX Full Automated Setup${NC}"
+if [ -n "$ACTIVE_BP_ID" ]; then
+  bp_hist_stats=$(get_blueprint_stats "$ACTIVE_BP_ID" 2>/dev/null || echo "")
+  echo -e "📐 ${BOLD}Arhitektuurne Kavand:${NC} ${GREEN}Blueprint ${ACTIVE_BP_ID}${NC}"
+  [ -n "$bp_hist_stats" ] && echo -e "⏱️  ${BOLD}Ajalooline ooteaeg:${NC}   ${YELLOW}${bp_hist_stats}${NC}"
+fi
 echo -e "${YELLOW}🎯 TARGET CONFIGURATIONS (Aktiivsed Profiilid ja Sihtseadistused):${NC}"
 get_active_db_instances | while IFS='|' read -r container prof env_key; do
   [ -z "$container" ] && continue
@@ -442,15 +451,20 @@ if [ "$IS_LOCAL" = "true" ]; then
   PULL_PID=$!
   register_child_pid "$PULL_PID"
 
+  hide_cursor
   ELAPSED=0
+  POLL_INTERVAL="${LIVE_TIMER_INTERVAL:-3}"
+  POLL_INTERVAL="${POLL_INTERVAL//[^0-9]/}"
+  [ -z "$POLL_INTERVAL" ] || [ "$POLL_INTERVAL" -le 0 ] && POLL_INTERVAL=3
+  print_progress "Laadin pilte" 0 15
   while kill -0 $PULL_PID 2>/dev/null; do
-    sleep 2
-    ELAPSED=$((ELAPSED + 2))
+    sleep "$POLL_INTERVAL"
+    ELAPSED=$((ELAPSED + POLL_INTERVAL))
     print_progress "Laadin pilte" "$ELAPSED" 15
   done
   wait $PULL_PID || true
   clear_progress_line
-  echo ""
+  restore_cursor
 
   PULL_SECS=$(( $(date +%s) - PULL_START ))
   PULL_TIME=$(format_duration $PULL_SECS)

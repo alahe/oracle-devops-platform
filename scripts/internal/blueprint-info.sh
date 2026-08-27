@@ -298,11 +298,18 @@ simulate_blueprint_dry_run() {
   local containers
   containers=$(extract_blueprint_containers "$num")
 
+  local bp_stats=""
+  if [ -f "$WORKSPACE_DIR/scripts/internal/common.sh" ]; then
+    source "$WORKSPACE_DIR/scripts/internal/common.sh" 2>/dev/null || true
+    bp_stats=$(get_blueprint_stats "$num" 2>/dev/null || echo "")
+  fi
+
   echo -e "\n${CYAN}==================================================================${NC}"
   echo -e "${YELLOW}🔍 BLUEPRINT ${num} SIMULATSIOON (DRY-RUN PRE-FLIGHT CHECK)...${NC}"
   echo -e "${CYAN}==================================================================${NC}"
   echo -e "   ├─ 📋 Valitud Blueprint:      ${GREEN}${bp_name}${NC}"
   echo -e "   ├─ ⚙️  Režiim:                 $( [ "$is_test_mode" = "true" ] && echo "${YELLOW}Automaattest (Test Mode -tb)${NC}" || echo "${GREEN}Toodang / Arendus (-b)${NC}" )"
+  [ -n "$bp_stats" ] && echo -e "   ├─ ⏱️  Ajalooline ooteaeg:     ${YELLOW}${bp_stats}${NC}"
   echo -e "   ├─ 📦 Tuvastatud Konteinerid: ${CYAN}${containers}${NC}"
   echo -e "   ├─ 🛡️  Konfiguratsiooni staatus: ✅ SÜNTAKSOK"
   echo -e "   └─ 🌐 Pordikonfliktide kontroll: ✅ VALMIS KÄIVITUSEKS"
