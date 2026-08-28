@@ -1,0 +1,52 @@
+profile:
+  id: db-forms-gvenzl
+  name: db-forms-gvenzl
+  description: "Lightweight Oracle Forms 14c Metadata and RCU Database running on gvenzl/oracle-free image."
+  functionality: forms
+  db_type: standard
+  image_vendor: gvenzl
+
+database:
+  container_name: db-forms
+  container_image: docker.io/gvenzl/oracle-free:latest
+  workload_type: NONE
+  admin_user: sys
+  admin_role: SYSDBA
+  default_service: FREEPDB1
+  db_port: 1534
+  wallet_required: false
+  configure_tde: false
+
+components:
+  forms:
+    enabled: true
+    version: "14.1.2"
+    container_name: app-forms
+    rcu_prefix: FORMS
+    http_port: 9001
+    https_port: 9002
+    admin_port: 7001
+    builder_port: 6082
+    vnc_enabled: true
+  ords:
+    enabled: false
+  apex:
+    enabled: false
+
+users:
+  - username: sys
+    role: SYSDBA
+    wallet_alias: DB_FORMS_SYS
+    color: "#E74C3C"
+  - username: DBA_ADMIN
+    role: DBA
+    wallet_alias: DB_FORMS_DBA_ADMIN
+    color: "#2980B9"
+  - username: FORMS_SCHEMA
+    role: SCHEMA
+    wallet_alias: DB_FORMS_SCHEMA
+    color: "#8E44AD"
+  - username: FORMS_DEV
+    role: DEVELOPER
+    wallet_alias: DB_FORMS_DEV
+    color: "#27AE60"

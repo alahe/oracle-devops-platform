@@ -216,19 +216,66 @@ if podman container exists "$PROXY_CONTAINER" 2>/dev/null; then
   podman exec "$PROXY_CONTAINER" rm -f /opt/oracle/admin/FREE/wallet/ewallet.p12 /opt/oracle/admin/FREE/wallet/cwallet.sso /opt/oracle/admin/FREE/wallet/ewallet.p12.lck /opt/oracle/admin/FREE/wallet/cwallet.sso.lck || true
 fi
 
+MAX_ATTEMPTS=15
+HOST_SQLCL_DIR=$(find "$HOME/.vscode/extensions" -name "sqlcl" -type d 2>/dev/null | sort -rV | head -n 1 || true)
+USE_HOST_PKI=false
+if [ -n "$HOST_SQLCL_DIR" ] && command -v java >/dev/null 2>&1; then
+  HOST_SQLCL_CP=$(find "$HOST_SQLCL_DIR/lib" -name "*.jar" | tr '\n' ':')
+  if java -cp "$HOST_SQLCL_CP" oracle.security.pki.textui.OraclePKITextUI help >/dev/null 2>&1; then
+    USE_HOST_PKI=true
+  fi
+fi
+
+USE_EPHEMERAL_WALLET=false
+if [ "$USE_HOST_PKI" = "false" ]; then
+  if ! podman exec "$PROXY_CONTAINER" bash -c '[ -d "/opt/oracle/product/23ai/dbhomeFree/jdk" ] || [ -d "/usr/java/default" ] || [ -d "/usr/java/latest" ]' >/dev/null 2>&1; then
+    USE_EPHEMERAL_WALLET=true
+  fi
+fi
+
 echo -e "${CYAN}├─${NC} ${YELLOW}[Alamsamm 4.5.1]: Loon uue paroolivaba Walleti (Auto-Login)...${NC}"
 echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}ootusaeg ~2s${NC}"
 ATTEMPT=1
-MAX_ATTEMPTS=5
-until podman exec "$PROXY_CONTAINER" orapki wallet create -wallet /opt/oracle/admin/FREE/wallet -pwd "$WALLET_PWD" -auto_login >/dev/null 2>&1; do
-  if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
-    echo -e "${CYAN}│${NC}  ❌ Viga: Walleti loomine orapki abil ebaõnnestus pärast $MAX_ATTEMPTS katset!"
-    exit 255
+if [ "$USE_HOST_PKI" = "true" ]; then
+  java -cp "$HOST_SQLCL_CP" oracle.security.pki.textui.OraclePKITextUI wallet create -wallet "$TNS_DIR" -pwd "$WALLET_PWD" -auto_login >/dev/null 2>&1 || true
+elif [ "$USE_EPHEMERAL_WALLET" = "true" ]; then
+  HELPER_IMG="${FORMS_CONTAINER_IMAGE:-localhost/oracle-forms:14.1.2}"
+  if ! podman image exists "$HELPER_IMG" 2>/dev/null; then
+    HELPER_IMG="container-registry.oracle.com/database/sqlcl:latest"
   fi
-  echo -e "${CYAN}│${NC}  ⚠️  orapki käivitus ebaõnnestus (transientne viga). Proovin uuesti... (Katse $ATTEMPT/$MAX_ATTEMPTS)"
-  sleep 2
-  ATTEMPT=$((ATTEMPT + 1))
-done
+  until podman run --rm -v "$TNS_DIR:/u01/oracle/tns_admin:rw" "$HELPER_IMG" /u01/oracle/bin/orapki wallet create -wallet /u01/oracle/tns_admin -pwd "$WALLET_PWD" -auto_login >/dev/null 2>&1; do
+    if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
+      echo -e "${CYAN}│${NC}  ❌ Viga: Walleti loomine orapki abil ebaõnnestus pärast $MAX_ATTEMPTS katset!"
+      exit 255
+    fi
+    echo -e "${CYAN}│${NC}  ⚠️  orapki käivitus ebaõnnestus (transientne viga). Proovin uuesti... (Katse $ATTEMPT/$MAX_ATTEMPTS)"
+    sleep 2
+    ATTEMPT=$((ATTEMPT + 1))
+  done
+else
+  until podman exec "$PROXY_CONTAINER" bash -c '
+    mkdir -p /opt/oracle/admin/FREE/wallet
+    if [ -d "/opt/oracle/product/23ai/dbhomeFree/jdk" ]; then
+      export JAVA_HOME="/opt/oracle/product/23ai/dbhomeFree/jdk"
+    elif ls -d /opt/oracle/product/*/dbhomeFree/jdk 2>/dev/null | head -n 1; then
+      export JAVA_HOME="$(ls -d /opt/oracle/product/*/dbhomeFree/jdk 2>/dev/null | head -n 1)"
+    elif [ -d "/usr/java/default" ]; then
+      export JAVA_HOME="/usr/java/default"
+    elif [ -d "/usr/java/latest" ]; then
+      export JAVA_HOME="/usr/java/latest"
+    fi
+    export PATH=$JAVA_HOME/bin:$ORACLE_HOME/bin:$PATH
+    orapki wallet create -wallet /opt/oracle/admin/FREE/wallet -pwd "$1" -auto_login
+  ' _ "$WALLET_PWD" >/dev/null 2>&1; do
+    if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
+      echo -e "${CYAN}│${NC}  ❌ Viga: Walleti loomine orapki abil ebaõnnestus pärast $MAX_ATTEMPTS katset!"
+      exit 255
+    fi
+    echo -e "${CYAN}│${NC}  ⚠️  orapki käivitus ebaõnnestus (transientne viga). Proovin uuesti... (Katse $ATTEMPT/$MAX_ATTEMPTS)"
+    sleep 2
+    ATTEMPT=$((ATTEMPT + 1))
+  done
+fi
 
 echo -e "${CYAN}├─${NC} ${YELLOW}[Alamsamm 4.5.2]: Lisanduvad ühenduse andmed Walletisse (SEPS)...${NC}"
 echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}ootusaeg ~2s${NC}"
@@ -290,19 +337,38 @@ DB_${UPPER_NAME}_VIEWER|TEST_VIEWER|READONLY"
         pwd_var=$(get_container_secret "$cname" "${uname}_password")
       fi
 
-      podman exec -i \
-        -e WALLET_PWD="$WALLET_PWD" \
-        -e ALIAS="$alias" \
-        -e UNAME="$uname" \
-        -e PWD_VAR="$pwd_var" \
-        "$PROXY_CONTAINER" sh -c '
-export JAVA_HOME=/usr/java/latest
-export PATH=$JAVA_HOME/bin:$PATH
+      if [ "$USE_HOST_PKI" = "true" ]; then
+        java -cp "$HOST_SQLCL_CP" oracle.security.pki.textui.OraclePKITextUI secretstore delete_credential -wallet "$TNS_DIR" -pwd "$WALLET_PWD" -connect_string "$alias" >/dev/null 2>&1 || true
+        java -cp "$HOST_SQLCL_CP" oracle.security.pki.textui.OraclePKITextUI secretstore create_credential -wallet "$TNS_DIR" -pwd "$WALLET_PWD" -connect_string "$alias" -username "$uname" -password "$pwd_var" >/dev/null 2>&1 || true
+      elif [ "$USE_EPHEMERAL_WALLET" = "true" ]; then
+        podman run -i --rm -v "$TNS_DIR:/u01/oracle/tns_admin:rw" "$HELPER_IMG" bash -c "
+          export PATH=/usr/java/default/bin:/u01/oracle/bin:\$PATH
+          echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl /u01/oracle/tns_admin -deleteCredential '$alias' >/dev/null 2>&1 || true
+          echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl /u01/oracle/tns_admin -createCredential '$alias' '$uname' '$pwd_var' >/dev/null 2>&1 || true
+        "
+      else
+        podman exec -i \
+          -e WALLET_PWD="$WALLET_PWD" \
+          -e ALIAS="$alias" \
+          -e UNAME="$uname" \
+          -e PWD_VAR="$pwd_var" \
+          "$PROXY_CONTAINER" sh -c '
+if [ -d "/opt/oracle/product/23ai/dbhomeFree/jdk" ]; then
+  export JAVA_HOME="/opt/oracle/product/23ai/dbhomeFree/jdk"
+elif ls -d /opt/oracle/product/*/dbhomeFree/jdk 2>/dev/null | head -n 1; then
+  export JAVA_HOME="$(ls -d /opt/oracle/product/*/dbhomeFree/jdk 2>/dev/null | head -n 1)"
+elif [ -d "/usr/java/default" ]; then
+  export JAVA_HOME="/usr/java/default"
+elif [ -d "/usr/java/latest" ]; then
+  export JAVA_HOME="/usr/java/latest"
+fi
+export PATH=$JAVA_HOME/bin:$ORACLE_HOME/bin:$PATH
 WALLET_PATH="/opt/oracle/admin/FREE/wallet"
 
 echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "$ALIAS" >/dev/null 2>&1 || true
 echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "$ALIAS" "$UNAME" "$PWD_VAR" >/dev/null 2>&1 || true
 '
+      fi
     done <<< "$USER_DEFS"
 
     # Retrieve APEX listener and admin passwords for this database instance
@@ -314,19 +380,59 @@ echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "$ALIAS" "$UNAM
     [ -z "$APEX_ADMIN_PWD" ] && APEX_ADMIN_PWD="$SYS_PWD"
 
     # Always generate canonical container-specific aliases (DB_<NAME>_*)
-    podman exec -i \
-      -e WALLET_PWD="$WALLET_PWD" \
-      -e SYS_PWD="$SYS_PWD" \
-      -e DBA_PWD="$DBA_PWD" \
-      -e SCH_PWD="$SCH_PWD" \
-      -e DEV_PWD="$DEV_PWD" \
-      -e VIEWER_PWD="$VIEWER_PWD" \
-      -e APEX_LISTENER_PWD="$APEX_LISTENER_PWD" \
-      -e APEX_ADMIN_PWD="$APEX_ADMIN_PWD" \
-      -e UPPER_NAME="$UPPER_NAME" \
-      "$PROXY_CONTAINER" sh -c '
-export JAVA_HOME=/usr/java/latest
-export PATH=$JAVA_HOME/bin:$PATH
+    pfx="$UPPER_NAME"
+    if [ "$USE_HOST_PKI" = "true" ]; then
+      for c_alias in "DB_${pfx}_SYS|sys|$SYS_PWD" "DB_${pfx}_DBA_ADMIN|DBA_ADMIN|$DBA_PWD" "DB_${pfx}_SCHEMA|${APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}|$SCH_PWD" "DB_${pfx}_DEV|${TEST_DEV_USER:-TEST_DEV}|$DEV_PWD" "DB_${pfx}_VIEWER|TEST_VIEWER|$VIEWER_PWD" "DB_${pfx}_APEX_ADMIN|ADMIN|$APEX_ADMIN_PWD" "DB_${pfx}_APEX_PUBLIC_USER|APEX_PUBLIC_USER|$APEX_LISTENER_PWD" "DB_${pfx}_APEX_LISTENER|APEX_LISTENER|$APEX_LISTENER_PWD" "DB_${pfx}_ORDS_PUBLIC_USER|ORDS_PUBLIC_USER|$APEX_LISTENER_PWD"; do
+        IFS='|' read -r a_name a_user a_pwd <<< "$c_alias"
+        [ -n "$a_pwd" ] || continue
+        java -cp "$HOST_SQLCL_CP" oracle.security.pki.textui.OraclePKITextUI secretstore delete_credential -wallet "$TNS_DIR" -pwd "$WALLET_PWD" -connect_string "$a_name" >/dev/null 2>&1 || true
+        java -cp "$HOST_SQLCL_CP" oracle.security.pki.textui.OraclePKITextUI secretstore create_credential -wallet "$TNS_DIR" -pwd "$WALLET_PWD" -connect_string "$a_name" -username "$a_user" -password "$a_pwd" >/dev/null 2>&1 || true
+      done
+    elif [ "$USE_EPHEMERAL_WALLET" = "true" ]; then
+      podman run -i --rm -v "$TNS_DIR:/u01/oracle/tns_admin:rw" "$HELPER_IMG" bash -c "
+        export PATH=/usr/java/default/bin:/u01/oracle/bin:\$PATH
+        WALLET_PATH=/u01/oracle/tns_admin
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_SYS' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_SYS' sys '$SYS_PWD' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_DBA_ADMIN' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_DBA_ADMIN' DBA_ADMIN '$DBA_PWD' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_SCHEMA' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_SCHEMA' '${APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}' '$SCH_PWD' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_DEV' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_DEV' '${TEST_DEV_USER:-TEST_DEV}' '$DEV_PWD' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_VIEWER' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_VIEWER' TEST_VIEWER '$VIEWER_PWD' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_APEX_ADMIN' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_APEX_ADMIN' 'ADMIN' '$APEX_ADMIN_PWD' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_APEX_PUBLIC_USER' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_APEX_PUBLIC_USER' 'APEX_PUBLIC_USER' '$APEX_LISTENER_PWD' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_APEX_LISTENER' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_APEX_LISTENER' 'APEX_LISTENER' '$APEX_LISTENER_PWD' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_ORDS_PUBLIC_USER' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_ORDS_PUBLIC_USER' 'ORDS_PUBLIC_USER' '$APEX_LISTENER_PWD' >/dev/null 2>&1 || true
+      "
+    else
+      podman exec -i \
+        -e WALLET_PWD="$WALLET_PWD" \
+        -e SYS_PWD="$SYS_PWD" \
+        -e DBA_PWD="$DBA_PWD" \
+        -e SCH_PWD="$SCH_PWD" \
+        -e DEV_PWD="$DEV_PWD" \
+        -e VIEWER_PWD="$VIEWER_PWD" \
+        -e APEX_LISTENER_PWD="$APEX_LISTENER_PWD" \
+        -e APEX_ADMIN_PWD="$APEX_ADMIN_PWD" \
+        -e UPPER_NAME="$UPPER_NAME" \
+        "$PROXY_CONTAINER" sh -c '
+if [ -d "/opt/oracle/product/23ai/dbhomeFree/jdk" ]; then
+  export JAVA_HOME="/opt/oracle/product/23ai/dbhomeFree/jdk"
+elif ls -d /opt/oracle/product/*/dbhomeFree/jdk 2>/dev/null | head -n 1; then
+  export JAVA_HOME="$(ls -d /opt/oracle/product/*/dbhomeFree/jdk 2>/dev/null | head -n 1)"
+elif [ -d "/usr/java/default" ]; then
+  export JAVA_HOME="/usr/java/default"
+elif [ -d "/usr/java/latest" ]; then
+  export JAVA_HOME="/usr/java/latest"
+fi
+export PATH=$JAVA_HOME/bin:$ORACLE_HOME/bin:$PATH
 WALLET_PATH="/opt/oracle/admin/FREE/wallet"
 
 pfx="$UPPER_NAME"
@@ -351,17 +457,30 @@ echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_APEX
 echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_ORDS_PUBLIC_USER" >/dev/null 2>&1 || true
 echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_ORDS_PUBLIC_USER" "ORDS_PUBLIC_USER" "$APEX_LISTENER_PWD" >/dev/null 2>&1 || true
 '
+    fi
   )
 done
 
-podman cp "$PROXY_CONTAINER:/opt/oracle/admin/FREE/wallet/cwallet.sso" "$TNS_DIR/cwallet.sso"
-podman cp "$PROXY_CONTAINER:/opt/oracle/admin/FREE/wallet/ewallet.p12" "$TNS_DIR/ewallet.p12"
+if [ "$USE_HOST_PKI" = "true" ]; then
+  if podman container exists "$PROXY_CONTAINER" 2>/dev/null; then
+    podman exec "$PROXY_CONTAINER" mkdir -p /opt/oracle/admin/FREE/wallet 2>/dev/null || true
+    podman cp "$TNS_DIR/cwallet.sso" "$PROXY_CONTAINER:/opt/oracle/admin/FREE/wallet/" 2>/dev/null || true
+    podman cp "$TNS_DIR/ewallet.p12" "$PROXY_CONTAINER:/opt/oracle/admin/FREE/wallet/" 2>/dev/null || true
+  fi
+elif [ "$USE_EPHEMERAL_WALLET" != "true" ]; then
+  podman cp "$PROXY_CONTAINER:/opt/oracle/admin/FREE/wallet/cwallet.sso" "$TNS_DIR/cwallet.sso"
+  podman cp "$PROXY_CONTAINER:/opt/oracle/admin/FREE/wallet/ewallet.p12" "$TNS_DIR/ewallet.p12"
+fi
 
 if [ -f "$WORKSPACE_DIR/config/certs/localCA.pem" ]; then
   echo -e "${CYAN}├─${NC} ${YELLOW}[Alamsamm 4.5.3]: Importin kohaliku juursertifikaadi (Root CA) kliendi walletisse...${NC}"
   echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}ootusaeg ~1s${NC}"
   cp "$WORKSPACE_DIR/config/certs/localCA.pem" "$TNS_DIR/localCA.pem"
-  podman exec "$PROXY_CONTAINER" orapki wallet add -wallet /opt/oracle/admin/FREE/wallet -pwd "$WALLET_PWD" -trusted_cert -cert /opt/oracle/admin/FREE/wallet/localCA.pem >/dev/null 2>&1 || true
+  if [ "$USE_EPHEMERAL_WALLET" = "true" ]; then
+    podman run --rm -v "$TNS_DIR:/u01/oracle/tns_admin:rw" "$HELPER_IMG" /u01/oracle/bin/orapki wallet add -wallet /u01/oracle/tns_admin -pwd "$WALLET_PWD" -trusted_cert -cert /u01/oracle/tns_admin/localCA.pem >/dev/null 2>&1 || true
+  else
+    podman exec "$PROXY_CONTAINER" orapki wallet add -wallet /opt/oracle/admin/FREE/wallet -pwd "$WALLET_PWD" -trusted_cert -cert /opt/oracle/admin/FREE/wallet/localCA.pem >/dev/null 2>&1 || true
+  fi
   rm -f "$TNS_DIR/localCA.pem"
 fi
 

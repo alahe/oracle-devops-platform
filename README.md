@@ -246,22 +246,22 @@ cp config/blueprints/.env.3-db-lis-apex-ords-with-proxy .env
 
 ---
 
-## 🏗️ Keskkonna 13 Ametlikku Arhitektuurset Kavandit (Environment Blueprints)
+## 🏗️ Keskkonna 18 Ametlikku Arhitektuurset Kavandit (Environment Blueprints)
 
-Süsteem sisaldab **13 ametlikku arhitektuurset kavandit (Blueprints)** kaustas [`config/blueprints/`](config/blueprints/), mis katavad kõik võimalikud tootmis- ja arenduskombinatsioonid (erinevad andmebaasi pildid nagu official Oracle DB 23ai, Gerald Venzl Community DB, Autonomous ADB emulator; brauseripõhine VS Code Web IDE jne).
+Süsteem sisaldab **18 ametlikku arhitektuurset kavandit (Blueprints)** kaustas [`config/blueprints/`](config/blueprints/), mis katavad kõik võimalikud tootmis- ja arenduskombinatsioonid (erinevad andmebaasi pildid nagu official Oracle DB 23ai, Gerald Venzl Community DB, Autonomous ADB emulator; brauseripõhine VS Code Web IDE; Oracle Forms 14c ja Analytics Publisher).
 
 ### 🚀 Käivitamine Käsuliinilt (Terminal):
 
 ```bash
 # 1. TOODANG & ARENDUS (Säilitab andmed, No-Reset):
 ./scripts/setup-all.sh -b 3           # Aktiveeri soovitatud 2-kihiline tootmiskavand
-./scripts/setup-all.sh --blueprint 7  # Aktiveeri Full Enterprise tootmiskavand
-./scripts/setup-all.sh -l             # Kuva kõigi 13 blueprinti tabel ilma käivitamata
+./scripts/setup-all.sh --blueprint 18 # Aktiveeri Forms + Embedded ORDS tootmiskavand
+./scripts/setup-all.sh -l             # Kuva kõigi 18 blueprinti tabel ilma käivitamata
 
 # 2. AUTOMAATTESTIMINE & CI/CD (Puhas algseis, koos reset-all -y):
 ./scripts/setup-all.sh -tb 3          # Testi üksikut blueprinti puhtalt lehelt
-./scripts/setup-all.sh -tb 1,5,8,10   # Testi valitud blueprintide jada
-./scripts/setup-all.sh -tb all        # Testi KÕIKI 13 blueprinti järjest
+./scripts/setup-all.sh -tb 1,5,8,18   # Testi valitud blueprintide jada
+./scripts/setup-all.sh -tb all        # Testi KÕIKI 18 blueprinti järjest
 ```
 
 | Nr | Blueprinti Fail | Käivitatavad Konteinerid | Peamine Eesmärk ja Arhitektuur |
@@ -279,6 +279,11 @@ Süsteem sisaldab **13 ametlikku arhitektuurset kavandit (Blueprints)** kaustas 
 | **11** | `.env.11-cloud-adb-with-web-ide` | `db-proxy-adb`, `app-ords`, `web-ide-dev` | Pilve Autonomous DB emuleerimine + Web IDE. |
 | **12** | `.env.12-publisher-gvenzl-with-web-ide` | `db-publisher-gvenzl`, `app-publisher`, `web-ide-dev` | Pixel-Perfect aruandlus kergel Gvenzl DB-l. |
 | **13** | `.env.13-full-enterprise-sandbox-web-ide` | 3 DB-d, `app-ords`, `app-publisher`, `web-ide-dev` | **Täielik ettevõtte pilvelabor (5 konteinerit).** |
+| **14** | `.env.14-forms-with-dedicated-db` | `db-forms`, `app-forms` | **Oracle Forms 14c (14.1.2)** eraldiseisval andmebaasil. |
+| **15** | `.env.15-forms-full-enterprise` | `db-forms`, `db-lis`, `db-proxy`, `app-forms`, `app-ords` | **Täielik Enterprise Forms Stack:** Forms + Forms RCU DB + Custom DB + APEX Proxy DB + ORDS. |
+| **16** | `.env.16-forms-minimal-hybrid` | `db-proxy`, `db-lis`, `app-forms`, `app-ords` | **Minimaalne Hübriid:** Forms + Kombineeritud Forms/APEX Proxy DB + Custom DB + ORDS. |
+| **17** | `.env.17-forms-all-in-one-db` | `db-proxy`, `app-forms`, `app-ords` | **All-in-One DB Katsevariant:** Forms + Kõik skeemid ühes Free DB-s + ORDS. |
+| **18** | `.env.18-forms-with-embedded-ords` | `db-proxy`, `app-forms` | **Forms + Sisseehitatud ORDS Jetty:** Kõik-ühes rakendusserver (Forms 9001 + ORDS 8088 ühes `app-forms` konteineris) + DB. |
 
 👉 Täielik kasutusjuhend ja detailne maatriks: [`config/blueprints/README.md`](config/blueprints/README.md) ja [`tests/README.md`](tests/README.md).
 
@@ -293,6 +298,10 @@ Süsteem sisaldab **13 ametlikku arhitektuurset kavandit (Blueprints)** kaustas 
 | 📊 **ORDS Database Actions** | `https://localhost:8448/ords/<pool>/_/landing`<br>*(või `http://localhost:8088/ords/<pool>/`)* | Kasutaja: `ADMIN` / DB Skeem | `./scripts/get-password.sh DB_<PREFIX>_DEV` |
 | 🌐 **ORDS Root REST API** | `https://localhost:8448/ords/<pool>/` | HTTP 200 / 302 | N/A |
 | 📑 **Analytics Publisher UI** | `http://localhost:9502/xmlpserver` | Kasutaja: `Administrator` | `./scripts/get-password.sh DB_PUBLISHER_DEV` |
+| 📐 **Forms Runtime** | `http://localhost:9001/forms/frmservlet` | Forms 14c Runtime teenus | N/A |
+| 📄 **Forms Test Form** | `http://localhost:9001/forms/frmservlet?form=test.fmx` | Forms 14c testvorm (`test.fmx`) | N/A |
+| 📐 **Forms Builder Web GUI** | `http://localhost:6082/vnc.html` | Forms 14c Builder (Zero-Install HTML5) | N/A |
+| ⚙️ **Forms WebLogic Admin** | `http://localhost:7001/console` | Kasutaja: `weblogic` | `./scripts/get-password.sh DB_FORMS_DEV` |
 | 💻 **Cloud Web IDE (VS Code)** | `http://localhost:8090/` | Zero-Install Dev Workspace | N/A |
 
 ---
@@ -319,6 +328,7 @@ Kogu detailne teave ja juhendid on jaotatud teemakohastesse failidesse. Kasuta a
 | 📦 **[docs/apex-apps-deployment.md](docs/apex-apps-deployment.md)** | APEX rakenduste automaatne järjestikuline importimine kaustast `binaries/apex_apps/`. |
 | 🌐 **[docs/standalone-ords.md](docs/standalone-ords.md)** | Eraldiseisva standalone ORDS-i paigaldusjuhend Linux serverisse. |
 | 🔌 **[docs/external-ords-publisher-setup.md](docs/external-ords-publisher-setup.md)** | Välise/olemasoleva ORDS serveri ja Publisher DB ühendusbasseini (pool) seadistus. |
+| 📐 **[docs/forms-setup.md](docs/forms-setup.md)** | **Oracle Forms 14c (14.1.2)** paigaldus-, haldus- ja testvormide kasutusjuhend. |
 | 🗃️ **[docs/artifactory-setup.md](docs/artifactory-setup.md)** | Sisevõrgu Artifactory hoidla seadistamine tarkvara allalaadimiseks. |
 | 🩹 **[patches/README.md](patches/README.md)** | APEX-i bundle patchide ja one-off patchide paigaldamise juhend. |
 | ☁️ **[docs/cloud-remote-deployment.md](docs/cloud-remote-deployment.md)** | Kaugpaigaldus OCI Always Free, Azure Free pilveserveritesse ning GitHub Actions CI/CD. |

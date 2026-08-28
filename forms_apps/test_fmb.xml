@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module version="140102" xmlns="http://xmlns.oracle.com/Forms" Name="test">
+  <FormModule Name="test" Title="Oracle Forms Module test">
+    <Block Name="MAIN_BLOCK">
+      <Item Name="ID" ItemType="Text Item" DataType="Number" Required="true"/>
+      <Item Name="NAME" ItemType="Text Item" DataType="Char" MaxLength="100"/>
+    </Block>
+  </FormModule>
+</Module>

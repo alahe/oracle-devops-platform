@@ -47,6 +47,7 @@ comp = data.get('components', {})
 ords = comp.get('ords', {})
 apex = comp.get('apex', {})
 pub = comp.get('publisher', {})
+forms = comp.get('forms', {})
 users = data.get('users', [])
 
 db_type_val = str(prof.get('db_type', 'standard')).lower()
@@ -67,6 +68,7 @@ lines = [
     f"export PROFILE_FUNC={q(prof.get('functionality', ''))}",
     f"export PROFILE_DB_TYPE={q(db_type_val)}",
     f"export PROFILE_VENDOR={q(prof.get('image_vendor', 'oracle'))}",
+    f"export PROFILE_CONTAINER_NAME={q(db.get('container_name', prof.get('id', '')))}",
     f"export PROFILE_WORKLOAD_TYPE={q(db.get('workload_type', 'NONE'))}",
     f"export PROFILE_ADMIN_USER={q(db.get('admin_user', 'sys'))}",
     f"export PROFILE_ADMIN_ROLE={q(db.get('admin_role', 'SYSDBA'))}",
@@ -113,6 +115,14 @@ lines = [
     f"export PROFILE_PUBLISHER_HTTPS_PORT={q(pub.get('https_port', 9503))}",
     f"export PROFILE_PUBLISHER_RCU_PREFIX={q(pub.get('rcu_prefix', 'OAS'))}",
     f"export PROFILE_PUBLISHER_DOMAIN_NAME={q(pub.get('domain_name', 'bi'))}",
+    # Forms
+    f"export PROFILE_FORMS_ENABLED={q(str(forms.get('enabled', False)).lower())}",
+    f"export PROFILE_FORMS_CONTAINER_NAME={q(forms.get('container_name', 'app-forms'))}",
+    f"export PROFILE_FORMS_HTTP_PORT={q(forms.get('http_port', 9001))}",
+    f"export PROFILE_FORMS_HTTPS_PORT={q(forms.get('https_port', 9002))}",
+    f"export PROFILE_FORMS_ADMIN_PORT={q(forms.get('admin_port', 7001))}",
+    f"export PROFILE_FORMS_RCU_PREFIX={q(forms.get('rcu_prefix', 'FORMS'))}",
+    f"export PROFILE_FORMS_VERSION={q(forms.get('version', '14.1.2'))}",
 ]
 print('\n'.join(lines))
 PYEOF

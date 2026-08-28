@@ -88,8 +88,8 @@ while [[ $# -gt 0 ]]; do
       ;;
     -b|--blueprint|--scenario|-s)
       val="$2"
-      if [[ "$val" == *","* ]] || [ "$val" = "all" ] || [ "$val" = "ALL" ] || ! [[ "$val" =~ ^[0-9]+$ ]] || [ "$val" -lt 1 ] || [ "$val" -gt 13 ]; then
-        echo -e "\n${RED}❌ VIGA: Toodangu/arenduse režiimis (--blueprint / -b) saab korraga valida AINULT ÜHE arhitektuurimalli vahemikus 1–13!${NC}"
+      if [[ "$val" == *","* ]] || [ "$val" = "all" ] || [ "$val" = "ALL" ] || ! [[ "$val" =~ ^[0-9]+$ ]] || [ "$val" -lt 1 ] || [ "$val" -gt 18 ]; then
+        echo -e "\n${RED}❌ VIGA: Toodangu/arenduse režiimis (--blueprint / -b) saab korraga valida AINULT ÜHE arhitektuurimalli vahemikus 1–18!${NC}"
         echo -e "ℹ️  Mitme kavandi järjestikuseks automaattestimiseks kasuta testrežiimi: ${YELLOW}--test-blueprints 1,3,7${NC} või ${YELLOW}--test-blueprints all${NC}\n"
         exit 1
       fi
@@ -98,8 +98,8 @@ while [[ $# -gt 0 ]]; do
       ;;
     -b=*|--blueprint=*|--scenario=*|-s=*)
       val="${1#*=}"
-      if [[ "$val" == *","* ]] || [ "$val" = "all" ] || [ "$val" = "ALL" ] || ! [[ "$val" =~ ^[0-9]+$ ]] || [ "$val" -lt 1 ] || [ "$val" -gt 13 ]; then
-        echo -e "\n${RED}❌ VIGA: Toodangu/arenduse režiimis (--blueprint / -b) saab korraga valida AINULT ÜHE arhitektuurimalli vahemikus 1–13!${NC}"
+      if [[ "$val" == *","* ]] || [ "$val" = "all" ] || [ "$val" = "ALL" ] || ! [[ "$val" =~ ^[0-9]+$ ]] || [ "$val" -lt 1 ] || [ "$val" -gt 18 ]; then
+        echo -e "\n${RED}❌ VIGA: Toodangu/arenduse režiimis (--blueprint / -b) saab korraga valida AINULT ÜHE arhitektuurimalli vahemikus 1–18!${NC}"
         echo -e "ℹ️  Mitme kavandi järjestikuseks automaattestimiseks kasuta testrežiimi: ${YELLOW}--test-blueprints 1,3,7${NC} või ${YELLOW}--test-blueprints all${NC}\n"
         exit 1
       fi
@@ -166,7 +166,7 @@ if [ "$DRY_RUN" = "true" ]; then
   if [ -n "$TEST_BLUEPRINTS" ]; then
     bp_list_to_test=""
     if [ "$TEST_BLUEPRINTS" = "all" ] || [ "$TEST_BLUEPRINTS" = "ALL" ]; then
-      bp_list_to_test="1 2 3 4 5 6 7 8 9 10 11 12 13"
+      bp_list_to_test="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18"
     elif [[ "$TEST_BLUEPRINTS" == *","* ]]; then
       bp_list_to_test=$(echo "$TEST_BLUEPRINTS" | tr ',' ' ')
     else
@@ -191,9 +191,9 @@ ENV_PATH="$WORKSPACE_DIR/.env"
 # Interaktiivne Blueprintide valik (kui .env puudub või kasutaja kutsus -i/--select)
 if { [ ! -f "$ENV_PATH" ] || [ "$INTERACTIVE_SELECT" = "true" ]; } && [ -z "$SELECTED_BLUEPRINT" ] && [ -z "$TEST_BLUEPRINTS" ] && [ "$FORCE" != "true" ] && [ -t 0 ]; then
   print_blueprints_table ""
-  read -t 30 -p "👉 Vali blueprint [1-13] (Vaikimisi: 3): " user_choice || true
+  read -t 30 -p "👉 Vali blueprint [1-18] (Vaikimisi: 3): " user_choice || true
   user_choice="${user_choice:-3}"
-  if ! [[ "$user_choice" =~ ^[0-9]+$ ]] || [ "$user_choice" -lt 1 ] || [ "$user_choice" -gt 13 ]; then
+  if ! [[ "$user_choice" =~ ^[0-9]+$ ]] || [ "$user_choice" -lt 1 ] || [ "$user_choice" -gt 18 ]; then
     echo -e "${RED}⚠️  Tundmatu valik '${user_choice}'. Kasutan vaikeväärtust: 3${NC}"
     user_choice=3
   fi
@@ -204,7 +204,7 @@ fi
 if [ -n "$TEST_BLUEPRINTS" ]; then
   BP_LIST=""
   if [ "$TEST_BLUEPRINTS" = "all" ] || [ "$TEST_BLUEPRINTS" = "ALL" ]; then
-    BP_LIST="1 2 3 4 5 6 7 8 9 10 11 12 13"
+    BP_LIST="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18"
   elif [[ "$TEST_BLUEPRINTS" == *","* ]]; then
     BP_LIST=$(echo "$TEST_BLUEPRINTS" | tr ',' ' ')
   fi
@@ -340,6 +340,25 @@ else
   SKIP_PUBLISHER=true
 fi
 
+# Dynamically evaluate active DB profiles to check if components.forms.enabled=true
+ANY_FORMS_ENABLED=false
+for inst in $(get_active_db_instances 2>/dev/null); do
+  pname=$(echo "$inst" | cut -d'|' -f2)
+  pfile="$WORKSPACE_DIR/config/profiles/databases/${pname}.yaml"
+  [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/${pname}.yaml"
+  if [ -f "$pfile" ]; then
+    forms_en=$(awk '/forms:/{flag=1;next}/ords:|apex:|publisher:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
+    if [ "$forms_en" = "true" ]; then
+      ANY_FORMS_ENABLED=true
+      break
+    fi
+  fi
+done
+
+if [ "${SKIP_FORMS:-true}" = "false" ] || [ "${ENABLE_FORMS:-false}" = "true" ]; then
+  ANY_FORMS_ENABLED=true
+fi
+
 ANY_LOCAL_ORDS_NEEDED=false
 is_adb_prof=false
 for inst in $(get_active_db_instances 2>/dev/null); do
@@ -404,6 +423,8 @@ get_active_db_instances | while IFS='|' read -r container prof env_key; do
       db_purpose="APEX Proxy vahekiht, Outbound REST Data Source, Azure Entra-ID (OIDC) ja Kafka puhver"
     elif [ "${PROFILE_PUBLISHER_ENABLED:-false}" = "true" ] || [ "$prof" = "publisher-only" ] || [ "$prof" = "publisher-free" ]; then
       db_purpose="Analytics Publisher RCU metaandmete & WebLogic infrastruktuuri hoidla"
+    elif [ "$container" = "db-forms" ] || [[ "$prof" == *"forms"* ]]; then
+      db_purpose="Oracle Forms 14c RCU metaandmete & WebLogic infrastruktuuri hoidla"
     fi
     echo -e "  🔹 ${BOLD}${container}${NC} [Profiil: ${YELLOW}${prof}${NC}, Port: ${CYAN}${p_port}${NC}, Teenus: ${CYAN}${p_service}${NC}]"
     echo -e "     └─ Otstarve: ${DIM}${db_purpose}${NC}"
@@ -418,6 +439,8 @@ METRICS_DIR="$WORKSPACE_DIR/metrics"
 mkdir -p "$METRICS_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 LOG_FILE="$LOG_DIR/setup_benchmarks_${TIMESTAMP}.log"
+# Säilitame algse TTY väljundi failideskriptoris 3 reaalajas loendurite jaoks
+exec 3>&1
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 if [ -f "$SCRIPT_DIR/internal/sanitize-logs.sh" ]; then
@@ -742,6 +765,23 @@ if [ "$SKIP_PUBLISHER" = "false" ] && { [ "$ANY_PUB_ENABLED" = "true" ] || [ "${
 fi
 
 # ----------------------------------------------------------------------------
+# SAMM 9.5: Oracle Forms 14c paigaldamine ja initsialiseerimine
+# ----------------------------------------------------------------------------
+FORMS_INSTALL_SECS=0
+if [ "${SKIP_FORMS:-false}" != "true" ] && { [ "$ANY_FORMS_ENABLED" = "true" ] || [ "${ENABLE_FORMS:-false}" = "true" ]; }; then
+  FORMS_START=$(date '+%s')
+  echo -e "\n${YELLOW}🚀 Paigaldan ja initsialiseerin Oracle Forms 14c teenuse...${NC}"
+  if [ -x "$SCRIPT_DIR/internal/install-forms.sh" ]; then
+    "$SCRIPT_DIR/internal/install-forms.sh" || true
+  fi
+  if [ -x "$SCRIPT_DIR/internal/test-forms-service.sh" ]; then
+    "$SCRIPT_DIR/internal/test-forms-service.sh" || true
+  fi
+  FORMS_INSTALL_SECS=$(( $(date '+%s') - FORMS_START ))
+  echo -e "⏱  [Samm valmis (Oracle Forms 14c paigaldus & testvorm): ${YELLOW}$(format_duration ${FORMS_INSTALL_SECS})${NC}]"
+fi
+
+# ----------------------------------------------------------------------------
 # SAMM 10: Hetktõmmise (Golden Snapshot) loomine
 # ----------------------------------------------------------------------------
 STEP9_SECS=0
@@ -880,6 +920,10 @@ for inst in $(get_active_db_instances 2>/dev/null); do
     echo -e "   │  └── 🟡 ${BOLD}5. TEST_VIEWER (${c_name})${NC}       (Vaataja -> sql /@DB_${c_short}_VIEWER)"
   elif [ "$c_name" = "db-publisher" ]; then
     echo -e "   │  └── 🟡 ${BOLD}3. PUBLISHER_READER (${c_name})${NC}  (Vaataja -> sql /@DB_${c_short}_READER)"
+  elif [ "$c_name" = "db-forms" ]; then
+    echo -e "   │  ├── 🟣 ${BOLD}3. FORMS_SCHEMA (${c_name})${NC}      (Skeem   -> sql /@DB_${c_short}_SCHEMA)"
+    echo -e "   │  ├── 🟢 ${BOLD}4. FORMS_DEV (${c_name})${NC}         (Arendaja-> sql /@DB_${c_short}_DEV)"
+    echo -e "   │  └── 🟡 ${BOLD}5. FORMS_VIEWER (${c_name})${NC}      (Vaataja -> sql /@DB_${c_short}_VIEWER)"
   else
     echo -e "   │  ├── 🟢 ${BOLD}3. TEST_DEV (${c_name})${NC}          (Arendaja-> sql /@DB_${c_short}_DEV)"
     echo -e "   │  └── 🟡 ${BOLD}4. TEST_VIEWER (${c_name})${NC}       (Vaataja -> sql /@DB_${c_short}_VIEWER)"

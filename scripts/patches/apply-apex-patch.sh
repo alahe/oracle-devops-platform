@@ -49,8 +49,10 @@ mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 LOG_FILE="$LOG_DIR/apex_patch_${TIMESTAMP}.log"
 
-# Suuname kogu väljundi nii ekraanile kui logifaili
-exec > >(tee -a "$LOG_FILE") 2>&1
+# Suuname kogu väljundi nii ekraanile kui logifaili (ainult eraldiseisval käivitamisel)
+if [ "${MASTER_SETUP:-false}" != "true" ]; then
+  exec > >(tee -a "$LOG_FILE") 2>&1
+fi
 
 if [ "$MASTER_SETUP" != "true" ]; then
   echo -e "${CYAN}==================================================================${NC}"

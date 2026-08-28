@@ -128,8 +128,10 @@ mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 LOG_FILE="$LOG_DIR/apex_install_${DB_SUFFIX}_${TIMESTAMP}.log"
 
-# Suuname kogu väljundi nii ekraanile kui lokaalsesse logifaili
-exec > >(tee -a "$LOG_FILE") 2>&1
+# Suuname kogu väljundi nii ekraanile kui lokaalsesse logifaili (ainult eraldiseisval käivitamisel)
+if [ "${MASTER_SETUP:-false}" != "true" ]; then
+  exec > >(tee -a "$LOG_FILE") 2>&1
+fi
 
 # 2. Git-is jälgitav metrics kataloog
 METRICS_DIR="$SCRIPT_DIR/../../metrics"
@@ -589,10 +591,10 @@ EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
 
--- TASK-018: Optimize DB Memory and PL/SQL Compiler for fast installation
+-- TASK-018: Optimize DB Memory and PL/SQL Compiler safely within Oracle Free RAM limits
 BEGIN
-    EXECUTE IMMEDIATE 'ALTER SYSTEM SET pga_aggregate_target = 2G SCOPE = MEMORY';
-    EXECUTE IMMEDIATE 'ALTER SYSTEM SET sga_target = 3G SCOPE = MEMORY';
+    EXECUTE IMMEDIATE 'ALTER SYSTEM SET pga_aggregate_target = 512M SCOPE = MEMORY';
+    EXECUTE IMMEDIATE 'ALTER SYSTEM SET sga_target = 1024M SCOPE = MEMORY';
     EXECUTE IMMEDIATE 'ALTER SYSTEM SET plsql_optimize_level = 2 SCOPE = MEMORY';
 EXCEPTION WHEN OTHERS THEN NULL;
 END;
@@ -767,13 +769,38 @@ EOF
     ELAPSED=$((ELAPSED + POLL_INTERVAL))
     print_progress "Paigaldan APEX mootorit (${CONTAINER_NAME})" "$ELAPSED" 360
   done
-  wait $SQL_PID
+  wait $SQL_PID || true
   clear_progress_line
   restore_cursor
 
+  # Kontrollime kas APEX paigaldus oli edukas (VALID staatus registris)
+  local_ver_check=""
+  if [ "$EXEC_MODE" = "CONTAINER" ]; then
+    local_ver_check=$(podman exec -i "$CONTAINER_NAME" sqlplus -s "$CONN_STR" <<EOF 2>/dev/null | grep -E 'VALID|INVALID' || echo ""
+SET FEEDBACK OFF
+SET HEADING OFF
+SELECT status FROM dba_registry WHERE comp_id = 'APEX';
+EXIT;
+EOF
+)
+  else
+    local_ver_check=$($DB_CLI "$CONN_STR" <<EOF 2>/dev/null | grep -E 'VALID|INVALID' || echo ""
+SET FEEDBACK OFF
+SET HEADING OFF
+SELECT status FROM dba_registry WHERE comp_id = 'APEX';
+EXIT;
+EOF
+)
+  fi
 
+  if [[ "$local_ver_check" != *"VALID"* ]]; then
+    echo -e "\n${RED}❌ VIGA: APEX mootori paigaldamine ebaõnnestus või katkes andmebaasi poolel!${NC}"
+    echo -e "ℹ️  Vaata detailset logi: ${CYAN}$SQL_LOG_FILE${NC}\n"
+    tail -n 25 "$SQL_LOG_FILE" 2>/dev/null || true
+    exit 1
+  fi
 
-  echo "✅ APEX mootori paigaldamine lõpetatud!"
+  echo "✅ APEX mootori paigaldamine lõpetatud (VALID)!"
 
   copy_static_images_to_volume
 

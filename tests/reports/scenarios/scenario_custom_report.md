@@ -1,14 +1,14 @@
-# Blueprinti custom Testiaruanne (2026-08-27 19:07:05)
+# Blueprinti custom Testiaruanne (2026-08-28 09:53:33)
 
-- **Aeg ja Kuupäev:** 2026-08-27 19:07:05
-- **Kogu Paigalduse Kestus:** 13m 17s
+- **Aeg ja Kuupäev:** 2026-08-28 09:53:33
+- **Kogu Paigalduse Kestus:** 52s
 - **Blueprinti Fail:** `config/blueprints/.env.custom-*`
 
 ---
 
 ## 1. ⏱ Ajakulu ja Tervisekontroll (Duration & Health)
 - **Tulemus:** ✅ Paigaldus ja tervisekontrollid läbitud 100% korrektselt.
-- **Kestus kokku:** 13m 17s
+- **Kestus kokku:** 52s
 
 ---
 
@@ -16,9 +16,8 @@
 
 | Konteineri Nimi | CPU % | Mälukasutus / Limiit | RAM % |
 | :--- | :--- | :--- | :--- |
-| db-proxy | 25.69% | 597.5MB / 3.221GB | 18.55% |
-| db-lis | 75.05% | 731MB / 3.221GB | 22.69% |
-| app-ords | 42.45% | 553MB / 1.074GB | 51.50% |
+| db-forms | 50.12% | 497.8MB / 3.221GB | 15.45% |
+| app-forms | 14.75% | 103.3MB / 8.297GB | 1.25% |
 
 ---
 
@@ -26,9 +25,8 @@
 
 | Voluumi Nimi | Kettamaht |
 | :--- | :--- |
-| oracle-free-db-in-prod_proxy_oradata | N/A |
+| oracle-free-db-in-prod_forms_oradata | N/A |
 | oracle-free-db-in-prod_apex_images_26_1 | N/A |
-| oracle-free-db-in-prod_lis_oradata | N/A |
 
 ---
 
@@ -36,9 +34,8 @@
 
 | Konteineri Nimi | Staatus | Pordid |
 | :--- | :--- | :--- |
-| db-proxy | Up About a minute (healthy) | 127.0.0.1:1532->1521/tcp |
-| db-lis | Up 6 minutes (healthy) | 127.0.0.1:1533->1521/tcp |
-| app-ords | Up 55 seconds (starting) | 127.0.0.1:8088->8088/tcp, 127.0.0.1:8448->8448/tcp |
+| db-forms | Up About a minute (healthy) | 127.0.0.1:1534->1521/tcp |
+| app-forms | Up 14 seconds (starting) | 127.0.0.1:6082->6082/tcp, 127.0.0.1:7001->7001/tcp, 127.0.0.1:9001-9002->9001-9002/tcp |
 
 ---
 
@@ -46,15 +43,10 @@
 
 | Veebiteenuse Nimi | Kontrollitud URL | HTTP Kood | TLS Usaldus | Staatus |
 | :--- | :--- | :--- | :--- | :--- |
-| ORDS Root HTTP | `http://localhost:8088/ords/` | `HTTP 302` | N/A | ✅ OK |
-| ORDS Root HTTPS | `https://localhost:8448/ords/` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
-| ORDS Database Actions (Default) | `https://localhost:8448/ords/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
-| APEX Builder (PROXY) | `https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
-| APEX Instance Admin (PROXY) | `https://localhost:8448/ords/proxy/apex_admin` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
-| ORDS Database Actions (PROXY) | `https://localhost:8448/ords/proxy/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
-| APEX Builder (LIS) | `https://localhost:8448/ords/lis/r/apex/workspace-sign-in/oracle-apex-sign-in` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
-| APEX Instance Admin (LIS) | `https://localhost:8448/ords/lis/apex_admin` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
-| ORDS Database Actions (LIS) | `https://localhost:8448/ords/lis/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
+| Forms Runtime (HTTP) | `http://localhost:9001/forms/frmservlet` | `HTTP 200` | N/A | ✅ OK |
+| Forms Test Form (HTTP) | `http://localhost:9001/forms/frmservlet?form=test.fmx` | `HTTP 200` | N/A | ✅ OK |
+| Forms WebLogic Console (HTTP) | `http://localhost:7001/console` | `HTTP 200` | N/A | ✅ OK |
+| Forms Builder Web GUI (HTTP) | `http://localhost:6082/vnc.html` | `HTTP 200` | N/A | ✅ OK |
 
 ---
 
@@ -73,18 +65,11 @@
 
 | SEPS Walleti Alias | Ühenduse Staatus | Tuvastatud Kasutaja & Baas |
 | :--- | :--- | :--- |
-| `DB_LIS_APP` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_LIS_DBA_ADMIN` | ✅ Ühendus Õnnestus | `DBA_ADMIN@FREEPDB1        ` |
-| `DB_LIS_DEV` | ✅ Ühendus Õnnestus | `TEST_DEV@FREEPDB1         ` |
-| `DB_LIS_SCHEMA` | ✅ Ühendus Õnnestus | `APEX_PROXY_SCHEMA@FREEPDB1    ` |
-| `DB_LIS_SYS` | ✅ Ühendus Õnnestus | `SYS@FREEPDB1              ` |
-| `DB_LIS_VIEWER` | ✅ Ühendus Õnnestus | `TEST_VIEWER@FREEPDB1      ` |
-| `DB_PROXY_DBA_ADMIN` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_PROXY_DEV` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_PROXY_SCHEMA` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_PROXY_SYS` | ✅ Ühendus Õnnestus | `SYS@FREEPDB1              ` |
-| `DB_PROXY_VIEWER` | ✅ Ühendus Õnnestus | `SYS@FREE` |
-| `DB_PUBLISHER_READER` | ℹ️ Vahele Jäetud | `Publisher profiil pole aktiivne` |
+| `DB_FORMS_DBA_ADMIN` | ✅ Ühendus Õnnestus | `DBA_ADMIN@FREEPDB1        ` |
+| `DB_FORMS_DEV` | ✅ Ühendus Õnnestus | `TEST_DEV@FREEPDB1         ` |
+| `DB_FORMS_SCHEMA` | ✅ Ühendus Õnnestus | `APEX_PROXY_SCHEMA@FREEPDB1    ` |
+| `DB_FORMS_SYS` | ✅ Ühendus Õnnestus | `SYS@FREEPDB1              ` |
+| `DB_FORMS_VIEWER` | ✅ Ühendus Õnnestus | `TEST_VIEWER@FREEPDB1      ` |
 
 ### 💡 Parooli Pärimine Walletist
 Kui arendajal või administraatoril on vaja tekstilist parooli (nt DBeaveri, DataGripi või välise tööriista jaoks), saab selle turvaliselt pärida käsuga:

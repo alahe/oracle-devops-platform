@@ -271,13 +271,21 @@ get_container_secret() {
 LIVE_TIMER_INTERVAL="${LIVE_TIMER_INTERVAL:-3}"
 
 hide_cursor() {
-  if [ -t 1 ] || [ -c /dev/tty ]; then
+  if [ -t 3 ]; then
+    printf "\033[?25l" >&3 2>/dev/null || true
+  elif [ -c /dev/tty ]; then
+    printf "\033[?25l" > /dev/tty 2>/dev/null || true
+  elif [ -t 1 ] || [ -t 2 ]; then
     tput civis 2>/dev/null || printf "\033[?25l" 2>/dev/null || true
   fi
 }
 
 restore_cursor() {
-  if [ -t 1 ] || [ -c /dev/tty ]; then
+  if [ -t 3 ]; then
+    printf "\033[?25h" >&3 2>/dev/null || true
+  elif [ -c /dev/tty ]; then
+    printf "\033[?25h" > /dev/tty 2>/dev/null || true
+  elif [ -t 1 ] || [ -t 2 ]; then
     tput cnorm 2>/dev/null || printf "\033[?25h" 2>/dev/null || true
   fi
 }
@@ -330,7 +338,9 @@ print_progress() {
   local dur_str
   dur_str=$(format_duration "$count")
 
-  if [ -c /dev/tty ]; then
+  if [ -t 3 ]; then
+    printf "\r\033[K   %s %-32s [%s] %-7s" "$spin" "$msg" "$bar" "$dur_str" >&3
+  elif [ -c /dev/tty ]; then
     printf "\r\033[K   %s %-32s [%s] %-7s" "$spin" "$msg" "$bar" "$dur_str" > /dev/tty 2>/dev/null || true
   elif [ -t 1 ] || [ -t 2 ]; then
     printf "\r\033[K   %s %-32s [%s] %-7s" "$spin" "$msg" "$bar" "$dur_str" >&2
@@ -339,14 +349,18 @@ print_progress() {
     local int_val="${LIVE_TIMER_INTERVAL:-3}"
     int_val="${int_val//[^0-9]/}"
     [ -z "$int_val" ] || [ "$int_val" -le 0 ] && int_val=3
-    if [ $((count % (int_val * 10))) -eq 0 ] && [ "$count" -gt 0 ]; then
+    if [ $((count % (int_val * 2))) -eq 0 ] && [ "$count" -gt 0 ]; then
       echo "   ⏳ [Progress] ${msg}... kestus: ${dur_str}"
     fi
   fi
 }
 
 clear_progress_line() {
-  if [ -t 1 ] || [ -t 2 ] || [ -c /dev/tty ]; then
+  if [ -t 3 ]; then
+    printf "\r\033[K" >&3
+  elif [ -c /dev/tty ]; then
+    printf "\r\033[K" > /dev/tty 2>/dev/null || true
+  elif [ -t 1 ] || [ -t 2 ]; then
     printf "\r\033[K" >&2
   fi
 }
@@ -410,7 +424,11 @@ run_substep() {
   while kill -0 "$pid" 2>/dev/null; do
     local elapsed=$(( $(date +%s) - start_t ))
     local dur_str=$(format_duration "$elapsed")
-    if [ -t 1 ] || [ -c /dev/tty ]; then
+    if [ -t 3 ]; then
+      printf "\r\033[K   ${CYAN}%s${NC} [Alamsamm %s]: %s... ⏳ %s" "$branch" "$sub_id" "$title" "$dur_str" >&3
+    elif [ -c /dev/tty ]; then
+      printf "\r\033[K   ${CYAN}%s${NC} [Alamsamm %s]: %s... ⏳ %s" "$branch" "$sub_id" "$title" "$dur_str" > /dev/tty 2>/dev/null || true
+    elif [ -t 1 ] || [ -t 2 ]; then
       printf "\r\033[K   ${CYAN}%s${NC} [Alamsamm %s]: %s... ⏳ %s" "$branch" "$sub_id" "$title" "$dur_str" >&2
     fi
     sleep "$interval"

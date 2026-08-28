@@ -31,8 +31,8 @@ if [ -f "$WORKSPACE_DIR/scripts/internal/download-publisher-binary.sh" ]; then
   "$WORKSPACE_DIR/scripts/internal/download-publisher-binary.sh" || true
 fi
 
-# Link/Copy all downloaded installer binaries and RPMs from binaries/publisher/ to build directory
-for pkg_path in "$WORKSPACE_DIR/binaries/publisher"/*.zip "$WORKSPACE_DIR/binaries/publisher"/*.rpm; do
+# Link/Copy downloaded installer binaries and RPMs from binaries/java/, binaries/middleware/, and binaries/publisher/
+for pkg_path in "$WORKSPACE_DIR/binaries/java"/*.rpm "$WORKSPACE_DIR/binaries/java"/*.zip "$WORKSPACE_DIR/binaries/middleware"/*.zip "$WORKSPACE_DIR/binaries/middleware"/*.jar "$WORKSPACE_DIR/binaries/publisher"/*.zip "$WORKSPACE_DIR/binaries/publisher"/*.rpm; do
   [ -f "$pkg_path" ] || continue
   bname=$(basename "$pkg_path")
   echo "ℹ️  Found installer package: $bname ($(du -h "$pkg_path" | awk '{print $1}'))"

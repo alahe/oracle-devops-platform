@@ -47,7 +47,21 @@ echo -e "${CYAN}================================================================
 URLS=()
 
 # 1. ORDS & APEX URLs
-if { [ "${SKIP_ORDS}" != "true" ] || [ "${IS_ADB:-false}" = "true" ]; } && [ "${PROFILE_ORDS_ENABLED:-true}" = "true" ]; then
+ANY_ORDS_ENABLED=false
+for inst in $(get_active_db_instances 2>/dev/null); do
+  pname=$(echo "$inst" | cut -d'|' -f2)
+  pfile="$PROJECT_ROOT/config/profiles/databases/${pname}.yaml"
+  [ ! -f "$pfile" ] && pfile="$PROJECT_ROOT/config/profiles/${pname}.yaml"
+  if [ -f "$pfile" ]; then
+    ords_en=$(awk '/ords:/{flag=1;next}/forms:|apex:|publisher:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
+    if [ "$ords_en" = "true" ]; then
+      ANY_ORDS_ENABLED=true
+      break
+    fi
+  fi
+done
+
+if [ "$ANY_ORDS_ENABLED" = "true" ] && [ "${SKIP_ORDS:-false}" != "true" ]; then
   ords_h_port="${ORDS_HTTP_PORT:-${PROFILE_ORDS_HTTP_PORT:-8088}}"
   ords_s_port="${ORDS_HTTPS_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8448}}"
   [ "${IS_ADB:-false}" = "true" ] && ords_s_port="${ORDS_HTTPS_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8443}}"
@@ -88,7 +102,7 @@ for inst in $(get_active_db_instances 2>/dev/null); do
   pfile="$PROJECT_ROOT/config/profiles/databases/${pname}.yaml"
   [ ! -f "$pfile" ] && pfile="$PROJECT_ROOT/config/profiles/${pname}.yaml"
   if [ -f "$pfile" ]; then
-    pub_en=$(awk '/publisher:/{flag=1;next}/ords:|apex:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
+    pub_en=$(awk '/publisher:/{flag=1;next}/forms:|ords:|apex:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
     if [ "$pub_en" = "true" ]; then
       ANY_PUB_ENABLED=true
       break
@@ -105,6 +119,35 @@ if [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ]
   if curl -s -k --connect-timeout 2 --max-time 3 -o /dev/null "https://localhost:${pub_s_port}/xmlpserver" 2>/dev/null; then
     URLS+=("Publisher UI (HTTPS)|https://localhost:${pub_s_port}/xmlpserver|xmlpserver")
   fi
+fi
+
+# 3. Oracle Forms 14c URLs
+ANY_FORMS_ENABLED=false
+for inst in $(get_active_db_instances 2>/dev/null); do
+  pname=$(echo "$inst" | cut -d'|' -f2)
+  pfile="$PROJECT_ROOT/config/profiles/databases/${pname}.yaml"
+  [ ! -f "$pfile" ] && pfile="$PROJECT_ROOT/config/profiles/${pname}.yaml"
+  if [ -f "$pfile" ]; then
+    forms_en=$(awk '/forms:/{flag=1;next}/ords:|apex:|publisher:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
+    if [ "$forms_en" = "true" ]; then
+      ANY_FORMS_ENABLED=true
+      break
+    fi
+  fi
+done
+
+if [ "${SKIP_FORMS:-true}" = "false" ] || [ "${ENABLE_FORMS:-false}" = "true" ]; then
+  ANY_FORMS_ENABLED=true
+fi
+
+if [ "$ANY_FORMS_ENABLED" = "true" ] || [ "${ENABLE_FORMS:-false}" = "true" ]; then
+  forms_h_port="${FORMS_HTTP_PORT:-9001}"
+  forms_admin_port="${FORMS_ADMIN_PORT:-7001}"
+  forms_builder_port="${FORMS_BUILDER_PORT:-6082}"
+  URLS+=("Forms Runtime (HTTP)|http://localhost:${forms_h_port}/forms/frmservlet|")
+  URLS+=("Forms Test Form (HTTP)|http://localhost:${forms_h_port}/forms/frmservlet?form=test.fmx|")
+  URLS+=("Forms WebLogic Console (HTTP)|http://localhost:${forms_admin_port}/console|")
+  URLS+=("Forms Builder Web GUI (HTTP)|http://localhost:${forms_builder_port}/vnc.html|")
 fi
 
 # 3. Web IDE URLs
@@ -141,7 +184,7 @@ for item in "${URLS[@]}"; do
   # Check TLS certificate trust if HTTPS
   if [[ "$url" =~ ^https:// ]]; then
     if [ -f "$CA_CERT" ]; then
-      if curl -s --cacert "$CA_CERT" --connect-timeout 3 --max-time 5 -o /dev/null "$url" 2>/dev/null; then
+      if curl -s --noproxy "*" --cacert "$CA_CERT" --connect-timeout 3 --max-time 5 -o /dev/null "$url" 2>/dev/null; then
         TLS_STATUS="✅ CA OK"
       else
         TLS_STATUS="⚠️ Self-Signed"
@@ -150,8 +193,8 @@ for item in "${URLS[@]}"; do
   fi
 
   for ((i=1; i<=MAX_RETRIES; i++)); do
-    BODY_OUTPUT=$(curl -s -k --connect-timeout 3 --max-time 5 "$url" 2>/dev/null || true)
-    HTTP_CODE=$(curl -s -k --connect-timeout 3 --max-time 5 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null | grep -E '^[0-9]{3}$' || echo "000")
+    BODY_OUTPUT=$(curl -s -k --noproxy "*" --connect-timeout 3 --max-time 5 "$url" 2>/dev/null || true)
+    HTTP_CODE=$(curl -s -k --noproxy "*" --connect-timeout 3 --max-time 5 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null | grep -E '^[0-9]{3}$' || echo "000")
 
     # Check for valid HTTP code (1xx-4xx, exclude 5xx)
     if [[ "$HTTP_CODE" =~ ^[1-4][0-9]{2}$ ]]; then

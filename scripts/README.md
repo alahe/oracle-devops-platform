@@ -43,6 +43,11 @@ scripts/
 │   ├── backup-publisher-catalog.sh  # Aruannete kataloogi eksport ja varundus
 │   └── deploy-publisher-reports.sh  # Aruannete import ja Git sünkroniseerimine
 │
+├── 📁 forms/                        # 📐 Oracle Forms 14c haldus ja operatsioonid
+│   ├── status-forms.sh              # Forms Runtime ja WebLogic serveri diagnostika
+│   ├── restart-forms.sh             # Forms konteineri taaskäivitamine
+│   └── deploy-forms-apps.sh         # .fmx rakenduste tarne kausta /u01/oracle/forms_apps
+│
 ├── 📁 patches/                      # 🩹 Patchide käsitsi rakendamise mootorid
 │   ├── apply-apex-patch.sh          # Oracle APEX PSE / Bundle patchi paigaldaja
 │   └── apply-publisher-patch.sh     # Analytics Publisheri OPatch paigaldaja
