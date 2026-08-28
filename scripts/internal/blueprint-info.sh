@@ -78,16 +78,20 @@ extract_blueprint_containers() {
   local db_publisher=""
   local db_proxy=""
   local db_lis=""
+  local db_forms=""
   local skip_ords=""
   local skip_publisher=""
+  local skip_forms=""
   local skip_web_ide=""
 
   # Parse variables directly from file safely
   db_publisher=$(grep -E "^DB_PUBLISHER=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
   db_proxy=$(grep -E "^DB_PROXY=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
   db_lis=$(grep -E "^DB_LIS=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
+  db_forms=$(grep -E "^DB_FORMS=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
   skip_ords=$(grep -E "^SKIP_ORDS=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
   skip_publisher=$(grep -E "^SKIP_PUBLISHER=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
+  skip_forms=$(grep -E "^SKIP_FORMS=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
   skip_web_ide=$(grep -E "^SKIP_WEB_IDE=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
 
   local containers=()
@@ -102,14 +106,23 @@ extract_blueprint_containers() {
   if [ -n "$db_lis" ] && [ "$db_lis" != "NONE" ]; then
     containers+=("db-lis")
   fi
+  if [ -n "$db_forms" ] && [ "$db_forms" != "NONE" ]; then
+    if [ "$db_forms" != "$db_proxy" ] && [ "$db_forms" != "$db_lis" ]; then
+      containers+=("db-forms")
+    fi
+  fi
 
   # Application containers
-  if [ "$skip_ords" = "false" ] || { [ -z "$skip_ords" ] && [ "${#containers[@]}" -gt 0 ]; }; then
+  if [ "$skip_ords" = "false" ] || { [ -z "$skip_ords" ] && [ "${#containers[@]}" -gt 0 ] && [ "$skip_forms" != "false" ]; }; then
     containers+=("app-ords")
   fi
 
   if [ "$skip_publisher" = "false" ]; then
     containers+=("app-publisher")
+  fi
+
+  if [ "$skip_forms" = "false" ]; then
+    containers+=("app-forms")
   fi
 
   # Web IDE container detection
@@ -137,54 +150,53 @@ print_blueprints_table() {
   printf "├────┼──────────────────────────────────────────┼─────────────────────────────┼──────────────────────────────────────────────┤\n"
 
   local match_count=0
-  for num in {1..13}; do
+  for num in {1..18}; do
     local bp_file
     bp_file=$(get_blueprint_file "$num") || continue
-    local bp_name
-    bp_name=$(basename "$bp_file")
-
-    local containers
+    match_count=$((match_count + 1))
+    
+    # Extract containers
     containers=$(extract_blueprint_containers "$num")
-    local container_summary
-    container_summary=$(echo "$containers" | sed 's/ /, /g')
-    [ -z "$container_summary" ] && container_summary="Pole (Väline/Eraldi)"
-
-    local meta
+    containers="${containers:-None}"
+    if [ ${#containers} -gt 27 ]; then
+      containers="${containers:0:24}..."
+    fi
+    
+    # Extract metadata
     meta=$(get_blueprint_meta "$num")
-    local title
     title=$(echo "$meta" | awk -F':::' '{print $1}')
-    local desc
     desc=$(echo "$meta" | awk -F':::' '{print $2}')
-
-    # Apply filter if provided
+    
+    # Apply optional filter
     if [ -n "$filter" ]; then
-      local combined_text
-      combined_text=$(echo "${num} ${bp_name} ${container_summary} ${desc} ${title}" | tr '[:upper:]' '[:lower:]')
-      if [[ "$combined_text" != *"$filter"* ]]; then
+      combined_text="$num $bp_file $containers $title $desc"
+      if ! echo "$combined_text" | grep -qi "$filter"; then
         continue
       fi
     fi
-
-    match_count=$((match_count + 1))
-
-    # Format description for table length
-    local short_desc="${desc:0:44}"
-    if [ "$num" -eq 3 ]; then
-      short_desc="🌟 VAIKIMISI: 2-Kihiline (Proxy + LIS)"
+    
+    bp_name=$(basename "$bp_file")
+    if [ ${#bp_name} -gt 40 ]; then
+      bp_name="${bp_name:0:37}..."
     fi
-
-    printf "│ %2d │ %-40s │ %-27s │ %-44s │\n" "$num" "$bp_name" "$container_summary" "$short_desc"
+    
+    summary="${desc:-$title}"
+    if [ ${#summary} -gt 44 ]; then
+      summary="${summary:0:41}..."
+    fi
+    
+    # Formatted row
+    printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" "$num" "$bp_name" "$containers" "$summary"
   done
-
-  printf "└────┴──────────────────────────────────────────┴─────────────────────────────┴──────────────────────────────────────────────┘\n"
+  echo -e "└────┴──────────────────────────────────────────┴─────────────────────────────┴──────────────────────────────────────────────┘\n"
 
   if [ -n "$filter" ] && [ "$match_count" -eq 0 ]; then
     echo -e "   ℹ️  Ühtegi blueprinti ei leitud otsingusõnaga: '${YELLOW}$filter${NC}'"
   fi
 
-  echo -e "💡 ${YELLOW}Käivitamine toodangus/arenduses (ilma resetita):${NC}  ./scripts/setup-all.sh -b <1-13>"
-  echo -e "🧪 ${YELLOW}Käivitamine automaattestimises (puhta algseisuga):${NC} ./scripts/setup-all.sh -tb <1-13|all>"
-  echo -e "🔍 ${YELLOW}Detailse info vaatamine:${NC}                        ./scripts/setup-all.sh -sb <1-13>"
+  echo -e "💡 ${YELLOW}Käivitamine toodangus/arenduses (ilma resetita):${NC}  ./scripts/setup-all.sh -b <1-18>"
+  echo -e "🧪 ${YELLOW}Käivitamine automaattestimises (puhta algseisuga):${NC} ./scripts/setup-all.sh -tb <1-18|all>"
+  echo -e "🔍 ${YELLOW}Detailse info vaatamine:${NC}                        ./scripts/setup-all.sh -sb <1-18>"
   echo -e "🔎 ${YELLOW}Märksõna järgi otsing:${NC}                          ./scripts/setup-all.sh --search <MÄRKSÕNA>\n"
 }
 
@@ -195,8 +207,8 @@ show_blueprint_details() {
   local num="$1"
   num="${num//[^0-9]/}"
   
-  if [ -z "$num" ] || [ "$num" -lt 1 ] || [ "$num" -gt 13 ]; then
-    echo -e "\n${RED}❌ VIGA: Palun sisesta kehtiv blueprinti number vahemikus 1–13!${NC}"
+  if [ -z "$num" ] || [ "$num" -lt 1 ] || [ "$num" -gt 18 ]; then
+    echo -e "\n${RED}❌ VIGA: Palun sisesta kehtiv blueprinti number vahemikus 1–18!${NC}"
     echo -e "ℹ️  Kasuta käsku: ${CYAN}./scripts/setup-all.sh --list-blueprints${NC} nimekirja vaatamiseks.\n"
     return 1
   fi
@@ -219,41 +231,28 @@ show_blueprint_details() {
 
   local containers
   containers=$(extract_blueprint_containers "$num")
-  local container_count
-  container_count=$(echo "$containers" | wc -w | tr -d ' ')
-
-  # Calculate estimated RAM
-  local ram_gb=2
-  if [ "$container_count" -ge 4 ]; then
-    ram_gb=7
-  elif [ "$container_count" -ge 3 ]; then
-    ram_gb=5
-  elif [ "$container_count" -ge 2 ]; then
-    ram_gb=3
-  fi
 
   echo -e "\n${CYAN}==================================================================${NC}"
   echo -e "${BOLD}🏗️   DETAILNE BLUEPRINTI ÜLEVAADE (BLUEPRINT INSPECTION)${NC}"
   echo -e "${CYAN}==================================================================${NC}"
-  echo -e "   ├─ 🏷️  ${BOLD}Number ja Nimi:${NC}     [${GREEN}${num}${NC}] ${BOLD}${bp_name}${NC}"
-  echo -e "   ├─ 📄 ${BOLD}Kavandi Fail:${NC}       ${bp_file}"
-  echo -e "   ├─ 📝 ${BOLD}Eesmärk:${NC}            ${desc}"
+  echo -e "🔹 ${BOLD}Number:${NC}        ${YELLOW}$num${NC}"
+  echo -e "🔹 ${BOLD}Kavandi fail:${NC}  ${CYAN}$bp_name${NC}"
+  echo -e "🔹 ${BOLD}Pealkiri:${NC}      ${BOLD}$title${NC}"
+  echo -e "🔹 ${BOLD}Kirjeldus:${NC}     $desc"
+
   local bp_stats=""
   if [ -f "$WORKSPACE_DIR/scripts/internal/common.sh" ]; then
-    source "$WORKSPACE_DIR/scripts/internal/common.sh" 2>/dev/null || true
     bp_stats=$(get_blueprint_stats "$num" 2>/dev/null || echo "")
   fi
   if [ -n "$bp_stats" ]; then
-    echo -e "   ├─ ⏱️  ${BOLD}Ajalooline ooteaeg:${NC} ${YELLOW}${bp_stats}${NC}"
+    echo -e "🔹 ${BOLD}Ajalooline kestus:${NC} ${YELLOW}$bp_stats${NC}"
   fi
-  echo -e "   ├─ 💾 ${BOLD}Eeldatav RAM:${NC}       ~${ram_gb} GB (Vaba kettamaht: ≥ 15 GB)"
-  echo -e "   ├─ 🔒 ${BOLD}TLS Poliitika:${NC}      permissive (Toetab tasemeid 0-4 / User-Space Trust)"
-  echo -e "   └─ 📦 ${BOLD}Plaanitavad Konteinerid (${container_count} tk):${NC}"
 
+  echo -e "\n🔹 ${BOLD}Plaanis käivitada järgmised konteinerid:${NC}"
   for c in $containers; do
     case "$c" in
       db-publisher)
-        echo -e "      ├── 🗄️  ${GREEN}db-publisher${NC}   [DB Metaandmed]    Port: 1531 -> 1521/FREEPDB1"
+        echo -e "      ├── 🗄️  ${GREEN}db-publisher${NC}   [Publisher RCU]    Port: 1531 -> 1521/FREEPDB1"
         ;;
       db-proxy)
         echo -e "      ├── 🗄️  ${GREEN}db-proxy${NC}       [APEX/SSO Proxy]   Port: 1532 -> 1521/FREEPDB1"
@@ -329,7 +328,7 @@ list_blueprint_test_reports() {
   printf "│ %-2s │ %-40s │ %-12s │ %-27s │\n" "Nr" "Blueprint" "Aruanne" "Viimane Testi Fail"
   printf "├────┼──────────────────────────────────────────┼──────────────┼─────────────────────────────┤\n"
 
-  for num in {1..13}; do
+  for num in {1..18}; do
     local bp_file
     bp_file=$(get_blueprint_file "$num") || continue
     local bp_name

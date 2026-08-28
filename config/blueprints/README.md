@@ -51,7 +51,7 @@ Käivita automatiseeritud testid ja mõõdikute kogumine:
 
 ---
 
-## 📊 13 Ametliku Blueprinti Maatriks
+## 📊 17 Ametliku Blueprinti Maatriks
 
 | Nr | Faili Nimi | Käivitatavad Konteinerid | Pordid | Otstarve ja Arhitektuurne Kirjeldus |
 | :--- | :--- | :--- | :--- | :--- |
@@ -68,6 +68,11 @@ Käivita automatiseeritud testid ja mõõdikute kogumine:
 | **11** | `.env.11-cloud-adb-with-web-ide` | `db-proxy-adb`, `app-ords`, `web-ide-dev` | `1532`, `8088`, `8443`, `8090` | **Pilve ADB Emulaator:** Autonomous Database (ATP/ADW) emulaator koos Web IDE-ga. |
 | **12** | `.env.12-publisher-gvenzl-with-web-ide` | `db-publisher-gvenzl`, `app-publisher`, `web-ide-dev` | `1531`, `9502`, `8090` | **Publisher Dev Lab:** Pixel-Perfect aruandlus kergel Gvenzl andmebaasil koos Web IDE-ga. |
 | **13** | `.env.13-full-enterprise-sandbox-web-ide` | 3 DB-d, `app-ords`, `app-publisher`, `web-ide-dev` | Kõik pordid | **Täielik Ettevõtte Pilvelabor:** Kõik 5 konteinerit koos brauseripõhise täisarenduskeskkonnaga. |
+| **14** | `.env.14-forms-with-dedicated-db` | `db-forms`, `app-forms` | `1534`, `9001`, `7001`, `6082` | **Forms 14c ja Pühendatud DB:** Oracle Forms 14c runtime ja WebLogic koos pühendatud RCU andmebaasiga. |
+| **15** | `.env.15-forms-full-enterprise` | `db-forms`, `db-lis`, `db-proxy`, `app-forms`, `app-ords` | `1531-1534`, `8088`, `9001`, `7001`, `6082` | **Täielik Enterprise Forms Stack:** Forms + Forms RCU DB + Custom DB + APEX Proxy DB + ORDS (Täielik isolatsioon). |
+| **16** | `.env.16-forms-minimal-hybrid` | `db-proxy`, `db-lis`, `app-forms`, `app-ords` | `1531`, `1532`, `8088`, `9001`, `7001`, `6082` | **Minimaalne Hübriid:** Forms + Kombineeritud Forms/APEX Proxy DB + Custom DB + ORDS (Tasakaalustatud ressursikasutus). |
+| **17** | `.env.17-forms-all-in-one-db` | `db-proxy`, `app-forms`, `app-ords` | `1532`, `8088`, `9001`, `7001`, `6082` | **All-in-One DB Katsevariant:** Forms + Kõik skeemid ühes Free DB-s + ORDS. |
+| **18** | `.env.18-forms-with-embedded-ords` | `db-proxy`, `app-forms` | `1532`, `8088`, `9001`, `7001`, `6082` | **Forms + Sisseehitatud ORDS Jetty:** Kõik-ühes rakendusserver (Forms 9001 + ORDS 8088 ühes `app-forms` konteineris) + DB. |
 
 ---
 
@@ -78,3 +83,4 @@ Kui soovid blueprinti käsitsi aktiveerida ilma skriptita:
 cp config/blueprints/.env.3-db-lis-apex-ords-with-proxy .env
 ```
 Kõik kohalikud muudatused tehakse faili `.env`, mis on `.gitignore` failis ning jääb ainult lokaalseks.
+
