@@ -41,11 +41,25 @@ CLEAN_LOGS=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
+    -l=*|--lang=*|-language=*|--language=*)
+      export CLI_LANG="${1#*=}"
+      if declare -f resolve_cli_lang >/dev/null 2>&1; then
+        export ACTIVE_CLI_LANG="$(resolve_cli_lang)"
+      fi
+      shift
+      ;;
+    -l|--lang|-language|--language)
+      export CLI_LANG="$2"
+      if declare -f resolve_cli_lang >/dev/null 2>&1; then
+        export ACTIVE_CLI_LANG="$(resolve_cli_lang)"
+      fi
+      shift 2
+      ;;
     -y|--force|--yes|-y*|--y*|-Y|--YES)
       FORCE=true
       shift
       ;;
-    -l|--logs)
+    --logs)
       CLEAN_LOGS=true
       shift
       ;;
@@ -109,14 +123,14 @@ PUB_HOST="${PUBLISHER_DB_HOST:-localhost}"
 PUB_PORT="${PUBLISHER_DB_PORT:-1531}"
 PUB_SERVICE="${PUBLISHER_DB_SERVICE:-FREEPDB1}"
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "${RED}⚠️  HOIATUS: See skript kustutab valitud komponendid, profiili ja andmed!${NC}"
-echo -e "   Projekt:   ${CYAN}$PROJECT_NAME${NC}"
+echo -e "${RED}$(msg_str "RESET_WARN_TITLE")${NC}"
+echo -e "   $(msg_str "LABEL_PROJECT"):   ${CYAN}$PROJECT_NAME${NC}"
 if [ "$COMPONENT" = "all" ]; then
-  echo -e "   Sihtkoht:  ${YELLOW}KÕIK (Täielik puhastus / Full Reset)${NC}"
+  echo -e "   $(msg_str "LABEL_TARGET"):  ${YELLOW}$(msg_str "RESET_TARGET_ALL")${NC}"
 else
-  echo -e "   Komponent: ${YELLOW}$COMPONENT${NC}"
+  echo -e "   $(msg_str "LABEL_COMPONENT"): ${YELLOW}$COMPONENT${NC}"
 fi
-echo -e "   Profiil:   ${CYAN}${PROFILE_NAME:-$TARGET_PROFILE}${NC}"
+echo -e "   $(msg_str "LABEL_PROFILE"):   ${CYAN}${PROFILE_NAME:-$TARGET_PROFILE}${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 if [ "$COMPONENT" = "all" ]; then
   get_active_db_instances 2>/dev/null | while IFS='|' read -r container prof env_key; do
@@ -126,32 +140,32 @@ if [ "$COMPONENT" = "all" ]; then
       p_port="${PROFILE_DB_PORT:-1532}"
       p_service="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
       c_vol=$(echo "$container" | sed 's/^db-//' | tr '-' '_')
-      echo -e "   - ${CYAN}${container}${NC} (Profiil: ${YELLOW}${prof}${NC})"
-      echo -e "     ├─ Andmebaas: ${CYAN}localhost:${p_port}/${p_service}${NC}"
-      echo -e "     └─ Volume: ${CYAN}${PROJECT_NAME}_${c_vol}_oradata${NC}"
+      echo -e "   - ${CYAN}${container}${NC} ($(msg_str "LABEL_PROFILE"): ${YELLOW}${prof}${NC})"
+      echo -e "     ├─ $(msg_str "LABEL_DATABASE"): ${CYAN}localhost:${p_port}/${p_service}${NC}"
+      echo -e "     └─ $(msg_str "LABEL_VOLUME"): ${CYAN}${PROJECT_NAME}_${c_vol}_oradata${NC}"
     )
   done
   load_web_ide_profile >/dev/null 2>&1 || true
   if [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
-    echo -e "   - ${CYAN}${WEB_IDE_CONTAINER_NAME:-web-ide-dev}${NC} (Web IDE Profiil: ${YELLOW}${WEB_IDE_PROFILE:-web-ide-standard}${NC})"
-    echo -e "     └─ Volume: ${CYAN}${PROJECT_NAME}_web_ide_data${NC}"
+    echo -e "   - ${CYAN}${WEB_IDE_CONTAINER_NAME:-web-ide-dev}${NC} (Web IDE $(msg_str "LABEL_PROFILE"): ${YELLOW}${WEB_IDE_PROFILE:-web-ide-standard}${NC})"
+    echo -e "     └─ $(msg_str "LABEL_VOLUME"): ${CYAN}${PROJECT_NAME}_web_ide_data${NC}"
   fi
-  echo -e "   - Võrk: ${CYAN}${PROJECT_NAME}_default${NC}"
+  echo -e "   - $(msg_str "LABEL_NETWORK"): ${CYAN}${PROJECT_NAME}_default${NC}"
 else
   c_vol=$(echo "$COMPONENT" | sed 's/^db-//' | tr '-' '_')
-  echo -e "   - Konteiner: ${CYAN}${COMPONENT}${NC}"
-  echo -e "   - Volume: ${CYAN}${PROJECT_NAME}_${c_vol}_oradata${NC}"
+  echo -e "   - $(msg_str "LABEL_CONTAINER"): ${CYAN}${COMPONENT}${NC}"
+  echo -e "   - $(msg_str "LABEL_VOLUME"): ${CYAN}${PROJECT_NAME}_${c_vol}_oradata${NC}"
 fi
 echo -e "${CYAN}==================================================================${NC}"
 
 if [ "$FORCE" = "false" ]; then
-  read -p "❓ Kas oled kindel, et soovid jätkata? (y/N): " CONFIRM
+  read -p "$(msg_str "PROMPT_CONFIRM_CONTINUE")" CONFIRM
   if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
-    echo -e "${RED}❌ Puhastamine tühistatud kasutaja poolt.${NC}"
+    echo -e "${RED}$(msg_str "RESET_CANCELLED_BY_USER")${NC}"
     exit 0
   fi
   if [ "$CLEAN_LOGS" = "false" ]; then
-    read -p "❓ Kas soovid puhastada ka paigalduslogid ja diagnostika-arhiivid (clean-logs.sh)? (y/N): " LOG_CONFIRM
+    read -p "$(msg_str "PROMPT_CONFIRM_CLEAN_LOGS")" LOG_CONFIRM
     if [[ "$LOG_CONFIRM" =~ ^[Yy]$ ]]; then
       CLEAN_LOGS=true
     fi
@@ -162,7 +176,7 @@ fi
 LOG_DIR="$SCRIPT_DIR/../install_logs"
 mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_FILE="$LOG_DIR/reset_${COMPONENT}_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/env_reset_${TIMESTAMP}.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 START_RESET=$(date +%s)
@@ -199,23 +213,23 @@ get_reset_stats() {
     fi
   done
   local avg=$((sum / count))
-  echo "keskmine: ${avg}s (min: ${min}s, max: ${max}s)"
+  msg_str "BENCHMARK_AVG" "${avg}s" "${min}s" "${max}s"
 }
 
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "📝 Puhastamise logi: ${CYAN}$LOG_FILE${NC}"
-echo -e "📊 Ajalooline ooteaeg: ${YELLOW}$(get_reset_stats "15s")${NC}"
+echo -e "📝 $(msg_str "RESET_LOG_LABEL") ${CYAN}$LOG_FILE${NC}"
+echo -e "📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(get_reset_stats "15s")${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 
 # Funktsioon konteineri kustutamiseks
 cleanup_container() {
   local container=$1
   if podman container exists "$container" 2>/dev/null; then
-    echo "   Peatame ja kustutame konteineri: $container"
+    echo -e "$(msg_str "RESET_CONTAINER_STOP" "$container")"
     podman stop "$container" 2>/dev/null || true
     podman rm -f "$container" 2>/dev/null || true
   else
-    echo "   Konteiner $container ei eksisteeri — OK"
+    echo -e "$(msg_str "RESET_CONTAINER_NOT_EXIST" "$container")"
   fi
 }
 
@@ -223,16 +237,16 @@ cleanup_container() {
 cleanup_volume() {
   local volume=$1
   if podman volume exists "$volume" 2>/dev/null; then
-    echo "   Kustutame volume: $volume"
+    echo "   Removing volume: $volume"
     podman volume rm "$volume" 2>/dev/null || true
   else
-    echo "   Volume $volume ei eksisteeri — OK"
+    echo "   Volume $volume does not exist — OK"
   fi
 }
 
 case $COMPONENT in
   all)
-    echo "Teostan kogu keskkonna täieliku puhastuse (Full Profile Reset)..."
+    echo "$(msg_str "RESET_PERFORMING")"
     COMPOSE_ARGS=(-f "$COMPOSE_FILE")
     OVERRIDE_FILE="$SCRIPT_DIR/../podman-compose.override.yml"
     [ -f "$OVERRIDE_FILE" ] && COMPOSE_ARGS+=(-f "$OVERRIDE_FILE")
@@ -247,9 +261,13 @@ case $COMPONENT in
       c_vol=$(echo "$container" | sed 's/^db-//' | tr '-' '_')
       cleanup_volume "${PROJECT_NAME}_${c_vol}_oradata"
       cleanup_volume "${PROJECT_NAME}_${c_vol}_data"
-      rm -rf "$SCRIPT_DIR/../config/ords/${container}"
+      rm -rf "$SCRIPT_DIR/../config/ords/${container}" "$SCRIPT_DIR/../config/ords/${c_vol}"
     done
+    rm -rf "$SCRIPT_DIR/../config/ords"/* 2>/dev/null || true
 
+    cleanup_container "app-forms"
+    cleanup_container "app-publisher"
+    cleanup_container "app-ords"
     cleanup_container "web-ide-dev"
     cleanup_container "ords-standalone-emulator"
     cleanup_container "ords-standalone-dev"
@@ -298,11 +316,11 @@ case $COMPONENT in
       [ -n "$v" ] && cleanup_volume "$v"
     done
     # Kustutame Podman Podid
-    echo "   Kustutame Podman Podid..."
+    echo "$(msg_str "RESET_PODS_REMOVING")"
     folder_basename=$(basename "$(cd "$SCRIPT_DIR/.." && pwd)")
     for pod in $(podman pod ls --format "{{.Name}}" 2>/dev/null | grep -E "${PROJECT_NAME}|${folder_basename}|pod_" || true); do
       if [ -n "$pod" ]; then
-        echo "   Peatame ja kustutame podi: $pod"
+        echo "   Stopping and removing pod: $pod"
         podman pod stop "$pod" 2>/dev/null || true
         podman pod rm -f "$pod" 2>/dev/null || true
       fi
@@ -312,9 +330,12 @@ case $COMPONENT in
     # Kustutame võrgu
     NETWORK="${PROJECT_NAME}_default"
     if podman network exists "$NETWORK" 2>/dev/null; then
-      echo "   Kustutame võrgu: $NETWORK"
-      podman network rm "$NETWORK" 2>/dev/null || true
+      podman network rm "$NETWORK" >/dev/null 2>&1 || true
     fi
+
+    # Puhastame rippuvad konteinerid, vahekihid ja ehitusvahemälu (vabastab kettaruumi)
+    echo "$(msg_str "RESET_PRUNING_DANGLING")"
+    podman system prune -f >> "$LOG_FILE" 2>&1 || true
     
     # Puhastame patchid
     PATCHES_DIR="$SCRIPT_DIR/../patches"
@@ -323,13 +344,13 @@ case $COMPONENT in
     fi
 
     # Kustutame Podmani saladused daemoni tasemel (turvaliselt)
-    echo "   Kustutame Podmani saladused..."
+    echo "$(msg_str "RESET_SECRETS_REMOVING")"
     for sec in $(get_required_secret_names 2>/dev/null || echo "publisher_db_sys_password apex_db_sys_password apex_schema_password ords_listener_password apex_admin_password test_dev_password"); do
       podman secret rm "$sec" >> "$LOG_FILE" 2>&1 || true
     done
     
     # Kustutame hosti failid ja konteinerite ajutised paigaldusfailid
-    echo "   Kustutame TNS_ADMIN/Wallet kataloogi ja ajutised paigalduskaustad..."
+    echo "$(msg_str "RESET_WALLET_REMOVING")"
     rm -rf "$SCRIPT_DIR/../config/tns_admin"
     rm -rf "$SCRIPT_DIR/../config/secrets"
     rm -f "$OVERRIDE_FILE"
@@ -343,7 +364,7 @@ case $COMPONENT in
     done
 
     # Kustutame VS Code registreeritud ühenduste kausta ja konfiguratsiooni
-    echo "   Kustutame VS Code ühenduste kausta..."
+    echo "$(msg_str "RESET_VSCODE_REMOVING")"
     folder_name="${VSCODE_FOLDER_NAME:-${DB_CONN_NAME:-${CONTAINER_NAME:-db-dev-full}}}"
     VSCODE_SQLCL=$(find "$HOME/.vscode/extensions" -name "sql" -path "*/oracle.sql-developer-*/dbtools/sqlcl/bin/sql" 2>/dev/null | sort -rV | head -n 1)
     if [ -n "$VSCODE_SQLCL" ] && [ -x "$VSCODE_SQLCL" ]; then
@@ -368,25 +389,27 @@ EOF
 
     if [ -f "$FOLDERS_FILE" ] && command -v jq &>/dev/null; then
       valid_ids=($(find "$DBTOOLS_CONNS_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2>/dev/null || true))
-      VALID_IDS_JSON=$(printf '%s\n' "${valid_ids[@]}" | jq -R . | jq -s .)
+      VALID_IDS_JSON=$(printf '%s\n' "${valid_ids[@]}" | jq -R . 2>/dev/null | jq -s . 2>/dev/null || echo "[]")
       jq --argjson valid "$VALID_IDS_JSON" '
         .folders = [
           .folders[]? |
           .connections = [ .connections[]? | select(. as $c | $valid | index($c)) ]
         ] |
         .folders = [ .folders[]? | select((.connections | length) > 0) ]
-      ' "$FOLDERS_FILE" > "${FOLDERS_FILE}.tmp" 2>/dev/null && mv "${FOLDERS_FILE}.tmp" "$FOLDERS_FILE" 2>/dev/null || true
+      ' "$FOLDERS_FILE" > "${FOLDERS_FILE}.tmp" 2>/dev/null || true
+      [ -f "${FOLDERS_FILE}.tmp" ] && mv "${FOLDERS_FILE}.tmp" "$FOLDERS_FILE" 2>/dev/null || true
+      rm -f "${FOLDERS_FILE}.tmp" 2>/dev/null || true
     fi
 
     for json_path in "$HOME/.sqldev/connections.json" "$HOME/.dbtools/connections.json"; do
       if [ -f "$json_path" ]; then
-        rm -f "$json_path"
+        rm -f "$json_path" 2>/dev/null || true
       fi
     done
     ;;
 
   *)
-    echo "Puhastan komponendi: $COMPONENT"
+    echo -e "$(msg_str "RESET_CLEANING_COMP" "$COMPONENT")"
     c_vol=$(echo "$COMPONENT" | sed 's/^db-//' | tr '-' '_')
     cleanup_container "$COMPONENT"
     cleanup_container "oracle-$COMPONENT"
@@ -404,7 +427,7 @@ fi
 
 # Kontrollime tulemust
 echo ""
-echo "Kontrollin puhastamise tulemust..."
+echo "$(msg_str "RESET_CHECKING")"
 CLEAN=true
 
 if [ "$COMPONENT" = "all" ]; then
@@ -438,15 +461,11 @@ fi
 echo ""
 if [ "$CLEAN" = "true" ]; then
   echo -e "${CYAN}==================================================================${NC}"
-  if [ "$COMPONENT" = "all" ]; then
-    echo -e "${GREEN}✅ KÕIK PUHAS! Kogu keskkonna (Full Reset) puhastus sooritatud.${NC}"
-  else
-    echo -e "${GREEN}✅ KÕIK PUHAS! Komponendi ($COMPONENT) puhastus sooritatud.${NC}"
-  fi
+  echo -e "${GREEN}$(msg_str "RESET_ALL_CLEAN")${NC}"
   echo -e "${CYAN}==================================================================${NC}"
 else
   echo -e "${CYAN}==================================================================${NC}"
-  echo -e "${RED}⚠️  HOIATUS: Mõned komponendid jäid kustutamata!${NC}"
+  echo -e "${RED}⚠️  WARNING: Some components could not be removed!${NC}"
   echo -e "${CYAN}==================================================================${NC}"
 fi
 
@@ -482,31 +501,31 @@ RESET_TOTAL_SECS=$DURATION_RESET
 EOF
 
 echo ""
-echo -e "${YELLOW}⏱  Puhastamine võttis aega: ${DURATION_RESET}s${NC}"
+echo -e "${YELLOW}$(msg_str "RESET_DURATION" "${DURATION_RESET}s")${NC}"
 echo "------------------------------------------------------------------"
-echo -e "📝 Logifail salvestati: ${CYAN}$LOG_FILE${NC}"
-echo -e "📊 Git mõõdikud salvestati: ${CYAN}$METRICS_DIR/reset_benchmarks.json${NC}"
+echo -e "$(msg_str "LOG_PATH_LABEL") ${CYAN}$LOG_FILE${NC}"
+echo -e "$(msg_str "METRICS_PATH_LABEL") ${CYAN}$METRICS_DIR/reset_benchmarks.json${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 echo ""
-echo "👉 Uuesti käivitamiseks ja seadistamiseks:"
+echo -e "$(msg_str "RESET_RESTART_HINT")"
 case "$COMPONENT" in
   ${TARGET_SERVICE:-db-apex-proxy}|db-apex-proxy)
-    echo "  1. Käivita konteiner:          podman compose up -d ${TARGET_SERVICE:-db-apex-proxy}"
-    echo "  2. Teosta DB algseadistus:    ./scripts/internal/init-db-instance.sh ${TARGET_PROFILE} ${TARGET_SERVICE:-db-apex-proxy}"
-    echo "  3. Paigalda APEX mootor:      ./scripts/internal/install-apex.sh"
+    echo "  1. Start container:          podman compose up -d ${TARGET_SERVICE:-db-apex-proxy}"
+    echo "  2. Initialize DB instance:   ./scripts/internal/init-db-instance.sh ${TARGET_PROFILE} ${TARGET_SERVICE:-db-apex-proxy}"
+    echo "  3. Install APEX engine:      ./scripts/internal/install-apex.sh"
     ;;
   db-publisher)
-    echo "  1. Käivita konteiner:          podman compose up -d db-publisher"
-    echo "  2. Teosta DB algseadistus:    ./scripts/internal/init-db-instance.sh appinfra-standard-gvenzl db-publisher"
+    echo "  1. Start container:          podman compose up -d db-publisher"
+    echo "  2. Initialize DB instance:   ./scripts/internal/init-db-instance.sh appinfra-standard-gvenzl db-publisher"
     ;;
   ords)
-    echo "  1. Käivita ORDS teenus:       podman compose --profile dev-ords up -d dev-ords"
+    echo "  1. Start ORDS service:       podman compose --profile dev-ords up -d dev-ords"
     ;;
   all)
-    echo "  Kogu keskkonna nullist automaatseks käivitamiseks (Full Process):"
+    echo -e "$(msg_str "RESET_HINT_FULL_PROCESS")"
     echo "    ./scripts/setup-all.sh"
     echo ""
-    echo "  Konteinerite käsitsi käivitamiseks:"
+    echo -e "$(msg_str "RESET_HINT_MANUAL_START")"
     echo "    ./scripts/start-containers.sh"
     ;;
 esac

@@ -38,7 +38,7 @@ fi
 
 # Genereerime dünaamiliselt podman-compose.override.yml profiili ja lisabaaside jaoks
 rm -f "$OVERRIDE_FILE"
-echo "   ℹ️  Genereerin profiilipõhise podman-compose.override.yml..."
+echo "   $(msg_str "COMPOSE_GEN_INFO")"
 cat <<EOF > "$OVERRIDE_FILE"
 version: '3.8'
 
@@ -144,7 +144,7 @@ EOF
 EOF
     fi
 
-    if [ "${SKIP_ORDS:-false}" != "true" ] && [ "${PROFILE_ORDS_ENABLED:-true}" = "true" ] && [ "${PROFILE_ORDS_CONTAINER_REQUIRED:-true}" != "false" ] && [ "${PROFILE_ORDS_PREINSTALLED:-false}" != "true" ] && [ "$IS_ADB" != "true" ] && [ "$has_central_ords" != "true" ]; then
+    if [ "${SKIP_ORDS:-false}" != "true" ] && [ "${PROFILE_ORDS_ENABLED:-true}" = "true" ] && [ "${PROFILE_ORDS_CONTAINER_REQUIRED:-true}" != "false" ] && [ "$has_central_ords" != "true" ]; then
       has_central_ords=true
       mkdir -p "$WORKSPACE_DIR/config/ords/$db"
       raw_svc_name="${PROFILE_ORDS_SERVICE_NAME:-app-ords}"
@@ -154,6 +154,61 @@ EOF
       ords_c_name=$(ensure_unique_name "$raw_c_name" "ORDS konteiner")
       ords_ssl_val="$ORDS_SSL"
       ords_http_val="$ORDS_PORT"
+
+      # Kogume kõigi aktiivsete andmebaaside basseinid ja loome konfiguratsiooni otse hosti kausta
+      ords_conf_dir="$WORKSPACE_DIR/config/ords/$db"
+      mkdir -p "$ords_conf_dir/databases"
+      rm -f "$ords_conf_dir/url-mapping.xml" 2>/dev/null || true
+
+      first_pool_created=false
+      first_pool_dir=""
+      ords_depends_yaml=""
+
+      for sub_item in "${active_instances[@]}"; do
+        IFS='|' read -r s_cname s_prof s_key <<< "$sub_item"
+        s_pfile="$WORKSPACE_DIR/config/profiles/databases/${s_prof}.yaml"
+        [ ! -f "$s_pfile" ] && s_pfile="$WORKSPACE_DIR/config/profiles/${s_prof}.yaml"
+        
+        s_ords_en="true"
+        s_pool_name=$(echo "$s_cname" | sed 's/^db-//' | tr '-' '_')
+        s_service="FREEPDB1"
+        s_in_port="1521"
+        if [ -f "$s_pfile" ]; then
+          s_ords_en=$(awk '/ords:/{flag=1;next}/forms:|apex:|publisher:|users:/{flag=0}flag' "$s_pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
+          s_pool_override=$(awk '/ords:/{flag=1;next}/forms:|apex:|publisher:|users:/{flag=0}flag' "$s_pfile" | grep -E '^[[:space:]]*pool_name:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
+          [ -n "$s_pool_override" ] && s_pool_name="$s_pool_override"
+          s_svc_override=$(grep -E '^[[:space:]]*default_service:' "$s_pfile" | head -n 1 | awk -F: '{print $2}' | tr -d ' "\r\n')
+          [ -n "$s_svc_override" ] && s_service="$s_svc_override"
+        fi
+
+        if [ "$s_ords_en" = "true" ]; then
+          ords_depends_yaml="${ords_depends_yaml}      ${s_cname}:\n        condition: service_healthy\n"
+          mkdir -p "$ords_conf_dir/databases/${s_pool_name}"
+          cat <<EOF_POOL > "$ords_conf_dir/databases/${s_pool_name}/pool.xml"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<entry key="db.connectionType">basic</entry>
+<entry key="db.hostname">${s_cname}</entry>
+<entry key="db.port">${s_in_port}</entry>
+<entry key="db.servicename">${s_service}</entry>
+<entry key="db.username">ORDS_PUBLIC_USER</entry>
+<entry key="db.password">placeholder</entry>
+<entry key="feature.sdw">true</entry>
+<entry key="restEnabledSql.active">true</entry>
+</properties>
+EOF_POOL
+          if [ "$first_pool_created" = "false" ]; then
+            first_pool_created=true
+            first_pool_dir="${s_pool_name}"
+          fi
+        fi
+      done
+
+      if [ "$first_pool_created" = "true" ]; then
+        mkdir -p "$ords_conf_dir/databases/default"
+        cp "$ords_conf_dir/databases/${first_pool_dir}/pool.xml" "$ords_conf_dir/databases/default/pool.xml" 2>/dev/null || true
+      fi
 
       cat <<EOF >> "$OVERRIDE_FILE"
   ${ords_svc_name}:
@@ -169,7 +224,7 @@ EOF
         export ORACLE_PWD=\$\$(cat /run/secrets/oracle_pwd 2>/dev/null || cat /run/secrets/${sys_secret_name})
         export APEX_LISTENER_PWD=\$\$(cat /run/secrets/ords_listener_password 2>/dev/null || cat /run/secrets/apex_schema_password 2>/dev/null || cat /run/secrets/oracle_pwd)
         export APEX_REST_PWD=\$\$(cat /run/secrets/ords_listener_password 2>/dev/null || cat /run/secrets/apex_schema_password 2>/dev/null || cat /run/secrets/oracle_pwd)
-        mkdir -p /etc/ords/config/ssl /etc/ords/config/databases/default
+        mkdir -p /etc/ords/config/ssl /opt/oracle/docroot
         if [ -f /etc/ords/certs/custom/tls.crt ] && [ -f /etc/ords/certs/custom/tls.key ]; then
           cp /etc/ords/certs/custom/tls.crt /etc/ords/config/ssl/cert.crt 2>/dev/null || true
           cp /etc/ords/certs/custom/tls.key /etc/ords/config/ssl/key.key 2>/dev/null || true
@@ -190,36 +245,42 @@ EOF
           [ -f /etc/ords/certs/localhost.key ] && cp /etc/ords/certs/localhost.key /etc/ords/config/ssl/key.key 2>/dev/null || true
         fi
         rm -rf /etc/ords/config/databases/*/wallet /etc/ords/config/databases/*/*/wallet 2>/dev/null || true
-        if [ ! -f /etc/ords/config/databases/default/pool.xml ] || ! grep -q "db.hostname" /etc/ords/config/databases/default/pool.xml 2>/dev/null; then
-          printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">' '<properties>' '<entry key="db.connectionType">basic</entry>' '<entry key="db.hostname">${c_name}</entry>' '<entry key="db.port">${c_in_port}</entry>' '<entry key="db.servicename">${c_service}</entry>' '<entry key="db.username">ORDS_PUBLIC_USER</entry>' '<entry key="db.password">\$\$APEX_LISTENER_PWD</entry>' '<entry key="feature.sdw">true</entry>' '<entry key="plsql.gateway.mode">proxied</entry>' '<entry key="restEnabledSql.active">true</entry>' '</properties>' > /etc/ords/config/databases/default/pool.xml
+        if [ -f /run/secrets/ords_listener_password ]; then
+          APEX_LISTENER_PWD=\$(cat /run/secrets/ords_listener_password)
         fi
         if [ -n "\$\$APEX_LISTENER_PWD" ]; then
           find /etc/ords/config/databases/ -name "pool.xml" -exec sed -i "s|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">\$\$APEX_LISTENER_PWD</entry>|g" {} + 2>/dev/null || true
         fi
-        ords --config /etc/ords/config config set standalone.http.port ${ords_http_val} 2>/dev/null || true
-        ords --config /etc/ords/config config set standalone.https.port ${ords_ssl_val} 2>/dev/null || true
-        ords --config /etc/ords/config config set standalone.static.path /opt/oracle/apex_images/images 2>/dev/null || true
+        mkdir -p /etc/ords/config/global
+        printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">' '<properties>' '<entry key="database.api.enabled">true</entry>' '<entry key="feature.sdw">true</entry>' '<entry key="restEnabledSql.active">true</entry>' '<entry key="standalone.doc.root">/opt/oracle/docroot</entry>' "<entry key=\"standalone.http.port\">${ords_http_val}</entry>" "<entry key=\"standalone.https.port\">${ords_ssl_val}</entry>" '<entry key="standalone.static.context.path">/i</entry>' '<entry key="standalone.static.path">/opt/oracle/apex_images/images</entry>' '</properties>' > /etc/ords/config/global/settings.xml
         exec ords --config /etc/ords/config serve
     environment:
       - DBHOST=${c_name}
       - DBPORT=${c_in_port}
       - DBSERVICENAME=${c_service}
+      - JAVA_TOOL_OPTIONS=-Xms512m -Xmx2048m -XX:+UseG1GC
+      - _JAVA_OPTIONS=-Xms512m -Xmx2048m
     secrets:
       - source: ${sys_secret_name}
         target: oracle_pwd
       - ords_listener_password
     depends_on:
-      ${c_name}:
-        condition: service_healthy
+$(echo -e "$ords_depends_yaml" | sed 's/^/  /')
     deploy:
       resources:
         limits:
           cpus: '1.00'
-          memory: ${PROFILE_ORDS_MEMORY:-1024M}
+          memory: ${PROFILE_ORDS_MEMORY:-3072M}
     volumes:
       - ${apex_img_vol}:/opt/oracle/apex_images:ro
       - ./config/ords/$db:/etc/ords/config:rw
       - ./config/certs:/etc/ords/certs:ro
+      - ./docs/dev-hub.html:/opt/oracle/docroot/index.html:ro
+      - ./docs/dev-hub.html:/opt/oracle/docroot/dev-hub.html:ro
+      - ./docs/dev-hub.html:/opt/oracle/docroot/hub.html:ro
+      - ./docs:/opt/oracle/docroot/docs:ro
+      - ./metrics:/opt/oracle/docroot/metrics:ro
+      - ./config/blueprints:/opt/oracle/docroot/blueprints:ro
     restart: unless-stopped
 
 EOF
@@ -265,4 +326,4 @@ cat <<EOF >> "$OVERRIDE_FILE"
     external: true
 EOF
 
-echo "   ✅ podman-compose.override.yml edukalt genereeritud!"
+echo "   $(msg_str "COMPOSE_GEN_SUCCESS")"

@@ -19,6 +19,14 @@ database:
   kafka_bootstrap_servers: "localhost:9092"
 
 components:
+  publisher:
+    enabled: true
+    version: "2025"
+    container_name: app-publisher
+    rcu_prefix: OAS
+    http_port: 9502
+    https_port: 9503
+    admin_port: 9500
   ords:
     enabled: true
     version: "26.2.2"

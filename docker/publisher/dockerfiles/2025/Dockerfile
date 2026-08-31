@@ -9,7 +9,7 @@
 
 FROM docker.io/oraclelinux:8
 
-LABEL maintainer="Oracle DevOps Platform <allan.lahe@swedbank.ee>"
+LABEL maintainer="Oracle DevOps Platform <devops@oracle-platform.local>"
 
 ENV ORACLE_HOME=/u01/oracle \
     JAVA_HOME=/usr/java/default \
@@ -27,11 +27,15 @@ USER root
 COPY jdk-17*.rpm /tmp/
 
 # Install OS dependencies and Official Oracle JDK 17 (Supported by Oracle)
-RUN JDK_RPM=$(ls -1 /tmp/jdk-17*.rpm 2>/dev/null | head -n 1 || true) && \
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then \
+      JDK_RPM=$(ls -1 /tmp/jdk-17*x64*.rpm /tmp/jdk-17*x86_64*.rpm 2>/dev/null | head -n 1 || true); \
+    else \
+      JDK_RPM=$(ls -1 /tmp/jdk-17*aarch64*.rpm /tmp/jdk-17*arm64*.rpm 2>/dev/null | head -n 1 || true); \
+    fi && \
     if [ -n "$JDK_RPM" ] && [ -f "$JDK_RPM" ]; then \
       JDK_TARGET="$JDK_RPM"; \
     else \
-      ARCH=$(uname -m) && \
       if [ "$ARCH" = "aarch64" ]; then \
         JDK_TARGET="https://download.oracle.com/java/17/archive/jdk-17.0.12_linux-aarch64_bin.rpm"; \
       else \
@@ -42,8 +46,8 @@ RUN JDK_RPM=$(ls -1 /tmp/jdk-17*.rpm 2>/dev/null | head -n 1 || true) && \
     dnf clean all && \
     rm -f /tmp/jdk-17*.rpm && \
     mkdir -p /u01/oracle /u01/oracle/.inventory && \
-    groupadd -g 1000 oracle && \
-    useradd -u 1000 -g oracle -d /u01/oracle oracle && \
+    groupadd -g 1000 oracle || true && \
+    useradd -u 1000 -g oracle -d /u01/oracle oracle || true && \
     chown -R root:root /tmp /var/tmp && \
     chmod 1777 /tmp /var/tmp && \
     chown -R oracle:oracle /u01

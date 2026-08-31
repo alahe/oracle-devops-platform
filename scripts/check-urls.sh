@@ -35,12 +35,73 @@ else
   NC=$'\033[0m'
 fi
 
-MAX_RETRIES=${1:-30}
-RETRY_INTERVAL=${2:-5}
+MAX_RETRIES=3
+RETRY_INTERVAL=1
+CURL_CONNECT_TIMEOUT=2
+CURL_MAX_TIME=3
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -l=*|--lang=*|-language=*|--language=*)
+      export CLI_LANG="${1#*=}"
+      shift
+      ;;
+    -l|--lang|-language|--language)
+      export CLI_LANG="$2"
+      shift 2
+      ;;
+    -t=*|--timeout=*)
+      CURL_MAX_TIME="${1#*=}"
+      shift
+      ;;
+    -t|--timeout)
+      CURL_MAX_TIME="$2"
+      shift 2
+      ;;
+    -r=*|--retries=*)
+      MAX_RETRIES="${1#*=}"
+      shift
+      ;;
+    -r|--retries)
+      MAX_RETRIES="$2"
+      shift 2
+      ;;
+    -i=*|--interval=*)
+      RETRY_INTERVAL="${1#*=}"
+      shift
+      ;;
+    -i|--interval)
+      RETRY_INTERVAL="$2"
+      shift 2
+      ;;
+    -q|--quick|--fast)
+      MAX_RETRIES=1
+      RETRY_INTERVAL=0
+      CURL_CONNECT_TIMEOUT=2
+      CURL_MAX_TIME=2
+      shift
+      ;;
+    *)
+      if [[ "$1" =~ ^[0-9]+$ ]]; then
+        if [ -z "${FIRST_POS_ARG:-}" ]; then
+          MAX_RETRIES="$1"
+          FIRST_POS_ARG="$1"
+        else
+          RETRY_INTERVAL="$1"
+        fi
+      fi
+      shift
+      ;;
+  esac
+done
+
+if declare -f resolve_cli_lang >/dev/null 2>&1; then
+  export ACTIVE_CLI_LANG="$(resolve_cli_lang)"
+fi
 CA_CERT="$PROJECT_ROOT/config/certs/localCA.pem"
 
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "${CYAN}🌐 Kontrollin ja testin veebiteenuste URL-ide kättesaadavust (HTTP GET)...${NC}"
+echo -e "${CYAN}$(msg_str "TITLE_URL_CHECK")${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 
 # Dynamic collection of target URLs: Label|URL|ContentCheckPattern
@@ -62,37 +123,40 @@ for inst in $(get_active_db_instances 2>/dev/null); do
 done
 
 if [ "$ANY_ORDS_ENABLED" = "true" ] && [ "${SKIP_ORDS:-false}" != "true" ]; then
-  ords_h_port="${ORDS_HTTP_PORT:-${PROFILE_ORDS_HTTP_PORT:-8088}}"
-  ords_s_port="${ORDS_HTTPS_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8448}}"
-  [ "${IS_ADB:-false}" = "true" ] && ords_s_port="${ORDS_HTTPS_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8443}}"
+  if podman container exists app-ords 2>/dev/null || [ "${PROFILE_ORDS_CONTAINER_REQUIRED:-true}" != "false" ]; then
+    ords_h_port="${ORDS_HTTP_PORT:-${PROFILE_ORDS_HTTP_PORT:-8088}}"
+    ords_s_port="${ORDS_HTTPS_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8448}}"
+    [ "${IS_ADB:-false}" = "true" ] && ords_s_port="${ORDS_HTTPS_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8443}}"
 
-  if [ "${IS_ADB:-false}" != "true" ]; then
-    URLS+=("ORDS Root HTTP|http://localhost:${ords_h_port}/ords/|")
+    if [ "${IS_ADB:-false}" != "true" ]; then
+      URLS+=("ORDS Root HTTP|http://localhost:${ords_h_port}/ords/|")
+    fi
+    URLS+=("Developer Hub (HTTPS)|https://localhost:${ords_s_port}/dev-hub.html|Oracle DevOps Platform")
+    URLS+=("ORDS Root HTTPS|https://localhost:${ords_s_port}/ords/|")
+    URLS+=("ORDS Database Actions (Default)|https://localhost:${ords_s_port}/ords/_/landing|!DatabaseCredentialError")
+
+    # Loop dynamically over all active database instances
+    for inst in $(get_active_db_instances 2>/dev/null); do
+      cname=$(echo "$inst" | cut -d'|' -f1)
+      pname=$(echo "$inst" | cut -d'|' -f2)
+      pfile="$PROJECT_ROOT/config/profiles/databases/${pname}.yaml"
+      [ ! -f "$pfile" ] && pfile="$PROJECT_ROOT/config/profiles/${pname}.yaml"
+
+      pool_name=$(echo "$cname" | sed 's/^db-//' | tr '-' '_')
+
+      apex_en="false"
+      if [ -f "$pfile" ]; then
+        apex_en=$(grep -A 8 "apex:" "$pfile" 2>/dev/null | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
+      fi
+
+      if [ "$apex_en" = "true" ]; then
+        upper_pool=$(echo "$pool_name" | tr '[:lower:]' '[:upper:]')
+        URLS+=("APEX Builder (${upper_pool})|https://localhost:${ords_s_port}/ords/${pool_name}/r/apex/workspace-sign-in/oracle-apex-sign-in|")
+        URLS+=("APEX Instance Admin (${upper_pool})|https://localhost:${ords_s_port}/ords/${pool_name}/apex_admin|")
+        URLS+=("ORDS Database Actions (${upper_pool})|https://localhost:${ords_s_port}/ords/${pool_name}/_/landing|!DatabaseCredentialError")
+      fi
+    done
   fi
-  URLS+=("ORDS Root HTTPS|https://localhost:${ords_s_port}/ords/|")
-  URLS+=("ORDS Database Actions (Default)|https://localhost:${ords_s_port}/ords/_/landing|!DatabaseCredentialError")
-
-  # Loop dynamically over all active database instances
-  for inst in $(get_active_db_instances 2>/dev/null); do
-    cname=$(echo "$inst" | cut -d'|' -f1)
-    pname=$(echo "$inst" | cut -d'|' -f2)
-    pfile="$PROJECT_ROOT/config/profiles/databases/${pname}.yaml"
-    [ ! -f "$pfile" ] && pfile="$PROJECT_ROOT/config/profiles/${pname}.yaml"
-
-    pool_name=$(echo "$cname" | sed 's/^db-//' | tr '-' '_')
-
-    apex_en="false"
-    if [ -f "$pfile" ]; then
-      apex_en=$(grep -A 8 "apex:" "$pfile" 2>/dev/null | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
-    fi
-
-    if [ "$apex_en" = "true" ]; then
-      upper_pool=$(echo "$pool_name" | tr '[:lower:]' '[:upper:]')
-      URLS+=("APEX Builder (${upper_pool})|https://localhost:${ords_s_port}/ords/${pool_name}/r/apex/workspace-sign-in/oracle-apex-sign-in|")
-      URLS+=("APEX Instance Admin (${upper_pool})|https://localhost:${ords_s_port}/ords/${pool_name}/apex_admin|")
-      URLS+=("ORDS Database Actions (${upper_pool})|https://localhost:${ords_s_port}/ords/${pool_name}/_/landing|!DatabaseCredentialError")
-    fi
-  done
 fi
 
 # 2. Analytics Publisher URLs
@@ -110,12 +174,14 @@ for inst in $(get_active_db_instances 2>/dev/null); do
   fi
 done
 
-if [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ]; then
+if [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ] || [ "${SKIP_PUBLISHER:-true}" = "false" ]; then
   pub_h_port="${PUBLISHER_HTTP_PORT:-9502}"
   pub_s_port="${PUBLISHER_HTTPS_PORT:-9503}"
   pub_admin_port="${PUBLISHER_ADMIN_PORT:-9500}"
   URLS+=("Publisher UI (HTTP)|http://localhost:${pub_h_port}/xmlpserver|xmlpserver")
-  URLS+=("WebLogic Console (HTTP)|http://localhost:${pub_admin_port}/console|")
+  if curl -s -m 2 -o /dev/null "http://localhost:${pub_admin_port}/console" 2>/dev/null; then
+    URLS+=("Publisher WebLogic Console (HTTP)|http://localhost:${pub_admin_port}/console|")
+  fi
   if curl -s -k --connect-timeout 2 --max-time 3 -o /dev/null "https://localhost:${pub_s_port}/xmlpserver" 2>/dev/null; then
     URLS+=("Publisher UI (HTTPS)|https://localhost:${pub_s_port}/xmlpserver|xmlpserver")
   fi
@@ -146,12 +212,15 @@ if [ "$ANY_FORMS_ENABLED" = "true" ] || [ "${ENABLE_FORMS:-false}" = "true" ]; t
   forms_builder_port="${FORMS_BUILDER_PORT:-6082}"
   URLS+=("Forms Runtime (HTTP)|http://localhost:${forms_h_port}/forms/frmservlet|")
   URLS+=("Forms Test Form (HTTP)|http://localhost:${forms_h_port}/forms/frmservlet?form=test.fmx|")
+  URLS+=("Forms Builder GUI (noVNC)|http://localhost:${forms_builder_port}/vnc.html|")
   URLS+=("Forms WebLogic Console (HTTP)|http://localhost:${forms_admin_port}/console|")
   URLS+=("Forms Builder Web GUI (HTTP)|http://localhost:${forms_builder_port}/vnc.html|")
+elif curl -s -m 2 http://localhost:6082/vnc.html >/dev/null 2>&1; then
+  URLS+=("Developer Hub Web GUI (HTTP)|http://localhost:6082/vnc.html|")
 fi
 
 # 3. Web IDE URLs
-if [ "${SKIP_WEB_IDE}" != "true" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
+if [ "${SKIP_WEB_IDE}" != "true" ] && { [ "${WEB_IDE_ENABLED}" = "true" ] || [ -n "$(podman ps -q --filter name=web-ide-dev 2>/dev/null)" ]; }; then
   web_ide_h_port="${WEB_IDE_HTTP_PORT:-8090}"
   web_ide_s_port="${WEB_IDE_HTTPS_PORT:-8449}"
   URLS+=("Web IDE (HTTP)|http://localhost:${web_ide_h_port}|")
@@ -184,7 +253,7 @@ for item in "${URLS[@]}"; do
   # Check TLS certificate trust if HTTPS
   if [[ "$url" =~ ^https:// ]]; then
     if [ -f "$CA_CERT" ]; then
-      if curl -s --noproxy "*" --cacert "$CA_CERT" --connect-timeout 3 --max-time 5 -o /dev/null "$url" 2>/dev/null; then
+      if curl -s --noproxy "*" --cacert "$CA_CERT" --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" -o /dev/null "$url" 2>/dev/null; then
         TLS_STATUS="✅ CA OK"
       else
         TLS_STATUS="⚠️ Self-Signed"
@@ -193,8 +262,8 @@ for item in "${URLS[@]}"; do
   fi
 
   for ((i=1; i<=MAX_RETRIES; i++)); do
-    BODY_OUTPUT=$(curl -s -k --noproxy "*" --connect-timeout 3 --max-time 5 "$url" 2>/dev/null || true)
-    HTTP_CODE=$(curl -s -k --noproxy "*" --connect-timeout 3 --max-time 5 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null | grep -E '^[0-9]{3}$' || echo "000")
+    BODY_OUTPUT=$(curl -s -k -L --noproxy "*" --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" "$url" 2>/dev/null || true)
+    HTTP_CODE=$(curl -s -k -L --noproxy "*" --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" -o /dev/null -w "%{http_code}" "$url" 2>/dev/null | grep -E '^[0-9]{3}$' || echo "000")
 
     # Check for valid HTTP code (1xx-4xx, exclude 5xx)
     if [[ "$HTTP_CODE" =~ ^[1-4][0-9]{2}$ ]]; then
@@ -221,10 +290,10 @@ for item in "${URLS[@]}"; do
   done
 
   if [ "$SUCCESS" = "true" ]; then
-    echo -e "${GREEN}✅ VASTUS SAADUD [HTTP ${HTTP_CODE}] [TLS: ${TLS_STATUS}]${NC}"
+    echo -e "${GREEN}$(msg_str "URL_SUCCESS" "HTTP ${HTTP_CODE}" "${TLS_STATUS}")${NC}"
     URL_MD_TABLE+="| ${label} | \`${url}\` | \`HTTP ${HTTP_CODE}\` | ${TLS_STATUS} | ✅ OK |\n"
   else
-    echo -e "${RED}❌ EI VASTA [HTTP ${HTTP_CODE:-000}] (Ühendus aegus / sisu viga)${NC}"
+    echo -e "${RED}$(msg_str "URL_FAIL" "HTTP ${HTTP_CODE:-000}")${NC}"
     URL_MD_TABLE+="| ${label} | \`${url}\` | \`HTTP ${HTTP_CODE:-000}\` | ${TLS_STATUS} | ❌ Kättesaamatu |\n"
     FAILED_URLS=$((FAILED_URLS + 1))
   fi
@@ -234,11 +303,11 @@ echo -e "$URL_MD_TABLE" > "$PROJECT_ROOT/metrics/urls_audit_temp.md"
 
 echo -e "${CYAN}==================================================================${NC}"
 if [ $FAILED_URLS -eq 0 ]; then
-  echo -e "${GREEN}✅ KÕIK AKTIIVSED VEEBITEENUSE URL-ID ON KONTROLLITUD JA REAGEERIVAD!${NC}"
+  echo -e "${GREEN}$(msg_str "ALL_URLS_OK")${NC}"
   echo -e "${CYAN}==================================================================${NC}"
   exit 0
 else
-  echo -e "${RED}❌ HOIATUS: ${FAILED_URLS} teenuse URL-i ei vasta!${NC}"
+  echo -e "${RED}$(msg_str "URL_WARN_COUNT" "$FAILED_URLS")${NC}"
   echo -e "${CYAN}==================================================================${NC}"
   exit 1
 fi

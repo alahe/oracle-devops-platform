@@ -3,7 +3,7 @@
 **Staatus:** `DONE`  
 **Prioriteet:** `HIGH`  
 **Valdkond:** `Architecture`  
-**Dokumentatsioon:** [docs/db-profiles-and-topology.md](../db-profiles-and-topology.md)  
+**Dokumentatsioon:** [docs/db-profiles-and-topology.md](../../docs/db-profiles-and-topology.md)  
 
 ---
 

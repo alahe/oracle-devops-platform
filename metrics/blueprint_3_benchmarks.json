@@ -12,10 +12,34 @@
     {
       "timestamp": "2026-08-27T20:20:57.075048",
       "duration_seconds": 801
+    },
+    {
+      "timestamp": "2026-08-28T19:34:52.102383",
+      "duration_seconds": 791
+    },
+    {
+      "timestamp": "2026-08-29T00:10:06.547932",
+      "duration_seconds": 121
+    },
+    {
+      "timestamp": "2026-08-30T13:57:56.453490",
+      "duration_seconds": 135
+    },
+    {
+      "timestamp": "2026-08-31T03:34:18.517529",
+      "duration_seconds": 185
+    },
+    {
+      "timestamp": "2026-08-31T03:41:52.912577",
+      "duration_seconds": 187
+    },
+    {
+      "timestamp": "2026-08-31T04:09:14.450878",
+      "duration_seconds": 1474
     }
   ],
-  "runs_count": 3,
-  "average_duration_seconds": 808,
-  "min_duration_seconds": 797,
-  "max_duration_seconds": 826
+  "runs_count": 9,
+  "average_duration_seconds": 590,
+  "min_duration_seconds": 121,
+  "max_duration_seconds": 1474
 }

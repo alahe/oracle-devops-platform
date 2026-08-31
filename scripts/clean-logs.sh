@@ -22,16 +22,34 @@ else
 fi
 
 FORCE=false
-for arg in "$@"; do
-  case $arg in
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -l=*|--lang=*|-language=*|--language=*)
+      export CLI_LANG="${1#*=}"
+      if declare -f resolve_cli_lang >/dev/null 2>&1; then
+        export ACTIVE_CLI_LANG="$(resolve_cli_lang)"
+      fi
+      shift
+      ;;
+    -l|--lang|-language|--language)
+      export CLI_LANG="$2"
+      if declare -f resolve_cli_lang >/dev/null 2>&1; then
+        export ACTIVE_CLI_LANG="$(resolve_cli_lang)"
+      fi
+      shift 2
+      ;;
     -y|--force|--yes|-y*|--y*|-Y|--YES)
       FORCE=true
+      shift
+      ;;
+    *)
+      shift
       ;;
   esac
 done
 
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "${CYAN}🧹 Puhastan paigalduslogid, ajutised kataloogid ja arhiivid...${NC}"
+echo -e "${CYAN}$(msg_str "CLEAN_LOGS_TITLE")${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 
 if [ "$FORCE" = "false" ]; then
@@ -46,15 +64,15 @@ COUNT_LOGS=0
 COUNT_DIRS=0
 COUNT_ZIPS=0
 
-# 1. Clear install_logs/*.log
+# 1. Clear install_logs/*.log and install_logs/*.sql
 if [ -d "$LOG_DIR" ]; then
   shopt -s nullglob
-  log_files=("$LOG_DIR"/*.log)
+  log_files=("$LOG_DIR"/*.log "$LOG_DIR"/*.sql)
   shopt -u nullglob
   COUNT_LOGS=${#log_files[@]}
   if [ $COUNT_LOGS -gt 0 ]; then
-    rm -f "$LOG_DIR"/*.log
-    echo -e "   ✅ Kustutatud ${COUNT_LOGS} logifaili kaustast install_logs/"
+    rm -f "$LOG_DIR"/*.log "$LOG_DIR"/*.sql
+    echo -e "   ✅ Kustutatud ${COUNT_LOGS} logi- ja SQL-faili kaustast install_logs/"
   fi
 fi
 
@@ -83,5 +101,5 @@ if [ $COUNT_ZIPS -gt 0 ]; then
 fi
 
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "${GREEN}✅ LOGIDE JA DIAGNOOSTIKA PUHASTAMINE TEHTUD!${NC}"
+echo -e "${GREEN}$(msg_str "CLEAN_LOGS_DONE")${NC}"
 echo -e "${CYAN}==================================================================${NC}"

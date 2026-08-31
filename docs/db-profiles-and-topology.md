@@ -24,8 +24,8 @@ flowchart TD
         P1["databases/db-proxy-adb.yaml"]
         P2["databases/db-proxy-oracle.yaml"]
         P3["databases/db-proxy-gvenzl.yaml"]
-        P4["databases/db-lis-oracle.yaml"]
-        P5["databases/db-lis-adb.yaml"]
+        P4["databases/db-alise-oracle.yaml"]
+        P5["databases/db-alise-adb.yaml"]
         P6["web-ide/web-ide-standard.yaml"]
     end
 
@@ -74,8 +74,8 @@ flowchart TD
 
 | Profile Filename | Description | Repository | DB Type | Use Case | ORDS | APEX |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`db-lis-oracle.yaml`** | Primary Application DB on Official Oracle Free DB 23ai | `container-registry.oracle.com/database/free:latest` | `standard` | Primary App | Yes (8448) | Yes |
-| **`db-lis-adb.yaml`** | Primary Application DB on Oracle Autonomous DB | `container-registry.oracle.com/database/adb-free:latest` | `adb` | Primary App | Yes (8443) | No |
+| **`db-alise-oracle.yaml`** | Primary Application DB on Official Oracle Free DB 23ai | `container-registry.oracle.com/database/free:latest` | `standard` | Primary App | Yes (8448) | Yes |
+| **`db-alise-adb.yaml`** | Primary Application DB on Oracle Autonomous DB | `container-registry.oracle.com/database/adb-free:latest` | `adb` | Primary App | Yes (8443) | No |
 | **`db-proxy-oracle.yaml`** | APEX Outbound Proxy DB on Official Oracle Free DB 23ai | `container-registry.oracle.com/database/free:latest` | `standard` | Proxy | Yes (8448) | Yes |
 | **`db-proxy-adb.yaml`** | APEX Proxy DB on Oracle Autonomous DB Free | `container-registry.oracle.com/database/adb-free:latest` | `adb` | Proxy | Yes (8443) | Yes |
 | **`db-proxy-gvenzl.yaml`** | APEX Proxy DB on Gvenzl 23c Faststart | `gvenzl/oracle-free:23-full-faststart` | `standard` | Proxy | Yes (8448) | Yes |
@@ -93,7 +93,7 @@ To set or change the main database profile, edit `.env`:
 
 ```bash
 # Select the desired profile:
-DB_LIS=db-lis-oracle
+DB_ALISE=db-alise-oracle
 
 # Or select an Autonomous DB profile:
 # DB_PROXY=db-proxy-adb
@@ -133,13 +133,13 @@ users:
     wallet_alias: DB_MY_COMPANY_SCHEMA
     color: "#2980B9"
 
-  # Custom Developer User:
-  - username: ALLANLAHE
+  # Standard Developer User:
+  - username: USER_DEVELOPER
     role: NORMAL
     ords_enabled: true
-    ords_alias: allanlahe
+    ords_alias: user_developer
     roles: [DB_DEVELOPER_ROLE]
-    wallet_alias: DB_ALLANLAHE
+    wallet_alias: DB_PROXY_DEV
     color: "#F39C12"
 ```
 
@@ -176,8 +176,8 @@ DB_PUBLISHER=publisher-free
 # 2. APEX Proxy & Outbound REST DB (db-proxy - Port 1532)
 DB_PROXY=proxy-gvenzl
 
-# 3. LIS Business App DB (db-lis - Port 1533)
-DB_LIS=app-free
+# 3. LIS Business App DB (db-alise - Port 1533)
+DB_ALISE=app-free
 ```
 
 ### 🌐 ORDS Multi-Pool Ühendustee ja Konfiguratsioon (app_ords)
@@ -187,7 +187,7 @@ Tsentraalne ORDS teenus (`app_ords`) kasuta andmebaaside ühendamiseks ORDS mult
 | URL Marsruut (Prefix) | ORDS Pooli Nimi | Sihtbaas & Port | Suunamise Eesmärk |
 | :--- | :--- | :--- | :--- |
 | `https://localhost:8448/ords/proxy/` | `default.xml` / `proxy.xml` | `db-proxy:1521/FREEPDB1` | 🛡️ APEX Proxy, Outbound REST ja Azure Entra-ID OIDC SSO |
-| `https://localhost:8448/ords/lis/` | `lis.xml` | `db-lis:1521/FREEPDB1` | 🧪 LIS Ärirakendus & PL/SQL loogika (Restricted DB Zone) |
+| `https://localhost:8448/ords/lis/` | `lis.xml` | `db-alise:1521/FREEPDB1` | 🧪 LIS Ärirakendus & PL/SQL loogika (Restricted DB Zone) |
 | `https://localhost:8448/ords/pub/` | `pub.xml` | `db-publisher:1521/FREEPDB1` | 🗄️ Analytics Publisher RCU metaandmete hoidla |
 
 ---
@@ -199,7 +199,7 @@ Projekti erinevate andmebaasi profiilide käivituskestuses esineb teadlik vahe v
 | Profiil / Pilt | Käivituskestus | Põhjus & Teostus |
 | :--- | :--- | :--- |
 | **`db-publisher-gvenzl`** (`gvenzl/oracle-free:23-full-faststart`) | **~5 – 15 sek** | **FastStart:** Andmebaas on pildi sees valmis initsialiseeritud. APEX on välja lülitatud. |
-| **`db-lis-oracle` / `db-proxy-oracle`** (`container-registry.oracle.com/database/free:latest`) | **~3 – 6 min** | **Standard DBCA:** Ametlik Oracle pilt teostab esmakordsel käivitamisel `CREATE DATABASE` / DBCA protsessi. |
+| **`db-alise-oracle` / `db-proxy-oracle`** (`container-registry.oracle.com/database/free:latest`) | **~3 – 6 min** | **Standard DBCA:** Ametlik Oracle pilt teostab esmakordsel käivitamisel `CREATE DATABASE` / DBCA protsessi. |
 | **APEX Mootori Paigaldus** | **+ 2 – 4 min** | Sisse lülitatud APEX mootori (`components.apex.enabled=true`) paigaldamisel teostatakse `@apexins.sql` DDL skriptid. |
 
 ---
@@ -212,8 +212,8 @@ sequenceDiagram
     participant ExtREST as "Valine REST API"
     participant ProxyDB as "Proxy DB (db-proxy)"
     participant LisORDS as "LIS ORDS Inbound Endpoint"
-    participant LisDB as "LIS DB (db-lis)"
-    participant LisAPEX as "LIS APEX App (db-lis)"
+    participant LisDB as "LIS DB (db-alise)"
+    participant LisAPEX as "LIS APEX App (db-alise)"
 
     ProxyDB->>ExtREST: Proxy DB teeb valjuva HTTPS paringu valisele API-le
     ExtREST-->>ProxyDB: Tagastab JSON vastuse

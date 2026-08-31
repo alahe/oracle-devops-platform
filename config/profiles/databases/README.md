@@ -8,8 +8,8 @@ This directory contains domain-isolated YAML profiles for configuring **Oracle D
 
 | Profile Filename | Description | DB Type | Wallet Required | Use Case |
 | :--- | :--- | :--- | :--- | :--- |
-| **`db-lis-oracle.yaml`** | Primary Application DB on Official Oracle Free DB 23ai/26ai | `standard` | Yes | Primary LIS Application |
-| **`db-lis-adb.yaml`** | Primary Application DB on Autonomous DB Free | `adb` | Yes | Primary LIS Cloud Emulation |
+| **`db-alise-oracle.yaml`** | Primary Application DB on Official Oracle Free DB 23ai/26ai | `standard` | Yes | Primary LIS Application |
+| **`db-alise-adb.yaml`** | Primary Application DB on Autonomous DB Free | `adb` | Yes | Primary LIS Cloud Emulation |
 | **`db-proxy-oracle.yaml`** | APEX Outbound Proxy DB on Official Oracle Free DB 23ai | `standard` | Yes | APEX Outbound Proxy |
 | **`db-proxy-adb.yaml`** | APEX Proxy DB on Autonomous DB Free | `adb` | Yes | APEX Proxy on ADB |
 | **`db-proxy-gvenzl.yaml`** | APEX Proxy DB on Gvenzl 23c Faststart | `standard` | Yes | APEX Proxy Lightweight |
@@ -26,7 +26,7 @@ Map active database instances in `.env` using `<NAME>_DB=<profile-name>`, `DB_<N
 
 ```bash
 # Primary Application Database Container
-DB_LIS=db-lis-oracle
+DB_ALISE=db-alise-oracle
 # DB_PROXY=db-proxy-oracle
 # DB_PUBLISHER=db-publisher-gvenzl
 ```

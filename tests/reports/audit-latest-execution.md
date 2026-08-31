@@ -8,13 +8,13 @@
 
 | Parameeter | Väärtus |
 | :--- | :--- |
-| **Käivitamise Kellaaeg** | `2026-08-26 23:12:42 EEST` |
+| **Käivitamise Kellaaeg** | `2026-08-31 14:13:35 EEST` |
 | **Käivitaja Kasutaja** | `allanlahe` |
 | **Aktiivne Profiil** | `proxy-standard-gvenzl` |
-| **Integratsioonitestid** | ✅ 10 / 10 Läbitud |
-| **Ühikutestid (Unit Tests)** | ✅ 54 / 54 Läbitud |
-| **Skriptide Kaetus** | 🟢 100% (54 skripti kaetud) |
-| **Kogu Testi Kestus** | `56s` |
+| **Integratsioonitestid** | ✅ 11 / 11 Läbitud |
+| **Ühikutestid (Unit Tests)** | ✅ 58 / 58 Läbitud |
+| **Skriptide Kaetus** | 🟢 100% (58 skripti kaetud) |
+| **Kogu Testi Kestus** | `49s` |
 | **Kõikide Testide Olek** | ✅ **PASSED (100%)** |
 
 ---
@@ -31,7 +31,8 @@
 8. **SQLcl Paroolivabad Ühendustestid:** `tests/integration/test-sqlcl-passwordless-connections.sh` (✅ PASSED)
 9. **GitHub Actions Offline Simulaator:** `tests/integration/test-github-actions-local.sh` (✅ PASSED)
 10. **Konteineriseeritud Web IDE:** `tests/integration/test-web-ide-container.sh` (✅ PASSED)
-11. **Eraldiseisvad Ühikutestid:** `tests/unit/test-script-*.sh` (54 testi - ✅ PASSED)
+11. **Mitmekeelsus & i18n Sünkronisatsioon (Rule 9):** `tests/test-multilingual-support.sh` (✅ PASSED)
+12. **Eraldiseisvad Ühikutestid:** `tests/unit/test-script-*.sh` (58 testi - ✅ PASSED)
 
 ---
 

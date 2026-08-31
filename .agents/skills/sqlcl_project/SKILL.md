@@ -1,144 +1,143 @@
 ---
 name: sqlcl_project_cicd
-description: Juhis Oracle SQLcl Projects (project käskude) kasutamiseks andmebaasi objektide versioonihalduseks ja automaatseks CI/CD tarnimiseks (deploy).
+description: Guidelines for Oracle SQLcl Projects, Liquibase declarative changelogs, Git-based version control, and offline CI/CD simulation.
 ---
 
-# SQLcl Projects: Andmebaasi Rakenduse CI/CD Juhis
+# SQLcl Projects: Database CI/CD, MCP Server & Liquibase Pipelines
 
-See skill juhendab, kuidas kasutada ametlikku Oracle SQLcl `project` käskude perekonda (alates SQLcl versioonist 23.x+), et orkestreerida andmebaasi objektide ja APEX rakenduste elutsüklit Git-põhiselt, ilma et oleks vaja käsitsi kirjutada ja hooldada keerulisi SQL skripte.
+This skill guides using Oracle SQLcl `project` commands (SQLcl 23.x/26.x), the **SQLcl MCP Server (`sql -mcp`)**, and Liquibase to version control schema DDLs, package deployment artifacts, and orchestrate Git-based CI/CD pipelines.
 
 ---
 
-## 1. SQLcl Projekti Struktuur
-
-SQLcl projekt seob kohaliku andmebaasi skeemi Git repositooriumiga. Projekti algatamisel (`project init`) luuakse järgmine failistruktuur:
+## 1. Project Directory Structure
 
 ```text
-projekti_juurkaust/
+project_root/
 ├── .dbtools/
-│   ├── project.config.json    # Projekti konfiguratsioon (skeemid, nited jne)
+│   ├── project.config.json    # Project settings & schema bindings
 │   └── filters/
-│       └── project.filters    # SQL predikaadid eksportimise filtreerimiseks
-├── src/                       # Andmebaasist eksporditud DDL failid (tabelid, triggerid jne)
-├── dist/                      # Staged / vabastatud reliisid (genereeritud SQL/Liquibase changelogid)
-└── artifact/                  # Valmis pakitud reliisi ZIP arhiivid (gen-artifact väljund)
+│       └── project.filters    # SQL predicates for export filtering
+├── src/
+│   ├── database/              # Exported DDL files (tables, packages, triggers)
+│   └── apex/                  # APEX application source (.apx or f100.sql)
+├── dist/                      # Staged Liquibase changelogs (dist/releases/next)
+└── artifact/                  # Bundled release ZIP archives
 ```
 
 ---
 
-## 2. Põhilised Käsud ja Töövoog
+## 2. Command Lifecycle & Production Boundaries
 
-Andmebaasi muudatuste tegemisel ja tarnimisel (CI/CD) järgitakse järgmist töövoogu:
-
-### 1. Projekti algatamine (`project init`)
-Käivitatakse üks kord projekti algfaasis, et luua konfiguratsioonifailid.
-```sql
--- Algatab projekti nimega monitoring_db ja seob selle APEX_PROXY_SCHEMA skeemiga
-project init -name monitoring_db -schemas APEX_PROXY_SCHEMA
+```mermaid
+graph LR
+  INIT[project init] --> EXPORT[project export]
+  EXPORT --> STAGE[project stage]
+  STAGE --> VERIFY[project verify verify-stage]
+  VERIFY --> RELEASE[project release -version x.y.z]
+  RELEASE --> ARTIFACT[project gen-artifact]
+  ARTIFACT --> DEPLOY[project deploy -file <artifact>]
 ```
 
-### 2. Muudatuste eksportimine (`project export`)
-Tõmbab andmebaasist (nt arenduskeskkonnast) uusima seisuga DDL koodi ja salvestab selle `src/` kataloogi.
-```sql
--- Eksport käivitatakse pärast andmebaasis muudatuste tegemist
-project export
-```
-*Soovitus:* Enne eksporti loo uus Giti haru (`git checkout -b feature/alert-job`).
+> [!IMPORTANT]
+> **Production Deployment Boundary:**
+> The AI agent works **exclusively in the DEV environment**. Promotion to TEST or PROD is executed strictly through versioned SQLcl Project artifacts (`project gen-artifact` $\rightarrow$ `project deploy`), gated behind human review and CI/CD approval pipelines.
 
-### 3. Muudatuste ettevalmistamine reliisiks (`project stage`)
-Võrdleb `src/` kausta sisu eelmise seisuga (või siht-haruga) ja koostab automaatselt Liquibase changelog failid delta-skriptidega kausta `dist/releases/next`.
-```sql
-project stage
-```
-*Käsitsi skriptide lisamine:* Kui on vaja lisada andmete migreerimise skripte (DML), saab neid lisada käsuga:
-```sql
-project stage add-custom -file-name migration_step.sql
-```
+1. **`project init -name my-app -schemas MY_SCHEMA -directory .`**: Initializes project.
+2. **`project export`**: Dumps database DDL to `src/database/`.
+3. **`project stage`**: Compiles delta Liquibase changelogs to `dist/releases/next`.
+4. **`project verify verify-stage`**: Validates changelog syntax against target database.
+5. **`project release -version 1.0.0`**: Freezes staged changes into version folder.
+6. **`project gen-artifact -version 1.0.0`**: Bundles release into `artifact/my-app-1.0.0.zip`.
+7. **`project deploy -file artifact/my-app-1.0.0.zip`**: Applies changes to target database in CI/CD.
 
-### 4. Versiooni kinnitamine (`project release`)
-Liigutab `next` olekus staged muudatused konkreetsesse versioonikausta (nt `dist/releases/1.0.0`).
-```sql
-project release -version 1.0.0
-```
+---
 
-### 5. Artefakti genereerimine (`project gen-artifact`)
-Pakib konkreetse versiooni failid ja Liquibase kontrollfailid kokku üheks ZIP arhiiviks kausta `artifact/`.
-```sql
-project gen-artifact -version 1.0.0
-```
-*Tulemus:* Tekib fail `artifact/monitoring_db-1.0.0.zip`. See fail on valmis tarnimiseks Test, UAT ja Production keskkondadesse.
+## 3. SQLcl MCP Server (`sql -mcp`)
 
-### 6. Artefakti tarnimine (`project deploy`)
-Ühendub sihtandmebaasiga ja paigaldab artefakti. SQLcl loeb ZIP failist Liquibase changelogi ja rakendab muudatused järjekorras.
+SQLcl 26.x provides a built-in MCP server that enables AI agents to query metadata, compile packages, and validate APEX applications safely:
+
+### Configuration (`.mcp.json` / Claude Code / Antigravity):
+```json
+{
+  "mcpServers": {
+    "sqlcl": {
+      "command": "sql",
+      "args": ["-mcp", "-conn", "apex-dev"],
+      "env": {
+        "SQLCL_RESTRICTION_LEVEL": "1"
+      }
+    }
+  }
+}
+```
+- **Restriction Level 1:** Allows SQL/PLSQL execution, compilation, and APEX validations while strictly preventing unauthorized access to the host operating system.
+
+---
+
+## 4. ORDS REST-Enabled Schema Invariant
+
+> [!IMPORTANT]
+> **REST-Enabled Schema Prerequisite:**
+> For SQLcl and APEXlang imports to succeed, the workspace's parsing schema MUST be REST-enabled via ORDS:
 ```sql
--- Sisene sihtandmebaasi (nt PROD) ja käivita:
-project deploy -file artifact/monitoring_db-1.0.0.zip
+BEGIN
+  ORDS.ENABLE_SCHEMA(
+      p_enabled             => TRUE,
+      p_schema              => 'PROXY_SCHEMA',
+      p_url_mapping_type    => 'BASE_PATH',
+      p_url_mapping_pattern => 'proxy',
+      p_auto_rest_auth      => FALSE
+  );
+  COMMIT;
+END;
+/
 ```
 
 ---
 
-## 3. Eksportimise Filtrid (`project.filters`)
+## 5. Liquibase Rules & Export Filters
 
-Selleks, et hoida koodibaas puhas ja vältida ajutiste või süsteemsete objektide sattumist Giti, seadistatakse faili `.dbtools/filters/project.filters` SQL-laadsed välistamise reeglid:
-
+### `.dbtools/filters/project.filters`:
 ```sql
--- Välista kõik ajutised tabelid
 object_name not like 'TEMP_%'
--- Välista süsteemsed tabelid ja triggerid
 and not (object_type = 'TABLE' and object_name like 'BIN$%')
--- Vali vaid kindlad monitooringu objektid
 and object_name in ('APP_CONFIG', 'OUTBOUND_REQUEST_LOG', 'KAFKA_MESSAGE_QUEUE')
 ```
 
----
-
-## 4. CI/CD Pipeline Integratsioon
-
-Selle asemel, et jooksutada kohalikke SQL skripte manuaalselt, saab CI/CD runneris (nt Jenkins, GitHub Actions, GitLab CI) kasutada järgmist lihtsat konteineripõhist sammu:
-
-```bash
-# Jooksutab SQLcl projekti deploy käsku
-podman run --rm -i \
-  -v "$(pwd):/workspace" \
-  -w /workspace \
-  container-registry.oracle.com/database/sqlcl:latest \
-  APEX_PROXY_SCHEMA/password@prod-db:1521/FREEPDB1 <<EOF
-project deploy -file artifact/monitoring_db-1.0.0.zip
-EXIT;
-EOF
-```
+### Idempotent Changelogs:
+- For packages, views, and procedures: specify `runOnChange:true`.
+- For DDL migrations: specify `failOnError:true`.
 
 ---
 
-## 5. Lokaalne Offline CI/CD Testimine Arendaja Arvutis (`./scripts/test-local-ci.sh`)
+## 6. Offline CI/CD Simulation (`test-local-ci.sh`)
 
-Selleks, et testida `.github/workflows/deploy-apex.yml` töövoogu ja `project deploy` käsku **oma arvutis täielikult offline režiimis ilma internetita ja ilma koodi pushimata**:
-
-### Lokaalsed käsulahendused:
 ```bash
-# 1. Kuivkäivitus (Dry-run): Kontrolli workflow ja SQLcl project syntaksit
+# 1. Dry-run syntax and workflow verification:
 ./scripts/test-local-ci.sh --dry-run
 
-# 2. Täielik lokaalne tarne simulaator oma lokaalse baasi vastu:
+# 2. Complete local deployment simulation against local database:
 ./scripts/test-local-ci.sh
 
-# 3. Käivita Nektos 'act' CLI abil:
+# 3. Execute via Nektos 'act' CLI:
 act -W .github/workflows/deploy-apex.yml
 ```
 
-### SEPS Walleti eksportimine GitHub Secrets jaoks:
-```bash
-# Genereeri DB_WALLET_BASE64 võti GitHub Secrets hoidlasse kopeerimiseks:
-./scripts/internal/export-ci-secrets.sh
-```
-
 ---
 
-## 6. Kasulikud Viited (Useful Resources)
+## 7. Interactive Terminal Formatting & Prompt Customization (`login.sql`)
 
+*(Matt Mulvaney Terminal Standards)*
 
-*   **Ametlik dokumentatsioon:** [Oracle SQLcl Database Application CI/CD Guide](https://docs.oracle.com/en/database/oracle/sql-developer-command-line/26.2/sqcug/database-application-ci-cd.html)
-*   **Reaalse elu näidisprojekt (Real-world examples):** [akluev/realSQLclProject (GitHub)](https://github.com/akluev/realSQLclProject) - Väga hea repositoorium, mis kirjeldab detailset kaustade paigutust, Giti harude haldust ja automaatset CI/CD töövoogu.
-*   **Tootejuhi detailne blogipostitus (Jeff Smith):** [Getting Started with SQLcl Projects](https://www.thatjeffsmith.com/archive/2025/05/getting-started-with-sqlcl-projects/)
+For interactive developer sessions, configure `login.sql` to enhance terminal aesthetics and protect sensitive parameters:
 
+```sql
+-- ANSI formatted output
+set sqlformat ansiconsole
 
+-- Protect credentials in history buffer
+set history filter show,history,clear,secret,pass,connect
+
+-- Context-aware colored prompt: USER @ TNS_ALIAS >
+set sqlprompt "@|bold,green _USER|@@@|bold,cyan _CONNECT_IDENTIFIER|@@|bold,magenta  > |@"
+```

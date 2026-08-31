@@ -31,7 +31,7 @@ components:
     local_dir: "ords"
     https_port: 8448
     http_port: 8088
-    schema_alias: test_dev
+    schema_alias: user_developer
   apex:
     enabled: true
     download_url: "https://download.oracle.com/otn_software/apex/apex_26.1_en.zip"
@@ -46,20 +46,30 @@ users:
     role: SYSDBA
     wallet_alias: DB_PROXY_SYS
     color: "#E74C3C"
+  - username: DBA_ADMIN
+    role: DBA
+    wallet_alias: DB_PROXY_DBA_ADMIN
+    color: "#2980B9"
   - username: APEX_PROXY_SCHEMA
     role: NORMAL
     wallet_alias: DB_PROXY_SCHEMA
     color: "#2980B9"
-  - username: TEST_DEV
+  - username: USER_DEVELOPER
     role: NORMAL
     ords_enabled: true
-    ords_alias: test_dev
+    ords_alias: user_developer
     roles: [DB_DEVELOPER_ROLE]
     wallet_alias: DB_PROXY_DEV
     color: "#F39C12"
-  - username: TEST_WEB_USER
+  - username: USER_APP
     role: NORMAL
-    wallet_alias: TEST_WEB_USER
+    roles: [RESOURCE]
+    wallet_alias: DB_PROXY_APP
+    color: "#27AE60"
+  - username: USER_VIEWER
+    role: READONLY
+    roles: [CONNECT]
+    wallet_alias: DB_PROXY_VIEWER
     color: "#8E44AD"
   - username: PUBLISHER_READER
     role: READONLY

@@ -15,7 +15,7 @@ METRICS_DIR="$WORKSPACE_DIR/metrics"
 mkdir -p "$LOG_DIR" "$METRICS_DIR"
 
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_FILE="$LOG_DIR/init_web_ide_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/web_ide_init_${TIMESTAMP}.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 START_TIME=$(date +%s)
@@ -78,7 +78,9 @@ if [ -f "$WEB_IDE_PROFILE_YAML" ]; then
   done
 fi
 
-if [ -d "$EXT_DIR" ]; then
+if [ -x "$SCRIPT_DIR/install-web-ide-extensions.sh" ]; then
+  "$SCRIPT_DIR/install-web-ide-extensions.sh" || true
+elif [ -d "$EXT_DIR" ]; then
   for vsix in "$EXT_DIR/"*.vsix; do
     if [ -f "$vsix" ]; then
       vsix_name=$(basename "$vsix")

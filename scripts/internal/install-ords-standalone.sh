@@ -27,7 +27,7 @@ fi
 LOG_DIR="$SCRIPT_DIR/../install_logs"
 mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_FILE="$LOG_DIR/ords_install_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/ords_standalone_install_${TIMESTAMP}.log"
 
 # Suuname kogu väljundi nii ekraanile kui lokaalsesse logifaili
 exec > >(tee -a "$LOG_FILE") 2>&1

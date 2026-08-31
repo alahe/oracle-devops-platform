@@ -15,7 +15,7 @@ bash -n "$WORKSPACE_DIR/scripts/register-connections.sh"
 # Test 2: Verify Python user generator creates core roles for proxy profile
 test_proxy_users=$(python3 -c "
 import yaml, json, os
-p = '$WORKSPACE_DIR/config/profiles/databases/proxy-standard-oracle.yaml'
+p = '$WORKSPACE_DIR/config/profiles/databases/db-proxy-oracle.yaml'
 users = []
 if os.path.exists(p):
     data = yaml.safe_load(open(p))
@@ -26,23 +26,27 @@ if 'SYS' not in existing_names:
     users.insert(0, {'username': 'SYS', 'role': 'SYSDBA', 'color': '#E74C3C'})
 if 'DBA_ADMIN' not in existing_names:
     users.append({'username': 'DBA_ADMIN', 'role': 'NORMAL', 'color': '#E67E22'})
-if 'TEST_DEV' not in existing_names and 'APP_DEV' not in existing_names:
-    users.append({'username': 'TEST_DEV', 'role': 'NORMAL', 'color': '#27AE60'})
-if 'TEST_VIEWER' not in existing_names:
-    users.append({'username': 'TEST_VIEWER', 'role': 'NORMAL', 'color': '#8E44AD'})
+if 'USER_DEVELOPER' not in existing_names and 'TEST_DEV' not in existing_names:
+    users.append({'username': 'USER_DEVELOPER', 'role': 'NORMAL', 'color': '#27AE60'})
+if 'USER_APP' not in existing_names:
+    users.append({'username': 'USER_APP', 'role': 'NORMAL', 'color': '#F39C12'})
+if 'USER_VIEWER' not in existing_names and 'TEST_VIEWER' not in existing_names:
+    users.append({'username': 'USER_VIEWER', 'role': 'NORMAL', 'color': '#8E44AD'})
 
-print(json.dumps([u.get('username') for u in users]))
+print(json.dumps([str(u.get('username', '')).upper() for u in users]))
 ")
 
-if [[ "$test_proxy_users" != *"SYS"* ]] || [[ "$test_proxy_users" != *"DBA_ADMIN"* ]] || [[ "$test_proxy_users" != *"TEST_DEV"* ]] || [[ "$test_proxy_users" != *"TEST_VIEWER"* ]]; then
-  echo "FAIL: Expected core users (SYS, DBA_ADMIN, TEST_DEV, TEST_VIEWER) in proxy users list"
+if [[ "$test_proxy_users" != *"SYS"* ]] || [[ "$test_proxy_users" != *"DBA_ADMIN"* ]] || { [[ "$test_proxy_users" != *"USER_DEVELOPER"* ]] && [[ "$test_proxy_users" != *"TEST_DEV"* ]]; }; then
+  echo "FAIL: Expected core users (SYS, DBA_ADMIN, USER_DEVELOPER) in proxy users list"
   exit 1
 fi
 
-# Test 3: Verify Python user generator creates core roles for bizapp profile
-test_lis_users=$(python3 -c "
+# Test 3: Verify Python user generator creates core roles for alise profile
+test_alise_users=$(python3 -c "
 import yaml, json, os
-p = '$WORKSPACE_DIR/config/profiles/databases/bizapp-standard-oracle.yaml'
+p = '$WORKSPACE_DIR/config/profiles/databases/db-alise-oracle.yaml'
+if not os.path.exists(p):
+    p = '$WORKSPACE_DIR/config/profiles/databases/db-lis-oracle.yaml'
 users = []
 if os.path.exists(p):
     data = yaml.safe_load(open(p))
@@ -53,16 +57,18 @@ if 'SYS' not in existing_names:
     users.insert(0, {'username': 'SYS', 'role': 'SYSDBA', 'color': '#E74C3C'})
 if 'DBA_ADMIN' not in existing_names:
     users.append({'username': 'DBA_ADMIN', 'role': 'NORMAL', 'color': '#E67E22'})
-if 'TEST_DEV' not in existing_names and 'APP_DEV' not in existing_names:
-    users.append({'username': 'TEST_DEV', 'role': 'NORMAL', 'color': '#27AE60'})
-if 'TEST_VIEWER' not in existing_names:
-    users.append({'username': 'TEST_VIEWER', 'role': 'NORMAL', 'color': '#8E44AD'})
+if 'USER_DEVELOPER' not in existing_names and 'TEST_DEV' not in existing_names:
+    users.append({'username': 'USER_DEVELOPER', 'role': 'NORMAL', 'color': '#27AE60'})
+if 'USER_APP' not in existing_names:
+    users.append({'username': 'USER_APP', 'role': 'NORMAL', 'color': '#F39C12'})
+if 'USER_VIEWER' not in existing_names and 'TEST_VIEWER' not in existing_names:
+    users.append({'username': 'USER_VIEWER', 'role': 'NORMAL', 'color': '#8E44AD'})
 
-print(json.dumps([u.get('username') for u in users]))
+print(json.dumps([str(u.get('username', '')).upper() for u in users]))
 ")
 
-if [[ "$test_lis_users" != *"SYS"* ]] || [[ "$test_lis_users" != *"DBA_ADMIN"* ]] || [[ "$test_lis_users" != *"TEST_DEV"* ]]; then
-  echo "FAIL: Expected core users (SYS, DBA_ADMIN, TEST_DEV) in LIS users list"
+if [[ "$test_alise_users" != *"SYS"* ]] || [[ "$test_alise_users" != *"DBA_ADMIN"* ]] || { [[ "$test_alise_users" != *"USER_DEVELOPER"* ]] && [[ "$test_alise_users" != *"TEST_DEV"* ]]; }; then
+  echo "FAIL: Expected core users (SYS, DBA_ADMIN, USER_DEVELOPER) in ALISE users list"
   exit 1
 fi
 

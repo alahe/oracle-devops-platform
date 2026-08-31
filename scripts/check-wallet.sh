@@ -50,8 +50,28 @@ else
   fi
 fi
 
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -l=*|--lang=*|-language=*|--language=*)
+      export CLI_LANG="${1#*=}"
+      shift
+      ;;
+    -l|--lang|-language|--language)
+      export CLI_LANG="$2"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
+if declare -f resolve_cli_lang >/dev/null 2>&1; then
+  export ACTIVE_CLI_LANG="$(resolve_cli_lang)"
+fi
+
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "${CYAN}🔑 Kontrollin SEPS Paroolivabu Oracle Wallet Ühendusi...${NC}"
+echo -e "${CYAN}$(msg_str "TITLE_WALLET_CHECK")${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 
 if [ ! -f "$TNS_DIR/tnsnames.ora" ]; then
@@ -89,23 +109,23 @@ for alias in "${ALIASES[@]}"; do
 
   # Check active profile domain relevance
   if { [[ "$alias" == *"PROXY"* ]] || [[ "$alias" == "DB_DBA_ADMIN" ]] || [[ "$alias" == "DB_TEST_DEV" ]] || [[ "$alias" == "DB_TEST_VIEWER" ]]; } && [[ "$ACTIVE_PROFILES" != *"proxy"* ]]; then
-    echo -e "${YELLOW}ℹ️ Vahele jäetud (Proxy profiil pole aktiivne)${NC}"
-    REPORT_MD+="| \`${alias}\` | ℹ️ Vahele Jäetud | \`Proxy profiil pole aktiivne\` |\n"
+    echo -e "${YELLOW}$(msg_str "WALLET_SKIPPED" 2>/dev/null || echo "ℹ️ Skipped (Proxy profile is not active)")${NC}"
+    REPORT_MD+="| \`${alias}\` | ℹ️ Skipped | \`Proxy profile is not active\` |\n"
     continue
   fi
   if [[ "$alias" == *"PUBLISHER"* ]] && [[ "$ACTIVE_PROFILES" != *"publisher"* ]]; then
-    echo -e "${YELLOW}ℹ️ Vahele jäetud (Publisher profiil pole aktiivne)${NC}"
-    REPORT_MD+="| \`${alias}\` | ℹ️ Vahele Jäetud | \`Publisher profiil pole aktiivne\` |\n"
+    echo -e "${YELLOW}$(msg_str "WALLET_SKIPPED" 2>/dev/null || echo "ℹ️ Skipped (Publisher profile is not active)")${NC}"
+    REPORT_MD+="| \`${alias}\` | ℹ️ Skipped | \`Publisher profile is not active\` |\n"
     continue
   fi
   if [[ "$alias" == *"INFRA"* ]] && [[ "$ACTIVE_PROFILES" != *"infra"* ]]; then
-    echo -e "${YELLOW}ℹ️ Vahele jäetud (Infra profiil pole aktiivne)${NC}"
-    REPORT_MD+="| \`${alias}\` | ℹ️ Vahele Jäetud | \`Infra profiil pole aktiivne\` |\n"
+    echo -e "${YELLOW}$(msg_str "WALLET_SKIPPED" 2>/dev/null || echo "ℹ️ Skipped (Infra profile is not active)")${NC}"
+    REPORT_MD+="| \`${alias}\` | ℹ️ Skipped | \`Infra profile is not active\` |\n"
     continue
   fi
-  if [[ "$alias" == *"LIS"* ]] && [[ "$ACTIVE_PROFILES" != *"lis"* ]] && [[ "$ACTIVE_PROFILES" != *"bizapp"* ]]; then
-    echo -e "${YELLOW}ℹ️ Vahele jäetud (LIS profiil pole aktiivne)${NC}"
-    REPORT_MD+="| \`${alias}\` | ℹ️ Vahele Jäetud | \`LIS profiil pole aktiivne\` |\n"
+  if { [[ "$alias" == *"ALISE"* ]] || [[ "$alias" == *"LIS"* ]]; } && [[ "$ACTIVE_PROFILES" != *"alise"* ]] && [[ "$ACTIVE_PROFILES" != *"lis"* ]] && [[ "$ACTIVE_PROFILES" != *"bizapp"* ]]; then
+    echo -e "${YELLOW}$(msg_str "WALLET_SKIPPED" 2>/dev/null || echo "ℹ️ Skipped (ALISE profile is not active)")${NC}"
+    REPORT_MD+="| \`${alias}\` | ℹ️ Skipped | \`ALISE profile is not active\` |\n"
     continue
   fi
 
@@ -113,8 +133,8 @@ for alias in "${ALIASES[@]}"; do
   ALIAS_PORT=$(grep -A 8 "^${alias}[[:space:]]*=" "$TNS_DIR/tnsnames.ora" | grep -i "PORT" | head -n 1 | sed -E 's/.*PORT[[:space:]]*=[[:space:]]*([0-9]+).*/\1/' | tr -d ' \r\n')
   
   if [ -n "$ALIAS_PORT" ] && ! nc -z 127.0.0.1 "$ALIAS_PORT" 2>/dev/null; then
-    echo -e "${YELLOW}ℹ️ Ei ole aktiivne (Port ${ALIAS_PORT} suletud)${NC}"
-    REPORT_MD+="| \`${alias}\` | ℹ️ Jäetud Vahele | \`Port ${ALIAS_PORT} suletud\` |\n"
+    echo -e "${YELLOW}ℹ️ Inactive (Port ${ALIAS_PORT} closed)${NC}"
+    REPORT_MD+="| \`${alias}\` | ℹ️ Skipped | \`Port ${ALIAS_PORT} closed\` |\n"
     continue
   fi
 
@@ -155,11 +175,11 @@ EOF
   fi
 
   if [ -n "$RES" ] && [[ "$RES" != *"FAIL"* ]] && [[ "$RES" == *"@"* ]]; then
-    echo -e "${GREEN}✅ ÜHENDUS ÕNNESTUS (${RES})${NC}"
-    REPORT_MD+="| \`${alias}\` | ✅ Ühendus Õnnestus | \`${RES}\` |\n"
+    echo -e "${GREEN}$(msg_str "WALLET_SUCCESS" "${RES}")${NC}"
+    REPORT_MD+="| \`${alias}\` | ✅ OK | \`${RES}\` |\n"
   else
-    echo -e "${RED}❌ ÜHENDUS EBAÕNNESTUS${NC}"
-    REPORT_MD+="| \`${alias}\` | ❌ Ei Saanud Ühendust | \`Kättesaamatu\` |\n"
+    echo -e "${RED}$(msg_str "WALLET_FAIL")${NC}"
+    REPORT_MD+="| \`${alias}\` | ❌ FAIL | \`Unreachable\` |\n"
   fi
 done
 

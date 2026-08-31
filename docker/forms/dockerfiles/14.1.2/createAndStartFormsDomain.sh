@@ -45,8 +45,13 @@ class FormsHandler(BaseHTTPRequestHandler):
             body = """<!DOCTYPE html><html><head><title>WebLogic 14c Console</title><style>body{font-family:sans-serif;background:#0f172a;color:#f8fafc;padding:40px;text-align:center;}.box{max-width:600px;margin:0 auto;background:#1e293b;border-radius:12px;padding:32px;border:1px solid #334155;}</style></head><body><div class="box"><h1>WebLogic Server 14c Console</h1><p style="color:#22c55e;font-weight:bold;">Status: RUNNING</p><p>Domain: <code>forms_domain</code> | AdminServer: 7001</p></div></body></html>""".encode('utf-8')
         elif 'ords' in self.path:
             body = """<!DOCTYPE html><html><head><title>Oracle REST Data Services</title><style>body{font-family:sans-serif;background:#0f172a;color:#f8fafc;padding:40px;text-align:center;}.box{max-width:600px;margin:0 auto;background:#1e293b;border-radius:12px;padding:32px;border:1px solid #334155;}</style></head><body><div class="box"><h1>Oracle REST Data Services (Embedded Jetty)</h1><p style="color:#22c55e;font-weight:bold;">Status: OPERATIONAL (HTTP 200)</p><p>Co-located inside <code>app-forms</code> container on port 8088.</p></div></body></html>""".encode('utf-8')
-        elif 'vnc' in self.path or self.path in ['/', '/index.html']:
-            body = """<!DOCTYPE html>
+        elif 'vnc' in self.path or self.path in ['/', '/index.html', '/hub']:
+            import os
+            if os.path.exists('/u01/oracle/dev-hub.html'):
+                with open('/u01/oracle/dev-hub.html', 'rb') as f:
+                    body = f.read()
+            else:
+                body = """<!DOCTYPE html>
 <html lang="et">
 <head>
     <title>Oracle Forms 14c DevOps & Modernization Hub</title>

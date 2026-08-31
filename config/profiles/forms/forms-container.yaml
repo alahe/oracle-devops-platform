@@ -1,0 +1,22 @@
+profile:
+  id: forms-container
+  name: forms-container
+  description: "Standard Oracle Forms 14c (14.1.2) container profile running in dedicated WebLogic domain."
+  type: middleware
+  component: forms
+
+forms:
+  enabled: true
+  mode: container
+  version: "14.1.2"
+  container_image: localhost/oracle-forms:14.1.2
+  container_name: app-forms
+  hostname: forms-dev
+  http_port: 9001
+  https_port: 9002
+  vnc_port: 6082
+  admin_port: 7001
+  admin_username: weblogic
+  target_database: "db-publisher"
+  rcu_prefix: "FORMS"
+  memory_args: "-Xms1024m -Xmx2048m -XX:MetaspaceSize=512m -XX:MaxMetaspaceSize=1024m"

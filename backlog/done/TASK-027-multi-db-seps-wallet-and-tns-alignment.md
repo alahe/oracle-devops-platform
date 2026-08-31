@@ -4,7 +4,7 @@
 **Prioriteet:** `HIGH`  
 **Valdkond:** `Security` | `Architecture` | `Tooling`  
 **Seotud Blueprintid / Profiilid:** Kõik mitme andmebaasiga profiilid (nt Blueprint 3 / `db-proxy` + `db-lis`, `publisher`, `full enterprise` jne)  
-**Dokumentatsioon:** [docs/turvalisus.md](../turvalisus.md), [connections/README.md](../../connections/README.md), [scripts/README.md](../../scripts/README.md)  
+**Dokumentatsioon:** [docs/turvalisus.md](../../docs/turvalisus.md), [connections/README.md](../../connections/README.md), [scripts/README.md](../../scripts/README.md)  
 
 ---
 

@@ -3,7 +3,7 @@
 **Staatus:** `DONE`  
 **Prioriteet:** `HIGH`  
 **Valdkond:** `Tooling`  
-**Dokumentatsioon:** [docs/github-actions-cicd.md](../github-actions-cicd.md)  
+**Dokumentatsioon:** [docs/github-actions-cicd.md](../../docs/web-ide-artifactory.md)  
 
 ---
 

@@ -1,67 +1,63 @@
 ---
 name: vscode_sql_developer_registration
-description: Juhis VS Code Oracle SQL Developer laienduse ühenduste, krüpteeritud paroolide ja kaustade automaatseks registreerimiseks ning saniteerimiseks SQLcl connmgr utiliidi kaudu.
+description: Guidelines for automated connection registration, OS Keychain password storage, and DBTU-03001 sanitization for VS Code Oracle SQL Developer.
 ---
 
-# VS Code Oracle SQL Developer: Ühenduste ja Kaustade Registreerimine
+# VS Code Oracle SQL Developer: Automated Registration, MCP & Keychain
 
-See skill juhendab, kuidas automaatselt konfigureerida ja registreerida Oracle andmebaasi ühendusi, salvestatud krüpteeritud paroole ja kaustade struktuuri **VS Code Extension: Oracle SQL Developer** laienduse jaoks.
-
----
-
-## 1. Arhitektuur ja Toimimise Mehhanism
-
-Modernne VS Code Oracle SQL Developer laiendus (versioonid 23.4+) ei kasuta turvalisuse ja Keychain integratsiooni tõttu lihtsat staatilist `connections.json` faili, vaid toetub **sisemisele SQLcl utiliidile** ja `.dbtools` struktuurile:
-
-*   **Asukoht kettal:** `~/.dbtools/connections/<GUID>/dbtools.properties`
-*   **Kaustade struktuur:** `~/.dbtools/connection_folders/folders.json`
-*   **Sisemine SQLcl:** `$HOME/.vscode/extensions/oracle.sql-developer-*/dbtools/sqlcl/bin/sql`
-
-❌ **Keelatud muster:** Käsitsi `.properties` või `folders.json` failide kirjutamine tekitab vigaseid `string-ID` viiteid ja murrab paroolide krüpteeringu.
-✅ **Õige muster:** Registreerimine tuleb teostada **VS Code laiendusega kaasas oleva SQLcl utiliidi** käskudega `connect -save` ja `connmgr`.
+This skill provides guidelines for configuring and registering Oracle database connections, OS Keychain encrypted passwords, SQLcl MCP Server integration, and multi-database folder structures for the **VS Code Oracle SQL Developer Extension**.
 
 ---
 
-## 2. Natiivne Registreerimise Töövoog (SQLcl Commands)
+## 1. Architecture & Mechanism
 
-Ühenduste ja kausta loomine toimub järgmise käsundiseeria abil SQLcl käsureal:
+Modern VS Code Oracle SQL Developer extensions manage connections via embedded SQLcl:
+*   **Disk Path:** `~/.dbtools/connections/<GUID>/dbtools.properties`
+*   **Folder Structure:** `~/.dbtools/connection_folders/folders.json`
+*   **Embedded SQLcl:** `$HOME/.vscode/extensions/oracle.sql-developer-*/dbtools/sqlcl/bin/sql`
+*   **MCP Server:** Built-in Model Context Protocol server exposing database metadata to AI agents.
+
+❌ **Prohibited:** Manually writing `.properties` or `folders.json` files corrupts GUID references and password encryption.
+✅ **Correct:** Register connections using SQLcl `connect -save` and `connmgr`.
+
+---
+
+## 2. Native Registration Workflow (SQLcl Commands)
 
 ```sql
--- 1. Puhasta ja loo sihtkaust
+-- 1. Reset and create target folder
 connmgr delete -folder /<folder_name> -force
 connmgr add -folder /<folder_name>
 
--- 2. Ühendu, krüpteeri ja salvesta parool OS Keychaini (-savepwd -replace)
-connect -save "1. Sys" -savepwd -replace sys/SinuParool@localhost:1532/FREEPDB1 as sysdba
+-- 2. Connect, encrypt, and persist password in OS Keychain (-savepwd -replace)
+connect -save "1. Sys" -savepwd -replace sys/YourPassword@localhost:1532/FREEPDB1 as sysdba
 connmgr move -conn "1. Sys" /<folder_name>
 
-connect -save "2. APEX_PROXY_SCHEMA" -savepwd -replace APEX_PROXY_SCHEMA/SinuParool@localhost:1532/FREEPDB1
+connect -save "2. APEX_PROXY_SCHEMA" -savepwd -replace APEX_PROXY_SCHEMA/YourPassword@localhost:1532/FREEPDB1
 connmgr move -conn "2. APEX_PROXY_SCHEMA" /<folder_name>
 
--- 3. Kontrolli tulemust
+-- 3. Verify
 connmgr list -folder /<folder_name>
 ```
 
 ---
 
-## 3. `DBTU-03001` Vea Ennetamine ja `folders.json` Saniteerimine
+## 3. Preventing `DBTU-03001` & Sanitizing `folders.json`
 
-### Vea Põhjus (`DBTU-03001`):
-Kui `~/.dbtools/connection_folders/folders.json` failis on alles vana projekti või kustutatud ühenduse ID (nt `"2ZuMX6avghyexCrZQ89W_Q"`), kuid sellele vastavat kausta `~/.dbtools/connections/2ZuMX6avghyexCrZQ89W_Q/` kettal enam ei ole, viskab VS Code käivitumisel vea `DBTU-03001` ja peidab kõik kaustad.
+### Root Cause (`DBTU-03001`):
+If `~/.dbtools/connection_folders/folders.json` contains orphaned connection IDs whose corresponding `~/.dbtools/connections/<GUID>/` folders no longer exist on disk, VS Code raises `DBTU-03001` on startup and hides all connection folders.
 
-### Automaatne Saniteerimise Muster (`jq` / Bash):
-Skriptis tuleb alati pärast registreerimist puhastada `folders.json` orvudest:
+### Automated Sanitization Pattern:
+Always prune orphaned GUIDs after modifying connections:
 
 ```bash
 FOLDERS_FILE="$HOME/.dbtools/connection_folders/folders.json"
 DBTOOLS_CONNS_DIR="$HOME/.dbtools/connections"
 
 if [ -f "$FOLDERS_FILE" ] && command -v jq &>/dev/null; then
-  # Tuvasta kettal tegelikult olemasolevad GUID kaustad
   valid_ids=($(find "$DBTOOLS_CONNS_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2>/dev/null || true))
   VALID_IDS_JSON=$(printf '%s\n' "${valid_ids[@]}" | jq -R . | jq -s .)
 
-  # Eemalda folders.json failist kõik orvud ID-d
   jq --argjson valid "$VALID_IDS_JSON" '
     .folders = [
       .folders[]? |
@@ -74,66 +70,73 @@ fi
 
 ---
 
-## 4. Dünaamiline Mitme Kausta Sünkroniseerimine (`dbtools.properties` + `folders.json` + `connections.json`)
+## 4. Multi-Folder Synchronization & Web IDE Mounts
 
-Toetmaks kõiki VS Code Oracle SQL Developer laienduse versioone (nii GUI natiivset kaustapuud kui ka JSON konfiguratsiooni), tagab skript `register-connections.sh` automaatse sünkroniseerimise üle kõigi aktiivsete andmebaaside (`db-publisher`, `db-proxy`, `db-lis`):
+To support multi-database topologies (`db-publisher`, `db-proxy`, `db-lis`):
+1. **GUID Properties:** `$HOME/.dbtools/connections/<GUID>/dbtools.properties` generates dedicated GUIDs with ports and UI colors (`color=#HEX`).
+2. **Folder Mapping:** `$HOME/.dbtools/connection_folders/folders.json` binds GUIDs to database folder names.
+3. **Web IDE Sync:** Volume mounting `~/.dbtools` into `web-ide-dev` makes all host connections immediately available in browser-based VS Code.
 
-1. **Kaustapõhised Natiivsed GUID Omadused:** `$HOME/.dbtools/connections/<GUID>/dbtools.properties` loob iga ühenduse jaoks eraldiseisva unikaalse GUID kausta koos parooli, pordi ja värviga (`color=#HEX`).
-2. **Natiivne Kaustapuu Nimekirjaga:** `$HOME/.dbtools/connection_folders/folders.json` sidustab GUID-id vastava kausta nimega (`db-publisher`, `db-proxy`, `db-lis`).
-3. **Universaalne JSON Konfiguratsioon:** `$HOME/.sqldev/connections.json` ja `$HOME/.dbtools/connections.json` uuendatakse säilitades kõigi kaustade ühendused ilma teisi kaustu üle kirjutamata.
-
-### Käsitsi või Automaatse Registreerimise Käsk:
-Eraldiseisva sünkroniseerimise teostamiseks käivita automaatskript:
+Run registration CLI:
 ```bash
-./scripts/internal/register-connections.sh
+./scripts/register-connections.sh
 ```
 
 ---
 
-## 6. Dünaamiline Käsurea Wrapper ja Kesta Integratsioon (`scripts/sqlcl.sh`)
+## 5. Enhanced SQLcl Terminal in VS Code & Quality-of-Life Formatting
 
-Süsteem toetab otseühendusi kasutaja käsurealt (nt `sql /@DB_APEX_PROXY_SYS as sysdba` ja `sql /@DB_TEST_DEV`):
+*(Inspired by Matt Mulvaney & Community Best Practices)*
 
-### 6.1 Wrapperi Loogika (`scripts/sqlcl.sh`):
-1. **Puhas `JAVA_TOOL_OPTIONS`:** Seab AINULT `export JAVA_TOOL_OPTIONS="-Doracle.net.tns_admin=$TNS_DIR"`. Eemaldab varasemad dubleeritud lipud, et ennetada Java System Property parseri viga `Syntax error at column 14: '`.
-2. **`JAVA_HOME` Puhastamine:** Teeb `unset JAVA_HOME` enne SQLcl käivitamist, vältimaks vanade Java versioonide (nt SQL Developer Java 11) sekkumist VS Code SQLcl 26.2 (Java 21+) käivitusprotsessi.
-3. **Parooli fallback võimendus (`get-password.sh`):** Kui `mkstore -viewEntry` tagastab krüpteeritud binaarbaidid (`.'???...` või `[[ "$PWD_VAL" == *"?"* ]]`), päritakse parool automaatselt Podman secret store'ist (`apex_db_sys_password`, `apex_db_dev_password` jne).
-4. **Süsteemne binary wrapper (`/Users/allanlahe/Applications/sqlcl/bin/sql` & `/opt/homebrew/Caskroom/sqlcl/.../bin/sql`):** Asendab või täiendab süsteemseid SQLcl binaare projekti wrapperiga, tagades et otsene käsk `sql` töötab sõltumata sellest, kas kasutaja kest laadis `alias sql` või mitte.
+The native SQLcl terminal opened by VS Code extensions often starts in `$HOME` rather than the active workspace, lacks colorized prompts, and misses SEPS Wallet parameters.
+
+### 5.1 Custom VS Code Terminal Profile (`.vscode/settings.json`)
+Configure a dedicated SQLcl terminal profile that launches `scripts/sqlcl.sh` inside the workspace root:
+
+```json
+{
+  "terminal.integrated.profiles.osx": {
+    "SQLcl": null,
+    "🚀 SQLcl (SEPS Wallet)": {
+      "path": "/bin/zsh",
+      "args": ["-c", "${workspaceFolder}/scripts/sqlcl.sh /@DB_PROXY_DEV"],
+      "icon": "database",
+      "color": "terminal.ansiBlue",
+      "overrideName": true
+    }
+  },
+  "terminal.integrated.profiles.linux": {
+    "SQLcl": null,
+    "🚀 SQLcl (SEPS Wallet)": {
+      "path": "/bin/bash",
+      "args": ["-c", "${workspaceFolder}/scripts/sqlcl.sh /@DB_PROXY_DEV"],
+      "icon": "database",
+      "color": "terminal.ansiBlue",
+      "overrideName": true
+    }
+  }
+}
+```
+
+### 5.2 Quality-of-Life Startup Profile (`login.sql`)
+Place a `login.sql` in the workspace or `$SQLPATH` to enforce modern formatting, history masking, and colored prompts:
+
+```sql
+-- Enhanced ANSI table formatting
+set sqlformat ansiconsole
+
+-- Mask sensitive commands and passwords from history buffer
+set history filter show,history,clear,secret,pass,connect
+
+-- Colorized contextual SQL prompt: USER @ TNS_ALIAS >
+set sqlprompt "@|bold,green _USER|@@@|bold,cyan _CONNECT_IDENTIFIER|@@|bold,magenta  > |@"
+```
 
 ---
 
-## 7. Stabiilsusleping ja Regressiooni Vältimise Reeglid (Stability Contracts)
+## 6. Stability Contracts
 
-Et vältida olukordi, kus ühe vea parandamisel tekib teine või vana viga tuleb tagasi, peavad kõik skriptid ja AI assistendid järgima **5 kohustuslikku stabiilsusreeglit**:
-
-### 1. Kanooniline SQLcl Versiooni Tuvastus (Binary Resolution Order):
-Skript peab alati valima VS Code laienduse **uusima SQLcl versiooni**:
-```bash
-VSCODE_SQLCL=$(find "$HOME/.vscode/extensions" -name "sql" -path "*/oracle.sql-developer-*/dbtools/sqlcl/bin/sql" 2>/dev/null | sort -rV | head -n 1)
-```
-Keelatud on loota pelgalt süsteemse `$PATH` muutuja peale ilma keskkonda saniteerimata.
-
-### 2. Keskkonnamuutujate Saniteerimise Reegel (Environment Isolation):
-Enne SQLcl väljakutsumist tuleb **alati teostada `unset JAVA_HOME`**, et vältida vanade seadistuste (nt SQL Developer Java 11) sekkumist VS Code SQLcl 26.2 (Java 21+) töösse. `JAVA_TOOL_OPTIONS` peab sisaldama AINULT:
-```bash
-export JAVA_TOOL_OPTIONS="-Doracle.net.tns_admin=$TNS_DIR"
-```
-Keelatud on korduvate `-Doracle.net.wallet_location=(SOURCE=...)` sulgudega lippude aheldamine (hoiab ära vea `Syntax error at column 14: '`).
-
-### 3. Binaarparooli Tuvastuse ja Secret Fallback Reegel:
-`mkstore -viewEntry` väljundit ei tohi kunagi otse SQLcl-ile edastada ilma kontrollita. Kui parool sisaldab binaarmärke või küsimärke (`[[ "$PWD_VAL" == *"?"* ]]`), tuleb parool lugeda automaatselt Podman secret store'ist (`apex_db_sys_password`, `apex_db_dev_password` jne).
-
-### 4. POSIX Kesta Ühilduvuse Reegel (Shell Portability):
-Keelatud on kasutada Bashi-spetsiifilisi sisefunktsioone (nagu `${ALIAS,,}`), mis murduvad `sh` / `zsh` all sisselugemisel. Kasutada tuleb porditavaid `tr '[:upper:]' '[:lower:]'` ja `awk` käske.
-
-### 5. Multi-Shell Registreerimise Reegel:
-Kesta integratsioonil tuleb lisada `TNS_ADMIN` ja `alias sql` **kõikidesse kesta profiilidesse** (`~/.zshrc`, `~/.zshenv`, `~/.bashrc`, `~/.bash_profile`) ning tagada käivitatav wrapper kaustas `~/Applications/sqlcl/bin/sql`.
-
----
-
-## 8. Projekti Reeglid ja Piirangud
-
-1. **Kausta nimi `.env` failist:** Kausta nimi pärineb dünaamiliselt `.env` / `repository.env` muutujatest (`VSCODE_FOLDER_NAME` -> `DB_CONN_NAME` -> `CONTAINER_NAME`).
-2. **Paroolid Oracle Walletist (SEPS):** Paroolid päritakse ALATI `./scripts/internal/get-password.sh <alias>` kaudu.
-3. **Konfiguratsioon YAML profiilist:** Kasutajad ja pordid loetakse `config/profiles/*.yaml` failist. Koodis ei ole ühtegi kõvakodeeritud kasutajat ega parooli.
-4. **Veebikasutajate välistamine:** APEX veebikontosid (nt `TEST_WEB_USER`) ei lisata andmebaasi SQL ühendusteks, kuna nende autentimine toimub läbi ORDS HTTP liidese (`ORA-01017` vältimine).
+1. **Resolution Order:** Always resolve SQLcl from the latest VS Code extension (`find "$HOME/.vscode/extensions" ... | sort -rV | head -n 1`).
+2. **Environment Isolation:** Run `unset JAVA_HOME` before SQLcl invocation.
+3. **Binary Password Fallback:** Guard `mkstore` output against binary bytes (`[[ "$PWD_VAL" == *"?"* ]]`).
+4. **Multi-Shell Registration:** Configure `TNS_ADMIN` and `alias sql` across `~/.zshrc`, `~/.zshenv`, `~/.bashrc`, `~/.bash_profile`.

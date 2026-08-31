@@ -22,7 +22,7 @@ if [ "$PROFILE_DB_PORT" != "1534" ]; then
   exit 1
 fi
 
-for bp in 14 15 16 17 18; do
+for bp in 20 21 22 23 40; do
   bp_file=$(find "$WORKSPACE_DIR/config/blueprints" -name ".env.${bp}-*" -o -name ".env.${bp}" | head -n 1)
   if [ -n "$bp_file" ] && [ -f "$bp_file" ]; then
     echo "✅ Blueprint $bp exists ($(basename "$bp_file"))!"
@@ -39,4 +39,4 @@ else
   exit 1
 fi
 
-echo "✅ Forms 14c profile, topology, and blueprints 14-18 tests passed!"
+echo "✅ Forms 14c profile, topology, and blueprints 20-23, 40 tests passed!"

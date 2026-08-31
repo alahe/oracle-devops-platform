@@ -13,9 +13,10 @@ OVERRIDE_FILE="$SCRIPT_DIR/../podman-compose.override.yml"
 COMPOSE_ARGS=(-f "$COMPOSE_FILE")
 [ -f "$OVERRIDE_FILE" ] && COMPOSE_ARGS+=(-f "$OVERRIDE_FILE")
 
-# Vaigistame podman compose hoiatusteate välise teenusepakkuja kohta
-export PODMAN_COMPOSE_WARNING_LOGS=false
-
+# Source common helpers and i18n engine
+if [ -f "$SCRIPT_DIR/internal/common.sh" ]; then
+  source "$SCRIPT_DIR/internal/common.sh"
+fi
 
 if [ -f ".env" ]; then
   set -a
@@ -68,15 +69,15 @@ for inst in $(get_active_db_instances 2>/dev/null); do
   fi
 done
 
-if [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ]; then
+if [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ] || [ "${SKIP_PUBLISHER:-true}" = "false" ]; then
   SKIP_PUBLISHER=false
 fi
 
 echo "=================================================================="
-echo "🚀 Käivitan Podmani compose konteinerid..."
+echo -e "$(msg_str "STARTING_COMPOSE_CONTAINERS")"
 get_active_db_instances | while IFS='|' read -r container prof env_key; do
   [ -z "$container" ] && continue
-  echo "   - Konteiner: $container (Profiil: $prof)"
+  echo "   - $(msg_str "LABEL_CONTAINER"): $container ($(msg_str "LABEL_PROFILE"): $prof)"
 done
 echo "=================================================================="
 
@@ -84,11 +85,14 @@ echo "=================================================================="
 if [ -x "$SCRIPT_DIR/internal/generate-passwords.sh" ]; then
   "$SCRIPT_DIR/internal/generate-passwords.sh" >/dev/null 2>&1 || true
 fi
+if [ -x "$SCRIPT_DIR/internal/generate-compose-override.sh" ]; then
+  "$SCRIPT_DIR/internal/generate-compose-override.sh" >/dev/null 2>&1 || true
+fi
 
 PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
 PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-app-db}"
 
-if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
+if [ "$SKIP_WEB_IDE" = "false" ]; then
   COMPOSE_ARGS+=(--profile web-ide)
 fi
 
@@ -97,47 +101,35 @@ if [ "$SKIP_PUBLISHER" = "false" ]; then
   COMPOSE_ARGS+=(--profile publisher)
 fi
 
+if [ -x "$SCRIPT_DIR/internal/generate-dev-hub.sh" ]; then
+  "$SCRIPT_DIR/internal/generate-dev-hub.sh" "$WORKSPACE_DIR/docs/dev-hub.html" >/dev/null 2>&1 || true
+fi
+
 podman-compose "${COMPOSE_ARGS[@]}" up -d
 
 # Ootame kuni andmebaasid on valmis (healthy)
-echo ""
-echo "⌛ Ootan andmebaaside käivitumist ja valmisolekut (Healthcheck)..."
-MAX_WAIT=600
+if [ -x "$SCRIPT_DIR/internal/wait-db-healthy.sh" ]; then
+  "$SCRIPT_DIR/internal/wait-db-healthy.sh"
+fi
 
-get_active_db_instances | while IFS='|' read -r container prof env_key; do
-  [ -z "$container" ] && continue
-  if podman container exists "$container" 2>/dev/null; then
-    echo "Ootan konteinerit: $container..."
-    WAIT_COUNT=0
-    until [ "$(podman inspect --format='{{.State.Health.Status}}' "$container" 2>/dev/null)" == "healthy" ]; do
-      sleep 3
-      WAIT_COUNT=$((WAIT_COUNT + 3))
-      if declare -f print_step_progress >/dev/null 2>&1; then
-        print_step_progress "Ootan konteinerit $container" "$WAIT_COUNT" 60
-      elif [ -c /dev/tty ]; then
-        printf "\r\033[K   ⏳ Ootan konteinerit %s... kestus: %ds" "$container" "$WAIT_COUNT" >/dev/tty 2>/dev/null || true
-      fi
-      if [ $WAIT_COUNT -ge $MAX_WAIT ]; then
-        echo ""
-        echo "❌ Viga: $container ei saavutanud valmisolekut $MAX_WAIT sekundi jooksul!"
-        exit 1
-      fi
-    done
-    if [ -c /dev/tty ]; then
-      printf "\r\033[K" >/dev/tty 2>/dev/null || true
-    fi
-    echo -e "✅ $container on valmis (healthy)!"
-    ensure_db_instance_open "$container" || true
-  fi
-done
+# Sünkroniseerime kasutajad ja paroolid koheselt peale andmebaasi valmimist
+if [ -x "$SCRIPT_DIR/internal/apply-profile-users.sh" ]; then
+  for inst in $(get_active_db_instances 2>/dev/null); do
+    c_name=$(echo "$inst" | cut -d'|' -f1)
+    [ -n "$c_name" ] && "$SCRIPT_DIR/internal/apply-profile-users.sh" "$c_name" >/dev/null 2>&1 || true
+  done
+fi
 
-if [ "$SKIP_WEB_IDE" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then
-  echo "🚀 Käivitan Web IDE konteineri..."
+if podman container exists app-ords 2>/dev/null; then
+  podman restart app-ords >/dev/null 2>&1 || true
+fi
+
+if [ "$SKIP_WEB_IDE" = "false" ]; then
   podman-compose "${COMPOSE_ARGS[@]}" --profile web-ide up -d >> /dev/null 2>&1 || true
   if [ -f "$SCRIPT_DIR/internal/init-web-ide.sh" ]; then
     "$SCRIPT_DIR/internal/init-web-ide.sh" >/dev/null 2>&1 || true
   fi
-  echo "✅ Web IDE (VS Code) käivitatud aadressil: http://localhost:${WEB_IDE_HTTP_PORT:-8090}"
+  echo "✅ Web IDE (VS Code) ready: http://localhost:${WEB_IDE_HTTP_PORT:-8090}"
 fi
 
 # 🌐 KOHUSTUSLIK URL TESTIMINE ENNE TÖÖKORRAS SÕNUMIT
@@ -146,6 +138,6 @@ if [ -x "$SCRIPT_DIR/internal/test-urls.sh" ]; then
 fi
 
 echo "=================================================================="
-echo "✅ Kõik valitud konteinerid ja veebiteenuste URL-id on töökorras!"
-echo "   Kontrolli staatust: podman ps"
+echo -e "$(msg_str "ALL_CONTAINERS_HEALTHY")"
+echo -e "$(msg_str "CHECK_STATUS_HINT")"
 echo "=================================================================="

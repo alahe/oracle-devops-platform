@@ -15,7 +15,7 @@ PATCH_DIR="$WORKSPACE_DIR/patches"
 mkdir -p "$LOG_DIR" "$METRICS_DIR" "$PATCH_DIR"
 
 TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
-LOG_FILE="$LOG_DIR/publisher_patch_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/publisher_patch_apply_${TIMESTAMP}.log"
 
 echo "==================================================================" | tee -a "$LOG_FILE"
 echo "🩹 Oracle Analytics Publisher Automated OPatch Engine" | tee -a "$LOG_FILE"

@@ -35,6 +35,7 @@ podman-compose.override.yml
 install_logs/
 golden-snapshots/
 backups/
+scratch/
 tests/reports/history/
 AdminServer.log
 biee_log*.txt

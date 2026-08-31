@@ -56,7 +56,10 @@ echo -e "  └─ 9. GitHub Actions Offline Simulaator & SQLcl Projects..."
 echo -e "  └─ 10. Konteineriseeritud Web IDE & Artifactory Peegeldus..."
 "$SCRIPT_DIR/integration/test-web-ide-container.sh" >/dev/null
 
-echo -e "${GREEN}✅ FAAS 1 Edukas: Kõik 10 mooduli integratsioonitesti läbiti puhtalt!${NC}"
+echo -e "  └─ 11. Mitmekeelsus & i18n Sünkronisatsioon (Rule 9: EN/ET/FI/SV/LV/LT)..."
+"$SCRIPT_DIR/test-multilingual-support.sh" >/dev/null
+
+echo -e "${GREEN}✅ FAAS 1 Edukas: Kõik 11 mooduli integratsioonitesti läbiti puhtalt!${NC}"
 
 
 
@@ -101,7 +104,7 @@ cat <<EOF > "$AUDIT_FILE"
 | **Käivitamise Kellaaeg** | \`${EXEC_DATE}\` |
 | **Käivitaja Kasutaja** | \`${USER_NAME}\` |
 | **Aktiivne Profiil** | \`${PROFILE_NAME}\` |
-| **Integratsioonitestid** | ✅ 10 / 10 Läbitud |
+| **Integratsioonitestid** | ✅ 11 / 11 Läbitud |
 | **Ühikutestid (Unit Tests)** | ✅ ${UNIT_TEST_COUNT} / ${UNIT_TEST_COUNT} Läbitud |
 | **Skriptide Kaetus** | 🟢 100% (${UNIT_TEST_COUNT} skripti kaetud) |
 | **Kogu Testi Kestus** | \`${DURATION}s\` |
@@ -121,7 +124,8 @@ cat <<EOF > "$AUDIT_FILE"
 8. **SQLcl Paroolivabad Ühendustestid:** \`tests/integration/test-sqlcl-passwordless-connections.sh\` (✅ PASSED)
 9. **GitHub Actions Offline Simulaator:** \`tests/integration/test-github-actions-local.sh\` (✅ PASSED)
 10. **Konteineriseeritud Web IDE:** \`tests/integration/test-web-ide-container.sh\` (✅ PASSED)
-11. **Eraldiseisvad Ühikutestid:** \`tests/unit/test-script-*.sh\` (${UNIT_TEST_COUNT} testi - ✅ PASSED)
+11. **Mitmekeelsus & i18n Sünkronisatsioon (Rule 9):** \`tests/test-multilingual-support.sh\` (✅ PASSED)
+12. **Eraldiseisvad Ühikutestid:** \`tests/unit/test-script-*.sh\` (${UNIT_TEST_COUNT} testi - ✅ PASSED)
 
 ---
 
@@ -130,7 +134,7 @@ Siinse aruande olemasolu ja teostamise ajatempel Giti commit-ajaloos kinnitab, e
 EOF
 
 echo -e "\n${CYAN}==================================================================${NC}"
-echo -e "${GREEN}🎉 KÕIK AUTOMAATTESTID (10 INTEGRATSIOONITESTI + ${UNIT_TEST_COUNT} ÜHIKUTESTI) LÄBITI EDUKALT!${NC}"
+echo -e "${GREEN}🎉 KÕIK AUTOMAATTESTID (11 INTEGRATSIOONITESTI + ${UNIT_TEST_COUNT} ÜHIKUTESTI) LÄBITI EDUKALT!${NC}"
 echo -e "   ⌛ Testide kogukestus: ${YELLOW}${DURATION}s${NC}"
 echo -e "   🛡 Auditi tõendi fail: ${CYAN}tests/reports/audit-latest-execution.md${NC}"
 echo -e "   💡 Vihje: Veebiliidese (APEX/ORDS) E2E sisselogimistesti käivitamiseks kasuta skripti: ${CYAN}./tests/test-browser-login.sh${NC}"

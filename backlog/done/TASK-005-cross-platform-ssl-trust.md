@@ -3,7 +3,7 @@
 **Staatus:** `DONE`  
 **Prioriteet:** `HIGH`  
 **Valdkond:** `Security`  
-**Dokumentatsioon:** [scripts/certs/README.md](../../scripts/certs/README.md), [docs/turvalisus.md](../turvalisus.md)  
+**Dokumentatsioon:** [scripts/certs/README.md](../../scripts/certs/README.md), [docs/turvalisus.md](../../docs/turvalisus.md)  
 
 ---
 

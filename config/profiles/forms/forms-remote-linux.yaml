@@ -1,0 +1,20 @@
+profile:
+  id: forms-remote-linux
+  name: forms-remote-linux
+  description: "Remote Enterprise Linux Oracle Forms 14c Server profile."
+  type: middleware
+  component: forms
+
+forms:
+  enabled: true
+  mode: remote-linux
+  version: "14.1.2"
+  remote_host: "10.0.1.51"
+  remote_user: "oracle"
+  http_port: 9001
+  https_port: 9002
+  vnc_port: 6082
+  admin_port: 7001
+  admin_username: weblogic
+  target_database: "db-publisher"
+  rcu_prefix: "FORMS"

@@ -33,39 +33,34 @@ if [ -f "$WORKSPACE_DIR/scripts/internal/load-profile.sh" ]; then
   source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
 fi
 
+if [ -f "$WORKSPACE_DIR/scripts/internal/credential-helper.sh" ]; then
+  source "$WORKSPACE_DIR/scripts/internal/credential-helper.sh"
+fi
+
 get_wallet_pwd() {
   local alias_name="$1"
   local uname="$2"
   local target_c="${3:-$c_name}"
   local pwd_val=""
 
-  local c_prefix=$(echo "$target_c" | tr '-' '_')
-  local c_prefix_upper=$(echo "$target_c" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
+  local c_prefix=$(echo "$target_c" | sed 's/^db-//' | tr '-' '_' | tr '[:upper:]' '[:lower:]')
+  local c_upper=$(echo "$c_prefix" | tr '[:lower:]' '[:upper:]')
 
   if [ "$uname" = "sys" ] || [ "$uname" = "SYS" ] || [[ "$alias_name" == *"SYS"* ]]; then
-    # 1. Read container's own internal SYS password
-    pwd_val=$(podman exec "$target_c" cat /run/secrets/oracle_pwd 2>/dev/null | tr -d '\r\n' || true)
-    # 2. Read Podman secret store for container
-    [ -z "$pwd_val" ] && pwd_val=$(podman secret inspect --showsecret "${c_prefix}_db_sys_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
-    [ -z "$pwd_val" ] && pwd_val=$(podman secret inspect --showsecret "${c_prefix}_sys_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
-    [ -z "$pwd_val" ] && pwd_val=$(podman secret inspect --showsecret apex_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
-    # 3. Read Wallet credential
-    [ -z "$pwd_val" ] && pwd_val=$("$SCRIPT_DIR/get-password.sh" "DB_${c_prefix_upper}_SYS" 2>/dev/null | grep "Password:" | sed $'s/\x1b\\[[0-9;]*m//g' | cut -d':' -f2- | tr -d ' \r' || true)
-  fi
-
-  if [ -z "$pwd_val" ] && { [ "$uname" = "TEST_DEV" ] || [ "$alias_name" = "DB_TEST_DEV" ] || [[ "$uname" == *"DEV"* ]]; }; then
-    pwd_val=$(podman secret inspect --showsecret apex_db_dev_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
-    [ -z "$pwd_val" ] && pwd_val=$(podman secret inspect --showsecret test_dev_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
-    [ -z "$pwd_val" ] && pwd_val=$(podman exec "$target_c" cat /run/secrets/apex_db_dev_password 2>/dev/null | tr -d '\r\n' || true)
-  fi
-
-  if [ -z "$pwd_val" ] && { [[ "$uname" == *"SCHEMA"* ]] || [[ "$alias_name" == *"SCHEMA"* ]]; }; then
-    pwd_val=$(podman secret inspect --showsecret apex_schema_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
-  fi
-
-  if [ -z "$pwd_val" ] && { [ "$uname" = "PUBLISHER_READER" ] || [ "$alias_name" = "DB_PUBLISHER_READER" ]; }; then
+    pwd_val=$(get_db_sys_password "$target_c" 2>/dev/null || true)
+  elif [[ "$uname" == *"SCHEMA"* ]] || [[ "$alias_name" == *"SCHEMA"* ]]; then
+    pwd_val=$(get_db_user_password "$target_c" "schema" 2>/dev/null || true)
+    [ -z "$pwd_val" ] && pwd_val=$(podman secret inspect --showsecret "${c_prefix}_schema_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+  elif [[ "$uname" == *"DBA_ADMIN"* ]] || [[ "$alias_name" == *"DBA_ADMIN"* ]]; then
+    pwd_val=$(get_db_user_password "$target_c" "dba_admin" 2>/dev/null || true)
+  elif [[ "$uname" == *"DEVELOPER"* ]] || [[ "$uname" == *"DEV"* ]] || [[ "$alias_name" == *"DEV"* ]]; then
+    pwd_val=$(get_db_user_password "$target_c" "dev" 2>/dev/null || true)
+  elif [[ "$uname" == *"APP"* ]] || [[ "$alias_name" == *"APP"* ]]; then
+    pwd_val=$(get_db_user_password "$target_c" "app" 2>/dev/null || true)
+  elif [[ "$uname" == *"VIEWER"* ]] || [[ "$alias_name" == *"VIEWER"* ]]; then
+    pwd_val=$(get_db_user_password "$target_c" "viewer" 2>/dev/null || true)
+  elif [[ "$uname" == *"PUBLISHER_READER"* ]] || [[ "$alias_name" == *"PUBLISHER_READER"* ]]; then
     pwd_val=$(podman secret inspect --showsecret publisher_reader_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
-    [ -z "$pwd_val" ] && pwd_val=$(podman secret inspect --showsecret apex_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
   fi
 
   if [ -z "$pwd_val" ]; then
@@ -146,17 +141,19 @@ if os.path.exists(p):
     data = yaml.safe_load(open(p))
     users = data.get('users', [])
 
-# Ensure core roles (SYS, DBA_ADMIN, SCHEMA, DEV, VIEWER) are in list if missing
+# Ensure core roles (SYS, DBA_ADMIN, SCHEMA, USER_DEVELOPER, USER_APP, USER_VIEWER) are in list if missing
 existing_names = [u.get('username', '').upper() for u in users if isinstance(u, dict)]
 
 if 'SYS' not in existing_names:
     users.insert(0, {'username': 'SYS', 'role': 'SYSDBA', 'color': '#E74C3C', 'wallet_alias': 'SYS'})
 if 'DBA_ADMIN' not in existing_names:
     users.append({'username': 'DBA_ADMIN', 'role': 'NORMAL', 'color': '#E67E22', 'wallet_alias': 'DBA_ADMIN'})
-if 'TEST_DEV' not in existing_names and 'APP_DEV' not in existing_names:
-    users.append({'username': 'TEST_DEV', 'role': 'NORMAL', 'color': '#27AE60', 'wallet_alias': 'DEV'})
-if 'TEST_VIEWER' not in existing_names:
-    users.append({'username': 'TEST_VIEWER', 'role': 'NORMAL', 'color': '#8E44AD', 'wallet_alias': 'VIEWER'})
+if 'USER_DEVELOPER' not in existing_names and 'TEST_DEV' not in existing_names:
+    users.append({'username': 'USER_DEVELOPER', 'role': 'NORMAL', 'color': '#27AE60', 'wallet_alias': 'DEV'})
+if 'USER_APP' not in existing_names:
+    users.append({'username': 'USER_APP', 'role': 'NORMAL', 'color': '#F39C12', 'wallet_alias': 'APP'})
+if 'USER_VIEWER' not in existing_names and 'TEST_VIEWER' not in existing_names:
+    users.append({'username': 'USER_VIEWER', 'role': 'NORMAL', 'color': '#8E44AD', 'wallet_alias': 'VIEWER'})
 
 def sort_key(u):
     uname = str(u.get('username', '')).upper()
@@ -167,11 +164,13 @@ def sort_key(u):
         return 2
     if 'SCHEMA' in uname:
         return 3
-    if 'DEV' in uname:
+    if 'DEV' in uname or 'DEVELOPER' in uname:
         return 4
-    if 'VIEWER' in uname or 'READ' in uname:
+    if 'APP' in uname:
         return 5
-    return 6
+    if 'VIEWER' in uname or 'READ' in uname:
+        return 6
+    return 7
 
 users = sorted(users, key=sort_key)
 print(json.dumps(users))
@@ -247,33 +246,10 @@ print(json.dumps(users))
     idx=$((idx + 1))
   done < <(echo "$users_json" | jq -c '.[]')
 
-  # 4. Scan wallet and environment for interactive developer users (created via create-developer.sh / setup-all.sh)
+  # 4. Include explicitly configured extra developer users if defined
   DEV_USERS=()
   [ -n "${EXTRA_DEV_USER:-}" ] && DEV_USERS+=("$EXTRA_DEV_USER")
   [ -n "${DEVELOPER_USER:-}" ] && DEV_USERS+=("$DEVELOPER_USER")
-  [ -n "${USER:-}" ] && DEV_USERS+=("$USER")
-  DEV_USERS+=("TEST_DEV")
-
-  PRIMARY_C="${c_name:-${PRIMARY_CONTAINER:-db-dev-full}}"
-  WALLET_PWD=$(get_wallet_password 2>/dev/null || cat "$WORKSPACE_DIR/config/secrets/wallet_password.txt" 2>/dev/null || echo "CustomWalletPass123!")
-  WALLET_LIST=""
-  if podman container exists "$PRIMARY_C" 2>/dev/null; then
-    WALLET_LIST=$(podman exec "$PRIMARY_C" sh -c 'export JAVA_HOME=/usr/java/latest; export PATH=$JAVA_HOME/bin:$PATH; echo "$1" | mkstore -wrl /opt/oracle/admin/FREE/wallet -listCredential' -- "$WALLET_PWD" </dev/null 2>/dev/null || true)
-  fi
-
-  while read -r w_line; do
-    w_alias=$(echo "$w_line" | awk '{print $2}' | tr -d '\r ')
-    [ -z "$w_alias" ] && continue
-    w_alias_upper=$(echo "$w_alias" | tr '[:lower:]' '[:upper:]')
-    if [[ "$w_alias_upper" == *"_DEV" ]]; then
-      # Extract username from DB_<CONTAINER>_<USER>
-      extracted_u="${w_alias_upper##*_}"
-      [ -n "$extracted_u" ] && DEV_USERS+=("$extracted_u")
-      DEV_USERS+=("$w_alias")
-    elif [[ "$w_alias_upper" != "DB_"* ]] && [[ "$w_alias_upper" != "APEX_"* ]] && [[ "$w_alias_upper" != "TEST_WEB_USER"* ]]; then
-      DEV_USERS+=("$w_alias")
-    fi
-  done < <(echo "$WALLET_LIST" | grep -E "^[0-9]+:")
 
   UNIQUE_DEV_USERS=($(printf "%s\n" "${DEV_USERS[@]}" | sort -u))
 
@@ -302,14 +278,10 @@ print(json.dumps(users))
       dev_pwd_val="$EXTRA_DEV_PWD"
     fi
     if [ -z "$dev_pwd_val" ]; then
-      dev_pwd_val=$(get_wallet_pwd "$dev_u" "$dev_u" </dev/null)
+      dev_pwd_val=$(get_wallet_pwd "$dev_u" "$dev_u" "$c_name" </dev/null)
     fi
     if [ -z "$dev_pwd_val" ]; then
-      dev_pwd_val=$(get_wallet_pwd "$dev_u_upper" "$dev_u_upper" </dev/null)
-    fi
-    if [ -z "$dev_pwd_val" ]; then
-      c_name_upper=$(echo "$PRIMARY_C" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-      dev_pwd_val=$(get_wallet_pwd "DB_${c_name_upper}_${dev_u_upper}" "$dev_u_upper" </dev/null)
+      dev_pwd_val=$(get_wallet_pwd "$dev_u_upper" "$dev_u_upper" "$c_name" </dev/null)
     fi
     [ -z "$dev_pwd_val" ] && continue
 
@@ -332,9 +304,6 @@ print(json.dumps(users))
     idx=$((idx + 1))
   done
 
-
-
-
   SQL_COMMANDS+=("connmgr list -folder /${folder_name}")
   SQL_COMMANDS+=("EXIT")
 
@@ -355,28 +324,45 @@ EOF
 
   # Synchronize colors and JSON files without overwriting SQLcl OS Keychain encrypted properties
   CONNS_JSON="$CONNS_ARRAY_JSON" FOLDER_NAME="$folder_name" PORT_VAL="$port" SERVICE_VAL="$service" python3 - << 'PYEOF'
-import json, os, sys
+import json, os, sys, shutil
 
 conns_in = json.loads(os.environ.get('CONNS_JSON', '[]'))
 folder = os.environ.get('FOLDER_NAME', 'pub-db')
 port = os.environ.get('PORT_VAL', '1533')
 service = os.environ.get('SERVICE_VAL', 'FREEPDB1')
 
+valid_pnames = [u.get('pretty_name') for u in conns_in if u.get('pretty_name')]
+
 dbtools_dir = os.path.expanduser('~/.dbtools/connections')
 if os.path.exists(dbtools_dir):
-    for u in conns_in:
-        uname = u.get('username')
-        ucolor = u.get('color', '#2980B9')
-        for entry in os.listdir(dbtools_dir):
-            prop_file = os.path.join(dbtools_dir, entry, 'dbtools.properties')
-            if os.path.isfile(prop_file):
+    for entry in list(os.listdir(dbtools_dir)):
+        entry_path = os.path.join(dbtools_dir, entry)
+        if not os.path.isdir(entry_path):
+            continue
+        prop_file = os.path.join(entry_path, 'dbtools.properties')
+        if os.path.isfile(prop_file):
+            try:
                 with open(prop_file, 'r', encoding='utf-8', errors='ignore') as pf:
                     lines = pf.readlines()
-                if any(f'userName={uname}' in l for l in lines) or any(f'userName={uname.lower()}' in l for l in lines):
-                    new_lines = [l for l in lines if not l.startswith('color=')]
-                    new_lines.append(f'color={ucolor}\n')
-                    with open(prop_file, 'w', encoding='utf-8') as pf:
-                        pf.writelines(new_lines)
+                cname = None
+                for line in lines:
+                    if line.startswith('name='):
+                        cname = line.split('=', 1)[1].strip()
+                        break
+                # Remove obsolete connections belonging to this folder/db
+                if cname and f'({folder})' in cname and cname not in valid_pnames:
+                    shutil.rmtree(entry_path, ignore_errors=True)
+                    continue
+                for u in conns_in:
+                    uname = u.get('username')
+                    ucolor = u.get('color', '#2980B9')
+                    if any(f'userName={uname}' in l for l in lines) or any(f'userName={uname.lower()}' in l for l in lines):
+                        new_lines = [l for l in lines if not l.startswith('color=')]
+                        new_lines.append(f'color={ucolor}\n')
+                        with open(prop_file, 'w', encoding='utf-8') as pf:
+                            pf.writelines(new_lines)
+            except Exception:
+                pass
 
 conns_path = os.path.expanduser('~/.sqldev/connections.json')
 existing_conns = []

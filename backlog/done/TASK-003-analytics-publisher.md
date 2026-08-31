@@ -4,7 +4,7 @@
 **Prioriteet:** `HIGH`  
 **Valdkond:** `Architecture`  
 **Seotud Blueprintid:** `.env.4-*`, `.env.7-*`, `.env.12-*`, `.env.13-*`  
-**Dokumentatsioon:** [docs/publisher-guide.md](../publisher-guide.md)  
+**Dokumentatsioon:** [docs/publisher-guide.md](../../docs/publisher-guide.md)  
 
 ---
 

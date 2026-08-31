@@ -41,7 +41,7 @@ components:
 
 ## 3.1 Automated JDBC Data Source & PUBLISHER_READER Wallet Setup
 
-Analytics Publisher connects automatically to the business application database (`db-lis` or remote DB) using a dedicated, least-privileged system account **`PUBLISHER_READER`**:
+Analytics Publisher connects automatically to the business application database (`db-alise` or remote DB) using a dedicated, least-privileged system account **`PUBLISHER_READER`**:
 
 1. **Oracle SEPS Wallet (`cwallet.sso`) Integration**:
    - The password for `PUBLISHER_READER` is generated and stored securely in Oracle SEPS Wallet under alias `DB_PUBLISHER_READER`.
@@ -51,9 +51,9 @@ Analytics Publisher connects automatically to the business application database 
      ```
    - Connection folder in VS Code SQL Developer extension: `/Publisher/DB_PUBLISHER_READER`.
 
-2. **Automated JDBC Data Source Registration (`LIS_APP_DB`)**:
-   - During setup (`./scripts/setup-all.sh`), script `scripts/internal/init-publisher-datasource.sh` generates the JDBC Data Source XML configuration `LIS_APP_DB.xml` inside Publisher repository.
-   - Works seamlessly for both **Local Container DBs (`db-lis:1521/FREEPDB1`)** and **Remote Enterprise DBs (`$DB_HOST:$DB_PORT/$DB_SERVICE`)**.
+2. **Automated JDBC Data Source Registration (`ALISE_APP_DB`)**:
+   - During setup (`./scripts/setup-all.sh`), script `scripts/internal/init-publisher-datasource.sh` generates the JDBC Data Source XML configuration `ALISE_APP_DB.xml` inside Publisher repository.
+   - Works seamlessly for both **Local Container DBs (`db-alise:1521/FREEPDB1`)** and **Remote Enterprise DBs (`$DB_HOST:$DB_PORT/$DB_SERVICE`)**.
 
 ---
 

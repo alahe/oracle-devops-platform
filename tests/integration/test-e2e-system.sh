@@ -19,9 +19,20 @@ echo -e "${CYAN}================================================================
 echo -e "🚀 KOGU SÜSTEEMI E2E INTEGRATSIOONITESTI KÄIVITAMINE"
 echo -e "${CYAN}==================================================================${NC}"
 
-# Step 1: Validate User Executable Scripts
-echo -e "\n${YELLOW}[E2E Samm 1] Kontrollin kasutaja põhitöövoo skripte (scripts/ juur)...${NC}"
-REQUIRED_SCRIPTS=("setup-all.sh" "reset-all.sh" "start-containers.sh" "create-golden-snapshots.sh" "restore-golden-snapshots.sh" "clean-logs.sh" "clean-golden-snapshots.sh")
+# Step 1: Validate User Executable Scripts (Modular 3-Tier Structure per Rule 3)
+echo -e "\n${YELLOW}[E2E Samm 1] Kontrollin kasutaja põhitöövoo skripte (scripts/ ja scripts/snapshots/)...${NC}"
+REQUIRED_SCRIPTS=(
+  "setup-all.sh"
+  "reset-all.sh"
+  "start-containers.sh"
+  "sqlcl.sh"
+  "get-password.sh"
+  "check-urls.sh"
+  "clean-logs.sh"
+  "snapshots/create-golden-snapshots.sh"
+  "snapshots/restore-golden-snapshots.sh"
+  "snapshots/clean-golden-snapshots.sh"
+)
 
 for script in "${REQUIRED_SCRIPTS[@]}"; do
   if [ -x "$WORKSPACE_DIR/scripts/$script" ]; then
@@ -31,11 +42,11 @@ for script in "${REQUIRED_SCRIPTS[@]}"; do
     exit 1
   fi
 done
-echo -e "${GREEN}✅ E2E Samm 1 Edukas: Kõik 5 põhisüsteemi skripti on valmis!${NC}"
+echo -e "${GREEN}✅ E2E Samm 1 Edukas: Kõik põhisüsteemi ja snapshotide skriptid on valmis!${NC}"
 
 # Step 2: Validate Internal Subsystem Scripts
 echo -e "\n${YELLOW}[E2E Samm 2] Kontrollin internal abiskriptide ja SQL algseadistajate olemasolu...${NC}"
-INTERNAL_SCRIPTS=("load-profile.sh" "resolve-topology.sh" "init-db-instance.sh" "init-db-instance.sql" "apply-profile-users.sh" "generate-passwords.sh" "generate-local-certs.sh" "register-connections.sh")
+INTERNAL_SCRIPTS=("load-profile.sh" "resolve-topology.sh" "init-db-instance.sh" "init-db-instance.sql" "apply-profile-users.sh" "generate-passwords.sh" "generate-local-certs.sh" "create-wallet.sh" "i18n.sh")
 
 for script in "${INTERNAL_SCRIPTS[@]}"; do
   if [ -f "$WORKSPACE_DIR/scripts/internal/$script" ]; then

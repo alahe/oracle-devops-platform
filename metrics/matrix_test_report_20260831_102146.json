@@ -1,0 +1,1 @@
+[{"blueprint": 7, "cold_duration_s": 692, "warm_duration_s": 60, "total_duration_s": 800, "cold_url_status": "PASS", "cold_wallet_status": "PASS", "cold_login_status": "PASS", "warm_url_status": "PASS", "warm_login_status": "PASS", "overall_status": "PASS", "error": ""}]

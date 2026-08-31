@@ -37,9 +37,8 @@ done
 cd "$TARGET_DIR"
 BUILD_START=$(date '+%s')
 
-echo "ℹ️  Starting container build for ${IMAGE_NAME} (amd64)..."
+echo "ℹ️  Starting container build for ${IMAGE_NAME}..."
 ${CONTAINER_CLI} build \
-  --arch amd64 \
   --build-arg BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
   --tag "${IMAGE_NAME}" \
   --file Dockerfile .

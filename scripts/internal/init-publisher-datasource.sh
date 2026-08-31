@@ -13,12 +13,12 @@ if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
   source "$SCRIPT_DIR/load-profile.sh"
 fi
 
-echo "📊 Konfigureerin Analytics Publisher JDBC Data Source ühendust (LIS_APP_DB)..."
+echo "📊 Konfigureerin Analytics Publisher JDBC Data Source ühendust (ALISE_APP_DB)..."
 
-# Tuvastame sihtbaasi andmed (lokaalne db-lis / db-proxy või remote host)
-TARGET_DB_HOST="${LIS_DB_HOST:-${DB_HOST:-db-lis}}"
-TARGET_DB_PORT="${LIS_DB_PORT:-${DB_PORT:-1521}}"
-TARGET_DB_SERVICE="${LIS_DB_SERVICE:-${DB_SERVICE:-FREEPDB1}}"
+# Tuvastame sihtbaasi andmed (lokaalne db-alise / db-proxy või remote host)
+TARGET_DB_HOST="${ALISE_DB_HOST:-${LIS_DB_HOST:-${DB_HOST:-db-alise}}}"
+TARGET_DB_PORT="${ALISE_DB_PORT:-${LIS_DB_PORT:-${DB_PORT:-1521}}}"
+TARGET_DB_SERVICE="${ALISE_DB_SERVICE:-${LIS_DB_SERVICE:-${DB_SERVICE:-FREEPDB1}}}"
 TARGET_USER="PUBLISHER_READER"
 
 # Pärime parooli Podman secretist või Walletist
@@ -35,12 +35,12 @@ fi
 PUB_DS_DIR="$WORKSPACE_DIR/config/publisher/datasources"
 mkdir -p "$PUB_DS_DIR"
 
-DS_FILE="$PUB_DS_DIR/LIS_APP_DB.xml"
+DS_FILE="$PUB_DS_DIR/ALISE_APP_DB.xml"
 
 cat <<EOF > "$DS_FILE"
 <?xml version="1.0" encoding="UTF-8"?>
 <jdbc-data-source xmlns="http://xmlns.oracle.com/weblogic/jdbc-data-source">
-  <name>LIS_APP_DB</name>
+  <name>ALISE_APP_DB</name>
   <jdbc-driver-params>
     <url>jdbc:oracle:thin:@${TARGET_DB_HOST}:${TARGET_DB_PORT}/${TARGET_DB_SERVICE}</url>
     <driver-name>oracle.jdbc.OracleDriver</driver-name>

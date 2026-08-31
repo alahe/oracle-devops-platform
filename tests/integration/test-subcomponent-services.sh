@@ -37,11 +37,11 @@ else
 fi
 
 # Test 2: Check Wallet Credential Script Execution
-echo -e "\n${YELLOW}[Test 2] Kontrollin Wallet credential skripti (view-wallet-credential.sh)...${NC}"
-if [ -x "$WORKSPACE_DIR/scripts/internal/view-wallet-credential.sh" ]; then
-  echo -e "${GREEN}✅ Test 2 Edukas: view-wallet-credential.sh skript on olemas ja käivitatav!${NC}"
+echo -e "\n${YELLOW}[Test 2] Kontrollin Wallet credential skripti (get-password.sh)...${NC}"
+if [ -x "$WORKSPACE_DIR/scripts/get-password.sh" ] || [ -x "$WORKSPACE_DIR/scripts/internal/view-wallet-credential.sh" ]; then
+  echo -e "${GREEN}✅ Test 2 Edukas: get-password.sh / view-wallet-credential.sh skript on olemas ja käivitatav!${NC}"
 else
-  echo -e "${RED}❌ Test 2 Ebaõnnestus: view-wallet-credential.sh skript puudub!${NC}"
+  echo -e "${RED}❌ Test 2 Ebaõnnestus: get-password.sh skript puudub!${NC}"
   exit 1
 fi
 

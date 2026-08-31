@@ -72,7 +72,7 @@ Skript `./scripts/setup-all.sh` teostab kogu keskkonna täieliku paigalduse: lae
 > - 👤 **Kasutajad & Rollid:** `apply-profile-users.sh`
 > - 🔒 **Sertifikaatide usaldamine:** `generate-local-certs.sh`
 > - 💻 **VS Code ühendused:** `register-connections.sh`
-> - 📊 **Raportid & Mõõdikud:** `generate-setup-report.sh` (JSON benchmarkid ja stsenaariumite raportid)
+> - 📊 **Raportid & Mõõdikud:** `generate-setup-report.sh` (JSON benchmarkid ja blueprintide raportid)
 
 > 📊 **Paigaldusprotsessi detailne voodiagramm ja arhitektuursed sammud (idempotentsus, SQLcl fallback, Microsoft Defenderi optimeerimine) on kirjeldatud eraldi dokumendis: [docs/setup-all-workflow.md](../docs/setup-all-workflow.md)**
 
@@ -93,7 +93,7 @@ Skript `./scripts/setup-all.sh` teostab kogu keskkonna täieliku paigalduse: lae
 *   **`-sb <N>` / `--show-blueprint <N>`:** Kuvab valitud blueprinti `<N>` detailse ülevaate (plaanitavad konteinerid, pordid, APEX/ORDS seaded, RAM eelarve ja TLS nõuded).
 *   **`--search <QUERY>` / `--search-blueprints`:** Otsib ja filtreerib blueprinte märksõna järgi (nt `publisher`, `gvenzl`, `adb`, `web-ide`).
 *   **`--dry-run`:** Simuleerib käivitust ja kontrollib konfiguratsioone ilma tegelikku paigaldust tegemata (töötab nii `-b <N> --dry-run` kui ka `-tb 1,3,7 --dry-run` režiimis).
-*   **`-ltr` / `--list-test-reports`:** Kuvab kõigi 13 blueprinti testiaruannete (scenario reports) olekut kaustas `tests/reports/scenarios/`.
+*   **`-ltr` / `--list-test-reports`:** Kuvab kõigi 13 blueprinti testiaruannete (blueprint reports) olekut kaustas `tests/reports/blueprints/`.
 *   **`-i` / `--select`:** Avab terminalis interaktiivse valikumenüü koos 30s taimeriga.
 *   `--force` / `-y`: Jätab vahele paigalduseelse kinnituse ja kettaruumi kontrolli küsimused (sobib automaattestideks ja CI/CD tööriistadele).
 *   `--no-publisher`: Jätab lokaalse Publisher andmebaasi (`db-publisher`) käivitamata ja seadistamata (säästab mälu).
@@ -298,7 +298,7 @@ Selleks, et mitte hoida paroole avatud tekstina konsoolis, failides või protses
 ./scripts/get-password.sh DB_PROXY_DEV          # Proxy DB arendaja parool
 ./scripts/get-password.sh DB_PROXY_APEX_ADMIN    # APEX INTERNAL admin parool
 ./scripts/get-password.sh DB_PROXY_SYS           # Proxy DB SYS administraatori parool
-./scripts/get-password.sh DB_LIS_DEV             # LIS DB arendaja parool
+./scripts/get-password.sh DB_ALISE_DEV             # LIS DB arendaja parool
 ./scripts/get-password.sh DB_PUBLISHER_DEV       # Analytics Publisheri administraatori parool
 ```
 

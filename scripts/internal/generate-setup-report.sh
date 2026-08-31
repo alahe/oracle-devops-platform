@@ -93,11 +93,11 @@ SETUP_STEP11_SNAPSHOT_SECS=$STEP9_SECS
 EOF
 
 # 📊 TESTARUANDE GENEREERIMINE (TEST MODE AUDIT REPORT)
-if [ "${IS_TEST_MODE:-false}" = "true" ] || [ -n "${TEST_SCENARIO:-}" ]; then
-  SCENARIO_ID="${TEST_SCENARIO:-custom}"
-  METRICS_SCENARIOS_DIR="$WORKSPACE_DIR/tests/reports/scenarios"
-  mkdir -p "$METRICS_SCENARIOS_DIR"
-  REPORT_FILE="$METRICS_SCENARIOS_DIR/scenario_${SCENARIO_ID}_report.md"
+if [ "${IS_TEST_MODE:-false}" = "true" ] || [ -n "${TEST_BLUEPRINTS:-}" ] || [ -n "${TEST_SCENARIO:-}" ]; then
+  BP_ID="${ACTIVE_BP_ID:-${TEST_BLUEPRINTS:-${TEST_SCENARIO:-custom}}}"
+  BLUEPRINT_REPORTS_DIR="$WORKSPACE_DIR/tests/reports/blueprints"
+  mkdir -p "$BLUEPRINT_REPORTS_DIR"
+  REPORT_FILE="$BLUEPRINT_REPORTS_DIR/blueprint_${BP_ID}_report.md"
   
   RUN_TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 
@@ -129,11 +129,11 @@ if [ "${IS_TEST_MODE:-false}" = "true" ] || [ -n "${TEST_SCENARIO:-}" ]; then
   WALLET_AUDIT_CONTENT=$(cat "$WORKSPACE_DIR/metrics/wallet_audit_temp.md" 2>/dev/null || echo "Ei leitud SEPS Walleti ühendusi.")
 
   cat <<EOF > "$REPORT_FILE"
-# Blueprinti ${SCENARIO_ID} Testiaruanne (${RUN_TIMESTAMP})
+# Blueprinti ${BP_ID} Testiaruanne (${RUN_TIMESTAMP})
 
 - **Aeg ja Kuupäev:** ${RUN_TIMESTAMP}
 - **Kogu Paigalduse Kestus:** ${TOTAL_MASTER_TIME}
-- **Blueprinti Fail:** \`config/blueprints/.env.${SCENARIO_ID}-*\`
+- **Blueprinti Fail:** \`config/blueprints/.env.${BP_ID}-*\`
 
 ---
 
@@ -197,5 +197,5 @@ Näiteks:
 - Vead / Iseparanemised: 0 kriitilist viga. Automaatne kontroll sooritatud.
 EOF
 
-  echo -e "${GREEN}📊 Testiaruanne genereeritud ja salvestatud:${NC} [scenario_${SCENARIO_ID}_report.md](file://${REPORT_FILE})"
+  echo -e "$(msg_str "REPORT_SAVED_MSG" "[blueprint_${BP_ID}_report.md](file://${REPORT_FILE})")"
 fi

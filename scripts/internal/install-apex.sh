@@ -103,12 +103,6 @@ if declare -f ensure_db_instance_open >/dev/null 2>&1; then
   ensure_db_instance_open "$CONTAINER_NAME" || true
 fi
 
-# Kui andmebaas on ADB või APEX_VER on NONE, siis siia andmebaasi APEX-it ei paigaldata!
-if [ "${IS_ADB:-false}" = "true" ] || [ "${PROFILE_APEX_INSTALL_REQUIRED:-true}" = "false" ] || [ "${PROFILE_APEX_PREINSTALLED:-false}" = "true" ]; then
-  echo "ℹ️  Andmebaas $DB_SUFFIX on Autonomous Database (ADB), kus APEX on juba eelinstalleeritud (Pre-installed). Jätan mootori paigaldamise vahele."
-  exit 0
-fi
-
 if [ "$APEX_VER" = "NONE" ]; then
   echo "ℹ️  APEX_VERSION on määratud NONE andmebaasile $DB_SUFFIX — Jätan APEX paigaldamise vahele."
   exit 0
@@ -126,7 +120,7 @@ APEX_ZIP="$APEX_BIN_DIR/$APEX_ZIP_NAME"
 LOG_DIR="$SCRIPT_DIR/../../install_logs"
 mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_FILE="$LOG_DIR/apex_install_${DB_SUFFIX}_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/apex_engine_install_${DB_SUFFIX}_${TIMESTAMP}.log"
 
 # Suuname kogu väljundi nii ekraanile kui lokaalsesse logifaili (ainult eraldiseisval käivitamisel)
 if [ "${MASTER_SETUP:-false}" != "true" ]; then
@@ -172,7 +166,22 @@ if [ -z "$APEX_LISTENER_PASSWORD" ]; then
   fi
   APEX_LISTENER_PASSWORD="${APEX_LISTENER_PASSWORD:-$SYS_PASSWORD}"
 fi
+APEX_ADMIN_PASSWORD="${APEX_ADMIN_PASSWORD:-}"
+DB_SUFFIX_UPPER=$(echo "$DB_SUFFIX" | tr '[:lower:]' '[:upper:]')
+if [ -z "$APEX_ADMIN_PASSWORD" ] || [ "$APEX_ADMIN_PASSWORD" = "$SYS_PASSWORD" ]; then
+  wallet_admin_pwd=$("$SCRIPT_DIR/../get-password.sh" -p "DB_${DB_SUFFIX_UPPER}_APEX_ADMIN" 2>/dev/null | tr -d '\r\n')
+  [ -z "$wallet_admin_pwd" ] && wallet_admin_pwd=$("$SCRIPT_DIR/../get-password.sh" -p "APEX_ADMIN" 2>/dev/null | tr -d '\r\n')
+  [ -n "$wallet_admin_pwd" ] && APEX_ADMIN_PASSWORD="$wallet_admin_pwd"
+fi
 APEX_ADMIN_PASSWORD="${APEX_ADMIN_PASSWORD:-$SYS_PASSWORD}"
+
+USER_DEV_PASSWORD="${USER_DEV_PASSWORD:-}"
+if [ -z "$USER_DEV_PASSWORD" ]; then
+  wallet_dev_pwd=$("$SCRIPT_DIR/../get-password.sh" -p "DB_${DB_SUFFIX_UPPER}_DEV" 2>/dev/null | tr -d '\r\n')
+  [ -z "$wallet_dev_pwd" ] && wallet_dev_pwd=$("$SCRIPT_DIR/../get-password.sh" -p "DEV" 2>/dev/null | tr -d '\r\n')
+  [ -n "$wallet_dev_pwd" ] && USER_DEV_PASSWORD="$wallet_dev_pwd"
+fi
+USER_DEV_PASSWORD="${USER_DEV_PASSWORD:-$APEX_ADMIN_PASSWORD}"
 DB_HOST="${APEX_DB_HOST:-${PROFILE_DB_HOST:-localhost}}"
 DB_PORT="${APEX_DB_PORT:-${PROFILE_DB_PORT:-1532}}"
 DB_SERVICE="${APEX_DB_SERVICE:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}"
@@ -293,9 +302,9 @@ print_sub_header() {
     stats=$(get_step_stats "$step_key1" "$default_est" 2>/dev/null || echo "")
     [ -z "$stats" ] && [ -n "$step_key2" ] && stats=$(get_step_stats "$step_key2" "$default_est" 2>/dev/null || echo "")
   fi
-  [ -z "$stats" ] && [ -n "$default_est" ] && stats="ootusaeg ~${default_est}"
+  [ -z "$stats" ] && [ -n "$default_est" ] && stats="$(msg_str "BENCHMARK_EST" "$default_est")"
   if [ -n "$stats" ]; then
-    echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}${stats}${NC}"
+    echo -e "${CYAN}│${NC}  📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}${stats}${NC}"
   fi
 }
 
@@ -400,10 +409,16 @@ if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ] || [ "$DB_HOST" 
       echo "Lokaalne andmebaas ($CONTAINER_NAME) ei tööta. Käivitan..."
       podman start "$CONTAINER_NAME" || true
     fi
-    echo "Ootan kuni andmebaas ($CONTAINER_NAME) on valmis (healthy)..."
-    until [ "$(podman inspect --format='{{.State.Health.Status}}' "$CONTAINER_NAME" 2>/dev/null)" == "healthy" ]; do
-      sleep 3
-    done
+    if [ -x "$SCRIPT_DIR/wait-db-healthy.sh" ]; then
+      "$SCRIPT_DIR/wait-db-healthy.sh" "$CONTAINER_NAME" 60
+    elif [ -x "$WORKSPACE_DIR/scripts/internal/wait-db-healthy.sh" ]; then
+      "$WORKSPACE_DIR/scripts/internal/wait-db-healthy.sh" "$CONTAINER_NAME" 60
+    else
+      echo "Ootan kuni andmebaas ($CONTAINER_NAME) on valmis (healthy)..."
+      until [ "$(podman inspect --format='{{.State.Health.Status}}' "$CONTAINER_NAME" 2>/dev/null)" == "healthy" ] || [ "$(podman inspect --format='{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null)" == "running" ]; do
+        sleep 2
+      done
+    fi
   fi
 fi
 
@@ -472,7 +487,7 @@ echo -e "⏱  [Samm 3 valmis (Seadistus / Failide kopeerimine): ${YELLOW}$STEP3_
 # ----------------------------------------------------------------------------
 # Define dedicated log file for SQL details
 STEP4_START=$(date +%s)
-SQL_LOG_FILE="$LOG_DIR/apex_sql_install_${TIMESTAMP}.log"
+SQL_LOG_FILE="$LOG_DIR/apex_engine_sql_${DB_SUFFIX}_${TIMESTAMP}.log"
 
 print_sub_header "4" "Running APEX Installation in $DB_SERVICE via $EXEC_MODE (Oodatav aeg ~4-7 min)..." "step4_apex_engine_install_seconds" "step7_apex_engine_install_seconds" "6m"
 echo -e "${CYAN}│${NC}  📝 Detailne SQL logi: ${CYAN}[Logi](file://$SQL_LOG_FILE)${NC}"
@@ -573,6 +588,7 @@ else
   # Valmistame ette täpse SQL skriptifaili
   LOCAL_SQL_SCRIPT="$SCRIPT_DIR/../../install_logs/run_apex_install_${DB_SUFFIX}.sql"
   cat << EOF > "$LOCAL_SQL_SCRIPT"
+ALTER SESSION SET CONTAINER = ${DB_SERVICE};
 -- Drop partial APEX schemas if present to allow clean fresh installation
 ALTER SESSION SET "_oracle_script" = TRUE;
 BEGIN
@@ -606,6 +622,12 @@ END;
 EXIT;
 EOF
 
+  APEX_MAJOR=$(echo "$APEX_VER" | cut -d'.' -f1 | tr -dc '0-9')
+  APEX_MINOR=$(echo "$APEX_VER" | cut -d'.' -f2 | tr -dc '0-9')
+  [ -z "$APEX_MAJOR" ] && APEX_MAJOR="26"
+  [ -z "$APEX_MINOR" ] && APEX_MINOR="1"
+  APEX_SCHEMA_NAME=$(printf "APEX_%02d%02d00" "$APEX_MAJOR" "$APEX_MINOR")
+
   LOCAL_POST_SQL_SCRIPT="$SCRIPT_DIR/../../install_logs/run_apex_post_install_${DB_SUFFIX}.sql"
   cat << EOF > "$LOCAL_POST_SQL_SCRIPT"
 SET ECHO ON;
@@ -613,12 +635,15 @@ SET SERVEROUTPUT ON;
 
 ALTER SESSION SET CONTAINER = ${DB_SERVICE};
 ALTER SESSION SET "_oracle_script" = TRUE;
+ALTER SESSION SET CURRENT_SCHEMA = ${APEX_SCHEMA_NAME};
 
 -- Set up APEX REST users (APEX_LISTENER and APEX_REST_PUBLIC_USER)
 @core/scripts/apxpreins.sql
-@apex_rest_config_core.sql @ "${APEX_LISTENER_PASSWORD}" "${APEX_LISTENER_PASSWORD}"
+@apex_rest_config_core.sql ./ "${APEX_LISTENER_PASSWORD}" "${APEX_LISTENER_PASSWORD}"
 
--- Unlock and sync passwords for ORDS & APEX public users
+SET DEFINE OFF;
+
+-- Unlock and sync passwords for ORDS and APEX public users
 ALTER USER APEX_PUBLIC_USER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" ACCOUNT UNLOCK;
 ALTER USER APEX_LISTENER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" ACCOUNT UNLOCK;
 ALTER USER APEX_REST_PUBLIC_USER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" ACCOUNT UNLOCK;
@@ -636,23 +661,30 @@ BEGIN
         v_cnt NUMBER;
         v_apex_schema VARCHAR2(30);
     BEGIN
-        SELECT username INTO v_apex_schema FROM dba_users WHERE username LIKE 'APEX_%' AND username NOT LIKE '%PUBLIC%' AND username NOT LIKE '%LISTENER%' AND username NOT LIKE '%ROUTER%' AND ROWNUM = 1;
-        
-        SELECT COUNT(*) INTO v_cnt FROM dba_users WHERE username = 'ORDS_METADATA';
-        IF v_cnt = 0 THEN
-            EXECUTE IMMEDIATE 'CREATE USER ORDS_METADATA IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" DEFAULT TABLESPACE SYSAUX TEMPORARY TABLESPACE TEMP QUOTA UNLIMITED ON SYSAUX';
-            EXECUTE IMMEDIATE 'GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE PROCEDURE, CREATE SEQUENCE TO ORDS_METADATA';
-            EXECUTE IMMEDIATE 'ALTER USER ORDS_METADATA ACCOUNT UNLOCK';
-        END IF;
+        SELECT username INTO v_apex_schema FROM dba_users WHERE username LIKE 'APEX_%' AND REGEXP_LIKE(username, '^APEX_[0-9]+$') AND ROWNUM = 1;
+
+        BEGIN
+            EXECUTE IMMEDIATE 'CREATE PROFILE UNLIMITED_PASS_PROFILE LIMIT
+              FAILED_LOGIN_ATTEMPTS UNLIMITED
+              PASSWORD_LIFE_TIME UNLIMITED
+              PASSWORD_REUSE_TIME UNLIMITED
+              PASSWORD_REUSE_MAX UNLIMITED
+              PASSWORD_LOCK_TIME UNLIMITED
+              PASSWORD_GRACE_TIME UNLIMITED';
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
 
         SELECT COUNT(*) INTO v_cnt FROM dba_users WHERE username = 'ORDS_PUBLIC_USER';
         IF v_cnt = 0 THEN
-            EXECUTE IMMEDIATE 'CREATE USER ORDS_PUBLIC_USER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP';
+            EXECUTE IMMEDIATE 'CREATE USER ORDS_PUBLIC_USER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP PROFILE UNLIMITED_PASS_PROFILE';
         ELSE
-            EXECUTE IMMEDIATE 'ALTER USER ORDS_PUBLIC_USER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" ACCOUNT UNLOCK';
+            EXECUTE IMMEDIATE 'ALTER USER ORDS_PUBLIC_USER IDENTIFIED BY "${APEX_LISTENER_PASSWORD}" PROFILE UNLIMITED_PASS_PROFILE ACCOUNT UNLOCK';
         END IF;
         EXECUTE IMMEDIATE 'GRANT CREATE SESSION TO ORDS_PUBLIC_USER';
         EXECUTE IMMEDIATE 'ALTER USER ORDS_PUBLIC_USER ACCOUNT UNLOCK';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_USER PROFILE UNLIMITED_PASS_PROFILE ACCOUNT UNLOCK';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_LISTENER PROFILE UNLIMITED_PASS_PROFILE ACCOUNT UNLOCK';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_REST_PUBLIC_USER PROFILE UNLIMITED_PASS_PROFILE ACCOUNT UNLOCK';
         EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_USER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
         EXECUTE IMMEDIATE 'ALTER USER APEX_REST_PUBLIC_USER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
         EXECUTE IMMEDIATE 'ALTER USER APEX_LISTENER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
@@ -663,96 +695,157 @@ BEGIN
         EXECUTE IMMEDIATE 'GRANT INHERIT PRIVILEGES ON USER ORDS_PUBLIC_USER TO ' || v_apex_schema;
         EXECUTE IMMEDIATE 'GRANT INHERIT PRIVILEGES ON USER APEX_PUBLIC_USER TO APEX_PUBLIC_ROUTER';
         EXECUTE IMMEDIATE 'GRANT INHERIT PRIVILEGES ON USER ORDS_PUBLIC_USER TO APEX_PUBLIC_ROUTER';
-
-        -- PL/SQL Gateway Config View
-        EXECUTE IMMEDIATE 'CREATE OR REPLACE VIEW ORDS_METADATA.PLSQL_GATEWAY_CONFIG AS SELECT ''ORDS_PUBLIC_USER'' AS runtime_user, ''APEX_PUBLIC_USER'' AS plsql_gateway_user, ''APEX Gateway'' AS comments, ''SYS'' AS created_by, SYSDATE AS created_on, ''SYS'' AS updated_by, SYSDATE AS updated_on FROM dual';
-        EXECUTE IMMEDIATE 'GRANT SELECT ON ORDS_METADATA.PLSQL_GATEWAY_CONFIG TO ORDS_PUBLIC_USER';
-        EXECUTE IMMEDIATE 'GRANT SELECT ON ORDS_METADATA.PLSQL_GATEWAY_CONFIG TO APEX_PUBLIC_USER';
-        EXECUTE IMMEDIATE 'GRANT SELECT ON ORDS_METADATA.PLSQL_GATEWAY_CONFIG TO PUBLIC';
     EXCEPTION WHEN OTHERS THEN NULL;
     END;
 END;
 /
 COMMIT;
 
--- Set APEX Instance Admin Password (Idempotent)
+-- Set APEX Instance Admin Password (Official Oracle API)
 BEGIN
-    APEX_UTIL.set_security_group_id( 10 );
-    IF APEX_UTIL.get_user_id('${APEX_ADMIN_USER:-ADMIN}') IS NULL THEN
-        APEX_UTIL.create_user(
-            p_user_name                    => '${APEX_ADMIN_USER:-ADMIN}',
-            p_email_address                => '${APEX_ADMIN_EMAIL:-${PROFILE_APEX_ADMIN_EMAIL:-admin@company.com}}',
-            p_web_password                 => '${APEX_ADMIN_PASSWORD}',
-            p_developer_privs              => 'ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE',
-            p_change_password_on_first_use => 'N'
-        );
-    ELSE
-        APEX_UTIL.change_password_by_developer(
-            p_user_name => '${APEX_ADMIN_USER:-ADMIN}',
-            p_password  => '${APEX_ADMIN_PASSWORD}'
-        );
-    END IF;
+    ${APEX_SCHEMA_NAME}.wwv_flow_instance_admin.set_parameter('STRONG_SITE_ADMIN_PASSWORD', 'N');
+    ${APEX_SCHEMA_NAME}.wwv_flow_instance_admin.set_parameter('ACCOUNT_LIFETIME_DAYS', '9999');
+    ${APEX_SCHEMA_NAME}.wwv_flow_instance_admin.set_parameter('MAX_LOGIN_FAILURES', '100');
+    COMMIT;
+    ${APEX_SCHEMA_NAME}.wwv_flow_instance_admin.create_or_update_admin_user(
+        p_username => 'ADMIN',
+        p_email    => '${APEX_ADMIN_EMAIL:-${PROFILE_APEX_ADMIN_EMAIL:-admin@company.com}}',
+        p_password => '${APEX_ADMIN_PASSWORD}'
+    );
+    ${APEX_SCHEMA_NAME}.wwv_flow_instance_admin.unlock_user(
+        p_workspace => 'INTERNAL',
+        p_username  => 'ADMIN',
+        p_password  => '${APEX_ADMIN_PASSWORD}'
+    );
+    UPDATE ${APEX_SCHEMA_NAME}.wwv_flow_fnd_user
+    SET change_password_on_first_use = 'N',
+        account_locked = 'N'
+    WHERE security_group_id = 10 AND user_name = 'ADMIN';
     COMMIT;
 EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
 
--- Create APEX Workspace for Application (Idempotent)
+-- Ensure primary schema user exists before creating workspace (Created without _oracle_script so APEX allows provisioning)
+ALTER SESSION SET "_oracle_script" = FALSE;
+
+DECLARE
+    v_user_cnt NUMBER;
+    v_schema VARCHAR2(100) := '${APEX_SCHEMA_USER:-${PROFILE_APEX_SCHEMA_USER:-${DB_SUFFIX_UPPER}_SCHEMA}}';
 BEGIN
-    IF APEX_UTIL.find_security_group_id('${APEX_WORKSPACE:-${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}}') IS NULL THEN
-        APEX_INSTANCE_ADMIN.add_workspace(
-            p_workspace_id   => NULL,
-            p_workspace      => '${APEX_WORKSPACE:-${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}}',
-            p_primary_schema => '${APEX_SCHEMA_USER:-${PROFILE_APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}}'
-        );
-        COMMIT;
+    SELECT COUNT(*) INTO v_user_cnt FROM dba_users WHERE username = v_schema;
+    IF v_user_cnt = 0 THEN
+        EXECUTE IMMEDIATE 'CREATE USER ' || v_schema || ' IDENTIFIED BY "${USER_DEV_PASSWORD:-${APEX_ADMIN_PASSWORD}}"';
+        EXECUTE IMMEDIATE 'GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE PROCEDURE, CREATE SEQUENCE, CREATE SYNONYM TO ' || v_schema;
+        EXECUTE IMMEDIATE 'ALTER USER ' || v_schema || ' DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP QUOTA UNLIMITED ON USERS';
     END IF;
 EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
 
--- Create Developer user ADMIN inside Workspace (Idempotent)
+-- Create APEX Workspace for Application and Developer Users (Atomic)
 DECLARE
     v_workspace_id NUMBER;
+    v_ws_name VARCHAR2(100) := '${APEX_WORKSPACE:-${PROFILE_APEX_WORKSPACE:-${DB_SUFFIX_UPPER}_WORKSPACE}}';
+    v_schema VARCHAR2(100) := '${APEX_SCHEMA_USER:-${PROFILE_APEX_SCHEMA_USER:-${DB_SUFFIX_UPPER}_SCHEMA}}';
 BEGIN
-    v_workspace_id := APEX_UTIL.find_security_group_id('${APEX_WORKSPACE:-${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}}');
-    IF v_workspace_id IS NOT NULL THEN
-        APEX_UTIL.set_security_group_id(v_workspace_id);
-        IF APEX_UTIL.get_user_id('${APEX_ADMIN_USER:-ADMIN}') IS NULL THEN
-            APEX_UTIL.create_user(
-                p_user_name                    => '${APEX_ADMIN_USER:-ADMIN}',
-                p_email_address                => '${APEX_ADMIN_EMAIL:-${PROFILE_APEX_ADMIN_EMAIL:-admin@company.com}}',
-                p_web_password                 => '${APEX_ADMIN_PASSWORD}',
+    v_workspace_id := ${APEX_SCHEMA_NAME}.HTMLDB_UTIL.find_security_group_id(v_ws_name);
+    IF v_workspace_id IS NULL OR v_workspace_id = 0 THEN
+        BEGIN
+            ${APEX_SCHEMA_NAME}.WWV_FLOW_INSTANCE_ADMIN.add_workspace(
+                p_workspace_id   => NULL,
+                p_workspace      => v_ws_name,
+                p_primary_schema => v_schema
+            );
+            COMMIT;
+            v_workspace_id := ${APEX_SCHEMA_NAME}.HTMLDB_UTIL.find_security_group_id(v_ws_name);
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+    END IF;
+
+    IF v_workspace_id IS NOT NULL AND v_workspace_id != 0 THEN
+        ${APEX_SCHEMA_NAME}.HTMLDB_UTIL.set_security_group_id(v_workspace_id);
+        
+        -- DEV
+        BEGIN
+            ${APEX_SCHEMA_NAME}.HTMLDB_UTIL.remove_user(p_user_name => 'DEV');
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+        BEGIN
+            ${APEX_SCHEMA_NAME}.HTMLDB_UTIL.create_user(
+                p_user_name                    => 'DEV',
+                p_email_address                => 'dev@company.local',
+                p_web_password                 => '${USER_DEV_PASSWORD:-${APEX_ADMIN_PASSWORD}}',
                 p_developer_privs              => 'ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE',
+                p_account_expiry               => sysdate + 3650,
+                p_account_locked               => 'N',
                 p_change_password_on_first_use => 'N'
             );
-        ELSE
-            APEX_UTIL.change_password_by_developer(
-                p_user_name => '${APEX_ADMIN_USER:-ADMIN}',
-                p_password  => '${APEX_ADMIN_PASSWORD}'
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+
+        -- USER_DEVELOPER
+        BEGIN
+            ${APEX_SCHEMA_NAME}.HTMLDB_UTIL.remove_user(p_user_name => 'USER_DEVELOPER');
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+        BEGIN
+            ${APEX_SCHEMA_NAME}.HTMLDB_UTIL.create_user(
+                p_user_name                    => 'USER_DEVELOPER',
+                p_email_address                => 'user_developer@company.local',
+                p_web_password                 => '${USER_DEV_PASSWORD:-${APEX_ADMIN_PASSWORD}}',
+                p_developer_privs              => 'ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE',
+                p_account_expiry               => sysdate + 3650,
+                p_account_locked               => 'N',
+                p_change_password_on_first_use => 'N'
             );
-        END IF;
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+
+        -- ADMIN
+        BEGIN
+            ${APEX_SCHEMA_NAME}.HTMLDB_UTIL.remove_user(p_user_name => 'ADMIN');
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+        BEGIN
+            ${APEX_SCHEMA_NAME}.HTMLDB_UTIL.create_user(
+                p_user_name                    => 'ADMIN',
+                p_email_address                => 'admin@company.local',
+                p_web_password                 => '${APEX_ADMIN_PASSWORD}',
+                p_developer_privs              => 'ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE',
+                p_account_expiry               => sysdate + 3650,
+                p_account_locked               => 'N',
+                p_change_password_on_first_use => 'N'
+            );
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
         COMMIT;
     END IF;
-EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
 
 EXIT;
 EOF
 
-  OTHER_CONTAINERS=$(podman ps --format '{{.Names}}' 2>/dev/null | grep -E '^db-|^oracle-db-' | grep -v "^${CONTAINER_NAME}$" || echo "")
-  if [ -n "$OTHER_CONTAINERS" ]; then
-    echo "ℹ️ Vabastan mälumahtu APEX paigalduse ajaks: peatan ajutiselt konteinerid: $OTHER_CONTAINERS..."
-    podman stop $OTHER_CONTAINERS >/dev/null 2>&1 || true
-  fi
-
+  # Do not pause other active database containers to avoid clock drift / ORA-12752 PMON termination
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
     podman exec "$CONTAINER_NAME" mkdir -p /tmp/apex_install/apex 2>/dev/null || true
     podman cp "$LOCAL_SQL_SCRIPT" "$CONTAINER_NAME":/tmp/apex_install/apex/run_install.sql
     podman cp "$LOCAL_POST_SQL_SCRIPT" "$CONTAINER_NAME":/tmp/apex_install/apex/run_post_install.sql
-    podman exec "$CONTAINER_NAME" chmod 644 /tmp/apex_install/apex/run_install.sql /tmp/apex_install/apex/run_post_install.sql 2>/dev/null || true
-    podman exec -i -w /tmp/apex_install/apex "$CONTAINER_NAME" sh -c "sqlplus -s 'sys/${SYS_PASSWORD}@localhost:1521/${DB_SERVICE} as sysdba' @run_install.sql && sqlplus -s 'sys/${SYS_PASSWORD}@localhost:1521/${DB_SERVICE} as sysdba' @run_post_install.sql" > "$SQL_LOG_FILE" 2>&1 &
+    
+    cat << 'RUN_EOF' > /tmp/run_apex_in_container.sh
+#!/bin/bash
+export ORACLE_HOME=$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1)
+[ -n "$ORACLE_HOME" ] && export PATH="$ORACLE_HOME/bin:$PATH"
+cd /tmp/apex_install/apex
+sqlplus -s / as sysdba @run_install.sql
+sqlplus -s / as sysdba @run_post_install.sql
+RUN_EOF
+    chmod +x /tmp/run_apex_in_container.sh
+    podman cp /tmp/run_apex_in_container.sh "$CONTAINER_NAME":/tmp/apex_install/apex/run.sh
+    podman exec "$CONTAINER_NAME" chmod 755 /tmp/apex_install/apex/run.sh /tmp/apex_install/apex/run_install.sql /tmp/apex_install/apex/run_post_install.sql 2>/dev/null || true
+    podman exec -i -w /tmp/apex_install/apex "$CONTAINER_NAME" /tmp/apex_install/apex/run.sh > "$SQL_LOG_FILE" 2>&1 &
+    rm -f /tmp/run_apex_in_container.sh
   else
     $DB_CLI "$CONN_STR" @"$LOCAL_SQL_SCRIPT" >> "$SQL_LOG_FILE" 2>&1 && $DB_CLI "$CONN_STR" @"$LOCAL_POST_SQL_SCRIPT" >> "$SQL_LOG_FILE" 2>&1 &
   fi
@@ -776,13 +869,13 @@ EOF
   # Kontrollime kas APEX paigaldus oli edukas (VALID staatus registris)
   local_ver_check=""
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
-    local_ver_check=$(podman exec -i "$CONTAINER_NAME" sqlplus -s "$CONN_STR" <<EOF 2>/dev/null | grep -E 'VALID|INVALID' || echo ""
+    local_ver_check=$(podman exec -i "$CONTAINER_NAME" sh -c 'export ORACLE_HOME=$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n "$ORACLE_HOME" ] && export PATH="$ORACLE_HOME/bin:$PATH"; sqlplus -s / as sysdba <<EOF
 SET FEEDBACK OFF
 SET HEADING OFF
-SELECT status FROM dba_registry WHERE comp_id = 'APEX';
+ALTER SESSION SET CONTAINER = '"${DB_SERVICE}"';
+SELECT status FROM dba_registry WHERE comp_id = '\''APEX'\'';
 EXIT;
-EOF
-)
+EOF' 2>/dev/null | grep -E 'VALID|INVALID' || echo "")
   else
     local_ver_check=$($DB_CLI "$CONN_STR" <<EOF 2>/dev/null | grep -E 'VALID|INVALID' || echo ""
 SET FEEDBACK OFF
@@ -846,7 +939,6 @@ if [ "$SKIP_ORDS" = "false" ] && podman container exists "$ORDS_CONTAINER" 2>/de
 <entry key=\"db.username\">ORDS_PUBLIC_USER</entry>
 <entry key=\"db.password\">${APEX_LISTENER_PASSWORD}</entry>
 <entry key=\"feature.sdw\">true</entry>
-<entry key=\"plsql.gateway.mode\">proxied</entry>
 <entry key=\"restEnabledSql.active\">true</entry>
 </properties>
 EOF_POOL
@@ -867,24 +959,32 @@ EOF_POOL
 <entry key=\"db.username\">ORDS_PUBLIC_USER</entry>
 <entry key=\"db.password\">${APEX_LISTENER_PASSWORD}</entry>
 <entry key=\"feature.sdw\">true</entry>
-<entry key=\"plsql.gateway.mode\">proxied</entry>
-<entry key=\"security.requestValidationFunction\">ords_util.authorize_plsql_gateway</entry>
 <entry key=\"restEnabledSql.active\">true</entry>
 </properties>
 EOF_POOL
       " || true
     fi
 
-    # Ensure url-mapping.xml dynamically maps all database pool directories
-    podman exec -i "$ORDS_CONTAINER" bash -c "
-      cat << 'EOF_MAP' > /etc/ords/config/url-mapping.xml
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<pool-mappings xmlns=\"http://xmlns.oracle.com/ords/pool-mapping\">
-  <pool-mapping name=\"proxy\" type=\"basepath\" value=\"proxy\" />
-  <pool-mapping name=\"lis\" type=\"basepath\" value=\"lis\" />
-</pool-mappings>
-EOF_MAP
-    " || true
+    # Ensure global settings and clean any legacy url-mapping.xml
+    podman exec -i "$ORDS_CONTAINER" bash -c '
+      mkdir -p /etc/ords/config/global
+      cat << "EOF_GLOBAL" > /etc/ords/config/global/settings.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<entry key="database.api.enabled">true</entry>
+<entry key="feature.sdw">true</entry>
+<entry key="restEnabledSql.active">true</entry>
+<entry key="standalone.doc.root">/opt/oracle/docroot</entry>
+<entry key="standalone.http.port">8088</entry>
+<entry key="standalone.https.port">8448</entry>
+<entry key="standalone.static.context.path">/i</entry>
+<entry key="standalone.static.path">/opt/oracle/apex_images/images</entry>
+</properties>
+EOF_GLOBAL
+
+      rm -f /etc/ords/config/url-mapping.xml 2>/dev/null || true
+    ' || true
 
     if [ -n "$APEX_LISTENER_PASSWORD" ]; then
       podman exec "$ORDS_CONTAINER" bash -c "for pool in \$(find /etc/ords/config/databases/ -name 'pool.xml' 2>/dev/null); do sed -i 's|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$APEX_LISTENER_PASSWORD</entry>|g' \"\$pool\" 2>/dev/null || true; done" || true
@@ -933,11 +1033,6 @@ else
   STEP5_SECS=0
   STEP5_TIME="vahele jäetud"
   echo "5. Patches/ kataloog puudub — vahele jäetud."
-fi
-
-if [ -n "$OTHER_CONTAINERS" ]; then
-  echo "ℹ️ Taaskäivitan peatatud konteinerid: $OTHER_CONTAINERS..."
-  podman start $OTHER_CONTAINERS >/dev/null 2>&1 || true
 fi
 
 TOTAL_SECS=$(( $(date +%s) - START_TOTAL ))

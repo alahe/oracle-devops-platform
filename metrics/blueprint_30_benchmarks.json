@@ -1,0 +1,49 @@
+{
+  "blueprint_id": 30,
+  "history": [
+    {
+      "timestamp": "2026-08-28T21:23:44.237502",
+      "duration_seconds": 414
+    },
+    {
+      "timestamp": "2026-08-29T00:57:41.738238",
+      "duration_seconds": 75
+    },
+    {
+      "timestamp": "2026-08-29T07:45:06.861234",
+      "duration_seconds": 86
+    },
+    {
+      "timestamp": "2026-08-29T08:02:24.571258",
+      "duration_seconds": 87
+    },
+    {
+      "timestamp": "2026-08-29T08:07:24.735079",
+      "duration_seconds": 84
+    },
+    {
+      "timestamp": "2026-08-29T08:10:53.722093",
+      "duration_seconds": 85
+    },
+    {
+      "timestamp": "2026-08-29T08:13:56.166397",
+      "duration_seconds": 86
+    },
+    {
+      "timestamp": "2026-08-29T08:55:29.993043",
+      "duration_seconds": 91
+    },
+    {
+      "timestamp": "2026-08-29T12:05:47.760037",
+      "duration_seconds": 85
+    },
+    {
+      "timestamp": "2026-08-30T15:25:26.586503",
+      "duration_seconds": 82
+    }
+  ],
+  "runs_count": 10,
+  "average_duration_seconds": 117,
+  "min_duration_seconds": 75,
+  "max_duration_seconds": 414
+}

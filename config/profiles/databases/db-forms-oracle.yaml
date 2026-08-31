@@ -46,11 +46,16 @@ users:
     role: SCHEMA
     wallet_alias: DB_FORMS_SCHEMA
     color: "#8E44AD"
-  - username: FORMS_DEV
+  - username: USER_DEVELOPER
     role: DEVELOPER
     wallet_alias: DB_FORMS_DEV
     color: "#27AE60"
-  - username: FORMS_VIEWER
+  - username: USER_APP
+    role: NORMAL
+    roles: [RESOURCE]
+    wallet_alias: DB_FORMS_APP
+    color: "#F39C12"
+  - username: USER_VIEWER
     role: VIEWER
     wallet_alias: DB_FORMS_VIEWER
-    color: "#F39C12"
+    color: "#95A5A6"

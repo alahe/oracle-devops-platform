@@ -34,12 +34,12 @@ trap 'rm -rf "$mock_metrics_dir"' EXIT
   save_blueprint_benchmark 3 300
 
   stats=$(get_blueprint_stats 3)
-  if [[ "$stats" != *"keskmine: 4m 10s"* ]] && [[ "$stats" != *"keskmine: 250s"* ]]; then
+  if [[ "$stats" != *"avg: 4m 10s"* ]] && [[ "$stats" != *"keskmine: 4m 10s"* ]] && [[ "$stats" != *"keskmine: 250s"* ]]; then
     echo "FAIL: Expected average 250s (4m 10s), got: '$stats'"
     exit 1
   fi
 
-  if [[ "$stats" != *"min: 3m 20s"* ]] || [[ "$stats" != *"max: 5m 0s"* ]] || [[ "$stats" != *"mõõtmisi: 2"* ]]; then
+  if [[ "$stats" != *"min: 3m 20s"* ]] || [[ "$stats" != *"max: 5m 0s"* ]] || { [[ "$stats" != *"measurements: 2"* ]] && [[ "$stats" != *"mõõtmisi: 2"* ]]; }; then
     echo "FAIL: Expected min 3m 20s, max 5m 0s, count 2 in stats: '$stats'"
     exit 1
   fi

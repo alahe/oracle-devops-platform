@@ -1,3 +1,5 @@
+[ 🇬🇧 English ](forms-setup.md) | [ 🇪🇪 Eesti ](et/forms-setup.md) | [ 🇸🇪 Svenska ](sv/README.md) | [ 🇱🇻 Latviešu ](lv/README.md) | [ 🇱🇹 Lietuvių ](lt/README.md)
+
 # Oracle Forms 14c (14.1.2) Paigaldus-, Arendus- ja Kasutusjuhend
 
 See juhend kirjeldab **Oracle Forms 14c (Fusion Middleware 14.1.2 / Forms Services)** paigaldamist, arhitektuuri, arendaja töövooge, failide edastamist konteinerisse, piltide ja hetktõmmiste haldust ning Forms rakenduste käitamist ja APEX-isse migreerimist.
@@ -12,7 +14,7 @@ See juhend kirjeldab **Oracle Forms 14c (Fusion Middleware 14.1.2 / Forms Servic
 | 🌐 **Forms Developer Hub** | `6082` | Arendaja veebikeskus ja diagnostikaliides (`http://localhost:6082/vnc.html`). |
 | ⚙️ **WebLogic Console** | `7001` | WebLogic AdminServer haldusliides (`/console`). |
 | 🗄️ **Forms DB (`db-forms`)** | `1534` | Oracle 23ai Free andmebaas RCU skeemidega (`FORMS_STB`, `FORMS_OPSS`, `FORMS_IAU`, `FORMS_WLS`). |
-| 🗄️ **Custom DB (`db-custom` / `db-lis`)** | `1531` | Custom ärirakenduse andmebaas (andmed, tabelid, paketid). |
+| 🗄️ **Custom DB (`db-custom` / `db-alise`)** | `1531` | Custom ärirakenduse andmebaas (andmed, tabelid, paketid). |
 | 🚀 **ORDS & APEX** | `8181` / `8088` | Oracle REST Data Services ja APEX App Builder. |
 
 ---
@@ -138,8 +140,8 @@ Kompileerimisel saab määrata sihtandmebaasi aliase (mis loetakse turvaliselt S
 | **Blueprint 14** | `14-forms-with-dedicated-db` | Oracle Forms 14c koos pühendatud metaandmete andmebaasiga (`db-forms`). |
 | **Blueprint 15** | `15-forms-full-enterprise` | Täisarhitektuur: Forms (`app-forms`) + Forms DB (`db-forms`) + Custom DB (`db-custom`) + APEX Proxy DB (`db-proxy`) + ORDS. |
 | **Blueprint 16** | `16-forms-minimal-hybrid` | Minimaalne hübriid: Forms (`app-forms`) + Forms/APEX Proxy DB (`db-forms-proxy`) + Custom DB (`db-custom`) + ORDS. |
-| **Blueprint 17** | `17-forms-all-in-one-db` | Ühendatud DB testvariant: Forms (`app-forms`) + Kõik-ühes andmebaas (`db-all`) + ORDS. |
-| **Blueprint 18** | `18-forms-with-embedded-ords` | Forms + Sisseehitatud ORDS Jetty: Kõik-ühes rakendusserver (`app-forms`: Forms 9001 + ORDS Jetty 8088) + `db-proxy`. |
+| **Blueprint 17** | `17-forms-with-embedded-ords` | Forms + Sisseehitatud ORDS Jetty: Kõik-ühes rakendusserver (`app-forms`: Forms 9001 + ORDS Jetty 8088) + `db-proxy`. |
+| **Blueprint 18** | `18-ultimate-all-in-one-enterprise` | 🌟 Ultimate Enterprise All-in-One: Forms 14c + Analytics Publisher + APEX 26.1 + ORDS ühendatud andmebaasil (`db-proxy`). |
 
 ---
 
@@ -163,4 +165,3 @@ Kompileerimisel saab määrata sihtandmebaasi aliase (mis loetakse turvaliselt S
 2. **Samm 2:** Käivita `./scripts/forms/export-forms-for-apex.sh`. See genereerib faili `forms_apps/apex_migration_bundle.zip`.
 3. **Samm 3:** Ava Oracle APEX App Builder, vali **App Builder &rarr; Application Migration Workshop** ning laadi üles loodud ZIP arhiiv.
 4. **Samm 4:** Eralda äriloogika käsuga `./scripts/forms/extract-forms-plsql.sh forms_apps/<vorm>_fmb.xml` ning rakenda genereeritud pakett andmebaasis.
-

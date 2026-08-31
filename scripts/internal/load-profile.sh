@@ -87,6 +87,9 @@ lines = [
     f"export RAW_CONTAINER_IMAGE={q(db.get('container_image', ''))}",
     # ORDS
     f"export PROFILE_ORDS_ENABLED={q(str(ords.get('enabled', True)).lower())}",
+    f"export PROFILE_ORDS_POOL_NAME={q(ords.get('pool_name', ''))}",
+    f"export PROFILE_ORDS_URL_MAPPING={q(ords.get('url_mapping', ''))}",
+    f"export PROFILE_ORDS_SCHEMA_ALIAS={q(ords.get('schema_alias', ''))}",
     f"export PROFILE_ORDS_MODE={q(ords.get('mode', 'local'))}",
     f"export PROFILE_ORDS_EXTERNAL_URL={q(ords.get('external_ords_url', ''))}",
     f"export PROFILE_ORDS_EXTERNAL_HOST={q(ords.get('external_ords_host', ''))}",
@@ -251,6 +254,41 @@ load_db_profile() {
     export IS_ADB="false"
   fi
 
+  # Prebuilt Fast-Start Image Discovery:
+  # If local prebuilt image exists in Podman/Docker, auto-switch to prebuilt image and set flags
+  if [ "${PROFILE_APEX_INSTALL_REQUIRED:-true}" = "true" ] && [ "${IS_ADB:-false}" != "true" ] && [ -z "$MAIN_DB_IMAGE" ]; then
+    if podman image exists "localhost/oracle-free-apex:23ai-${PROFILE_VENDOR:-gvenzl}-apex${PROFILE_APEX_VERSION:-26.1}" 2>/dev/null; then
+      export RESOLVED_DB_IMAGE="localhost/oracle-free-apex:23ai-${PROFILE_VENDOR:-gvenzl}-apex${PROFILE_APEX_VERSION:-26.1}"
+      export PROFILE_APEX_PREINSTALLED="true"
+    elif podman image exists "localhost/oracle-free-apex:latest" 2>/dev/null; then
+      export RESOLVED_DB_IMAGE="localhost/oracle-free-apex:latest"
+      export PROFILE_APEX_PREINSTALLED="true"
+    fi
+  fi
+
+  if [ "${PROFILE_FORMS_ENABLED:-false}" = "true" ] || [ "${FORMS_ENABLED:-false}" = "true" ]; then
+    if [ -z "$FORMS_CONTAINER_IMAGE" ]; then
+      if podman image exists "localhost/oracle-forms:14.1.2" 2>/dev/null; then
+        export FORMS_CONTAINER_IMAGE="localhost/oracle-forms:14.1.2"
+        export FORMS_PREINSTALLED="true"
+      elif podman image exists "localhost/oracle-forms:latest" 2>/dev/null; then
+        export FORMS_CONTAINER_IMAGE="localhost/oracle-forms:latest"
+        export FORMS_PREINSTALLED="true"
+      fi
+    fi
+  fi
+
+  if [ "${PROFILE_PUBLISHER_ENABLED:-false}" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ]; then
+    if [ -z "$PUBLISHER_CONTAINER_IMAGE" ]; then
+      if podman image exists "localhost/oracle-publisher-domain:latest" 2>/dev/null; then
+        export PUBLISHER_CONTAINER_IMAGE="localhost/oracle-publisher-domain:latest"
+        export PUBLISHER_PREINSTALLED="true"
+      elif podman image exists "localhost/oracle-publisher:latest" 2>/dev/null; then
+        export PUBLISHER_CONTAINER_IMAGE="localhost/oracle-publisher:latest"
+      fi
+    fi
+  fi
+
   # DB Versiooni tuletamine pildist
   local db_ver_label="Oracle Database 23ai Free (23.x)"
   if [[ "$RESOLVED_DB_IMAGE" == *"21"* ]]; then
@@ -347,7 +385,16 @@ get_active_db_instances() {
   local raw_instances=()
   local found_proxy=false
 
-  if [ -f "$env_file" ]; then
+  # 0. Kontrollime kõigepealt mälus olevaid keskkonnamuutujaid (kui need on eksporditud)
+  for env_k in DB_PROXY DB_PUBLISHER DB_FORMS DB_ALISE; do
+    local prof_val="${!env_k:-}"
+    if [ -n "$prof_val" ] && [ "$prof_val" != "NONE" ]; then
+      local c_name=$(echo "$env_k" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+      raw_instances+=("${c_name}|${prof_val}|${env_k}")
+    fi
+  done
+
+  if [ "${#raw_instances[@]}" -eq 0 ] && [ -f "$env_file" ]; then
     while IFS= read -r line || [ -n "$line" ]; do
       line=$(echo "$line" | sed 's/#.*//' | xargs)
       [ -z "$line" ] && continue
@@ -360,14 +407,16 @@ get_active_db_instances() {
         if [[ "$key" =~ ^DB_ ]] || [[ "$key" =~ _DB$ ]] || [[ "$key" =~ ^ORDS_ ]] || [[ "$key" =~ _ORDS$ ]] || [[ "$key" =~ ^PROXY_ ]] || [[ "$key" =~ _PROXY$ ]] || [[ "$key" == "MAIN_DB_PROFILE" ]] || [[ "$key" == "PUB_DB" ]]; then
           local res_prof="$profile"
           case "$profile" in
-            "bizapp-standard-oracle"|"bizapp-free"|"bizapp"|"app-free") res_prof="db-lis-oracle" ;;
-            "bizapp-adb-oracle"|"bizapp-adb"|"app-adb") res_prof="db-lis-adb" ;;
+            "alise-standard-oracle"|"alise-free"|"alise"|"app-free"|"bizapp-standard-oracle"|"bizapp-free"|"bizapp") res_prof="db-alise-oracle" ;;
+            "alise-adb-oracle"|"alise-adb"|"app-adb"|"bizapp-adb-oracle"|"bizapp-adb") res_prof="db-alise-adb" ;;
+            "db-lis-oracle") res_prof="db-alise-oracle" ;;
+            "db-lis-adb") res_prof="db-alise-adb" ;;
             "proxy-standard-oracle"|"proxy-free") res_prof="db-proxy-oracle" ;;
             "proxy-adb-oracle"|"proxy-adb") res_prof="db-proxy-adb" ;;
             "proxy-standard-gvenzl"|"proxy-gvenzl") res_prof="db-proxy-gvenzl" ;;
             "publisher-free") res_prof="db-publisher-oracle" ;;
             "publisher-only") res_prof="db-publisher-gvenzl" ;;
-            "appinfra-standard-gvenzl"|"appinfra"|"db-lis-gvenzl"|"lis-gvenzl") res_prof="db-infra-gvenzl" ;;
+            "appinfra-standard-gvenzl"|"appinfra"|"db-alise-gvenzl"|"alise-gvenzl") res_prof="db-infra-gvenzl" ;;
             "cicd-standard-oracle"|"cicd") res_prof="db-cicd" ;;
           esac
 
@@ -427,7 +476,7 @@ get_all_profile_container_names() {
 }
 
 get_required_secret_names() {
-  local secrets=("apex_db_sys_password" "publisher_db_sys_password" "proxy_db_sys_password" "lis_db_sys_password" "apex_schema_password" "test_dev_password" "ords_listener_password" "apex_admin_password")
+  local secrets=("apex_db_sys_password" "publisher_db_sys_password" "proxy_db_sys_password" "alise_db_sys_password" "lis_db_sys_password" "apex_schema_password" "test_dev_password" "ords_listener_password" "apex_admin_password")
   for inst in $(get_active_db_instances 2>/dev/null); do
     local cname
     cname=$(echo "$inst" | cut -d'|' -f1)

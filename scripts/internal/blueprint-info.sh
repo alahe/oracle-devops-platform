@@ -27,17 +27,58 @@ NC=$'\033[0m'
 BLUEPRINTS_DIR="$WORKSPACE_DIR/config/blueprints"
 
 # ----------------------------------------------------------------------------
-# 1. Helper: Resolve Blueprint File Path by Number
+# ----------------------------------------------------------------------------
+# 1. Helper: Resolve Blueprint File Path by Number or Name
 # ----------------------------------------------------------------------------
 get_blueprint_file() {
-  local num="$1"
-  num="${num//[^0-9]/}"
-  [ -z "$num" ] && return 1
+  local query="$1"
+  [ -z "$query" ] && return 1
 
-  local bp_file
-  bp_file=$(find "$BLUEPRINTS_DIR" -maxdepth 1 -type f -name ".env.${num}-*" -o -name ".env.${num}" 2>/dev/null | head -n 1)
+  # If query is already an existing file path
+  if [ -f "$query" ]; then
+    echo "$query"
+    return 0
+  fi
+
+  local bp_file=""
+
+  # If query is purely numeric
+  if [[ "$query" =~ ^[0-9]+$ ]]; then
+    bp_file=$(find "$BLUEPRINTS_DIR" -maxdepth 1 -type f \( -name ".env.${query}-*" -o -name ".env.${query}" \) 2>/dev/null | head -n 1)
+  else
+    # Query is a string/name (e.g. "forms-with-embedded-ords", "publisher-dedicated", "ultimate")
+    local clean_q
+    clean_q=$(echo "$query" | tr '[:upper:]' '[:lower:]' | sed -E 's/^\.env\.//; s/^[0-9]+[-_]//')
+    bp_file=$(find "$BLUEPRINTS_DIR" -maxdepth 1 -type f -iname ".env.*-${clean_q}*" 2>/dev/null | head -n 1)
+    if [ -z "$bp_file" ]; then
+      bp_file=$(find "$BLUEPRINTS_DIR" -maxdepth 1 -type f -iname ".env.*${clean_q}*" 2>/dev/null | head -n 1)
+    fi
+  fi
+
   if [ -n "$bp_file" ] && [ -f "$bp_file" ]; then
     echo "$bp_file"
+    return 0
+  fi
+  return 1
+}
+
+# ----------------------------------------------------------------------------
+# 1.1 Helper: Extract Blueprint Number from File or Query
+# ----------------------------------------------------------------------------
+get_blueprint_number() {
+  local query="$1"
+  local bp_file
+  bp_file=$(get_blueprint_file "$query" 2>/dev/null || echo "")
+  if [ -n "$bp_file" ]; then
+    local bname
+    bname=$(basename "$bp_file")
+    echo "$bname" | sed -E 's/^\.env\.([0-9]+).*/\1/'
+    return 0
+  fi
+  local num
+  num=$(echo "$query" | sed -E 's/.*\.env\.([0-9]+).*/\1/; s/[^0-9]//g')
+  if [ -n "$num" ]; then
+    echo "$num"
     return 0
   fi
   return 1
@@ -47,9 +88,12 @@ get_blueprint_file() {
 # 2. Helper: Extract Blueprint Metadata (Title & Description)
 # ----------------------------------------------------------------------------
 get_blueprint_meta() {
-  local num="$1"
+  local query="$1"
   local bp_file
-  bp_file=$(get_blueprint_file "$num") || return 1
+  bp_file=$(get_blueprint_file "$query") || return 1
+
+  local num
+  num=$(get_blueprint_number "$query" 2>/dev/null || echo "")
 
   local title=""
   local desc=""
@@ -71,9 +115,9 @@ get_blueprint_meta() {
 # 3. Dynamic Container Extraction Engine
 # ----------------------------------------------------------------------------
 extract_blueprint_containers() {
-  local num="$1"
+  local query="$1"
   local bp_file
-  bp_file=$(get_blueprint_file "$num") || return 1
+  bp_file=$(get_blueprint_file "$query") || return 1
 
   local db_publisher=""
   local db_proxy=""
@@ -87,7 +131,7 @@ extract_blueprint_containers() {
   # Parse variables directly from file safely
   db_publisher=$(grep -E "^DB_PUBLISHER=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
   db_proxy=$(grep -E "^DB_PROXY=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
-  db_lis=$(grep -E "^DB_LIS=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
+  db_alise=$(grep -E "^(DB_ALISE|DB_LIS)=" "$bp_file" 2>/dev/null | tail -n 1 | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
   db_forms=$(grep -E "^DB_FORMS=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
   skip_ords=$(grep -E "^SKIP_ORDS=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
   skip_publisher=$(grep -E "^SKIP_PUBLISHER=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
@@ -98,16 +142,20 @@ extract_blueprint_containers() {
 
   # Database containers
   if [ -n "$db_publisher" ] && [ "$db_publisher" != "NONE" ]; then
-    containers+=("db-publisher")
+    if [ "$db_publisher" != "$db_proxy" ] && [ "$db_publisher" != "$db_alise" ]; then
+      containers+=("db-publisher")
+    fi
   fi
   if [ -n "$db_proxy" ] && [ "$db_proxy" != "NONE" ]; then
     containers+=("db-proxy")
   fi
-  if [ -n "$db_lis" ] && [ "$db_lis" != "NONE" ]; then
-    containers+=("db-lis")
+  if [ -n "$db_alise" ] && [ "$db_alise" != "NONE" ]; then
+    if [ "$db_alise" != "$db_proxy" ]; then
+      containers+=("db-alise")
+    fi
   fi
   if [ -n "$db_forms" ] && [ "$db_forms" != "NONE" ]; then
-    if [ "$db_forms" != "$db_proxy" ] && [ "$db_forms" != "$db_lis" ]; then
+    if [ "$db_forms" != "$db_proxy" ] && [ "$db_forms" != "$db_alise" ] && [ "$db_forms" != "$db_publisher" ]; then
       containers+=("db-forms")
     fi
   fi
@@ -136,7 +184,7 @@ extract_blueprint_containers() {
 }
 
 # ----------------------------------------------------------------------------
-# 4. Print Dynamic Blueprints ASCII Table (Supports Optional Filter)
+# 4. Print Dynamic Blueprints ASCII Table (Grouped by Decade Series)
 # ----------------------------------------------------------------------------
 print_blueprints_table() {
   local filter="${1:-}"
@@ -149,54 +197,91 @@ print_blueprints_table() {
   printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" "Nr" "Blueprint (Kavandi Fail)" "Käivitatavad Konteinerid" "Otstarve ja Kirjeldus"
   printf "├────┼──────────────────────────────────────────┼─────────────────────────────┼──────────────────────────────────────────────┤\n"
 
+  # Find all blueprints and sort numerically
+  local all_files=()
+  while IFS= read -r f; do
+    [ -n "$f" ] && all_files+=("$f")
+  done < <(find "$BLUEPRINTS_DIR" -maxdepth 1 -type f -name ".env.*" 2>/dev/null | sed -E 's/.*\.env\.([0-9]+).*/\1 &/' | sort -n -k1,1 | awk '{print $2}')
+
   local match_count=0
-  for num in {1..18}; do
-    local bp_file
-    bp_file=$(get_blueprint_file "$num") || continue
-    match_count=$((match_count + 1))
-    
+  local last_group=""
+
+  for bp_file in "${all_files[@]}"; do
+    local bp_name
+    bp_name=$(basename "$bp_file")
+    local num
+    num=$(echo "$bp_name" | sed -E 's/^\.env\.([0-9]+).*/\1/')
+
     # Extract containers
+    local containers
     containers=$(extract_blueprint_containers "$num")
     containers="${containers:-None}"
     if [ ${#containers} -gt 27 ]; then
       containers="${containers:0:24}..."
     fi
-    
+
     # Extract metadata
+    local meta
     meta=$(get_blueprint_meta "$num")
+    local title
     title=$(echo "$meta" | awk -F':::' '{print $1}')
+    local desc
     desc=$(echo "$meta" | awk -F':::' '{print $2}')
-    
+
     # Apply optional filter
     if [ -n "$filter" ]; then
-      combined_text="$num $bp_file $containers $title $desc"
+      local combined_text="$num $bp_file $containers $title $desc"
       if ! echo "$combined_text" | grep -qi "$filter"; then
         continue
       fi
     fi
-    
-    bp_name=$(basename "$bp_file")
+
+    match_count=$((match_count + 1))
+
+    # Decade group header
+    local cur_group=""
+    if [ "$num" -lt 10 ]; then
+      cur_group="Core DB & APEX (1–9)"
+    elif [ "$num" -lt 20 ]; then
+      cur_group="Analytics Publisher (10–19)"
+    elif [ "$num" -lt 30 ]; then
+      cur_group="Oracle Forms 14c (20–29)"
+    elif [ "$num" -lt 40 ]; then
+      cur_group="Web IDE & Cloud Lab (30–39)"
+    else
+      cur_group="Ultimate Enterprise (40+)"
+    fi
+
+    if [ -z "$filter" ] && [ "$cur_group" != "$last_group" ]; then
+      if [ -n "$last_group" ]; then
+        printf "├────┼──────────────────────────────────────────┼─────────────────────────────┼──────────────────────────────────────────────┤\n"
+      fi
+      printf "│ \033[1;33m%-2s\033[0m │ \033[1;33m%-40s\033[0m │ %-27s │ %-44s │\n" "::" "🔹 Seeria: ${cur_group}" "" ""
+      printf "├────┼──────────────────────────────────────────┼─────────────────────────────┼──────────────────────────────────────────────┤\n"
+      last_group="$cur_group"
+    fi
+
     if [ ${#bp_name} -gt 40 ]; then
       bp_name="${bp_name:0:37}..."
     fi
-    
-    summary="${desc:-$title}"
+
+    local summary="${desc:-$title}"
     if [ ${#summary} -gt 44 ]; then
       summary="${summary:0:41}..."
     fi
-    
-    # Formatted row
-    printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" "$num" "$bp_name" "$containers" "$summary"
+
+    printf "│ %2d │ %-40s │ %-27s │ %-44s │\n" "$num" "$bp_name" "$containers" "$summary"
   done
+
   echo -e "└────┴──────────────────────────────────────────┴─────────────────────────────┴──────────────────────────────────────────────┘\n"
 
   if [ -n "$filter" ] && [ "$match_count" -eq 0 ]; then
     echo -e "   ℹ️  Ühtegi blueprinti ei leitud otsingusõnaga: '${YELLOW}$filter${NC}'"
   fi
 
-  echo -e "💡 ${YELLOW}Käivitamine toodangus/arenduses (ilma resetita):${NC}  ./scripts/setup-all.sh -b <1-18>"
-  echo -e "🧪 ${YELLOW}Käivitamine automaattestimises (puhta algseisuga):${NC} ./scripts/setup-all.sh -tb <1-18|all>"
-  echo -e "🔍 ${YELLOW}Detailse info vaatamine:${NC}                        ./scripts/setup-all.sh -sb <1-18>"
+  echo -e "💡 ${YELLOW}Käivitamine toodangus/arenduses (ilma resetita):${NC}  ./scripts/setup-all.sh -b <NUM|NIMI>"
+  echo -e "🧪 ${YELLOW}Käivitamine automaattestimises (puhta algseisuga):${NC} ./scripts/setup-all.sh -tb <NUM|NIMI|all>"
+  echo -e "🔍 ${YELLOW}Detailse info vaatamine:${NC}                        ./scripts/setup-all.sh -sb <NUM|NIMI>"
   echo -e "🔎 ${YELLOW}Märksõna järgi otsing:${NC}                          ./scripts/setup-all.sh --search <MÄRKSÕNA>\n"
 }
 
@@ -204,22 +289,18 @@ print_blueprints_table() {
 # 5. Show Detailed Blueprint Inspection Breakdown
 # ----------------------------------------------------------------------------
 show_blueprint_details() {
-  local num="$1"
-  num="${num//[^0-9]/}"
-  
-  if [ -z "$num" ] || [ "$num" -lt 1 ] || [ "$num" -gt 18 ]; then
-    echo -e "\n${RED}❌ VIGA: Palun sisesta kehtiv blueprinti number vahemikus 1–18!${NC}"
+  local query="$1"
+  local bp_file
+  bp_file=$(get_blueprint_file "$query")
+
+  if [ -z "$bp_file" ] || [ ! -f "$bp_file" ]; then
+    echo -e "\n${RED}❌ VIGA: Blueprinti '${query}' ei leitud!${NC}"
     echo -e "ℹ️  Kasuta käsku: ${CYAN}./scripts/setup-all.sh --list-blueprints${NC} nimekirja vaatamiseks.\n"
     return 1
   fi
 
-  local bp_file
-  bp_file=$(get_blueprint_file "$num")
-  if [ -z "$bp_file" ] || [ ! -f "$bp_file" ]; then
-    echo -e "${RED}❌ Blueprinti faili ei leitud numbrile: $num${NC}"
-    return 1
-  fi
-
+  local num
+  num=$(get_blueprint_number "$query")
   local bp_name
   bp_name=$(basename "$bp_file")
   local meta
@@ -245,7 +326,11 @@ show_blueprint_details() {
     bp_stats=$(get_blueprint_stats "$num" 2>/dev/null || echo "")
   fi
   if [ -n "$bp_stats" ]; then
-    echo -e "🔹 ${BOLD}Ajalooline kestus:${NC} ${YELLOW}$bp_stats${NC}"
+    local hist_lbl="Ajalooline kestus"
+    if declare -f msg_str >/dev/null 2>&1; then
+      hist_lbl="$(msg_str "LABEL_HIST_DURATION")"
+    fi
+    echo -e "🔹 ${BOLD}${hist_lbl}:${NC} ${YELLOW}$bp_stats${NC}"
   fi
 
   echo -e "\n🔹 ${BOLD}Plaanis käivitada järgmised konteinerid:${NC}"
@@ -257,14 +342,20 @@ show_blueprint_details() {
       db-proxy)
         echo -e "      ├── 🗄️  ${GREEN}db-proxy${NC}       [APEX/SSO Proxy]   Port: 1532 -> 1521/FREEPDB1"
         ;;
-      db-lis)
-        echo -e "      ├── 🗄️  ${GREEN}db-lis${NC}         [Isoleeritud LIS]  Port: 1533 -> 1521/FREEPDB1"
+      db-alise|db-lis)
+        echo -e "      ├── 🗄️  ${GREEN}db-alise${NC}       [ALISE Schema Engine] Port: 1533 -> 1521/FREEPDB1"
+        ;;
+      db-forms)
+        echo -e "      ├── 🗄️  ${GREEN}db-forms${NC}       [Forms RCU DB]     Port: 1534 -> 1521/FREEPDB1"
         ;;
       app-ords)
         echo -e "      ├── 🌐  ${CYAN}app-ords${NC}       [ORDS & APEX Web]  Pordid: 8088 (HTTP), 8448 (HTTPS)"
         ;;
       app-publisher)
         echo -e "      ├── 📊  ${MAGENTA}app-publisher${NC}  [Pixel Perfect]    Pordid: 9502 (HTTP), 9503 (HTTPS)"
+        ;;
+      app-forms)
+        echo -e "      ├── 📐  ${MAGENTA}app-forms${NC}      [Forms 14c Services] Pordid: 9001, 7001, 6082"
         ;;
       web-ide-dev)
         echo -e "      └── 💻  ${BLUE}web-ide-dev${NC}    [VS Code Web IDE]  Pordid: 8090 (HTTP), 8449 (HTTPS)"
@@ -282,16 +373,18 @@ show_blueprint_details() {
 # 6. Simulate Blueprint Dry-Run (Pre-flight Validation without modifying state)
 # ----------------------------------------------------------------------------
 simulate_blueprint_dry_run() {
-  local num="$1"
+  local query="$1"
   local is_test_mode="${2:-false}"
 
   local bp_file
-  bp_file=$(get_blueprint_file "$num")
+  bp_file=$(get_blueprint_file "$query")
   if [ -z "$bp_file" ]; then
-    echo -e "${RED}❌ VIGA: Blueprinti $num ei leitud!${NC}"
+    echo -e "${RED}❌ VIGA: Blueprinti '${query}' ei leitud!${NC}"
     return 1
   fi
 
+  local num
+  num=$(get_blueprint_number "$query")
   local bp_name
   bp_name=$(basename "$bp_file")
   local containers
@@ -304,42 +397,47 @@ simulate_blueprint_dry_run() {
   fi
 
   echo -e "\n${CYAN}==================================================================${NC}"
-  echo -e "${YELLOW}🔍 BLUEPRINT ${num} SIMULATSIOON (DRY-RUN PRE-FLIGHT CHECK)...${NC}"
+  echo -e "${YELLOW}$(msg_str "DRY_RUN_HEADER" "$num" "$bp_name")${NC}"
   echo -e "${CYAN}==================================================================${NC}"
-  echo -e "   ├─ 📋 Valitud Blueprint:      ${GREEN}${bp_name}${NC}"
-  echo -e "   ├─ ⚙️  Režiim:                 $( [ "$is_test_mode" = "true" ] && echo "${YELLOW}Automaattest (Test Mode -tb)${NC}" || echo "${GREEN}Toodang / Arendus (-b)${NC}" )"
-  [ -n "$bp_stats" ] && echo -e "   ├─ ⏱️  Ajalooline ooteaeg:     ${YELLOW}${bp_stats}${NC}"
-  echo -e "   ├─ 📦 Tuvastatud Konteinerid: ${CYAN}${containers}${NC}"
-  echo -e "   ├─ 🛡️  Konfiguratsiooni staatus: ✅ SÜNTAKSOK"
-  echo -e "   └─ 🌐 Pordikonfliktide kontroll: ✅ VALMIS KÄIVITUSEKS"
+  echo -e "   ├─ 📋 $(msg_str "LABEL_SELECTED_BP"):      ${GREEN}${bp_name}${NC}"
+  echo -e "   ├─ ⚙️  $(msg_str "LABEL_MODE"):                 $( [ "$is_test_mode" = "true" ] && echo "${YELLOW}$(msg_str "MODE_TEST")${NC}" || echo "${GREEN}$(msg_str "MODE_PROD")${NC}" )"
+  [ -n "$bp_stats" ] && echo -e "   ├─ ⏱️  $(msg_str "BENCHMARK_LABEL")     ${YELLOW}${bp_stats}${NC}"
+  echo -e "   ├─ 📦 $(msg_str "LABEL_DETECTED_CONTAINERS"): ${CYAN}${containers}${NC}"
+  echo -e "   ├─ 🛡️  $(msg_str "LABEL_CONFIG_STATUS")"
+  echo -e "   └─ 🌐 $(msg_str "LABEL_PORT_CHECK")"
   echo -e "${CYAN}==================================================================${NC}"
-  echo -e "🎉 ${GREEN}DRY-RUN EDUKAS:${NC} Blueprint ${num} on kehtiv ja valmis paigalduseks ilma vigadeta.\n"
+  echo -e "${GREEN}$(msg_str "DRY_RUN_SUCCESS" "$num")${NC}\n"
 }
 
 # ----------------------------------------------------------------------------
 # 7. List Blueprint Test Reports
 # ----------------------------------------------------------------------------
 list_blueprint_test_reports() {
-  local reports_dir="$WORKSPACE_DIR/tests/reports/scenarios"
+  local reports_dir="$WORKSPACE_DIR/tests/reports/blueprints"
   echo -e "\n${CYAN}==================================================================${NC}"
-  echo -e "${BOLD}📊   BLUEPRINTIDE TESTIARUANNETE OLEK (TEST SCENARIO REPORTS)${NC}"
+  echo -e "${BOLD}📊   BLUEPRINTIDE TESTIARUANNETE OLEK (BLUEPRINT TEST REPORTS)${NC}"
   echo -e "${CYAN}==================================================================${NC}"
   printf "┌────┬──────────────────────────────────────────┬──────────────┬─────────────────────────────┐\n"
   printf "│ %-2s │ %-40s │ %-12s │ %-27s │\n" "Nr" "Blueprint" "Aruanne" "Viimane Testi Fail"
   printf "├────┼──────────────────────────────────────────┼──────────────┼─────────────────────────────┤\n"
 
-  for num in {1..18}; do
-    local bp_file
-    bp_file=$(get_blueprint_file "$num") || continue
+  local all_files=()
+  while IFS= read -r f; do
+    [ -n "$f" ] && all_files+=("$f")
+  done < <(find "$BLUEPRINTS_DIR" -maxdepth 1 -type f -name ".env.*" 2>/dev/null | sed -E 's/.*\.env\.([0-9]+).*/\1 &/' | sort -n -k1,1 | awk '{print $2}')
+
+  for bp_file in "${all_files[@]}"; do
     local bp_name
     bp_name=$(basename "$bp_file")
-    local rep_file="$reports_dir/scenario_${num}_report.md"
+    local num
+    num=$(echo "$bp_name" | sed -E 's/^\.env\.([0-9]+).*/\1/')
+    local rep_file="$reports_dir/blueprint_${num}_report.md"
 
     local status="❌ Puudub"
     local report_name="-"
     if [ -f "$rep_file" ]; then
       status="✅ Olemas"
-      report_name="scenario_${num}_report.md"
+      report_name="blueprint_${num}_report.md"
     fi
 
     printf "│ %2d │ %-40s │ %-12s │ %-27s │\n" "$num" "$bp_name" "$status" "$report_name"

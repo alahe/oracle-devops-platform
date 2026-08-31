@@ -1,0 +1,5 @@
+# 📊 Architecture Blueprints (3–49) Comprehensive Test Matrix Report
+
+| Blueprint # | Overall Status | Cold Setup Time | Warm Restart Time | Cold URLs | Cold Login | Warm URLs | Warm Login |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **#31** | ❌ FAIL | 797s | 36s | PASS | FAIL | PASS | FAIL |

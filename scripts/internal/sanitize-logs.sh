@@ -42,16 +42,21 @@ print_step_progress() {
     formatted_time="${m}m ${s}s"
   fi
 
+  local dur_lbl="duration"
+  if declare -f msg_str >/dev/null 2>&1; then
+    dur_lbl="$(msg_str "LABEL_DURATION")"
+  fi
+
   if [ -t 1 ]; then
     # Interactive stdout TTY: update single line in-place
-    printf "\r\033[K   ⏳ %s... kestus: \033[1;33m%s\033[0m" "$msg" "$formatted_time"
+    printf "\r\033[K   ⏳ %s... %s: \033[1;33m%s\033[0m" "$msg" "$dur_lbl" "$formatted_time"
   elif ( true >/dev/tty ) 2>/dev/null; then
     # Direct TTY available: update single line in-place
-    printf "\r\033[K   ⏳ %s... kestus: \033[1;33m%s\033[0m" "$msg" "$formatted_time" > /dev/tty 2>/dev/null || true
+    printf "\r\033[K   ⏳ %s... %s: \033[1;33m%s\033[0m" "$msg" "$dur_lbl" "$formatted_time" > /dev/tty 2>/dev/null || true
   else
     # Piped / Log stream: emit clean progress line every interval (default 7s)
     if [ "$interval" -gt 0 ] && [ $((elapsed_num % interval)) -eq 0 ] && [ "$elapsed_num" -gt 0 ]; then
-      echo -e "   ⏳ ${msg}... kestus: ${formatted_time}"
+      echo -e "   ⏳ ${msg}... ${dur_lbl}: ${formatted_time}"
     fi
   fi
 }

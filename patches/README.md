@@ -20,7 +20,7 @@ patches/
 ```
 
 Skript teostab automaatselt järgmised sammud:
-- Tuvastab dünaamiliselt profiilipõhise primaarse andmebaasikonteineri (nt `db-lis`, `db-proxy`).
+- Tuvastab dünaamiliselt profiilipõhise primaarse andmebaasikonteineri (nt `db-alise`, `db-proxy`).
 - Kopeerib patchi paigaldusfailid konteinerisse ja käivitab `@catpatch.sql` / `@apxpatch.sql` andmebaasis `SYSDBA` õigustes (tõstab APEX versiooni 26.1.0 -> 26.1.4).
 - Uuendab automaatselt `apex_images` volume-is asuvad staatilised pildid ja stiilid (sünkroniseerimine toimub ka juhul, kui SQL patch on andmebaasis juba varasemalt rakendatud).
 - Taaskäivitab dünaamiliselt ORDS teenuse konteineri uute failide ja lahenduste rakendamiseks.

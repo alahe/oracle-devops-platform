@@ -25,11 +25,14 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
 # Vali hetktõmmise (Golden Snapshot) fail (vaikimisi latest või interaktiivne valik)
 FORCE=false
+NO_ROTATE=false
 BACKUP_FILE_NAME=""
 
 for arg in "$@"; do
   if [ "$arg" = "--force" ] || [ "$arg" = "-y" ]; then
     FORCE=true
+  elif [ "$arg" = "--no-rotate" ]; then
+    NO_ROTATE=true
   else
     BACKUP_FILE_NAME="$arg"
   fi
@@ -125,18 +128,18 @@ get_restore_stats() {
     if [ $val -gt $max ]; then max=$val; fi
   done
   local avg=$((sum / count))
-  echo "keskmine: $(format_duration $avg) (min: $(format_duration $min), max: $(format_duration $max))"
+  msg_str "BENCHMARK_AVG" "$(format_duration $avg)" "$(format_duration $min)" "$(format_duration $max)"
 }
 
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${YELLOW}🚀 Oracle APEX Proxy DB Volume Golden Snapshot Taastamine${NC}"
 echo -e "📂 Lähtehetktõmmis: ${CYAN}$BACKUP_FILE${NC}"
-echo -e "   📊 Ajalooline ooteaeg: ${YELLOW}$(get_restore_stats "1m 30s")${NC}"
+echo -e "   📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(get_restore_stats "1m 30s")${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 
 LOG_DIR="$WORKSPACE_DIR/install_logs"
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/restore_golden_snapshots_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/snapshot_restore_${TIMESTAMP}.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 START_RESTORE=$(date +%s)
@@ -177,6 +180,15 @@ echo ""
 
 echo "Käivitan teenused taastatud andmetega..."
 podman-compose "${COMPOSE_ARGS[@]}" up -d >> "$LOG_FILE" 2>&1
+
+if [ "$NO_ROTATE" != "true" ] && [ -x "$WORKSPACE_DIR/scripts/rotate-password.sh" ]; then
+  echo -e "${CYAN}🔄 Roteerin taastatud andmebaasi paroolid ja uuendan SEPS Walletit...${NC}"
+  if [ -x "$WORKSPACE_DIR/scripts/internal/wait-db-healthy.sh" ]; then
+    "$WORKSPACE_DIR/scripts/internal/wait-db-healthy.sh" "db-proxy" >> "$LOG_FILE" 2>&1 || true
+  fi
+  "$WORKSPACE_DIR/scripts/rotate-password.sh" all >> "$LOG_FILE" 2>&1 || true
+  echo -e "${GREEN}✅ Paroolid edukalt roteeritud ja sünkroniseeritud.${NC}"
+fi
 
 DURATION_RESTORE=$(( $(date +%s) - START_RESTORE ))
 

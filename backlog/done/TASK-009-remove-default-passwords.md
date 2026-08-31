@@ -3,7 +3,7 @@
 **Staatus:** `DONE`  
 **Prioriteet:** `HIGH`  
 **Valdkond:** `Security`  
-**Dokumentatsioon:** [docs/turvalisus.md](../turvalisus.md)  
+**Dokumentatsioon:** [docs/turvalisus.md](../../docs/turvalisus.md)  
 
 ---
 

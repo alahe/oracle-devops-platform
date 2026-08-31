@@ -115,26 +115,42 @@ echo -e "   ├─ ⚙️  ${BOLD}Konteineri mootor:${NC}  ${CONTAINER_CLI}"
 echo -e "   └─ 🏷️  ${BOLD}Soovitud APEX:${NC}      ${APEX_VER_ARG}"
 echo -e "${CYAN}==================================================================${NC}\n"
 
+# Pärime paroolid dünaamiliselt SEPS Walletist / Podman secretist
+SYS_PWD=$("$WORKSPACE_DIR/scripts/get-password.sh" "DB_PROXY_SYS" 2>/dev/null || true)
+if [ -z "$SYS_PWD" ]; then
+  SYS_PWD=$(podman secret inspect --showsecret apex_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+fi
+if [ -z "$SYS_PWD" ]; then
+  SYS_PWD=$("$WORKSPACE_DIR/scripts/internal/generate-passwords.sh" --show-only 2>/dev/null | grep "SYS Parool:" | awk '{print $3}' || true)
+fi
+
+DEV_PWD=$("$WORKSPACE_DIR/scripts/get-password.sh" "DB_PROXY_DEV" 2>/dev/null || true)
+if [ -z "$DEV_PWD" ]; then
+  DEV_PWD=$(podman secret inspect --showsecret test_dev_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+fi
+[ -z "$DEV_PWD" ] && DEV_PWD="$SYS_PWD"
+
 echo -e "   1. Käivitan ajutise FastStart DB konteineri (${TEMP_CONTAINER})..."
 $CONTAINER_CLI run -d --name "$TEMP_CONTAINER" \
-  -e ORACLE_PASSWORD=OraclePass2026Sys! \
+  -e ORACLE_PASSWORD="$SYS_PWD" \
+  -e APP_USER="USER_DEVELOPER" \
+  -e APP_USER_PASSWORD="$DEV_PWD" \
   -e ORACLE_FREE_FASTSTART=true \
   "$BASE_IMAGE" >/dev/null
 
 echo -e "   2. Ootan andmebaasi valmisolekut (healthy)..."
-COUNT=0
-until [ "$($CONTAINER_CLI inspect --format='{{.State.Health.Status}}' "$TEMP_CONTAINER" 2>/dev/null)" == "healthy" ] || [ $COUNT -ge 120 ]; do
-  sleep 2
-  COUNT=$((COUNT + 2))
-done
-
-if [ "$($CONTAINER_CLI inspect --format='{{.State.Health.Status}}' "$TEMP_CONTAINER" 2>/dev/null)" != "healthy" ]; then
-  echo -e "${RED}❌ VIGA: Ajutine baas ei saavutanud valmisolekut!${NC}"
-  exit 1
+if [ -x "$WORKSPACE_DIR/scripts/internal/wait-db-healthy.sh" ]; then
+  "$WORKSPACE_DIR/scripts/internal/wait-db-healthy.sh" "$TEMP_CONTAINER" 180
+else
+  COUNT=0
+  until [ "$($CONTAINER_CLI inspect --format='{{.State.Health.Status}}' "$TEMP_CONTAINER" 2>/dev/null)" == "healthy" ] || [ $COUNT -ge 120 ]; do
+    sleep 2
+    COUNT=$((COUNT + 2))
+  done
 fi
 
 echo -e "   3. Paigaldan APEX ${APEX_VER_ARG} mootori konteineri sisse..."
-SYS_PWD="OraclePass2026Sys!" "$WORKSPACE_DIR/scripts/internal/install-apex.sh" --db "$TEMP_CONTAINER" --version "$APEX_VER_ARG" >/dev/null 2>&1 || true
+SYS_PASSWORD="$SYS_PWD" "$WORKSPACE_DIR/scripts/internal/install-apex.sh" --db "$TEMP_CONTAINER" --version "$APEX_VER_ARG"
 
 echo -e "   4. Tuvastan reaalajas andmebaasi sisevaadetest versioonid (In-DB Auto-Tagging)..."
 DETECTED_INFO=$(detect_container_db_versions "$TEMP_CONTAINER" 2>/dev/null || echo "23ai:26.1:NONE")

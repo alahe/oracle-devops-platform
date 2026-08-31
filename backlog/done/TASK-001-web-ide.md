@@ -4,7 +4,7 @@
 **Prioriteet:** `HIGH`  
 **Valdkond:** `Tooling`  
 **Seotud Blueprintid:** `.env.9-*`, `.env.11-*`, `.env.12-*`, `.env.13-*`  
-**Dokumentatsioon:** [docs/web-ide-artifactory.md](../web-ide-artifactory.md)  
+**Dokumentatsioon:** [docs/web-ide-artifactory.md](../../docs/web-ide-artifactory.md)  
 
 ---
 

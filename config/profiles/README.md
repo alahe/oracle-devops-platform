@@ -42,13 +42,13 @@ users:
     wallet_alias: DB_MY_COMPANY_SCHEMA
     color: "#2980B9"
 
-  # Custom Developer Account:
-  - username: ALLANLAHE
+  # Standard Developer Account:
+  - username: USER_DEVELOPER
     role: NORMAL
     ords_enabled: true
-    ords_alias: allanlahe
+    ords_alias: user_developer
     roles: [DB_DEVELOPER_ROLE]
-    wallet_alias: DB_ALLANLAHE
+    wallet_alias: DB_PROXY_DEV
     color: "#F39C12"
 ```
 

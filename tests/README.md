@@ -9,8 +9,8 @@ Kõik 13 ametlikku arhitektuurset kavandit (Blueprints) asuvad keskse tõeallika
 ## 📁 Kataloogi Struktuur
 
 - **`config/blueprints/`** ➔ 13 ametlikku arhitektuurset blueprinti (`.env.1-*` kuni `.env.13-*`).
-- **`tests/reports/`** ➔ Blueprintide koondmaatriks ([`scenario_benchmark_matrix.md`](reports/scenario_benchmark_matrix.md)).
-- **`tests/reports/scenarios/`** ➔ Automaatselt genereeritud ja Git-is jälgitavad testiaruanded (`scenario_1_report.md` kuni `scenario_13_report.md`).
+- **`tests/reports/`** ➔ Blueprintide koondmaatriks ([`blueprint_benchmark_matrix.md`](reports/blueprint_benchmark_matrix.md)).
+- **`tests/reports/blueprints/`** ➔ Automaatselt genereeritud ja Git-is jälgitavad testiaruanded (`blueprint_1_report.md` kuni `blueprint_13_report.md`).
 
 ---
 
@@ -31,20 +31,20 @@ Testide käivitamiseks puhtalt lehelt (automaatse `reset-all -y` ja verifitseeri
 
 ---
 
-## 📊 Kõigi 13 Stsenaariumi Ülevaade
+## 📊 Kõigi 13 Blueprinti Ülevaade
 
-| Stsenaarium | Nimi | Käivitatavad Konteinerid | Peamine Eesmärk |
+| Blueprint | Nimi | Käivitatavad Konteinerid | Peamine Eesmärk |
 | :--- | :--- | :--- | :--- |
-| **1** | `.env.1-only-db-lis` | `db-lis` | Ainult LIS Andmebaas ilma veebiteenusteta. |
-| **2** | `.env.2-db-lis-with-apex-ords` | `db-lis`, `app-ords` | LIS Baas + APEX 26.2 + ORDS üheskoos. |
-| **3** | `.env.3-db-lis-apex-ords-with-proxy` | `db-proxy`, `db-lis`, `app-ords` | 2-Kihiline andmebaasi arhitektuur (Proxy + LIS). |
+| **1** | `.env.1-only-db-alise` | `db-alise` | Ainult LIS Andmebaas ilma veebiteenusteta. |
+| **2** | `.env.2-db-alise-with-apex-ords` | `db-alise`, `app-ords` | LIS Baas + APEX 26.2 + ORDS üheskoos. |
+| **3** | `.env.3-db-alise-apex-ords-with-proxy` | `db-proxy`, `db-alise`, `app-ords` | 2-Kihiline andmebaasi arhitektuur (Proxy + LIS). |
 | **4** | `.env.4-only-app-publisher` | `db-publisher` | Eraldiseisev Analytics Publisheri andmebaas. |
 | **5** | `.env.5-only-ords` | `app-ords` | Lokaalne ORDS Gateway kaug-andmebaasiga. |
 | **6** | `.env.6-ords-with-apex` | `db-proxy`, `app-ords` | Proxy andmebaas + APEX + ORDS gateway. |
-| **7** | `.env.7-all-services-together` | `db-publisher`, `db-proxy`, `db-lis`, `app-ords`, `app-publisher` | Täielik 4-Kihiline Ettevõtte Tootmiskeskkond. |
-| **8** | `.env.8-gvenzl-dev-light` | `db-lis-gvenzl` | Kergekaaluline Gerald Venzl DB CI/CD testideks. |
-| **9** | `.env.9-dev-workstation-with-web-ide` | `db-lis`, `app-ords`, `web-ide-dev` | **Zero-Install Arendaja Töōkoht** (VS Code Brauseris). |
-| **10** | `.env.10-hybrid-multi-vendor-db` | `db-proxy-oracle`, `db-lis-gvenzl`, `app-ords` | Mitme eri andmebaasi pildi (Oracle + Gvenzl) klaster. |
+| **7** | `.env.7-all-services-together` | `db-publisher`, `db-proxy`, `db-alise`, `app-ords`, `app-publisher` | Täielik 4-Kihiline Ettevõtte Tootmiskeskkond. |
+| **8** | `.env.8-gvenzl-dev-light` | `db-alise-gvenzl` | Kergekaaluline Gerald Venzl DB CI/CD testideks. |
+| **9** | `.env.9-dev-workstation-with-web-ide` | `db-alise`, `app-ords`, `web-ide-dev` | **Zero-Install Arendaja Töōkoht** (VS Code Brauseris). |
+| **10** | `.env.10-hybrid-multi-vendor-db` | `db-proxy-oracle`, `db-alise-gvenzl`, `app-ords` | Mitme eri andmebaasi pildi (Oracle + Gvenzl) klaster. |
 | **11** | `.env.11-cloud-adb-with-web-ide` | `db-proxy-adb`, `app-ords`, `web-ide-dev` | Pilve Autonomous DB emuleerimine + Web IDE. |
 | **12** | `.env.12-publisher-gvenzl-with-web-ide` | `db-publisher-gvenzl`, `app-publisher`, `web-ide-dev` | Pixel-Perfect aruandlus kergel Gvenzl DB-l. |
 | **13** | `.env.13-full-enterprise-sandbox-web-ide` | 3 DB-d, `app-ords`, `app-publisher`, `web-ide-dev` | **Täielik ettevõtte pilvelabor (5 konteinerit).** |

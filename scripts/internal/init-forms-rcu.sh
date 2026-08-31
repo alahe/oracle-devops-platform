@@ -8,14 +8,20 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+if [ -f "$SCRIPT_DIR/i18n.sh" ]; then
+  source "$SCRIPT_DIR/i18n.sh"
+fi
 if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
   source "$SCRIPT_DIR/load-profile.sh"
 fi
+if [ -f "$SCRIPT_DIR/credential-helper.sh" ]; then
+  source "$SCRIPT_DIR/credential-helper.sh"
+fi
 
-PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | grep -i "forms" | head -n 1 | cut -d'|' -f1)
-PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-forms}"
-PRIMARY_PROFILE=$(get_active_db_instances 2>/dev/null | grep -i "forms" | head -n 1 | cut -d'|' -f2)
-PRIMARY_PROFILE="${PRIMARY_PROFILE:-db-forms-oracle}"
+PRIMARY_CONTAINER=$(resolve_service_target_db "forms")
+PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-proxy}"
+PRIMARY_PROFILE=$(resolve_service_target_profile "forms")
+PRIMARY_PROFILE="${PRIMARY_PROFILE:-db-proxy-oracle}"
 
 load_db_profile "$PRIMARY_PROFILE" >/dev/null 2>&1 || true
 
@@ -24,12 +30,19 @@ DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${PROFILE_DB_PORT:-1534}"
 DB_SERVICE="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
 
-SYS_PWD=$(podman exec "$PRIMARY_CONTAINER" cat /run/secrets/oracle_pwd 2>/dev/null || podman secret inspect --showsecret forms_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || echo "")
+SYS_PWD=$(get_db_sys_password "$PRIMARY_CONTAINER")
 if [ -z "$SYS_PWD" ]; then
-  SYS_PWD=$("$SCRIPT_DIR/../get-password.sh" "DB_FORMS_SYS" 2>/dev/null | grep "Password:" | awk '{print $3}' | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\r\n' || echo "")
+  echo "❌ VIGA: Ei suutnud leida SYS parooli andmebaasile ${PRIMARY_CONTAINER}!"
+  exit 1
 fi
-if [ -z "$SYS_PWD" ]; then
-  SYS_PWD="Welcome1_$(date +%s)"
+
+# Tagame SYS ja SYSTEM paroolide sünkroonsuse
+if podman container exists "$PRIMARY_CONTAINER" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$PRIMARY_CONTAINER" 2>/dev/null)" = "running" ]; then
+  podman exec -i "$PRIMARY_CONTAINER" sh -c "sqlplus -S / as sysdba" << SYSSYNC >/dev/null 2>&1 || true
+ALTER USER sys IDENTIFIED BY "${SYS_PWD}" CONTAINER=ALL;
+ALTER USER system IDENTIFIED BY "${SYS_PWD}" CONTAINER=ALL;
+EXIT;
+SYSSYNC
 fi
 
 echo "🚀 Initializing Oracle Forms 14c RCU Schemas (${RCU_PREFIX}_*) on Database ${DB_HOST}:${DB_PORT}/${DB_SERVICE}..."
@@ -82,6 +95,6 @@ if podman container exists "$PRIMARY_CONTAINER" 2>/dev/null && [ "$(podman inspe
   podman exec -i "$PRIMARY_CONTAINER" sqlplus -s "sys/${SYS_PWD}@localhost:1521/${DB_SERVICE} as sysdba" < "$TMP_SQL" >/dev/null 2>&1 || true
   echo "✅ Forms 14c RCU schemas successfully initialized inside container ${PRIMARY_CONTAINER}!"
 else
-  echo "⚠️  Konteiner $PRIMARY_CONTAINER ei tööta. RCU skeemid initsialiseeritakse andmebaasi käivitamisel."
+  echo "⚠️  $(msg_str "FORMS_RCU_CONTAINER_OFFLINE" "$PRIMARY_CONTAINER")"
 fi
 rm -f "$TMP_SQL"

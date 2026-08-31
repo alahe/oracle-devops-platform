@@ -14,6 +14,12 @@ _ORACLE_COMMON_SH_LOADED=true
 _COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$_COMMON_DIR/../.." && pwd)"
 
+# Source central localization engine
+if [ -f "$_COMMON_DIR/i18n.sh" ]; then
+  # shellcheck source=/dev/null
+  source "$_COMMON_DIR/i18n.sh"
+fi
+
 # ----------------------------------------------------------------------------
 # 1. Terminal Colors & Formatting
 # ----------------------------------------------------------------------------
@@ -111,25 +117,30 @@ detect_container_db_versions() {
   fi
 
   local db_info
-  db_info=$($cli exec -i "$c_name" sqlplus -s "sys/OraclePass2026Sys!@localhost:1521/FREEPDB1 as sysdba" << 'EOF' 2>/dev/null | grep -v -E "Connected to|Oracle Database|version" || echo ""
+  db_info=$($cli exec -i "$c_name" sh -c 'export ORACLE_HOME=$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n "$ORACLE_HOME" ] && export PATH="$ORACLE_HOME/bin:$PATH"; sqlplus -s / as sysdba << '\''EOF'\''
 SET FEEDBACK OFF
 SET HEADING OFF
 SET PAGESIZE 0
 SET VERIFY OFF
-SELECT (SELECT version_full FROM v$instance) || ':' ||
-       NVL((SELECT version FROM dba_registry WHERE comp_id = 'APEX'), 'NONE') || ':' ||
-       NVL((SELECT version FROM ords_metadata.ords_version WHERE ROWNUM = 1), 'NONE')
+ALTER SESSION SET CONTAINER = FREEPDB1;
+SELECT (SELECT version_full FROM v$instance) || '\''|'\'' ||
+       NVL((SELECT version FROM dba_registry WHERE comp_id = '\''APEX'\''), '\''NONE'\'') || '\''|'\'' ||
+       NVL((SELECT version FROM ords_metadata.ords_version WHERE ROWNUM = 1), '\''NONE'\'')
 FROM dual;
 EXIT;
-EOF
-  )
+EOF' 2>/dev/null | grep "|" | tr -d ' \r\n' | head -n 1 || echo "")
 
-  local raw_line
-  raw_line=$(echo "$db_info" | grep ":" | tr -d ' \r\n' | head -n 1)
-  if [ -z "$raw_line" ]; then
-    echo "23ai:26.1:NONE"
+  if [ -n "$db_info" ]; then
+    local d_ver=$(echo "$db_info" | cut -d'|' -f1)
+    local a_ver=$(echo "$db_info" | cut -d'|' -f2)
+    local o_ver=$(echo "$db_info" | cut -d'|' -f3)
+
+    if [[ "$d_ver" =~ ^23\. ]]; then
+      d_ver="23ai"
+    fi
+    echo "${d_ver}:${a_ver}:${o_ver}"
   else
-    echo "$raw_line"
+    echo "23ai:26.1:NONE"
   fi
 }
 
@@ -158,7 +169,7 @@ get_step_stats() {
   local count=${#values[@]}
   if [ $count -eq 0 ]; then
     if [ -n "$default_est" ]; then
-      echo "ootusaeg ~${default_est}"
+      msg_str "BENCHMARK_EST" "$default_est"
     fi
     return 0
   fi
@@ -172,11 +183,11 @@ get_step_stats() {
     if [ $val -gt $max ]; then max=$val; fi
   done
   local avg=$((sum / count))
-  echo "keskmine: $(format_duration $avg) (min: $(format_duration $min), max: $(format_duration $max))"
+  msg_str "BENCHMARK_AVG" "$(format_duration $avg)" "$(format_duration $min)" "$(format_duration $max)"
 }
 
 get_total_setup_stats() {
-  get_step_stats "total_duration_seconds" "~15 minutit (kui pilte tõmmatakse esimest korda)" "setup_benchmarks_*.json"
+  get_step_stats "total_duration_seconds" "~15m" "setup_benchmarks_*.json"
 }
 
 get_blueprint_stats() {
@@ -199,7 +210,18 @@ try:
     def fmt(s):
         return f'{s}s' if s < 60 else f'{s//60}m {s%60}s'
     if cnt > 0:
-        print(f'keskmine: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, mõõtmisi: {cnt})')
+        import subprocess
+        # Invoke msg_str via environment
+        import os
+        lang = os.environ.get('CLI_LANG', os.environ.get('ACTIVE_CLI_LANG', 'en'))
+        labels = {
+            'en': f'avg: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, measurements: {cnt})',
+            'et': f'keskmine: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, mõõtmisi: {cnt})',
+            'sv': f'medel: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, mätningar: {cnt})',
+            'lv': f'vid: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, mērījumi: {cnt})',
+            'lt': f'vid: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, bandymai: {cnt})'
+        }
+        print(labels.get(lang[:2], labels['en']))
 except Exception:
     pass
 " 2>/dev/null || echo ""
@@ -273,7 +295,7 @@ LIVE_TIMER_INTERVAL="${LIVE_TIMER_INTERVAL:-3}"
 hide_cursor() {
   if [ -t 3 ]; then
     printf "\033[?25l" >&3 2>/dev/null || true
-  elif [ -c /dev/tty ]; then
+  elif [ -t 1 ] && [ -c /dev/tty ]; then
     printf "\033[?25l" > /dev/tty 2>/dev/null || true
   elif [ -t 1 ] || [ -t 2 ]; then
     tput civis 2>/dev/null || printf "\033[?25l" 2>/dev/null || true
@@ -283,11 +305,15 @@ hide_cursor() {
 restore_cursor() {
   if [ -t 3 ]; then
     printf "\033[?25h" >&3 2>/dev/null || true
-  elif [ -c /dev/tty ]; then
+  elif [ -t 1 ] && [ -c /dev/tty ]; then
     printf "\033[?25h" > /dev/tty 2>/dev/null || true
   elif [ -t 1 ] || [ -t 2 ]; then
     tput cnorm 2>/dev/null || printf "\033[?25h" 2>/dev/null || true
   fi
+}
+
+show_cursor() {
+  restore_cursor "$@"
 }
 
 print_header() {
@@ -303,7 +329,7 @@ print_header() {
     local stats
     stats=$(get_step_stats "$step_key" "$default_est" "$file_pattern" 2>/dev/null || echo "")
     if [ -n "$stats" ]; then
-      echo -e "   📊 Ajalooline ooteaeg: ${YELLOW}${stats}${NC}"
+      echo -e "   📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}${stats}${NC}"
     fi
   fi
   echo -e "${CYAN}==================================================================${NC}"
@@ -340,7 +366,7 @@ print_progress() {
 
   if [ -t 3 ]; then
     printf "\r\033[K   %s %-32s [%s] %-7s" "$spin" "$msg" "$bar" "$dur_str" >&3
-  elif [ -c /dev/tty ]; then
+  elif ( true >/dev/tty ) 2>/dev/null; then
     printf "\r\033[K   %s %-32s [%s] %-7s" "$spin" "$msg" "$bar" "$dur_str" > /dev/tty 2>/dev/null || true
   elif [ -t 1 ] || [ -t 2 ]; then
     printf "\r\033[K   %s %-32s [%s] %-7s" "$spin" "$msg" "$bar" "$dur_str" >&2
@@ -349,8 +375,12 @@ print_progress() {
     local int_val="${LIVE_TIMER_INTERVAL:-3}"
     int_val="${int_val//[^0-9]/}"
     [ -z "$int_val" ] || [ "$int_val" -le 0 ] && int_val=3
+    local dur_lbl="duration"
+    if declare -f msg_str >/dev/null 2>&1; then
+      dur_lbl="$(msg_str "LABEL_DURATION")"
+    fi
     if [ $((count % (int_val * 2))) -eq 0 ] && [ "$count" -gt 0 ]; then
-      echo "   ⏳ [Progress] ${msg}... kestus: ${dur_str}"
+      echo "   ⏳ [Progress] ${msg}... ${dur_lbl}: ${dur_str}"
     fi
   fi
 }
@@ -358,7 +388,7 @@ print_progress() {
 clear_progress_line() {
   if [ -t 3 ]; then
     printf "\r\033[K" >&3
-  elif [ -c /dev/tty ]; then
+  elif ( true >/dev/tty ) 2>/dev/null; then
     printf "\r\033[K" > /dev/tty 2>/dev/null || true
   elif [ -t 1 ] || [ -t 2 ]; then
     printf "\r\033[K" >&2
@@ -426,7 +456,7 @@ run_substep() {
     local dur_str=$(format_duration "$elapsed")
     if [ -t 3 ]; then
       printf "\r\033[K   ${CYAN}%s${NC} [Alamsamm %s]: %s... ⏳ %s" "$branch" "$sub_id" "$title" "$dur_str" >&3
-    elif [ -c /dev/tty ]; then
+    elif ( true >/dev/tty ) 2>/dev/null; then
       printf "\r\033[K   ${CYAN}%s${NC} [Alamsamm %s]: %s... ⏳ %s" "$branch" "$sub_id" "$title" "$dur_str" > /dev/tty 2>/dev/null || true
     elif [ -t 1 ] || [ -t 2 ]; then
       printf "\r\033[K   ${CYAN}%s${NC} [Alamsamm %s]: %s... ⏳ %s" "$branch" "$sub_id" "$title" "$dur_str" >&2

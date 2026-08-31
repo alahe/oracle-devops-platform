@@ -1,0 +1,33 @@
+{
+  "blueprint_id": 6,
+  "history": [
+    {
+      "timestamp": "2026-08-28T19:59:28.093619",
+      "duration_seconds": 330
+    },
+    {
+      "timestamp": "2026-08-29T00:15:18.374675",
+      "duration_seconds": 44
+    },
+    {
+      "timestamp": "2026-08-30T13:19:09.436278",
+      "duration_seconds": 66
+    },
+    {
+      "timestamp": "2026-08-30T14:03:48.273958",
+      "duration_seconds": 61
+    },
+    {
+      "timestamp": "2026-08-31T07:14:07.308164",
+      "duration_seconds": 84
+    },
+    {
+      "timestamp": "2026-08-31T07:36:31.405946",
+      "duration_seconds": 83
+    }
+  ],
+  "runs_count": 6,
+  "average_duration_seconds": 111,
+  "min_duration_seconds": 44,
+  "max_duration_seconds": 330
+}

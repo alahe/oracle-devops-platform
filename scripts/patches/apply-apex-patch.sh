@@ -47,7 +47,7 @@ fi
 LOG_DIR="$SCRIPT_DIR/../../install_logs"
 mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_FILE="$LOG_DIR/apex_patch_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/apex_patch_apply_${TIMESTAMP}.log"
 
 # Suuname kogu väljundi nii ekraanile kui logifaili (ainult eraldiseisval käivitamisel)
 if [ "${MASTER_SETUP:-false}" != "true" ]; then
@@ -168,9 +168,9 @@ print_sub_header() {
     stats=$(get_step_stats "$step_key1" "$default_est" 2>/dev/null || echo "")
     [ -z "$stats" ] && [ -n "$step_key2" ] && stats=$(get_step_stats "$step_key2" "$default_est" 2>/dev/null || echo "")
   fi
-  [ -z "$stats" ] && [ -n "$default_est" ] && stats="ootusaeg ~${default_est}"
+  [ -z "$stats" ] && [ -n "$default_est" ] && stats="$(msg_str "BENCHMARK_EST" "$default_est")"
   if [ -n "$stats" ]; then
-    echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}${stats}${NC}"
+    echo -e "${CYAN}│${NC}  📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}${stats}${NC}"
   fi
 }
 
@@ -333,7 +333,7 @@ fi
 # 3. Patchi paigaldus andmebaasis
 # ----------------------------------------------------------------------------
 PSTEP3_START=$(date +%s)
-PATCH_SQL_LOG_FILE="$LOG_DIR/apex_patch_sql_${TIMESTAMP}.log"
+PATCH_SQL_LOG_FILE="$LOG_DIR/apex_patch_apply_sql_${TIMESTAMP}.log"
 
 print_sub_header "2" "Running APEX Patch in $DB_SERVICE via $EXEC_MODE..." "step5_apex_patch_install_seconds" "step9_apex_patch_install_seconds" "1m"
 echo -e "${CYAN}│${NC}  📝 Detailne SQL logi: ${CYAN}[Logi](file://$PATCH_SQL_LOG_FILE)${NC}"

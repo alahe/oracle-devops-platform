@@ -11,11 +11,15 @@ WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
   source "$SCRIPT_DIR/load-profile.sh"
 fi
+if [ -f "$SCRIPT_DIR/credential-helper.sh" ]; then
+  source "$SCRIPT_DIR/credential-helper.sh"
+fi
 
-PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | grep -i "publisher" | head -n 1 | cut -d'|' -f1)
-PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-main-db-profile}"
-PRIMARY_PROFILE=$(get_active_db_instances 2>/dev/null | grep -i "publisher" | head -n 1 | cut -d'|' -f2)
-PRIMARY_PROFILE="${PRIMARY_PROFILE:-publisher-free}"
+PRIMARY_CONTAINER=$(resolve_service_target_db "publisher")
+PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-proxy}"
+
+PRIMARY_PROFILE=$(resolve_service_target_profile "publisher")
+PRIMARY_PROFILE="${PRIMARY_PROFILE:-db-proxy-oracle}"
 
 load_db_profile "$PRIMARY_PROFILE" >/dev/null 2>&1 || true
 
@@ -24,10 +28,7 @@ if [ "${SKIP_ORDS}" = "true" ] || [ "${PROFILE_ORDS_ENABLED}" = "false" ]; then
   exit 0
 fi
 
-SYS_PWD=$(podman exec "$PRIMARY_CONTAINER" cat /run/secrets/oracle_pwd 2>/dev/null || podman secret inspect --showsecret publisher_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || echo "")
-if [ -z "$SYS_PWD" ]; then
-  SYS_PWD=$("$SCRIPT_DIR/get-password.sh" "DB_PUBLISHER_SYS" 2>/dev/null | grep "Password:" | awk '{print $3}' | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\r\n' || echo "")
-fi
+SYS_PWD=$(get_db_sys_password "$PRIMARY_CONTAINER" 2>/dev/null || true)
 
 DB_SERVICE="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
 

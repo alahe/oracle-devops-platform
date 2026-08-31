@@ -8,6 +8,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+[ -f "$SCRIPT_DIR/i18n.sh" ] && source "$SCRIPT_DIR/i18n.sh"
 [ -f "$SCRIPT_DIR/common.sh" ] && source "$SCRIPT_DIR/common.sh"
 [ -f "$SCRIPT_DIR/load-profile.sh" ] && source "$SCRIPT_DIR/load-profile.sh"
 
@@ -20,7 +21,7 @@ FORMS_ADMIN="${PROFILE_FORMS_ADMIN_PORT:-7001}"
 MAX_WAIT_SECONDS="${FORMS_TEST_TIMEOUT:-120}"
 
 echo -e "\n${CYAN}==================================================================${NC}"
-echo -e "${BOLD}🧪 ORACLE FORMS 14c TESTVORMI JA TEENUSE VALIDEERIMINE${NC}"
+echo -e "${BOLD}$(msg_str "FORMS_TEST_HEADER")${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 
 # 1. Veendu, et test.fmx on lokaalses forms_apps kaustas olemas
@@ -30,14 +31,14 @@ if [ ! -f "$WORKSPACE_DIR/forms_apps/test.fmx" ]; then
 fi
 
 # 2. Ootamise tsükkel reaalajas loenduriga
-echo "⌛ Ootan kuni Oracle Forms 14c Runtime ja testvorm (test.fmx) on valmis..."
+echo "$(msg_str "FORMS_TEST_WAITING")"
 START_T=$(date +%s)
 READY=false
 
 hide_cursor
 while true; do
   ELAPSED=$(( $(date +%s) - START_T ))
-  print_progress "Valideerin Forms testvormi (Port: $FORMS_PORT)" "$ELAPSED" "$MAX_WAIT_SECONDS"
+  print_progress "Validating Forms test form (Port: $FORMS_PORT)" "$ELAPSED" "$MAX_WAIT_SECONDS"
 
   # Kontrolli Forms Servlet vastust
   HTTP_CODE=$(curl -s --noproxy "*" -o /dev/null -w "%{http_code}" "http://localhost:${FORMS_PORT}/forms/frmservlet?form=test.fmx" 2>/dev/null || echo "000")
@@ -60,13 +61,13 @@ TOTAL_WAIT=$(( $(date +%s) - START_T ))
 WAIT_STR=$(format_duration "$TOTAL_WAIT")
 
 if [ "$READY" = "true" ]; then
-  echo -e "🎉 ${GREEN}Forms 14c Runtime ja testvorm töötavad edukalt!${NC} (Aeg: ${YELLOW}${WAIT_STR}${NC})"
+  echo -e "${GREEN}$(msg_str "FORMS_TEST_SUCCESS" "${YELLOW}${WAIT_STR}${GREEN}")${NC}"
   echo -e "   ├─ 🌐 Forms Runtime URL:  ${CYAN}http://localhost:${FORMS_PORT}/forms/frmservlet${NC}"
-  echo -e "   ├─ 📄 Testvormi URL:      ${CYAN}http://localhost:${FORMS_PORT}/forms/frmservlet?form=test.fmx${NC}"
+  echo -e "   ├─ 📄 Test form URL:      ${CYAN}http://localhost:${FORMS_PORT}/forms/frmservlet?form=test.fmx${NC}"
   echo -e "   └─ ⚙️  WebLogic Admin:     ${CYAN}http://localhost:${FORMS_ADMIN}/console${NC}\n"
   exit 0
 else
-  echo -e "ℹ️  ${YELLOW}Forms konteiner käivitub taustal (Praegune HTTP: ${HTTP_CODE}).${NC}"
-  echo -e "   Kasuta staatuse jälgimiseks: ${CYAN}./scripts/forms/status-forms.sh${NC}\n"
+  echo -e "ℹ️  ${YELLOW}Forms container starting in background (Current HTTP: ${HTTP_CODE}).${NC}"
+  echo -e "   Check status using: ${CYAN}./scripts/forms/status-forms.sh${NC}\n"
   exit 0
 fi

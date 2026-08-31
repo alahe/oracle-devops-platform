@@ -42,13 +42,17 @@ done
 cd "$TARGET_DIR"
 BUILD_START=$(date '+%s')
 
-# Temporarily stop non-essential DB containers (db-proxy, db-lis) to free RAM for OUI build
-echo "ℹ️  Peatan ajutiselt db-proxy ja db-lis konteinerid, et vabastada ehituse ajaks RAM mälu..."
-podman stop db-proxy db-lis 2>/dev/null || true
+# Clean old build containers and reclaim disk space before starting build
+$CONTAINER_CLI rm -f $($CONTAINER_CLI ps -a --filter "name=publisher_build" -q 2>/dev/null) 2>/dev/null || true
+$CONTAINER_CLI container prune -f 2>/dev/null || true
+
+# Temporarily stop non-essential DB containers to free RAM for OUI build
+echo "ℹ️  Temporarily pausing db-proxy and db-alise containers to free RAM for build..."
+podman stop db-proxy db-alise 2>/dev/null || true
 
 cleanup_build_ram() {
-  echo "ℹ️  Taaskäivitan db-proxy ja db-lis konteinerid..."
-  podman start db-proxy db-lis 2>/dev/null || true
+  echo "ℹ️  Restarting db-proxy and db-alise containers..."
+  podman start db-proxy db-alise 2>/dev/null || true
 }
 trap cleanup_build_ram EXIT
 
@@ -58,7 +62,11 @@ cat << 'BUILDSCRIPT' > "$TARGET_DIR/build_inside.sh"
 set -e
 echo '📦 Installing OS packages & Official Oracle JDK 17...'
 ARCH=$(uname -m)
-JDK_RPM=$(ls -1 /u01_mount/jdk-17*${ARCH}*.rpm /u01_mount/jdk-17*.rpm 2>/dev/null | head -n 1)
+if [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "amd64" ]; then
+  JDK_RPM=$(ls -1 /u01_mount/jdk-17*x64*.rpm /u01_mount/jdk-17*x86_64*.rpm 2>/dev/null | head -n 1)
+else
+  JDK_RPM=$(ls -1 /u01_mount/jdk-17*aarch64*.rpm /u01_mount/jdk-17*arm64*.rpm 2>/dev/null | head -n 1)
+fi
 dnf -y install "$JDK_RPM" unzip hostname libnsl libaio tar gzip procps findutils coreutils
 dnf clean all
 mkdir -p /u01/oracle /u01/oracle/.inventory /tmp
@@ -122,32 +130,31 @@ chmod +x /u01/createAndStartDomain.sh /u01/wait_for_db.sh
 rm -rf /tmp/OraInstall* /tmp/orcl* /u01/infra_extract /u01/oas_extract 2>/dev/null || true
 BUILDSCRIPT
 chmod +x "$TARGET_DIR/build_inside.sh"
+echo "📦 Executing container instance build via direct volume mount..."
+CONTAINER_ID="publisher_build_$(date +%s)"
+$CONTAINER_CLI rm -f "$CONTAINER_ID" 2>/dev/null || true
 
-if ! $CONTAINER_CLI build -t "$IMAGE_NAME" -f Dockerfile .; then
-  echo "⚠️ Standard buildah layer build encountered OverlayFS permission restrictions. Switching to active container instance build fallback..."
-  CONTAINER_ID="publisher_build_$(date +%s)"
-  $CONTAINER_CLI rm -f "$CONTAINER_ID" 2>/dev/null || true
-  
-  $CONTAINER_CLI run -d --name "$CONTAINER_ID" --privileged --tmpfs /tmp:rw,exec,mode=1777,size=8G -v "$TARGET_DIR:/u01_mount:z" docker.io/oraclelinux:8 sleep 3600
-  
-  trap '$CONTAINER_CLI rm -f "$CONTAINER_ID" 2>/dev/null || true; rm -f "$TARGET_DIR/build_inside.sh"' EXIT
-  
-  $CONTAINER_CLI exec "$CONTAINER_ID" /u01_mount/build_inside.sh
-  $CONTAINER_CLI exec "$CONTAINER_ID" rm -rf /tmp/* /u01/infra_extract /u01/oas_extract 2>/dev/null || true
-  
-  echo "💾 Committing container instance to image '$IMAGE_NAME'..."
-  $CONTAINER_CLI commit \
-    --change "USER oracle" \
-    --change "WORKDIR /u01/oracle" \
-    --change "ENV ORACLE_HOME=/u01/oracle JAVA_HOME=/usr/java/default PATH=/usr/java/default/bin:/u01/oracle/bin:\$PATH DOMAIN_NAME=bi DOMAINS_DIR=/u01/oracle/user_projects/domains DOMAIN_HOME=/u01/oracle/user_projects/domains/bi" \
-    --change "EXPOSE 9502 9503 9500-9999" \
-    --change "CMD [\"/u01/createAndStartDomain.sh\"]" \
-    "$CONTAINER_ID" "$IMAGE_NAME"
-  
-  $CONTAINER_CLI rm -f "$CONTAINER_ID" 2>/dev/null || true
-  rm -f "$TARGET_DIR/build_inside.sh"
-  trap - EXIT
-fi
+$CONTAINER_CLI run -d --name "$CONTAINER_ID" --privileged -v "$TARGET_DIR:/u01_mount:z" docker.io/oraclelinux:8 sleep 3600
+
+trap '$CONTAINER_CLI rm -f "$CONTAINER_ID" 2>/dev/null || true; rm -f "$TARGET_DIR/build_inside.sh"' EXIT
+
+$CONTAINER_CLI exec "$CONTAINER_ID" /u01_mount/build_inside.sh
+$CONTAINER_CLI exec "$CONTAINER_ID" sh -c 'rm -rf /tmp/* /var/tmp/* /u01/infra_extract /u01/oas_extract /root/.cache /u01/oracle/.inventory/logs/*.log /var/cache/dnf /var/cache/yum /u01/oracle/cfgtoollogs/* 2>/dev/null || true'
+
+echo "💾 Committing container instance to image '$IMAGE_NAME'..."
+TMPDIR=/var/tmp $CONTAINER_CLI commit \
+  --change "USER oracle" \
+  --change "WORKDIR /u01/oracle" \
+  --change "ENV ORACLE_HOME=/u01/oracle JAVA_HOME=/usr/java/default PATH=/usr/java/default/bin:/u01/oracle/bin:\$PATH DOMAIN_NAME=bi DOMAINS_DIR=/u01/oracle/user_projects/domains DOMAIN_HOME=/u01/oracle/user_projects/domains/bi" \
+  --change "EXPOSE 9502 9503 9500-9999" \
+  --change "CMD [\"/u01/createAndStartDomain.sh\"]" \
+  "$CONTAINER_ID" "$IMAGE_NAME"
+
+$CONTAINER_CLI tag "$IMAGE_NAME" "localhost/oracle-publisher:latest" >/dev/null 2>&1 || true
+$CONTAINER_CLI tag "$IMAGE_NAME" "localhost/oracle-publisher:${VERSION}" >/dev/null 2>&1 || true
+$CONTAINER_CLI rm -f "$CONTAINER_ID" 2>/dev/null || true
+rm -f "$TARGET_DIR/build_inside.sh"
+trap - EXIT
 
 BUILD_END=$(date '+%s')
 BUILD_ELAPSED=$(( BUILD_END - BUILD_START ))

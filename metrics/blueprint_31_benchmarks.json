@@ -1,0 +1,81 @@
+{
+  "blueprint_id": 31,
+  "history": [
+    {
+      "timestamp": "2026-08-28T21:27:48.603916",
+      "duration_seconds": 38
+    },
+    {
+      "timestamp": "2026-08-28T21:30:57.150208",
+      "duration_seconds": 37
+    },
+    {
+      "timestamp": "2026-08-28T21:32:26.568780",
+      "duration_seconds": 38
+    },
+    {
+      "timestamp": "2026-08-29T00:59:04.703907",
+      "duration_seconds": 39
+    },
+    {
+      "timestamp": "2026-08-29T07:46:38.269175",
+      "duration_seconds": 44
+    },
+    {
+      "timestamp": "2026-08-29T08:04:03.002893",
+      "duration_seconds": 47
+    },
+    {
+      "timestamp": "2026-08-30T15:27:00.749003",
+      "duration_seconds": 57
+    },
+    {
+      "timestamp": "2026-08-31T04:14:22.916971",
+      "duration_seconds": 84
+    },
+    {
+      "timestamp": "2026-08-31T04:22:12.251558",
+      "duration_seconds": 85
+    },
+    {
+      "timestamp": "2026-08-31T04:35:07.582777",
+      "duration_seconds": 100
+    },
+    {
+      "timestamp": "2026-08-31T04:49:59.299012",
+      "duration_seconds": 97
+    },
+    {
+      "timestamp": "2026-08-31T05:04:56.581455",
+      "duration_seconds": 729
+    },
+    {
+      "timestamp": "2026-08-31T05:24:24.591448",
+      "duration_seconds": 727
+    },
+    {
+      "timestamp": "2026-08-31T05:39:38.582461",
+      "duration_seconds": 743
+    },
+    {
+      "timestamp": "2026-08-31T05:54:25.732616",
+      "duration_seconds": 735
+    },
+    {
+      "timestamp": "2026-08-31T06:10:09.500551",
+      "duration_seconds": 741
+    },
+    {
+      "timestamp": "2026-08-31T06:25:21.030713",
+      "duration_seconds": 749
+    },
+    {
+      "timestamp": "2026-08-31T06:41:43.649771",
+      "duration_seconds": 738
+    }
+  ],
+  "runs_count": 18,
+  "average_duration_seconds": 323,
+  "min_duration_seconds": 37,
+  "max_duration_seconds": 749
+}

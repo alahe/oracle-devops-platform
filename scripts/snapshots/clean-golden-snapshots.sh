@@ -30,12 +30,27 @@ echo "   Kokku faile (kustutatavaid): $TOTAL_FILES"
 echo "   Kataloogi kogumaht:         $TOTAL_SIZE"
 echo "=================================================================="
 
-# Küsime kasutajalt päevade arvu
-read -p "❓ Sisesta päevade arv, millest vanemad hetktõmmised kustutada (0 = säilita ainult viimane koopia, vaikimisi 0): " DAYS
+# Parameetrite tugi (-y, --yes, --days=N)
+AUTO_YES=false
+DAYS=0
 
-# Vaikimisi väärtus on 0
-if [ -z "$DAYS" ]; then
-  DAYS=0
+for arg in "$@"; do
+  case $arg in
+    -y|--yes|-f|--force)
+      AUTO_YES=true
+      ;;
+    --days=*)
+      DAYS="${arg#*=}"
+      ;;
+    [0-9]*)
+      DAYS="$arg"
+      ;;
+  esac
+done
+
+if [ "$AUTO_YES" = "false" ] && [ -t 0 ]; then
+  read -p "❓ Sisesta päevade arv, millest vanemad hetktõmmised kustutada (0 = säilita ainult viimane koopia, vaikimisi 0): " USER_DAYS
+  [ -n "$USER_DAYS" ] && DAYS="$USER_DAYS"
 fi
 
 # Valideerime sisendit

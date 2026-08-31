@@ -1,0 +1,13 @@
+{
+  "blueprint_id": 42,
+  "history": [
+    {
+      "timestamp": "2026-08-29T11:36:25.677900",
+      "duration_seconds": 4047
+    }
+  ],
+  "runs_count": 1,
+  "average_duration_seconds": 4047,
+  "min_duration_seconds": 4047,
+  "max_duration_seconds": 4047
+}

@@ -56,19 +56,19 @@ get_backup_stats() {
     if [ $val -gt $max ]; then max=$val; fi
   done
   local avg=$((sum / count))
-  echo "keskmine: $(format_duration $avg) (min: $(format_duration $min), max: $(format_duration $max))"
+  msg_str "BENCHMARK_AVG" "$(format_duration $avg)" "$(format_duration $min)" "$(format_duration $max)"
 }
 
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${YELLOW}🚀 Oracle APEX Proxy DB Volume Golden Snapshot${NC}"
 echo -e "📂 Sihtkoht: ${CYAN}$BACKUP_FILE${NC}"
-echo -e "   📊 Ajalooline ooteaeg: ${YELLOW}$(get_backup_stats "2m")${NC}"
+echo -e "   📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(get_backup_stats "2m")${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 
 # 1. Logifaili seadistus (lokaalne, ei lähe Git-i)
 LOG_DIR="$WORKSPACE_DIR/install_logs"
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/backup_golden_snapshots_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/snapshot_backup_${TIMESTAMP}.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 START_BACKUP=$(date +%s)

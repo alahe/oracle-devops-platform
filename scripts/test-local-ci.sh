@@ -15,7 +15,7 @@ METRICS_DIR="$WORKSPACE_DIR/metrics"
 mkdir -p "$LOG_DIR" "$METRICS_DIR"
 
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_FILE="$LOG_DIR/test_local_ci_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/ci_local_test_${TIMESTAMP}.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 START_TIME=$(date +%s)

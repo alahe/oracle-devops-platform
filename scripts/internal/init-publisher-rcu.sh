@@ -11,11 +11,15 @@ WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
   source "$SCRIPT_DIR/load-profile.sh"
 fi
+if [ -f "$SCRIPT_DIR/credential-helper.sh" ]; then
+  source "$SCRIPT_DIR/credential-helper.sh"
+fi
 
-PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | grep -i "publisher" | head -n 1 | cut -d'|' -f1)
-PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-main-db-profile}"
-PRIMARY_PROFILE=$(get_active_db_instances 2>/dev/null | grep -i "publisher" | head -n 1 | cut -d'|' -f2)
-PRIMARY_PROFILE="${PRIMARY_PROFILE:-publisher-free}"
+PRIMARY_CONTAINER=$(resolve_service_target_db "publisher")
+PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-proxy}"
+
+PRIMARY_PROFILE=$(resolve_service_target_profile "publisher")
+PRIMARY_PROFILE="${PRIMARY_PROFILE:-db-proxy-oracle}"
 
 load_db_profile "$PRIMARY_PROFILE" >/dev/null 2>&1 || true
 
@@ -23,13 +27,19 @@ RCU_PREFIX="${PUBLISHER_RCU_PREFIX:-OAS}"
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${PROFILE_DB_PORT:-1533}"
 DB_SERVICE="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
-SYS_PWD=$(podman exec "$PRIMARY_CONTAINER" cat /run/secrets/oracle_pwd 2>/dev/null || podman secret inspect --showsecret publisher_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || echo "")
+SYS_PWD=$(get_db_sys_password "$PRIMARY_CONTAINER")
 if [ -z "$SYS_PWD" ]; then
-  SYS_PWD=$("$SCRIPT_DIR/get-password.sh" "DB_PUBLISHER_SYS" 2>/dev/null | grep "Password:" | awk '{print $3}' | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\r\n' || echo "")
-fi
-if [ -z "$SYS_PWD" ]; then
-  echo "❌ VIGA: Ei suutnud leida SYS parooli Walletist ega Podman Secrets store'ist!"
+  echo "❌ VIGA: Ei suutnud leida SYS parooli andmebaasile ${PRIMARY_CONTAINER}!"
   exit 1
+fi
+
+# Tagame SYS parooli sünkroonsuse andmebaasis
+if podman ps --format "{{.Names}}" 2>/dev/null | grep -q "$PRIMARY_CONTAINER"; then
+  podman exec -i "$PRIMARY_CONTAINER" sh -c "sqlplus -S / as sysdba" << SYSSYNC >/dev/null 2>&1 || true
+ALTER USER sys IDENTIFIED BY "${SYS_PWD}" CONTAINER=ALL;
+ALTER USER system IDENTIFIED BY "${SYS_PWD}" CONTAINER=ALL;
+EXIT;
+SYSSYNC
 fi
 
 echo "🚀 Initializing RCU Schemas (${RCU_PREFIX}_*) on Database ${DB_HOST}:${DB_PORT}/${DB_SERVICE}..."

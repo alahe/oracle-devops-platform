@@ -23,6 +23,15 @@ if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
   load_db_profile >/dev/null 2>&1 || true
 fi
 
+if [ -f "$SCRIPT_DIR/i18n.sh" ]; then
+  # shellcheck source=/dev/null
+  source "$SCRIPT_DIR/i18n.sh"
+fi
+if [ -f "$SCRIPT_DIR/credential-helper.sh" ]; then
+  # shellcheck source=/dev/null
+  source "$SCRIPT_DIR/credential-helper.sh"
+fi
+
 # Tuvastame esmase aktiivse andmebaasi konteineri nime ja dünaamilise aliase
 PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
 PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-dev-full}"
@@ -233,8 +242,8 @@ if [ "$USE_HOST_PKI" = "false" ]; then
   fi
 fi
 
-echo -e "${CYAN}├─${NC} ${YELLOW}[Alamsamm 4.5.1]: Loon uue paroolivaba Walleti (Auto-Login)...${NC}"
-echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}ootusaeg ~2s${NC}"
+echo -e "${CYAN}├─${NC} ${YELLOW}[$(msg_str "STEP_4_5_NAME") 1]: $(msg_str "SUB_WALLET_1")${NC}"
+echo -e "${CYAN}│${NC}  📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(msg_str "BENCHMARK_EST" "2s")${NC}"
 ATTEMPT=1
 if [ "$USE_HOST_PKI" = "true" ]; then
   java -cp "$HOST_SQLCL_CP" oracle.security.pki.textui.OraclePKITextUI wallet create -wallet "$TNS_DIR" -pwd "$WALLET_PWD" -auto_login >/dev/null 2>&1 || true
@@ -277,8 +286,8 @@ else
   done
 fi
 
-echo -e "${CYAN}├─${NC} ${YELLOW}[Alamsamm 4.5.2]: Lisanduvad ühenduse andmed Walletisse (SEPS)...${NC}"
-echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}ootusaeg ~2s${NC}"
+echo -e "${CYAN}├─${NC} ${YELLOW}[$(msg_str "STEP_4_5_NAME") 2]: $(msg_str "SUB_WALLET_2")${NC}"
+echo -e "${CYAN}│${NC}  📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(msg_str "BENCHMARK_EST" "2s")${NC}"
 
 instances=()
 while IFS= read -r line; do
@@ -291,15 +300,13 @@ for inst in "${instances[@]}"; do
   UPPER_NAME=$(echo "$cname" | sed 's/^db-//' | tr '-' '_' | tr '[:lower:]' '[:upper:]')
   CNAME_UPPER=$(echo "$cname" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
   
-  SYS_PWD=$(get_container_secret "$cname" "oracle_pwd")
-  [ -z "$SYS_PWD" ] && SYS_PWD=$(get_container_secret "$cname" "apex_db_sys_password")
-  DBA_PWD=$(get_container_secret "$cname" "dba_admin_password")
-  [ -z "$DBA_PWD" ] && DBA_PWD="$SYS_PWD"
-  SCH_PWD=$(get_container_secret "$cname" "apex_schema_password")
-  DEV_PWD=$(get_container_secret "$cname" "test_dev_password")
-  VIEWER_PWD=$(get_container_secret "$cname" "test_viewer_password")
-  WEB_PWD=$(get_container_secret "$cname" "test_web_password")
-  ADMIN_PWD=$(get_container_secret "$cname" "apex_admin_password")
+  SYS_PWD=$(get_db_sys_password "$cname" 2>/dev/null || true)
+  DBA_PWD=$(get_db_user_password "$cname" "dba_admin" 2>/dev/null || echo "$SYS_PWD")
+  DEV_PWD=$(get_db_user_password "$cname" "dev" 2>/dev/null || echo "$SYS_PWD")
+  VIEWER_PWD=$(get_db_user_password "$cname" "viewer" 2>/dev/null || echo "$SYS_PWD")
+  APP_PWD=$(get_db_user_password "$cname" "app" 2>/dev/null || echo "$SYS_PWD")
+  SCH_PWD=$(get_db_user_password "$cname" "schema" 2>/dev/null || echo "$SYS_PWD")
+  ADMIN_PWD=$(get_service_admin_password "apex_admin" 2>/dev/null || echo "$SYS_PWD")
 
   (
     load_db_profile "$prof" >/dev/null 2>&1 || true
@@ -311,8 +318,9 @@ for inst in "${instances[@]}"; do
       USER_DEFS="DB_${UPPER_NAME}_SYS|sys|SYSDBA
 DB_${UPPER_NAME}_DBA_ADMIN|DBA_ADMIN|DBA
 DB_${UPPER_NAME}_SCHEMA|APEX_PROXY_SCHEMA|NORMAL
-DB_${UPPER_NAME}_DEV|TEST_DEV|NORMAL
-DB_${UPPER_NAME}_VIEWER|TEST_VIEWER|READONLY"
+DB_${UPPER_NAME}_DEV|USER_DEVELOPER|NORMAL
+DB_${UPPER_NAME}_APP|USER_APP|NORMAL
+DB_${UPPER_NAME}_VIEWER|USER_VIEWER|READONLY"
     fi
 
     while IFS='|' read -r alias uname urole; do
@@ -325,12 +333,12 @@ DB_${UPPER_NAME}_VIEWER|TEST_VIEWER|READONLY"
         pwd_var="$DBA_PWD"
       elif [ "$uname" = "APEX_PROXY_SCHEMA" ]; then
         pwd_var="$SCH_PWD"
-      elif [ "$uname" = "TEST_DEV" ]; then
+      elif [ "$uname" = "USER_DEVELOPER" ] || [ "$uname" = "TEST_DEV" ]; then
         pwd_var="$DEV_PWD"
-      elif [ "$uname" = "TEST_VIEWER" ]; then
+      elif [ "$uname" = "USER_VIEWER" ] || [ "$uname" = "TEST_VIEWER" ]; then
         pwd_var="$VIEWER_PWD"
-      elif [ "$uname" = "TEST_WEB_USER" ]; then
-        pwd_var="$WEB_PWD"
+      elif [ "$uname" = "USER_APP" ]; then
+        pwd_var="$APP_PWD"
       elif [ "$uname" = "ADMIN" ]; then
         pwd_var="$ADMIN_PWD"
       else
@@ -343,31 +351,10 @@ DB_${UPPER_NAME}_VIEWER|TEST_VIEWER|READONLY"
       elif [ "$USE_EPHEMERAL_WALLET" = "true" ]; then
         podman run -i --rm -v "$TNS_DIR:/u01/oracle/tns_admin:rw" "$HELPER_IMG" bash -c "
           export PATH=/usr/java/default/bin:/u01/oracle/bin:\$PATH
-          echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl /u01/oracle/tns_admin -deleteCredential '$alias' >/dev/null 2>&1 || true
-          echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl /u01/oracle/tns_admin -createCredential '$alias' '$uname' '$pwd_var' >/dev/null 2>&1 || true
+          WALLET_PATH=/u01/oracle/tns_admin
+          echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential '$alias' >/dev/null 2>&1 || true
+          echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential '$alias' '$uname' '$pwd_var' >/dev/null 2>&1 || true
         "
-      else
-        podman exec -i \
-          -e WALLET_PWD="$WALLET_PWD" \
-          -e ALIAS="$alias" \
-          -e UNAME="$uname" \
-          -e PWD_VAR="$pwd_var" \
-          "$PROXY_CONTAINER" sh -c '
-if [ -d "/opt/oracle/product/23ai/dbhomeFree/jdk" ]; then
-  export JAVA_HOME="/opt/oracle/product/23ai/dbhomeFree/jdk"
-elif ls -d /opt/oracle/product/*/dbhomeFree/jdk 2>/dev/null | head -n 1; then
-  export JAVA_HOME="$(ls -d /opt/oracle/product/*/dbhomeFree/jdk 2>/dev/null | head -n 1)"
-elif [ -d "/usr/java/default" ]; then
-  export JAVA_HOME="/usr/java/default"
-elif [ -d "/usr/java/latest" ]; then
-  export JAVA_HOME="/usr/java/latest"
-fi
-export PATH=$JAVA_HOME/bin:$ORACLE_HOME/bin:$PATH
-WALLET_PATH="/opt/oracle/admin/FREE/wallet"
-
-echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "$ALIAS" >/dev/null 2>&1 || true
-echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "$ALIAS" "$UNAME" "$PWD_VAR" >/dev/null 2>&1 || true
-'
       fi
     done <<< "$USER_DEFS"
 
@@ -382,7 +369,7 @@ echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "$ALIAS" "$UNAM
     # Always generate canonical container-specific aliases (DB_<NAME>_*)
     pfx="$UPPER_NAME"
     if [ "$USE_HOST_PKI" = "true" ]; then
-      for c_alias in "DB_${pfx}_SYS|sys|$SYS_PWD" "DB_${pfx}_DBA_ADMIN|DBA_ADMIN|$DBA_PWD" "DB_${pfx}_SCHEMA|${APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}|$SCH_PWD" "DB_${pfx}_DEV|${TEST_DEV_USER:-TEST_DEV}|$DEV_PWD" "DB_${pfx}_VIEWER|TEST_VIEWER|$VIEWER_PWD" "DB_${pfx}_APEX_ADMIN|ADMIN|$APEX_ADMIN_PWD" "DB_${pfx}_APEX_PUBLIC_USER|APEX_PUBLIC_USER|$APEX_LISTENER_PWD" "DB_${pfx}_APEX_LISTENER|APEX_LISTENER|$APEX_LISTENER_PWD" "DB_${pfx}_ORDS_PUBLIC_USER|ORDS_PUBLIC_USER|$APEX_LISTENER_PWD"; do
+      for c_alias in "DB_${pfx}_SYS|sys|$SYS_PWD" "DB_${pfx}_DBA_ADMIN|DBA_ADMIN|$DBA_PWD" "DB_${pfx}_SCHEMA|${APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}|$SCH_PWD" "DB_${pfx}_DEV|${TEST_DEV_USER:-USER_DEVELOPER}|$DEV_PWD" "DB_${pfx}_APP|USER_APP|$APP_PWD" "DB_${pfx}_VIEWER|USER_VIEWER|$VIEWER_PWD" "DB_${pfx}_APEX_ADMIN|ADMIN|$APEX_ADMIN_PWD" "DB_${pfx}_APEX_PUBLIC_USER|APEX_PUBLIC_USER|$APEX_LISTENER_PWD" "DB_${pfx}_APEX_LISTENER|APEX_LISTENER|$APEX_LISTENER_PWD" "DB_${pfx}_ORDS_PUBLIC_USER|ORDS_PUBLIC_USER|$APEX_LISTENER_PWD"; do
         IFS='|' read -r a_name a_user a_pwd <<< "$c_alias"
         [ -n "$a_pwd" ] || continue
         java -cp "$HOST_SQLCL_CP" oracle.security.pki.textui.OraclePKITextUI secretstore delete_credential -wallet "$TNS_DIR" -pwd "$WALLET_PWD" -connect_string "$a_name" >/dev/null 2>&1 || true
@@ -399,9 +386,11 @@ echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "$ALIAS" "$UNAM
         echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_SCHEMA' >/dev/null 2>&1 || true
         echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_SCHEMA' '${APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}' '$SCH_PWD' >/dev/null 2>&1 || true
         echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_DEV' >/dev/null 2>&1 || true
-        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_DEV' '${TEST_DEV_USER:-TEST_DEV}' '$DEV_PWD' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_DEV' '${TEST_DEV_USER:-USER_DEVELOPER}' '$DEV_PWD' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_APP' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_APP' 'USER_APP' '$APP_PWD' >/dev/null 2>&1 || true
         echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_VIEWER' >/dev/null 2>&1 || true
-        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_VIEWER' TEST_VIEWER '$VIEWER_PWD' >/dev/null 2>&1 || true
+        echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_VIEWER' USER_VIEWER '$VIEWER_PWD' >/dev/null 2>&1 || true
         echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_APEX_ADMIN' >/dev/null 2>&1 || true
         echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -createCredential 'DB_${pfx}_APEX_ADMIN' 'ADMIN' '$APEX_ADMIN_PWD' >/dev/null 2>&1 || true
         echo '$WALLET_PWD' | /u01/oracle/bin/mkstore -wrl \$WALLET_PATH -deleteCredential 'DB_${pfx}_APEX_PUBLIC_USER' >/dev/null 2>&1 || true
@@ -418,6 +407,7 @@ echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "$ALIAS" "$UNAM
         -e DBA_PWD="$DBA_PWD" \
         -e SCH_PWD="$SCH_PWD" \
         -e DEV_PWD="$DEV_PWD" \
+        -e APP_PWD="$APP_PWD" \
         -e VIEWER_PWD="$VIEWER_PWD" \
         -e APEX_LISTENER_PWD="$APEX_LISTENER_PWD" \
         -e APEX_ADMIN_PWD="$APEX_ADMIN_PWD" \
@@ -443,9 +433,11 @@ echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_DBA_
 echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_SCHEMA" >/dev/null 2>&1 || true
 echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_SCHEMA" "${APEX_SCHEMA_USER:-APEX_PROXY_SCHEMA}" "$SCH_PWD" >/dev/null 2>&1 || true
 echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_DEV" >/dev/null 2>&1 || true
-echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_DEV" "${TEST_DEV_USER:-TEST_DEV}" "$DEV_PWD" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_DEV" "${TEST_DEV_USER:-USER_DEVELOPER}" "$DEV_PWD" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_APP" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_APP" "USER_APP" "$APP_PWD" >/dev/null 2>&1 || true
 echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_VIEWER" >/dev/null 2>&1 || true
-echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_VIEWER" TEST_VIEWER "$VIEWER_PWD" >/dev/null 2>&1 || true
+echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -createCredential "DB_${pfx}_VIEWER" USER_VIEWER "$VIEWER_PWD" >/dev/null 2>&1 || true
 
 # System & Web credentials per database
 echo "$WALLET_PWD" | mkstore -wrl $WALLET_PATH -deleteCredential "DB_${pfx}_APEX_ADMIN" >/dev/null 2>&1 || true
@@ -473,8 +465,8 @@ elif [ "$USE_EPHEMERAL_WALLET" != "true" ]; then
 fi
 
 if [ -f "$WORKSPACE_DIR/config/certs/localCA.pem" ]; then
-  echo -e "${CYAN}├─${NC} ${YELLOW}[Alamsamm 4.5.3]: Importin kohaliku juursertifikaadi (Root CA) kliendi walletisse...${NC}"
-  echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}ootusaeg ~1s${NC}"
+  echo -e "${CYAN}├─${NC} ${YELLOW}[$(msg_str "STEP_4_5_NAME") 3]: $(msg_str "SUB_WALLET_3")${NC}"
+  echo -e "${CYAN}│${NC}  📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(msg_str "BENCHMARK_EST" "1s")${NC}"
   cp "$WORKSPACE_DIR/config/certs/localCA.pem" "$TNS_DIR/localCA.pem"
   if [ "$USE_EPHEMERAL_WALLET" = "true" ]; then
     podman run --rm -v "$TNS_DIR:/u01/oracle/tns_admin:rw" "$HELPER_IMG" /u01/oracle/bin/orapki wallet add -wallet /u01/oracle/tns_admin -pwd "$WALLET_PWD" -trusted_cert -cert /u01/oracle/tns_admin/localCA.pem >/dev/null 2>&1 || true
@@ -484,8 +476,8 @@ if [ -f "$WORKSPACE_DIR/config/certs/localCA.pem" ]; then
   rm -f "$TNS_DIR/localCA.pem"
 fi
 
-echo -e "${CYAN}├─${NC} ${YELLOW}[Alamsamm 4.5.4]: Genereerin TNS konfiguratsioonifailid...${NC}"
-echo -e "${CYAN}│${NC}  📊 Ajalooline ooteaeg: ${YELLOW}ootusaeg ~1s${NC}"
+echo -e "${CYAN}├─${NC} ${YELLOW}[$(msg_str "STEP_4_5_NAME") 4]: $(msg_str "SUB_WALLET_4")${NC}"
+echo -e "${CYAN}│${NC}  📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(msg_str "BENCHMARK_EST" "1s")${NC}"
 
 # Genereerime hosti tnsnames.ora dünaamiliselt kõigi aktiivsete instantside ja profiilide jaoks
 cat << EOF > "$TNS_DIR/tnsnames.ora"
@@ -507,8 +499,11 @@ get_active_db_instances 2>/dev/null | while IFS='|' read -r cname prof env_key; 
 
     if [ -z "$USER_DEFS" ]; then
       USER_DEFS="DB_${UPPER_NAME}_SYS|sys|SYSDBA
+DB_${UPPER_NAME}_DBA_ADMIN|DBA_ADMIN|DBA
 DB_${UPPER_NAME}_SCHEMA|APEX_PROXY_SCHEMA|NORMAL
-DB_${UPPER_NAME}_DEV|TEST_DEV|NORMAL"
+DB_${UPPER_NAME}_DEV|USER_DEVELOPER|NORMAL
+DB_${UPPER_NAME}_APP|USER_APP|NORMAL
+DB_${UPPER_NAME}_VIEWER|USER_VIEWER|READONLY"
     fi
 
     while IFS='|' read -r alias uname urole; do
@@ -625,8 +620,11 @@ while IFS='|' read -r cname prof env_key; do
 
     if [ -z "$USER_DEFS" ]; then
       USER_DEFS="DB_${SHORT_NAME}_SYS|sys|SYSDBA
+DB_${SHORT_NAME}_DBA_ADMIN|DBA_ADMIN|DBA
 DB_${SHORT_NAME}_SCHEMA|APEX_PROXY_SCHEMA|NORMAL
-DB_${SHORT_NAME}_DEV|TEST_DEV|NORMAL"
+DB_${SHORT_NAME}_DEV|USER_DEVELOPER|NORMAL
+DB_${SHORT_NAME}_APP|USER_APP|NORMAL
+DB_${SHORT_NAME}_VIEWER|USER_VIEWER|READONLY"
     fi
 
     while IFS='|' read -r alias uname urole; do
@@ -729,5 +727,5 @@ if command -v zip &>/dev/null; then
 fi
 
 
-echo -e "${CYAN}│${NC}  ✅ Wallet ja TNS failid loodud asukohta: ${GREEN}$TNS_DIR${NC}"
-echo -e "${CYAN}│${NC}  📦 GUI Wallet ZIP pakk loodud asukohta: ${GREEN}$WORKSPACE_DIR/config/oracle_db_wallet.zip${NC}"
+echo -e "${CYAN}│${NC}  $(msg_str "WALLET_FILES_CREATED" "${GREEN}$TNS_DIR${NC}")"
+echo -e "${CYAN}│${NC}  $(msg_str "WALLET_ZIP_CREATED" "${GREEN}$WORKSPACE_DIR/config/oracle_db_wallet.zip${NC}")"

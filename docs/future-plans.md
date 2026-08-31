@@ -115,7 +115,7 @@ See dokument koondab projekti **reaalse teostusauditi (Staatuse Kontroll)**, rea
 
 ### 1.16 LIS Süsteemi Üldine Põhiarhitektuur (4-Kihiline Mudel)
 - **Staatus:** **✅ REALISEERITUD JA VALIDEERITUD**
-- **Kirjeldus:** Teostatud standardne enterprise 4-kihiline topoloogia (`db-publisher` metaandmed + `db-proxy` APEX/SSO vahekiht + `db-lis` isoleeritud äribaas + `app_ords` tsentraalne multi-pool ORDS server + `app_publisher` BI Publisher). Tagatud on 0 outbound internet liikuvus `db-lis` ärisektoris ja Outbound REST ACL load `db-proxy` kihis.
+- **Kirjeldus:** Teostatud standardne enterprise 4-kihiline topoloogia (`db-publisher` metaandmed + `db-proxy` APEX/SSO vahekiht + `db-alise` isoleeritud äribaas + `app_ords` tsentraalne multi-pool ORDS server + `app_publisher` BI Publisher). Tagatud on 0 outbound internet liikuvus `db-alise` ärisektoris ja Outbound REST ACL load `db-proxy` kihis.
 
 ### 1.17 Automaatne Versiooni Tuvastamine ja Eelinfo Õigepärasus (DB, APEX, ORDS)
 - **Staatus:** **✅ REALISEERITUD JA VALIDEERITUD**
@@ -139,14 +139,14 @@ See dokument koondab projekti **reaalse teostusauditi (Staatuse Kontroll)**, rea
     *Tulemus:* Paigaldamisel ei toimu enam ühtegi DBCA tekitamist, RCU skeemide loomist ega WLST domeeniskripte.  
     *Ajasääst:* ~16–18 minutit *(Kogu keskkonna tõstmine lüheneb **~1–2 minutile**!)*.
   - **Variant B (FastStart DB Pildimudelite Laialdane Kasutamine):**  
-    Lülitada kõik andmebaasi profiilid (`db-publisher`, `db-proxy`, `db-lis`) pildile `docker.io/gvenzl/oracle-free:23-full-faststart`.  
+    Lülitada kõik andmebaasi profiilid (`db-publisher`, `db-proxy`, `db-alise`) pildile `docker.io/gvenzl/oracle-free:23-full-faststart`.  
     *Tulemus:* Andmebaasid ei tee DBCA tekitamist, vaid käivituvad koheselt mälus **10 sekundiga**.  
     *Ajasääst:* ~6 minutit *(Kogu paigaldus ~8–9 minutit)*.
   - **Variant C (Andmekannu Ketta-mahu / Volume & Domain Snapshot Caching):**  
     Esmakordsel paigaldusel salvestada WebLogic domeeni kaust ja metaandmete baaside ketta-mahud (*named volume snapshot / Golden Snapshot*), taastades selle uutel paigaldustel otse kettalt.  
     *Ajasääst:* ~10–12 minutit korduvpaigaldusel.
   - **Variant D (Nutikas Ressurssipõhine Paralleelne Orkestreerimine):**  
-    Kui masinas on piisavalt RAM-i (≥ 8 GB), käivitada kõigi kolme andmebaasi (`db-publisher`, `db-proxy`, `db-lis`) ja Publisheri taustaprotsessid korraga mälus paralleelselt, hoides vähese mäluga masinatel automaatselt režiimi `STRICT_SEQUENTIAL_MODE=true`.
+    Kui masinas on piisavalt RAM-i (≥ 8 GB), käivitada kõigi kolme andmebaasi (`db-publisher`, `db-proxy`, `db-alise`) ja Publisheri taustaprotsessid korraga mälus paralleelselt, hoides vähese mäluga masinatel automaatselt režiimi `STRICT_SEQUENTIAL_MODE=true`.
 
 ---
 
@@ -225,8 +225,8 @@ See dokument koondab projekti **reaalse teostusauditi (Staatuse Kontroll)**, rea
   1. **`./scripts/setup-all.sh --list-blueprints` (lühivorm: `-lb` või `-l`):**
      - Kuvab terminalis värvilise ja struktureeritud tabeli kõigist 13 blueprintist:
        - **Nr:** [1–13]
-       - **Blueprinti Nimi:** nt `.env.3-db-lis-apex-ords-with-proxy`
-       - **Aktiivsed Teenused:** `db-proxy`, `db-lis`, `app-ords`
+       - **Blueprinti Nimi:** nt `.env.3-db-alise-apex-ords-with-proxy`
+       - **Aktiivsed Teenused:** `db-proxy`, `db-alise`, `app-ords`
        - **Eesmärk / Kirjeldus:** 2-kihiline andmebaasi arhitektuur (Proxy + LIS)
        - **RAM Vajadus:** Hinnanguline mälumaht (nt `~4 GB`)
   2. **`./scripts/setup-all.sh --show-blueprint <N>` (lühivorm: `-sb <N>`):**

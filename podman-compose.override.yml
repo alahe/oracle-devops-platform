@@ -1,53 +1,9 @@
 version: '3.8'
 
 services:
-  db-forms:
-    image: docker.io/gvenzl/oracle-free:latest
-    container_name: db-forms
-    hostname: db-forms
-    shm_size: 2g
-    security_opt:
-      - "no-new-privileges:true"
-    ports:
-      - "127.0.0.1:1534:1521"
+  db-apex-proxy:
+    image: container-registry.oracle.com/database/free:latest
     environment:
-      - ORACLE_PASSWORD_FILE=/run/secrets/oracle_pwd
-      - ORACLE_SID=FREE
-      - ORACLE_PDB=FREEPDB1
-      - TNS_ADMIN=/opt/oracle/admin/FREE/wallet
-      - CONFIGURE_TDE=false
-      - ENCRYPT_TABLESPACES=ALL
-    volumes:
-      - forms_oradata:/opt/oracle/oradata
-      - ./config/tns_admin:/opt/oracle/admin/FREE/wallet:rw
-      - apex_images_26_1:/opt/oracle/apex_images
-    secrets:
-      - source: forms_db_sys_password
-        target: oracle_pwd
-    deploy:
-      resources:
-        limits:
-          cpus: '2.00'
-          memory: 3072M
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - (echo "SELECT 'ALIVE' FROM DUAL;" | sqlplus -L -S / as sysdba 2>/dev/null | grep -q 'ALIVE') || (echo "SELECT 'ALIVE' FROM DUAL;" | sqlplus -L -S sys/`cat /run/secrets/oracle_pwd 2>/dev/null`@localhost:1521/FREEPDB1 as sysdba 2>/dev/null | grep -q 'ALIVE') || (nc -z localhost 1521 2>/dev/null) || exit 1
-      interval: 10s
-      timeout: 10s
-      retries: 25
-      start_period: 30s
-    restart: unless-stopped
-
-
-volumes:
-  forms_oradata:
-  apex_images_26_1:
-
-secrets:
-  forms_db_sys_password:
-    external: true
-  apex_db_sys_password:
-    external: true
-  ords_listener_password:
-    external: true
+      - WORKLOAD_TYPE=OLTP
+      - ADMIN_PASSWORD=OraclePass2026Admin
+      - WALLET_PASSWORD=OraclePass2026Wallet

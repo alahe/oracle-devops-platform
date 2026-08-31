@@ -27,28 +27,33 @@ Kui soovid lisada ühenduse käsitsi `+` nupuga (nt DBeaver, IntelliJ, Basic-üh
     ```bash
     ./scripts/get-password.sh DB_PUBLISHER_SYS
     ```
-*   **Arendaja TEST_DEV parool:**
+*   **Arendaja USER_DEVELOPER parool:**
     ```bash
     ./scripts/get-password.sh DB_PROXY_DEV
     ```
-*   **Veebikasutaja TEST_WEB_USER parool:**
+*   **Forms rakenduskasutaja USER_APP parool:**
     ```bash
-    ./scripts/get-password.sh TEST_WEB_USER
+    ./scripts/get-password.sh DB_FORMS_APP
+    ```
+*   **Vaatleja USER_VIEWER parool:**
+    ```bash
+    ./scripts/get-password.sh DB_PROXY_VIEWER
     ```
 
 *   **LIS SYS parool:**
     ```bash
-    ./scripts/get-password.sh DB_LIS_SYS
+    ./scripts/get-password.sh DB_ALISE_SYS
     ```
-*   **LIS Arendaja TEST_DEV parool:**
+*   **LIS Arendaja USER_DEVELOPER parool:**
     ```bash
-    ./scripts/get-password.sh DB_LIS_DEV
+    ./scripts/get-password.sh DB_ALISE_DEV
     ```
 
 - **Publisher DB (SYS):** Host `localhost`, Port `1531`, Service `FREEPDB1`, User `sys` (Role: `SYSDBA`), Password `<Skripti_Väljund>`
 - **APEX Proxy DB (SYS):** Host `localhost`, Port `1532`, Service `FREEPDB1`, User `sys` (Role: `SYSDBA`), Password `<Skripti_Väljund>`
 - **LIS Äribaas DB (SYS):** Host `localhost`, Port `1533`, Service `FREEPDB1`, User `sys` (Role: `SYSDBA`), Password `<Skripti_Väljund>`
-- **APEX Proxy DB (Developer User):** Host `localhost`, Port `1532`, Service `FREEPDB1`, User `TEST_DEV` (Role: `NORMAL`), Password `<Skripti_Väljund>`
+- **Forms DB (SYS):** Host `localhost`, Port `1534`, Service `FREEPDB1`, User `sys` (Role: `SYSDBA`), Password `<Skripti_Väljund>`
+- **APEX Proxy DB (Developer User):** Host `localhost`, Port `1532`, Service `FREEPDB1`, User `USER_DEVELOPER` (Role: `NORMAL`), Password `<Skripti_Väljund>`
   *Märkus: Kasutajale on määratud süsteemne roll **`DB_DEVELOPER_ROLE`**, mis tagab vajalikud õigused arendustöödeks.*
 
 ---
@@ -118,8 +123,8 @@ Kui `TNS_ADMIN` on seadistatud, saad andmebaasi sisse logida paroolivabalt kasut
     ```
 *   **LIS Äribaas DB:**
     ```bash
-    sql /@DB_LIS_SYS as sysdba
-    sql /@DB_LIS_DEV
+    sql /@DB_ALISE_SYS as sysdba
+    sql /@DB_ALISE_DEV
     ```
 *   **Publisher DB:**
     ```bash

@@ -50,7 +50,7 @@ According to **Rule 3 (Directory Layout Rule for Scripts)**, this directory cont
 | **[common.sh](common.sh)** | Central shared core shell library (colors, duration formatters, progress reporting, signal cleanup traps, and pigz compression helpers). |
 | **[generate-compose-override.sh](generate-compose-override.sh)** | Dynamic Podman Compose override generator (`podman-compose.override.yml`) based on active database profiles and Podman secrets. |
 | **[wait-db-healthy.sh](wait-db-healthy.sh)** | 2-phase adaptive healthcheck & self-healing engine verifying container health, TCP listeners, and PDB READ WRITE status. |
-| **[generate-setup-report.sh](generate-setup-report.sh)** | Benchmark & setup report generator exporting JSON benchmarks, ENV metrics, and scenario audit Markdown reports. |
+| **[generate-setup-report.sh](generate-setup-report.sh)** | Benchmark & setup report generator exporting JSON benchmarks, ENV metrics, and blueprint audit Markdown reports. |
 
 
 

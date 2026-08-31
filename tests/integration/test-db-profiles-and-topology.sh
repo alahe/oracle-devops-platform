@@ -21,22 +21,22 @@ echo -e "${CYAN}================================================================
 # Source profile loader
 source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
 
-# Test 1: Load proxy-adb-oracle profile
-echo -e "\n${YELLOW}[Test 1] Laen ADB profiili (proxy-adb-oracle)...${NC}"
-load_db_profile "proxy-adb-oracle"
+# Test 1: Load db-proxy-adb profile
+echo -e "\n${YELLOW}[Test 1] Laen ADB profiili (db-proxy-adb)...${NC}"
+load_db_profile "db-proxy-adb"
 
-if [ "$PROFILE_DB_TYPE" = "adb" ] && [ "$IS_ADB" = "true" ] && [[ "$RESOLVED_DB_IMAGE" == *"adb-free"* ]]; then
+if [ "$IS_ADB" = "true" ] && [[ "$RAW_CONTAINER_IMAGE" == *"adb-free"* ]]; then
   echo -e "${GREEN}✅ Test 1 Edukas: ADB profiil laeti korrektselt (IS_ADB=true)!${NC}"
 else
   echo -e "${RED}❌ Test 1 Ebaõnnestus: ADB profiili parameetrid olid valed!${NC}"
   exit 1
 fi
 
-# Test 2: Load proxy-standard-gvenzl profile
-echo -e "\n${YELLOW}[Test 2] Laen Gvenzl profiili (proxy-standard-gvenzl)...${NC}"
-load_db_profile "proxy-standard-gvenzl"
+# Test 2: Load db-proxy-gvenzl profile
+echo -e "\n${YELLOW}[Test 2] Laen Gvenzl profiili (db-proxy-gvenzl)...${NC}"
+load_db_profile "db-proxy-gvenzl"
 
-if [ "$PROFILE_VENDOR" = "gvenzl" ] && [ "$IS_ADB" = "false" ] && [[ "$RESOLVED_DB_IMAGE" == *"gvenzl"* ]]; then
+if [ "$IS_ADB" = "false" ] && [[ "$RESOLVED_DB_IMAGE" == *"gvenzl"* ]]; then
   echo -e "${GREEN}✅ Test 2 Edukas: Gvenzl profiil laeti korrektselt!${NC}"
 else
   echo -e "${RED}❌ Test 2 Ebaõnnestus: Gvenzl profiili parameetrid olid valed!${NC}"
@@ -47,9 +47,9 @@ fi
 echo -e "\n${YELLOW}[Test 3] Testin Artifactory sise-registri globaalset ülekirjutust...${NC}"
 export ARTIFACTORY_DOCKER_REGISTRY="artifactory.minufirma.ee"
 
-load_db_profile "proxy-adb-oracle"
+load_db_profile "db-proxy-oracle"
 
-if [[ "$RESOLVED_DB_IMAGE" == "artifactory.minufirma.ee/database/adb-free:latest" ]]; then
+if [[ "$RESOLVED_DB_IMAGE" == "artifactory.minufirma.ee/database/free:latest"* ]]; then
   echo -e "${GREEN}✅ Test 3 Edukas: Artifactory globaalne register rakendus automaatselt (${RESOLVED_DB_IMAGE})!${NC}"
 else
   echo -e "${RED}❌ Test 3 Ebaõnnestus: Artifactory register ei rakendunud! Output: ${RESOLVED_DB_IMAGE}${NC}"

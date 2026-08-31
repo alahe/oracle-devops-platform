@@ -41,10 +41,22 @@ RUN mkdir -p /opt/sqlcl && \
     rm -f /tmp/sqlcl.zip && \
     chmod +x /opt/sqlcl/bin/sql || true
 
+# 5. Pre-configure default VS Code settings for Oracle SQL Developer & Antigravity
+RUN mkdir -p /config/.local/share/code-server/User /root/.local/share/code-server/User && \
+    SETTINGS_JSON='{"oracle.sql.developer.tnsAdmin":"/config/.oracle/tns_admin","oracle.sql.developer.javaPath":"/usr/lib/jvm/java-21-openjdk-amd64","redhat.telemetry.enabled":false,"workbench.colorTheme":"Default Dark Modern","workbench.startupEditor":"none"}' && \
+    echo "$SETTINGS_JSON" > /config/.local/share/code-server/User/settings.json && \
+    echo "$SETTINGS_JSON" > /root/.local/share/code-server/User/settings.json
+
+# 6. Pre-install Official Extensions (Oracle SQL Developer, Antigravity, GitHub Actions, Red Hat YAML)
+RUN /app/code-server/bin/code-server --install-extension Oracle.sql-developer-for-vscode 2>/dev/null || true && \
+    /app/code-server/bin/code-server --install-extension google.antigravity 2>/dev/null || true && \
+    /app/code-server/bin/code-server --install-extension github.vscode-github-actions 2>/dev/null || true && \
+    /app/code-server/bin/code-server --install-extension redhat.vscode-yaml 2>/dev/null || true && \
+    chown -R 1000:1000 /config 2>/dev/null || true
+
 # 7. Pre-configure Antigravity & SQLcl alias in user profiles
 RUN echo 'export TNS_ADMIN=/config/.oracle/tns_admin' >> /etc/bash.bashrc && \
     echo 'export JAVA_TOOL_OPTIONS="-Doracle.net.tns_admin=/config/.oracle/tns_admin"' >> /etc/bash.bashrc && \
     echo 'alias sql="/opt/sqlcl/bin/sql"' >> /etc/bash.bashrc
-
 
 WORKDIR /workspace

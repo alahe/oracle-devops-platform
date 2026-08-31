@@ -11,7 +11,7 @@ database:
   workload_type: OLTP
   admin_user: ADMIN
   admin_role: NORMAL
-  default_service: MYATP_low
+  default_service: FREEPDB1
   db_port: 1532
   wallet_required: true
 
@@ -19,9 +19,11 @@ components:
   ords:
     enabled: true
     preinstalled: true
-    container_required: false
-    https_port: 8443
-    http_port: 8080
+    container_required: true
+    https_port: 8448
+    http_port: 8088
+    pool_name: "proxy"
+    url_mapping: "/ords/proxy/"
   apex:
     enabled: true
     preinstalled: true
@@ -33,14 +35,32 @@ users:
     role: ADMIN
     wallet_alias: DB_PROXY_SYS
     color: "#E74C3C"
+  - username: ADMIN
+    role: ADMIN
+    wallet_alias: DB_PROXY_APEX_ADMIN
+    color: "#E74C3C"
+  - username: DBA_ADMIN
+    role: DBA
+    wallet_alias: DB_PROXY_DBA_ADMIN
+    color: "#2980B9"
   - username: APEX_PROXY_SCHEMA
     role: NORMAL
     wallet_alias: DB_PROXY_SCHEMA
     color: "#2980B9"
-  - username: TEST_DEV
+  - username: USER_DEVELOPER
     role: NORMAL
     ords_enabled: true
-    ords_alias: test_dev
+    ords_alias: user_developer
     roles: [DB_DEVELOPER_ROLE]
     wallet_alias: DB_PROXY_DEV
     color: "#F39C12"
+  - username: USER_APP
+    role: NORMAL
+    roles: [RESOURCE]
+    wallet_alias: DB_PROXY_APP
+    color: "#27AE60"
+  - username: USER_VIEWER
+    role: READONLY
+    roles: [CONNECT]
+    wallet_alias: DB_PROXY_VIEWER
+    color: "#8E44AD"

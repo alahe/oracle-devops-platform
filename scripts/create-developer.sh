@@ -96,7 +96,7 @@ DEV_PWD="Dev_${RAND_PART}_2026!"
 LOG_DIR="$WORKSPACE_DIR/install_logs"
 mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_FILE="$LOG_DIR/create_developer_${DEV_USER}_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/db_developer_init_${TIMESTAMP}.log"
 
 echo "------------------------------------------------------------------"
 echo "ℹ️  Loon kasutajat '$DEV_USER' tööruumi 'PROXY_WORKSPACE'..."
@@ -192,6 +192,11 @@ BEGIN
         p_developer_privs              => 'CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE',
         p_change_password_on_first_use => 'N'
     );
+    UPDATE wwv_flow_fnd_user
+    SET account_expiry = NULL,
+        account_locked = 'N',
+        change_password_on_first_use = 'N'
+    WHERE user_name = '${DEV_USER}';
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('✅ Arendaja kasutajakonto edukalt loodud!');
   END IF;
@@ -258,6 +263,11 @@ BEGIN
         p_developer_privs              => 'CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE',
         p_change_password_on_first_use => 'N'
     );
+    UPDATE wwv_flow_fnd_user
+    SET account_expiry = NULL,
+        account_locked = 'N',
+        change_password_on_first_use = 'N'
+    WHERE user_name = '${DEV_USER}';
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('✅ Arendaja kasutajakonto edukalt loodud!');
   END IF;

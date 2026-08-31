@@ -95,7 +95,8 @@ services:
       - PASSWORD=
     volumes:
       - ./:/workspace
-      - ./config/tns_admin_container:/config/.oracle/tns_admin
+      - ./config/tns_admin_container:/config/.oracle/tns_admin:ro
+      - ${HOME}/.dbtools/connections:/config/.dbtools/connections:rw
       - web_ide_data:/config
     restart: unless-stopped
 
@@ -104,6 +105,7 @@ services:
   # ---------------------------------------------------------------------------
   publisher:
     profiles:
+      - publisher
       - app-publisher
     image: ${PUBLISHER_CONTAINER_IMAGE:-app-publisher:latest}
     container_name: ${PUBLISHER_CONTAINER_NAME:-app-publisher}
@@ -116,7 +118,7 @@ services:
     environment:
       - BI_DOMAIN_NAME=${PUBLISHER_DOMAIN_NAME:-bi}
       - DB_HOST=${PUBLISHER_DB_HOST:-db-publisher}
-      - DB_PORT=${PUBLISHER_DB_PORT:-1533}
+      - DB_PORT=${PUBLISHER_DB_CONTAINER_PORT:-1521}
       - DB_SERVICE=${PUBLISHER_DB_SERVICE:-FREEPDB1}
     volumes:
       - publisher_data:/u01/oracle/user_projects

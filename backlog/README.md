@@ -67,5 +67,8 @@ backlog/
 | **022** | Loetav Juurfailisüsteem ja Hardening (`--read-only`) | `Security` | [`TASK-022-readonly-hardening.md`](todo/TASK-022-readonly-hardening.md) | **🟡 OSALISELT VALMIS** |
 | **023** | Keskne Auditilogi ja SIEM Integratsioon (Unified Auditing) | `Security` | [`TASK-023-unified-auditing-siem.md`](todo/TASK-023-unified-auditing-siem.md) | **❌ OOTEL** |
 | **024** | WAF & OAuth2 / OIDC Entra-ID Lõiming REST API-dele | `Security` | [`TASK-024-waf-oauth2-entra-id.md`](todo/TASK-024-waf-oauth2-entra-id.md) | **🟡 OSALISELT VALMIS** |
-| **029** | Oracle Forms 14c Konteiner, Metaandmete Baas ja Profiilid | `Architecture` | [`TASK-029-oracle-forms-container-and-profiles.md`](todo/TASK-029-oracle-forms-container-and-profiles.md) | **🟡 KAVANDATUD** |
+| **029** | Oracle Forms 14c Konteiner, Metaandmete Baas ja Profiilid | `Architecture` | [`TASK-029-oracle-forms-container-and-profiles.md`](done/TASK-029-oracle-forms-container-and-profiles.md) | **🟡 KAVANDATUD** |
 | **031** | Ettevõtte Sise-Artifactory Live-Ühenduse ja Piltide Pushimise Valideerimine | `Tooling` | [`TASK-031-enterprise-artifactory-live-testing.md`](todo/TASK-031-enterprise-artifactory-live-testing.md) | **🟡 OOTEL (Võrk)** |
+| **032** | LIS Nime ja Viidete Asendamine Üldise 'db-custom' Mudeliga | `Architecture` | [`TASK-032-generalize-lis-to-custom-db.md`](todo/TASK-032-generalize-lis-to-custom-db.md) | **🟡 KAVANDATUD** |
+| **033** | Developer Hub Realiseerimine ja Automaatne Paigaldus APEX Rakendusena | `Tooling` | [`TASK-033-apex-developer-hub-app.md`](todo/TASK-033-apex-developer-hub-app.md) | **🟡 KAVANDATUD** |
+| **034** | Deterministliku Paroolide ja Saladuste Haldussüsteemi Standardiseerimine (Credential Matrix) | `Security` | [`TASK-034-deterministic-credential-matrix.md`](todo/TASK-034-deterministic-credential-matrix.md) | **🚀 TÖÖS (IN_PROGRESS)** |
