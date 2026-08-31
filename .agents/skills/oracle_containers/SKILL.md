@@ -72,17 +72,34 @@ FROM customers c WITH INSERT UPDATE DELETE;
 
 ---
 
-## 4. Startup Performance: FastStart vs Standard DBCA
+## 5. Multitenant PDB Context & Clock Skew Resilience (Multi-DB Invariants)
 
-| Image / Profile | Startup Time | Technical Behavior |
-| :--- | :--- | :--- |
-| **`gvenzl/oracle-free:23-full-faststart`** | **~5 – 15 seconds** | **FastStart:** Pre-created database (`FREEPDB1`) mounted instantly in memory. |
-| **`container-registry.oracle.com/database/free:latest`** | **~3 – 6 minutes** | **Standard DBCA:** First boot builds datafiles from scratch. |
-| **Apple Silicon ARM64 Fallback** | Automatic | `load-profile.sh` maps `adb-free` (AMD64 only) to multi-arch `database/free:latest`. |
+### 5.1 Multitenant PDB Direct Connection Rule (`CDB$ROOT` Drop Prevention)
+When executing complex administrative scripts (APEX engine install, ORDS metadata setup, patching) targeted at a Pluggable Database (`FREEPDB1`), **never rely on `sqlplus / as sysdba` followed by `ALTER SESSION SET CONTAINER`**. Internal `CONNECT` commands inside Oracle vendor scripts drop back to `CDB$ROOT`.
+- **Mandatory Pattern:** Always connect directly using the explicit PDB service:
+  ```bash
+  sqlplus "sys/${SYS_PASSWORD}@localhost:1521/${DB_SERVICE} as sysdba" @script.sql
+  ```
+
+### 5.3 Tablespace Pre-allocation Invariant (Preventing I/O Lock Freezes & ORA-03114)
+Oracle Free DB initializes datafiles with small sizes (e.g. `SYSAUX` at 480MB, 10MB auto-extend). Heavy installations (APEX, ORDS metadata) perform hundreds of sequential datafile resize operations, creating severe I/O lock contention, private strand flush freezes (`Thread 1 cannot allocate new log`), and client disconnects (`ORA-03114`).
+- **Rule:** Always pre-allocate datafiles with larger chunks prior to heavy workloads:
+  ```sql
+  ALTER DATABASE DATAFILE '/opt/oracle/oradata/FREE/FREEPDB1/sysaux01.dbf' RESIZE 2048M AUTOEXTEND ON NEXT 128M MAXSIZE UNLIMITED;
+  ALTER DATABASE DATAFILE '/opt/oracle/oradata/FREE/FREEPDB1/system01.dbf' RESIZE 1024M AUTOEXTEND ON NEXT 128M MAXSIZE UNLIMITED;
+  ALTER DATABASE DATAFILE '/opt/oracle/oradata/FREE/FREEPDB1/undotbs01.dbf' RESIZE 512M AUTOEXTEND ON NEXT 64M MAXSIZE UNLIMITED;
+  ```
+
+### 5.4 Serial vs Parallel Recompilation in PDBs (Preventing ORA-609 Scheduler Slave Timeouts)
+In containerized PDB environments, `sys.utl_recomp.recomp_parallel` spawns `DBMS_SCHEDULER` worker jobs originating from `CDB$ROOT`. Under heavy CPU/IO load, these worker jobs encounter TCP listener authentication timeouts (`ORA-609: could not attach to incoming connection`), terminating the parent session.
+- **Rule:** In containerized PDB installations, replace parallel recompilation with in-session serial recompilation:
+  ```sql
+  sys.utl_recomp.recomp_serial(schema => 'APEX_260100');
+  ```
 
 ---
 
-## 5. Ephemeral Container Pattern (`--rm`)
+## 6. Ephemeral Container Pattern (`--rm`)
 
 For one-off CLI operations (schema migrations, backups, exports):
 ```bash

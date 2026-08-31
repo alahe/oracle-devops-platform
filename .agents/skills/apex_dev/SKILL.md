@@ -151,3 +151,19 @@ END;
 # Run automated E2E login and authentication validation:
 ./scripts/test-browser-login.sh
 ```
+
+---
+
+## 7. APEX Engine Installation & Troubleshooting Matrix
+
+| Issue / Symptom | Root Cause | Mandatory Architectural Pattern |
+| :--- | :--- | :--- |
+| **`Enter value for apex_:` prompt** | `apex_rest_config_core.sql` resets SQL*Plus `SET DEFINE '&'`. Comment with `&` is parsed as variable. | Always emit `SET DEFINE OFF;` immediately after vendor scripts and replace `&` with `and` in SQL comments. |
+| **`ORA-03114` during recompilation** | `sys.utl_recomp.recomp_parallel` spawns `DBMS_SCHEDULER` jobs that fail TCP listener auth in PDB (`ORA-609`). | Replace parallel recompilation with in-session serial recompilation (`sys.utl_recomp.recomp_serial`). |
+| **I/O lock freeze / Datafile resize bottleneck** | Small default `SYSAUX` (480M) triggers 50+ consecutive 10MB auto-extensions. | Pre-allocate `SYSAUX` (2048M), `SYSTEM` (1024M), `UNDOTBS1` (512M) with `AUTOEXTEND ON NEXT 128M` before installation. |
+| **`LOADING` state / Incomplete upgrade** | Manual `DROP USER APEX_XXXXXX CASCADE` leaves orphaned `SYS.DBA_REGISTRY` entries. | Never manually drop APEX engine schemas; let `apexins.sql` manage schema upgrades cleanly. |
+| **`ORA-01017` on PDB SYS connection** | SYS password not synchronized in `CDB$ROOT` passwordfile (`orapw`). | Sync SYS password in `CDB$ROOT` via local OS authentication (`/ as sysdba`) before TCP connections. |
+| **`HTTP 574` / `ORA-01017` on `|default|lo|` pool** | ORDS `default/pool.xml` or custom pool XML contains unexpanded `placeholder` or unquoted heredoc variable. | Use unquoted heredoc (`cat << EOF_POOL`) and ensure entrypoint dynamically syncs `APEX_LISTENER_PWD` into all `/etc/ords/config/databases/*/pool.xml`. |
+| **`HTTP 404` on APEX Builder / `apex_admin`** | ORDS `pool.xml` missing PL/SQL gateway enablement. | Explicitly configure `<entry key="plsql.gateway.mode">proxied</entry>` and `<entry key="feature.apex">true</entry>` in all ORDS database pools. |
+| **`ORA-12752` Clock Skew Crash** | Pausing database containers (`podman stop`) during background tasks causes VM clock jumps. | Never pause database containers in multi-DB clusters; tune SGA/PGA per instance instead. |
+

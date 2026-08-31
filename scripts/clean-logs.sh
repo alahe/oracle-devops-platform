@@ -53,9 +53,9 @@ echo -e "${CYAN}$(msg_str "CLEAN_LOGS_TITLE")${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 
 if [ "$FORCE" = "false" ]; then
-  read -p "$(echo -e "${YELLOW}❓ Kas soovid kustutada kõik logid, unzipped_log* kataloogid ja bieeconfiglogs*.zip failid? (y/N): ${NC}")" CONFIRM
+  read -p "$(echo -e "${YELLOW}$(msg_str "CLEAN_LOGS_PROMPT")${NC}")" CONFIRM
   if [[ ! "$CONFIRM" =~ ^[YyJj] ]]; then
-    echo -e "${RED}❌ Logide puhastamine tühistatud.${NC}"
+    echo -e "${RED}$(msg_str "CLEAN_LOGS_CANCELLED")${NC}"
     exit 0
   fi
 fi
@@ -72,7 +72,7 @@ if [ -d "$LOG_DIR" ]; then
   COUNT_LOGS=${#log_files[@]}
   if [ $COUNT_LOGS -gt 0 ]; then
     rm -f "$LOG_DIR"/*.log "$LOG_DIR"/*.sql
-    echo -e "   ✅ Kustutatud ${COUNT_LOGS} logi- ja SQL-faili kaustast install_logs/"
+    msg_print "CLEAN_LOGS_DELETED_LOGS" "$COUNT_LOGS"
   fi
 fi
 
@@ -85,7 +85,7 @@ if [ $COUNT_DIRS -gt 0 ]; then
   for d in "${unzipped_dirs[@]}"; do
     [ -d "$d" ] && rm -rf "$d"
   done
-  echo -e "   ✅ Kustutatud ${COUNT_DIRS} unzipped_log* kataloogi koos sisuga."
+  msg_print "CLEAN_LOGS_DELETED_DIRS" "$COUNT_DIRS"
 fi
 
 # 3. Clear bieeconfiglogs*.zip diagnostic archives
@@ -97,7 +97,7 @@ if [ $COUNT_ZIPS -gt 0 ]; then
   for z in "${biee_zips[@]}"; do
     [ -f "$z" ] && rm -f "$z"
   done
-  echo -e "   ✅ Kustutatud ${COUNT_ZIPS} bieeconfiglogs*.zip arhiivi."
+  msg_print "CLEAN_LOGS_DELETED_ZIPS" "$COUNT_ZIPS"
 fi
 
 echo -e "${CYAN}==================================================================${NC}"

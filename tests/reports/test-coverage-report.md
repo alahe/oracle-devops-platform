@@ -5,7 +5,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ---
 
-## 📅 Genereeritud: 2026-08-31 14:13:11
+## 📅 Genereeritud: 2026-08-31 17:43:45
 
 ---
 
@@ -17,6 +17,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 | **`check-wallet.sh`** | ✅ Kaetud | [`test-multi-db-seps-wallet.sh`](../unit/test-multi-db-seps-wallet.sh),[`test-script-test-wallet-connections.sh`](../unit/test-script-test-wallet-connections.sh) |
 | **`clean-logs.sh`** | ✅ Kaetud | [`test-script-clean-logs.sh`](../unit/test-script-clean-logs.sh),[`test-e2e-system.sh`](../integration/test-e2e-system.sh) |
 | **`create-developer.sh`** | ✅ Kaetud | [`test-script-create-developer.sh`](../unit/test-script-create-developer.sh),[`test-internal-installers-and-helpers.sh`](../integration/test-internal-installers-and-helpers.sh) |
+| **`deploy-blueprint.sh`** | ✅ Kaetud | [`test-script-deploy-blueprint.sh`](../unit/test-script-deploy-blueprint.sh) |
 | **`deploy-remote.sh`** | ✅ Kaetud | [`test-script-deploy-remote.sh`](../unit/test-script-deploy-remote.sh) |
 | **`get-password.sh`** | ✅ Kaetud | [`test-multi-db-seps-wallet.sh`](../unit/test-multi-db-seps-wallet.sh),[`test-script-get-password.sh`](../unit/test-script-get-password.sh),[`test-e2e-system.sh`](../integration/test-e2e-system.sh),[`test-subcomponent-services.sh`](../integration/test-subcomponent-services.sh),[`test-browser-login.sh`](../test-browser-login.sh) |
 | **`publish-image-to-artifactory.sh`** | ✅ Kaetud | [`test-apex-speedup-and-artifactory.sh`](../unit/test-apex-speedup-and-artifactory.sh) |
@@ -79,7 +80,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ## 📈 Kokkuvõttev Mõõdik (Summary Metrics)
 
-- **Kogu skriptide arv (Total Scripts):** 54
-- **Testidega kaetud skripte (Covered Scripts):** 53
+- **Kogu skriptide arv (Total Scripts):** 55
+- **Testidega kaetud skripte (Covered Scripts):** 54
 - **Automaattestide kaetus (Test Coverage):** **98%**
 

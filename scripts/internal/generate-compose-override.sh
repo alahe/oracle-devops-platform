@@ -195,6 +195,8 @@ EOF
 <entry key="db.username">ORDS_PUBLIC_USER</entry>
 <entry key="db.password">placeholder</entry>
 <entry key="feature.sdw">true</entry>
+<entry key="feature.apex">true</entry>
+<entry key="plsql.gateway.mode">proxied</entry>
 <entry key="restEnabledSql.active">true</entry>
 </properties>
 EOF_POOL
@@ -246,10 +248,10 @@ EOF_POOL
         fi
         rm -rf /etc/ords/config/databases/*/wallet /etc/ords/config/databases/*/*/wallet 2>/dev/null || true
         if [ -f /run/secrets/ords_listener_password ]; then
-          APEX_LISTENER_PWD=\$(cat /run/secrets/ords_listener_password)
-        fi
-        if [ -n "\$\$APEX_LISTENER_PWD" ]; then
-          find /etc/ords/config/databases/ -name "pool.xml" -exec sed -i "s|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">\$\$APEX_LISTENER_PWD</entry>|g" {} + 2>/dev/null || true
+          APEX_LISTENER_PWD=\$(cat /run/secrets/ords_listener_password | tr -d '\r\n')
+          if [ -n "\$APEX_LISTENER_PWD" ]; then
+            find /etc/ords/config/databases/ -name "pool.xml" -exec sed -i "s|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">\$APEX_LISTENER_PWD</entry>|g" {} + 2>/dev/null || true
+          fi
         fi
         mkdir -p /etc/ords/config/global
         printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">' '<properties>' '<entry key="database.api.enabled">true</entry>' '<entry key="feature.sdw">true</entry>' '<entry key="restEnabledSql.active">true</entry>' '<entry key="standalone.doc.root">/opt/oracle/docroot</entry>' "<entry key=\"standalone.http.port\">${ords_http_val}</entry>" "<entry key=\"standalone.https.port\">${ords_ssl_val}</entry>" '<entry key="standalone.static.context.path">/i</entry>' '<entry key="standalone.static.path">/opt/oracle/apex_images/images</entry>' '</properties>' > /etc/ords/config/global/settings.xml

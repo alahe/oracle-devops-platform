@@ -2,68 +2,202 @@
 
 # Oracle DevOps -Alusta (Suomenkielinen Käyttöopas)
 
-> **Tuotantovalmis, lisenssimaksuton (0 €) ja 100% salasanaton (SEPS Wallet) kehitys- ja DevOps-alusta: Oracle 23ai, APEX 26, Forms 14c, Publisher ja Web IDE.**
+> **Tuotantovalmis, lisenssimaksuton (0 €) ja 100% salasanaton (SEPS Wallet) Oracle 23ai, APEX SSO -yhdyskäytävä, Forms 14c, Publisher ja Web IDE kehitys- sekä DevOps-alusta.**
 
 ---
 
-## 🎯 Miksi teemme tämän ja mitä hyötyä saamme?
+## ⚡ 60-Sekunnin Pikakäynnistys
 
-1. 💰 **Massiiviset Kustannussäästöt (0 € lisenssimaksuja):** Hyödynnämme ilmaisen Oracle Database Free 23ai:n huipputeknologiaa (JSON-Relational Duality, Kafka, APEX 26.1), säästäen yrityslisensseissä.
-2. 🔒 **100% Salasanaton ja Vuotovapaa (SEPS Wallet):** Oracle Wallet (SEPS) ja Podman Secrets estävät salasanojen päätymisen tiedostoihin, lokeihin tai `ps aux` -tulosteisiin. Kehittäjä kirjautuu yhdellä klikkauksella.
-3. ⚡ **Käynnistys Sekunneissa (Esiasennetut Kuvat & Snapshots):** Esikoottujen konttikuvien ansiosta täydelliset enterprise-pinot käynnistyvät **15 minuutin sijasta 1–2 minuutissa**.
+```bash
+# 1. Kloonaa repositorio ja siirry hakemistoon
+git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-free-db-in-prod
+
+# 2. Käynnistä 2-kerroksinen tuotantopino (Blueprint 3)
+./scripts/setup-all.sh -b 3 --lang fi
+
+# 3. Tarkastele salasanoja, URL-osoitteita ja leikepöytäapuria (tai avaa Dev Hub: http://localhost:8088/)
+./scripts/get-password.sh
+```
 
 ---
 
-## 📦 Toiminnallisuudet ja Konttipinot (Decade Matrix)
+## 🗺️ Uuden Kehittäjän Perehdytyspolku (Onboarding Journey)
 
-Alusta tarjoaa **23 kanonista arkkitehtuurisuunnitelmaa (Environment Blueprints)**, jotka on jaettu 5 loogiseen sarjaan:
+```mermaid
+flowchart TD
+    Start(["🚀 Kehittäjä Aloittaa"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
+    Clone --> ChooseBP{"2. Valitse Arkkitehtuurisuunnitelma"}
+    
+    ChooseBP -->|Oletus 2-DB Pino| BP3["./scripts/setup-all.sh -b 3"]
+    ChooseBP -->|Forms + Publisher + IDE| BP41["./scripts/setup-all.sh -b 41"]
+    ChooseBP -->|Esikatselu / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 34 --dry-run"]
+    
+    BP3 --> DevHub["3. Avaa DevOps-Komentokeskus<br/>🌐 http://localhost:8088/"]
+    BP41 --> DevHub
+    BPDry --> ChooseBP
+    
+    DevHub --> PwdSpikker["4. Salasanaopas (SEPS Wallet)<br/>./scripts/get-password.sh DB_PROXY_DEV -c"]
+    
+    PwdSpikker --> DevWork["5. Aloita Kehitystyö!"]
+    DevWork --> WorkIDE["💻 Web IDE & SQL Developer (:8090)"]
+    DevWork --> WorkAPEX["🌟 APEX Builder & SSO -Yhdyskäytävä (:8088)"]
+    DevWork --> WorkForms["📐 Forms 14c noVNC Builder (:6082)"]
+    DevWork --> WorkPub["📑 Analytics Publisher (:9502)"]
+```
 
-| Sarja | Pinon Nimi | Suoritettavat Kontit | Tärkeimmät Toiminnallisuudet | Moduulin Opas |
-| :---: | :--- | :--- | :--- | :--- |
-| **1–9** | **Core DB & APEX** | `db-alise`, `db-proxy`, `app-ords` | Oracle 23ai Free DB, APEX 26.1 Builder, moniallas-ORDS, REST Enabled SQL | 🗄️ **[config/blueprints/README.fi.md](../../config/blueprints/README.fi.md)** |
-| **10–19** | **Analytics Publisher** | `db-publisher`, `app-publisher`, `app-ords` | Pixel Perfect PDF/Excel -raportit, WebLogic BI -toimialue, RCU-metatiedot, `PUBLISHER_READER` wallet | 📑 **[docs/fi/publisher-setup.md](publisher-setup.md)** |
-| **20–29** | **Oracle Forms 14c** | `db-forms`, `app-forms`, `app-ords` | Forms Services 14.1.2 (`/forms/frmservlet`), testilomake (`test.fmx`), CLI-eräkäännös, APEX-migraatio | 📐 **[docs/fi/forms-setup.md](forms-setup.md)** |
-| **30–39** | **Web IDE & CI/CD** | `web-ide-dev`, `db-alise`, `app-ords` | Selainpohjainen VS Code (Portti 8090), Oracle SQL Dev, Antigravity AI, offline GitHub Actions (`act`) | 💻 **[docs/fi/web-ide-artifactory.md](web-ide-artifactory.md)** |
-| **40–49** | **Ultimate Enterprise** | Kaikki palvelut yhdessä | Forms 14c + Publisher + APEX 26.1 + ORDS + Web IDE (kaikki-yhdessä ja eristetyt mallit) | 🌟 **[config/blueprints/README.fi.md](../../config/blueprints/README.fi.md)** |
+---
+
+## ⚡ Setup-All 10-Vaiheinen Elinkaariarkkitehtuuri
+
+```mermaid
+flowchart LR
+    P1["1. Konttikuvien Lataus"] --> P2["2. ORDS Lataus"]
+    P2 --> P3["3. APEX Paketit"]
+    P3 --> P4["4. Konttien Käynnistys"]
+    P4 --> P5["5. DB Terveyden Odotus"]
+    P5 --> P6["6. APEX Asennus"]
+    P6 --> P7["7. Skeemat & SEPS Init"]
+    P7 --> P8["8. APEX Sovellusten Julkaisu"]
+    P8 --> P9["9. Middleware & Palvelut"]
+    P9 --> P10["10. Kultainen Tilannevedos (~15s DR)"]
+```
+
+---
+
+## 🌐 Dev Hub (`http://localhost:8088/`) — Yhdistetty Ohjauskeskus (*Single Pane of Glass*)
+
+Kehittäjän ei tarvitse opetella ulkoa kymmeniä eri portteja. **Dev Hub** toimii keskitettynä portaalina:
+- **1-Klikkauksen Palvelulinkit:** Välitön pääsy APEX Builderiin, Database Actionsiin (SDW), Forms 14c -palveluihin, HTML5 noVNC Forms Builderiin ja Analytics Publisheriin.
+- **1-Klikkauksen Salasanakopiointi:** Yksi klikkaus kopioi avatun salasanan suoraan leikepöydälle (valmiina liitettäväksi: `Cmd+V` / `Ctrl+V`).
+- **Reaaliaikainen Terveydentilan Diagnostiikka:** Automaattinen latenssitarkistus 6 sekunnin välein.
+- **Integroitu Markdown-Dokumentaatiolukija:** Lue ja hae oppaita suoraan selaimessa.
+- **Blueprintien Käyttöönotto ja Hallinta:** Ota käyttöön ja vaihda blueprintejä selaimesta tai komennolla `./scripts/deploy-blueprint.sh`.
+
+---
+
+## 🔑 Mistä Löydän Salasanani? (SEPS Wallet -Pikaopas)
+
+Kaikki salasanat generoidaan vahvalla kryptografisella satunnaisuudella ja tallennetaan turvallisesti **Oracle SEPS (Secure External Password Store) Walleteihin** ja Podman-salaisuuksiin.
+
+```bash
+# Näytä salasanojen ja palveluiden koontitaulukko:
+./scripts/get-password.sh
+
+# Kopioi kehittäjän salasana suoraan leikepöydälle:
+./scripts/get-password.sh DB_PROXY_DEV -c
+
+# Kopioi APEX-pääkäyttäjän salasana:
+./scripts/get-password.sh DB_PROXY_APEX_ADMIN -c
+
+# Yhdistä tietokantaan SQLcl:llä ILMAN salasanaa:
+sql /@DB_PROXY_DEV
+```
+
+---
+
+## 🎯 3 Sidosryhmänäkymää ja Alustan Arvo
+
+| Sidosryhmä | Tärkeimmät Hyödyt ja Päivittäinen Kokemus | Tekninen Mahdollistaja |
+| :--- | :--- | :--- |
+| **👤 Loppukäyttäjä ja Liiketoiminta** | • **Ei Asennettavia Työpöytäasiakkaita:** Moderni HTML5-selainkokemus ja APEX Universal Theme.<br/>• **Kertakirjautuminen (SSO):** Yksi kirjautuminen APEXin ja Forms-sovellusten välillä.<br/>• **Pixel-Perfect -Raportit:** Automaattinen PDF/Excel-asiakirjojen generointi. | • ORDS Moniallas-Yhdyskäytävä<br/>• APEX Reverse Proxy SSO Formsille<br/>• Analytics Publisher REST API |
+| **💻 Kehittäjä** | • **~15s FastStart Palautuminen:** Välitön tilan nollaus Kultaisilla Tilannevedoksilla.<br/>• **Salasanaton SQL:** Nopea yhteys `./scripts/sqlcl.sh`:lla ja SEPS Walletilla.<br/>• **Selainpohjainen Web IDE:** Asennusvapaa VS Code Oracle SQL Developerilla ja tekoälyllä. | • Podman FastStart Tilannevedokset<br/>• SEPS Oracle Wallet -Synkronointi<br/>• `code-server` Web IDE -Kontti |
+| **🛡️ Tarkastaja ja Arkkitehti** | • **0 € Lisenssikustannus:** Oracle 23ai Free DB tuotannossa.<br/>• **Zero-Trust Verkkoeristys:** Tietokanta ei avaa raakaa SQL:ää julkiseen verkkoon.<br/>• **Hallittu Suoritus:** EBNF-deklaratiiviset sopimukset, AST-turva-analyysi ja VPD. | • JSON-Relational Duality<br/>• 2-Kerroksinen Verkkotopologia<br/>• Oracle Virtual Private Database (VPD) |
+
+---
+
+## 🔄 Oracle APEXin ja Forms 14c:n Integraation Rooli
+
+Tässä arkkitehtuurissa **Oracle APEX 26.1** on sijoitettu ensisijaisesti seuraaviin rooleihin:
+1. **Forms Modernisoinnin Silta:** Forms 14c -lomakkeiden vaiheittainen modernisointi responsiivisiksi verkkosovelluksiksi [Oracle APEXlang DSL:n](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) avulla.
+2. **Yritystason SSO Reverse Proxy Formsille:** APEX käsittelee nykyaikaiset identiteettipalvelut (Azure Entra ID, SAML, OAuth2) ja välittää todennetun istunnon turvallisesti Forms 14c:lle ilman kallista WebLogic OAM/OIF -infrastruktuuria.
+
+---
+
+## 📋 11 Kuratoitua Arkkitehtuurisuunnitelmaa (Blueprints)
+
+```mermaid
+graph TD
+  subgraph Sarja 1-9: Core DB & APEX SSO -Yhdyskäytävä
+    BP3["🌟 BP 3 (OLETUS): 2-Kerroksinen Tuotantopino<br/>db-proxy + db-alise + app-ords (Portit 1532, 1533, 8088)"]
+    BP7["BP 7: Monitoimittaja Hybridi<br/>Virallinen Oracle 23ai DB + Gerald Venzl DB + ORDS"]
+  end
+
+  subgraph Sarja 10-19: Analytics Publisher
+    BP13["BP 13: Kaikki-Yhdessä Publisher DB<br/>Yksi 23ai DB (RCU + Data) + Publisher + ORDS"]
+    BP11["BP 11: Eristetty Publisher Yritys<br/>3 erillistä DB:tä + Publisher + ORDS"]
+  end
+
+  subgraph Sarja 20-29: Oracle Forms 14c & Modernisointi
+    BP22["BP 22: Minimaalinen Forms Hybridi<br/>Yhdistetty Forms/Proxy DB + ALISE DB + Forms 14c + ORDS"]
+    BP21["BP 21: Täysi Forms Yrityspino<br/>Forms RCU DB + Custom DB + Proxy DB + Forms 14c + ORDS"]
+  end
+
+  subgraph Sarja 30-39: Kehitystyöasemat & Web IDE
+    BP34["🌟 BP 34: Standardi 2-Kerroksinen DB + Web IDE<br/>db-proxy + db-alise + app-ords + web-ide-dev (Portti 8090)"]
+    BP31["BP 31: Pilvi Autonomous DB + Web IDE<br/>ADB-emulaattori + VS Code Web IDE"]
+  end
+
+  subgraph Sarja 40-49: Ultimate Enterprise -Kokonaisuudet
+    BP41["🌟 BP 41: Ultimate Kaikki-Yhdessä Yritys + Web IDE<br/>Forms + Publisher + APEX SSO + Web IDE 1 DB:llä"]
+    BP42["BP 42: Täysin Eristetty Pilvilaboratorio<br/>8 eristettyä konttia, 4 erillistä tietokantaa"]
+    BP43["BP 43: 2-DB Hybridi Yritys + Web IDE<br/>Proxy DB + Jaettu Middleware RCU DB"]
+  end
+```
+
+### 🚀 Blueprintien Käyttöönotto ja Hallinta (`./scripts/deploy-blueprint.sh`)
+
+```bash
+# 1. Tarkista aktiivinen blueprint ja palveluiden tila:
+./scripts/deploy-blueprint.sh --status --lang fi
+
+# 2. Ota käyttöön Blueprint 3 (OLETUS 2-Kerroksinen Tuotantopino):
+./scripts/deploy-blueprint.sh -b 3 --lang fi
+
+# 3. Ota käyttöön Blueprint 41 (Ultimate Kaikki-Yhdessä Yritys):
+./scripts/deploy-blueprint.sh -b 41 --lang fi
+
+# 4. Simuloi käyttöönottoa ilman muutoksia (Dry-Run):
+./scripts/deploy-blueprint.sh -b 34 --dry-run
+
+# 5. Näytä 11 blueprintin taulukko päätteessä:
+./scripts/deploy-blueprint.sh --list --lang fi
+```
 
 ---
 
 ## 🚀 Pikakäynnistyksen CLI-Komennot (Quickstart CLI)
 
 ```bash
-# 1. Käynnistä haluttu blueprint (esim. BP 41: All-in-One Enterprise tai BP 43: Hybridi 2-DB):
-./scripts/setup-all.sh -b 41 --lang fi
+# 1. Käynnistä haluttu blueprint:
+./scripts/setup-all.sh -b 3 --lang fi
 
-# 2. Tarkastele salasanojen ja palveluiden koontitaulukkoa (tai kopioi salasana leikepöydälle -c):
+# 2. Tarkastele salasanojen ja palveluiden koontitaulukkoa (tai kopioi -c):
 ./scripts/get-password.sh
 ./scripts/get-password.sh DB_PROXY_DEV -c
-./scripts/get-password.sh DB_PROXY_APEX_ADMIN -c
 
-# 3. Nopea ja Turvallinen Kirjautumisopas:
-# 👉 Katso: docs/fi/quick-login-guide.md
-
-# 4. Kierrätä salasanat turvallisesti (päivittää tietokannan, Podman Secretit ja SEPS Walletin):
+# 3. Kierrätä salasanat turvallisesti ilman katkoksia:
 ./scripts/rotate-password.sh db-proxy dev
 ./scripts/rotate-password.sh all
 
-# 5. Tarkista aktiivisten verkkopalveluiden (APEX, Forms, Publisher, Web IDE) URL-osoitteet:
+# 4. Tarkista aktiiviset verkkopalvelut ja SEPS Wallet -yhteydet:
 ./scripts/check-urls.sh --lang fi
-
-# 6. Tarkista SEPS salasanattomat Oracle Wallet -yhteydet:
 ./scripts/check-wallet.sh
 
-# 7. Suorita monikielisyyden (i18n) testisarja (Sääntö 9: EN, ET, FI, SV, LV, LT):
+# 5. Suorita automaattinen kirjautumis- ja käyttöliittymätesti:
+./scripts/test-browser-login.sh
+
+# 6. Suorita monikielisyyden (i18n) tarkistus (Sääntö 9: EN, ET, FI, SV, LV, LT):
 ./tests/test-multilingual-support.sh
 
-# 8. Luo tai palauta Kultaisia Tilannevedoksia (~15s palautuminen):
+# 7. Luo tai palauta Kultaisia Tilannevedoksia (~15s palautuminen):
 ./scripts/snapshots/create-golden-snapshots.sh
 ./scripts/snapshots/restore-golden-snapshots.sh
 
-# 9. Puhdista lokit, väliaikaiset tiedostot ja vanhat tilannevedokset:
+# 8. Puhdista lokit, väliaikaiset tiedostot ja vanhat tilannevedokset:
 ./scripts/clean-logs.sh -y
 ./scripts/snapshots/clean-golden-snapshots.sh -y
 
-# 10. Nollaa ympäristö puhtaaseen alkutilaan:
+# 9. Nollaa ympäristö puhtaaseen alkutilaan:
 ./scripts/reset-all.sh -y
 ```
 
@@ -75,6 +209,8 @@ Alusta tarjoaa **23 kanonista arkkitehtuurisuunnitelmaa (Environment Blueprints)
 - 📐 **[docs/fi/forms-setup.md](forms-setup.md):** Oracle Forms 14c käyttöohje — porttikartta (9001/7001/6082), testilomakkeen avaaminen (`frmservlet?form=test.fmx`), lomakkeiden lisääminen kansioon `forms_apps/`, kääntäminen ja APEX-migraatio.
 - 📑 **[docs/fi/publisher-setup.md](publisher-setup.md):** Analytics Publisherin käyttöohje — portti 9502 (`/xmlpserver`), RCU-metatietokanta, `PUBLISHER_READER` Wallet -tili, JDBC-tietolähteiden liittäminen ja raporttien jakelu.
 - 💻 **[docs/fi/web-ide-artifactory.md](web-ide-artifactory.md):** Web IDE -käyttöohje — VS Code -laajennukset (Oracle SQL Developer, Antigravity AI, GitHub Actions), isäntäyhteyksien reaaliaikainen synkronointi ja offline GitHub Actions -testaus (`act`).
-- 🌐 **[docs/dev-hub.html](../../docs/dev-hub.html):** **Kehittäjän ja DevOpsin Komentokeskus (Developer Hub)** — Saatavilla osoitteissa **`http://localhost:8088/`** ja **`https://localhost:8448/`** (ORDS) sekä **`http://localhost:6082/vnc.html`** (Forms). Sisältää reaaliaikaisen latenssin seurannan, interaktiiviset Mermaid-arkkitehtuurikaaviot, 22+ Blueprintin luettelon, selaimensisäisen Markdown-lukijan ja DevOps-pikakomennot 6 kielellä (🇬🇧 EN, 🇪🇪 ET, 🇫🇮 FI, 🇸🇪 SV, 🇱🇻 LV, 🇱🇹 LT).
-- 📊 **[config/blueprints/README.fi.md](../../config/blueprints/README.fi.md):** Kaikkien 23 arkkitehtuurisuunnitelman tekninen matriisi.
+- 🌐 **[docs/dev-hub.html](../../docs/dev-hub.html):** **Kehittäjän ja DevOpsin Komentokeskus (Developer Hub)** — Saatavilla osoitteissa **`http://localhost:8088/`** ja **`https://localhost:8448/`** (ORDS) sekä **`http://localhost:6082/vnc.html`** (Forms). Sisältää reaaliaikaisen latenssin seurannan, interaktiiviset Mermaid-arkkitehtuurikaaviot, 11 Blueprintin luettelon, selaimensisäisen Markdown-lukijan ja DevOps-pikakomennot 6 kielellä.
+- 📊 **[config/blueprints/README.fi.md](../../config/blueprints/README.fi.md):** Kaikkien 11 arkkitehtuurisuunnitelman tekninen matriisi.
 - 📖 **[Oracle APEX 26.1 APEXlang Reference Manual](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/):** Oraclen virallinen spesifikaatio deklaratiivisesta `.apx`-kieliopista, kääntäjän AST-solmuista ja CLI-komennoista.
+- 📜 **[Virallinen APEXlang EBNF -Kielioppi (`apexlang.ebnf`)](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf):** Koneluettava virallinen EBNF-kielioppitiedosto tekoälyn rajoitettuun dekoodaukseen (GBNF) ja staattisiin turvallisuustyökaluihin.
+

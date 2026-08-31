@@ -24,13 +24,44 @@ elif [ -f "$WORKSPACE_DIR/config/repository.env" ]; then
   set +a
 fi
 
+if [ -f "$WORKSPACE_DIR/scripts/internal/common.sh" ]; then
+  source "$WORKSPACE_DIR/scripts/internal/common.sh"
+fi
+
 if [ -f "$WORKSPACE_DIR/scripts/internal/load-profile.sh" ]; then
   source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
   load_db_profile >/dev/null 2>&1 || true
 fi
 
+FORCE_MODE=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -l=*|--lang=*|-language=*|--language=*)
+      export CLI_LANG="${1#*=}"
+      if declare -f resolve_cli_lang >/dev/null 2>&1; then
+        export ACTIVE_CLI_LANG="$(resolve_cli_lang)"
+      fi
+      shift
+      ;;
+    -l|--lang|-language|--language)
+      export CLI_LANG="$2"
+      if declare -f resolve_cli_lang >/dev/null 2>&1; then
+        export ACTIVE_CLI_LANG="$(resolve_cli_lang)"
+      fi
+      shift 2
+      ;;
+    -y|--force|--yes|-y*|--y*|-Y|--YES)
+      FORCE_MODE=true
+      shift
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
 if [ "${PROFILE_APEX_ENABLED:-true}" = "false" ]; then
-  echo "ℹ️  APEX ei ole selle profiili puhul aktiivne (${PROFILE_NAME:-publisher-only}). Jätan APEX arendajakonto loomise vahele."
+  msg_print "DEV_CREATOR_APEX_DISABLED" "${PROFILE_NAME:-publisher-only}"
   exit 0
 fi
 
@@ -51,6 +82,7 @@ elif podman container exists db-dev-full 2>/dev/null; then
   [ -z "$SYS_PASSWORD" ] && SYS_PASSWORD=$(podman exec db-dev-full cat /run/secrets/apex_db_sys_password 2>/dev/null | tr -d '\r\n' || true)
 elif podman container exists db-apex-proxy 2>/dev/null; then
   SYS_PASSWORD=$("$SCRIPT_DIR/get-password.sh" DB_APEX_PROXY_SYS </dev/null 2>/dev/null | grep "Password:" | sed $'s/\x1b\\[[0-9;]*m//g' | cut -d':' -f2 | tr -d ' \r\t ')
+  [ -z "$SYS_PASSWORD" ] && SYS_PASSWORD=$(podman exec db-apex-proxy cat /run/secrets/apex_db_sys_password 2>/dev/null | tr -d '\r\n' || true)
 fi
 if [ -z "$SYS_PASSWORD" ]; then
   if [ -f "/run/secrets/apex_db_sys_password" ]; then
@@ -60,13 +92,6 @@ if [ -z "$SYS_PASSWORD" ]; then
   fi
 fi
 
-FORCE_MODE=false
-for arg in "$@"; do
-  if [ "$arg" = "--force" ] || [ "$arg" = "-y" ]; then
-    FORCE_MODE=true
-  fi
-done
-
 # Tuvastame jooksva PC kasutajanime keskkonnast ja muudame suurtähtedeks (APEX standard)
 DEFAULT_DEV_USER=$(echo "${DEVELOPER_USER:-$USER}" | tr '[:lower:]' '[:upper:]')
 if [ -z "$DEFAULT_DEV_USER" ]; then
@@ -74,13 +99,13 @@ if [ -z "$DEFAULT_DEV_USER" ]; then
 fi
 
 echo "=================================================================="
-echo "👤 APEX ARENDAJAKONTO LOOMISE UTILIIT"
+msg_print "DEV_CREATOR_TITLE"
 echo "=================================================================="
 if [ "$FORCE_MODE" = "true" ] || [ ! -t 0 ]; then
   DEV_USER="$DEFAULT_DEV_USER"
-  echo "ℹ️  Automaatne režiim (--force): Kasutan kasutajanime '$DEV_USER'"
+  msg_print "DEV_CREATOR_AUTO_USER" "$DEV_USER"
 else
-  read -p "❓ Sisesta APEX arendaja kasutajanimi [Vaikimisi: $DEFAULT_DEV_USER]: " DEV_USER
+  read -p "$(msg_str "DEV_CREATOR_PROMPT_USER" "$DEFAULT_DEV_USER")" DEV_USER
   DEV_USER=${DEV_USER:-$DEFAULT_DEV_USER}
 fi
 
@@ -99,8 +124,8 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 LOG_FILE="$LOG_DIR/db_developer_init_${TIMESTAMP}.log"
 
 echo "------------------------------------------------------------------"
-echo "ℹ️  Loon kasutajat '$DEV_USER' tööruumi 'PROXY_WORKSPACE'..."
-echo "ℹ️  Detailne paigalduslogi suunatakse faili: $LOG_FILE"
+msg_print "DEV_CREATOR_CREATING" "$DEV_USER" "PROXY_WORKSPACE"
+msg_print "DEV_CREATOR_LOG_FILE" "$LOG_FILE"
 
 # Tuvastame SQLcl asukoha (eelistades VS Code laienduse sisest binääri parooli salvestamiseks)
 SQLCL_BIN=""
@@ -298,7 +323,7 @@ echo \"$WALLET_PWD\" | mkstore -wrl \$WALLET_PATH -createCredential \"${DEV_USER
   export EXTRA_DEV_COLOR="${DEVELOPER_COLOR:-#F39C12}"
 
 
-  echo "Registreerin ühendused VS Code SQL Developer laiendusele..."
+  msg_print "DEV_CREATOR_REG_VSCODE"
   "$SCRIPT_DIR/register-connections.sh" >/dev/null 2>&1 || true
 
   echo "=================================================================="
@@ -310,12 +335,12 @@ echo \"$WALLET_PWD\" | mkstore -wrl \$WALLET_PATH -createCredential \"${DEV_USER
   echo "   Sisselogimise URL:   https://localhost:8448/ords/apex"
   echo "   Logi asukoht:        $LOG_FILE"
   echo "   --------------------------------------------------------------"
-  echo "   ✅ Ühendus registreeritud VS Code SQL Developer all!"
-  echo "   👉 Ava/värskenda Oracle SQL Developer paneel VS Code-is ühenduse nägemiseks."
+  msg_print "DEV_CREATOR_REG_SUCCESS"
+  msg_print "DEV_CREATOR_REG_HINT"
   echo "=================================================================="
 else
-  echo "❌ Viga: Kasutaja loomine ebaõnnestus."
-  echo "👉 Vaata täpsemat logi failist: $LOG_FILE"
+  msg_print "DEV_CREATOR_FAILED"
+  msg_print "DEV_CREATOR_SEE_LOG" "$LOG_FILE"
   if [ -f "$LOG_FILE" ]; then
     echo "------------------------------------------------------------------"
     grep -E "Viga:|ORA-" "$LOG_FILE" || head -n 10 "$LOG_FILE"

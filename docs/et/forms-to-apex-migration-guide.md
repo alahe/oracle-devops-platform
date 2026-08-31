@@ -114,15 +114,16 @@ graph TD
   end
 ```
 
-1. **Versioonitud EBNF Grammatika kui Esivärava Kaitse:** APEXlangi kirjutav LLM ei väljasta suvalist koodi, vaid rangelt formaliseeritud deklaratiivseid definitsioone. Vigane süntaks või hallutsineeritud atribuut kukub läbi juba parsimise ajal SQLcl-is, mitte kunagi toodangus.
-2. **Platvormi Sisseehitatud Immuunsus:**
+1. **Avaldatud EBNF Grammatika kui Esivärava Kaitse ([`apexlang.ebnf`](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf)):** APEXlangi kirjutav LLM ei väljasta suvalist koodi, vaid rangelt formaliseeritud [EBNF grammatikale](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf) alluvat struktuuri. Kohalikus või ettevõtte AI järeldusmootoris (nt `llama.cpp` GBNF piirangutega dekodeerimine) on mudelil füüsiliselt võimatu väljastada olematuid võtmeid, vigaseid väärtusi või sulgemata sulge. Vigane süntaks kukub läbi parsimise ajal SQLcl-is, mitte kunagi toodangus.
+2. **Deterministlik AST Staatiline Turvaanalüüs:** Turvatööriistad ei kasuta habrast tekstilist regex-otsingut, vaid analüüsivad otse abstraktset süntaksipuud (AST) — kontrollides autoriseerimisskeeme (`@ADMIN_ROLE`), raami sissepaneku keeldu (`embedInFrames: deny`) ja laiendatud HTML-i varjestamist enne juurutamist.
+3. **Platvormi Sisseehitatud Immuunsus:**
    - **SQL-süstimine:** APEX kasutab vaikimisi alati sidusmuutujaid (*bind variables*) kõigis regioonides, vormides ja protsessides.
    - **Autentimine:** Standardne deklareeritud skeem välistab käsitsi kirjutatud JWT vead.
    - **Pääsuhaldus ja Reataseme Turvalisus (RLS/VPD):** Turvapoliitikad elavad andmebaasi tuumas *allpool* rakenduse kihti. AI mudel saab neid viidata, kuid **ei saa neist mitte kunagi mööda hiilida**.
 
 > [!TIP]
 > **Juhitud Sisend vs Juhitud Käitusaeg:**
-> Võid kulutada tohutult aega ja raha vigade püüdmisele pärast seda, kui AI on need tekitanud — või ehitada platvormile, kus enamik turvaauke on juba arhitektuurselt võimatud.
+> Võid kulutada tohutult aega ja raha vigade püüdmisele pärast seda, kui AI on need tekitanud — või ehitada platvormile, kus enamik turvaauke on juba arhitektuurselt võimatud. Vaata ametlikku masinloetavat [APEXlang EBNF Grammatikat](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf).
 
 ### Genereeri seda, mida soovid omada; oma seda, mida genereerid
 Kaasaegsete AI agentidega (Antigravity, Claude Code, Codex) saab genereerida mistahes rakenduse — piiriks on vaid idee kvaliteet. Kuid ettevõtte kriitiliste süsteemide puhul ei piisa sellest, et rakendus läbib 1. päeval AI automaattestid:
@@ -198,11 +199,21 @@ graph TD
   F -->|Eesmärk: Avalik B2C E-Pood| NEXT[3. Next.js Kasutajaliides + ORDS REST API<br/>Eraldatud UI Kiht koos Vahekihi Halduskuluga]
 ```
 
-### "Rakendus võib näida vana, kuid selle taga olev äri ei ole lihtne"
-Forms rakendused sisaldavad 15–20 aasta jooksul PL/SQL pakettidesse, protseduuridesse ja päästikutesse kirjutatud keerulist äriloogikat ja erijuhtumeid. Katse kirjutada kogu süsteem korraga ümber Next.js peale on kalleim ja riskantseim viis nende 20 aasta jooksul tekkinud ärireeglite "taasavastamiseks".
+### "Armu probleemi, mitte tehnoloogiasse" (Domeeniteadmus on ettevõtte tõeline vara)
 
-### Eraldatuse Illusioon (Next.js vs. APEX)
-Kasutajaliidese viimine Next.js/React peale **ei tähenda automaatselt Oracle'ist vabanemist**. Kui põhilised arvutused, valideerimised ja andmemudel jäävad Oracle andmebaasi, on sõltuvus endiselt alles — lisandub vaid Node/Next.js vahekihi haldus, REST API serialiseerimise latentsus ja sessioonide sünkroonimise keerukus.
+*(Inspireeritud Simon Martinellist, AI Unified Process loojast ja Oracle ACE Pro-st)*
+
+Generatiivse AI ajastul on koodi genereerimine muutunud kiireks ja odavaks. Ettevõtte tõeline konkurentsieelis ja tarkvaratehniline väljakutse on **äridomeeni probleemi, ärilise kavatsuse ja süsteeminõuete sügav mõistmine**.
+
+Oracle Formsi pärandsüsteemid kätkevad endas 15–25 aasta jooksul lihvitud ärireegleid ja erijuhtumeid. Tarkvaratehnika distsipliin ei seisne uusima veebiraamistiku tagaajamises, vaid domeeniprobleemile õige lahenduse ehitamises. Moderniseerimisel peab peamine siht olema **selle domeeniteadmuse säilitamine** võimalikult lihtsa ja vahetu arhitektuuriga.
+
+### Juhusliku Sidususe Minimeerimine (Accidental Coupling & IVP)
+
+*(Inspireeritud Yannick Lothist, Independent Variation Principle / IVP autorist)*
+
+Iga arhitektuurne otsus kas minimeerib või võimendab **juhuslikku tehnilist sidusust** (*accidental coupling*):
+- **Juhuslik Sidusus Vahekihiga Ümberkirjutamisel (Next.js / Node):** Andmebaasi domeeni lahutamine eraldi esiotsa raamistikuks sunnib meeskondi ehitama ja hooldama tarbetut tehnilist liimi: võrgu serialiseerimist, DTO objekte ja dubleeritud valideerimisloogikat.
+- **Minimaalne Sidusus Oracle APEX-is:** Kuna APEX käivitub otse andmebaasi tuumas PL/SQL pakettide peal, on juhuslikud tehnilised sõltuvused viidud miinimumini. Domeenimudeli muudatused kanduvad rakendusse loomulikult ilma 5 võrgukihi ümberkirjutamiseta.
 
 ### Strateegiline Otsustusmaatriks
 

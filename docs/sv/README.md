@@ -2,50 +2,202 @@
 
 # Oracle DevOps Plattform (Svensk Guide)
 
-> **Produktionsklar, licensavgiftsfri (0 €) och 100% lösenordsfri (SEPS Wallet) utvecklings- och DevOps-plattform för Oracle 23ai, APEX 26, Forms 14c, Publisher och Web IDE.**
+> **Produktionsklar, licensavgiftsfri (0 €) och 100% lösenordsfri (SEPS Wallet) utvecklings- och DevOps-plattform för Oracle 23ai, APEX SSO Gateway, Forms 14c, Publisher och Web IDE.**
 
 ---
 
-## 🎯 Varför gör vi detta och vilka är fördelarna?
+## ⚡ 60-Sekunders Snabbstart
 
-1. 💰 **Massiva Kostnadsbesparingar (0 € licensavgift):** Vi drar nytta av Oracle Database Free 23ai (JSON-Relational Duality, Kafka, APEX 26.1) och sparar enterprise-licenskostnader.
-2. 🔒 **100% Lösenordsfri och Läcksäker (SEPS Wallet):** Oracle Wallet (SEPS) och Podman Secrets förhindrar lösenordsläckor i loggar och skript.
-3. ⚡ **Startklar på Sekunder (Förbyggda Avbilder & Ögonblicksbilder):** Tack vare förbyggda containrar startar hela enterprise-miljön på **1–2 minuter istället för 15 minuter**.
+```bash
+# 1. Klona arkivet och gå till mappen
+git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-free-db-in-prod
+
+# 2. Starta standard 2-lagers produktionsmiljö (Blueprint 3)
+./scripts/setup-all.sh -b 3 --lang sv
+
+# 3. Visa lösenord, webbadresser och urklippshjälp (eller öppna Dev Hub på http://localhost:8088/)
+./scripts/get-password.sh
+```
 
 ---
 
-## 📦 Arkitektoniska Modeller (Decade Matrix)
+## 🗺️ Introduktionsresa för Nya Utvecklare (Onboarding Journey)
 
-| Serie | Stacknamn | Containrar | Huvudfunktioner | Specifik Guide |
-| :---: | :--- | :--- | :--- | :--- |
-| **1–9** | **Core DB & APEX** | `db-alise`, `db-proxy`, `app-ords` | Oracle 23ai Free DB, APEX 26.1 Builder, multi-pool ORDS, REST Enabled SQL | 🗄️ **[config/blueprints/README.md](../../config/blueprints/README.md)** |
-| **10–19** | **Analytics Publisher** | `db-publisher`, `app-publisher`, `app-ords` | Pixel Perfect PDF/Excel rapporter, WebLogic BI domän, RCU metadata | 📑 **[docs/publisher-setup.md](../publisher-setup.md)** |
-| **20–29** | **Oracle Forms 14c** | `db-forms`, `app-forms`, `app-ords` | Forms Services 14.1.2 (`/forms/frmservlet`), testformulär (`test.fmx`), APEX migrering | 📐 **[docs/forms-setup.md](../forms-setup.md)** |
-| **30–39** | **Web IDE & CI/CD** | `web-ide-dev`, `db-alise`, `app-ords` | Webbläsarbaserad VS Code (Port 8090), Oracle SQL Dev, Antigravity AI | 💻 **[docs/web-ide-artifactory.md](../web-ide-artifactory.md)** |
-| **40–49** | **Ultimate Enterprise** | Alla containrar | Forms 14c + Publisher + APEX 26.1 + ORDS + Web IDE | 🌟 **[config/blueprints/README.md](../../config/blueprints/README.md)** |
+```mermaid
+flowchart TD
+    Start(["🚀 Utvecklaren Börjar"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
+    Clone --> ChooseBP{"2. Välj Arkitektur Blueprint"}
+    
+    ChooseBP -->|Standard 2-DB Miljö| BP3["./scripts/setup-all.sh -b 3"]
+    ChooseBP -->|Forms + Publisher + IDE| BP41["./scripts/setup-all.sh -b 41"]
+    ChooseBP -->|Förhandsgranskning / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 34 --dry-run"]
+    
+    BP3 --> DevHub["3. Öppna DevOps Kommandocenter<br/>🌐 http://localhost:8088/"]
+    BP41 --> DevHub
+    BPDry --> ChooseBP
+    
+    DevHub --> PwdSpikker["4. Lösenordslathund (SEPS Wallet)<br/>./scripts/get-password.sh DB_PROXY_DEV -c"]
+    
+    PwdSpikker --> DevWork["5. Börja Utveckla!"]
+    DevWork --> WorkIDE["💻 Web IDE & SQL Developer (:8090)"]
+    DevWork --> WorkAPEX["🌟 APEX Builder & SSO Gateway (:8088)"]
+    DevWork --> WorkForms["📐 Forms 14c noVNC Builder (:6082)"]
+    DevWork --> WorkPub["📑 Analytics Publisher (:9502)"]
+```
+
+---
+
+## ⚡ Setup-All 10-Fas Livscykelarkitektur
+
+```mermaid
+flowchart LR
+    P1["1. Hämta Avbilder"] --> P2["2. Hämta ORDS"]
+    P2 --> P3["3. APEX Paket"]
+    P3 --> P4["4. Starta Containrar"]
+    P4 --> P5["5. Vänta på DB-Hälsa"]
+    P5 --> P6["6. Installera APEX"]
+    P6 --> P7["7. Scheman & SEPS Init"]
+    P7 --> P8["8. Driftsätt APEX Appar"]
+    P8 --> P9["9. Middleware & Tjänster"]
+    P9 --> P10["10. Gyllene Ögonblicksbild (~15s DR)"]
+```
+
+---
+
+## 🌐 Dev Hub (`http://localhost:8088/`) — Enhetligt Kontrollcenter (*Single Pane of Glass*)
+
+Utvecklare behöver inte memorera dussintals olika portar. **Dev Hub** fungerar som en central portal:
+- **1-Klick Tjänstelänkar:** Direktåtkomst till APEX Builder, Database Actions (SDW), Forms 14c körtid, HTML5 noVNC Forms Builder och Analytics Publisher.
+- **1-Klick Lösenordskopiering:** Ett klick kopierar det dekrypterade lösenordet direkt till urklipp (redo att klistra in med `Cmd+V` / `Ctrl+V`).
+- **Hälsodiagnostik i Realtid:** Automatisk latenskontroll var 6:e sekund.
+- **Integrerad Markdown Dokumentationsläsare:** Läs och sök guider direkt i webbläsaren.
+- **Blueprint Driftsättning och Hantering:** Driftsätt och byt blueprints via webbläsaren eller kommandot `./scripts/deploy-blueprint.sh`.
+
+---
+
+## 🔑 Var Hittar Jag Mitt Lösenord? (SEPS Wallet Lathund)
+
+Alla lösenord genereras med högkryptografisk säkerhet och lagras säkert i **Oracle SEPS (Secure External Password Store) Wallets** och Podman Secrets.
+
+```bash
+# Visa fullständig lösenordsmatristabell:
+./scripts/get-password.sh
+
+# Kopiera utvecklarlösenord direkt till urklipp:
+./scripts/get-password.sh DB_PROXY_DEV -c
+
+# Kopiera APEX administratörslösenord:
+./scripts/get-password.sh DB_PROXY_APEX_ADMIN -c
+
+# Anslut till databasen via SQLcl UTAN något lösenord:
+sql /@DB_PROXY_DEV
+```
+
+---
+
+## 🎯 3 Intressentperspektiv och Affärsvärde
+
+| Perspektiv | Huvudfördelar och Daglig Upplevelse | Teknisk Möjliggörare |
+| :--- | :--- | :--- |
+| **👤 Slutanvändare och Verksamhet** | • **Ingen Klientinstallation:** Modern HTML5-upplevelse och APEX Universal Theme.<br/>• **Single Sign-On (SSO):** En inloggning för både APEX och äldre Forms-system.<br/>• **Pixel-Perfect Rapporter:** Automatiserad PDF/Excel-dokumentgenerering. | • ORDS Multi-Pool Gateway<br/>• APEX Reverse Proxy SSO för Forms<br/>• Analytics Publisher REST API |
+| **💻 Utvecklare** | • **~15s FastStart Återställning:** Omedelbar nollställning med Gyllene Ögonblicksbilder.<br/>• **Lösenordsfri SQL:** Snabb anslutning via `./scripts/sqlcl.sh` och SEPS Wallet.<br/>• **Installationsfri Web IDE:** VS Code i webbläsaren med Oracle SQL Developer och AI. | • Podman FastStart Ögonblicksbilder<br/>• SEPS Oracle Wallet Auto-Synk<br/>• `code-server` Web IDE Container |
+| **🛡️ Revisor och Arkitekt** | • **0 € Licensavgift:** Oracle 23ai Free DB i produktion.<br/>• **Zero-Trust Nätverksisolering:** Databasen exponerar aldrig rå SQL till publika nätverk.<br/>• **Styrd Exekvering:** EBNF-deklarativa kontrakt, AST-säkerhetsanalys och VPD. | • JSON-Relational Duality<br/>• 2-Lagers Nätverkstopologi<br/>• Oracle Virtual Private Database (VPD) |
+
+---
+
+## 🔄 Integrationsfokus för Oracle APEX och Forms 14c
+
+I denna arkitektur är **Oracle APEX 26.1** primärt positionerad som:
+1. **Bro för Modernisering av Forms:** Stegvis modernisering av Forms 14c-skärmar till responsiva moderna webbapplikationer med [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
+2. **Enterprise SSO Reverse Proxy för Forms:** APEX hanterar moderna identitetsleverantörer (Azure Entra ID, SAML, OAuth2) och förmedlar säkra autentiserade sessioner till Forms 14c utan dyr WebLogic OAM/OIF-infrastruktur.
+
+---
+
+## 📋 11 Kuraterade Arkitektur Blueprints
+
+```mermaid
+graph TD
+  subgraph Serie 1-9: Core DB & APEX SSO Gateway
+    BP3["🌟 BP 3 (STANDARD): 2-Lagers Produktionsmiljö<br/>db-proxy + db-alise + app-ords (Portar 1532, 1533, 8088)"]
+    BP7["BP 7: Flerleverantörs Hybrid<br/>Officiell Oracle 23ai DB + Gerald Venzl DB + ORDS"]
+  end
+
+  subgraph Serie 10-19: Analytics Publisher
+    BP13["BP 13: Allt-i-Ett Publisher DB<br/>En 23ai DB (RCU + Data) + Publisher + ORDS"]
+    BP11["BP 11: Dedikerad Publisher Enterprise<br/>3 isolerade databaser + Publisher + ORDS"]
+  end
+
+  subgraph Serie 20-29: Oracle Forms 14c & Modernisering
+    BP22["BP 22: Minimal Forms Hybrid<br/>Kombinerad Forms/Proxy DB + ALISE DB + Forms 14c + ORDS"]
+    BP21["BP 21: Full Enterprise Forms Miljö<br/>Forms RCU DB + Anpassad DB + Proxy DB + Forms 14c + ORDS"]
+  end
+
+  subgraph Serie 30-39: Utvecklararbetsstationer & Web IDE
+    BP34["🌟 BP 34: Standard 2-Lagers DB + Web IDE<br/>db-proxy + db-alise + app-ords + web-ide-dev (Port 8090)"]
+    BP31["BP 31: Moln Autonomous DB + Web IDE<br/>ADB Emulator + VS Code Web IDE"]
+  end
+
+  subgraph Serie 40-49: Ultimate Enterprise Sviter
+    BP41["🌟 BP 41: Ultimate Allt-i-Ett Enterprise + Web IDE<br/>Forms + Publisher + APEX SSO + Web IDE på 1 DB"]
+    BP42["BP 42: Fullt Isolerat Molnlaboratorium<br/>8 isolerade containrar, 4 dedikerade databaser"]
+    BP43["BP 43: 2-DB Hybrid Enterprise + Web IDE<br/>Proxy DB + Delad Middleware RCU DB"]
+  end
+```
+
+### 🚀 Blueprint Driftsättning och Hantering (`./scripts/deploy-blueprint.sh`)
+
+```bash
+# 1. Kontrollera aktiv blueprint och tjänstehälsa:
+./scripts/deploy-blueprint.sh --status --lang sv
+
+# 2. Driftsätt Blueprint 3 (STANDARD 2-Lagers Produktionsmiljö):
+./scripts/deploy-blueprint.sh -b 3 --lang sv
+
+# 3. Driftsätt Blueprint 41 (Ultimate Allt-i-Ett Enterprise):
+./scripts/deploy-blueprint.sh -b 41 --lang sv
+
+# 4. Simulera driftsättning utan ändringar (Dry-Run):
+./scripts/deploy-blueprint.sh -b 34 --dry-run
+
+# 5. Visa 11 blueprints i kommandotolken:
+./scripts/deploy-blueprint.sh --list --lang sv
+```
 
 ---
 
 ## 🚀 Snabbstart (Quickstart CLI)
 
 ```bash
-# 1. Starta önskad blueprint (t.ex. BP 30: Dev Workstation + Web IDE):
-./scripts/setup-all.sh -b 30 --lang sv
+# 1. Starta önskad blueprint:
+./scripts/setup-all.sh -b 3 --lang sv
 
-# 2. Hämta lösenord säkert från SEPS Wallet:
-./scripts/get-password.sh DB_DEV
-./scripts/get-password.sh DB_APEX_ADMIN
+# 2. Visa lösenords- och tjänstematristabell (eller kopiera med -c):
+./scripts/get-password.sh
+./scripts/get-password.sh DB_PROXY_DEV -c
 
-# 3. Kontrollera aktiva webbtjänsters URL:er:
+# 3. Rotera lösenord säkert utan avbrott:
+./scripts/rotate-password.sh db-proxy dev
+./scripts/rotate-password.sh all
+
+# 4. Kontrollera aktiva webbtjänster och SEPS Wallet-anslutningar:
 ./scripts/check-urls.sh --lang sv
+./scripts/check-wallet.sh
 
-# 4. Kör verifieringstest för flerspråkighet (Regel 9: EN, ET, FI, SV, LV, LT):
+# 5. Kör automatiserat inloggnings- och gränssnittstest:
+./scripts/test-browser-login.sh
+
+# 6. Kör verifieringstest för flerspråkighet (Regel 9: EN, ET, FI, SV, LV, LT):
 ./tests/test-multilingual-support.sh
 
-# 5. Rensa loggar och tillfälliga filer:
-./scripts/clean-logs.sh -y
+# 7. Skapa eller återställ Gyllene Ögonblicksbilder (~15s återställning):
+./scripts/snapshots/create-golden-snapshots.sh
+./scripts/snapshots/restore-golden-snapshots.sh
 
-# 6. Återställ miljön till rent utgångsläge:
+# 8. Rensa loggar, tillfälliga filer och gamla ögonblicksbilder:
+./scripts/clean-logs.sh -y
+./scripts/snapshots/clean-golden-snapshots.sh -y
+
+# 9. Återställ miljön till rent utgångsläge:
 ./scripts/reset-all.sh -y
 ```
 
@@ -58,5 +210,7 @@
 - 📑 **[docs/publisher-setup.md](../../docs/publisher-setup.md):** Analytics Publisher Guide.
 - 💻 **[docs/web-ide-artifactory.md](../../docs/web-ide-artifactory.md):** Web IDE Guide.
 - 🌐 **[docs/dev-hub.html](../../docs/dev-hub.html):** **Developer & DevOps Command Center** (`http://localhost:8088/` och `http://localhost:6082/vnc.html`).
-- 📊 **[config/blueprints/README.md](../../config/blueprints/README.md):** Blueprint-katalog.
+- 📊 **[config/blueprints/README.md](../../config/blueprints/README.md):** 11 Blueprints-katalog.
 - 📖 **[Oracle APEX 26.1 APEXlang Reference Manual](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/):** Officiell specifikation för deklarativ `.apx`-grammatik och kompilatorkommandon.
+- 📜 **[Officiell APEXlang EBNF-grammatik (`apexlang.ebnf`)](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf):** Maskinläsbar formell EBNF-specifikation för begränsad AI-avkodning (GBNF) och statiska säkerhetsverktyg.
+

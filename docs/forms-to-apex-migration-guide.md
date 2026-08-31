@@ -114,15 +114,16 @@ graph TD
   end
 ```
 
-1. **Versioned EBNF Grammar as Front-Door Guardrail:** An LLM writing APEXlang does not emit arbitrary procedural source. It emits declarative definitions constrained by a strict, versioned EBNF grammar. Invalid syntax or hallucinated attributes fail at parse time in SQLcl, never in production.
-2. **Built-in Platform Immunity:**
+1. **Published EBNF Grammar as Front-Door Guardrail ([`apexlang.ebnf`](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf)):** An LLM writing APEXlang does not emit arbitrary procedural source. It emits declarative definitions constrained by a published formal [EBNF grammar](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf). In local/enterprise inference (e.g. `llama.cpp` GBNF constrained decoding), the model physically cannot emit invalid properties, malformed enums, or unclosed syntax. Invalid syntax fails at parse time in SQLcl, never in production.
+2. **Deterministic AST Static Security Analysis:** Security tools and linters walk the Abstract Syntax Tree (AST) rather than brittle regex strings to verify authorization schemes (`@ADMIN_ROLE`), frame embedding (`embedInFrames: deny`), and extended HTML escaping before deployment.
+3. **Built-in Platform Immunity:**
    - **SQL Injection:** APEX uses bind variables by default across all regions, forms, and processes.
    - **Authentication:** Standardized declarative schemes enforce SSO/OAuth/DB auth without hand-rolled JWT bugs.
    - **Access Control & Row-Level Security (RLS):** Policies and Virtual Private Database (VPD) rules live in the database kernel *below* the application layer. The AI model can reference them, but can **never** bypass them.
 
 > [!TIP]
 > **Governed Input vs. Governed Runtime:**
-> You can spend immense engineering effort catching mistakes after an LLM generates them, or you can generate onto a trusted platform that makes most security vulnerabilities impossible by design.
+> You can spend immense engineering effort catching mistakes after an LLM generates them, or you can generate onto a trusted platform that makes most security vulnerabilities impossible by design. Check the official machine-readable [APEXlang EBNF Grammar](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf).
 
 ### Generate What You Want to Own, Own What You Generate
 With modern AI agents (Antigravity, Claude Code, Codex), you can generate *any* application; you are limited only by the quality of your prompt. But for enterprise workloads, passing day-1 AI unit tests is not enough:
@@ -198,11 +199,21 @@ graph TD
   F -->|Goal: Public B2C E-Commerce| NEXT[3. Next.js UI + ORDS REST APIs<br/>Decoupled UI Layer with Middleware Overhead]
 ```
 
-### "An application may look old, but the business behind it is not simple"
-Forms applications contain 15–20 years of tacit business rules, complex validation matrices, and edge-case exceptions embedded in PL/SQL. Attempting an upfront "big bang" rewrite in Next.js is the most expensive way to rediscover business rules.
+### "Fall in Love with the Problem, Not the Technology" (Domain Knowledge is the Real Asset)
 
-### The Illusion of Decoupling (Next.js vs. APEX)
-Moving the frontend UI to Next.js does **not** automatically decouple your business from Oracle. If your core validation, procedures, and data models remain in Oracle Database, the dependency still exists—except now you must maintain a Node/Next.js middle tier, write REST API serialization layers, and handle cross-tier state authentication.
+*(Inspired by Simon Martinelli, Creator of AI Unified Process & Oracle ACE Pro)*
+
+In the generative AI era, generating code is fast and cheap. The real competitive advantage and true engineering challenge is **understanding the domain problem, business intent, and system requirements**. 
+
+Legacy Oracle Forms applications embody 15–25 years of refined business domain rules, validation exceptions, and operational edge cases. Software engineering discipline is not about chasing the latest UI framework; it is about building the right solution to a domain problem. When modernizing, the primary goal must be **preserving and honoring that domain knowledge** with the simplest, most direct architecture possible.
+
+### Minimizing Accidental Coupling (Independent Variation Principle)
+
+*(Inspired by Yannick Loth, Software Architect & Creator of IVP)*
+
+Every architectural choice either minimizes or amplifies **accidental coupling**:
+- **Accidental Coupling in Middle-Tier Rewrites (Next.js / Node):** Splitting a database-backed domain into a separate frontend framework forces teams to build and maintain accidental plumbing: network serializers, DTO mappings, cross-tier state machines, and duplicate validation logic.
+- **Minimal Coupling in Oracle APEX:** Because APEX executes directly in the database kernel against native SQL/PLSQL packages, accidental architectural dependencies are eliminated. Changes to domain tables propagate naturally without cascading across 5 network layers.
 
 ### Strategic Decision Matrix
 

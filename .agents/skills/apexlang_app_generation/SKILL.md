@@ -8,8 +8,9 @@ description: Guidelines for generating Oracle APEX applications using Oracle APE
 This skill guides generating production-ready Oracle APEX applications, pages, shared components, and dynamic actions using Oracle's official **APEXlang** declarative Domain Specific Language (`.apx` files), SQLcl MCP Server integration, and the **AI Vibe-Coding Loop**.
 
 > [!NOTE]
-> **Official Oracle Documentation:**
-> Refer to the canonical [Oracle APEX 26.1 APEXlang Reference Manual](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) for authoritative grammar specifications, AST nodes, and CLI compiler flags.
+> **Official Oracle Documentation & Published EBNF Grammar:**
+> - [Oracle APEX 26.1 APEXlang Reference Manual](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) — Authoritative specification for `.apx` AST nodes, keywords, and compiler CLI flags.
+> - [Official APEXlang EBNF Grammar (`apexlang.ebnf`)](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf) — Machine-readable formal EBNF grammar file for grammar-constrained decoding (GBNF), AST parser generators, and static security analyzers.
 
 ---
 
@@ -46,6 +47,25 @@ The pairing of **SQLcl and its Model Context Protocol (MCP) server (`sql -mcp`)*
    - **AI Agent:** Generates declarative `.apx` DSL and PL/SQL packages, driving SQLcl via MCP.
    - **Human Developer:** Browses tables, views, and execution plans using **Oracle SQL Developer for VS Code**, reviewing clean Git diffs before production deployment.
 
+### 1.2 Published EBNF Grammar & Grammar-Constrained Decoding (GBNF)
+
+*(Inspired by Kris Rice, SVP Software Development, Oracle Database)*
+
+With the publication of the official machine-readable [APEXlang EBNF Grammar (`apexlang.ebnf`)](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf), APEXlang transitions from an informal convention into a **strict, enforceable software engineering contract**:
+
+1. **Grammar-Constrained Decoding (GBNF at Token Sampling Level):**
+   - In local and enterprise AI inference engines (e.g. `llama.cpp`, DGX clusters with Nemotron, Claude/Codex APIs with constrained decoding), the EBNF grammar is converted to GBNF.
+   - **The model physically cannot emit invalid property keys, malformed enums, or unclosed brackets.** The "looks plausible but won't import" failure mode is eliminated down to 0% by construction.
+2. **Deterministic AST Static Security Analysis:**
+   - Security tools walk the Abstract Syntax Tree (AST) rather than brittle regex heuristics:
+     - **Authorization Schemes:** Verifies `@ADMIN_ROLE` or named security scheme is present on sensitive components.
+     - **Frame Embedding:** Enforces `embedInFrames: deny` or `allowSameOrigin`.
+     - **Session State:** Asserts `sessionStateProtection: enabled` with SHA-2+ hash algorithms.
+     - **HTML Escaping:** Asserts `htmlEscapingMode: extended`.
+     - **Reference Integrity:** Validates all component references strictly begin with `@` (e.g., `@THEME_42`).
+3. **Structural AST Diffing:**
+   - Code reviews and CI/CD pipelines compare AST nodes across versions, guaranteeing structural integrity across APEX upgrades.
+
 ---
 
 ## 2. Direct vs. Indirect Generation & "Low-Code as Code"
@@ -75,7 +95,7 @@ When designing, building, or modifying an APEX application, the AI agent must st
 
 ```mermaid
 graph TD
-  S1[1. Inspect Schema First<br/>Query live DB via MCP/SQLcl - DO NOT guess columns] --> S2[2. Business Logic First<br/>Write & compile PL/SQL packages - ensure VALID]
+  S1[1. Domain & Schema First<br/>Query live DB via MCP/SQLcl - DO NOT guess columns] --> S2[2. Business Logic First<br/>Write & compile PL/SQL packages - ensure VALID]
   S2 --> S3[3. Author APEXlang DSL<br/>Generate .apx source, spec & messages.apx]
   S3 --> S4[4. Validate Before Import<br/>Run apex validate / apexctl]
   S4 --> S5[5. Import into DEV<br/>apex import into DEV database]
@@ -83,8 +103,8 @@ graph TD
 ```
 
 ### Stage Rules & Invariants:
-1. **"Inspect First" Rule:** Never hallucinate column names or table schemas. Query the live database first via MCP (`DESCRIBE <table_name>`, `DBA_TAB_COLUMNS`).
-2. **"Business Logic First" Rule:** Compile and test PL/SQL packages (`.pks`/`.pkb`) in the database before building the UI. Check `USER_ERRORS` and assert status is `VALID`.
+1. **"Domain & Schema First" Rule (Simon Martinelli / AI Unified Process):** Fall in love with the business domain problem, not the code. Software generation starts with clear business intent and existing database truth. Never hallucinate column names or table schemas. Query the live database first via MCP (`DESCRIBE <table_name>`, `DBA_TAB_COLUMNS`).
+2. **"Business Logic First" Rule (Yannick Loth / IVP):** Keep domain logic close to the data kernel. Eliminate accidental middle-tier DTO coupling by implementing domain business rules directly in PL/SQL packages (`*_API_PKG`). Compile and test PL/SQL packages in the database before building the UI, asserting `STATUS = 'VALID'`.
 3. **"Declarative UI" Rule:** Express all UI in APEXlang DSL (`.apx` files) following the application spec (`.apexlang/application-spec.md`).
 4. **"Validate Before Import" Rule:** Always run `node tools/apexctl.mjs apexlang validate --app-path <path>` (or `apex validate`) before sending code to the database. Fix all compiler diagnostics in code.
 5. **"Safe Import to DEV":** Import the validated app into the local DEV database (`apex import` or `./scripts/internal/deploy-apex-apps.sh`).

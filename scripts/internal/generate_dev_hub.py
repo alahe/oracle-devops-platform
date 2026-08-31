@@ -222,6 +222,26 @@ DOC_SPECS = [
         }
     },
     {
+        "id": "forms-to-apex",
+        "rel": "docs/forms-to-apex-migration-guide.md",
+        "titles": {
+            "en": "🚀 Forms-to-APEX Modernization Guide",
+            "et": "🚀 Forms -> APEX Moderniseerimise Juhend",
+            "fi": "🚀 Forms -> APEX Modernisointiopas",
+            "sv": "🚀 Forms -> APEX Moderniseringsguide",
+            "lv": "🚀 Forms -> APEX Modernizācijas Rokasgrāmata",
+            "lt": "🚀 Forms -> APEX Modernizavimo Vadovas"
+        },
+        "files": {
+            "en": "docs/forms-to-apex-migration-guide.md",
+            "et": "docs/et/forms-to-apex-migration-guide.md",
+            "fi": "docs/fi/forms-to-apex-migration-guide.md",
+            "sv": "docs/sv/forms-to-apex-migration-guide.md",
+            "lv": "docs/lv/forms-to-apex-migration-guide.md",
+            "lt": "docs/lt/forms-to-apex-migration-guide.md"
+        }
+    },
+    {
         "id": "blueprints-matrix",
         "rel": "config/blueprints/README.md",
         "titles": {
@@ -263,114 +283,114 @@ for spec in DOC_SPECS:
         "contents": contents
     })
 
-# 2. Blueprints Catalog with Multilingual Metadata
+# 2. Blueprints Catalog with Multilingual Metadata (11 Curated Models)
 BP_CATALOG = {
-    1: {
-        "cat": "core", "ram": "2-3 GB", "conts": "db-proxy, app-ords",
-        "en": ("Core APEX & DB Standard", "Standard Oracle Free DB 23ai with APEX 26.1 and standalone ORDS pool."),
-        "et": ("Core APEX & DB Standard", "Standardne Oracle Free DB 23ai koos APEX 26.1 ja eraldiseisva ORDS basseiniga."),
-        "fi": ("Core APEX & DB Standardi", "Standardi Oracle Free DB 23ai APEX 26.1:llä ja erillisellä ORDS-altaalla."),
-        "sv": ("Core APEX & DB Standard", "Standard Oracle Free DB 23ai med APEX 26.1 och fristående ORDS-pool."),
-        "lv": ("Core APEX & DB Standard", "Standarta Oracle Free DB 23ai ar APEX 26.1 un atsevišķu ORDS pūlu."),
-        "lt": ("Core APEX & DB Standard", "Standartinė Oracle Free DB 23ai su APEX 26.1 ir atskiru ORDS telkiniu.")
-    },
-    2: {
-        "cat": "core", "ram": "2-3 GB", "conts": "db-alise, app-ords",
-        "en": ("Core Single DB Direct", "Dedicated custom database instance with direct REST-enabled SQL."),
-        "et": ("Core Üksik DB Otseühendus", "Spetsiaalne kohandatud andmebaasi instants otsese REST SQL toega."),
-        "fi": ("Core Yksittäinen DB Suora", "Erillinen räätälöity tietokantainstanssi suoralla REST-yhteensopivalla SQL:llä."),
-        "sv": ("Core Enskild DB Direkt", "Dedikerad anpassad databasinstans med direkt REST-aktiverad SQL."),
-        "lv": ("Core Viena DB Tieša", "Paredzēta pielāgota datubāzes instance ar tiešu REST iespējotu SQL."),
-        "lt": ("Core Viena DB Tiesioginė", "Skirta pritaikyta duomenų bazės instancija su tiesioginiu REST SQL palaikymu.")
-    },
     3: {
         "cat": "core", "ram": "3-4 GB", "conts": "db-proxy, db-alise, app-ords",
-        "en": ("2-DB Hybrid Architecture", "APEX proxy gateway combined with backend business logic database."),
-        "et": ("2-DB Hübriidarhitektuur", "APEX proxy lüüs kombineeritud äriloogika andmebaasiga."),
-        "fi": ("2-DB Hybridiarkkitehtuuri", "APEX proxy -yhdyskäytävä yhdistettynä taustaliiketoimintatietokantaan."),
-        "sv": ("2-DB Hybridarkitektur", "APEX proxy-gateway kombinerad med affärslogikdatabas."),
-        "lv": ("2-DB Hibrīdarhitektūra", "APEX proxy vārteja apvienota ar biznesa loģikas datubāzi."),
-        "lt": ("2-DB Hibridinė Architektūra", "APEX proxy šliuzas sujungtas su verslo logikos duomenų baze.")
+        "en": ("🌟 2-DB Hybrid Production Stack (DEFAULT)", "Standard 2-layer secure network topology (isolated Proxy DB and ALISE DB) with APEX SSO Gateway and ORDS."),
+        "et": ("🌟 2-DB Hübriid Tootmisvirn (VAIKIMISI)", "Standardne 2-kihiline turvaline võrgutopoloogia (eraldatud Proxy DB ja ALISE DB) koos APEX SSO ja ORDS-iga."),
+        "fi": ("🌟 2-DB Hybridi Tuotantopino (OLETUS)", "Standardi 2-kerroksinen tietoturvallinen topologia (Proxy DB ja ALISE DB) APEX SSO:lla ja ORDS:lla."),
+        "sv": ("🌟 2-DB Hybrid Produktionsstack (STANDARD)", "Standard 2-lagers säker nätverkstopologi (isolerad Proxy DB och ALISE DB) med APEX SSO och ORDS."),
+        "lv": ("🌟 2-DB Hibrīda Ražošanas Steks (NOKLUSĒJUMS)", "Standarta 2 slāņu droša tīkla topoloģija (atsevišķa Proxy DB un ALISE DB) ar APEX SSO un ORDS."),
+        "lt": ("🌟 2-DB Hibridinis Gamybos Rinkinys (NUMATYTASIS)", "Standartinė 2 sluoksnių saugi tinklo topologija (atskira Proxy DB ir ALISE DB) su APEX SSO ir ORDS.")
     },
-    10: {
-        "cat": "publisher", "ram": "4-6 GB", "conts": "db-publisher, app-publisher, app-ords",
-        "en": ("Analytics Publisher Standalone", "Pixel-Perfect enterprise PDF/Excel reporting with dedicated RCU DB."),
-        "et": ("Analytics Publisher Eraldiseisev", "Pixel-Perfect ettevõtte PDF/Excel aruandlus eraldiseisva RCU baasiga."),
-        "fi": ("Analytics Publisher Erillinen", "Pixel-Perfect yritysraportointi erillisellä RCU-tietokannalla."),
-        "sv": ("Analytics Publisher Fristående", "Pixel-Perfect företagsrapportering med dedikerad RCU-databas."),
-        "lv": ("Analytics Publisher Atsevišķs", "Pixel-Perfect uzņēmuma atskaites ar atsevišķu RCU datubāzi."),
-        "lt": ("Analytics Publisher Atskiras", "Pixel-Perfect įmonės ataskaitos su atskira RCU duomenų baze.")
+    7: {
+        "cat": "core", "ram": "3-4 GB", "conts": "db-proxy, db-alise, app-ords",
+        "en": ("Multi-Vendor Hybrid Cluster", "Official Oracle 23ai image (Proxy) and Gerald Venzl image (ALISE) co-existing."),
+        "et": ("Mitme Tarnija Hübriidklaster", "Ametlik Oracle 23ai pilt (Proxy) ja Gerald Venzl pilt (ALISE) koos töötamas."),
+        "fi": ("Monitoimittaja Hybridiryhmä", "Virallinen Oracle 23ai -kuva (Proxy) ja Gerald Venzl -kuva (ALISE) yhdessä."),
+        "sv": ("Multi-Vendor Hybridkluster", "Officiell Oracle 23ai-avbild (Proxy) och Gerald Venzl-avbild (ALISE) tillsammans."),
+        "lv": ("Daudzu Piegādātāju Hibrīda Klasteris", "Oficiālais Oracle 23ai attēls (Proxy) un Gerald Venzl attēls (ALISE) kopā."),
+        "lt": ("Kelių Tiekėjų Hibridinis Klasteris", "Oficialus Oracle 23ai atvaizdas (Proxy) ir Gerald Venzl atvaizdas (ALISE) kartu.")
     },
     11: {
-        "cat": "publisher", "ram": "4-6 GB", "conts": "db-proxy, app-publisher, app-ords",
-        "en": ("Analytics Publisher on Proxy DB", "Publisher reporting engine sharing metadata tables in Proxy DB."),
-        "et": ("Analytics Publisher Proxy Baasis", "Publisher aruandlusmootor jagatud RCU metaandmetega Proxy baasis."),
-        "fi": ("Analytics Publisher Proxy DB:ssä", "Publisher-raportointimoottori jaetulla RCU-metadatalla Proxy DB:ssä."),
-        "sv": ("Analytics Publisher på Proxy DB", "Publisher rapportmotor med delade metadata i Proxy DB."),
-        "lv": ("Analytics Publisher Proxy DB", "Publisher atskaišu dzinējs ar koplietotiem metadatiem Proxy DB."),
-        "lt": ("Analytics Publisher Proxy DB", "Publisher ataskaitų variklis su bendrais metaduomenimis Proxy DB.")
+        "cat": "publisher", "ram": "4-6 GB", "conts": "db-publisher, db-alise, db-proxy, app-ords, app-publisher",
+        "en": ("Analytics Publisher Dedicated Enterprise", "Pixel-Perfect enterprise PDF/Excel reporting with dedicated RCU DB, ALISE DB, Proxy DB, and ORDS."),
+        "et": ("Analytics Publisher Eraldatud Ettevõte", "Pixel-Perfect ettevõtte PDF/Excel aruandlus eraldiseisva RCU baasi, ALISE baasi, Proxy baasi ja ORDS-iga."),
+        "fi": ("Analytics Publisher Eristetty Yritys", "Pixel-Perfect raportointi erillisellä RCU DB:llä, ALISE DB:llä, Proxy DB:llä ja ORDS:lla."),
+        "sv": ("Analytics Publisher Dedikerad Enterprise", "Pixel-Perfect företagsrapportering med dedikerad RCU DB, ALISE DB, Proxy DB och ORDS."),
+        "lv": ("Analytics Publisher Atsevišķs Uzņēmums", "Pixel-Perfect atskaites ar atsevišķu RCU DB, ALISE DB, Proxy DB un ORDS."),
+        "lt": ("Analytics Publisher Atskira Įmonė", "Pixel-Perfect ataskaitos su atskira RCU DB, ALISE DB, Proxy DB ir ORDS.")
     },
-    20: {
-        "cat": "forms", "ram": "4-6 GB", "conts": "db-forms, app-forms, app-ords",
-        "en": ("Oracle Forms 14c Standalone", "Forms Services 14.1.2 with WebLogic domain, test.fmx and RCU DB."),
-        "et": ("Oracle Forms 14c Eraldiseisev", "Forms Services 14.1.2 koos WebLogic domeeni, test.fmx ja RCU baasiga."),
-        "fi": ("Oracle Forms 14c Erillinen", "Forms Services 14.1.2 WebLogic-toimialueella, test.fmx:llä ja RCU-tietokannalla."),
-        "sv": ("Oracle Forms 14c Fristående", "Forms Services 14.1.2 med WebLogic-domän, test.fmx och RCU-databas."),
-        "lv": ("Oracle Forms 14c Atsevišķs", "Forms Services 14.1.2 ar WebLogic domēnu, test.fmx un RCU datubāzi."),
-        "lt": ("Oracle Forms 14c Atskiras", "Forms Services 14.1.2 su WebLogic domenu, test.fmx ir RCU duomenų baze.")
+    13: {
+        "cat": "publisher", "ram": "3-4 GB", "conts": "db-proxy, app-ords, app-publisher",
+        "en": ("Analytics Publisher All-in-One DB", "All RCU schemas and business data consolidated inside one Free DB (db-proxy) with Publisher and ORDS."),
+        "et": ("Analytics Publisher Kõik-Ühes DB", "Kõik RCU skeemid ja äriandmed ühes Free DB-s (db-proxy) koos Publisheri ja ORDS-iga."),
+        "fi": ("Analytics Publisher Kaikki-Yhdessä DB", "Kaikki RCU-skeemat ja data yhdessä Free DB:ssä (db-proxy) Publisherin ja ORDS:n kera."),
+        "sv": ("Analytics Publisher Allt-i-ett DB", "Alla RCU-scheman och affärsdata samlat i en Free DB (db-proxy) med Publisher och ORDS."),
+        "lv": ("Analytics Publisher Viss-Vienā DB", "Visas RCU shēmas un biznesa dati vienā Free DB (db-proxy) ar Publisher un ORDS."),
+        "lt": ("Analytics Publisher Viskas-Viename DB", "Visos RCU schemos ir verslo duomenys vienoje Free DB (db-proxy) su Publisher ir ORDS.")
     },
     21: {
-        "cat": "forms", "ram": "4-6 GB", "conts": "db-proxy, app-forms, app-ords",
-        "en": ("Forms 14c on Proxy DB", "Oracle Forms Services 14c sharing repository schemas in Proxy DB."),
-        "et": ("Forms 14c Proxy Baasis", "Oracle Forms Services 14c jagatud RCU skeemidega Proxy baasis."),
-        "fi": ("Forms 14c Proxy DB:ssä", "Oracle Forms Services 14c jaetuilla RCU-skeemoilla Proxy DB:ssä."),
-        "sv": ("Forms 14c på Proxy DB", "Oracle Forms Services 14c med delade RCU-scheman i Proxy DB."),
-        "lv": ("Forms 14c Proxy DB", "Oracle Forms Services 14c ar koplietotām RCU shēmām Proxy DB."),
-        "lt": ("Forms 14c Proxy DB", "Oracle Forms Services 14c su bendromis RCU schemomis Proxy DB.")
+        "cat": "forms", "ram": "4-6 GB", "conts": "db-forms, db-alise, db-proxy, app-forms, app-ords",
+        "en": ("Forms 14c Full Enterprise Stack", "Dedicated Forms RCU DB + Custom DB + APEX Proxy DB + Forms 14c Services & HTML5 noVNC + ORDS."),
+        "et": ("Forms 14c Täielik Ettevõtte Virn", "Eraldi Forms RCU DB + Kohandatud DB + APEX Proxy DB + Forms 14c teenused ja HTML5 noVNC + ORDS."),
+        "fi": ("Forms 14c Täysi Yrityspino", "Erillinen Forms RCU DB + Custom DB + APEX Proxy DB + Forms 14c ja HTML5 noVNC + ORDS."),
+        "sv": ("Forms 14c Fullständig Enterprise", "Dedikerad Forms RCU DB + Anpassad DB + APEX Proxy DB + Forms 14c & noVNC + ORDS."),
+        "lv": ("Forms 14c Pilns Uzņēmuma Steks", "Atsevišķa Forms RCU DB + Pielāgota DB + APEX Proxy DB + Forms 14c un noVNC + ORDS."),
+        "lt": ("Forms 14c Pilnas Įmonės Rinkinys", "Atskira Forms RCU DB + Pritaikyta DB + APEX Proxy DB + Forms 14c ir noVNC + ORDS.")
     },
-    30: {
-        "cat": "webide", "ram": "3-4 GB", "conts": "web-ide-dev, db-proxy, app-ords",
-        "en": ("Web IDE & SQL Developer", "Browser VS Code workstation with Oracle SQL Developer extension."),
-        "et": ("Web IDE ja SQL Developer", "Brauseripõhine VS Code töökoht koos SQL Developer laiendusega."),
-        "fi": ("Web IDE ja SQL Developer", "Selainpohjainen VS Code -työympäristö SQL Developer -laajennuksella."),
-        "sv": ("Web IDE och SQL Developer", "Webbaserad VS Code arbetsyta med SQL Developer."),
-        "lv": ("Web IDE un SQL Developer", "Pārlūka VS Code darba vieta ar SQL Developer paplašinājumu."),
-        "lt": ("Web IDE ir SQL Developer", "Naršyklės VS Code darbo vieta su SQL Developer plėtiniu.")
+    22: {
+        "cat": "forms", "ram": "3-5 GB", "conts": "db-proxy, db-alise, app-forms, app-ords",
+        "en": ("Forms 14c Minimal Hybrid Stack", "Combined Forms/Proxy DB + ALISE DB + ORDS + Forms Services (HTML5 noVNC Forms Builder on port 6082)."),
+        "et": ("Forms 14c Minimaalne Hübriid", "Kombineeritud Forms/Proxy DB + ALISE DB + ORDS + Forms teenused (HTML5 noVNC pordil 6082)."),
+        "fi": ("Forms 14c Minimaalinen Hybridi", "Yhdistetty Forms/Proxy DB + ALISE DB + ORDS + Forms (HTML5 noVNC portissa 6082)."),
+        "sv": ("Forms 14c Minimal Hybrid", "Kombinerad Forms/Proxy DB + ALISE DB + ORDS + Forms (HTML5 noVNC på port 6082)."),
+        "lv": ("Forms 14c Minimāls Hibrīds", "Kombinēta Forms/Proxy DB + ALISE DB + ORDS + Forms (HTML5 noVNC portā 6082)."),
+        "lt": ("Forms 14c Minimalus Hibridinis", "Sujungta Forms/Proxy DB + ALISE DB + ORDS + Forms (HTML5 noVNC prievade 6082).")
     },
-    40: {
-        "cat": "enterprise", "ram": "6-8 GB", "conts": "All Stacks (Dedicated DBs)",
-        "en": ("Full Enterprise Dedicated", "Complete stack with isolated databases for Proxy, Publisher, and Forms."),
-        "et": ("Täielik Ettevõtte Eraldatud", "Kõik teenused eraldatud andmebaasidega (Proxy, Publisher, Forms)."),
-        "fi": ("Täysi Yritys Erillinen", "Täydellinen pino eristetyillä tietokannoilla Proxylle, Publisherille ja Formsille."),
-        "sv": ("Full Enterprise Dedikerad", "Komplett stack med isolerade databaser för Proxy, Publisher och Forms."),
-        "lv": ("Pilna Uzņēmuma Atsevišķa", "Pilns steks ar atsevišķām datubāzēm Proxy, Publisher un Forms."),
-        "lt": ("Pilna Įmonės Atskira", "Pilnas rinkinys su atskiromis duomenų bazėmis Proxy, Publisher ir Forms.")
+    31: {
+        "cat": "webide", "ram": "3-4 GB", "conts": "db-proxy, app-ords, web-ide-dev",
+        "en": ("Cloud Autonomous DB (ADB) + Web IDE", "Autonomous Database emulator with browser VS Code Web IDE, Oracle SQL Developer extension, and Antigravity AI."),
+        "et": ("Pilve Autonomous DB (ADB) + Web IDE", "Autonomous Database emulaator koos brauseri VS Code Web IDE, SQL Developer laienduse ja Antigravity AI-ga."),
+        "fi": ("Pilvi Autonomous DB (ADB) + Web IDE", "Autonomous Database -emulaattori selainpohjaisella VS Code Web IDE:llä ja Antigravity AI:lla."),
+        "sv": ("Moln Autonomous DB (ADB) + Web IDE", "Autonomous Database-emulator med webbaserad VS Code Web IDE och Antigravity AI."),
+        "lv": ("Mākoņa Autonomous DB (ADB) + Web IDE", "Autonomous Database emulators ar pārlūka VS Code Web IDE un Antigravity AI."),
+        "lt": ("Debesų Autonomous DB (ADB) + Web IDE", "Autonomous Database emuliatorius su naršyklės VS Code Web IDE ir Antigravity AI.")
+    },
+    34: {
+        "cat": "webide", "ram": "3-5 GB", "conts": "db-proxy, db-alise, app-ords, web-ide-dev",
+        "en": ("🌟 2-Layer Production Stack + Web IDE", "Recommended 2-layer production stack with browser VS Code Web IDE, SQL Developer, SEPS Wallet sync, and AI coding tools."),
+        "et": ("🌟 2-Kihiline Tootmisvirn + Web IDE", "Soovituslik 2-kihiline tootmislahendus koos brauseri VS Code Web IDE, SQL Developeri, SEPS Walleti ja AI tööriistadega."),
+        "fi": ("🌟 2-Kerroksinen Tuotantopino + Web IDE", "Suositeltu 2-kerroksinen tuotantoratkaisu selainpohjaisella VS Code Web IDE:llä ja SEPS Wallet -synkronoinnilla."),
+        "sv": ("🌟 2-Lagers Produktionsstack + Web IDE", "Rekommenderad 2-lagers produktionsstack med webbaserad VS Code Web IDE och SEPS Wallet."),
+        "lv": ("🌟 2 Slāņu Ražošanas Steks + Web IDE", "Ieteicamais 2 slāņu ražošanas steks ar pārlūka VS Code Web IDE un SEPS Wallet."),
+        "lt": ("🌟 2 Sluoksnių Gamybos Rinkinys + Web IDE", "Rekomenduojamas 2 sluoksnių gamybos rinkinys su naršyklės VS Code Web IDE ir SEPS Wallet.")
     },
     41: {
-        "cat": "enterprise", "ram": "4-6 GB", "conts": "db-proxy, app-ords, app-publisher, app-forms, web-ide-dev",
-        "en": ("All-in-One Enterprise (Single DB)", "Forms 14c + Publisher + APEX 26.1 + Web IDE consolidated on 1 DB."),
-        "et": ("Kõik-Ühes Ettevõte (1 DB)", "Forms 14c + Publisher + APEX 26.1 + Web IDE koondatud ühte andmebaasi."),
-        "fi": ("Kaikki-Yhdessä Yritys (1 DB)", "Forms 14c + Publisher + APEX 26.1 + Web IDE yhdistettynä yhteen tietokantaan."),
-        "sv": ("Allt-i-ett Enterprise (1 DB)", "Forms 14c + Publisher + APEX 26.1 + Web IDE samlat i 1 databas."),
-        "lv": ("Viss-Vienā Uzņēmums (1 DB)", "Forms 14c + Publisher + APEX 26.1 + Web IDE apvienots 1 datubāzē."),
-        "lt": ("Viskas-Viename Įmonė (1 DB)", "Forms 14c + Publisher + APEX 26.1 + Web IDE sujungta 1 duomenų bazėje.")
+        "cat": "enterprise", "ram": "4-6 GB", "conts": "db-proxy, app-forms, app-publisher, app-ords, web-ide-dev",
+        "en": ("🌟 Ultimate All-in-One Enterprise + Web IDE", "Forms 14c + Publisher + APEX SSO Reverse Proxy + ORDS + Web IDE consolidated on a single 23ai Free DB."),
+        "et": ("🌟 Ultimate Kõik-Ühes Ettevõte + Web IDE", "Forms 14c + Publisher + APEX SSO Proxy + ORDS + Web IDE koondatud ühele 23ai Free DB-le."),
+        "fi": ("🌟 Ultimate Kaikki-Yhdessä Yritys + Web IDE", "Forms 14c + Publisher + APEX SSO Proxy + ORDS + Web IDE yhdistettynä yhteen 23ai Free DB:hen."),
+        "sv": ("🌟 Ultimate Allt-i-ett Enterprise + Web IDE", "Forms 14c + Publisher + APEX SSO Proxy + ORDS + Web IDE samlat i en enda 23ai Free DB."),
+        "lv": ("🌟 Ultimate Viss-Vienā Uzņēmums + Web IDE", "Forms 14c + Publisher + APEX SSO Proxy + ORDS + Web IDE apvienots vienā 23ai Free DB."),
+        "lt": ("🌟 Ultimate Viskas-Viename Įmonė + Web IDE", "Forms 14c + Publisher + APEX SSO Proxy + ORDS + Web IDE sujungta vienoje 23ai Free DB.")
+    },
+    42: {
+        "cat": "enterprise", "ram": "6-8 GB", "conts": "db-forms, db-publisher, db-proxy, db-alise, app-forms, app-publisher, app-ords, web-ide-dev",
+        "en": ("Fully Isolated Enterprise Cloud Lab", "8 isolated containers with dedicated databases for Forms, Publisher, APEX, and Custom applications + Web IDE."),
+        "et": ("Täielikult Eraldatud Ettevõtte Pilvelabor", "8 eraldatud konteinerit koos eraldi andmebaasidega Forms, Publisher, APEX ja kohandatud rakenduste jaoks + Web IDE."),
+        "fi": ("Täysin Eristetty Yrityspilvilaboratorio", "8 eristettyä konttia erillisillä tietokannoilla Formsille, Publisherille ja APEXille + Web IDE."),
+        "sv": ("Fullständigt Isolerat Enterprise Molnlabb", "8 isolerade behållare med dedikerade databaser för Forms, Publisher och APEX + Web IDE."),
+        "lv": ("Pilnībā Izolēta Uzņēmuma Mākoņlaboratorija", "8 izolēti konteineri ar atsevišķām datubāzēm Forms, Publisher un APEX + Web IDE."),
+        "lt": ("Visiškai Izoliuota Įmonės Debesų Laboratorija", "8 izoliuoti konteineriai su atskiromis duomenų bazėmis Forms, Publisher ir APEX + Web IDE.")
     },
     43: {
-        "cat": "enterprise", "ram": "5-7 GB", "conts": "db-proxy, db-alise, app-ords, app-publisher, app-forms, web-ide-dev",
-        "en": ("Hybrid 2-DB Enterprise", "Consolidated 2-DB architecture with isolated business logic engine."),
-        "et": ("Hübriid 2-DB Ettevõte", "2-DB arhitektuur eraldatud äriloogika ja andmetöötluse mootoriga."),
-        "fi": ("Hybridi 2-DB Yritys", "Konsolidoitu 2-DB arkkitehtuuri eristetyllä liiketoimintalogiikkamoottorilla."),
-        "sv": ("Hybrid 2-DB Enterprise", "Konsoliderad 2-DB arkitektur med isolerad affärslogikdatabas."),
-        "lv": ("Hibrīda 2-DB Uzņēmums", "Konsolidēta 2-DB arhitektūra ar atsevišķu biznesa loģikas dzinēju."),
-        "lt": ("Hibridinė 2-DB Įmonė", "Konsoliduota 2-DB architektūra su atskiru verslo logikos varikliu.")
+        "cat": "enterprise", "ram": "5-7 GB", "conts": "db-proxy, db-publisher, app-forms, app-publisher, app-ords, web-ide-dev",
+        "en": ("2-Database Hybrid Enterprise + Web IDE", "APEX/ORDS Proxy DB + Shared Middleware Infra DB (db-publisher) for Forms 14c and Publisher RCU schemas + Web IDE."),
+        "et": ("2-Andmebaasi Hübriid Ettevõte + Web IDE", "APEX/ORDS Proxy DB + Ühine Middleware Infra DB (db-publisher) Forms 14c ja Publisher RCU skeemide jaoks + Web IDE."),
+        "fi": ("2-Tietokannan Hybridi Yritys + Web IDE", "APEX/ORDS Proxy DB + Jaettu Middleware DB (db-publisher) Forms 14c ja Publisher RCU:lle + Web IDE."),
+        "sv": ("2-Databas Hybrid Enterprise + Web IDE", "APEX/ORDS Proxy DB + Delad Middleware DB (db-publisher) för Forms och Publisher RCU + Web IDE."),
+        "lv": ("2 Datubāzu Hibrīda Uzņēmums + Web IDE", "APEX/ORDS Proxy DB + Koplietota Middleware DB (db-publisher) Forms un Publisher RCU + Web IDE."),
+        "lt": ("2 Duomenų Bazių Hibridinė Įmonė + Web IDE", "APEX/ORDS Proxy DB + Bendra Middleware DB (db-publisher) Forms ir Publisher RCU + Web IDE.")
     }
 }
 
-bp_files = sorted(glob.glob(os.path.join(WORKSPACE_DIR, "config/blueprints/*.yaml")))
+bp_files = sorted(glob.glob(os.path.join(WORKSPACE_DIR, "config/blueprints/.env.*")))
 bp_list = []
 for bp_file in bp_files:
     b_base = os.path.basename(bp_file)
-    m = re.match(r"^(\d+)-", b_base)
+    m = re.search(r"\.env\.(\d+)", b_base)
     if m:
         b_num = int(m.group(1))
         info = BP_CATALOG.get(b_num)
@@ -382,17 +402,12 @@ for bp_file in bp_files:
             descs = {lang: info.get(lang, info["en"])[1] for lang in ["en", "et", "fi", "sv", "lv", "lt"]}
         else:
             cat = "core"
-            if 10 <= b_num <= 19: cat = "publisher"
-            elif 20 <= b_num <= 29: cat = "forms"
-            elif 30 <= b_num <= 39: cat = "webide"
-            elif b_num >= 40: cat = "enterprise"
-            
-            ram = "4-6 GB" if cat in ["publisher", "forms", "enterprise"] else "2-3 GB"
+            ram = "3-4 GB"
             conts = "Active Containers"
             title_def = f"Blueprint #{b_num}"
             desc_def = f"Architecture blueprint configuration #{b_num}."
-            titles = {l: title_def for l in ["en", "et", "sv", "lv", "lt"]}
-            descs = {l: desc_def for l in ["en", "et", "sv", "lv", "lt"]}
+            titles = {l: title_def for l in ["en", "et", "fi", "sv", "lv", "lt"]}
+            descs = {l: desc_def for l in ["en", "et", "fi", "sv", "lv", "lt"]}
 
         bp_list.append({
             "num": b_num,
@@ -472,8 +487,12 @@ for db_k, def_c in [("DB_PROXY", "db-proxy"), ("DB_ALISE", "db-alise"), ("DB_PUB
         pool_name = def_c.replace("db-", "").replace("-", "_")
         ords_conf = p_data.get("components", {}).get("ords", {})
         apex_conf = p_data.get("components", {}).get("apex", {})
-        if ords_conf.get("pool_name"):
+        if ords_conf.get("pool_name") and ords_conf.get("pool_name") != "default":
             pool_name = ords_conf.get("pool_name")
+        elif ords_conf.get("url_mapping"):
+            m_path = ords_conf.get("url_mapping").strip("/").split("/")[-1]
+            if m_path:
+                pool_name = m_path
         active_db_list.append({
             "key": db_k,
             "c_name": def_c,
@@ -1450,6 +1469,16 @@ html_content = f"""<!DOCTYPE html>
         </div>
         <div class="grid">
             <div class="card">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_deploy">🚀 Blueprint Deployment & Switching</h4>
+                <p data-i18n="desc_devops_deploy">Inspect active environment, test configurations, or switch cleanly between curated blueprints.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/deploy-blueprint.sh --status<br/>
+                    ./scripts/deploy-blueprint.sh -b 3<br/>
+                    ./scripts/deploy-blueprint.sh -b 41
+                </div>
+            </div>
+            <div class="card">
                 <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_wallet">🔐 Oracle Wallet Credential Matrix</h4>
                 <p data-i18n="desc_devops_wallet">Query or inspect decrypted credentials from SEPS Wallet safely without plaintext leaks.</p>
                 <div class="code-box">
@@ -1763,7 +1792,7 @@ const I18N_DICT = {{
     header_subtitle: "Unified Command Center, Real-Time Service Health & Multilingual Architecture Portal",
     tab_services: "Services & Status",
     tab_architecture: "Architecture & Topology",
-    tab_blueprints: "Blueprints Explorer (22+)",
+    tab_blueprints: "Blueprints Explorer (11 Models)",
     tab_docs: "Documentation",
     tab_devops: "DevOps Commands",
     tab_benchmarks: "Logs & Benchmarks",
@@ -1822,8 +1851,8 @@ const I18N_DICT = {{
     diag_title_1: "🏗️ Active Multi-DB & Container Topology",
     diag_title_2: "🔐 Zero-Trust Ingress, TLS & SEPS Wallet Architecture",
     diag_title_3: "🔄 Oracle Forms 14c Modernization Workflow",
-    title_blueprints: "📋 Architecture Blueprints Catalog (22+ Stacks)",
-    filter_all: "🌟 All (23)",
+    title_blueprints: "📋 Architecture Blueprints Catalog (11 Models)",
+    filter_all: "🌟 All (11)",
     filter_core: "🗄️ Core APEX & DB (1–9)",
     filter_pub: "📑 Analytics Publisher (10–19)",
     filter_forms: "📐 Oracle Forms 14c (20–29)",
@@ -1831,6 +1860,8 @@ const I18N_DICT = {{
     filter_ent: "🚀 Enterprise All-in-One (40–49)",
     docs_empty_hint: "Select a document from the left navigation menu to view its full formatted guide.",
     title_cheatsheet: "⚡ Developer & DevOps Quick Commands",
+    title_devops_deploy: "🚀 Blueprint Deployment & Switching",
+    desc_devops_deploy: "Inspect active environment, test configurations, or switch cleanly between curated blueprints.",
     title_devops_wallet: "🔐 Oracle Wallet Credential Matrix",
     desc_devops_wallet: "Query or inspect decrypted credentials from SEPS Wallet safely without plaintext leaks.",
     title_devops_rotate: "🔄 Zero-Downtime Password Rotation",
@@ -1839,7 +1870,7 @@ const I18N_DICT = {{
     desc_devops_snapshot: "Create or restore compressed golden snapshots in ~15 seconds.",
     title_devops_health: "🌐 Service Health Diagnostics",
     desc_devops_health: "Test active web service HTTP/HTTPS endpoints and SEPS Wallet connections.",
-    btn_copy_cmd: "📋 Copy Launch Command",
+    btn_copy_cmd: "📋 Copy Deploy Command",
     bench_th_step: "Setup Step / Subsystem",
     bench_th_duration: "Duration",
     bench_th_status: "Status",
@@ -1848,20 +1879,20 @@ const I18N_DICT = {{
     bench_step2: "Step 2: ORDS Software Download",
     bench_step3: "Step 3: APEX Software Packages",
     bench_step4: "Step 4: Database Container Startup",
-    bench_step5: "Step 5: Database Healthcheck Wait",
-    bench_step6: "Step 6: APEX Engine & Patching",
-    bench_step7: "Step 7: DB Objects & Schemas Init",
-    bench_step8: "Step 8: Packaged APEX Apps Deploy",
-    bench_step9: "Step 9: Analytics Publisher Startup",
+    bench_step5: "Step 5: Database Health Check Wait",
+    bench_step6: "Step 6: APEX Engine Install & Patching",
+    bench_step7: "Step 7: DB Objects & Schema Init",
+    bench_step8: "Step 8: APEX Apps Deployment",
+    bench_step9: "Step 9: Analytics Publisher",
     bench_step10: "Step 10: Golden Snapshots Creation",
     bench_total: "TOTAL SETUP TIME",
-    bench_empty: "Benchmark metrics file metrics/setup_benchmarks.json will be generated upon complete run of setup-all.sh."
+    bench_empty: "Benchmarks file metrics/setup_benchmarks.json will be generated after setup-all.sh execution."
   }},
   et: {{
     header_subtitle: "Ühendatud juhtpaneel, reaalajas teenuste monitooring ja mitmekeelne arhitektuuriportaal",
     tab_services: "Teenused ja Staatus",
     tab_architecture: "Arhitektuur ja Topoloogia",
-    tab_blueprints: "Kavandite Kataloog (22+)",
+    tab_blueprints: "Kavandite Kataloog (11 Mudelit)",
     tab_docs: "Dokumentatsioon",
     tab_devops: "DevOps Käsud",
     tab_benchmarks: "Logid ja Mõõdikud",
@@ -1920,8 +1951,8 @@ const I18N_DICT = {{
     diag_title_1: "🏗️ Aktiivne Mitme DB ja Konteinerite Topoloogia",
     diag_title_2: "🔐 Zero-Trust Ingress, TLS ja SEPS Wallet Arhitektuur",
     diag_title_3: "🔄 Oracle Forms 14c Moderniseerimise Töövoog",
-    title_blueprints: "📋 Arhitektuursete Kavandite Kataloog (22+ Stäkki)",
-    filter_all: "🌟 Kõik (23)",
+    title_blueprints: "📋 Arhitektuursete Kavandite Kataloog (11 Mudelit)",
+    filter_all: "🌟 Kõik (11)",
     filter_core: "🗄️ Core APEX & DB (1–9)",
     filter_pub: "📑 Analytics Publisher (10–19)",
     filter_forms: "📐 Oracle Forms 14c (20–29)",
@@ -1929,6 +1960,8 @@ const I18N_DICT = {{
     filter_ent: "🚀 Enterprise Kõik-Ühes (40–49)",
     docs_empty_hint: "Vali vasakpoolsest menüüst dokument, et lugeda täielikku juhendit.",
     title_cheatsheet: "⚡ Arendaja ja DevOps Kiirkäsud",
+    title_devops_deploy: "🚀 Blueprintide Juurutamine ja Vahetamine",
+    desc_devops_deploy: "Kontrolli aktiivset keskkonda, testi seadistust või vaheta mugavalt kureeritud blueprinte.",
     title_devops_wallet: "🔐 Oracle Wallet Paroolide Maatriks",
     desc_devops_wallet: "Päri või kontrolli dekrüpteeritud paroole SEPS Walletist turvaliselt ilma leketeta.",
     title_devops_rotate: "🔄 Paroolide Katkestusteta Roteerimine",
@@ -1937,7 +1970,7 @@ const I18N_DICT = {{
     desc_devops_snapshot: "Loo või taasta kokkupakitud kuldseid hetktõmmiseid ~15 sekundiga.",
     title_devops_health: "🌐 Veebiteenuste Diagnostika",
     desc_devops_health: "Kontrolli aktiivseid HTTP/HTTPS veebiteenuseid ja SEPS Walleti ühendusi.",
-    btn_copy_cmd: "📋 Kopeeri Käivituskäsk",
+    btn_copy_cmd: "📋 Kopeeri Juurutamiskäsk",
     bench_th_step: "Paigalduse Samm / Alamsüsteem",
     bench_th_duration: "Kestus",
     bench_th_status: "Staatus",
@@ -1947,10 +1980,10 @@ const I18N_DICT = {{
     bench_step3: "Samm 3: APEX tarkvarapaketid",
     bench_step4: "Samm 4: Andmebaasi konteineri käivitamine",
     bench_step5: "Samm 5: Andmebaasi valmisoleku ootamine",
-    bench_step6: "Samm 6: APEX mootori paigaldus ja patchimine",
+    bench_step6: "Samm 6: APEX mootori paigaldus ja uuendused",
     bench_step7: "Samm 7: DB objektide ja skeemide initsialiseerimine",
-    bench_step8: "Samm 8: APEX rakenduste deploy",
-    bench_step9: "Samm 9: Analytics Publisheri käivitamine",
+    bench_step8: "Samm 8: APEX rakenduste paigaldus",
+    bench_step9: "Samm 9: Analytics Publisher",
     bench_step10: "Samm 10: Kuldsete hetktõmmiste loomine",
     bench_total: "KOGU PAIGALDUSE AEG",
     bench_empty: "Mõõdikute fail metrics/setup_benchmarks.json luuakse pärast setup-all.sh käivitamist."
@@ -1959,7 +1992,7 @@ const I18N_DICT = {{
     header_subtitle: "Yhdistetty ohjauspaneeli, reaaliaikainen palveluseuranta ja monikielinen arkkitehtuuriportaali",
     tab_services: "Palvelut ja Tila",
     tab_architecture: "Arkkitehtuuri ja Topologia",
-    tab_blueprints: "Blueprint-Luettelo (22+)",
+    tab_blueprints: "Blueprint-Luettelo (11 Mallia)",
     tab_docs: "Dokumentaatio",
     tab_devops: "DevOps-Komennot",
     tab_benchmarks: "Lokit ja Suorituskyky",
@@ -2018,8 +2051,8 @@ const I18N_DICT = {{
     diag_title_1: "🏗️ Aktiivinen Multi-DB ja Konttitopologia",
     diag_title_2: "🔐 Zero-Trust Ingress, TLS ja SEPS Wallet -Arkkitehtuuri",
     diag_title_3: "🔄 Oracle Forms 14c Modernisointityönkulku",
-    title_blueprints: "📋 Arkkitehtuurin Blueprint-Luettelo (22+)",
-    filter_all: "🌟 Kaikki (23)",
+    title_blueprints: "📋 Arkkitehtuurin Blueprint-Luettelo (11 Mallia)",
+    filter_all: "🌟 Kaikki (11)",
     filter_core: "🗄️ Core APEX & DB (1–9)",
     filter_pub: "📑 Analytics Publisher (10–19)",
     filter_forms: "📐 Oracle Forms 14c (20–29)",
@@ -2027,6 +2060,8 @@ const I18N_DICT = {{
     filter_ent: "🚀 Enterprise Kaikki-Yhdessä (40–49)",
     docs_empty_hint: "Valitse asiakirja vasemmasta valikosta nähdäksesi koko oppaan.",
     title_cheatsheet: "⚡ Kehittäjän & DevOps Pikakomennot",
+    title_devops_deploy: "🚀 Blueprintien Käyttöönotto ja Vaihto",
+    desc_devops_deploy: "Tarkista aktiivinen tila, testaa asetukset tai vaihda kuratoitujen blueprintien välillä.",
     title_devops_wallet: "🔐 Oracle Wallet -Salasanamatriisi",
     desc_devops_wallet: "Hae salatut tunnistetiedot turvallisesti SEPS Walletista ilman vuotoja.",
     title_devops_rotate: "🔄 Salasanan Rotaatio Ilman Katkoksia",
@@ -2035,7 +2070,7 @@ const I18N_DICT = {{
     desc_devops_snapshot: "Luo tai palauta pakattuja kultaisia tilannevedoksia ~15 sekunnissa.",
     title_devops_health: "🌐 Palveluiden Terveyden Diagnostiikka",
     desc_devops_health: "Testaa aktiiviset HTTP/HTTPS-verkkopalvelut ja SEPS Wallet -yhteydet.",
-    btn_copy_cmd: "📋 Kopioi Käynnistyskomento",
+    btn_copy_cmd: "📋 Kopioi Käyttöönottokomento",
     bench_th_step: "Asennusvaihe / Osajärjestelmä",
     bench_th_duration: "Kesto",
     bench_th_status: "Tila",
@@ -2057,7 +2092,7 @@ const I18N_DICT = {{
     header_subtitle: "Enhetlig kontrollpanel, realtidsövervakning och flerspråkig arkitekturportal",
     tab_services: "Tjänster och Status",
     tab_architecture: "Arkitektur och Topologi",
-    tab_blueprints: "Blueprint Katalogen (22+)",
+    tab_blueprints: "Blueprint Katalogen (11 Modeller)",
     tab_docs: "Dokumentation",
     tab_devops: "DevOps Kommandon",
     tab_benchmarks: "Loggar och Prestanda",
@@ -2116,8 +2151,8 @@ const I18N_DICT = {{
     diag_title_1: "🏗️ Aktiv Multi-DB och Container Topologi",
     diag_title_2: "🔐 Zero-Trust Ingress, TLS och SEPS Wallet Arkitektur",
     diag_title_3: "🔄 Oracle Forms 14c Moderniseringsarbetsflöde",
-    title_blueprints: "📋 Arkitektur Blueprints (22+ Stacks)",
-    filter_all: "🌟 Alla (23)",
+    title_blueprints: "📋 Arkitektur Blueprints (11 Modeller)",
+    filter_all: "🌟 Alla (11)",
     filter_core: "🗄️ Core APEX & DB (1–9)",
     filter_pub: "📑 Analytics Publisher (10–19)",
     filter_forms: "📐 Oracle Forms 14c (20–29)",
@@ -2125,6 +2160,8 @@ const I18N_DICT = {{
     filter_ent: "🚀 Enterprise Allt-i-ett (40–49)",
     docs_empty_hint: "Välj ett dokument i den vänstra menyn för att läsa hela guiden.",
     title_cheatsheet: "⚡ Utvecklare & DevOps Snabbkommandon",
+    title_devops_deploy: "🚀 Blueprint Driftsättning och Byte",
+    desc_devops_deploy: "Inspektera aktiv miljö, testa konfigurationer eller byt smidigt mellan blueprints.",
     title_devops_wallet: "🔐 Oracle Wallet Lösenordsmatris",
     desc_devops_wallet: "Hämta krypterade autentiseringsuppgifter säkert från SEPS Wallet.",
     title_devops_rotate: "🔄 Lösenordsrotation utan Avbrott",
@@ -2133,7 +2170,7 @@ const I18N_DICT = {{
     desc_devops_snapshot: "Skapa eller återställ komprimerade ögonblicksbilder på ~15 sekunder.",
     title_devops_health: "🌐 Hälsodiagnostik för Tjänster",
     desc_devops_health: "Testa aktiva HTTP/HTTPS-anslutningar och SEPS Wallet.",
-    btn_copy_cmd: "📋 Kopiera Startkommando",
+    btn_copy_cmd: "📋 Kopiera Driftsättningskommando",
     bench_th_step: "Installationssteg / Delsystem",
     bench_th_duration: "Varaktighet",
     bench_th_status: "Status",
@@ -2155,7 +2192,7 @@ const I18N_DICT = {{
     header_subtitle: "Vienots vadības centrs, pakalpojumu uzraudzība un daudzvalodu arhitektūras portāls",
     tab_services: "Pakalpojumi un Statuss",
     tab_architecture: "Arhitektūra un Topoloģija",
-    tab_blueprints: "Plānu Katalogs (22+)",
+    tab_blueprints: "Plānu Katalogs (11 Modeļi)",
     tab_docs: "Dokumentācija",
     tab_devops: "DevOps Komandas",
     tab_benchmarks: "Žurnāli un Veiktspēja",
@@ -2214,8 +2251,8 @@ const I18N_DICT = {{
     diag_title_1: "🏗️ Aktīvā Multi-DB un Konteineru Topoloģija",
     diag_title_2: "🔐 Zero-Trust Ingress, TLS un SEPS Wallet Arhitektūra",
     diag_title_3: "🔄 Oracle Forms 14c Modernizācijas Darbplūsma",
-    title_blueprints: "📋 Arhitektūras Plānu Katalogs (22+)",
-    filter_all: "🌟 Visi (23)",
+    title_blueprints: "📋 Arhitektūras Plānu Katalogs (11 Modeļi)",
+    filter_all: "🌟 Visi (11)",
     filter_core: "🗄️ Core APEX & DB (1–9)",
     filter_pub: "📑 Analytics Publisher (10–19)",
     filter_forms: "📐 Oracle Forms 14c (20–29)",
@@ -2223,6 +2260,8 @@ const I18N_DICT = {{
     filter_ent: "🚀 Enterprise Viss-Vienā (40–49)",
     docs_empty_hint: "Atlasiet dokumentu kreisajā izvēlnē, lai skatītu pilnu rokasgrāmatu.",
     title_cheatsheet: "⚡ Izstrādātāja & DevOps Ātrās Komandas",
+    title_devops_deploy: "🚀 Blueprint Izvēršana un Pārslēgšana",
+    desc_devops_deploy: "Pārbaudiet aktīvo vidi, testējiet iestatījumus vai viegli pārslēdzieties starp blueprints.",
     title_devops_wallet: "🔐 Oracle Wallet Paroļu Matrica",
     desc_devops_wallet: "Droši iegūstiet atšifrētos datus no SEPS Wallet.",
     title_devops_rotate: "🔄 Paroļu Rotācija Bez Dīkstāves",
@@ -2231,7 +2270,7 @@ const I18N_DICT = {{
     desc_devops_snapshot: "Izveidojiet vai atjaunojiet momentuzņēmumus ~15 sekundēs.",
     title_devops_health: "🌐 Pakalpojumu Veselības Diagnostika",
     desc_devops_health: "Pārbaudiet aktīvos HTTP/HTTPS savienojumus un SEPS Wallet.",
-    btn_copy_cmd: "📋 Kopēt Palaišanas Komandu",
+    btn_copy_cmd: "📋 Kopēt Izvēršanas Komandu",
     bench_th_step: "Uzstādīšanas Solis / Apakšsistēma",
     bench_th_duration: "Ilgums",
     bench_th_status: "Statuss",
@@ -2253,7 +2292,7 @@ const I18N_DICT = {{
     header_subtitle: "Vieningas valdymo centras, paslaugų stebėsena ir daugiakalbis architektūros portalas",
     tab_services: "Paslaugos ir Būsena",
     tab_architecture: "Architektūra ir Topologija",
-    tab_blueprints: "Planų Katalogas (22+)",
+    tab_blueprints: "Planų Katalogas (11 Modelių)",
     tab_docs: "Dokumentacija",
     tab_devops: "DevOps Komandos",
     tab_benchmarks: "Žurnalai ir Našumas",
@@ -2312,8 +2351,8 @@ const I18N_DICT = {{
     diag_title_1: "🏗️ Aktyvi Multi-DB ir Konteinerių Topologija",
     diag_title_2: "🔐 Zero-Trust Ingress, TLS ir SEPS Wallet Architektūra",
     diag_title_3: "🔄 Oracle Forms 14c Modernizavimo Eiga",
-    title_blueprints: "📋 Architektūros Planų Katalogas (22+)",
-    filter_all: "🌟 Visi (23)",
+    title_blueprints: "📋 Architektūros Planų Katalogas (11 Modelių)",
+    filter_all: "🌟 Visi (11)",
     filter_core: "🗄️ Core APEX & DB (1–9)",
     filter_pub: "📑 Analytics Publisher (10–19)",
     filter_forms: "📐 Oracle Forms 14c (20–29)",
@@ -2509,7 +2548,7 @@ function renderBlueprints(filter) {{
         </div>
       </div>
       <div style="display: flex; gap: 8px; margin-top: 8px;">
-        <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 0.75rem;" onclick="copyText('./scripts/setup-all.sh -b ${{b.num}} --lang ${{currentLang}}')">${{copyLabel}}</button>
+        <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 0.75rem;" onclick="copyText('./scripts/deploy-blueprint.sh -b ${{b.num}} --lang ${{currentLang}}')">${{copyLabel}}</button>
       </div>
     `;
     grid.appendChild(card);
@@ -2658,33 +2697,17 @@ function openServiceWithCredentials(targetUrl, alias, user, evt) {{
   const pwd = (isLocal && LOCAL_PASSWORDS && LOCAL_PASSWORDS[alias]) ? LOCAL_PASSWORDS[alias] : '';
 
   if (isLocal && pwd) {{
-    // 1. Copy real password directly to clipboard for effortless pasting
+    // 1. Copy real password directly to clipboard (Zero-Trust: NEVER pass password as URL query parameter)
     if (navigator.clipboard) {{
       navigator.clipboard.writeText(pwd).then(() => {{
         showToast('🔑 Password for ' + (user || alias) + ' copied to clipboard! (Cmd+V / Ctrl+V to paste)');
       }}).catch(() => {{}});
     }}
+  }}
 
-    // 2. Append password parameter to login URL when on localhost
-    if (finalUrl.includes('workspace-sign-in/oracle-apex-sign-in')) {{
-      if (!finalUrl.includes('f4550_p1_password=')) {{
-        finalUrl += '&f4550_p1_password=' + encodeURIComponent(pwd);
-      }}
-    }} else if (finalUrl.includes('apex_admin')) {{
-      finalUrl = finalUrl.replace('/apex_admin', '/r/apex/workspace-sign-in/administration-sign-in?p10_username=ADMIN&p10_password=' + encodeURIComponent(pwd));
-    }} else if (finalUrl.includes('workspace-sign-in/administration-sign-in')) {{
-      if (!finalUrl.includes('p10_password=')) {{
-        finalUrl += '&p10_password=' + encodeURIComponent(pwd);
-      }}
-    }} else if (finalUrl.includes('user_developer/sign-in') || finalUrl.includes('/sign-in')) {{
-      if (!finalUrl.includes('username=')) {{
-        finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'username=' + encodeURIComponent(user || 'USER_DEVELOPER');
-      }}
-    }} else if (finalUrl.includes('xmlpserver')) {{
-      if (!finalUrl.includes('password=')) {{
-        finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'username=weblogic&password=' + encodeURIComponent(pwd);
-      }}
-    }}
+  // Clean redirection for apex_admin to administration-sign-in with ADMIN username prefilled (no password)
+  if (finalUrl.includes('/apex_admin')) {{
+    finalUrl = finalUrl.replace('/apex_admin', '/r/apex/workspace-sign-in/administration-sign-in?p10_username=ADMIN');
   }}
 
   window.open(finalUrl, '_blank');

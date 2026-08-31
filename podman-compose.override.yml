@@ -1,9 +1,170 @@
 version: '3.8'
 
 services:
-  db-apex-proxy:
+  db-proxy:
     image: container-registry.oracle.com/database/free:latest
+    container_name: db-proxy
+    hostname: db-proxy
+    shm_size: 2g
+    security_opt:
+      - "no-new-privileges:true"
+    ports:
+      - "127.0.0.1:1532:1521"
     environment:
-      - WORKLOAD_TYPE=OLTP
-      - ADMIN_PASSWORD=OraclePass2026Admin
-      - WALLET_PASSWORD=OraclePass2026Wallet
+      - ORACLE_PASSWORD_FILE=/run/secrets/oracle_pwd
+      - ORACLE_SID=FREE
+      - ORACLE_PDB=FREEPDB1
+      - TNS_ADMIN=/opt/oracle/admin/FREE/wallet
+      - CONFIGURE_TDE=true
+      - ENCRYPT_TABLESPACES=ALL
+    volumes:
+      - proxy_oradata:/opt/oracle/oradata
+      - ./config/tns_admin:/opt/oracle/admin/FREE/wallet:rw
+      - apex_images_26_1:/opt/oracle/apex_images
+    secrets:
+      - source: proxy_db_sys_password
+        target: oracle_pwd
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 3072M
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - (echo "SELECT 'ALIVE' FROM DUAL;" | sqlplus -L -S / as sysdba 2>/dev/null | grep -q 'ALIVE') || (echo "SELECT 'ALIVE' FROM DUAL;" | sqlplus -L -S sys/`cat /run/secrets/oracle_pwd 2>/dev/null`@localhost:1521/FREEPDB1 as sysdba 2>/dev/null | grep -q 'ALIVE') || (nc -z localhost 1521 2>/dev/null) || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 25
+      start_period: 30s
+    restart: unless-stopped
+
+  app-ords:
+    image: container-registry.oracle.com/database/ords:latest
+    container_name: app-ords
+    ports:
+      - "127.0.0.1:8088:8088"
+      - "127.0.0.1:8448:8448"
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        export ORACLE_PWD=$$(cat /run/secrets/oracle_pwd 2>/dev/null || cat /run/secrets/proxy_db_sys_password)
+        export APEX_LISTENER_PWD=$$(cat /run/secrets/ords_listener_password 2>/dev/null || cat /run/secrets/apex_schema_password 2>/dev/null || cat /run/secrets/oracle_pwd)
+        export APEX_REST_PWD=$$(cat /run/secrets/ords_listener_password 2>/dev/null || cat /run/secrets/apex_schema_password 2>/dev/null || cat /run/secrets/oracle_pwd)
+        mkdir -p /etc/ords/config/ssl /opt/oracle/docroot
+        if [ -f /etc/ords/certs/custom/tls.crt ] && [ -f /etc/ords/certs/custom/tls.key ]; then
+          cp /etc/ords/certs/custom/tls.crt /etc/ords/config/ssl/cert.crt 2>/dev/null || true
+          cp /etc/ords/certs/custom/tls.key /etc/ords/config/ssl/key.key 2>/dev/null || true
+        elif [ -f /etc/ords/certs/public/public_cert.crt ] && [ -f /etc/ords/certs/public/public_key.key ]; then
+          cp /etc/ords/certs/public/public_cert.crt /etc/ords/config/ssl/cert.crt 2>/dev/null || true
+          cp /etc/ords/certs/public/public_key.key /etc/ords/config/ssl/key.key 2>/dev/null || true
+        elif [ -f /etc/ords/certs/corp/corp_cert.crt ] && [ -f /etc/ords/certs/corp/corp_key.key ]; then
+          cp /etc/ords/certs/corp/corp_cert.crt /etc/ords/config/ssl/cert.crt 2>/dev/null || true
+          cp /etc/ords/certs/corp/corp_key.key /etc/ords/config/ssl/key.key 2>/dev/null || true
+        elif [ -f /etc/ords/certs/user_ca/localhost.crt ] && [ -f /etc/ords/certs/user_ca/localhost.key ]; then
+          cp /etc/ords/certs/user_ca/localhost.crt /etc/ords/config/ssl/cert.crt 2>/dev/null || true
+          cp /etc/ords/certs/user_ca/localhost.key /etc/ords/config/ssl/key.key 2>/dev/null || true
+        elif [ -f /etc/ords/certs/self_signed/self_signed.crt ] && [ -f /etc/ords/certs/self_signed/self_signed.key ]; then
+          cp /etc/ords/certs/self_signed/self_signed.crt /etc/ords/config/ssl/cert.crt 2>/dev/null || true
+          cp /etc/ords/certs/self_signed/self_signed.key /etc/ords/config/ssl/key.key 2>/dev/null || true
+        else
+          [ -f /etc/ords/certs/localhost.crt ] && cp /etc/ords/certs/localhost.crt /etc/ords/config/ssl/cert.crt 2>/dev/null || true
+          [ -f /etc/ords/certs/localhost.key ] && cp /etc/ords/certs/localhost.key /etc/ords/config/ssl/key.key 2>/dev/null || true
+        fi
+        rm -rf /etc/ords/config/databases/*/wallet /etc/ords/config/databases/*/*/wallet 2>/dev/null || true
+        if [ -f /run/secrets/ords_listener_password ]; then
+          APEX_LISTENER_PWD=$(cat /run/secrets/ords_listener_password)
+        fi
+        if [ -n "$$APEX_LISTENER_PWD" ]; then
+          find /etc/ords/config/databases/ -name "pool.xml" -exec sed -i "s|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$$APEX_LISTENER_PWD</entry>|g" {} + 2>/dev/null || true
+        fi
+        mkdir -p /etc/ords/config/global
+        printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">' '<properties>' '<entry key="database.api.enabled">true</entry>' '<entry key="feature.sdw">true</entry>' '<entry key="restEnabledSql.active">true</entry>' '<entry key="standalone.doc.root">/opt/oracle/docroot</entry>' "<entry key=\"standalone.http.port\">8088</entry>" "<entry key=\"standalone.https.port\">8448</entry>" '<entry key="standalone.static.context.path">/i</entry>' '<entry key="standalone.static.path">/opt/oracle/apex_images/images</entry>' '</properties>' > /etc/ords/config/global/settings.xml
+        exec ords --config /etc/ords/config serve
+    environment:
+      - DBHOST=db-proxy
+      - DBPORT=1521
+      - DBSERVICENAME=FREEPDB1
+      - JAVA_TOOL_OPTIONS=-Xms512m -Xmx2048m -XX:+UseG1GC
+      - _JAVA_OPTIONS=-Xms512m -Xmx2048m
+    secrets:
+      - source: proxy_db_sys_password
+        target: oracle_pwd
+      - ords_listener_password
+    depends_on:
+        db-proxy:
+          condition: service_healthy
+        db-alise:
+          condition: service_healthy
+  
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 1024M
+    volumes:
+      - apex_images_26_1:/opt/oracle/apex_images:ro
+      - ./config/ords/proxy:/etc/ords/config:rw
+      - ./config/certs:/etc/ords/certs:ro
+      - ./docs/dev-hub.html:/opt/oracle/docroot/index.html:ro
+      - ./docs/dev-hub.html:/opt/oracle/docroot/dev-hub.html:ro
+      - ./docs/dev-hub.html:/opt/oracle/docroot/hub.html:ro
+      - ./docs:/opt/oracle/docroot/docs:ro
+      - ./metrics:/opt/oracle/docroot/metrics:ro
+      - ./config/blueprints:/opt/oracle/docroot/blueprints:ro
+    restart: unless-stopped
+
+  db-alise:
+    image: container-registry.oracle.com/database/free:latest
+    container_name: db-alise
+    hostname: db-alise
+    shm_size: 2g
+    security_opt:
+      - "no-new-privileges:true"
+    ports:
+      - "127.0.0.1:1533:1521"
+    environment:
+      - ORACLE_PASSWORD_FILE=/run/secrets/oracle_pwd
+      - ORACLE_SID=FREE
+      - ORACLE_PDB=FREEPDB1
+      - TNS_ADMIN=/opt/oracle/admin/FREE/wallet
+      - CONFIGURE_TDE=true
+      - ENCRYPT_TABLESPACES=ALL
+    volumes:
+      - alise_oradata:/opt/oracle/oradata
+      - ./config/tns_admin:/opt/oracle/admin/FREE/wallet:rw
+      - apex_images_26_1:/opt/oracle/apex_images
+    secrets:
+      - source: alise_db_sys_password
+        target: oracle_pwd
+    deploy:
+      resources:
+        limits:
+          cpus: '2.00'
+          memory: 3072M
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - (echo "SELECT 'ALIVE' FROM DUAL;" | sqlplus -L -S / as sysdba 2>/dev/null | grep -q 'ALIVE') || (echo "SELECT 'ALIVE' FROM DUAL;" | sqlplus -L -S sys/`cat /run/secrets/oracle_pwd 2>/dev/null`@localhost:1521/FREEPDB1 as sysdba 2>/dev/null | grep -q 'ALIVE') || (nc -z localhost 1521 2>/dev/null) || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 25
+      start_period: 30s
+    restart: unless-stopped
+
+
+volumes:
+  proxy_oradata:
+  apex_images_26_1:
+  alise_oradata:
+
+secrets:
+  proxy_db_sys_password:
+    external: true
+  alise_db_sys_password:
+    external: true
+  apex_db_sys_password:
+    external: true
+  ords_listener_password:
+    external: true

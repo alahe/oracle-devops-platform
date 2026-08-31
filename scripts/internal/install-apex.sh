@@ -439,6 +439,17 @@ if [ "$IS_CONTAINER_AVAIL" = "true" ]; then
   # 2. Pakime lahti konteineri sees (host-süsteemi viirusetõrje seda ei kontrolli)
   print_progress "Pakin APEX tarkvara lahti konteineris (${CONTAINER_NAME})" 0 1
   podman exec -u root "$CONTAINER_NAME" unzip -o -q /tmp/apex-latest.zip -d /tmp/apex_install/ >/dev/null 2>&1 || true
+  # Bypass redundant interim recompilations in Phase 1 (full recompilation runs at the end in Phase 3)
+  podman exec -u root "$CONTAINER_NAME" sed -i 's/sys.utl_recomp.recomp_parallel/null; -- utl_recomp/g' /tmp/apex_install/apex/coreins.sql 2>/dev/null || true
+  podman exec -u root "$CONTAINER_NAME" sed -i 's/sys.utl_recomp.recomp_serial/null; -- utl_recomp/g' /tmp/apex_install/apex/coreins.sql 2>/dev/null || true
+  # Fix Oracle APEX timing stack overflow (prevents ORA-01704 string literal too long on action 120)
+  podman exec -u root "$CONTAINER_NAME" sed -i "s/'\^TIMING_ALL_VALUES'||//g" /tmp/apex_install/apex/core/scripts/timing_start.sql 2>/dev/null || true
+  # Fix Oracle APEX define character sensitivity by making internal script calls direct relative (@@)
+  podman exec -u root "$CONTAINER_NAME" sh -c "find /tmp/apex_install/apex -type f \( -name '*.sql' -o -name '*.plb' \) -exec sed -i 's/@\^PREFIX\./@@/g' {} +" 2>/dev/null || true
+  # Disable fragile SQL*Plus errorlogging table writes that trigger SP2-1519 and fatal ORA-03114 disconnects during recompilation
+  podman exec -u root "$CONTAINER_NAME" sh -c "find /tmp/apex_install/apex -type f -name '*.sql' -exec sed -i 's/set errorlogging on.*/set errorlogging off/g' {} +" 2>/dev/null || true
+  # Bypass 25,000-line CJK PDF extra font loader to prevent PGA memory exhaustion in Free DB containers
+  podman exec -u root "$CONTAINER_NAME" sh -c "echo 'prompt ...extra PDF fonts skipped' > /tmp/apex_install/apex/core/apex_install_pdf_extra_fonts_data.sql" 2>/dev/null || true
   podman exec -u root "$CONTAINER_NAME" chown -R oracle:oinstall /tmp/apex_install >/dev/null 2>&1 || true
   
   APEX_SOURCE_DIR="/tmp/apex_install/apex"
@@ -498,7 +509,7 @@ SKIP_APEX_ENGINE_INSTALL=false
 echo "Kontrollin andmebaasis installeeritud APEX-i olekut..."
 DB_APEX_INFO=""
 if [ "$EXEC_MODE" = "CONTAINER" ]; then
-  DB_APEX_INFO=$(podman exec -i "$CONTAINER_NAME" sqlplus -s "$CONN_STR" <<EOF 2>/dev/null | grep -v -E "Connected to|Oracle Database|version" || echo ""
+  DB_APEX_INFO=$(podman exec -i -u oracle "$CONTAINER_NAME" sh -c "export ORACLE_PDB_SID=${DB_SERVICE:-FREEPDB1}; export ORACLE_HOME=\$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n \"\$ORACLE_HOME\" ] && export PATH=\"\$ORACLE_HOME/bin:\$PATH\"; sqlplus -s / as sysdba" <<EOF 2>/dev/null | grep -v -E "Connected to|Oracle Database|version" || echo ""
 SET FEEDBACK OFF
 SET HEADING OFF
 SET PAGESIZE 0
@@ -586,38 +597,46 @@ else
   fi
 
   # Valmistame ette täpse SQL skriptifaili
-  LOCAL_SQL_SCRIPT="$SCRIPT_DIR/../../install_logs/run_apex_install_${DB_SUFFIX}.sql"
-  cat << EOF > "$LOCAL_SQL_SCRIPT"
+  LOCAL_PRE_SQL_SCRIPT="$SCRIPT_DIR/../../install_logs/run_apex_pre_install_${DB_SUFFIX}.sql"
+  cat << EOF > "$LOCAL_PRE_SQL_SCRIPT"
 ALTER SESSION SET CONTAINER = ${DB_SERVICE};
--- Drop partial APEX schemas if present to allow clean fresh installation
-ALTER SESSION SET "_oracle_script" = TRUE;
+
+-- Pre-allocate tablespaces to prevent continuous resize contention during installation
 BEGIN
-    EXECUTE IMMEDIATE 'DROP USER APEX_260100 CASCADE';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-BEGIN
-    EXECUTE IMMEDIATE 'DROP USER APEX_240100 CASCADE';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-BEGIN
-    EXECUTE IMMEDIATE 'DROP USER APEX_230200 CASCADE';
-EXCEPTION WHEN OTHERS THEN NULL;
+  FOR f IN (SELECT file_name, tablespace_name FROM dba_data_files) LOOP
+    IF f.tablespace_name = 'SYSAUX' THEN
+      BEGIN 
+        EXECUTE IMMEDIATE 'ALTER DATABASE DATAFILE ''' || f.file_name || ''' RESIZE 2048M';
+        EXECUTE IMMEDIATE 'ALTER DATABASE DATAFILE ''' || f.file_name || ''' AUTOEXTEND ON NEXT 128M MAXSIZE UNLIMITED';
+      EXCEPTION WHEN OTHERS THEN NULL; 
+      END;
+    ELSIF f.tablespace_name = 'SYSTEM' THEN
+      BEGIN 
+        EXECUTE IMMEDIATE 'ALTER DATABASE DATAFILE ''' || f.file_name || ''' RESIZE 1024M';
+        EXECUTE IMMEDIATE 'ALTER DATABASE DATAFILE ''' || f.file_name || ''' AUTOEXTEND ON NEXT 128M MAXSIZE UNLIMITED';
+      EXCEPTION WHEN OTHERS THEN NULL; 
+      END;
+    ELSIF f.tablespace_name = 'UNDOTBS1' THEN
+      BEGIN 
+        EXECUTE IMMEDIATE 'ALTER DATABASE DATAFILE ''' || f.file_name || ''' RESIZE 512M';
+        EXECUTE IMMEDIATE 'ALTER DATABASE DATAFILE ''' || f.file_name || ''' AUTOEXTEND ON NEXT 64M MAXSIZE UNLIMITED';
+      EXCEPTION WHEN OTHERS THEN NULL; 
+      END;
+    END IF;
+  END LOOP;
 END;
 /
 
--- TASK-018: Optimize DB Memory and PL/SQL Compiler safely within Oracle Free RAM limits
+-- TASK-018: Optimize DB Memory, Resource Manager and PL/SQL Compiler safely within Oracle Free RAM limits
 BEGIN
+    EXECUTE IMMEDIATE 'ALTER SYSTEM SET resource_manager_plan = '''' SCOPE = MEMORY';
     EXECUTE IMMEDIATE 'ALTER SYSTEM SET pga_aggregate_target = 512M SCOPE = MEMORY';
     EXECUTE IMMEDIATE 'ALTER SYSTEM SET sga_target = 1024M SCOPE = MEMORY';
     EXECUTE IMMEDIATE 'ALTER SYSTEM SET plsql_optimize_level = 2 SCOPE = MEMORY';
+    EXECUTE IMMEDIATE 'ALTER SESSION SET "_oracle_script" = TRUE';
 EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
-
--- Run main APEX installation (${APEX_INSTALL_SQL:-apexins.sql}): @script tablespace_apex tablespace_files tablespace_temp images
-@$([ "$RUNTIME_ONLY" = "true" ] && echo "apxrtins.sql" || echo "apexins.sql") SYSAUX SYSAUX TEMP /i/
 
 EXIT;
 EOF
@@ -830,24 +849,32 @@ EOF
   # Do not pause other active database containers to avoid clock drift / ORA-12752 PMON termination
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
     podman exec "$CONTAINER_NAME" mkdir -p /tmp/apex_install/apex 2>/dev/null || true
-    podman cp "$LOCAL_SQL_SCRIPT" "$CONTAINER_NAME":/tmp/apex_install/apex/run_install.sql
+    podman cp "$LOCAL_PRE_SQL_SCRIPT" "$CONTAINER_NAME":/tmp/apex_install/apex/run_pre_install.sql
     podman cp "$LOCAL_POST_SQL_SCRIPT" "$CONTAINER_NAME":/tmp/apex_install/apex/run_post_install.sql
     
-    cat << 'RUN_EOF' > /tmp/run_apex_in_container.sh
+    APEX_ENGINE_SQL="apexins.sql"
+    [ "$RUNTIME_ONLY" = "true" ] && APEX_ENGINE_SQL="apxrtins.sql"
+
+    cat << RUN_EOF > /tmp/run_apex_in_container.sh
 #!/bin/bash
-export ORACLE_HOME=$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1)
-[ -n "$ORACLE_HOME" ] && export PATH="$ORACLE_HOME/bin:$PATH"
+export ORACLE_HOME=\$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1)
+[ -n "\$ORACLE_HOME" ] && export PATH="\$ORACLE_HOME/bin:\$PATH"
+export ORACLE_SID="FREE"
+export ORACLE_PDB_SID="${DB_SERVICE:-FREEPDB1}"
+unset TWO_TASK
+unset TNS_ADMIN
 cd /tmp/apex_install/apex
-sqlplus -s / as sysdba @run_install.sql
+sqlplus -s / as sysdba @run_pre_install.sql
+sqlplus -s / as sysdba @${APEX_ENGINE_SQL} SYSAUX SYSAUX TEMP /i/
 sqlplus -s / as sysdba @run_post_install.sql
 RUN_EOF
     chmod +x /tmp/run_apex_in_container.sh
     podman cp /tmp/run_apex_in_container.sh "$CONTAINER_NAME":/tmp/apex_install/apex/run.sh
-    podman exec "$CONTAINER_NAME" chmod 755 /tmp/apex_install/apex/run.sh /tmp/apex_install/apex/run_install.sql /tmp/apex_install/apex/run_post_install.sql 2>/dev/null || true
+    podman exec "$CONTAINER_NAME" chmod 755 /tmp/apex_install/apex/run.sh /tmp/apex_install/apex/run_pre_install.sql /tmp/apex_install/apex/run_post_install.sql 2>/dev/null || true
     podman exec -i -w /tmp/apex_install/apex "$CONTAINER_NAME" /tmp/apex_install/apex/run.sh > "$SQL_LOG_FILE" 2>&1 &
     rm -f /tmp/run_apex_in_container.sh
   else
-    $DB_CLI "$CONN_STR" @"$LOCAL_SQL_SCRIPT" >> "$SQL_LOG_FILE" 2>&1 && $DB_CLI "$CONN_STR" @"$LOCAL_POST_SQL_SCRIPT" >> "$SQL_LOG_FILE" 2>&1 &
+    $DB_CLI "$CONN_STR" @"$LOCAL_PRE_SQL_SCRIPT" >> "$SQL_LOG_FILE" 2>&1 && $DB_CLI "$CONN_STR" @"$LOCAL_POST_SQL_SCRIPT" >> "$SQL_LOG_FILE" 2>&1 &
   fi
   SQL_PID=$!
 
@@ -869,13 +896,12 @@ RUN_EOF
   # Kontrollime kas APEX paigaldus oli edukas (VALID staatus registris)
   local_ver_check=""
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
-    local_ver_check=$(podman exec -i "$CONTAINER_NAME" sh -c 'export ORACLE_HOME=$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n "$ORACLE_HOME" ] && export PATH="$ORACLE_HOME/bin:$PATH"; sqlplus -s / as sysdba <<EOF
+    local_ver_check=$(podman exec -i "$CONTAINER_NAME" sh -c "export ORACLE_HOME=\$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n \"\$ORACLE_HOME\" ] && export PATH=\"\$ORACLE_HOME/bin:\$PATH\"; export ORACLE_PDB_SID=\"${DB_SERVICE:-FREEPDB1}\"; sqlplus -s / as sysdba <<EOF
 SET FEEDBACK OFF
 SET HEADING OFF
-ALTER SESSION SET CONTAINER = '"${DB_SERVICE}"';
-SELECT status FROM dba_registry WHERE comp_id = '\''APEX'\'';
+SELECT status FROM dba_registry WHERE comp_id = 'APEX';
 EXIT;
-EOF' 2>/dev/null | grep -E 'VALID|INVALID' || echo "")
+EOF" 2>/dev/null | grep -E 'VALID|INVALID' || echo "")
   else
     local_ver_check=$($DB_CLI "$CONN_STR" <<EOF 2>/dev/null | grep -E 'VALID|INVALID' || echo ""
 SET FEEDBACK OFF
@@ -928,7 +954,7 @@ if [ "$SKIP_ORDS" = "false" ] && podman container exists "$ORDS_CONTAINER" 2>/de
     # Configure default pool
     podman exec -i "$ORDS_CONTAINER" bash -c "
       mkdir -p /etc/ords/config/databases/default
-      cat << 'EOF_POOL' > /etc/ords/config/databases/default/pool.xml
+      cat << EOF_POOL > /etc/ords/config/databases/default/pool.xml
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">
 <properties>
@@ -939,6 +965,8 @@ if [ "$SKIP_ORDS" = "false" ] && podman container exists "$ORDS_CONTAINER" 2>/de
 <entry key=\"db.username\">ORDS_PUBLIC_USER</entry>
 <entry key=\"db.password\">${APEX_LISTENER_PASSWORD}</entry>
 <entry key=\"feature.sdw\">true</entry>
+<entry key=\"feature.apex\">true</entry>
+<entry key=\"plsql.gateway.mode\">proxied</entry>
 <entry key=\"restEnabledSql.active\">true</entry>
 </properties>
 EOF_POOL
@@ -948,7 +976,7 @@ EOF_POOL
     if [ -n "$pool_suffix" ] && [ "$pool_suffix" != "default" ]; then
       podman exec -i "$ORDS_CONTAINER" bash -c "
         mkdir -p /etc/ords/config/databases/${pool_suffix}
-        cat << 'EOF_POOL' > /etc/ords/config/databases/${pool_suffix}/pool.xml
+        cat << EOF_POOL > /etc/ords/config/databases/${pool_suffix}/pool.xml
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">
 <properties>
@@ -959,6 +987,8 @@ EOF_POOL
 <entry key=\"db.username\">ORDS_PUBLIC_USER</entry>
 <entry key=\"db.password\">${APEX_LISTENER_PASSWORD}</entry>
 <entry key=\"feature.sdw\">true</entry>
+<entry key=\"feature.apex\">true</entry>
+<entry key=\"plsql.gateway.mode\">proxied</entry>
 <entry key=\"restEnabledSql.active\">true</entry>
 </properties>
 EOF_POOL

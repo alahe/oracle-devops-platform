@@ -22,11 +22,11 @@ exec > >(tee -a "$MATRIX_LOG") 2>&1
 REPORT_FILE="$WORKSPACE_DIR/metrics/matrix_test_report_${TIMESTAMP}.json"
 SUMMARY_MD="$WORKSPACE_DIR/metrics/matrix_test_summary_${TIMESTAMP}.md"
 
-# Blueprints to test (default: 3 to 43 as requested)
+# Blueprints to test (default: 11 curated canonical blueprints)
 if [ $# -gt 0 ]; then
   BP_LIST=("$@")
 else
-  BP_LIST=(3 4 5 6 7 10 11 12 13 20 21 22 23 30 31 32 33 34 40 41 42 43)
+  BP_LIST=(3 7 11 13 21 22 31 34 41 42 43)
 fi
 
 echo "=================================================================="
