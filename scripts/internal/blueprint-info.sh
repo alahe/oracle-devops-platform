@@ -98,8 +98,15 @@ get_blueprint_meta() {
   local title=""
   local desc=""
 
-  title=$(grep -m 1 -E "^# STSENAARIUM|^# SCENARIO|^# BLUEPRINT" "$bp_file" 2>/dev/null | sed -E 's/^#[[:space:]]*//' || echo "")
+  title=$(grep -m 1 -E "^# Blueprint [0-9]+:|^# STSENAARIUM|^# SCENARIO|^# BLUEPRINT" "$bp_file" 2>/dev/null | sed -E 's/^#[[:space:]]*//' || echo "")
+  if [ -z "$title" ]; then
+    title=$(head -n 1 "$bp_file" 2>/dev/null | grep "^#" | sed -E 's/^#[[:space:]]*//' || echo "")
+  fi
+
   desc=$(grep -m 1 -E "^# Kasutus:|^# Usage:|^# Eesmärk:" "$bp_file" 2>/dev/null | sed -E 's/^#[[:space:]]*(Kasutus:|Usage:|Eesmärk:)[[:space:]]*//' || echo "")
+  if [ -z "$desc" ]; then
+    desc=$(sed -n '2p' "$bp_file" 2>/dev/null | grep "^#" | sed -E 's/^#[[:space:]]*//' || echo "")
+  fi
 
   if [ -z "$title" ]; then
     title="Blueprint ${num} ($(basename "$bp_file"))"
@@ -137,6 +144,7 @@ extract_blueprint_containers() {
   skip_publisher=$(grep -E "^SKIP_PUBLISHER=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
   skip_forms=$(grep -E "^SKIP_FORMS=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
   skip_web_ide=$(grep -E "^SKIP_WEB_IDE=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
+  web_ide_prof=$(grep -E "^WEB_IDE_PROFILE=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
 
   local containers=()
 
@@ -176,7 +184,7 @@ extract_blueprint_containers() {
   # Web IDE container detection
   local bp_basename
   bp_basename=$(basename "$bp_file")
-  if [[ "$bp_basename" == *"web-ide"* ]] || [ "$skip_web_ide" = "false" ]; then
+  if [ "$web_ide_prof" = "web-ide-dev" ] || [ "$skip_web_ide" = "false" ]; then
     containers+=("web-ide-dev")
   fi
 
@@ -241,22 +249,20 @@ print_blueprints_table() {
     # Decade group header
     local cur_group=""
     if [ "$num" -lt 10 ]; then
-      cur_group="Core DB & APEX (1–9)"
+      cur_group="Grupp 1: Üksiktooted Eraldi (Standalone Isolates 1–9)"
     elif [ "$num" -lt 20 ]; then
-      cur_group="Analytics Publisher (10–19)"
+      cur_group="Grupp 2: Konsolideeritud Teenused (Combined Subsystems 10–19)"
     elif [ "$num" -lt 30 ]; then
-      cur_group="Oracle Forms 14c (20–29)"
-    elif [ "$num" -lt 40 ]; then
-      cur_group="Web IDE & Cloud Lab (30–39)"
+      cur_group="Grupp 3: Kihiline Ettevõtte Virn (Layered Stacks 20–29)"
     else
-      cur_group="Ultimate Enterprise (40+)"
+      cur_group="Grupp 4: Hübriidsed Virnad (Hybrid Stacks 30–39)"
     fi
 
     if [ -z "$filter" ] && [ "$cur_group" != "$last_group" ]; then
       if [ -n "$last_group" ]; then
         printf "├────┼──────────────────────────────────────────┼─────────────────────────────┼──────────────────────────────────────────────┤\n"
       fi
-      printf "│ \033[1;33m%-2s\033[0m │ \033[1;33m%-40s\033[0m │ %-27s │ %-44s │\n" "::" "🔹 Seeria: ${cur_group}" "" ""
+      printf "│ \033[1;33m%-2s\033[0m │ \033[1;33m%-40s\033[0m │ %-27s │ %-44s │\n" "::" "🔹 ${cur_group}" "" ""
       printf "├────┼──────────────────────────────────────────┼─────────────────────────────┼──────────────────────────────────────────────┤\n"
       last_group="$cur_group"
     fi
@@ -276,13 +282,13 @@ print_blueprints_table() {
   echo -e "└────┴──────────────────────────────────────────┴─────────────────────────────┴──────────────────────────────────────────────┘\n"
 
   if [ -n "$filter" ] && [ "$match_count" -eq 0 ]; then
-    echo -e "   ℹ️  Ühtegi blueprinti ei leitud otsingusõnaga: '${YELLOW}$filter${NC}'"
+    echo -e "   ℹ️  No blueprints found matching search keyword: '${YELLOW}$filter${NC}'"
   fi
 
-  echo -e "💡 ${YELLOW}Käivitamine toodangus/arenduses (ilma resetita):${NC}  ./scripts/setup-all.sh -b <NUM|NIMI>"
-  echo -e "🧪 ${YELLOW}Käivitamine automaattestimises (puhta algseisuga):${NC} ./scripts/setup-all.sh -tb <NUM|NIMI|all>"
-  echo -e "🔍 ${YELLOW}Detailse info vaatamine:${NC}                        ./scripts/setup-all.sh -sb <NUM|NIMI>"
-  echo -e "🔎 ${YELLOW}Märksõna järgi otsing:${NC}                          ./scripts/setup-all.sh --search <MÄRKSÕNA>\n"
+  echo -e "💡 ${YELLOW}Run in production/development (no reset):${NC}    ./scripts/setup-all.sh -b <NUM|NAME>"
+  echo -e "🧪 ${YELLOW}Run in automated test mode (clean slate):${NC}    ./scripts/setup-all.sh -tb <NUM|NAME|all>"
+  echo -e "🔍 ${YELLOW}Inspect detailed configuration:${NC}              ./scripts/setup-all.sh -sb <NUM|NAME>"
+  echo -e "🔎 ${YELLOW}Search blueprints by keyword:${NC}                ./scripts/setup-all.sh --search <KEYWORD>\n"
 }
 
 # ----------------------------------------------------------------------------
@@ -294,8 +300,8 @@ show_blueprint_details() {
   bp_file=$(get_blueprint_file "$query")
 
   if [ -z "$bp_file" ] || [ ! -f "$bp_file" ]; then
-    echo -e "\n${RED}❌ VIGA: Blueprinti '${query}' ei leitud!${NC}"
-    echo -e "ℹ️  Kasuta käsku: ${CYAN}./scripts/setup-all.sh --list-blueprints${NC} nimekirja vaatamiseks.\n"
+    echo -e "\n${RED}❌ ERROR: Blueprint '${query}' not found!${NC}"
+    echo -e "ℹ️  Use command: ${CYAN}./scripts/setup-all.sh --list-blueprints${NC} to view available blueprints.\n"
     return 1
   fi
 
@@ -379,7 +385,7 @@ simulate_blueprint_dry_run() {
   local bp_file
   bp_file=$(get_blueprint_file "$query")
   if [ -z "$bp_file" ]; then
-    echo -e "${RED}❌ VIGA: Blueprinti '${query}' ei leitud!${NC}"
+    echo -e "${RED}❌ ERROR: Blueprint '${query}' not found!${NC}"
     return 1
   fi
 
@@ -415,10 +421,10 @@ simulate_blueprint_dry_run() {
 list_blueprint_test_reports() {
   local reports_dir="$WORKSPACE_DIR/tests/reports/blueprints"
   echo -e "\n${CYAN}==================================================================${NC}"
-  echo -e "${BOLD}📊   BLUEPRINTIDE TESTIARUANNETE OLEK (BLUEPRINT TEST REPORTS)${NC}"
+  echo -e "${BOLD}📊   BLUEPRINT TEST REPORTS STATUS (BLUEPRINT TEST REPORTS)${NC}"
   echo -e "${CYAN}==================================================================${NC}"
   printf "┌────┬──────────────────────────────────────────┬──────────────┬─────────────────────────────┐\n"
-  printf "│ %-2s │ %-40s │ %-12s │ %-27s │\n" "Nr" "Blueprint" "Aruanne" "Viimane Testi Fail"
+  printf "│ %-2s │ %-40s │ %-12s │ %-27s │\n" "No" "Blueprint" "Report" "Latest Test File"
   printf "├────┼──────────────────────────────────────────┼──────────────┼─────────────────────────────┤\n"
 
   local all_files=()
@@ -433,15 +439,15 @@ list_blueprint_test_reports() {
     num=$(echo "$bp_name" | sed -E 's/^\.env\.([0-9]+).*/\1/')
     local rep_file="$reports_dir/blueprint_${num}_report.md"
 
-    local status="❌ Puudub"
+    local status="❌ Missing"
     local report_name="-"
     if [ -f "$rep_file" ]; then
-      status="✅ Olemas"
+      status="✅ Present"
       report_name="blueprint_${num}_report.md"
     fi
 
     printf "│ %2d │ %-40s │ %-12s │ %-27s │\n" "$num" "$bp_name" "$status" "$report_name"
   done
   printf "└────┴──────────────────────────────────────────┴──────────────┴─────────────────────────────┘\n"
-  echo -e "📁 ${YELLOW}Aruannete kaust:${NC} $reports_dir\n"
+  echo -e "📁 ${YELLOW}Reports directory:${NC} $reports_dir\n"
 }

@@ -20,10 +20,90 @@
     {
       "timestamp": "2026-08-30T17:39:25.305960",
       "duration_seconds": 79
+    },
+    {
+      "timestamp": "2026-09-01T17:20:51.919217",
+      "duration_seconds": 220
+    },
+    {
+      "timestamp": "2026-09-01T17:32:38.200443",
+      "duration_seconds": 241
+    },
+    {
+      "timestamp": "2026-09-01T17:37:29.488116",
+      "duration_seconds": 305
+    },
+    {
+      "timestamp": "2026-09-01T19:15:20.220911",
+      "duration_seconds": 235
+    },
+    {
+      "timestamp": "2026-09-01T19:24:12.303832",
+      "duration_seconds": 373
+    },
+    {
+      "timestamp": "2026-09-02T00:11:52.801107",
+      "duration_seconds": 246
+    },
+    {
+      "timestamp": "2026-09-02T00:17:53.990575",
+      "duration_seconds": 314
+    },
+    {
+      "timestamp": "2026-09-02T05:29:24.616058",
+      "duration_seconds": 234
+    },
+    {
+      "timestamp": "2026-09-02T05:35:34.260811",
+      "duration_seconds": 298
+    },
+    {
+      "timestamp": "2026-09-02T07:27:48.157725",
+      "duration_seconds": 247
+    },
+    {
+      "timestamp": "2026-09-02T07:34:02.968689",
+      "duration_seconds": 312
+    },
+    {
+      "timestamp": "2026-09-02T07:46:52.553519",
+      "duration_seconds": 256
+    },
+    {
+      "timestamp": "2026-09-02T07:53:24.967579",
+      "duration_seconds": 325
+    },
+    {
+      "timestamp": "2026-09-02T08:05:54.741167",
+      "duration_seconds": 218
+    },
+    {
+      "timestamp": "2026-09-02T08:18:52.908650",
+      "duration_seconds": 224
+    },
+    {
+      "timestamp": "2026-09-02T08:26:22.029994",
+      "duration_seconds": 295
+    },
+    {
+      "timestamp": "2026-09-02T08:39:11.734285",
+      "duration_seconds": 229
+    },
+    {
+      "timestamp": "2026-09-02T08:46:36.849273",
+      "duration_seconds": 302
+    },
+    {
+      "timestamp": "2026-09-02T08:59:17.291773",
+      "duration_seconds": 208
+    },
+    {
+      "timestamp": "2026-09-02T09:06:36.229367",
+      "duration_seconds": 275
     }
   ],
-  "runs_count": 5,
-  "average_duration_seconds": 150,
+  "runs_count": 25,
+  "average_duration_seconds": 244,
   "min_duration_seconds": 70,
   "max_duration_seconds": 436
 }

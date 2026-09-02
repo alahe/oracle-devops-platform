@@ -57,7 +57,7 @@ check_ports_and_analyze_network() {
     echo "${WEB_IDE_CONTAINER_NAME:-web-ide-dev}:${WEB_IDE_HTTPS_PORT:-8449}:WebIDE-HTTPS" >> "$temp_file"
   fi
 
-  # 3. Kontrollime pordikonflikte aktiivsete teenuste vahel (Duplication Check)
+  # 3. Check for port conflicts between active services (Duplication Check)
   local seen_ports=""
   local conflict_details=()
 
@@ -72,55 +72,59 @@ check_ports_and_analyze_network() {
     fi
   done < "$temp_file"
 
-  # 4. Trükime võrgu analüüsi ja marsruutimise ülevaate
+  # 4. Network Analysis and Routing Overview
   echo ""
-  echo -e "${YELLOW}🌐 VÕRGU TOPOLOOGIA JA MARSRUUTIMISE ANALÜÜS (Network Analysis):${NC}"
-  echo -e "   ├─ Võrgu režiim:       Podman Bridge Network '${CYAN}oracle-devops-platform_default${NC}'"
-  echo -e "   ├─ Turvaala:           Kõik välised pordid on sidustatud rangelt ${GREEN}127.0.0.1 (Loopback Only)${NC}"
-  echo -e "   └─ Suunamised (Port Forwarding & Internal Routing):"
+  echo -e "${YELLOW}🌐 NETWORK TOPOLOGY AND ROUTING ANALYSIS:${NC}"
+  echo -e "   ├─ Network mode:       Podman Bridge Network '${CYAN}oracle-devops-platform_default${NC}'"
+  echo -e "   ├─ Security:           All external ports bound strictly to ${GREEN}127.0.0.1 (Loopback Only)${NC}"
+  echo -e "   └─ Port Forwarding & Internal Routing:"
   while IFS=':' read -r svc port note; do
     [ -z "$port" ] && continue
-    echo -e "      • ${CYAN}${svc}${NC} ➔ Hosti port ${GREEN}127.0.0.1:${port}${NC} (${note})"
+    echo -e "      • ${CYAN}${svc}${NC} ➔ Host port ${GREEN}127.0.0.1:${port}${NC} (${note})"
   done < "$temp_file"
   echo -e "${CYAN}==================================================================${NC}"
 
-  # 5. Kui esineb dubleerimine profiilide vahel:
+  # 5. Profile port conflict detection
   if [ "$has_conflict" = "true" ]; then
-    echo -e "${RED}❌ VIGA: TUVASTATI PORDI KONFLIKT AKTIIVSETE PROFIILIDE VAHEL!${NC}"
+    echo -e "${RED}❌ ERROR: DETECTED PORT CONFLICT BETWEEN ACTIVE PROFILES!${NC}"
     for err in "${conflict_details[@]}"; do
       echo -e "$err"
     done
     echo ""
-    echo -e "${YELLOW}💡 KUIDAS PARANDADA:${NC}"
-    echo -e "   1. Ava konfliktsed profiilifailid kaustast: ${CYAN}config/profiles/databases/${NC} või lokaalne fail ${CYAN}.env${NC}"
-    echo -e "   2. Muuda ühes failis rida '${CYAN}db_port: ...${NC}' või '.env' muutujat n-ö unikaalseks pordiks (nt 1531, 1532, 1533)."
-    echo -e "   3. Käivita paigaldus uuesti: ${GREEN}./scripts/setup-all.sh${NC}"
+    echo -e "${YELLOW}💡 HOW TO RESOLVE:${NC}"
+    echo -e "   1. Open conflicting profile files in: ${CYAN}config/profiles/databases/${NC} or local ${CYAN}.env${NC}"
+    echo -e "   2. Modify line '${CYAN}db_port: ...${NC}' or '.env' variable to a unique port (e.g. 1531, 1532, 1533)."
+    echo -e "   3. Run setup again: ${GREEN}./scripts/setup-all.sh${NC}"
     echo -e "${CYAN}==================================================================${NC}"
     rm -f "$temp_file"
     exit 1
   fi
 
-  # 6. Kontrollime host-masina pordi hõivatust (Occupied Port Check)
+  # 6. Check host machine port occupancy (Occupied Port Check)
   local occupied_ports=()
   while IFS=':' read -r svc port note; do
     [ -z "$port" ] && continue
     if nc -z 127.0.0.1 "$port" 2>/dev/null; then
       if ! podman ps --format '{{.Ports}}' 2>/dev/null | grep -q ":${port}->"; then
-        occupied_ports+=("   - Port ${RED}${port}${NC} (Teenus: ${CYAN}${svc}${NC}) on host-süsteemis teise rakenduse poolt HÕIVATUD!")
+        occupied_ports+=("   - Port ${RED}${port}${NC} (Service: ${CYAN}${svc}${NC}) is OCCUPIED by another process on host system!")
       fi
     fi
   done < "$temp_file"
 
-  rm -f "$temp_file"
-
-  if [ "${#occupied_ports[@]}" -gt 0 ]; then
-    echo -e "${YELLOW}⚠️  HOIATUS: Mõned pordid on host-süsteemis teise protsessi poolt kasutusel!${NC}"
-    for occ in "${occupied_ports[@]}"; do
-      echo -e "$occ"
+  if [ ${#occupied_ports[@]} -gt 0 ]; then
+    echo -e "${RED}❌ ERROR: HOST PORTS ARE ALREADY OCCUPIED BY ANOTHER APPLICATION!${NC}"
+    for err in "${occupied_ports[@]}"; do
+      echo -e "$err"
     done
-    echo -e "   💡 Märkus: Sule teine rakendus või muuda pordi väärtust failis [.env](file://${WORKSPACE_DIR}/.env)."
+    echo ""
+    echo -e "${YELLOW}💡 HOW TO RESOLVE:${NC}"
+    echo -e "   1. Check running host processes: ${CYAN}lsof -i :<PORT> -sTCP:LISTEN${NC}"
+    echo -e "   2. Or change port in ${CYAN}.env${NC} or database profile YAML."
     echo -e "${CYAN}==================================================================${NC}"
+    rm -f "$temp_file"
+    exit 1
   fi
+  rm -f "$temp_file"
 }
 
 check_ports_and_analyze_network

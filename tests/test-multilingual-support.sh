@@ -412,6 +412,79 @@ for k in non_ascii_keys:
       echo "$MR_RESULT" | tail -n +2
     fi
   fi
+
+  # 1.7 Shell Scripts Canonical English Comments Audit (Rule 9.1)
+  TESTS_TOTAL=$((TESTS_TOTAL + 1))
+  log_ui "  └─ 7. Shell-skriptide kanooniliste ingliskeelsete kommentaaride audit..."
+
+  COMMENTS_RESULT=$(python3 -c '
+import glob, re, os
+
+workspace = "'"$WORKSPACE_DIR"'"
+scripts = sorted(glob.glob(os.path.join(workspace, "scripts/**/*.sh"), recursive=True))
+
+et_patterns = [
+    r"\b(Paigaldan|paigaldame|Käivitan|käivitame|Kustutan|kustutame|Peatan|peatame)\b",
+    r"\b(Tuvastame|tuvastame|Kontrollin|kontrollime|Seadistame|seadistame|Initsialiseerime)\b",
+    r"\b(Laeme|laeme|Ekspordime|ekspordime|Impordime|impordime|Genereerime|genereerime)\b",
+    r"\b(Viga:|viga:|Edukas|edukas|Loodud|loodud|Lõpetatud|lõpetatud|Vahele jäetud)\b",
+    r"\b(andmebaasi|andmebaas|kasutajakonto|võtmehoidja|lõikelaud)\b"
+]
+
+found = []
+for s in scripts:
+    if "i18n.sh" in s:
+        continue
+    rel = os.path.relpath(s, workspace)
+    with open(s, "r", encoding="utf-8", errors="ignore") as f:
+        lines = f.readlines()
+    for idx, line in enumerate(lines, 1):
+        if "#" in line:
+            comment = line[line.find("#"):]
+            for pat in et_patterns:
+                if re.search(pat, comment, re.IGNORECASE):
+                    found.append(f"{rel}:{idx} -> {line.strip()}")
+                    break
+
+print(f"{len(found)}")
+for item in found:
+    print(f"❌ Mitte-ingliskeelne kommentaar: {item}")
+')
+
+  COMMENTS_ERR_CNT=$(echo "$COMMENTS_RESULT" | head -n 1)
+  if [ "$COMMENTS_ERR_CNT" -eq 0 ]; then
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+    log_ui "     ${GREEN}✅ 100% Ingliskeelsed kommentaarid: Kõik shell-skriptid vastavad kanoonilisele standardile!${NC}"
+  else
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    log_ui "     ${RED}❌ Tuvastati ${COMMENTS_ERR_CNT} tõlkimata kommentaari shell-skriptides!${NC}"
+    if [ "$JSON_MODE" = "false" ]; then
+      echo "$COMMENTS_RESULT" | tail -n +2
+    fi
+  fi
+
+  # 1.8 Multi-Language CLI Output Rendering Test across 6 Languages
+  TESTS_TOTAL=$((TESTS_TOTAL + 1))
+  log_ui "  └─ 8. CLI mitmekeelse väljundi renderdamine kõigis 6 keeles..."
+
+  CLI_ERR=0
+  for l in en et fi sv lv lt; do
+    out=$("$WORKSPACE_DIR/scripts/get-password.sh" --lang "$l" help 2>&1 || true)
+    if [ -z "$out" ]; then
+      CLI_ERR=$((CLI_ERR + 1))
+      log_ui "     ${RED}❌ Väljund puudub keelel: $l${NC}"
+    elif [ "$VERBOSE" = "true" ]; then
+      header_sample=$(echo "$out" | grep -E "(MATRIX|MAATRIKS|MATRIISI|MATRIS|MATRICA)" | head -n 1)
+      log_ui "     ${GREEN}✓${NC} [$l]: $header_sample"
+    fi
+  done
+
+  if [ $CLI_ERR -eq 0 ]; then
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+    log_ui "     ${GREEN}✅ CLI tööriistade mitmekeelne väljund toimib sujuvalt kõigis 6 toetatud keeles!${NC}"
+  else
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+  fi
   return 0
 }
 

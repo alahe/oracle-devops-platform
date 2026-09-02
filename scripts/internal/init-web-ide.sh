@@ -34,7 +34,7 @@ echo "=================================================================="
 WEB_IDE_CONTAINER="${WEB_IDE_CONTAINER_NAME:-web-ide-dev}"
 
 if ! podman container exists "$WEB_IDE_CONTAINER" 2>/dev/null; then
-  echo "ℹ️  Web IDE konteiner '$WEB_IDE_CONTAINER' ei ole veel käivitatud. Jätkan seadistust."
+  echo "ℹ️  Web IDE container '$WEB_IDE_CONTAINER' is not running yet. Continuing setup."
   exit 0
 fi
 
@@ -43,14 +43,14 @@ TNS_DIR="$WORKSPACE_DIR/config/tns_admin_container"
 [ ! -d "$TNS_DIR" ] && TNS_DIR="$WORKSPACE_DIR/config/tns_admin"
 
 if [ -d "$TNS_DIR" ]; then
-  echo "🔒 Sünkroniseerin SEPS Walleti Web IDE konteineriga..."
+  echo "🔒 Synchronizing SEPS Wallet with Web IDE container..."
   podman exec -i "$WEB_IDE_CONTAINER" mkdir -p /config/.oracle/tns_admin 2>/dev/null || true
   podman cp "$TNS_DIR/." "$WEB_IDE_CONTAINER:/config/.oracle/tns_admin/" 2>/dev/null || true
-  echo "✅ SEPS Wallet edukalt sünkroniseeritud Web IDE konteinerisse!"
+  echo "✅ SEPS Wallet synchronized successfully to Web IDE container!"
 fi
 
 # 2. Register VS Code SQL Developer Connections inside Web IDE
-echo "🔌 Registreerin SQL Developer ühendused Web IDE sisse..."
+echo "🔌 Registering SQL Developer connections in Web IDE..."
 "$SCRIPT_DIR/register-connections.sh" >/dev/null 2>&1 || true
 
 # 3. Dynamic Profile-Driven Extension & Tool Initializer
@@ -64,14 +64,14 @@ EXT_DIR="$WORKSPACE_DIR/binaries/extensions"
 mkdir -p "$EXT_DIR"
 
 if [ -f "$WEB_IDE_PROFILE_YAML" ]; then
-  echo "📦 Parsin VS Code laiendusi profiilist: $(basename "$WEB_IDE_PROFILE_YAML")..."
+  echo "📦 Parsing VS Code extensions from profile: $(basename "$WEB_IDE_PROFILE_YAML")..."
   # Download extensions with explicit download_url if not present
   awk '/extensions:/{flag=1;next}flag' "$WEB_IDE_PROFILE_YAML" 2>/dev/null | grep -E "vsix_path|download_url|id" | while read -r line; do
     if [[ "$line" =~ download_url:[[:space:]]*\"?([^\"]+)\"? ]] && [ -n "${BASH_REMATCH[1]}" ]; then
       url="${BASH_REMATCH[1]}"
       fname=$(basename "$url")
       if [ ! -f "$EXT_DIR/$fname" ]; then
-        echo "⬇️  Laen alla laienduse URL-ilt: $url..."
+        echo "⬇️  Downloading extension from URL: $url..."
         curl -sL "$url" -o "$EXT_DIR/$fname" 2>/dev/null || true
       fi
     fi
@@ -85,7 +85,7 @@ elif [ -d "$EXT_DIR" ]; then
     if [ -f "$vsix" ]; then
       vsix_name=$(basename "$vsix")
       CODE_SERVER_BIN="/app/code-server/bin/code-server"
-      echo "📦 Paigaldan VS Code laiendust: $vsix_name..."
+      echo "📦 Installing VS Code extension: $vsix_name..."
       podman exec -i "$WEB_IDE_CONTAINER" $CODE_SERVER_BIN --install-extension "/workspace/binaries/extensions/$vsix_name" 2>/dev/null || true
     fi
   done
@@ -111,5 +111,5 @@ with open(metrics_file, 'w') as f:
 " 2>/dev/null || true
 
 echo "=================================================================="
-echo "✅ WEB IDE SEADISTUS VALMIS (${DURATION}s)"
+echo "✅ WEB IDE SETUP COMPLETED (${DURATION}s)"
 echo "=================================================================="

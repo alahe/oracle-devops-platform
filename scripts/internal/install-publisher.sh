@@ -236,8 +236,14 @@ if [ "$INSTALL_MODE" = "container" ]; then
         fi
       done
     fi
+
+    # Ensure target publisher DB is running
+    if podman container exists "$TARGET_PUB_DB" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$TARGET_PUB_DB" 2>/dev/null)" != "running" ]; then
+      podman start "$TARGET_PUB_DB" >/dev/null 2>&1 || true
+    fi
+
     podman rm -f app-publisher 2>/dev/null || true
-    NET_NAME=$(podman network ls --format "{{.Name}}" 2>/dev/null | grep -v "bridge" | grep -v "host" | head -n 1)
+    NET_NAME=$(podman inspect "$TARGET_PUB_DB" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || podman inspect "db-publisher" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || podman network ls --format "{{.Name}}" 2>/dev/null | grep -v "bridge" | grep -v "host" | head -n 1 || echo "oracle-free-db-in-prod_default")
     NET_NAME="${NET_NAME:-oracle-free-db-in-prod_default}"
     
     SYS_PWD=$(get_db_sys_password "$TARGET_PUB_DB")

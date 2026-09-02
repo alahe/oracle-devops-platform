@@ -17,7 +17,7 @@ init_db_instance() {
 
   load_db_profile "$target_profile"
 
-  echo "⚙️  Käivitan andmebaasi algseadistuse profiilile '${PROFILE_NAME}' (${container_name})..."
+  echo "⚙️  Starting database initialization for profile '${PROFILE_NAME}' (${container_name})..."
 
   if [ -f "$SCRIPT_DIR/init-db-instance.sql" ]; then
     run_sqlcl -s "$CONN_STR_SYS" @"$SCRIPT_DIR/init-db-instance.sql" >/dev/null 2>&1 || true
@@ -41,7 +41,7 @@ EOF' >/dev/null 2>&1 || true
     "$SCRIPT_DIR/apply-profile-users.sh" "$target_profile" "$container_name"
   fi
 
-  echo "✅ Instants '${container_name}' (${PROFILE_NAME}) algseadistatud edukalt!"
+  echo "✅ Instance '${container_name}' (${PROFILE_NAME}) initialized successfully!"
 }
 
 if [ "${BASH_SOURCE[0]}" -ef "$0" ]; then

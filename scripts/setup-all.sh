@@ -23,6 +23,9 @@ fi
 if [ -f "$SCRIPT_DIR/internal/blueprint-info.sh" ]; then
   source "$SCRIPT_DIR/internal/blueprint-info.sh"
 fi
+if [ -f "$SCRIPT_DIR/internal/snapshot-resolver.sh" ]; then
+  source "$SCRIPT_DIR/internal/snapshot-resolver.sh"
+fi
 
 trap restore_cursor EXIT INT TERM
 
@@ -77,6 +80,10 @@ while [[ $# -gt 0 ]]; do
       export DRY_RUN=true
       shift
       ;;
+    --publish)
+      export PUBLISH_SNAPSHOT=true
+      shift
+      ;;
     -i|--select|--interactive)
       export INTERACTIVE_SELECT=true
       shift
@@ -103,8 +110,8 @@ while [[ $# -gt 0 ]]; do
     -b|--blueprint|--scenario|-s)
       val="$2"
       if [[ "$val" == *","* ]] || [ "$val" = "all" ] || [ "$val" = "ALL" ] || ! [[ "$val" =~ ^[0-9]+$ ]] || [ "$val" -lt 1 ] || [ "$val" -gt 49 ]; then
-        echo -e "\n${RED}❌ VIGA: Toodangu/arenduse režiimis (--blueprint / -b) saab korraga valida AINULT ÜHE arhitektuurimalli vahemikus 1–49!${NC}"
-        echo -e "ℹ️  Mitme kavandi järjestikuseks automaattestimiseks kasuta testrežiimi: ${YELLOW}--test-blueprints 1,3,7${NC} või ${YELLOW}--test-blueprints all${NC}\n"
+        echo -e "\n${RED}❌ ERROR: In blueprint mode (--blueprint / -b), you can select ONLY ONE blueprint between 1–49!${NC}"
+        echo -e "ℹ️  For automated sequential multi-blueprint testing, use test mode: ${YELLOW}--test-blueprints 1,3,7${NC} or ${YELLOW}--test-blueprints all${NC}\n"
         exit 1
       fi
       export SELECTED_BLUEPRINT="$val"
@@ -113,8 +120,8 @@ while [[ $# -gt 0 ]]; do
     -b=*|--blueprint=*|--scenario=*|-s=*)
       val="${1#*=}"
       if [[ "$val" == *","* ]] || [ "$val" = "all" ] || [ "$val" = "ALL" ] || ! [[ "$val" =~ ^[0-9]+$ ]] || [ "$val" -lt 1 ] || [ "$val" -gt 49 ]; then
-        echo -e "\n${RED}❌ VIGA: Toodangu/arenduse režiimis (--blueprint / -b) saab korraga valida AINULT ÜHE arhitektuurimalli vahemikus 1–49!${NC}"
-        echo -e "ℹ️  Mitme kavandi järjestikuseks automaattestimiseks kasuta testrežiimi: ${YELLOW}--test-blueprints 1,3,7${NC} või ${YELLOW}--test-blueprints all${NC}\n"
+        echo -e "\n${RED}❌ ERROR: In blueprint mode (--blueprint / -b), you can select ONLY ONE blueprint between 1–49!${NC}"
+        echo -e "ℹ️  For automated sequential multi-blueprint testing, use test mode: ${YELLOW}--test-blueprints 1,3,7${NC} or ${YELLOW}--test-blueprints all${NC}\n"
         exit 1
       fi
       export SELECTED_BLUEPRINT="$val"
@@ -155,6 +162,31 @@ while [[ $# -gt 0 ]]; do
       ;;
     --apex-runtime|--runtime-only)
       export APEX_RUNTIME_ONLY=true
+      shift
+      ;;
+    --fast|--skip-tests)
+      export SKIP_TESTS=true
+      shift
+      ;;
+    --lock-internal-apex|--lock-apex)
+      export LOCK_INTERNAL_APEX=true
+      export DISABLE_INTERNAL_APEX_WEB=true
+      shift
+      ;;
+    --snapshot-mode)
+      export SNAPSHOT_MODE="$2"
+      shift 2
+      ;;
+    --snapshot-mode=*)
+      export SNAPSHOT_MODE="${1#*=}"
+      shift
+      ;;
+    --unified-middleware|--unified-fmw)
+      export USE_UNIFIED_MIDDLEWARE=true
+      shift
+      ;;
+    --build-base-image|--create-base-image)
+      export BUILD_BASE_IMAGE=true
       shift
       ;;
     --build-image|--create-image)
@@ -202,7 +234,7 @@ fi
 ENV_PATH="$WORKSPACE_DIR/.env"
 [ ! -f "$ENV_PATH" ] && ENV_PATH=".env"
 
-# Interaktiivne Blueprintide valik (kui .env puudub või kasutaja kutsus -i/--select)
+# Interactive Blueprint selector (when .env is missing or user specified -i/--select)
 if { [ ! -f "$ENV_PATH" ] || [ "$INTERACTIVE_SELECT" = "true" ]; } && [ -z "$SELECTED_BLUEPRINT" ] && [ -z "$TEST_BLUEPRINTS" ] && [ "$FORCE" != "true" ] && [ -t 0 ]; then
   print_blueprints_table ""
   read -t 30 -p "👉 Vali blueprint [1-40] (Vaikimisi: 3): " user_choice || true
@@ -257,7 +289,7 @@ if [ -n "$TEST_BLUEPRINTS" ]; then
     cp "$BP_FILE" "$WORKSPACE_DIR/.env"
     ENV_PATH="$WORKSPACE_DIR/.env"
   else
-    echo -e "${RED}❌ VIGA: Blueprinti '${TEST_BLUEPRINTS}' faili ei leitud kaustast config/blueprints/${NC}"
+    echo -e "${RED}❌ $(msg_str "ERROR_BP_NOT_FOUND" "$TEST_BLUEPRINTS")${NC}"
     exit 1
   fi
 fi
@@ -269,19 +301,19 @@ if [ -n "$SELECTED_BLUEPRINT" ] && [ -z "$TEST_BLUEPRINTS" ]; then
     ACTIVE_BP_ID=$(get_blueprint_number "$BP_FILE")
     planned_c=$(extract_blueprint_containers "$ACTIVE_BP_ID" 2>/dev/null || echo "")
     bp_hist_stats=$(get_blueprint_stats "$ACTIVE_BP_ID" 2>/dev/null || echo "")
-    echo -e "${CYAN}🏗️  Aktiveerin arhitektuurse kavandi (Blueprint ${ACTIVE_BP_ID}): $(basename "$BP_FILE")${NC}"
-    [ -n "$planned_c" ] && echo -e "   📦 Plaanitavad Konteinerid: ${GREEN}${planned_c}${NC}"
+    echo -e "${CYAN}$(msg_str "BP_ACTIVATING" "$ACTIVE_BP_ID" "$(basename "$BP_FILE")")${NC}"
+    [ -n "$planned_c" ] && echo -e "   📦 $(msg_str "PLANNED_CONTAINERS"): ${GREEN}${planned_c}${NC}"
     [ -n "$bp_hist_stats" ] && echo -e "   ⏱️  $(msg_str "BENCHMARK_LABEL") ${YELLOW}${bp_hist_stats}${NC}"
-    echo -e "${GREEN}ℹ️  Toodangurežiim: Säilitan olemasolevad andmebaasi andmed ja volumed (No Reset).${NC}"
+    echo -e "${GREEN}$(msg_str "PROD_MODE_KEEPING_DATA")${NC}"
     cp "$BP_FILE" "$WORKSPACE_DIR/.env"
     ENV_PATH="$WORKSPACE_DIR/.env"
   else
-    echo -e "${RED}❌ VIGA: Blueprinti '${SELECTED_BLUEPRINT}' faili ei leitud kaustast config/blueprints/${NC}"
+    echo -e "${RED}❌ $(msg_str "ERROR_BP_NOT_FOUND" "$SELECTED_BLUEPRINT")${NC}"
     exit 1
   fi
 fi
 
-# Laeme keskkonnamuutujad ja profiilimootori
+# Load environment variables and profile engine
 if [ -f "$ENV_PATH" ]; then
   set -a
   source "$ENV_PATH"
@@ -313,7 +345,7 @@ if [ -f "$SCRIPT_DIR/internal/resolve-tls-mode.sh" ]; then
   fi
 fi
 
-# 2. Genereerime ja usaldame kohalikud SSL/TLS sertifikaadid (vajadusel)
+# 2. Generate and trust local SSL/TLS certificates (if needed)
 if [ "$RESOLVED_TLS_MODE" = "USER_LOCAL" ] && [ -x "$SCRIPT_DIR/internal/generate-local-certs.sh" ]; then
   "$SCRIPT_DIR/internal/generate-local-certs.sh" --no-prompt || true
   if [[ "$OSTYPE" == "darwin"* ]] && [ -x "$SCRIPT_DIR/certs/trust-local-cert-mac.sh" ]; then
@@ -321,7 +353,7 @@ if [ "$RESOLVED_TLS_MODE" = "USER_LOCAL" ] && [ -x "$SCRIPT_DIR/internal/generat
   fi
 fi
 
-# Genereerime podman-compose.override.yml profiilide ja saladuste põhjal
+# Generate podman-compose.override.yml based on active profiles and secrets
 if [ -x "$SCRIPT_DIR/internal/generate-compose-override.sh" ]; then
   "$SCRIPT_DIR/internal/generate-compose-override.sh"
 fi
@@ -522,7 +554,7 @@ fi
 ORDS_DL_START=$(date +%s)
 if [ "$SKIP_ORDS" = "true" ]; then
   print_header "2" "$(msg_str "STEP_2_TITLE")"
-  echo -e "   ℹ️  Standalone ORDS container not required. (Reason: ${CYAN}${ORDS_SKIP_REASON:-disabled}${NC})"
+  msg_print "ORDS_CONTAINER_NOT_REQUIRED" "${ORDS_SKIP_REASON:-disabled}"
   ORDS_DL_SECS=0
   ORDS_DL_TIME="$(msg_str "STATUS_SKIPPED")"
 else
@@ -537,15 +569,22 @@ else
   FOUND_ORDS_ZIP=""
   if [ -f "$EXPECTED_ORDS_PATH" ] && unzip -t "$EXPECTED_ORDS_PATH" &>/dev/null; then
     FOUND_ORDS_ZIP="$EXPECTED_ORDS_PATH"
-    echo "   ✅ Leitud täpne kohalik ORDS tarkvarapakett: $(basename "$FOUND_ORDS_ZIP")"
+    msg_print "ORDS_LOCAL_FOUND_EXACT" "$(basename "$FOUND_ORDS_ZIP")"
   elif [ -f "$ORDS_BIN_DIR/ords-latest.zip" ] && unzip -t "$ORDS_BIN_DIR/ords-latest.zip" &>/dev/null; then
     FOUND_ORDS_ZIP="$ORDS_BIN_DIR/ords-latest.zip"
-    echo "   ✅ Leitud olemasolev kohalik ORDS tarkvarapakett: ords-latest.zip"
+    msg_print "ORDS_LOCAL_FOUND_EXISTING" "ords-latest.zip"
   fi
 
   if [ -z "$FOUND_ORDS_ZIP" ]; then
-    echo "   ℹ️  Laadin ORDS paketi URL-ilt: $ORDS_URL..."
-    curl -sSL -k -o "$EXPECTED_ORDS_PATH" "$ORDS_URL" || true
+    if declare -f artifactory_is_configured >/dev/null 2>&1 && artifactory_is_configured; then
+      if artifactory_fetch_binary "ords" "$EXPECTED_ORDS_NAME" "$EXPECTED_ORDS_PATH" || artifactory_fetch_binary "ords" "ords-latest.zip" "$EXPECTED_ORDS_PATH"; then
+        FOUND_ORDS_ZIP="$EXPECTED_ORDS_PATH"
+      fi
+    fi
+    if [ -z "$FOUND_ORDS_ZIP" ]; then
+      msg_print "ORDS_DOWNLOADING_FROM_URL" "$ORDS_URL"
+      curl -sSL -k -o "$EXPECTED_ORDS_PATH" "$ORDS_URL" || true
+    fi
   fi
   ORDS_DL_SECS=$(( $(date +%s) - ORDS_DL_START ))
   ORDS_DL_TIME=$(format_duration $ORDS_DL_SECS)
@@ -601,14 +640,14 @@ if [ "${#UNIQUE_APEX_VERSIONS[@]}" -gt 0 ]; then
     fi
 
     if [ -n "$FOUND_APEX_ZIP" ]; then
-      echo "   ✅ Leitud olemasolev kohalik APEX tarkvarapakett: $(basename "$FOUND_APEX_ZIP")"
+      msg_print "APEX_LOCAL_FOUND_EXISTING" "$(basename "$FOUND_APEX_ZIP")"
       ZIP_PATH="$FOUND_APEX_ZIP"
     else
-      echo "   Laadin alla APEX $ver ($ZIP_NAME)..."
+      msg_print "APEX_DOWNLOADING_VER" "$ver" "$ZIP_NAME"
       rm -f "$ZIP_PATH"
       curl -sSL -k -o "$ZIP_PATH" "$VER_URL" || true
       if ! unzip -t "$ZIP_PATH" &>/dev/null; then
-        echo "   ⚠️  Allalaaditud fail ei ole kehtiv ZIP arhiiv. Otsin kohalikku apex-latest.zip..."
+        msg_print "APEX_DOWNLOAD_INVALID_ZIP"
         rm -f "$ZIP_PATH"
         if [ -f "$APEX_BIN_DIR/apex-latest.zip" ] && unzip -t "$APEX_BIN_DIR/apex-latest.zip" &>/dev/null; then
           ZIP_PATH="$APEX_BIN_DIR/apex-latest.zip"
@@ -620,7 +659,7 @@ if [ "${#UNIQUE_APEX_VERSIONS[@]}" -gt 0 ]; then
 
     TARGET_DIR="$WORKSPACE_DIR/db-install/apex_$ver"
     if [ ! -d "$TARGET_DIR/apex" ]; then
-      echo "   Pakin lahti APEX $ver -> $TARGET_DIR..."
+      msg_print "APEX_UNPACKING_VER" "$ver" "$TARGET_DIR"
       mkdir -p "$TARGET_DIR"
       unzip -o -q "$ZIP_PATH" -d "$TARGET_DIR" || true
     fi
@@ -762,7 +801,7 @@ for inst in $ACTIVE_INST_LIST; do
 done
 
 # ----------------------------------------------------------------------------
-# SAMM 7: Andmebaasi skeemi migratsioonid (Liquibase / Init DB)
+# STEP 7: Database schema migrations (Liquibase / Init DB)
 # ----------------------------------------------------------------------------
 STEP5_5_START=$(date +%s)
 print_header "7" "$(msg_str "STEP_7_TITLE")" "step5_5_liquibase_migration_seconds" "15s"
@@ -843,19 +882,31 @@ if [ "${SKIP_FORMS:-false}" != "true" ] && { [ "$ANY_FORMS_ENABLED" = "true" ] |
 fi
 
 # ----------------------------------------------------------------------------
-# SAMM 10: Hetktõmmise (Golden Snapshot) loomine
+# SAMM 10: Hetktõmmise (Golden Snapshot) loomine & Metaandmete Uuendamine
 # ----------------------------------------------------------------------------
 STEP9_SECS=0
-if [ "$FORCE" != "true" ] && [ "${IS_TEST_MODE:-false}" != "true" ]; then
-  print_header "10" "$(msg_str "STEP_10_TITLE")" "snapshot_duration_seconds" "2m"
-  prompt_user_confirm "❓ Kas soovid värskelt paigaldatud keskkonnast kohe teha hetktõmmise (Golden Snapshot)?" MAKE_BACKUP_CONFIRM 45 "N" \
-    "Loodakse andmebaasi ja mahutite täielik varukoopia kausta golden-snapshots/." \
-    "Hetktõmmise loomine jäetakse vahele."
+if [ "${IS_TEST_MODE:-false}" != "true" ]; then
+  print_header "10" "$(msg_str "STEP_10_TITLE")" "snapshot_duration_seconds" "25s"
   
-  if [[ "$MAKE_BACKUP_CONFIRM" =~ ^[Yy]$ ]]; then
+  SNAP_EXISTS=false
+  if declare -f find_best_golden_snapshot >/dev/null 2>&1; then
+    EXISTING_SNAP=$(find_best_golden_snapshot "${SELECTED_BLUEPRINT:-3}" "${PROFILE_NAME:-db-proxy-oracle}" 2>/dev/null || true)
+    [ -n "$EXISTING_SNAP" ] && [ -f "$EXISTING_SNAP" ] && SNAP_EXISTS=true
+  fi
+
+  if [ "$SNAP_EXISTS" = "false" ] || [ "${FORCE_SNAPSHOT:-false}" = "true" ] || [ "$FORCE" = "true" ]; then
+    msg_print "SNAPSHOT_AUTO_CREATING" "${SELECTED_BLUEPRINT:-3}" "${PROFILE_NAME:-db-proxy-oracle}"
     SNAP_START=$(date +%s)
-    "$SCRIPT_DIR/snapshots/create-golden-snapshots.sh"
+    "$SCRIPT_DIR/snapshots/create-golden-snapshots.sh" --blueprint "${SELECTED_BLUEPRINT:-3}" --profile "${PROFILE_NAME:-db-proxy-oracle}" --auto || true
     STEP9_SECS=$(( $(date +%s) - SNAP_START ))
+
+    if [ "${ARTIFACTORY_AUTO_PUBLISH:-false}" = "true" ] || [ "${PUBLISH_SNAPSHOT:-false}" = "true" ]; then
+      if [ -x "$SCRIPT_DIR/publish-to-artifactory.sh" ]; then
+        "$SCRIPT_DIR/publish-to-artifactory.sh" --product blueprints --blueprint "${SELECTED_BLUEPRINT:-3}" --profile "${PROFILE_NAME:-db-proxy-oracle}" -y || true
+      fi
+    fi
+  else
+    echo -e "   ✅ $(msg_str "SNAPSHOT_FASTPATH_DETECTED" "${PROFILE_NAME:-db-proxy-oracle}")"
   fi
 fi
 
@@ -892,16 +943,20 @@ export SETUP_STEP10_DEPLOY_APPS_SECS="$STEP8_DEPLOY_SECS"
 export SETUP_STEP11_SNAPSHOT_SECS="$STEP9_SECS"
 
 # URL ja Walleti automaattestid (Käivitatakse enne raporti genereerimist, et tulemused jõuaksid raportisse)
-if [ -x "$SCRIPT_DIR/check-urls.sh" ]; then
-  if [ "$IS_TEST_MODE" = "true" ] || [ -n "$TEST_BLUEPRINTS" ]; then
-    "$SCRIPT_DIR/check-urls.sh" 15 2 || true
-  else
-    "$SCRIPT_DIR/check-urls.sh" 24 5 || true
+if [ "${SKIP_TESTS:-false}" = "true" ]; then
+  echo -e "\n${YELLOW}⚡ Fast Mode (--fast): Post-provisioning URL and wallet diagnostics skipped.${NC}"
+else
+  if [ -x "$SCRIPT_DIR/check-urls.sh" ]; then
+    if [ "$IS_TEST_MODE" = "true" ] || [ -n "$TEST_BLUEPRINTS" ]; then
+      "$SCRIPT_DIR/check-urls.sh" 15 2 || true
+    else
+      "$SCRIPT_DIR/check-urls.sh" 24 5 || true
+    fi
   fi
-fi
 
-if [ -x "$SCRIPT_DIR/check-wallet.sh" ]; then
-  "$SCRIPT_DIR/check-wallet.sh" || true
+  if [ -x "$SCRIPT_DIR/check-wallet.sh" ]; then
+    "$SCRIPT_DIR/check-wallet.sh" || true
+  fi
 fi
 
 # Raportite ja JSON mõõdikute genereerimine

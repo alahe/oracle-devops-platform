@@ -11,8 +11,8 @@ INPUT_XML="${1:-}"
 OUTPUT_DIR="${2:-$PROJECT_ROOT/forms_apps/extracted_plsql}"
 
 if [ -z "$INPUT_XML" ] || [ ! -f "$INPUT_XML" ]; then
-  echo "Kasutus: $0 <FORMS_XML_FAIL> [VÄLJUNDKAUST]"
-  echo "Näide:   $0 forms_apps/test_fmb.xml forms_apps/extracted_plsql"
+  echo "Usage: $0 <FORMS_XML_FILE> [OUTPUT_DIR]"
+  echo "Example: $0 forms_apps/test_fmb.xml forms_apps/extracted_plsql"
   exit 1
 fi
 

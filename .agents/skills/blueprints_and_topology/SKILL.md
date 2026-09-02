@@ -1,23 +1,22 @@
 ---
 name: blueprints_and_topology
-description: Guidelines for managing the 23 architecture blueprints, 5-series decision matrix, dynamic port topology, and idempotent multi-database orchestration.
+description: Guidelines for managing the 15 architecture blueprints, 4-decade decision matrix, dynamic port topology, and idempotent multi-database orchestration.
 ---
 
 # Architecture Blueprints & Dynamic Port Topology Engine
 
-This skill guides selecting, resolving, and orchestrating the **23 canonical architecture blueprints** (`config/blueprints/.env.<N>-*`) and resolving dynamic multi-database port topologies without collisions.
+This skill guides selecting, resolving, and orchestrating the **15 canonical architecture blueprints** (`config/blueprints/.env.<N>-*`) organized in **4 decade-based groups** and resolving dynamic multi-database port topologies without collisions.
 
 ---
 
-## 1. The 5-Series Blueprint Decision Matrix
+## 1. The 4-Group Blueprint Decision Matrix
 
-| Series | Blueprints | Architecture Domain | Target Use Cases & Included Components |
+| Decade Group | Blueprints | Architecture Domain | Target Use Cases & Included Components |
 | :---: | :---: | :--- | :--- |
-| **1–9** | `1` – `9` | **Core Database & APEX** | Single-database and light developer setups (Oracle Free DB, Autonomous DB, ORDS, APEX Builder). |
-| **10–19** | `10` – `19` | **Analytics Publisher** | Pixel-Perfect reporting, XML/PDF batch printing, RCU metadata database, and Publisher REST API. |
-| **20–29** | `20` – `29` | **Oracle Forms 14c Services** | Oracle Forms 14.1.2 Runtime, HTML5 noVNC Forms Builder GUI (`6082`), and APEX migration bundles. |
-| **30–39** | `30` – `39` | **Web IDE & CI/CD** | Containerized VS Code Web IDE, Oracle SQL Developer Extension, Antigravity AI, and offline GitHub Actions `act` runner. |
-| **40–43** | `40` – `43` | **Enterprise Hybrid Multi-DB** | Multi-DB enterprise topologies (e.g. BP 41: All-in-One Enterprise, BP 43: Hybrid 2-DB Proxy + LIS). |
+| **Group 1 (1–9)** | `1` – `6` | **Standalone Isolates** | Isolated individual components (ALISE DB, ORDS & Dev Hub, Proxy DB, Web IDE, Analytics Publisher, Oracle Forms 14c) for pure component isolation, fast image builds, and isolated unit testing. |
+| **Group 2 (10–19)** | `10` – `11` | **Consolidated Subsystems** | Combined components sharing resources (BP 10: Forms 14c + Publisher sharing 1 unified DB saving ~2.5 GB RAM; BP 11: Combined ORDS + Web-IDE). |
+| **Group 3 (20–29)** | `20` – `24` | **Layered Enterprise Stacks** | Full layered stacks (BP 20: 1-DB Core; **BP 21: Canonical 2-Layer Default**; BP 22: 1-DB Publisher; BP 23: 3-DB Isolated Publisher Stack; BP 24: 3-DB Isolated Forms Modernization Stack). |
+| **Group 4 (30–39)** | `30` – `31` | **Hybrid Enterprise Stacks** | Multi-subsystem hybrid stacks (BP 30: Compact Enterprise; **BP 31: Ultimate Enterprise Hybrid Stack**). |
 
 ---
 
@@ -25,19 +24,30 @@ This skill guides selecting, resolving, and orchestrating the **23 canonical arc
 
 ```mermaid
 graph TD
-  START[What is the primary operational goal?] --> Q1{Primary Workload?}
-  Q1 -->|APEX / Database Only| BP1[BP 1–9: Core DB]
-  Q1 -->|Pixel-Perfect Reports| BP2[BP 10–19: Analytics Publisher]
-  Q1 -->|Forms Modernization| BP3[BP 20–29: Forms 14c Services]
-  Q1 -->|Full Cloud Dev Workstation| BP4[BP 30–39: Web IDE]
-  Q1 -->|Complete Multi-DB Enterprise| BP5[BP 40–43: Enterprise Multi-DB]
+  START[What is the architectural requirement?] --> Q1{Scope & Complexity?}
+  Q1 -->|Single Component Isolate / Testing| G1[Group 1: Standalone Isolates 1–9]
+  Q1 -->|Combined Middleware Services| G2[Group 2: Consolidated Subsystems 10–19]
+  Q1 -->|Layered Business Stack + Web IDE| G3[Group 3: Layered Stacks 20–29]
+  Q1 -->|Full Hybrid Enterprise Suite| G4[Group 4: Hybrid Stacks 30–39]
 
-  BP1 -->|Standalone ORDS| BP_07[BP 7: Standalone ORDS + APEX]
-  BP2 -->|Publisher Dedicated| BP_10[BP 10: Publisher FastStart]
-  BP3 -->|Forms + APEX Hub| BP_22[BP 22: Forms 14c Full Stack]
-  BP4 -->|Web IDE + SQLcl CI/CD| BP_30[BP 30: Web IDE Workstation]
-  BP5 -->|Forms + Publisher + APEX| BP_41[BP 41: All-in-One Enterprise]
-  BP5 -->|2-DB Proxy + LIS| BP_43[BP 43: Hybrid 2-DB Setup]
+  G1 --> BP1[BP 1: ALISE DB]
+  G1 --> BP2[BP 2: Standalone ORDS]
+  G1 --> BP3[BP 3: Proxy DB]
+  G1 --> BP4[BP 4: Standalone Web IDE]
+  G1 --> BP5[BP 5: Standalone Publisher]
+  G1 --> BP6[BP 6: Standalone Forms 14c]
+
+  G2 --> BP10[BP 10: Forms + Publisher Unified DB]
+  G2 --> BP11[BP 11: Consolidated ORDS + Web-IDE]
+
+  G3 --> BP20[BP 20: 1-DB Core Stack]
+  G3 --> BP21["🌟 BP 21: Canonical 2-Layer Stack (DEFAULT)"]
+  G3 --> BP22[BP 22: 1-DB Publisher Stack]
+  G3 --> BP23[BP 23: 3-DB Isolated Publisher Stack]
+  G3 --> BP24[BP 24: 3-DB Isolated Forms Modernization]
+
+  G4 --> BP30[BP 30: Compact Enterprise Hybrid]
+  G4 --> BP31["🌟 BP 31: Ultimate Enterprise Hybrid Stack"]
 ```
 
 ---
@@ -46,31 +56,41 @@ graph TD
 
 When multiple databases or services are running, ports must be calculated dynamically without collisions:
 
-| Component | Default Base Port | Offset Rules & Secondary DB Allocation |
+| Component | Default Host Port | Offset Rules & Secondary DB Allocation |
 | :--- | :---: | :--- |
-| **Primary Database (`db-proxy`)** | `1532` | Standard container DB port (`1521` internal $\rightarrow$ `1532` host). |
-| **Secondary Database (`db-lis`)** | `1533` | Incremented automatically if port `1532` is busy. |
-| **Publisher / Forms Database** | `1534` | Incremented automatically if port `1533` is busy. |
-| **Primary ORDS HTTPS / HTTP** | `8448` / `8088` | Main APEX / Database Actions gateway. |
-| **Standalone ORDS HTTPS / HTTP** | `8445` / `8085` | Embedded standalone ORDS pool gateway. |
-| **Analytics Publisher HTTP / HTTPS** | `9502` / `9503` | Pixel-Perfect UI (`/xmlpserver`) and REST API. |
-| **Forms Runtime / WebLogic / noVNC** | `9001` / `7001` / `6082` | Forms Servlet, AdminServer, and HTML5 Web GUI. |
-| **Web IDE Port** | `8090` | Browser-based VS Code IDE. |
+| **Proxy Database (`db-proxy`)** | `1532` | Standard 2-layer gateway DB port (`1521` internal $\rightarrow$ `1532` host). |
+| **ALISE Database (`db-alise`)** | `1533` | Dedicated business application DB port. |
+| **Publisher Database (`db-publisher`)** | `1531` | Dedicated or unified Forms & Publisher RCU infrastructure DB. |
+| **Forms Database (`db-forms`)** | `1534` | Dedicated Forms RCU DB. |
+| **ORDS HTTPS / HTTP Gateway** | `8448` / `8088` | Main APEX / Database Actions / Dev Hub gateway. |
+| **Analytics Publisher HTTP** | `9502` | Pixel-Perfect Web UI (`/xmlpserver`) and REST API. |
+| **Forms Runtime / WebLogic / noVNC** | `9001` / `7001` / `6082` | Forms Servlet runtime, WebLogic AdminServer, and HTML5 noVNC GUI. |
+| **Web IDE Port** | `8090` | Browser-based VS Code IDE (`code-server`). |
 
 ---
 
 ## 4. CLI Execution Modes
 
 1. **Idempotent Deployment (`-b <N>` / `--blueprint <N>`):**
-   - Preserves existing data volumes (`oradata`).
-   - Reconfigures containers and routes to the selected blueprint instantly:
+   - Preserves existing database volumes (`oradata`).
+   - Reconfigures containers and routes to the selected blueprint cleanly:
      ```bash
-     ./scripts/setup-all.sh -b 41
+     ./scripts/setup-all.sh -b 21
+     ./scripts/deploy-blueprint.sh -b 21
      ```
-2. **Matrix Regression Testing (`-tb <LIST|all>` / `--test-blueprints`):**
-   - Automatically cleans slate (`reset-all.sh -y`), deploys blueprint, validates endpoints, and collects timing benchmarks into `metrics/setup_benchmarks.json`:
+2. **Matrix Automated Testing (`-tb <LIST|all>` / `--test-blueprints`):**
+   - Automatically cleans slate (`reset-all.sh -y`), deploys target blueprint, validates endpoints, and collects benchmarks:
      ```bash
-     ./scripts/setup-all.sh -tb 7 10 30 41
+     ./scripts/setup-all.sh -tb 21
      ```
-3. **List Blueprint Catalog (`-l` / `--list-blueprints`):**
-   - Outputs ASCII table of all 23 blueprints with component matrices without starting containers.
+3. **List Blueprint Catalog (`-lb` / `--list-blueprints`):**
+   - Outputs formatted ASCII table of all 15 blueprints across 4 groups without starting containers:
+     ```bash
+     ./scripts/setup-all.sh -lb
+     ```
+4. **Inspect Blueprint Details (`-sb <N>` / `--show-blueprint <N>`):**
+   - Displays container layout, memory requirements, and network topology for a specific blueprint:
+     ```bash
+     ./scripts/setup-all.sh -sb 21
+     ```
+

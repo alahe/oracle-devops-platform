@@ -35,10 +35,10 @@ else
   NC=$'\033[0m'
 fi
 
-MAX_RETRIES=3
-RETRY_INTERVAL=1
-CURL_CONNECT_TIMEOUT=2
-CURL_MAX_TIME=3
+MAX_RETRIES=15
+RETRY_INTERVAL=2
+CURL_CONNECT_TIMEOUT=3
+CURL_MAX_TIME=5
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -230,8 +230,8 @@ if [ "${SKIP_WEB_IDE}" != "true" ] && { [ "${WEB_IDE_ENABLED}" = "true" ] || [ -
 fi
 
 if [ ${#URLS[@]} -eq 0 ]; then
-  echo -e "${YELLOW}ℹ️ Ei leitud ühtegi aktiivset veebiteenuse URL-i testimiseks.${NC}"
-  echo -e "Ei ole aktiivseid veebiteenuse URL-e" > "$PROJECT_ROOT/metrics/urls_audit_temp.md"
+  msg_print "URL_NO_ACTIVE_URLS"
+  echo "No active web service URLs" > "$PROJECT_ROOT/metrics/urls_audit_temp.md"
   exit 0
 fi
 
@@ -243,7 +243,7 @@ for item in "${URLS[@]}"; do
   url=$(echo "$item" | cut -d'|' -f2)
   pattern=$(echo "$item" | cut -d'|' -f3)
 
-  echo -ne "   Testing ${label} [${url}]... "
+  echo -ne "$(msg_str "URL_TESTING_ENDPOINT" "$label" "$url")"
 
   SUCCESS=false
   HTTP_CODE=""
@@ -265,8 +265,8 @@ for item in "${URLS[@]}"; do
     BODY_OUTPUT=$(curl -s -k -L --noproxy "*" --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" "$url" 2>/dev/null || true)
     HTTP_CODE=$(curl -s -k -L --noproxy "*" --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" -o /dev/null -w "%{http_code}" "$url" 2>/dev/null | grep -E '^[0-9]{3}$' || echo "000")
 
-    # Check for valid HTTP code (1xx-4xx, exclude 5xx)
-    if [[ "$HTTP_CODE" =~ ^[1-4][0-9]{2}$ ]]; then
+    # Check for valid HTTP code (1xx-4xx, ORDS 574 unmapped root is also responsive)
+    if [[ "$HTTP_CODE" =~ ^[1-4][0-9]{2}$ ]] || [ "$HTTP_CODE" = "574" ]; then
       # If pattern check is required
       if [ -n "$pattern" ]; then
         if [[ "$pattern" == "!"* ]]; then

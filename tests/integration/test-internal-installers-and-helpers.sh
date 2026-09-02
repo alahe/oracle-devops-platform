@@ -35,11 +35,12 @@ INTERNAL_HELPERS=(
 echo -e "\n${YELLOW}[Test 1] Kontrollin skriptide olemasolu ja BASH süntaksit...${NC}"
 for helper in "${INTERNAL_HELPERS[@]}"; do
   file_path="$WORKSPACE_DIR/scripts/internal/$helper"
+  [ ! -f "$file_path" ] && file_path="$WORKSPACE_DIR/scripts/$helper"
   if [ -f "$file_path" ]; then
     bash -n "$file_path"
-    echo -e "   ${GREEN}✓ internal/${helper} süntaks on täielikult korras.${NC}"
+    echo -e "   ${GREEN}✓ ${helper} süntaks on täielikult korras.${NC}"
   else
-    echo -e "${RED}❌ Test 1 Ebaõnnestus: scripts/internal/${helper} puudub!${NC}"
+    echo -e "${RED}❌ Test 1 Ebaõnnestus: ${helper} puudub!${NC}"
     exit 1
   fi
 done
@@ -47,7 +48,9 @@ echo -e "${GREEN}✅ Test 1 Edukas: Kõik sisemised abiskriptid on süntaksilise
 
 # Test 2: Verify create-developer.sh dry-run logic
 echo -e "\n${YELLOW}[Test 2] Kontrollin create-developer.sh parameetrite tuletamist...${NC}"
-if grep -q "DB_DEVELOPER_ROLE" "$WORKSPACE_DIR/scripts/internal/create-developer.sh"; then
+DEV_SCRIPT="$WORKSPACE_DIR/scripts/create-developer.sh"
+[ ! -f "$DEV_SCRIPT" ] && DEV_SCRIPT="$WORKSPACE_DIR/scripts/internal/create-developer.sh"
+if grep -q "DB_DEVELOPER_ROLE" "$DEV_SCRIPT"; then
   echo -e "${GREEN}✅ Test 2 Edukas: create-developer.sh kasutab kohustuslikku DB_DEVELOPER_ROLE rolli!${NC}"
 else
   echo -e "${RED}❌ Test 2 Ebaõnnestus: DB_DEVELOPER_ROLE puudub skriptist create-developer.sh!${NC}"

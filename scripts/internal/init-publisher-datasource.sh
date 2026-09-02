@@ -15,7 +15,7 @@ fi
 
 echo "📊 Konfigureerin Analytics Publisher JDBC Data Source ühendust (ALISE_APP_DB)..."
 
-# Tuvastame sihtbaasi andmed (lokaalne db-alise / db-proxy või remote host)
+# Resolve target database parameters (local db-alise / db-proxy or remote host)
 TARGET_DB_HOST="${ALISE_DB_HOST:-${LIS_DB_HOST:-${DB_HOST:-db-alise}}}"
 TARGET_DB_PORT="${ALISE_DB_PORT:-${LIS_DB_PORT:-${DB_PORT:-1521}}}"
 TARGET_DB_SERVICE="${ALISE_DB_SERVICE:-${LIS_DB_SERVICE:-${DB_SERVICE:-FREEPDB1}}}"

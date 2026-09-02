@@ -26,6 +26,8 @@ source "$WORKSPACE_DIR/scripts/internal/i18n.sh"
 source "$WORKSPACE_DIR/scripts/internal/common.sh"
 # shellcheck source=scripts/internal/blueprint-info.sh
 source "$WORKSPACE_DIR/scripts/internal/blueprint-info.sh"
+# shellcheck source=scripts/internal/snapshot-resolver.sh
+source "$WORKSPACE_DIR/scripts/internal/snapshot-resolver.sh"
 
 # Default settings
 SELECTED_BP=""
@@ -82,6 +84,26 @@ while [[ $# -gt 0 ]]; do
       ;;
     -d|--dry-run)
       DRY_RUN=true
+      shift
+      ;;
+    --fast|--skip-tests)
+      FAST_MODE=true
+      shift
+      ;;
+    --lock-internal-apex|--lock-apex)
+      LOCK_INTERNAL_APEX=true
+      shift
+      ;;
+    --snapshot-mode)
+      SNAPSHOT_MODE="$2"
+      shift 2
+      ;;
+    --snapshot-mode=*)
+      SNAPSHOT_MODE="${1#*=}"
+      shift
+      ;;
+    --unified-middleware|--unified-fmw)
+      UNIFIED_MIDDLEWARE=true
       shift
       ;;
     -l|--list)
@@ -240,6 +262,18 @@ if [ "$FORCE" = true ]; then
 fi
 if [ -n "${CLI_LANG:-}" ]; then
   SETUP_ARGS+=("--lang" "$CLI_LANG")
+fi
+if [ "${FAST_MODE:-false}" = "true" ]; then
+  SETUP_ARGS+=("--fast")
+fi
+if [ "${LOCK_INTERNAL_APEX:-false}" = "true" ]; then
+  SETUP_ARGS+=("--lock-internal-apex")
+fi
+if [ -n "${SNAPSHOT_MODE:-}" ]; then
+  SETUP_ARGS+=("--snapshot-mode" "$SNAPSHOT_MODE")
+fi
+if [ "${UNIFIED_MIDDLEWARE:-false}" = "true" ]; then
+  SETUP_ARGS+=("--unified-middleware")
 fi
 
 "$WORKSPACE_DIR/scripts/setup-all.sh" "${SETUP_ARGS[@]}" 2>&1 | tee -a "$LOG_FILE"

@@ -12,8 +12,8 @@
 # 1. Klooni repositoorium ja liigu kausta
 git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-free-db-in-prod
 
-# 2. Käivita vaikimisi 2-kihiline tootmisvirn (Blueprint 3)
-./scripts/setup-all.sh -b 3 --lang et
+# 2. Käivita vaikimisi 2-kihiline tootmisvirn (Blueprint 21)
+./scripts/setup-all.sh -b 21 --lang et
 
 # 3. Vaata paroole, URL-e ja lõikelaua spikrit (või ava Dev Hub aadressil http://localhost:8088/)
 ./scripts/get-password.sh
@@ -28,12 +28,12 @@ flowchart TD
     Start(["🚀 Arendaja Alustab"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
     Clone --> ChooseBP{"2. Vali Arhitektuurne Blueprint"}
     
-    ChooseBP -->|Vaikimisi 2-DB Virn| BP3["./scripts/setup-all.sh -b 3"]
-    ChooseBP -->|Forms + Publisher + IDE| BP41["./scripts/setup-all.sh -b 41"]
-    ChooseBP -->|Eelvaade / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 34 --dry-run"]
+    ChooseBP -->|Vaikimisi 2-DB Virn| BP21["./scripts/setup-all.sh -b 21 --lang et"]
+    ChooseBP -->|Forms + Publisher + IDE| BP31["./scripts/setup-all.sh -b 31 --lang et"]
+    ChooseBP -->|Eelvaade / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 21 --dry-run"]
     
-    BP3 --> DevHub["3. Ava DevOps Juhtimiskeskus<br/>🌐 http://localhost:8088/"]
-    BP41 --> DevHub
+    BP21 --> DevHub["3. Ava DevOps Juhtimiskeskus<br/>🌐 http://localhost:8088/"]
+    BP31 --> DevHub
     BPDry --> ChooseBP
     
     DevHub --> PwdSpikker["4. Paroolispikker (SEPS Wallet)<br/>./scripts/get-password.sh DB_PROXY_DEV -c"]
@@ -162,6 +162,21 @@ graph TD
 # 5. Kuva 11 blueprinti tabel käsureal:
 ./scripts/deploy-blueprint.sh --list --lang et
 ```
+
+---
+
+## ⚡ Kiirendatud ~15s Taastumine & Automaatne Versioonikontroll
+
+Oracle Free DB in Prod sisaldab **uut mitmetasemelist Kuldse Hetktõmmise ja Skip-Mootorit** (`scripts/internal/snapshot-resolver.sh`), mis vähendab teistkordset käivitusaega **~6–12 minutilt ~15 sekundini**:
+
+1. **Automaatne Versioonikontroll & Aegunud Hetktõmmiste Invalideerimine (`.meta.json`):**
+   - Iga Golden Snapshot sisaldab masinloetavat `.meta.json` lepingut, kuhu salvestatakse APEXi, andmebaasi, ORDSi ja middleware täpsed versioonid.
+   - Enne taastamist kontrollitakse rangelt versioonide vastavust. Kui leitakse aegunud hetktõmmis (nt profiil nõuab `APEX 26.1`, aga snapshot on `24.2`), väljastatakse hoiatus `VERSION MISMATCH`, tehakse puhas paigaldus ja genereeritakse automaatselt uus ajakohane hetktõmmis.
+2. **Profiilipõhine Ristkasutus & Skip-Maatriks:**
+   - Kuna samad andmebaasi profiilid korduvad mitmes blueprintis (nt `db-proxy-oracle` BP 3, BP 7, BP 21, BP 22, BP 34, BP 43), jätab blueprintide vahetamine (nt BP 3 $\rightarrow$ BP 34 Web IDE lisamiseks) andmebaasi puutumata ja käivitab vaid puuduva lisakonteineri **~3 sekundiga**.
+3. **Shared vs. Dedicated WebLogic Topoloogiad:**
+   - **SAMAS WebLogicus (BP 41 & BP 43):** Ühine Kõik-Ühes andmebaas (`db-dev-full`), ühised RCU skeemid (`DEV_` prefiks), 1 kombineeritud snapshot ja madal RAM-i kulu (~6–8 GB).
+   - **ERALDI WebLogicutes (BP 11, BP 21 & BP 42):** Eraldi andmebaasid (`db-forms`, `db-publisher`), modulaarsed snapshotid ja selektiivne käivitus, mis säästab kuni 4 GB RAMi.
 
 ---
 

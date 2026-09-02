@@ -1,10 +1,10 @@
-[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](../../docs/sv/README.md) | [ 🇱🇻 Latviešu ](../../docs/lv/README.md) | [ 🇱🇹 Lietuvių ](../../docs/lt/README.md)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🏗️ Architecture Blueprints (11 Curated Enterprise Models)
+# 🏗️ Architecture Blueprints (15 Curated Enterprise Models)
 
-This directory serves as the **central and canonical single source of truth for the 11 curated architecture blueprints**.
+This directory serves as the **central and canonical single source of truth for the 15 curated architecture blueprints** organized into **4 decade-based logical groups**.
 
-Each blueprint (`.env.<N>-*`) defines a complete infrastructure model ranging from a lightweight 2-layer developer database to an 8-container fully isolated enterprise cloud lab.
+Each blueprint (`.env.<N>-*`) defines a complete infrastructure model ranging from a standalone isolate database or gateway to an ultimate enterprise hybrid stack with Web IDE.
 
 ---
 
@@ -16,141 +16,92 @@ Use the dedicated orchestration script **`./scripts/deploy-blueprint.sh`** (or `
 # 1. Check current active blueprint and container health:
 ./scripts/deploy-blueprint.sh --status
 
-# 2. Deploy or switch to Blueprint 3 (DEFAULT 2-layer production stack):
-./scripts/deploy-blueprint.sh -b 3
+# 2. Deploy or switch to Blueprint 21 (DEFAULT 2-layer production stack with Web IDE):
+./scripts/deploy-blueprint.sh -b 21
 
-# 3. Deploy Blueprint 41 (Ultimate All-in-One Enterprise with Forms + Publisher + APEX + Web IDE):
-./scripts/deploy-blueprint.sh -b 41
+# 3. Deploy Blueprint 31 (Ultimate Enterprise Hybrid Stack with Forms + Publisher + APEX + Web IDE):
+./scripts/deploy-blueprint.sh -b 31
 
 # 4. Dry-run simulation (preview actions without modifying containers):
-./scripts/deploy-blueprint.sh -b 42 --dry-run
+./scripts/deploy-blueprint.sh -b 21 --dry-run
 
 # 5. List all available curated blueprints in a formatted ASCII table:
 ./scripts/setup-all.sh -lb
 
-# 6. Run automated 2-pass matrix verification (Cold setup + Warm recovery):
-./scripts/internal/run_blueprint_matrix_test.sh
+# 6. Run automated clean test suite on a blueprint:
+./scripts/setup-all.sh -tb 21
 ```
 
 ---
 
-## 📊 Canonical 11-Blueprint Architecture Matrix
+## 📊 Canonical 15-Blueprint Architecture Matrix
 
 ```mermaid
 graph TD
-  subgraph Series 1-9: Core DB & APEX SSO Gateway
-    BP3["🌟 BP 3 (DEFAULT): 2-Layer Production Stack<br/>db-proxy + db-alise + app-ords (Ports 1532, 1533, 8088)"]
-    BP7["BP 7: Hybrid Cluster<br/>Official Oracle 23ai DB + Gerald Venzl DB + ORDS"]
+  subgraph Group 1: Standalone Isolates (1–9)
+    BP1["BP 1: Standalone ALISE DB<br/>db-alise + app-ords (Port 1533)"]
+    BP2["BP 2: Standalone ORDS & Dev Hub<br/>app-ords (Ports 8088/8448)"]
+    BP3["BP 3: Standalone Proxy DB & APEX SSO<br/>db-proxy + app-ords (Port 1532)"]
+    BP4["BP 4: Standalone Web-IDE Workstation<br/>web-ide-dev (Port 8090)"]
+    BP5["BP 5: Standalone Analytics Publisher<br/>db-publisher + app-publisher (Ports 1531, 9502)"]
+    BP6["BP 6: Standalone Oracle Forms 14c<br/>db-forms + app-forms (Ports 1534, 9001, 6082)"]
   end
 
-  subgraph Series 10-19: Analytics Publisher
-    BP13["BP 13: All-in-One Publisher DB<br/>Single 23ai DB (RCU + Business data) + Publisher + ORDS"]
-    BP11["BP 11: Dedicated Isolated Publisher Stack<br/>3 dedicated DBs + Publisher + ORDS"]
+  subgraph Group 2: Combined Subsystems (10–19)
+    BP10["BP 10: Forms + Publisher Unified DB<br/>db-publisher + app-forms + app-publisher"]
+    BP11["BP 11: Consolidated ORDS & Web-IDE<br/>app-ords + web-ide-dev"]
   end
 
-  subgraph Series 20-29: Oracle Forms 14c & Modernization
-    BP22["BP 22: Minimal Hybrid Forms<br/>Combined Forms/Proxy DB + ALISE DB + Forms 14c + ORDS"]
-    BP21["BP 21: Full Enterprise Forms<br/>Forms RCU DB + Custom DB + Proxy DB + Forms 14c + ORDS"]
+  subgraph Group 3: Layered Stacks (20–29)
+    BP20["BP 20: 1-DB Core Application Stack<br/>db-alise + app-ords + web-ide-dev"]
+    BP21["🌟 BP 21 (PLATFORM DEFAULT): Canonical 2-Layer Stack<br/>db-proxy + db-alise + app-ords + web-ide-dev"]
+    BP22["BP 22: 1-DB Compact Reporting Stack<br/>db-alise + app-publisher + app-ords + web-ide-dev"]
+    BP23["BP 23: Full Isolated Reporting Stack (3 DBs)<br/>db-publisher + db-proxy + db-alise + Publisher + ORDS + Web-IDE"]
+    BP24["BP 24: Full Isolated Forms Stack (3 DBs)<br/>db-forms + db-proxy + db-alise + Forms + ORDS + Web-IDE"]
   end
 
-  subgraph Series 30-39: Developer Workstations & Web IDE
-    BP34["🌟 BP 34: Standard 2-Layer DB + Web IDE<br/>db-proxy + db-alise + app-ords + web-ide-dev (Port 8090)"]
-    BP31["BP 31: Cloud Autonomous DB + Web IDE<br/>ADB emulator + VS Code Web IDE"]
-  end
-
-  subgraph Series 40-49: Ultimate Enterprise Suites
-    BP41["🌟 BP 41: Ultimate All-in-One Enterprise + Web IDE<br/>Forms + Publisher + APEX SSO + Web IDE on Single 23ai DB"]
-    BP42["BP 42: Full Isolated Enterprise Cloud Lab<br/>8 isolated containers, 4 dedicated databases"]
-    BP43["BP 43: 2-DB Hybrid Enterprise + Web IDE<br/>Proxy DB + Shared Forms/Publisher RCU DB"]
+  subgraph Group 4: Hybrid Stacks (30–39)
+    BP30["BP 30: Compact Enterprise Hybrid Stack<br/>db-publisher + db-alise + Forms + Pub + ORDS + Web-IDE"]
+    BP31["🌟 BP 31: Ultimate Enterprise Hybrid Stack<br/>db-publisher + db-proxy + db-alise + Forms + Pub + ORDS + Web-IDE"]
   end
 ```
 
 ---
 
-### 🔹 Series 1–9: Core Database & APEX SSO Gateway Architectures
-| No | File Name | Active Containers | Ports | Purpose & Description |
+### 🔹 Group 1: Standalone Isolates (1–9)
+| No | File Name | Active Containers | Host Ports | Purpose & Description |
 | :--- | :--- | :--- | :--- | :--- |
-| **3** | `.env.3-db-alise-apex-ords-with-proxy` | `db-proxy`, `db-alise`, `app-ords` | `1532`, `1533`, `8088`, `8448` | **🌟 DEFAULT PRODUCTION STACK:** 2-layer secure network topology (isolated Proxy DB and ALISE DB) with APEX and ORDS. |
-| **7** | `.env.7-hybrid-multi-vendor-db` | `db-proxy`, `db-alise`, `app-ords` | `1532`, `1533`, `8088`, `8448` | **Hybrid Cluster:** Official Oracle 23ai image (Proxy) and Gerald Venzl image (ALISE) co-existing. |
-
-```mermaid
-graph LR
-  Client[Browser / SQLcl] -->|8088 / 8448| ORDS[app-ords Gateway]
-  Client -->|1532| ProxyDB[(db-proxy 23ai)]
-  Client -->|1533| AliseDB[(db-alise 23ai)]
-  ORDS -->|JDBC / SEPS| ProxyDB
-  ORDS -->|JDBC / SEPS| AliseDB
-```
+| **1** | `.env.1-standalone-alise-db` | `db-alise`, `app-ords` | `1533`, `8088`, `8448` | **Standalone ALISE Business DB:** Dedicated custom application database holding business schemas, PL/SQL code, DDL/DML, and internal APEX/ORDS. |
+| **2** | `.env.2-standalone-ords-devhub` | `app-ords` | `8088`, `8448` | **Standalone ORDS & Dev Hub:** HTTP/HTTPS gateway and Developer Hub for Remote and Cloud Databases. |
+| **3** | `.env.3-standalone-proxy-db` | `db-proxy`, `app-ords` | `1532`, `8088`, `8448` | **Standalone Proxy DB & APEX SSO:** Security gateway and external connection actor (REST API, Azure Entra ID, Kafka). |
+| **4** | `.env.4-standalone-web-ide` | `web-ide-dev` | `8090` | **Standalone Web-IDE Workstation:** Browser-based VS Code Web IDE with Oracle SQL Developer extension and local CI testing (`act`). |
+| **5** | `.env.5-standalone-analytics-publisher` | `db-publisher`, `app-publisher` | `1531`, `9502` | **Standalone Analytics Publisher:** Pixel-Perfect enterprise PDF/Excel reporting with dedicated RCU DB (`db-publisher`). |
+| **6** | `.env.6-standalone-oracle-forms` | `db-forms`, `app-forms` | `1534`, `9001`, `7001`, `6082` | **Standalone Oracle Forms 14c:** Forms 14c Services & HTML5 noVNC Forms Builder GUI with dedicated Forms RCU DB (`db-forms`). |
 
 ---
 
-### 🔹 Series 10–19: Analytics Publisher Architectures (Pixel-Perfect Reporting)
-| No | File Name | Active Containers | Ports | Purpose & Description |
+### 🔹 Group 2: Combined Subsystems (10–19)
+| No | File Name | Active Containers | Host Ports | Purpose & Description |
 | :--- | :--- | :--- | :--- | :--- |
-| **11** | `.env.11-publisher-full-enterprise` | `db-publisher`, `db-alise`, `db-proxy`, `app-ords`, `app-publisher` | `1531-1533`, `8088`, `9502` | **Fully Isolated Publisher Stack:** All 3 databases (Publisher RCU, ALISE, Proxy), ORDS, and Publisher co-located. |
-| **13** | `.env.13-publisher-all-in-one-db` | `db-proxy`, `app-ords`, `app-publisher` | `1532`, `8088`, `9502` | **All-in-One Publisher DB:** All RCU schemas and business data combined inside one Free DB (`db-proxy`). |
-
-```mermaid
-graph LR
-  User[Browser / Client] -->|9502| Pub[app-publisher WebLogic]
-  User -->|8088| ORDS[app-ords Gateway]
-  Pub -->|RCU Schemas| PubDB[(db-publisher / db-proxy)]
-  Pub -->|Direct XML / SQL| BizDB[(db-alise / db-proxy)]
-```
+| **10** | `.env.10-consolidated-forms-publisher-unified-db` | `db-publisher`, `app-forms`, `app-publisher` | `1531`, `9502`, `9001`, `6082` | **Forms + Publisher Unified DB:** Forms 14c and Analytics Publisher sharing a single unified 23ai DB (`db-publisher`) for both RCU schemas, saving ~2.5 GB RAM. |
+| **11** | `.env.11-consolidated-ords-web-ide` | `app-ords`, `web-ide-dev` | `8088`, `8448`, `8090` | **Consolidated ORDS Gateway & Web-IDE:** Integrated web and developer workstation layer (ORDS gateway + code-server Web IDE) in a unified network. |
 
 ---
 
-### 🔹 Series 20–29: Oracle Forms 14c Architectures (Forms Services & Modernization)
-| No | File Name | Active Containers | Ports | Purpose & Description |
+### 🔹 Group 3: Layered Enterprise Stacks (20–29)
+| No | File Name | Active Containers | Host Ports | Purpose & Description |
 | :--- | :--- | :--- | :--- | :--- |
-| **21** | `.env.21-forms-full-enterprise` | `db-forms`, `db-alise`, `db-proxy`, `app-forms`, `app-ords` | `1531-1534`, `8088`, `9001`, `6082` | **Full Enterprise Forms Stack:** Dedicated Forms RCU DB + Custom DB + APEX Proxy DB + Forms 14c + ORDS. |
-| **22** | `.env.22-forms-minimal-hybrid` | `db-proxy`, `db-alise`, `app-forms`, `app-ords` | `1531`, `1532`, `8088`, `9001`, `6082` | **Minimal Forms Hybrid:** Combined Forms/Proxy DB + ALISE DB + ORDS + Forms Services (HTML5 noVNC). |
-
-```mermaid
-graph LR
-  User[Developer / User] -->|6082| VNC[HTML5 noVNC Forms Builder]
-  User -->|9001| FormsRun[Forms 14c Runtime]
-  User -->|8088| APEXProxy[APEX SSO Reverse Proxy]
-  APEXProxy -->|Auth Validation| FormsRun
-  FormsRun -->|SQL / PLSQL| FormsDB[(db-forms / db-proxy)]
-```
+| **20** | `.env.20-stack-alise-ords-webide` | `db-alise`, `app-ords`, `web-ide-dev` | `1533`, `8088`, `8448`, `8090` | **1-DB Core Application Stack:** Single-database core APEX stack with dedicated ALISE business database, ORDS gateway, and browser Web IDE. |
+| **21** | `.env.21-stack-alise-ords-proxy-webide` | `db-proxy`, `db-alise`, `app-ords`, `web-ide-dev` | `1532`, `1533`, `8088`, `8448`, `8090` | **🌟 PLATFORM DEFAULT:** Canonical 2-layer secure network topology (isolated Proxy DB and ALISE DB) with APEX SSO Gateway, ORDS, and Web IDE. |
+| **22** | `.env.22-stack-alise-publisher-ords-webide` | `db-alise`, `app-publisher`, `app-ords`, `web-ide-dev` | `1533`, `8088`, `8448`, `9502`, `8090` | **1-DB Compact Reporting Stack:** Resource-efficient reporting stack where Analytics Publisher shares RCU schemas inside the ALISE database. |
+| **23** | `.env.23-stack-alise-ords-proxy-webide-publisher` | `db-publisher`, `db-proxy`, `db-alise`, `app-ords`, `web-ide-dev`, `app-publisher` | `1531-1533`, `8088`, `9502`, `8090` | **Full Isolated 2-Layer Reporting Stack:** 3 isolated databases (`db-publisher`, `db-proxy`, `db-alise`), WebLogic Publisher, ORDS, and Web IDE *(requires $\ge 12\text{ GB}$ RAM)*. |
+| **24** | `.env.24-stack-alise-ords-proxy-webide-forms` | `db-forms`, `db-proxy`, `db-alise`, `app-ords`, `web-ide-dev`, `app-forms` | `1532-1534`, `8088`, `9001`, `6082`, `8090` | **Full Isolated 2-Layer Forms Stack:** 3 isolated databases (`db-forms`, `db-proxy`, `db-alise`), Forms 14c Services, noVNC, ORDS, and Web IDE *(requires $\ge 12\text{ GB}$ RAM)*. |
 
 ---
 
-### 🔹 Series 30–39: Zero-Install Developer Workstations & Cloud Labs (Web IDE)
-| No | File Name | Active Containers | Ports | Purpose & Description |
+### 🔹 Group 4: Hybrid Stacks (30–39)
+| No | File Name | Active Containers | Host Ports | Purpose & Description |
 | :--- | :--- | :--- | :--- | :--- |
-| **31** | `.env.31-cloud-adb-with-web-ide` | `db-proxy`, `app-ords`, `web-ide-dev` | `1532`, `8088`, `8090` | **Cloud ADB Emulator + Web IDE:** Autonomous Database emulator with browser VS Code Web IDE & tools. |
-| **34** | `.env.34-proxy-alise-apex-ords-with-web-ide` | `db-proxy`, `db-alise`, `app-ords`, `web-ide-dev` | `1532`, `1533`, `8088`, `8090` | **🌟 2-Layer Enterprise Stack + Web IDE:** Recommended 2-layer production stack with browser VS Code Web IDE. |
+| **30** | `.env.30-hybrid-alise-forms-pub-ords-webide` | `db-publisher`, `db-alise`, `app-forms`, `app-publisher`, `app-ords`, `web-ide-dev` | `1531`, `1533`, `8088`, `9502`, `9001`, `6082`, `8090` | **Compact Enterprise Hybrid Stack:** Resource-efficient hybrid stack with dedicated ALISE DB, consolidated Forms & Publisher RCU DB (`db-publisher`), and integrated ORDS & Web-IDE. |
+| **31** | `.env.31-hybrid-alise-proxy-forms-pub-ords-webide` | `db-publisher`, `db-proxy`, `db-alise`, `app-forms`, `app-publisher`, `app-ords`, `web-ide-dev` | `1531-1533`, `8088`, `9502`, `9001`, `6082`, `8090` | **🌟 ULTIMATE ENTERPRISE:** Complete 2-layer Proxy + ALISE architecture with consolidated Forms & Publisher RCU database and integrated ORDS & Web-IDE *(requires $\ge 12\text{ GB}$ RAM)*. |
 
-```mermaid
-graph LR
-  Dev[Developer Browser] -->|8090| WebIDE[code-server Web IDE<br/>SQL Dev + AI + Git]
-  Dev -->|8088| DevHub[DevOps Command Center / ORDS]
-  WebIDE -->|SEPS Wallet| ProxyDB[(db-proxy 23ai)]
-  WebIDE -->|SEPS Wallet| AliseDB[(db-alise 23ai)]
-```
-
----
-
-### 🔹 Series 40–49: Ultimate Enterprise All-in-One & Cloud Labs
-| No | File Name | Active Containers | Ports | Purpose & Description |
-| :--- | :--- | :--- | :--- | :--- |
-| **41** | `.env.41-ultimate-all-in-one-enterprise-with-web-ide` | `db-proxy`, `app-forms`, `app-publisher`, `app-ords`, `web-ide-dev` | `1532`, `8088`, `9502`, `9001`, `8090`, `6082` | **🌟 Ultimate All-in-One Enterprise:** Forms 14c + Publisher + APEX SSO + ORDS + Web IDE on single 23ai DB (`db-proxy`). |
-| **42** | `.env.42-ultimate-full-enterprise-isolated-with-web-ide` | `db-forms`, `db-publisher`, `db-proxy`, `db-alise`, `app-forms`, `app-publisher`, `app-ords`, `web-ide-dev` | All ports | **Fully Isolated Cloud Lab:** Forms and Publisher in dedicated containers on isolated databases with Web IDE. |
-| **43** | `.env.43-proxy-ords-apex-with-shared-forms-publisher-db-web-ide` | `db-proxy`, `db-publisher`, `app-forms`, `app-publisher`, `app-ords`, `web-ide-dev` | `1531`, `1532`, `8088`, `9502`, `9001`, `8090`, `6082` | **2-Database Hybrid Enterprise:** APEX/ORDS Proxy DB + Shared Middleware Infra DB (`db-publisher`) for Forms & Publisher RCU. |
-
-```mermaid
-graph TD
-  subgraph Ultimate All-in-One Blueprint 41
-    WebIDE[Web IDE :8090]
-    DevHub[Dev Hub & APEX SSO :8088]
-    Forms[Forms 14c & noVNC :9001 / :6082]
-    Pub[Analytics Publisher :9502]
-    SingleDB[(Single Oracle 23ai Free DB :1532<br/>All Schemas, RCU & Data)]
-    WebIDE --> SingleDB
-    DevHub --> SingleDB
-    Forms --> SingleDB
-    Pub --> SingleDB
-  end
-```

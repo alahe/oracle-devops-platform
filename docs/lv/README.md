@@ -12,8 +12,8 @@
 # 1. Klonēt krātuvi un pāriet uz mapi
 git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-free-db-in-prod
 
-# 2. Palaist noklusējuma 2-slāņu ražošanas steku (Blueprint 3)
-./scripts/setup-all.sh -b 3 --lang lv
+# 2. Palaist noklusējuma 2-slāņu ražošanas steku (Blueprint 21)
+./scripts/setup-all.sh -b 21 --lang lv
 
 # 3. Skatīt paroles, URL un starpliktuves palīgu (vai atvērt Dev Hub: http://localhost:8088/)
 ./scripts/get-password.sh
@@ -28,12 +28,12 @@ flowchart TD
     Start(["🚀 Izstrādātājs Sāk"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
     Clone --> ChooseBP{"2. Izvēlēties Arhitektūras Plānu"}
     
-    ChooseBP -->|Noklusējuma 2-DB Steks| BP3["./scripts/setup-all.sh -b 3"]
-    ChooseBP -->|Forms + Publisher + IDE| BP41["./scripts/setup-all.sh -b 41"]
-    ChooseBP -->|Priekšskatījums / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 34 --dry-run"]
+    ChooseBP -->|Noklusējuma 2-DB Steks| BP21["./scripts/setup-all.sh -b 21 --lang lv"]
+    ChooseBP -->|Forms + Publisher + IDE| BP31["./scripts/setup-all.sh -b 31 --lang lv"]
+    ChooseBP -->|Priekšskatījums / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 21 --dry-run"]
     
-    BP3 --> DevHub["3. Atvērt DevOps Vadības Centru<br/>🌐 http://localhost:8088/"]
-    BP41 --> DevHub
+    BP21 --> DevHub["3. Atvērt DevOps Vadības Centru<br/>🌐 http://localhost:8088/"]
+    BP31 --> DevHub
     BPDry --> ChooseBP
     
     DevHub --> PwdSpikker["4. Paroļu Špikeris (SEPS Wallet)<br/>./scripts/get-password.sh DB_PROXY_DEV -c"]
@@ -162,6 +162,21 @@ graph TD
 # 5. Parādīt 11 plānu tabulu konsolē:
 ./scripts/deploy-blueprint.sh --list --lang lv
 ```
+
+---
+
+## ⚡ Paātrināta ~15s Atjaunošana & Automatizēta Versiju Pārbaude
+
+Oracle Free DB in Prod ietver **inteliģentu daudzlīmeņu Golden Snapshot un Skip dzinēju** (`scripts/internal/snapshot-resolver.sh`), kas samazina otro palaišanas laiku no **~6–12 minūtēm līdz ~15 sekundēm**:
+
+1. **Automatizēta Versiju Pārbaude & Novecojušu Momentuzņēmumu Anulēšana (`.meta.json`):**
+   - Katrs Golden Snapshot ietver mašīnlasāmu `.meta.json` līgumu, kurā reģistrētas APEX, datubāzes, ORDS un starpprogrammatūras versijas.
+   - Pirms atjaunošanas tiek stingri pārbaudīta versiju saderība. Ja tiek atklāts novecojis momentuzņēmums (piem., mērķis `APEX 26.1` pret snapshot `24.2`), sistēma brīdina ar `VERSION MISMATCH`, veic tīru instalēšanu un automātiski ģenerē jaunu atjauninātu momentuzņēmumu.
+2. **Profilos Balstīta Atkārtota Izmantošana & Skip Matrica:**
+   - Tā kā identiski datubāzes profili tiek koplietoti vairākos plānos (piem., `db-proxy-oracle` BP 3, BP 7, BP 21, BP 22, BP 34, BP 43), pārslēdzot plānus (piem., BP 3 $\rightarrow$ BP 34 Web IDE pievienošanai), datubāze paliek neskarta un tiek palaists tikai trūkstošais konteiners **~3 sekundēs**.
+3. **Shared vs. Dedicated WebLogic Topoloģijas:**
+   - **Koplietots WebLogic (BP 41 & BP 43):** Viena All-in-One datubāze (`db-dev-full`), vienotas RCU shēmas (`DEV_`), 1 kombinēts momentuzņēmums un zems RAM patēriņš (~6–8 GB).
+   - **Specializēts WebLogic (BP 11, BP 21 & BP 42):** Neatkarīgas datubāzes (`db-forms`, `db-publisher`), modulāri momentuzņēmumi un selektīva palaišana, ietaupot līdz 4 GB RAM.
 
 ---
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Golden Snapshot Puhastamise Utiliit
-# Kustutab golden-snapshots/ kaustast vanad hetktõmmised vastavalt kasutaja valikule.
-# Vaikimisi jäetakse alati alles "*latest.tar.gz" hetktõmmised.
+# Golden Snapshot Clean & Purge Utility
+# Purges obsolete Golden Snapshots according to retention rules.
+# Preserves "*latest.tar.gz" Golden Snapshots by default.
 # ============================================================================
 
 set -e
@@ -11,26 +11,26 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)/golden-snapshots"
 
 if [ ! -d "$BACKUP_DIR" ]; then
-  echo "📂 Hetktõmmiste kausta ei eksisteeri ($BACKUP_DIR) — midagi pole puhastada."
+  echo "📂 Snapshots directory does not exist ($BACKUP_DIR) — nothing to clean."
   exit 0
 fi
 
-# Loeme olemasolevate hetktõmmiste arvu ja mahu
+# Count existing snapshots and directory size
 TOTAL_FILES=$(find "$BACKUP_DIR" -type f ! -name "*latest.tar.gz" ! -name ".gitignore" ! -name ".gitkeep" 2>/dev/null | wc -l | tr -d ' ')
 if [ "$TOTAL_FILES" -eq 0 ]; then
-  echo "ℹ️  Hetktõmmiste kaustas ei ole vanu hetktõmmiseid, mida kustutada (alles on vaid latest.tar.gz või kaust on tühi)."
+  echo "ℹ️  No old snapshots found to delete in snapshots directory (only latest.tar.gz preserved or directory empty)."
   exit 0
 fi
 
 TOTAL_SIZE=$(du -sh "$BACKUP_DIR" | awk '{print $1}')
 echo "=================================================================="
-echo "🧹 HETKTÕMMISTE (GOLDEN SNAPSHOTS) PUHASTAMISE UTILIIT"
-echo "   Asukoht:     $BACKUP_DIR"
-echo "   Kokku faile (kustutatavaid): $TOTAL_FILES"
-echo "   Kataloogi kogumaht:         $TOTAL_SIZE"
+echo "🧹 GOLDEN SNAPSHOT CLEAN & PURGE UTILITY"
+echo "   Directory:                  $BACKUP_DIR"
+echo "   Total eligible files:       $TOTAL_FILES"
+echo "   Total snapshot space used:  $TOTAL_SIZE"
 echo "=================================================================="
 
-# Parameetrite tugi (-y, --yes, --days=N)
+# Argument parsing (-y, --yes, --days=N)
 AUTO_YES=false
 DAYS=0
 
@@ -49,33 +49,33 @@ for arg in "$@"; do
 done
 
 if [ "$AUTO_YES" = "false" ] && [ -t 0 ]; then
-  read -p "❓ Sisesta päevade arv, millest vanemad hetktõmmised kustutada (0 = säilita ainult viimane koopia, vaikimisi 0): " USER_DAYS
+  read -p "❓ Enter retention days to purge snapshots older than N days (0 = keep only latest snapshot, default 0): " USER_DAYS
   [ -n "$USER_DAYS" ] && DAYS="$USER_DAYS"
 fi
 
-# Valideerime sisendit
+# Validate input
 if [[ ! "$DAYS" =~ ^[0-9]+$ ]]; then
-  echo "❌ Viga: Sisend peab olema arv (0 või suurem)!"
+  echo "❌ Error: Input must be a positive integer (0 or greater)!"
   exit 1
 fi
 
 echo "------------------------------------------------------------------"
 
 if [ "$DAYS" -eq 0 ]; then
-  echo "🗑  Kustutan kõik vanad hetktõmmised (jättes alles viimase 'latest' koopia)..."
+  echo "🗑  Purging all older Golden Snapshots (preserving latest snapshot)..."
   find "$BACKUP_DIR" -type f ! -name "*latest.tar.gz" ! -name ".gitignore" ! -name ".gitkeep" -delete
-  echo "✅ Vanad hetktõmmised edukalt kustutatud!"
+  echo "✅ Obsolete snapshots purged successfully!"
 else
-  # Kustutame failid, mis on vanemad kui DAYS päeva
+  # Delete snapshot files older than specified retention days
   MTIME_VAL=$((DAYS - 1))
   
   TO_DELETE=$(find "$BACKUP_DIR" -type f ! -name "*latest.tar.gz" ! -name ".gitignore" ! -name ".gitkeep" -mtime +$MTIME_VAL 2>/dev/null | wc -l | tr -d ' ')
   
   if [ "$TO_DELETE" -eq 0 ]; then
-    echo "ℹ️  Ei leitud ühtegi hetktõmmise faili, mis oleks vanem kui $DAYS päev(a)."
+    echo "ℹ️  No snapshot files found older than $DAYS day(s)."
   else
     find "$BACKUP_DIR" -type f ! -name "*latest.tar.gz" ! -name ".gitignore" ! -name ".gitkeep" -mtime +$MTIME_VAL -delete
-    echo "✅ Edukalt kustutatud $TO_DELETE hetktõmmise faili!"
+    echo "✅ Successfully purged $TO_DELETE snapshot file(s)!"
   fi
 fi
 

@@ -49,9 +49,9 @@ DB_PROXY =
 
 ---
 
-## 2. Dynamic Credential Helpers
+## 2. Dynamic Credential Helpers & Zero-Trust Architecture
 
-1. **Read Password / Copy to Clipboard:**
+1. **Read Password / Copy to Clipboard (Just-In-Time In-Memory):**
    ```bash
    ./scripts/get-password.sh <ALIAS>
    ./scripts/get-password.sh DB_PROXY_DEV -c    # Copies password to OS clipboard
@@ -65,6 +65,11 @@ DB_PROXY =
    ./scripts/sqlcl.sh /@DB_PROXY_DEV
    ./scripts/sqlcl.sh /@DB_PROXY_SYS as sysdba
    ```
+4. **Strict Zero-Trust In-Memory Lifecycle Contract (Web UI & CLI):**
+   - **Encryption at Rest (Mandatory):** Secrets must reside strictly in encrypted form inside the Oracle SEPS Auto-Login Wallet (`cwallet.sso` / `ewallet.p12` with AES-256) or Podman secret tmpfs.
+   - **Zero Plaintext Files on Disk:** Passwords MUST NEVER be persisted to disk in unencrypted format (no `.json`, `.txt`, `.env`, or `.cache` files), regardless of file permissions (`chmod 0600` is NOT an exemption).
+   - **Just-In-Time In-Memory Decryption:** Passwords may only be decrypted dynamically in memory at runtime directly from `cwallet.sso` via `mkstore` / `get-password.sh` and destroyed immediately after process completion.
+   - **Zero Synthetic Fallbacks:** Synthetic fallback passwords (such as SHA hashes or dummy values) are strictly prohibited. Every credential must be dynamically verified against the database SEPS Wallet.
 
 ---
 

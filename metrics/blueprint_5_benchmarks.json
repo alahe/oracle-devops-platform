@@ -16,10 +16,34 @@
     {
       "timestamp": "2026-08-31T07:10:49.160448",
       "duration_seconds": 757
+    },
+    {
+      "timestamp": "2026-09-01T18:19:22.148162",
+      "duration_seconds": 630
+    },
+    {
+      "timestamp": "2026-09-01T18:26:07.622691",
+      "duration_seconds": 695
+    },
+    {
+      "timestamp": "2026-09-02T00:57:31.728063",
+      "duration_seconds": 613
+    },
+    {
+      "timestamp": "2026-09-02T01:05:45.781759",
+      "duration_seconds": 676
+    },
+    {
+      "timestamp": "2026-09-02T06:15:05.806417",
+      "duration_seconds": 608
+    },
+    {
+      "timestamp": "2026-09-02T06:23:16.160678",
+      "duration_seconds": 671
     }
   ],
-  "runs_count": 4,
-  "average_duration_seconds": 334,
+  "runs_count": 10,
+  "average_duration_seconds": 522,
   "min_duration_seconds": 72,
   "max_duration_seconds": 757
 }

@@ -11,7 +11,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Laeme keskkonnamuutujad ja profiilimootori
+# Load environment variables and profile engine
 if [ -f "$WORKSPACE_DIR/.env" ]; then
   set -a
   source "$WORKSPACE_DIR/.env"
@@ -32,7 +32,7 @@ if [ -f "$SCRIPT_DIR/credential-helper.sh" ]; then
   source "$SCRIPT_DIR/credential-helper.sh"
 fi
 
-# Tuvastame esmase aktiivse andmebaasi konteineri nime ja dünaamilise aliase
+# Detect primary active database container name and dynamic alias
 PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
 PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-dev-full}"
 if ! podman container exists "$PRIMARY_CONTAINER" 2>/dev/null; then
@@ -105,23 +105,23 @@ if { [ "$PROFILE_DB_TYPE" = "adb" ] || [ "$IS_ADB" = "true" ] || [ "$APEX_DB_TYP
 fi
 
 if [ "$IS_ADB" = "true" ]; then
-  echo -e "${CYAN}├─${NC} ${YELLOW}[Autonomous Database]: Kasutan ADB-siseselt genereeritud mTLS Walletit...${NC}"
-  echo -e "${CYAN}│${NC}  ⌛ Ootan kuni ADB on loonud wallet failid (ewallet.p12 ja cwallet.sso)..."
+  echo -e "${CYAN}├─${NC} ${YELLOW}[Autonomous Database]: Using ADB internal mTLS Wallet...${NC}"
+  echo -e "${CYAN}│${NC}  ⌛ Waiting until ADB creates wallet files (ewallet.p12 and cwallet.sso)..."
 
   WAIT_S=0
   until podman exec "$PROXY_CONTAINER" sh -c "[ -f /u01/app/oracle/wallets/tls_wallet/cwallet.sso ] && [ -f /u01/app/oracle/wallets/tls_wallet/tnsnames.ora ]" &>/dev/null; do
     sleep 3
     WAIT_S=$((WAIT_S + 3))
-    print_progress "   Ootan walleti ja tnsnames faile konteineris... ${ORANGE}${WAIT_S}s${NC}\r"
+    print_progress "   Waiting for wallet and tnsnames files in container... ${ORANGE}${WAIT_S}s${NC}\r"
     if [ $WAIT_S -ge 180 ]; then
       echo ""
-      echo -e "${CYAN}│${NC}  ❌ Viga: ADB ei genereerinud wallet faile konteineris 180 sekundi jooksul!"
+      echo -e "${CYAN}│${NC}  ❌ Error: ADB did not generate wallet files inside container within 180 seconds!"
       exit 1
     fi
   done
   echo ""
 
-  echo -e "${CYAN}│${NC}  🔐 Registreerin süsteemsed SEPS tunnused ADB Walletisse..."
+  echo -e "${CYAN}│${NC}  🔐 Registering system SEPS credentials in ADB Wallet..."
   DB_SYS_PWD=$(get_container_secret "$PROXY_CONTAINER" "apex_db_sys_password")
   APEX_SCHEMA_PWD=$(get_container_secret "$PROXY_CONTAINER" "apex_schema_password")
   TEST_DEV_PWD=$(get_container_secret "$PROXY_CONTAINER" "test_dev_password")
@@ -254,10 +254,10 @@ elif [ "$USE_EPHEMERAL_WALLET" = "true" ]; then
   fi
   until podman run --rm -v "$TNS_DIR:/u01/oracle/tns_admin:rw" "$HELPER_IMG" /u01/oracle/bin/orapki wallet create -wallet /u01/oracle/tns_admin -pwd "$WALLET_PWD" -auto_login >/dev/null 2>&1; do
     if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
-      echo -e "${CYAN}│${NC}  ❌ Viga: Walleti loomine orapki abil ebaõnnestus pärast $MAX_ATTEMPTS katset!"
+      echo -e "${CYAN}│${NC}  ❌ Error: Wallet generation using orapki failed after $MAX_ATTEMPTS attempts!"
       exit 255
     fi
-    echo -e "${CYAN}│${NC}  ⚠️  orapki käivitus ebaõnnestus (transientne viga). Proovin uuesti... (Katse $ATTEMPT/$MAX_ATTEMPTS)"
+    echo -e "${CYAN}│${NC}  ⚠️  orapki execution failed (transient error). Retrying... (Attempt $ATTEMPT/$MAX_ATTEMPTS)"
     sleep 2
     ATTEMPT=$((ATTEMPT + 1))
   done
@@ -277,10 +277,10 @@ else
     orapki wallet create -wallet /opt/oracle/admin/FREE/wallet -pwd "$1" -auto_login
   ' _ "$WALLET_PWD" >/dev/null 2>&1; do
     if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
-      echo -e "${CYAN}│${NC}  ❌ Viga: Walleti loomine orapki abil ebaõnnestus pärast $MAX_ATTEMPTS katset!"
+      echo -e "${CYAN}│${NC}  ❌ Error: Wallet generation using orapki failed after $MAX_ATTEMPTS attempts!"
       exit 255
     fi
-    echo -e "${CYAN}│${NC}  ⚠️  orapki käivitus ebaõnnestus (transientne viga). Proovin uuesti... (Katse $ATTEMPT/$MAX_ATTEMPTS)"
+    echo -e "${CYAN}│${NC}  ⚠️  orapki execution failed (transient error). Retrying... (Attempt $ATTEMPT/$MAX_ATTEMPTS)"
     sleep 2
     ATTEMPT=$((ATTEMPT + 1))
   done
@@ -479,7 +479,7 @@ fi
 echo -e "${CYAN}├─${NC} ${YELLOW}[$(msg_str "STEP_4_5_NAME") 4]: $(msg_str "SUB_WALLET_4")${NC}"
 echo -e "${CYAN}│${NC}  📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(msg_str "BENCHMARK_EST" "1s")${NC}"
 
-# Genereerime hosti tnsnames.ora dünaamiliselt kõigi aktiivsete instantside ja profiilide jaoks
+# Generate host tnsnames.ora dynamically for all active instances and profiles
 cat << EOF > "$TNS_DIR/tnsnames.ora"
 # TNS Names Configuration for Host (Auto-generated: $(date))
 EOF
@@ -603,7 +603,7 @@ WALLET_LOCATION =
 SQLNET.WALLET_OVERRIDE = TRUE
 EOF
 
-# Genereerime konteineri tnsnames.ora dünaamiliselt
+# Generate container tnsnames.ora dynamically
 cat << EOF > "$CONTAINER_TNS_DIR/tnsnames.ora"
 # TNS Names Configuration for Container (Auto-generated: $(date))
 EOF
@@ -679,13 +679,13 @@ done < <(get_active_db_instances 2>/dev/null)
 chmod 644 "$TNS_DIR"/ewallet.p12 "$TNS_DIR"/cwallet.sso "$TNS_DIR"/*.ora 2>/dev/null || true
 chmod 644 "$CONTAINER_TNS_DIR"/* 2>/dev/null || true
 
-# TNS fallback sümbollingid kasutaja kodukaustas raw SQLcl käivituseks
+# TNS fallback symlinks in user home directory for standalone SQLcl
 ln -sf "$TNS_DIR/tnsnames.ora" "$HOME/tnsnames.ora" 2>/dev/null || true
 ln -sf "$TNS_DIR/sqlnet.ora" "$HOME/sqlnet.ora" 2>/dev/null || true
 ln -sf "$TNS_DIR/cwallet.sso" "$HOME/cwallet.sso" 2>/dev/null || true
 ln -sf "$TNS_DIR/ewallet.p12" "$HOME/ewallet.p12" 2>/dev/null || true
 
-# Süsteemse sql wrapperi tagamine kasutaja PATH kaustades
+# Maintain system-wide sql wrapper in user PATH directories
 for bin_dir in "$HOME/Applications/sqlcl/bin" "$HOME/.local/bin" "$HOME/bin"; do
   if [ -d "$bin_dir" ]; then
     cat << 'EOF' > "$bin_dir/sql"
@@ -715,7 +715,7 @@ if [ -x "$HB_SQL" ]; then
   exec "$HB_SQL" "$@"
 fi
 
-echo "❌ Viga: SQLcl utiliiti ei leitud!"
+echo "❌ Error: SQLcl utility not found!"
 exit 1
 EOF
     chmod +x "$bin_dir/sql" 2>/dev/null || true

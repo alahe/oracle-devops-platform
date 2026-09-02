@@ -1,0 +1,34 @@
+[
+  {
+    "blueprint": 10,
+    "cold_duration_s": 730,
+    "warm_duration_s": 400,
+    "total_duration_s": 1405,
+    "cold_url_status": "PASS",
+    "cold_wallet_status": "PASS",
+    "cold_login_status": "PASS",
+    "snapshot_created": "PASS",
+    "restore_status": "PASS",
+    "warm_url_status": "FAIL",
+    "warm_wallet_status": "PASS",
+    "warm_login_status": "FAIL",
+    "overall_status": "FAIL",
+    "error": ""
+  },
+  {
+    "blueprint": 11,
+    "cold_duration_s": 265,
+    "warm_duration_s": 204,
+    "total_duration_s": 557,
+    "cold_url_status": "PASS",
+    "cold_wallet_status": "PASS",
+    "cold_login_status": "FAIL",
+    "snapshot_created": "PASS",
+    "restore_status": "PASS",
+    "warm_url_status": "PASS",
+    "warm_wallet_status": "PASS",
+    "warm_login_status": "FAIL",
+    "overall_status": "PASS",
+    "error": ""
+  }
+]

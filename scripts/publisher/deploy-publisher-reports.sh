@@ -48,7 +48,7 @@ echo "======================================================================" | 
 TARGET_REPORTS_DIR=""
 
 if [ -n "${REPORTS_ARTIFACTORY_URL}" ]; then
-  echo -e "${CYAN}1. Laadin aruannete ehituspaketi Artifactory'st:${NC} ${REPORTS_ARTIFACTORY_URL}" | tee -a "$LOG_FILE"
+  echo -e "${CYAN}1. Fetching reports package from Artifactory:${NC} ${REPORTS_ARTIFACTORY_URL}" | tee -a "$LOG_FILE"
   mkdir -p "$LOCAL_CACHE_DIR"
   
   AUTH_HEADER=()
@@ -68,11 +68,11 @@ if [ -n "${REPORTS_ARTIFACTORY_URL}" ]; then
       unzip -q -o "$TMP_ARCHIVE" -d "$LOCAL_CACHE_DIR" >> "$LOG_FILE" 2>&1 || true
     fi
     rm -f "$TMP_ARCHIVE"
-    echo -e "${GREEN}✅ Artifactory ehituspakett edukalt alla laaditud ja lahti pakitud!${NC}" | tee -a "$LOG_FILE"
+    echo -e "${GREEN}✅ Artifactory reports package downloaded and extracted successfully!${NC}" | tee -a "$LOG_FILE"
   fi
   TARGET_REPORTS_DIR="$LOCAL_CACHE_DIR"
 elif [ -n "${REPORTS_GIT_URL}" ]; then
-  echo -e "${CYAN}1. Sünkroniseerin eraldiseisva aruannete Git repositooriumi:${NC} ${REPORTS_GIT_URL} (Branch: ${REPORTS_GIT_BRANCH})" | tee -a "$LOG_FILE"
+  echo -e "${CYAN}1. Synchronizing decoupled reports Git repository:${NC} ${REPORTS_GIT_URL} (Branch: ${REPORTS_GIT_BRANCH})" | tee -a "$LOG_FILE"
   mkdir -p "$LOCAL_CACHE_DIR"
   if [ -d "$LOCAL_CACHE_DIR/.git" ]; then
     (cd "$LOCAL_CACHE_DIR" && git fetch origin && git checkout "$REPORTS_GIT_BRANCH" && git pull origin "$REPORTS_GIT_BRANCH") >> "$LOG_FILE" 2>&1 || true
@@ -81,33 +81,33 @@ elif [ -n "${REPORTS_GIT_URL}" ]; then
   fi
   TARGET_REPORTS_DIR="$LOCAL_CACHE_DIR"
 elif [ -d "$LOCAL_DEV_DIR" ]; then
-  echo -e "${CYAN}1. Kasutan lokaalset aruannete kausta:${NC} ${LOCAL_DEV_DIR}" | tee -a "$LOG_FILE"
+  echo -e "${CYAN}1. Using local reports directory:${NC} ${LOCAL_DEV_DIR}" | tee -a "$LOG_FILE"
   TARGET_REPORTS_DIR="$LOCAL_DEV_DIR"
 elif [ -d "$LOCAL_CACHE_DIR" ]; then
-  echo -e "${CYAN}1. Kasutan puhverdatud aruannete kausta:${NC} ${LOCAL_CACHE_DIR}" | tee -a "$LOG_FILE"
+  echo -e "${CYAN}1. Using cached reports directory:${NC} ${LOCAL_CACHE_DIR}" | tee -a "$LOG_FILE"
   TARGET_REPORTS_DIR="$LOCAL_CACHE_DIR"
 else
-  echo -e "${YELLOW}ℹ️ Aruannete allikat ei leitud. Loome näidiskausta...${NC}" | tee -a "$LOG_FILE"
+  echo -e "${YELLOW}ℹ️ No reports source found. Creating sample directory structure...${NC}" | tee -a "$LOG_FILE"
   mkdir -p "$LOCAL_DEV_DIR/Custom/Reports"
   TARGET_REPORTS_DIR="$LOCAL_DEV_DIR"
 fi
 
-echo -e "   └─ Aruannete allikas: ${TARGET_REPORTS_DIR}" | tee -a "$LOG_FILE"
+echo -e "   └─ Reports source: ${TARGET_REPORTS_DIR}" | tee -a "$LOG_FILE"
 
 # 2. Deploy Reports to Publisher
 if ! "${RUNTIME_ENGINE}" ps --format "{{.Names}}" 2>/dev/null | grep -q "^${CONTAINER_NAME}$"; then
-  echo -e "${YELLOW}⚠️ Konteiner ${CONTAINER_NAME} ei käi. Jätan aruannete füüsilise paigalduse vahele.${NC}" | tee -a "$LOG_FILE"
+  echo -e "${YELLOW}⚠️ Container ${CONTAINER_NAME} is not running. Skipping physical report deployment.${NC}" | tee -a "$LOG_FILE"
   exit 0
 fi
 
-echo -e "${CYAN}2. Paigaldan aruanded ja trükised (Režiim: ${DEPLOY_MODE})...${NC}" | tee -a "$LOG_FILE"
+echo -e "${CYAN}2. Deploying reports and layouts (Mode: ${DEPLOY_MODE})...${NC}" | tee -a "$LOG_FILE"
 
 if [ "$DEPLOY_MODE" = "catalog" ]; then
   # Direct Catalog Volume Sync
-  echo "   └─ Kopeerin aruannete failid Publisheri kataloogi (/u01/.../bipublisher/repository/)..." | tee -a "$LOG_FILE"
+  echo "   └─ Copying report files to Publisher catalog (/u01/.../bipublisher/repository/)..." | tee -a "$LOG_FILE"
   "${RUNTIME_ENGINE}" cp "${TARGET_REPORTS_DIR}/." "${CONTAINER_NAME}:/u01/oracle/user_projects/domains/bi/bidata/components/bipublisher/repository/" >> "$LOG_FILE" 2>&1 || true
   "${RUNTIME_ENGINE}" exec -i "${CONTAINER_NAME}" chmod -R 775 /u01/oracle/user_projects/domains/bi/bidata/components/bipublisher/repository/ >> "$LOG_FILE" 2>&1 || true
-  echo -e "${GREEN}✅ Aruanded kopeeritud Publisheri kataloogi edukalt!${NC}" | tee -a "$LOG_FILE"
+  echo -e "${GREEN}✅ Reports copied to Publisher catalog successfully!${NC}" | tee -a "$LOG_FILE"
 else
   # REST API Upload
   PUBLISHER_URL="${PUBLISHER_URL:-http://localhost:9502/xmlpserver}"
@@ -120,12 +120,12 @@ else
 
   find "${TARGET_REPORTS_DIR}" -type f \( -name "*.xdoz" -o -name "*.xdmz" \) | while read -r report_file; do
     rel_path="${report_file#"${TARGET_REPORTS_DIR}"/}"
-    echo "   └─ REST üleslaadimine: ${rel_path}..." | tee -a "$LOG_FILE"
+    echo "   └─ REST upload: ${rel_path}..." | tee -a "$LOG_FILE"
     curl -s -u "${ADMIN_USER}:${ADMIN_PWD}" -F "reportPath=/Custom/${rel_path}" -F "file=@${report_file}" "${PUBLISHER_URL}/services/rest/v1/reports" >> "$LOG_FILE" 2>&1 || true
   done
-  echo -e "${GREEN}✅ Aruanded laaditud üles läbi Publisher REST API!${NC}" | tee -a "$LOG_FILE"
+  echo -e "${GREEN}✅ Reports uploaded via Publisher REST API successfully!${NC}" | tee -a "$LOG_FILE"
 fi
 
 echo "======================================================================" | tee -a "$LOG_FILE"
-echo -e "${GREEN}🎉 Analytics Publisher aruannete paigaldus lõpetatud!${NC}" | tee -a "$LOG_FILE"
+echo -e "${GREEN}🎉 Analytics Publisher reports deployment completed!${NC}" | tee -a "$LOG_FILE"
 echo "======================================================================" | tee -a "$LOG_FILE"

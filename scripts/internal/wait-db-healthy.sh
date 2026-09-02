@@ -54,7 +54,7 @@ for container in "${CONTAINERS_TO_CHECK[@]}"; do
         if podman exec "$container" sh -c "[ -f /u01/container_state/.installed_ords ]" 2>/dev/null; then
           is_healthy=true
         else
-          # Kontrollime, et PDB on avatud READ WRITE olekus
+          # Verify that pluggable database (PDB) is opened in READ WRITE mode
           pdb_check=$(podman exec -i "$container" sh -c 'export ORACLE_HOME=$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n "$ORACLE_HOME" ] && export PATH="$ORACLE_HOME/bin:$PATH"; echo -e "SET HEADING OFF FEEDBACK OFF;\nSHOW PDBS;\nEXIT;" | sqlplus -s / as sysdba' 2>/dev/null || true)
           if echo "$pdb_check" | grep -q "READ WRITE"; then
             is_healthy=true
@@ -69,16 +69,16 @@ for container in "${CONTAINERS_TO_CHECK[@]}"; do
       break
     fi
 
-    # Kui konteinerit ei ole aktiivses compose profiilis defineeritud ega käivitatud (not_found), jätame selle kohe vahele
-    if [ "$c_status" = "not_found" ] && [ $WAIT_COUNT -ge 6 ]; then
+    # If container is not defined in active compose profile (not_found), wait up to 30s before skipping
+    if [ "$c_status" = "not_found" ] && [ $WAIT_COUNT -ge 30 ]; then
       clear_progress_line
-      echo -e "   ℹ️  Konteinerit ${YELLOW}${container}${NC} ei ole aktiivses profiilis käivitatud (Skipping)."
+      echo -e "   ℹ️  Container ${YELLOW}${container}${NC} is not running in active profile (Skipping)."
       break
     fi
 
     sleep "$POLL_INTERVAL"
     WAIT_COUNT=$((WAIT_COUNT + POLL_INTERVAL))
-    # Adaptiivne intervalli reguleerimine
+    # Adaptive poll interval
     if [ $WAIT_COUNT -gt 30 ] && [ "$POLL_INTERVAL" -lt 5 ]; then
       POLL_INTERVAL=5
     fi

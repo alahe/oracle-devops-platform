@@ -75,7 +75,7 @@ echo -e "${CYAN}$(msg_str "TITLE_WALLET_CHECK")${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 
 if [ ! -f "$TNS_DIR/tnsnames.ora" ]; then
-  echo -e "${YELLOW}ℹ️ TNS_ADMIN kataloogis puudub tnsnames.ora fail. Jätan vahele.${NC}"
+  msg_print "WALLET_NO_TNS_NAMES"
   exit 0
 fi
 
@@ -83,7 +83,7 @@ fi
 ALIASES=($(grep -E '^[A-Za-z0-9_]+[[:space:]]*=' "$TNS_DIR/tnsnames.ora" | cut -d'=' -f1 | tr -d ' ' | sort -u))
 
 if [ ${#ALIASES[@]} -eq 0 ]; then
-  echo -e "${YELLOW}ℹ️ tnsnames.ora failis ei leitud ühtegi ühenduse aliast.${NC}"
+  msg_print "WALLET_NO_ALIASES"
   exit 0
 fi
 

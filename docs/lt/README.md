@@ -12,8 +12,8 @@
 # 1. Klonuoti saugyklą ir pereiti į katalogą
 git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-free-db-in-prod
 
-# 2. Paleisti numatytąjį 2 sluoksnių gamybos paketą (Blueprint 3)
-./scripts/setup-all.sh -b 3 --lang lt
+# 2. Paleisti numatytąjį 2 sluoksnių gamybos paketą (Blueprint 21)
+./scripts/setup-all.sh -b 21 --lang lt
 
 # 3. Peržiūrėti slaptažodžius, URL ir iškarpinės pagalbą (arba atidaryti Dev Hub: http://localhost:8088/)
 ./scripts/get-password.sh
@@ -28,12 +28,12 @@ flowchart TD
     Start(["🚀 Kūrėjas Pradeda"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
     Clone --> ChooseBP{"2. Pasirinkti Architektūros Planą"}
     
-    ChooseBP -->|Numatytasis 2-DB Paketas| BP3["./scripts/setup-all.sh -b 3"]
-    ChooseBP -->|Forms + Publisher + IDE| BP41["./scripts/setup-all.sh -b 41"]
-    ChooseBP -->|Peržiūra / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 34 --dry-run"]
+    ChooseBP -->|Numatytasis 2-DB Paketas| BP21["./scripts/setup-all.sh -b 21 --lang lt"]
+    ChooseBP -->|Forms + Publisher + IDE| BP31["./scripts/setup-all.sh -b 31 --lang lt"]
+    ChooseBP -->|Peržiūra / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 21 --dry-run"]
     
-    BP3 --> DevHub["3. Atidaryti DevOps Valdymo Centrą<br/>🌐 http://localhost:8088/"]
-    BP41 --> DevHub
+    BP21 --> DevHub["3. Atidaryti DevOps Valdymo Centrą<br/>🌐 http://localhost:8088/"]
+    BP31 --> DevHub
     BPDry --> ChooseBP
     
     DevHub --> PwdSpikker["4. Slaptažodžių Špargalka (SEPS Wallet)<br/>./scripts/get-password.sh DB_PROXY_DEV -c"]
@@ -162,6 +162,21 @@ graph TD
 # 5. Parodyti 11 planų lentelę konsolėje:
 ./scripts/deploy-blueprint.sh --list --lang lt
 ```
+
+---
+
+## ⚡ Pagreitintas ~15s Atkūrimas & Automatizuota Versijų Patikra
+
+Oracle Free DB in Prod apima **išmanų kelių lygių Golden Snapshot ir Skip variklį** (`scripts/internal/snapshot-resolver.sh`), kuris sutrumpina antrą paleidimo laiką nuo **~6–12 minučių iki ~15 sekundžių**:
+
+1. **Automatizuota Versijų Patikra & Pasenusių Momentinių Kopijų Anuliavimas (`.meta.json`):**
+   - Kiekviena Golden Snapshot apima mašininiu būdu skaitomą `.meta.json` sutartį, kurioje registruojamos APEX, duomenų bazės, ORDS ir tarpinės programinės įrangos versijos.
+   - Prieš atkūrimą griežtai tikrinamas versijų suderinamumas. Jei aptinkama pasenusi momentinė kopija (pvz., tikslinis `APEX 26.1` prieš snapshot `24.2`), sistema įspėja `VERSION MISMATCH`, atlieka švarų diegimą ir automatiškai sugeneruoja naują atnaujintą momentinę kopiją.
+2. **Profiliais Pagrįstas Pakartotinis Naudojimas & Skip Matrica:**
+   - Kadangi identiški duomenų bazės profiliai dalijami keliuose planuose (pvz., `db-proxy-oracle` BP 3, BP 7, BP 21, BP 22, BP 34, BP 43), plano keitimas (pvz., BP 3 $\rightarrow$ BP 34 Web IDE pridėjimui) palieka duomenų bazę nepaliestą ir paleidžia tik trūkstamą konteinerį per **~3 sekundes**.
+3. **Shared vs. Dedicated WebLogic Topologijos:**
+   - **Bendras WebLogic (BP 41 & BP 43):** Viena All-in-One duomenų bazė (`db-dev-full`), sujungtos RCU schemos (`DEV_`), 1 kombinuota momentinė kopija ir mažas RAM sunaudojimas (~6–8 GB).
+   - **Dedikuotas WebLogic (BP 11, BP 21 & BP 42):** Nepriklausomos duomenų bazės (`db-forms`, `db-publisher`), modulinės momentinės kopijos ir atrankinis paleidimas, sutaupantis iki 4 GB RAM.
 
 ---
 

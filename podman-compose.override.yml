@@ -74,10 +74,10 @@ services:
         fi
         rm -rf /etc/ords/config/databases/*/wallet /etc/ords/config/databases/*/*/wallet 2>/dev/null || true
         if [ -f /run/secrets/ords_listener_password ]; then
-          APEX_LISTENER_PWD=$(cat /run/secrets/ords_listener_password)
-        fi
-        if [ -n "$$APEX_LISTENER_PWD" ]; then
-          find /etc/ords/config/databases/ -name "pool.xml" -exec sed -i "s|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$$APEX_LISTENER_PWD</entry>|g" {} + 2>/dev/null || true
+          APEX_LISTENER_PWD=$(cat /run/secrets/ords_listener_password | tr -d '\r\n')
+          if [ -n "$APEX_LISTENER_PWD" ]; then
+            find /etc/ords/config/databases/ -name "pool.xml" -exec sed -i "s|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$APEX_LISTENER_PWD</entry>|g" {} + 2>/dev/null || true
+          fi
         fi
         mkdir -p /etc/ords/config/global
         printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">' '<properties>' '<entry key="database.api.enabled">true</entry>' '<entry key="feature.sdw">true</entry>' '<entry key="restEnabledSql.active">true</entry>' '<entry key="standalone.doc.root">/opt/oracle/docroot</entry>' "<entry key=\"standalone.http.port\">8088</entry>" "<entry key=\"standalone.https.port\">8448</entry>" '<entry key="standalone.static.context.path">/i</entry>' '<entry key="standalone.static.path">/opt/oracle/apex_images/images</entry>' '</properties>' > /etc/ords/config/global/settings.xml

@@ -17,7 +17,7 @@ ENV_PATH="$WORKSPACE_DIR/.env"
 COMPOSE_FILE="$WORKSPACE_DIR/podman-compose.yml"
 OVERRIDE_FILE="$WORKSPACE_DIR/podman-compose.override.yml"
 
-# Kontrollime, kas vajalikud Podman saladused on registreeritud
+# Verify that required Podman secrets are registered
 SECRETS_EXIST=true
 if [ -f "$ENV_PATH" ]; then
   for secret in $(get_required_secret_names 2>/dev/null || echo "apex_db_sys_password publisher_db_sys_password apex_schema_password test_dev_password"); do
@@ -36,7 +36,7 @@ if [ "$SECRETS_EXIST" = "false" ]; then
   fi
 fi
 
-# Genereerime dünaamiliselt podman-compose.override.yml profiili ja lisabaaside jaoks
+# Dynamically generate podman-compose.override.yml for profiles and additional databases
 rm -f "$OVERRIDE_FILE"
 echo "   $(msg_str "COMPOSE_GEN_INFO")"
 cat <<EOF > "$OVERRIDE_FILE"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Oracle DevOps Platform - macOS User Certificate Remover
-# Eemaldab kohaliku Dev Root CA macOS kasutaja võtmehoidjast.
+# Removes local Dev Root CA from current macOS user keychain.
 # ============================================================================
 set -e
 

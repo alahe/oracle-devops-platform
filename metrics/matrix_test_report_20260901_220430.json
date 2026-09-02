@@ -1,0 +1,50 @@
+[
+  {
+    "blueprint": 24,
+    "cold_duration_s": 987,
+    "warm_duration_s": 643,
+    "total_duration_s": 2041,
+    "cold_url_status": "PASS",
+    "cold_wallet_status": "PASS",
+    "cold_login_status": "FAIL",
+    "snapshot_created": "WARN",
+    "restore_status": "PASS",
+    "warm_url_status": "FAIL",
+    "warm_wallet_status": "PASS",
+    "warm_login_status": "FAIL",
+    "overall_status": "FAIL",
+    "error": ""
+  },
+  {
+    "blueprint": 30,
+    "cold_duration_s": 1366,
+    "warm_duration_s": 670,
+    "total_duration_s": 2411,
+    "cold_url_status": "PASS",
+    "cold_wallet_status": "PASS",
+    "cold_login_status": "PASS",
+    "snapshot_created": "PASS",
+    "restore_status": "PASS",
+    "warm_url_status": "FAIL",
+    "warm_wallet_status": "PASS",
+    "warm_login_status": "FAIL",
+    "overall_status": "FAIL",
+    "error": ""
+  },
+  {
+    "blueprint": 31,
+    "cold_duration_s": 1714,
+    "warm_duration_s": 629,
+    "total_duration_s": 2876,
+    "cold_url_status": "PASS",
+    "cold_wallet_status": "PASS",
+    "cold_login_status": "PASS",
+    "snapshot_created": "PASS",
+    "restore_status": "PASS",
+    "warm_url_status": "FAIL",
+    "warm_wallet_status": "PASS",
+    "warm_login_status": "FAIL",
+    "overall_status": "FAIL",
+    "error": ""
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "last_updated": "2026-09-02T05:38:55Z",
+  "total_duration_seconds": 229,
+  "total_duration_formatted": "3m 49s",
+  "parameters": {
+    "is_local": "true",
+    "db_host": "localhost",
+    "db_port": "1532",
+    "db_service": "FREEPDB1",
+    "ords_port": "8088",
+    "ords_ssl_port": "8448"
+  },
+  "steps": {
+    "step1_container_images_pull_seconds": 3,
+    "step2_ords_download_seconds": 1,
+    "step3_apex_download_unzip_seconds": 13,
+    "step4_container_startup_seconds": 28,
+    "step4_5_wallet_tns_config_seconds": 61,
+    "step5_ords_service_seconds": 1,
+    "step5_5_liquibase_migration_seconds": 1,
+    "step6_apex_copy_container_seconds": 20,
+    "step7_apex_engine_install_seconds": 348,
+    "step8_ords_config_seconds": 10,
+    "step9_publisher_install_seconds": 0,
+    "step10_deploy_apex_apps_seconds": 0,
+    "step11_snapshot_seconds": 30
+  }
+}

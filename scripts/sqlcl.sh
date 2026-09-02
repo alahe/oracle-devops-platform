@@ -17,7 +17,7 @@ fi
 
 TNS_DIR="$WORKSPACE_DIR/config/tns_admin"
 if [ ! -d "$TNS_DIR" ]; then
-  echo "❌ Viga: TNS kausta '$TNS_DIR' ei leitud!"
+  echo "❌ Error: TNS directory '$TNS_DIR' not found!"
   exit 1
 fi
 

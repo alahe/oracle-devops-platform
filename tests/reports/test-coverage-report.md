@@ -5,7 +5,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ---
 
-## 📅 Genereeritud: 2026-08-31 17:43:45
+## 📅 Genereeritud: 2026-09-01 15:37:16
 
 ---
 
@@ -21,6 +21,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 | **`deploy-remote.sh`** | ✅ Kaetud | [`test-script-deploy-remote.sh`](../unit/test-script-deploy-remote.sh) |
 | **`get-password.sh`** | ✅ Kaetud | [`test-multi-db-seps-wallet.sh`](../unit/test-multi-db-seps-wallet.sh),[`test-script-get-password.sh`](../unit/test-script-get-password.sh),[`test-e2e-system.sh`](../integration/test-e2e-system.sh),[`test-subcomponent-services.sh`](../integration/test-subcomponent-services.sh),[`test-browser-login.sh`](../test-browser-login.sh) |
 | **`publish-image-to-artifactory.sh`** | ✅ Kaetud | [`test-apex-speedup-and-artifactory.sh`](../unit/test-apex-speedup-and-artifactory.sh) |
+| **`publish-to-artifactory.sh`** | ✅ Kaetud | [`test-script-publish-to-artifactory.sh`](../unit/test-script-publish-to-artifactory.sh) |
 | **`register-connections.sh`** | ✅ Kaetud | [`test-script-register-connections.sh`](../unit/test-script-register-connections.sh),[`test-vscode-wallet-connections.sh`](../unit/test-vscode-wallet-connections.sh),[`test-internal-installers-and-helpers.sh`](../integration/test-internal-installers-and-helpers.sh) |
 | **`reset-all.sh`** | ✅ Kaetud | [`test-script-reset-all.sh`](../unit/test-script-reset-all.sh),[`test-e2e-system.sh`](../integration/test-e2e-system.sh) |
 | **`rotate-password.sh`** | ✅ Kaetud | [`test-password-rotation.sh`](../unit/test-password-rotation.sh) |
@@ -36,11 +37,13 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 | Skript | Kaetuse Olek | Testkomplektid (Test Suites) |
 | :--- | :--- | :--- |
+| **`internal/apply-apex-patch.sh`** | ✅ Kaetud | [`test-compact-terminal-ux.sh`](../unit/test-compact-terminal-ux.sh),[`test-script-apply-apex-patch.sh`](../unit/test-script-apply-apex-patch.sh),[`test-internal-installers-and-helpers.sh`](../integration/test-internal-installers-and-helpers.sh) |
 | **`internal/apply-profile-users.sh`** | ✅ Kaetud | [`test-script-apply-profile-users.sh`](../unit/test-script-apply-profile-users.sh),[`test-e2e-system.sh`](../integration/test-e2e-system.sh),[`test-profile-users-and-roles.sh`](../integration/test-profile-users-and-roles.sh) |
+| **`internal/artifactory-client.sh`** | ✅ Kaetud | [`test-artifactory-client.sh`](../unit/test-artifactory-client.sh),[`test-script-artifactory-client.sh`](../unit/test-script-artifactory-client.sh) |
 | **`internal/blueprint-info.sh`** | ✅ Kaetud | [`test-compact-terminal-ux.sh`](../unit/test-compact-terminal-ux.sh) |
 | **`internal/check-network-ports.sh`** | ✅ Kaetud | [`test-script-check-network-ports.sh`](../unit/test-script-check-network-ports.sh) |
 | **`internal/check-prerequisites.sh`** | ✅ Kaetud | [`test-script-check-prerequisites.sh`](../unit/test-script-check-prerequisites.sh) |
-| **`internal/common.sh`** | ✅ Kaetud | [`test-compact-terminal-ux.sh`](../unit/test-compact-terminal-ux.sh),[`test-custom-image-naming-pattern.sh`](../unit/test-custom-image-naming-pattern.sh),[`test-script-common.sh`](../unit/test-script-common.sh) |
+| **`internal/common.sh`** | ✅ Kaetud | [`test-artifactory-client.sh`](../unit/test-artifactory-client.sh),[`test-compact-terminal-ux.sh`](../unit/test-compact-terminal-ux.sh),[`test-custom-image-naming-pattern.sh`](../unit/test-custom-image-naming-pattern.sh),[`test-script-artifactory-client.sh`](../unit/test-script-artifactory-client.sh),[`test-script-common.sh`](../unit/test-script-common.sh),[`test-script-snapshot-resolver.sh`](../unit/test-script-snapshot-resolver.sh),[`test-snapshot-resolver.sh`](../unit/test-snapshot-resolver.sh) |
 | **`internal/configure-external-ords-pool.sh`** | ✅ Kaetud | [`test-script-configure-external-ords-pool.sh`](../unit/test-script-configure-external-ords-pool.sh) |
 | **`internal/create-wallet.sh`** | ✅ Kaetud | [`test-multi-db-seps-wallet.sh`](../unit/test-multi-db-seps-wallet.sh),[`test-script-create-wallet.sh`](../unit/test-script-create-wallet.sh),[`test-e2e-system.sh`](../integration/test-e2e-system.sh),[`test-internal-installers-and-helpers.sh`](../integration/test-internal-installers-and-helpers.sh) |
 | **`internal/credential-helper.sh`** | ✅ Kaetud | [`test-credentials-matrix.sh`](../unit/test-credentials-matrix.sh),[`test-password-rotation.sh`](../unit/test-password-rotation.sh) |
@@ -52,7 +55,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 | **`internal/generate-local-certs.sh`** | ✅ Kaetud | [`test-script-generate-local-certs.sh`](../unit/test-script-generate-local-certs.sh),[`test-e2e-system.sh`](../integration/test-e2e-system.sh) |
 | **`internal/generate-passwords.sh`** | ✅ Kaetud | [`test-script-generate-passwords.sh`](../unit/test-script-generate-passwords.sh),[`test-e2e-system.sh`](../integration/test-e2e-system.sh),[`test-password-generator.sh`](../integration/test-password-generator.sh) |
 | **`internal/generate-setup-report.sh`** | ✅ Kaetud | [`test-script-generate-setup-report.sh`](../unit/test-script-generate-setup-report.sh) |
-| **`internal/i18n.sh`** | ✅ Kaetud | [`test-i18n-translations.sh`](../unit/test-i18n-translations.sh),[`test-e2e-system.sh`](../integration/test-e2e-system.sh),[`test-multilingual-support.sh`](../test-multilingual-support.sh) |
+| **`internal/i18n.sh`** | ✅ Kaetud | [`test-artifactory-client.sh`](../unit/test-artifactory-client.sh),[`test-i18n-translations.sh`](../unit/test-i18n-translations.sh),[`test-script-artifactory-client.sh`](../unit/test-script-artifactory-client.sh),[`test-e2e-system.sh`](../integration/test-e2e-system.sh),[`test-multilingual-support.sh`](../test-multilingual-support.sh) |
 | **`internal/init-db-instance.sh`** | ✅ Kaetud | [`test-script-init-db-instance.sh`](../unit/test-script-init-db-instance.sh),[`test-e2e-system.sh`](../integration/test-e2e-system.sh),[`test-instance-initializer.sh`](../integration/test-instance-initializer.sh) |
 | **`internal/init-forms-rcu.sh`** | ✅ Kaetud | [`test-script-status-forms.sh`](../unit/test-script-status-forms.sh) |
 | **`internal/init-publisher-datasource.sh`** | ✅ Kaetud | [`test-script-init-publisher-datasource.sh`](../unit/test-script-init-publisher-datasource.sh) |
@@ -70,6 +73,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 | **`internal/resolve-topology.sh`** | ✅ Kaetud | [`test-script-resolve-topology.sh`](../unit/test-script-resolve-topology.sh),[`test-db-profiles-and-topology.sh`](../integration/test-db-profiles-and-topology.sh),[`test-e2e-system.sh`](../integration/test-e2e-system.sh) |
 | **`internal/run_blueprint_matrix_test.sh`** | ❌ Kaetus puudub | - |
 | **`internal/sanitize-logs.sh`** | ✅ Kaetud | [`test-script-sanitize-logs.sh`](../unit/test-script-sanitize-logs.sh) |
+| **`internal/snapshot-resolver.sh`** | ✅ Kaetud | [`test-artifactory-client.sh`](../unit/test-artifactory-client.sh),[`test-script-artifactory-client.sh`](../unit/test-script-artifactory-client.sh),[`test-script-snapshot-resolver.sh`](../unit/test-script-snapshot-resolver.sh),[`test-snapshot-resolver.sh`](../unit/test-snapshot-resolver.sh) |
 | **`internal/test-forms-service.sh`** | ✅ Kaetud | [`test-script-status-forms.sh`](../unit/test-script-status-forms.sh) |
 | **`internal/test-publisher-ds.sh`** | ✅ Kaetud | [`test-script-test-publisher-ds.sh`](../unit/test-script-test-publisher-ds.sh) |
 | **`internal/test-standalone-ords-emulation.sh`** | ✅ Kaetud | [`test-script-test-standalone-ords-emulation.sh`](../unit/test-script-test-standalone-ords-emulation.sh) |
@@ -80,7 +84,7 @@ Aruanne analüüsib kõigi kaustades `scripts/` ja `scripts/internal/` asuvate S
 
 ## 📈 Kokkuvõttev Mõõdik (Summary Metrics)
 
-- **Kogu skriptide arv (Total Scripts):** 55
-- **Testidega kaetud skripte (Covered Scripts):** 54
+- **Kogu skriptide arv (Total Scripts):** 59
+- **Testidega kaetud skripte (Covered Scripts):** 58
 - **Automaattestide kaetus (Test Coverage):** **98%**
 

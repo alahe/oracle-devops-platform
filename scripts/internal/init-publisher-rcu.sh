@@ -29,11 +29,11 @@ DB_PORT="${PROFILE_DB_PORT:-1533}"
 DB_SERVICE="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
 SYS_PWD=$(get_db_sys_password "$PRIMARY_CONTAINER")
 if [ -z "$SYS_PWD" ]; then
-  echo "❌ VIGA: Ei suutnud leida SYS parooli andmebaasile ${PRIMARY_CONTAINER}!"
+  echo "❌ ERROR: Could not find SYS password for database ${PRIMARY_CONTAINER}!"
   exit 1
 fi
 
-# Tagame SYS parooli sünkroonsuse andmebaasis
+# Synchronize SYS password in database
 if podman ps --format "{{.Names}}" 2>/dev/null | grep -q "$PRIMARY_CONTAINER"; then
   podman exec -i "$PRIMARY_CONTAINER" sh -c "sqlplus -S / as sysdba" << SYSSYNC >/dev/null 2>&1 || true
 ALTER USER sys IDENTIFIED BY "${SYS_PWD}" CONTAINER=ALL;

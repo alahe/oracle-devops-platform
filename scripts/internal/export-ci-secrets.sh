@@ -16,7 +16,7 @@ if [ ! -d "$TNS_DIR" ]; then
 fi
 
 if [ ! -d "$TNS_DIR" ]; then
-  echo "❌ Viga: TNS/Wallet kataloogi ei leitud ($TNS_DIR)!"
+  echo "❌ Error: TNS/Wallet directory not found ($TNS_DIR)!"
   exit 1
 fi
 
@@ -24,20 +24,19 @@ echo "=================================================================="
 echo "🔐 ORACLE SEPS WALLET CI/CD SECRETS EXPORTER"
 echo "=================================================================="
 
-# Loo ajutine ZIP pakk Wallet failidest
+# Create temporary ZIP package of wallet files
 TMP_ZIP="/tmp/wallet_ci_$$.zip"
 (cd "$TNS_DIR" && zip -q -r "$TMP_ZIP" .)
 
-
-# Konverteeri Base64 sõneks
+# Convert to Base64 string
 B64_STR=$(base64 < "$TMP_ZIP" | tr -d '\r\n')
 rm -f "$TMP_ZIP"
 
-echo -e "✅ SEPS Wallet edukalt pakitud ja konverteeritud Base64 kujule!"
-echo "   Kopeeri allolev sõne GitHub Secrets muutujasse: DB_WALLET_BASE64"
+echo -e "✅ SEPS Wallet compressed and converted to Base64 successfully!"
+echo "   Copy the string below to GitHub Secrets variable: DB_WALLET_BASE64"
 echo "------------------------------------------------------------------"
 echo "$B64_STR"
 echo "------------------------------------------------------------------"
-echo "💡 Kasutamine käsureal (GitHub CLI):"
+echo "💡 Usage via GitHub CLI:"
 echo "   gh secret set DB_WALLET_BASE64 -b\"$B64_STR\""
 echo "=================================================================="

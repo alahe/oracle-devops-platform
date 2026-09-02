@@ -40,13 +40,13 @@ for arg in "$@"; do
 done
 
 echo "=================================================================="
-echo "🚀 LOKAALNE GITHUB ACTIONS SIMULAATOR & TESTI KÄIVITAJA"
-echo "   Töövoog: .github/workflows/$WORKFLOW"
-echo "   Režiim:  $([ "$DRY_RUN" = "true" ] && echo "Kuivkäivitus (--dry-run)" || echo "Täielik täitmine (Local Execution)")"
+echo "🚀 LOCAL GITHUB ACTIONS SIMULATOR & CI RUNNER"
+echo "   Workflow: .github/workflows/$WORKFLOW"
+echo "   Mode:     $([ "$DRY_RUN" = "true" ] && echo "Dry-run (--dry-run)" || echo "Full Execution (Local Execution)")"
 echo "=================================================================="
 
-# 1. Genereeri .env.secrets SEPS Walletist
-echo "🔑 Valmistan ette lokaalsed CI/CD saladused (.env.secrets)..."
+# 1. Generate .env.secrets from SEPS Wallet
+echo "🔑 Preparing local CI/CD secrets (.env.secrets)..."
 SECRET_FILE="$WORKSPACE_DIR/.env.secrets"
 
 # Export Base64 wallet
@@ -58,31 +58,31 @@ OCR_USERNAME=${OCR_USERNAME:-"none"}
 OCR_PASSWORD=${OCR_PASSWORD:-"none"}
 EOF
 
-echo "✅ .env.secrets fail edukalt genereeritud!"
+echo "✅ .env.secrets file generated successfully!"
 
-# 2. Kontrolli act CLI olemasolu
+# 2. Check if act CLI is installed
 if command -v act >/dev/null 2>&1; then
-  echo "✅ Tuvastati Nektos 'act' CLI utiliit."
+  echo "✅ Detected Nektos 'act' CLI utility."
   ACT_CMD="act"
 else
-  echo "ℹ️  'act' CLI utiliiti ei leitud host-süsteemist."
-  echo "   Kasutan lokaalset ajutise konteineri (ephemeral SQLcl container) fallback mudelit."
+  echo "ℹ️  'act' CLI tool not found on host system."
+  echo "   Using local ephemeral SQLcl container fallback model."
   ACT_CMD="fallback"
 fi
 
 if [ "$DRY_RUN" = "true" ]; then
-  echo "🔍 [DRY-RUN]: Kontrollin workflow süntaksit ja sammusid..."
+  echo "🔍 [DRY-RUN]: Verifying workflow syntax and steps..."
   if [ "$ACT_CMD" = "act" ]; then
     act -W ".github/workflows/$WORKFLOW" -n
   else
-    echo "✅ Workflow fail .github/workflows/$WORKFLOW on olemas ja süntaks korras."
+    echo "✅ Workflow file .github/workflows/$WORKFLOW exists and syntax is valid."
   fi
 else
   if [ "$ACT_CMD" = "act" ]; then
-    echo "🚀 Käivitan lokaalse workflow käivituse 'act' abil..."
+    echo "🚀 Launching local workflow execution with 'act'..."
     act -W ".github/workflows/$WORKFLOW" --secret-file "$SECRET_FILE"
   else
-    echo "🚀 Käivitan SQLcl Projects tarne ajutises konteineris (Ephemeral Fallback)..."
+    echo "🚀 Executing SQLcl Projects deployment in ephemeral container..."
     PRIMARY_CONTAINER=$(podman ps --format "{{.Names}}" 2>/dev/null | grep -E "^(db-|oracle-)" | head -n 1 || echo "db-dev-full")
     TNS_DIR="$WORKSPACE_DIR/config/tns_admin_container"
     [ ! -d "$TNS_DIR" ] && TNS_DIR="$WORKSPACE_DIR/config/tns_admin"
@@ -124,7 +124,7 @@ with open(metrics_file, 'w') as f:
 echo "test_local_ci_duration_seconds=$DURATION" >> "$METRICS_DIR/setup_benchmarks.env"
 
 echo "=================================================================="
-echo "🎉 LOKAALNE CI/CD TEST EDUKALT LÕPETATUD!"
-echo "   ⌛ Kestus: ${DURATION}s"
-echo "   📝 Logi: $LOG_FILE"
+echo "🎉 LOCAL CI/CD TEST COMPLETED SUCCESSFULLY!"
+echo "   ⌛ Duration: ${DURATION}s"
+echo "   📝 Log:      $LOG_FILE"
 echo "=================================================================="

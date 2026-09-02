@@ -54,14 +54,14 @@ generate_all_passwords() {
     cp "$WORKSPACE_DIR/.env.example" "$ENV_PATH"
   fi
 
-  # Laeme keskkonnamuutujad, et saada kätte ADDITIONAL_DATABASES
+  # Load environment variables to resolve ADDITIONAL_DATABASES
   if [ -f "$ENV_PATH" ]; then
     set -a
     source "$ENV_PATH"
     set +a
   fi
 
-  # Laeme profiilimootori ja aktiivsed andmebaasid
+  # Load profile engine and active database instances
   if [ -f "$WORKSPACE_DIR/scripts/internal/load-profile.sh" ]; then
     source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
   fi
@@ -75,7 +75,7 @@ generate_all_passwords() {
     fi
   }
 
-  # 1. Genereerime iga aktiivse andmebaasi instantsi kohta täieliku rollide maatriksi
+  # 1. Generate complete role credentials matrix for each active database instance
   local primary_dev_pwd=""
   local primary_viewer_pwd=""
   local primary_app_pwd=""

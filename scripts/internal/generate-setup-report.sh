@@ -125,8 +125,8 @@ if [ "${IS_TEST_MODE:-false}" = "true" ] || [ -n "${TEST_BLUEPRINTS:-}" ] || [ -
     ACTIVE_CONTAINERS_TABLE="| Konteineri Nimi | Staatus | Pordid |\n| :--- | :--- | :--- |\n${ACTIVE_CONTAINERS_MD}"
   fi
 
-  URL_AUDIT_CONTENT=$(cat "$WORKSPACE_DIR/metrics/urls_audit_temp.md" 2>/dev/null || echo "Ei leitud aktiivseid URL-e.")
-  WALLET_AUDIT_CONTENT=$(cat "$WORKSPACE_DIR/metrics/wallet_audit_temp.md" 2>/dev/null || echo "Ei leitud SEPS Walleti ühendusi.")
+  URL_AUDIT_CONTENT=$(cat "$WORKSPACE_DIR/metrics/urls_audit_temp.md" 2>/dev/null || echo "No active URLs detected.")
+  WALLET_AUDIT_CONTENT=$(cat "$WORKSPACE_DIR/metrics/wallet_audit_temp.md" 2>/dev/null || echo "No SEPS Wallet connections detected.")
 
   cat <<EOF > "$REPORT_FILE"
 # Blueprinti ${BP_ID} Testiaruanne (${RUN_TIMESTAMP})

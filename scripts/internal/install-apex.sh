@@ -26,6 +26,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [ -f "$SCRIPT_DIR/common.sh" ]; then
   source "$SCRIPT_DIR/common.sh"
 fi
+if [ -f "$SCRIPT_DIR/snapshot-resolver.sh" ]; then
+  source "$SCRIPT_DIR/snapshot-resolver.sh"
+fi
 
 # Värvide seadistamine (ainult siis kui terminal seda toetab)
 if [ -t 0 ] || { [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; }; then
@@ -82,6 +85,7 @@ else
 fi
 
 DB_SUFFIX=$(echo "$CONTAINER_NAME" | sed 's/^db-//' | tr '-' '_')
+DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${TARGET_PORT:-}"
 if [ -z "$DB_PORT" ]; then
   PORT_VAR="DB_${DB_SUFFIX}_PORT"
@@ -108,6 +112,13 @@ if [ "$APEX_VER" = "NONE" ]; then
   exit 0
 fi
 
+# In-DB APEX Idempotency & Skip Check:
+if declare -f can_skip_in_db_apex >/dev/null 2>&1; then
+  if can_skip_in_db_apex "$CONTAINER_NAME" "$APEX_VER"; then
+    exit 0
+  fi
+fi
+
 APEX_URL="${APEX_DOWNLOAD_URL:-${RESOLVED_APEX_URL:-${PROFILE_APEX_DOWNLOAD_URL:-https://download.oracle.com/otn_software/apex/apex_26.1_en.zip}}}"
 APEX_ZIP_NAME=$(basename "$APEX_URL")
 APEX_BIN_DIR="$SCRIPT_DIR/../../binaries/apex"
@@ -115,6 +126,16 @@ APEX_ZIP="$APEX_BIN_DIR/$APEX_ZIP_NAME"
 [ ! -f "$APEX_ZIP" ] && [ -f "$SCRIPT_DIR/../../binaries/$APEX_ZIP_NAME" ] && APEX_ZIP="$SCRIPT_DIR/../../binaries/$APEX_ZIP_NAME"
 [ ! -f "$APEX_ZIP" ] && [ -f "$APEX_BIN_DIR/apex-latest.zip" ] && APEX_ZIP="$APEX_BIN_DIR/apex-latest.zip"
 [ ! -f "$APEX_ZIP" ] && [ -f "$SCRIPT_DIR/../../binaries/apex-latest.zip" ] && APEX_ZIP="$SCRIPT_DIR/../../binaries/apex-latest.zip"
+
+# Artifactory LAN Fallback: Download from enterprise catalog if missing locally
+if [ ! -f "$APEX_ZIP" ] && declare -f artifactory_is_configured >/dev/null 2>&1 && artifactory_is_configured; then
+  mkdir -p "$APEX_BIN_DIR"
+  if artifactory_fetch_binary "apex" "$APEX_ZIP_NAME" "$APEX_BIN_DIR/$APEX_ZIP_NAME"; then
+    APEX_ZIP="$APEX_BIN_DIR/$APEX_ZIP_NAME"
+  elif artifactory_fetch_binary "apex" "apex-latest.zip" "$APEX_BIN_DIR/apex-latest.zip"; then
+    APEX_ZIP="$APEX_BIN_DIR/apex-latest.zip"
+  fi
+fi
 
 # 1. Lokaalsed paigalduse logid (ei lähe Git-i)
 LOG_DIR="$SCRIPT_DIR/../../install_logs"
@@ -201,7 +222,7 @@ format_duration() {
 
 copy_static_images_to_volume() {
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
-    echo "📦 Kopeerin APEX staatilised pildid ühisesse volume-i (/opt/oracle/apex_images/)..."
+    msg_print "APEX_COPY_STATIC_IMAGES_VOLUME" "/opt/oracle/apex_images/"
     podman exec -u root "$CONTAINER_NAME" mkdir -p /opt/oracle/apex_images /tmp/apex_install
     podman exec -u root "$CONTAINER_NAME" chown -R oracle:oinstall /opt/oracle/apex_images /tmp/apex_install || true
     
@@ -272,17 +293,17 @@ download_file() {
       echo "✅ Allalaadimine õnnestus PowerShelliga (süsteemi proxy auth)."
       return 0
     fi
-    echo "PowerShell allalaadimine ebaõnnestus, proovin kohalikku curl-i..."
+    echo "PowerShell download failed, trying local curl..."
   fi
   
   if ! curl -fL -o "$dest" "$url"; then
-    echo "❌ VIGA: Allalaadimine ebaõnnestus (HTTP 404 või võrguviga: $url)"
+    echo "❌ ERROR: Download failed (HTTP 404 or network error: $url)"
     rm -f "$dest"
     return 1
   fi
 
   if [[ "$dest" == *.zip ]] && ! unzip -t "$dest" &>/dev/null; then
-    echo "❌ VIGA: Allalaaditud fail $dest ei ole kehtiv ZIP arhiiv (URL $url tagastas vigase sisu)."
+    echo "❌ ERROR: Downloaded file $dest is not a valid ZIP archive (URL $url returned invalid content)."
     rm -f "$dest"
     return 1
   fi
@@ -296,7 +317,7 @@ print_sub_header() {
   local step_key1="$3"
   local step_key2="$4"
   local default_est="$5"
-  echo -e "${CYAN}├─${NC} ${YELLOW}[Alamsamm 6.${sub_num}]: ${title}${NC}"
+  echo -e "${CYAN}├─${NC} ${YELLOW}$(msg_str "SUB_STEP_HEADER" "$sub_num" "$title")${NC}"
   local stats=""
   if [ -n "$step_key1" ]; then
     stats=$(get_step_stats "$step_key1" "$default_est" 2>/dev/null || echo "")
@@ -316,7 +337,7 @@ print_sub_header "1" "Checking ORDS Service & Database Readiness..." "step1_ords
 
 ords_c_check="${PROFILE_ORDS_CONTAINER_NAME:-oracle-ords-dev}"
 if podman container exists "$ords_c_check" 2>/dev/null; then
-  echo "ORDS konteiner ($ords_c_check) on aktiivne."
+  msg_print "ORDS_CONTAINER_ACTIVE" "$ords_c_check"
 fi
 STEP1_SECS=$(($(date +%s) - STEP1_START))
 ORDS_JSON="$METRICS_DIR/ords_setup_benchmarks.json"
@@ -325,14 +346,14 @@ if [ -f "$ORDS_JSON" ]; then
   STEP1_SECS=$ORDS_BENCHMARK_SECS
 fi
 STEP1_TIME=$(format_duration $STEP1_SECS)
-echo -e "⏱  [Samm 1 valmis (ORDS seadistus): ${YELLOW}$STEP1_TIME${NC}]"
+echo -e "⏱  [$(msg_str "STEP_1_ORDS_SETUP_DONE" "$STEP1_TIME")]"
 
 # ----------------------------------------------------------------------------
 # 2. APEX Tarkvarapaketi kontroll ja lahtipakkimine
 # ----------------------------------------------------------------------------
 STEP2_START=$(date +%s)
 print_sub_header "2" "Checking Oracle APEX Software Source..." "step2_download_unzip_seconds" "step3_apex_download_unzip_seconds" "1s"
-# Kontrollime lokaalseid APEX zip failide versioone (apex-latest.zip -> spetsiifiline fail -> allalaadimine)
+# Check local APEX zip package versions (apex-latest.zip -> specific archive -> download)
 get_apex_zip_version() {
   local zfile="$1"
   if [ -f "$zfile" ]; then
@@ -345,42 +366,41 @@ LEGACY_BIN_DIR="$SCRIPT_DIR/../../binaries"
 mkdir -p "$BINARIES_DIR"
 TARGET_APEX_ZIP=""
 
-# 1. Kontrollime kas lokaalselt on olemas nõutud versiooni zip või apex-latest.zip
+# 1. Check whether required APEX zip or apex-latest.zip exists locally
 APEX_URL_ZIP_NAME=$(basename "$APEX_URL")
 EXPECTED_ZIP="$BINARIES_DIR/$APEX_URL_ZIP_NAME"
 
 if [ -f "$EXPECTED_ZIP" ] && unzip -t "$EXPECTED_ZIP" &>/dev/null; then
   TARGET_APEX_ZIP="$EXPECTED_ZIP"
-  echo "Leitud olemasolev kohalik arhiiv binaries/apex/$APEX_URL_ZIP_NAME."
+  msg_print "APEX_LOCAL_ARCHIVE_FOUND" "binaries/apex/$APEX_URL_ZIP_NAME"
 elif [ -f "$BINARIES_DIR/apex-latest.zip" ] && unzip -t "$BINARIES_DIR/apex-latest.zip" &>/dev/null; then
   TARGET_APEX_ZIP="$BINARIES_DIR/apex-latest.zip"
-  echo "Leitud olemasolev kohalik arhiiv binaries/apex/apex-latest.zip."
+  msg_print "APEX_LOCAL_ARCHIVE_FOUND" "binaries/apex/apex-latest.zip"
 elif [ -f "$BINARIES_DIR/apex_latest.zip" ] && unzip -t "$BINARIES_DIR/apex_latest.zip" &>/dev/null; then
   TARGET_APEX_ZIP="$BINARIES_DIR/apex_latest.zip"
-  echo "Leitud olemasolev kohalik arhiiv binaries/apex/apex_latest.zip."
+  msg_print "APEX_LOCAL_ARCHIVE_FOUND" "binaries/apex/apex_latest.zip"
 elif [ -f "$LEGACY_BIN_DIR/$APEX_URL_ZIP_NAME" ] && unzip -t "$LEGACY_BIN_DIR/$APEX_URL_ZIP_NAME" &>/dev/null; then
   TARGET_APEX_ZIP="$LEGACY_BIN_DIR/$APEX_URL_ZIP_NAME"
-  echo "Leitud olemasolev kohalik arhiiv binaries/$APEX_URL_ZIP_NAME."
+  msg_print "APEX_LOCAL_ARCHIVE_FOUND" "binaries/$APEX_URL_ZIP_NAME"
 elif [ -f "$LEGACY_BIN_DIR/apex-latest.zip" ] && unzip -t "$LEGACY_BIN_DIR/apex-latest.zip" &>/dev/null; then
   TARGET_APEX_ZIP="$LEGACY_BIN_DIR/apex-latest.zip"
-  echo "Leitud olemasolev kohalik arhiiv binaries/apex-latest.zip."
+  msg_print "APEX_LOCAL_ARCHIVE_FOUND" "binaries/apex-latest.zip"
 fi
 
 # 2. Kui lokaalselt sobivat zip faili ei ole, laadime alla profiili URL-ilt või apex-latest.zip URL-ilt
 if [ -z "$TARGET_APEX_ZIP" ] || [ ! -f "$TARGET_APEX_ZIP" ]; then
   TARGET_APEX_ZIP="$EXPECTED_ZIP"
-  echo "Lokaalsest kataloogist ei leitud nõutud APEX versiooni $APEX_VER ($APEX_URL_ZIP_NAME). Laadin alla aadressilt: $APEX_URL..."
+  msg_print "APEX_DOWNLOADING_VER" "$APEX_VER" "$APEX_URL_ZIP_NAME"
   if ! download_file "$APEX_URL" "$TARGET_APEX_ZIP"; then
-    echo "⚠️  Hoiatus: $APEX_URL allalaadimine ebaõnnestus. Proovin teist allalaadimisliidest (apex-latest.zip)..."
+    msg_print "APEX_DOWNLOAD_INVALID_ZIP"
     LATEST_URL="https://download.oracle.com/otn_software/apex/apex-latest.zip"
     TARGET_APEX_ZIP="$BINARIES_DIR/apex-latest.zip"
     if ! download_file "$LATEST_URL" "$TARGET_APEX_ZIP"; then
       # 3. Kui ka latest URL ei toimi, otsime kaustast binaries/apex/ või binaries/ kõrgeima versiooniga kehtivat zip-arhiivi
-      echo "⚠️  Eemalt allalaadimine ebaõnnestus. Otsin kaustast binaries/apex/ kõrgeima versiooniga kehtivat ZIP-paketti..."
       HIGHEST_ZIP=$(ls "$BINARIES_DIR"/apex*.zip "$LEGACY_BIN_DIR"/apex*.zip 2>/dev/null | sort -rV | while read -r f; do unzip -t "$f" &>/dev/null && echo "$f" && break; done || true)
       if [ -n "$HIGHEST_ZIP" ] && [ -f "$HIGHEST_ZIP" ]; then
         TARGET_APEX_ZIP="$HIGHEST_ZIP"
-        echo "✅ Kasutan parimat kohalikku APEX paketti: $(basename "$HIGHEST_ZIP")"
+        msg_print "APEX_LOCAL_FOUND_EXISTING" "$(basename "$HIGHEST_ZIP")"
       fi
     fi
   fi
@@ -391,7 +411,7 @@ APEX_ZIP_NAME=$(basename "$APEX_ZIP")
 
 STEP2_SECS=$(($(date +%s) - STEP2_START))
 STEP2_TIME=$(format_duration $STEP2_SECS)
-echo -e "⏱  [Samm 2 valmis (APEX allalaadimine): ${YELLOW}$STEP2_TIME${NC}]"
+echo -e "⏱  [$(msg_str "STEP_2_APEX_DL_DONE" "$STEP2_TIME")]"
 
 # ----------------------------------------------------------------------------
 # 3. CLI Tööriista tuvastamine ja režiimi valik
@@ -401,12 +421,12 @@ print_sub_header "3" "Preparing Connection and Copying Files if required..." "st
 
 # Automaatne lokaalse konteineri kontroll ja käivitamine
 IS_CONTAINER_AVAIL=false
-if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ] || [ "$DB_HOST" = "$CONTAINER_NAME" ]; then
+if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ] || [ "$DB_HOST" = "$CONTAINER_NAME" ] || podman container exists "$CONTAINER_NAME" 2>/dev/null; then
   if podman container exists "$CONTAINER_NAME" 2>/dev/null; then
     IS_CONTAINER_AVAIL=true
     STATUS=$(podman container inspect --format='{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null || echo "stopped")
     if [ "$STATUS" != "running" ]; then
-      echo "Lokaalne andmebaas ($CONTAINER_NAME) ei tööta. Käivitan..."
+      echo "Local database container ($CONTAINER_NAME) is not running. Starting..."
       podman start "$CONTAINER_NAME" || true
     fi
     if [ -x "$SCRIPT_DIR/wait-db-healthy.sh" ]; then
@@ -414,7 +434,7 @@ if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ] || [ "$DB_HOST" 
     elif [ -x "$WORKSPACE_DIR/scripts/internal/wait-db-healthy.sh" ]; then
       "$WORKSPACE_DIR/scripts/internal/wait-db-healthy.sh" "$CONTAINER_NAME" 60
     else
-      echo "Ootan kuni andmebaas ($CONTAINER_NAME) on valmis (healthy)..."
+      echo "Waiting until database container ($CONTAINER_NAME) is healthy..."
       until [ "$(podman inspect --format='{{.State.Health.Status}}' "$CONTAINER_NAME" 2>/dev/null)" == "healthy" ] || [ "$(podman inspect --format='{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null)" == "running" ]; do
         sleep 2
       done
@@ -423,21 +443,21 @@ if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ] || [ "$DB_HOST" 
 fi
 
 EXEC_MODE="CLIENT"
-# Eelistame alati CONTAINER režiimi kohalikus arenduses (et vältida Defenderi skaneerimise lag-i host-masinas)
+# Prefer container mode in local development
 if [ "$IS_CONTAINER_AVAIL" = "true" ]; then
-  echo "Tuvastati kohalik konteiner $CONTAINER_NAME."
-  echo "Kasutan konteineri režiimi (unzip + paigaldus otse konteineris, et vältida Defenderi viivitusi)..."
+  msg_print "CONTAINER_DETECTED_LOCAL" "$CONTAINER_NAME"
+  msg_print "CONTAINER_MODE_DEFENDER_OPT"
   EXEC_MODE="CONTAINER"
   
-  # 1. Kopeerime ZIP-faili konteinerisse (üks suur fail, kopeerub sekundiga)
-  print_progress "Kopeerin APEX tarkvara konteinerisse (${CONTAINER_NAME})" 0 1
+  # 1. Copy ZIP archive into container
+  print_progress "$(msg_str "PROGRESS_COPY_APEX_CONTAINER" "$CONTAINER_NAME")" 0 1
   podman exec -u root "$CONTAINER_NAME" rm -rf /tmp/apex_install /tmp/apex-latest.zip >/dev/null 2>&1 || true
   podman exec -u root "$CONTAINER_NAME" mkdir -p /tmp/apex_install >/dev/null 2>&1 || true
   podman cp "$APEX_ZIP" "$CONTAINER_NAME":/tmp/apex-latest.zip
   podman exec -u root "$CONTAINER_NAME" chmod 644 /tmp/apex-latest.zip >/dev/null 2>&1 || true
   
-  # 2. Pakime lahti konteineri sees (host-süsteemi viirusetõrje seda ei kontrolli)
-  print_progress "Pakin APEX tarkvara lahti konteineris (${CONTAINER_NAME})" 0 1
+  # 2. Unpack inside container
+  print_progress "$(msg_str "PROGRESS_UNZIP_APEX_CONTAINER" "$CONTAINER_NAME")" 0 1
   podman exec -u root "$CONTAINER_NAME" unzip -o -q /tmp/apex-latest.zip -d /tmp/apex_install/ >/dev/null 2>&1 || true
   # Bypass redundant interim recompilations in Phase 1 (full recompilation runs at the end in Phase 3)
   podman exec -u root "$CONTAINER_NAME" sed -i 's/sys.utl_recomp.recomp_parallel/null; -- utl_recomp/g' /tmp/apex_install/apex/coreins.sql 2>/dev/null || true
@@ -457,16 +477,15 @@ if [ "$IS_CONTAINER_AVAIL" = "true" ]; then
   DB_CLI="podman exec -i -w $APEX_SOURCE_DIR $CONTAINER_NAME sqlplus -s"
   CONN_STR="sys/${SYS_PASSWORD}@localhost:1521/$DB_SERVICE as sysdba"
 else
-  # Client-side execution (kui konteinerit pole või on tegu täiesti eraldiseisva/kaug-andmebaasiga)
-  # Siin peame pakkima lahti hostis
-  echo "Kasutan host-süsteemi režiimi (CLIENT)..."
+  # Client-side execution
+  echo "Using host-system mode (CLIENT)..."
   NEED_UNZIP=false
   TARGET_DIR="$SCRIPT_DIR/../../db-install/apex_${APEX_VER}"
   if [ ! -d "$TARGET_DIR/apex" ] || [ ! -f "$TARGET_DIR/.unzipped_source" ] || [ "$(cat "$TARGET_DIR/.unzipped_source" 2>/dev/null)" != "$APEX_ZIP_NAME" ]; then
     NEED_UNZIP=true
   fi
   if [ "$NEED_UNZIP" = "true" ]; then
-    echo "Pakin APEX-i lahti host-süsteemis..."
+    echo "Extracting APEX on host system..."
     rm -rf "$TARGET_DIR"
     mkdir -p "$TARGET_DIR"
     unzip -o -q "$APEX_ZIP" -d "$TARGET_DIR"
@@ -484,14 +503,14 @@ else
     APEX_SOURCE_DIR="$TARGET_DIR/apex"
     REST_PATH="."
   else
-    echo "❌ Viga: Ei leidnud SQLcl ega SQL*Plus utiliite host-süsteemist!"
+    echo "❌ Error: Neither SQLcl nor SQL*Plus CLI utilities were found on host system!"
     exit 1
   fi
 fi
 
 STEP3_SECS=$(($(date +%s) - STEP3_START))
 STEP3_TIME=$(format_duration $STEP3_SECS)
-echo -e "⏱  [Samm 3 valmis (Seadistus / Failide kopeerimine): ${YELLOW}$STEP3_TIME${NC}]"
+echo -e "⏱  [$(msg_str "STEP_3_SETUP_COPY_DONE" "$STEP3_TIME")]"
 
 # ----------------------------------------------------------------------------
 # 4. APEX mootori paigaldamine andmebaasis
@@ -500,13 +519,13 @@ echo -e "⏱  [Samm 3 valmis (Seadistus / Failide kopeerimine): ${YELLOW}$STEP3_
 STEP4_START=$(date +%s)
 SQL_LOG_FILE="$LOG_DIR/apex_engine_sql_${DB_SUFFIX}_${TIMESTAMP}.log"
 
-print_sub_header "4" "Running APEX Installation in $DB_SERVICE via $EXEC_MODE (Oodatav aeg ~4-7 min)..." "step4_apex_engine_install_seconds" "step7_apex_engine_install_seconds" "6m"
-echo -e "${CYAN}│${NC}  📝 Detailne SQL logi: ${CYAN}[Logi](file://$SQL_LOG_FILE)${NC}"
+print_sub_header "4" "$(msg_str "SUB_STEP_4_RUNNING_APEX" "$DB_SERVICE" "$EXEC_MODE")" "step4_apex_engine_install_seconds" "step7_apex_engine_install_seconds" "6m"
+echo -e "${CYAN}│${NC}  📝 $(msg_str "DETAIL_SQL_LOG_LINK" "$SQL_LOG_FILE")"
 
 # Kui käivitatakse kliendi-režiimis, peame minema apex kataloogi sisse
-# Kontrollime kas andmebaasis on juba sama või uuem kehtiv APEX versioon
+# Check whether the database already has the same or newer valid APEX version
 SKIP_APEX_ENGINE_INSTALL=false
-echo "Kontrollin andmebaasis installeeritud APEX-i olekut..."
+msg_print "CHECKING_DB_APEX_STATUS"
 DB_APEX_INFO=""
 if [ "$EXEC_MODE" = "CONTAINER" ]; then
   DB_APEX_INFO=$(podman exec -i -u oracle "$CONTAINER_NAME" sh -c "export ORACLE_PDB_SID=${DB_SERVICE:-FREEPDB1}; export ORACLE_HOME=\$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n \"\$ORACLE_HOME\" ] && export PATH=\"\$ORACLE_HOME/bin:\$PATH\"; sqlplus -s / as sysdba" <<EOF 2>/dev/null | grep -v -E "Connected to|Oracle Database|version" || echo ""
@@ -545,7 +564,7 @@ if [ "$DB_APEX_STATUS" = "VALID" ] && [ -n "$DB_APEX_VER" ]; then
 fi
 
 if [ "$SKIP_APEX_ENGINE_INSTALL" = "true" ]; then
-  echo "✅ Andmebaasis on juba paigaldatud ja kehtiv APEX versioon $DB_APEX_VER (soovitud: $TARGET_APEX_VER). Jätan mootori installeerimise vahele."
+  msg_print "APEX_ENGINE_ALREADY_INSTALLED" "$DB_APEX_VER" "$TARGET_APEX_VER"
   copy_static_images_to_volume
   # Sünkroniseerime APEX_PUBLIC_USER ja REST liideste paroolid
   LOCAL_POST_SQL_SCRIPT="$SCRIPT_DIR/../../install_logs/run_apex_post_install_${DB_SUFFIX}.sql"
@@ -581,6 +600,26 @@ BEGIN
 EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
+
+DECLARE
+    v_schema VARCHAR2(30);
+BEGIN
+    SELECT username INTO v_schema FROM all_users WHERE username LIKE 'APEX_%' AND REGEXP_LIKE(username, '^APEX_[0-9]+$') AND ROWNUM = 1;
+    IF v_schema IS NOT NULL THEN
+        EXECUTE IMMEDIATE 'ALTER SESSION SET CURRENT_SCHEMA = ' || v_schema;
+        EXECUTE IMMEDIATE 'BEGIN ' ||
+                          v_schema || '.wwv_flow_instance_admin.set_parameter(''STRONG_SITE_ADMIN_PASSWORD'', ''N''); ' ||
+                          v_schema || '.wwv_flow_instance_admin.set_parameter(''ACCOUNT_LIFETIME_DAYS'', ''9999''); ' ||
+                          v_schema || '.wwv_flow_instance_admin.set_parameter(''MAX_LOGIN_FAILURES'', ''100''); ' ||
+                          v_schema || '.wwv_flow_instance_admin.create_or_update_admin_user(p_username => ''ADMIN'', p_email => ''${APEX_ADMIN_EMAIL:-${PROFILE_APEX_ADMIN_EMAIL:-admin@company.com}}'', p_password => ''' || '${APEX_ADMIN_PASSWORD}' || '''); ' ||
+                          v_schema || '.wwv_flow_instance_admin.unlock_user(p_workspace => ''INTERNAL'', p_username => ''ADMIN'', p_password => ''' || '${APEX_ADMIN_PASSWORD}' || '''); ' ||
+                          'UPDATE ' || v_schema || '.wwv_flow_fnd_user SET change_password_on_first_use = ''N'', account_locked = ''N'' WHERE security_group_id = 10 AND user_name = ''ADMIN''; ' ||
+                          'COMMIT; END;';
+    END IF;
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+COMMIT;
 EXIT;
 EOF
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
@@ -846,7 +885,12 @@ END;
 EXIT;
 EOF
 
-  # Do not pause other active database containers to avoid clock drift / ORA-12752 PMON termination
+  OTHER_CONTAINERS=$(podman ps --format '{{.Names}}' 2>/dev/null | grep -E '^db-|^oracle-db-' | grep -v "^${CONTAINER_NAME}$" || echo "")
+  if [ -n "$OTHER_CONTAINERS" ]; then
+    msg_print "APEX_ENGINE_PAUSING_CONTAINERS" "$OTHER_CONTAINERS"
+    podman stop $OTHER_CONTAINERS >/dev/null 2>&1 || true
+  fi
+
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
     podman exec "$CONTAINER_NAME" mkdir -p /tmp/apex_install/apex 2>/dev/null || true
     podman cp "$LOCAL_PRE_SQL_SCRIPT" "$CONTAINER_NAME":/tmp/apex_install/apex/run_pre_install.sql
@@ -857,6 +901,7 @@ EOF
 
     cat << RUN_EOF > /tmp/run_apex_in_container.sh
 #!/bin/bash
+set -e
 export ORACLE_HOME=\$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1)
 [ -n "\$ORACLE_HOME" ] && export PATH="\$ORACLE_HOME/bin:\$PATH"
 export ORACLE_SID="FREE"
@@ -883,17 +928,22 @@ RUN_EOF
   POLL_INTERVAL="${LIVE_TIMER_INTERVAL:-3}"
   POLL_INTERVAL="${POLL_INTERVAL//[^0-9]/}"
   [ -z "$POLL_INTERVAL" ] || [ "$POLL_INTERVAL" -le 0 ] && POLL_INTERVAL=3
-  print_progress "Paigaldan APEX mootorit (${CONTAINER_NAME})" 0 360
+  print_progress "$(msg_str "PROGRESS_INSTALLING_APEX_ENGINE" "$CONTAINER_NAME")" 0 360
   while kill -0 $SQL_PID 2>/dev/null; do
     sleep "$POLL_INTERVAL"
     ELAPSED=$((ELAPSED + POLL_INTERVAL))
-    print_progress "Paigaldan APEX mootorit (${CONTAINER_NAME})" "$ELAPSED" 360
+    print_progress "$(msg_str "PROGRESS_INSTALLING_APEX_ENGINE" "$CONTAINER_NAME")" "$ELAPSED" 360
   done
   wait $SQL_PID || true
   clear_progress_line
   restore_cursor
 
-  # Kontrollime kas APEX paigaldus oli edukas (VALID staatus registris)
+  if [ -n "$OTHER_CONTAINERS" ]; then
+    msg_print "APEX_ENGINE_RESUMING_CONTAINERS" "$OTHER_CONTAINERS"
+    podman start $OTHER_CONTAINERS >/dev/null 2>&1 || true
+  fi
+
+  # Verify APEX installation validity (VALID status in registry)
   local_ver_check=""
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
     local_ver_check=$(podman exec -i "$CONTAINER_NAME" sh -c "export ORACLE_HOME=\$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n \"\$ORACLE_HOME\" ] && export PATH=\"\$ORACLE_HOME/bin:\$PATH\"; export ORACLE_PDB_SID=\"${DB_SERVICE:-FREEPDB1}\"; sqlplus -s / as sysdba <<EOF
@@ -913,13 +963,13 @@ EOF
   fi
 
   if [[ "$local_ver_check" != *"VALID"* ]]; then
-    echo -e "\n${RED}❌ VIGA: APEX mootori paigaldamine ebaõnnestus või katkes andmebaasi poolel!${NC}"
-    echo -e "ℹ️  Vaata detailset logi: ${CYAN}$SQL_LOG_FILE${NC}\n"
+    echo -e "\n${RED}$(msg_str "ERROR_APEX_ENGINE_FAILED")${NC}"
+    echo -e "$(msg_str "SEE_DETAILED_LOG" "$SQL_LOG_FILE")\n"
     tail -n 25 "$SQL_LOG_FILE" 2>/dev/null || true
     exit 1
   fi
 
-  echo "✅ APEX mootori paigaldamine lõpetatud (VALID)!"
+  msg_print "APEX_ENGINE_INSTALLED_VALID"
 
   copy_static_images_to_volume
 
@@ -932,7 +982,7 @@ EOF
 fi
 
 STEP4_TIME=$(format_duration $STEP4_SECS)
-echo -e "⏱  [Samm 4 valmis (APEX mootor): ${YELLOW}$STEP4_TIME${NC}]"
+echo -e "⏱  [$(msg_str "STEP_4_APEX_ENGINE_DONE" "$STEP4_TIME")]"
 
 # ----------------------------------------------------------------------------
 # 4.1. ORDS Konfiguratsiooni uuendamine (plsql.gateway.mode = proxied)
@@ -945,7 +995,7 @@ ORDS_CONF_LOG="$LOG_DIR/ords_configure_${DB_SUFFIX}_${TIMESTAMP}.log"
 
 if [ "$SKIP_ORDS" = "false" ] && podman container exists "$ORDS_CONTAINER" 2>/dev/null; then
   echo "=================================================================="
-  echo "Kontrollin ja sünkroniseerin ORDS serveri ($ORDS_CONTAINER) seadistused..."
+  msg_print "ORDS_CHECKING_SYNCING_CONFIG" "$ORDS_CONTAINER"
   echo "📝 Logifail: [Logi](file://$ORDS_CONF_LOG)"
   echo "=================================================================="
   {
@@ -1025,27 +1075,34 @@ fi
 
 ORDS_CONF_SECS=$(( $(date +%s) - ORDS_CONF_START ))
 ORDS_CONF_TIME=$(format_duration $ORDS_CONF_SECS)
-echo -e "⏱  [ORDS konfigureerimine valmis: ${YELLOW}$ORDS_CONF_TIME${NC}]"
+echo -e "⏱  [$(msg_str "ORDS_CONFIGURE_COMPLETED_STEP" "$ORDS_CONF_TIME")]"
 
 if podman container exists app-ords 2>/dev/null; then
-  echo "🔄 Taaskäivitan ORDS teenuse (app-ords), et uued kasutajaandmed rakenduksid mälus..."
+  msg_print "ORDS_RESTARTING_SERVICE" "app-ords"
   podman restart app-ords >/dev/null 2>&1 || true
 fi
 
 # ----------------------------------------------------------------------------
-# 5. Automaatne APEX Patchi paigaldamine (kui patches/ kataloogis on .zip fail)
+# 5. Automated APEX Patch installation (if a .zip file exists in patches/ or binaries/)
 # ----------------------------------------------------------------------------
 STEP5_START=$(date +%s)
-PATCHES_DIR="$SCRIPT_DIR/../../patches"
+APEX_PATCHES_DIR="$WORKSPACE_DIR/binaries/apex/patches"
+[ ! -d "$APEX_PATCHES_DIR" ] && APEX_PATCHES_DIR="$WORKSPACE_DIR/patches"
 PATCH_SCRIPT="$SCRIPT_DIR/apply-apex-patch.sh"
+[ ! -x "$PATCH_SCRIPT" ] && PATCH_SCRIPT="$WORKSPACE_DIR/scripts/internal/apply-apex-patch.sh"
 
-if [ -d "$PATCHES_DIR" ] && [ -x "$PATCH_SCRIPT" ]; then
-  APEX_VER_CLEAN=$(echo "$APEX_VER" | tr -d '.')
-  LATEST_PATCH=$(find "$PATCHES_DIR" -maxdepth 1 \( -name "p*_${APEX_VER_CLEAN}_*.zip" -o -name "p*_${APEX_VER}_*.zip" \) -type f | sort -V | tail -n 1)
+APEX_VER_CLEAN=$(echo "$APEX_VER" | tr -d '.')
+LATEST_PATCH=""
+if [ -d "$WORKSPACE_DIR/binaries/apex/patches" ]; then
+  LATEST_PATCH=$(find "$WORKSPACE_DIR/binaries/apex/patches" -maxdepth 1 \( -name "p*_${APEX_VER_CLEAN}_*.zip" -o -name "p*_${APEX_VER}_*.zip" \) -type f 2>/dev/null | sort -V | tail -n 1)
+fi
+if [ -z "$LATEST_PATCH" ] && [ -d "$WORKSPACE_DIR/patches" ]; then
+  LATEST_PATCH=$(find "$WORKSPACE_DIR/patches" -maxdepth 1 \( -name "p*_${APEX_VER_CLEAN}_*.zip" -o -name "p*_${APEX_VER}_*.zip" \) -type f 2>/dev/null | sort -V | tail -n 1)
+fi
 
-  if [ -n "$LATEST_PATCH" ]; then
+if [ -x "$PATCH_SCRIPT" ] && [ -n "$LATEST_PATCH" ]; then
     echo ""
-    print_sub_header "5" "Leitud APEX patch: $(basename "$LATEST_PATCH") - Käivitan automaatse paigalduse..." "step5_apex_patch_install_seconds" "step9_apex_patch_install_seconds" "30s"
+    print_sub_header "5" "$(msg_str "APEX_PATCH_FOUND_AUTO_INSTALL" "$(basename "$LATEST_PATCH")")" "step5_apex_patch_install_seconds" "step9_apex_patch_install_seconds" "30s"
     if [ "$SKIP_ORDS" = "true" ]; then
       TARGET_CONTAINER="$CONTAINER_NAME" "$PATCH_SCRIPT" "$LATEST_PATCH" --no-ords
     else
@@ -1053,16 +1110,11 @@ if [ -d "$PATCHES_DIR" ] && [ -x "$PATCH_SCRIPT" ]; then
     fi
     STEP5_SECS=$(( $(date +%s) - STEP5_START ))
     STEP5_TIME=$(format_duration $STEP5_SECS)
-    echo -e "⏱  [Samm 5 valmis (APEX Patch): ${YELLOW}$STEP5_TIME${NC}]"
-  else
+    echo -e "⏱  [$(msg_str "STEP_5_APEX_PATCH_DONE" "$STEP5_TIME")]"
+else
     STEP5_SECS=0
     STEP5_TIME="vahele jäetud"
-    echo "5. Patches/ kataloogis ei leitud ühtegi .zip patchi — vahele jäetud."
-  fi
-else
-  STEP5_SECS=0
-  STEP5_TIME="vahele jäetud"
-  echo "5. Patches/ kataloog puudub — vahele jäetud."
+    msg_print "APEX_PATCH_NO_ZIP_SKIPPED"
 fi
 
 TOTAL_SECS=$(( $(date +%s) - START_TOTAL ))
@@ -1115,16 +1167,16 @@ EOF
 
 echo ""
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "${CYAN}⏱   KOKKUVÕTLIKUD MÕÕDIKUD (SETUP BENCHMARK METRICS)${NC}"
+msg_print "SETUP_BENCHMARKS_HEADER"
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "  1. ORDS Teenuse seadistus:     ${YELLOW}$STEP1_TIME (${STEP1_SECS}s)${NC}"
-echo -e "  2. APEX Tarkvarapakett:        ${YELLOW}$STEP2_TIME (${STEP2_SECS}s)${NC}"
-echo -e "  3. Failide seadistus/kopeerimine: ${YELLOW}$STEP3_TIME (${STEP3_SECS}s)${NC}"
-echo -e "  4. APEX Mootori install (DB):  ${YELLOW}$STEP4_TIME (${STEP4_SECS}s)${NC}"
-echo -e "  5. ORDS konfigureerimine:      ${YELLOW}$ORDS_CONF_TIME (${ORDS_CONF_SECS}s)${NC}"
-echo -e "  6. APEX Patchi install (DB):   ${YELLOW}$STEP5_TIME (${STEP5_SECS}s)${NC}"
+msg_print "SETUP_BENCHMARKS_STEP1" "$STEP1_TIME" "$STEP1_SECS"
+msg_print "SETUP_BENCHMARKS_STEP2" "$STEP2_TIME" "$STEP2_SECS"
+msg_print "SETUP_BENCHMARKS_STEP3" "$STEP3_TIME" "$STEP3_SECS"
+msg_print "SETUP_BENCHMARKS_STEP4" "$STEP4_TIME" "$STEP4_SECS"
+msg_print "SETUP_BENCHMARKS_STEP5" "$ORDS_CONF_TIME" "$ORDS_CONF_SECS"
+msg_print "SETUP_BENCHMARKS_STEP6" "$STEP5_TIME" "$STEP5_SECS"
 echo "  ------------------------------------------------------------"
-echo -e "  ⌛ KOGU PAIGALDUSE KESTUS:     ${GREEN}$TOTAL_TIME (${TOTAL_SECS}s)${NC}"
+msg_print "SETUP_BENCHMARKS_TOTAL" "$TOTAL_TIME" "$TOTAL_SECS"
 echo -e "${CYAN}==================================================================${NC}"
 if [ "$MASTER_SETUP" != "true" ]; then
   echo "📊 Mõõdikud salvestati Git-i kausta: $JSON_BENCHMARK"

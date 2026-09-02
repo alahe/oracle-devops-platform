@@ -94,27 +94,27 @@ fi
 
 SSH_CMD="ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ${REMOTE_USER}@${REMOTE_HOST}"
 
-echo -e "\n${CYAN}1. Kontrollin SSH ühendust serveriga ${REMOTE_HOST}...${NC}"
+echo -e "\n${CYAN}1. Verifying SSH connectivity to ${REMOTE_HOST}...${NC}"
 if ! $SSH_CMD "echo 'SSH Connection OK'" >/dev/null 2>&1; then
-  echo -e "${RED}❌ Viga: Ei suutnud luua SSH ühendust serveriga ${REMOTE_USER}@${REMOTE_HOST}!${NC}"
-  echo "   Kontrolli SSH võtme teed (${SSH_KEY_PATH}) ja pilve tulemüüri reegleid (Port 22)."
+  echo -e "${RED}❌ Error: Could not establish SSH connection to ${REMOTE_USER}@${REMOTE_HOST}!${NC}"
+  echo "   Check SSH key path (${SSH_KEY_PATH}) and firewall rules (Port 22)."
   exit 1
 fi
-echo -e "${GREEN}✅ SSH ühendus toimib!${NC}"
+echo -e "${GREEN}✅ SSH connection verified!${NC}"
 
-echo -e "\n${CYAN}2. Seadistan kaug-serveri keskkonna ja paigaldan vajadusel Podmani/Dockerit...${NC}"
+echo -e "\n${CYAN}2. Configuring remote server environment and dependencies...${NC}"
 $SSH_CMD bash -s << 'REMOTE_INIT_EOF'
 set -e
-echo "Pakettide uuendamine ja vajalike tööriistade paigaldus..."
+echo "Updating packages and installing required tools..."
 if command -v dnf >/dev/null 2>&1; then
   sudo dnf -y install podman git curl unzip findutils || true
 elif command -v apt-get >/dev/null 2>&1; then
   sudo apt-get update -qq && sudo apt-get install -y -qq podman git curl unzip findutils || true
 fi
 
-# Tulemüüri portide avamine kui firewalld on aktiivne
+# Open firewall ports if firewalld is active
 if command -v firewall-cmd >/dev/null 2>&1 && systemctl is-active --quiet firewalld; then
-  echo "Avame Linux tulemüüris pordid 9502, 9500 ja 8088..."
+  echo "Opening firewall ports 9502, 9500 and 8088..."
   sudo firewall-cmd --add-port=9502/tcp --permanent 2>/dev/null || true
   sudo firewall-cmd --add-port=9500/tcp --permanent 2>/dev/null || true
   sudo firewall-cmd --add-port=8088/tcp --permanent 2>/dev/null || true
@@ -122,15 +122,15 @@ if command -v firewall-cmd >/dev/null 2>&1 && systemctl is-active --quiet firewa
 fi
 REMOTE_INIT_EOF
 
-echo -e "\n${CYAN}3. Sünkroniseerin projekti koodi kaug-serverisse...${NC}"
+echo -e "\n${CYAN}3. Synchronizing project code to remote host...${NC}"
 REMOTE_DIR="oracle-free-db-in-prod"
 rsync -avz --exclude='.git' --exclude='install_logs' --exclude='backups' -e "ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH}" "$WORKSPACE_DIR/" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/" >/dev/null
 
-echo -e "\n${CYAN}4. Käivitan kaug-serveris automaatse paigalduse (setup-all.sh)...${NC}"
+echo -e "\n${CYAN}4. Launching automated remote installation (setup-all.sh)...${NC}"
 $SSH_CMD "cd ${REMOTE_DIR} && MAIN_DB_PROFILE=${PROFILE_NAME} ./scripts/setup-all.sh -y"
 
 echo "======================================================================"
-echo -e "${GREEN}🎉 Kaugpaigaldus serverisse ${REMOTE_HOST} lõpetatud edukalt!${NC}"
+echo -e "${GREEN}🎉 Remote deployment to ${REMOTE_HOST} completed successfully!${NC}"
 echo -e "   🔗 Analytics Publisher UI: ${CYAN}http://${REMOTE_HOST}:9502/xmlpserver${NC}"
 echo -e "   🔗 WebLogic Remote REST:   ${CYAN}http://${REMOTE_HOST}:9500/console/welcome${NC}"
 echo "======================================================================"

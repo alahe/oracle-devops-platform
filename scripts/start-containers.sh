@@ -96,7 +96,7 @@ if [ "$SKIP_WEB_IDE" = "false" ]; then
   COMPOSE_ARGS+=(--profile web-ide)
 fi
 
-# Käivitame meile teadaolevad compose teenused
+# Start defined compose services
 if [ "$SKIP_PUBLISHER" = "false" ]; then
   COMPOSE_ARGS+=(--profile publisher)
 fi
@@ -112,7 +112,7 @@ if [ -x "$SCRIPT_DIR/internal/wait-db-healthy.sh" ]; then
   "$SCRIPT_DIR/internal/wait-db-healthy.sh"
 fi
 
-# Sünkroniseerime kasutajad ja paroolid koheselt peale andmebaasi valmimist
+# Synchronize users and passwords immediately upon database readiness
 if [ -x "$SCRIPT_DIR/internal/apply-profile-users.sh" ]; then
   for inst in $(get_active_db_instances 2>/dev/null); do
     c_name=$(echo "$inst" | cut -d'|' -f1)
@@ -122,6 +122,14 @@ fi
 
 if podman container exists app-ords 2>/dev/null; then
   podman restart app-ords >/dev/null 2>&1 || true
+fi
+
+if podman container exists app-forms 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' app-forms 2>/dev/null)" != "running" ]; then
+  podman start app-forms >/dev/null 2>&1 || true
+fi
+
+if [ "$SKIP_PUBLISHER" = "false" ] && podman container exists app-publisher 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' app-publisher 2>/dev/null)" != "running" ]; then
+  podman start app-publisher >/dev/null 2>&1 || true
 fi
 
 if [ "$SKIP_WEB_IDE" = "false" ]; then

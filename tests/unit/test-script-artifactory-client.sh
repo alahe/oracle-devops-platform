@@ -1,0 +1,1 @@
+test-artifactory-client.sh

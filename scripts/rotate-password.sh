@@ -75,12 +75,12 @@ rotate_db_user_password() {
       secret_name="${c_short}_apex_admin_password"
       ;;
     *)
-      echo "❌ Tundmatu roll: '$role'. Lubatud rollid: sys, dev, viewer, app, schema, apex_admin." >&2
+      echo "❌ Unknown role: '$role'. Allowed roles: sys, dev, viewer, app, schema, apex_admin." >&2
       return 1
       ;;
   esac
 
-  echo "🔄 Roteerin parooli: Andmebaas [${target_db}] -> Kasutaja [${db_username}]..."
+  echo "🔄 Rotating password: Database [${target_db}] -> User [${db_username}]..."
 
   # 1. Update Database & APEX User Password
   if command -v podman &>/dev/null && podman container exists "$target_db" 2>/dev/null; then
@@ -93,14 +93,18 @@ EOSQL
     elif [ "$role" = "apex_admin" ] || [ "$role" = "admin" ]; then
       podman exec -i "$target_db" sqlplus -s / as sysdba <<EOSQL >/dev/null 2>&1 || true
 ALTER SESSION SET CONTAINER = FREEPDB1;
-ALTER SESSION SET CURRENT_SCHEMA = APEX_260100;
+DECLARE
+  v_schema VARCHAR2(30);
 BEGIN
-  wwv_flow_instance_admin.create_or_update_admin_user(
-      p_username => 'ADMIN',
-      p_email    => 'admin@company.com',
-      p_password => '${new_pwd}'
-  );
-  COMMIT;
+  SELECT username INTO v_schema FROM all_users WHERE username LIKE 'APEX_%' AND REGEXP_LIKE(username, '^APEX_[0-9]+$') AND ROWNUM = 1;
+  EXECUTE IMMEDIATE 'ALTER SESSION SET CURRENT_SCHEMA = ' || v_schema;
+  EXECUTE IMMEDIATE 'BEGIN ' ||
+                    v_schema || '.wwv_flow_instance_admin.set_parameter(''STRONG_SITE_ADMIN_PASSWORD'', ''N''); ' ||
+                    v_schema || '.wwv_flow_instance_admin.create_or_update_admin_user(p_username => ''ADMIN'', p_email => ''admin@company.com'', p_password => ''' || '${new_pwd}' || '''); ' ||
+                    v_schema || '.wwv_flow_instance_admin.unlock_user(p_workspace => ''INTERNAL'', p_username => ''ADMIN'', p_password => ''' || '${new_pwd}' || '''); ' ||
+                    'UPDATE ' || v_schema || '.wwv_flow_fnd_user SET change_password_on_first_use = ''N'', account_locked = ''N'' WHERE security_group_id = 10 AND user_name = ''ADMIN''; ' ||
+                    'COMMIT; END;';
+EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
 EXIT;
@@ -117,19 +121,20 @@ EOSQL
   # 2. Update Podman Secret Store
   store_secret "$secret_name" "$new_pwd"
 
-  # 3. Synchronize APEX users & SEPS Wallet
-  if [ -x "$SCRIPT_DIR/internal/apply-profile-users.sh" ]; then
-    "$SCRIPT_DIR/internal/apply-profile-users.sh" "$target_db" >/dev/null 2>&1 || true
-  elif [ -x "$SCRIPT_DIR/internal/create-wallet.sh" ]; then
+  # 3. Synchronize SEPS Wallet & APEX users
+  if [ -x "$SCRIPT_DIR/internal/create-wallet.sh" ]; then
     "$SCRIPT_DIR/internal/create-wallet.sh" >/dev/null 2>&1 || true
   fi
+  if [ -x "$SCRIPT_DIR/internal/apply-profile-users.sh" ]; then
+    "$SCRIPT_DIR/internal/apply-profile-users.sh" "$target_db" >/dev/null 2>&1 || true
+  fi
 
-  echo "✅ Parool edukalt roteeritud: [${target_db} - ${db_username}] (Saladus: ${secret_name})"
+  echo "✅ Password successfully rotated: [${target_db} - ${db_username}] (Secret: ${secret_name})"
 }
 
 rotate_ords_listener_password() {
   local new_pwd="$1"
-  echo "🔄 Roteerin ORDS Listeneri parooli (ORDS_PUBLIC_USER & APEX_LISTENER)..."
+  echo "🔄 Rotating ORDS Listener password (ORDS_PUBLIC_USER, APEX_PUBLIC_USER, APEX_LISTENER)..."
   
   local dbs=$(get_active_db_instances 2>/dev/null | cut -d'|' -f1)
   [ -z "$dbs" ] && dbs="db-proxy"
@@ -140,6 +145,7 @@ rotate_ords_listener_password() {
 ALTER SESSION SET CONTAINER = FREEPDB1;
 ALTER SESSION SET "_oracle_script" = TRUE;
 ALTER USER ORDS_PUBLIC_USER IDENTIFIED BY "${new_pwd}" ACCOUNT UNLOCK;
+ALTER USER APEX_PUBLIC_USER IDENTIFIED BY "${new_pwd}" ACCOUNT UNLOCK;
 ALTER USER APEX_LISTENER IDENTIFIED BY "${new_pwd}" ACCOUNT UNLOCK;
 ALTER USER APEX_REST_PUBLIC_USER IDENTIFIED BY "${new_pwd}" ACCOUNT UNLOCK;
 EXIT;
@@ -151,28 +157,35 @@ EOSQL
   store_secret "apex_listener_password" "$new_pwd"
   store_secret "apex_rest_public_password" "$new_pwd"
 
-  # Sync all active databases and wallet
+  # 1. Update SEPS Wallet with new secrets
+  if [ -x "$SCRIPT_DIR/internal/create-wallet.sh" ]; then
+    "$SCRIPT_DIR/internal/create-wallet.sh" >/dev/null 2>&1 || true
+  fi
+
+  # 2. Sync all active database users & ORDS configurations
   for target_db in $dbs; do
     if [ -x "$SCRIPT_DIR/internal/apply-profile-users.sh" ]; then
       "$SCRIPT_DIR/internal/apply-profile-users.sh" "$target_db" >/dev/null 2>&1 || true
     fi
   done
 
-  if [ -x "$SCRIPT_DIR/internal/create-wallet.sh" ]; then
-    "$SCRIPT_DIR/internal/create-wallet.sh" >/dev/null 2>&1 || true
-  fi
-
+  # 3. Directly patch all ORDS pool XML files in app-ords
   if command -v podman &>/dev/null && podman container exists "app-ords" 2>/dev/null; then
-    echo "🔄 Taaskäivitan app-ords konteineri uue parooliga..."
+    podman exec app-ords bash -c "
+      for pool in \$(find /etc/ords/config/databases/ -name 'pool.xml' 2>/dev/null); do
+        sed -i 's|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$new_pwd</entry>|g' \"\$pool\" 2>/dev/null || true
+      done
+    " 2>/dev/null || true
+    echo "🔄 Restarting app-ords container with updated credentials..."
     podman restart app-ords >/dev/null 2>&1 || true
   fi
 
-  echo "✅ ORDS Listeneri parool edukalt roteeritud."
+  echo "✅ ORDS Listener password successfully rotated."
 }
 
 rotate_all_credentials() {
   echo "=================================================================="
-  echo "🔄 ALUSTAN KÕIGI AKTIIVSETE SALADUSTE TÄIELIKKU ROTATSIOONI"
+  echo "🔄 STARTING FULL ROTATION OF ALL ACTIVE SECRETS"
   echo "=================================================================="
 
   local dbs=$(get_active_db_instances 2>/dev/null | cut -d'|' -f1)
@@ -180,7 +193,7 @@ rotate_all_credentials() {
 
   for c_db in $dbs; do
     [ -z "$c_db" ] && continue
-    echo -e "\n📦 Andmebaas: ${c_db}"
+    echo -e "\n📦 Database: ${c_db}"
     rotate_db_user_password "$c_db" "sys" "$(gen_strong_password)"
     rotate_db_user_password "$c_db" "dev" "$(gen_strong_password)"
     rotate_db_user_password "$c_db" "viewer" "$(gen_strong_password)"
@@ -188,11 +201,11 @@ rotate_all_credentials() {
     rotate_db_user_password "$c_db" "apex_admin" "$(gen_strong_password)"
   done
 
-  echo -e "\n🌐 Middleware teenused:"
+  echo -e "\n🌐 Middleware services:"
   rotate_ords_listener_password "$(gen_strong_password)"
 
   echo "=================================================================="
-  echo "✅ KÕIK PAROOLID EDUKALT ROTEERITUD JA SÜNKRONISEERITUD"
+  echo "✅ ALL SECRETS SUCCESSFULLY ROTATED AND SYNCHRONIZED"
   echo "=================================================================="
   if [ -x "$SCRIPT_DIR/get-password.sh" ]; then
     "$SCRIPT_DIR/get-password.sh"

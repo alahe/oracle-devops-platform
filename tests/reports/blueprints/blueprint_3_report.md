@@ -1,14 +1,14 @@
-# Blueprinti 3 Testiaruanne (2026-08-31 04:08:44)
+# Blueprinti 3 Testiaruanne (2026-09-01 09:13:21)
 
-- **Aeg ja Kuupäev:** 2026-08-31 04:08:44
-- **Kogu Paigalduse Kestus:** 24m 34s
+- **Aeg ja Kuupäev:** 2026-09-01 09:13:21
+- **Kogu Paigalduse Kestus:** 19m 39s
 - **Blueprinti Fail:** `config/blueprints/.env.3-*`
 
 ---
 
 ## 1. ⏱ Ajakulu ja Tervisekontroll (Duration & Health)
 - **Tulemus:** ✅ Paigaldus ja tervisekontrollid läbitud 100% korrektselt.
-- **Kestus kokku:** 24m 34s
+- **Kestus kokku:** 19m 39s
 
 ---
 
@@ -16,9 +16,9 @@
 
 | Konteineri Nimi | CPU % | Mälukasutus / Limiit | RAM % |
 | :--- | :--- | :--- | :--- |
-| db-proxy | 59.36% | 552.6MB / 3.221GB | 17.16% |
-| db-alise | 94.88% | 759MB / 3.221GB | 23.56% |
-| app-ords | 34.20% | 975.7MB / 1.074GB | 90.87% |
+| db-proxy | 94.42% | 543.2MB / 3.221GB | 16.86% |
+| db-alise | 43.90% | 546.6MB / 3.221GB | 16.97% |
+| app-ords | 43.60% | 953.3MB / 1.074GB | 88.79% |
 
 ---
 
@@ -36,9 +36,9 @@
 
 | Konteineri Nimi | Staatus | Pordid |
 | :--- | :--- | :--- |
-| db-proxy | Up About a minute (healthy) | 127.0.0.1:1532->1521/tcp |
-| db-alise | Up 12 minutes (healthy) | 127.0.0.1:1533->1521/tcp |
-| app-ords | Up 52 seconds (starting) | 127.0.0.1:8088->8088/tcp, 127.0.0.1:8448->8448/tcp |
+| db-proxy | Up 3 minutes (healthy) | 127.0.0.1:1532->1521/tcp |
+| db-alise | Up 20 minutes (healthy) | 127.0.0.1:1533->1521/tcp |
+| app-ords | Up About a minute (starting) | 127.0.0.1:8088->8088/tcp, 127.0.0.1:8448->8448/tcp |
 
 ---
 
@@ -46,15 +46,15 @@
 
 | Veebiteenuse Nimi | Kontrollitud URL | HTTP Kood | TLS Usaldus | Staatus |
 | :--- | :--- | :--- | :--- | :--- |
-| ORDS Root HTTP | `http://localhost:8088/ords/` | `HTTP 200` | N/A | ✅ OK |
+| ORDS Root HTTP | `http://localhost:8088/ords/` | `HTTP 302` | N/A | ✅ OK |
 | Developer Hub (HTTPS) | `https://localhost:8448/dev-hub.html` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
 | ORDS Root HTTPS | `https://localhost:8448/ords/` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
 | ORDS Database Actions (Default) | `https://localhost:8448/ords/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
 | APEX Builder (PROXY) | `https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
-| APEX Instance Admin (PROXY) | `https://localhost:8448/ords/proxy/apex_admin` | `HTTP 404` | ⚠️ Self-Signed | ✅ OK |
+| APEX Instance Admin (PROXY) | `https://localhost:8448/ords/proxy/apex_admin` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
 | ORDS Database Actions (PROXY) | `https://localhost:8448/ords/proxy/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
-| APEX Builder (ALISE) | `https://localhost:8448/ords/alise/r/apex/workspace-sign-in/oracle-apex-sign-in` | `HTTP 404` | ⚠️ Self-Signed | ✅ OK |
-| APEX Instance Admin (ALISE) | `https://localhost:8448/ords/alise/apex_admin` | `HTTP 404` | ⚠️ Self-Signed | ✅ OK |
+| APEX Builder (ALISE) | `https://localhost:8448/ords/alise/r/apex/workspace-sign-in/oracle-apex-sign-in` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
+| APEX Instance Admin (ALISE) | `https://localhost:8448/ords/alise/apex_admin` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
 | ORDS Database Actions (ALISE) | `https://localhost:8448/ords/alise/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
 
 ---

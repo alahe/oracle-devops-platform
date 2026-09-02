@@ -23,14 +23,14 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     -h|--help)
-      echo "Kasutus: $0 [VALIKUD] [FAILID...]"
+      echo "Usage: $0 [OPTIONS] [FILES...]"
       echo ""
-      echo "Valikud:"
-      echo "  --all            Kompileeri kõik forms_apps/ kaustas asuvad .fmb, .mmb, .pll failid"
-      echo "  -a, --alias      Määra SEPS Walleti alias (Vaikimisi: DB_FORMS_DEV)"
-      echo "  -h, --help       Kuva see abiinfo"
+      echo "Options:"
+      echo "  --all            Compile all .fmb, .mmb, .pll files in forms_apps/ directory"
+      echo "  -a, --alias      Specify SEPS Wallet alias (Default: DB_FORMS_DEV)"
+      echo "  -h, --help       Show this help message"
       echo ""
-      echo "Näited:"
+      echo "Examples:"
       echo "  $0 forms_apps/test.fmb"
       echo "  $0 --all"
       exit 0
@@ -49,8 +49,8 @@ if [ "$COMPILE_ALL" = "true" ]; then
 fi
 
 if [ ${#TARGET_FILES[@]} -eq 0 ]; then
-  echo "⚠️  Ühtegi kompileeritavat faili ei leitud ega määratud!"
-  echo "   Kasuta: $0 forms_apps/minuvorm.fmb või $0 --all"
+  echo "⚠️  No source files found or specified for compilation!"
+  echo "   Usage: $0 forms_apps/myform.fmb or $0 --all"
   exit 1
 fi
 
@@ -61,13 +61,13 @@ fi
 
 # Ensure container is running
 if ! $CTR_CMD ps --format "{{.Names}}" 2>/dev/null | grep -q "^${CONTAINER_NAME}$"; then
-  echo "⚠️  Forms konteiner ($CONTAINER_NAME) ei tööta!"
-  echo "   Käivita see käsuga: ./scripts/setup-all.sh -b 14"
+  echo "⚠️  Forms container ($CONTAINER_NAME) is not running!"
+  echo "   Start it using: ./scripts/setup-all.sh -b 14"
   exit 1
 fi
 
 echo "=================================================================="
-echo "🔨 ORACLE FORMS 14c PARTII-KOMPILEERIMINE (BATCH COMPILER)"
+echo "🔨 ORACLE FORMS 14c BATCH COMPILER (CLI)"
 echo "=================================================================="
 
 for src_file in "${TARGET_FILES[@]}"; do
@@ -81,7 +81,7 @@ for src_file in "${TARGET_FILES[@]}"; do
     *)   mtype="form" ;;
   esac
   
-  echo "📦 Kompileerin [$mtype]: $base_name..."
+  echo "📦 Compiling [$mtype]: $base_name..."
   
   # Execute frmcmp_batch inside container with SEPS wallet
   $CTR_CMD exec "$CONTAINER_NAME" bash -c "
@@ -99,9 +99,9 @@ for src_file in "${TARGET_FILES[@]}"; do
     fi
   " || true
   
-  echo "   ✅ Kompileerimine sooritatud: $base_name"
+  echo "   ✅ Compilation finished: $base_name"
 done
 
 echo "=================================================================="
-echo "🎉 Kõik määratud Forms failid on edukalt töödeldud!"
+echo "🎉 All specified Forms files processed successfully!"
 echo "=================================================================="

@@ -12,8 +12,8 @@
 # 1. Klona arkivet och gå till mappen
 git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-free-db-in-prod
 
-# 2. Starta standard 2-lagers produktionsmiljö (Blueprint 3)
-./scripts/setup-all.sh -b 3 --lang sv
+# 2. Starta standard 2-lagers produktionsmiljö (Blueprint 21)
+./scripts/setup-all.sh -b 21 --lang sv
 
 # 3. Visa lösenord, webbadresser och urklippshjälp (eller öppna Dev Hub på http://localhost:8088/)
 ./scripts/get-password.sh
@@ -28,12 +28,12 @@ flowchart TD
     Start(["🚀 Utvecklaren Börjar"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
     Clone --> ChooseBP{"2. Välj Arkitektur Blueprint"}
     
-    ChooseBP -->|Standard 2-DB Miljö| BP3["./scripts/setup-all.sh -b 3"]
-    ChooseBP -->|Forms + Publisher + IDE| BP41["./scripts/setup-all.sh -b 41"]
-    ChooseBP -->|Förhandsgranskning / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 34 --dry-run"]
+    ChooseBP -->|Standard 2-DB Miljö| BP21["./scripts/setup-all.sh -b 21 --lang sv"]
+    ChooseBP -->|Forms + Publisher + IDE| BP31["./scripts/setup-all.sh -b 31 --lang sv"]
+    ChooseBP -->|Förhandsgranskning / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 21 --dry-run"]
     
-    BP3 --> DevHub["3. Öppna DevOps Kommandocenter<br/>🌐 http://localhost:8088/"]
-    BP41 --> DevHub
+    BP21 --> DevHub["3. Öppna DevOps Kommandocenter<br/>🌐 http://localhost:8088/"]
+    BP31 --> DevHub
     BPDry --> ChooseBP
     
     DevHub --> PwdSpikker["4. Lösenordslathund (SEPS Wallet)<br/>./scripts/get-password.sh DB_PROXY_DEV -c"]
@@ -162,6 +162,21 @@ graph TD
 # 5. Visa 11 blueprints i kommandotolken:
 ./scripts/deploy-blueprint.sh --list --lang sv
 ```
+
+---
+
+## ⚡ Accelererad ~15s Återställning & Automatisk Versionskontroll
+
+Oracle Free DB in Prod innehåller en **intelligent flernivåbaserad Golden Snapshot- och Skip-motor** (`scripts/internal/snapshot-resolver.sh`) som förkortar starttiden vid andra körningen från **~6–12 minuter till ~15 sekunder**:
+
+1. **Automatisk Versionskontroll & Ogiltigförklaring av Gamla Snapshots (`.meta.json`):**
+   - Varje Golden Snapshot inkluderar ett maskinläsbart `.meta.json`-avtal som sparar versioner av APEX, databas, ORDS och mellanprogramvara.
+   - Före återställning kontrolleras versionskompatibiliteten strikt. Om en föråldrad snapshot upptäcks (t.ex. mål `APEX 26.1` mot snapshot `24.2`), varnar systemet med `VERSION MISMATCH`, utför en ren installation och genererar automatiskt en ny uppdaterad snapshot.
+2. **Profilbaserad Återanvändning & Skip-Matris:**
+   - Eftersom identiska databasprofiler delas mellan flera blueprints (t.ex. `db-proxy-oracle` i BP 3, BP 7, BP 21, BP 22, BP 34, BP 43), lämnar byte av blueprint (t.ex. BP 3 $\rightarrow$ BP 34 för Web IDE) databasen orörd och startar endast den saknade behållaren på **~3 sekunder**.
+3. **Shared vs. Dedicated WebLogic-Topologier:**
+   - **Delad WebLogic (BP 41 & BP 43):** En gemensam All-in-One-databas (`db-dev-full`), samlade RCU-scheman (`DEV_`), 1 kombinerad snapshot och låg RAM-användning (~6–8 GB).
+   - **Dedikerad WebLogic (BP 11, BP 21 & BP 42):** Oberoende databaser (`db-forms`, `db-publisher`), modulära snapshots och selektiv start som sparar upp till 4 GB RAM.
 
 ---
 

@@ -78,7 +78,7 @@ resolve_tls_mode() {
     RESOLVED_TLS_MODE="CUSTOM_CERT"
     RESOLVED_SSL_CERT="$custom_crt"
     RESOLVED_SSL_KEY="$custom_key"
-    RESOLVED_TLS_REASON="Tuvastati käsitsi lisatud sertifikaat kaustas config/certs/custom/"
+    RESOLVED_TLS_REASON="Detected custom certificate in config/certs/custom/"
     [ -f "$custom_dir/ca.crt" ] && RESOLVED_SSL_CA="$custom_dir/ca.crt"
     [ -f "$custom_dir/chain.pem" ] && RESOLVED_SSL_CA="$custom_dir/chain.pem"
   fi
@@ -88,85 +88,76 @@ resolve_tls_mode() {
   # --------------------------------------------------------------------------
   if [ "$RESOLVED_TLS_MODE" = "UNKNOWN" ] && [ "${USE_PUBLIC_CA_CERTS:-false}" = "true" ]; then
     if [ -f "$certs_dir/public_cert.crt" ] && [ -f "$certs_dir/public_key.key" ]; then
-      RESOLVED_TLS_MODE="PUBLIC_DNS"
+      RESOLVED_TLS_MODE="PUBLIC_CA"
       RESOLVED_SSL_CERT="$certs_dir/public_cert.crt"
       RESOLVED_SSL_KEY="$certs_dir/public_key.key"
-      RESOLVED_TLS_REASON="Avalik FQDN ja Let's Encrypt / Avaliku CA sertifikaat"
+      RESOLVED_TLS_REASON="Detected production Public CA certificates"
+      [ -f "$certs_dir/ca.crt" ] && RESOLVED_SSL_CA="$certs_dir/ca.crt"
     fi
   fi
 
   # --------------------------------------------------------------------------
-  # STEP 2: Check for Corporate PKI / Enterprise CA (Variant 2)
+  # STEP 2: Check for Enterprise Internal CA (Variant 2)
   # --------------------------------------------------------------------------
-  if [ "$RESOLVED_TLS_MODE" = "UNKNOWN" ] && { [ "${CORP_PKI_ENABLED:-false}" = "true" ] || [ -f "$certs_dir/corp/corp_cert.crt" ]; }; then
-    if [ -f "$certs_dir/corp/corp_cert.crt" ] && [ -f "$certs_dir/corp/corp_key.key" ]; then
-      RESOLVED_TLS_MODE="CORP_PKI"
-      RESOLVED_SSL_CERT="$certs_dir/corp/corp_cert.crt"
-      RESOLVED_SSL_KEY="$certs_dir/corp/corp_key.key"
-      RESOLVED_SSL_CA="$certs_dir/corp/corp_ca.crt"
-      RESOLVED_TLS_REASON="Ettevõtte Sise-PKI (Corporate Root CA)"
+  if [ "$RESOLVED_TLS_MODE" = "UNKNOWN" ] && [ "${USE_CORP_INTERNAL_CA:-false}" = "true" ]; then
+    if [ -f "$certs_dir/corp_internal_ca.crt" ] && [ -f "$certs_dir/corp_internal_key.key" ]; then
+      RESOLVED_TLS_MODE="CORP_INTERNAL_CA"
+      RESOLVED_SSL_CERT="$certs_dir/corp_internal_ca.crt"
+      RESOLVED_SSL_KEY="$certs_dir/corp_internal_key.key"
+      RESOLVED_TLS_REASON="Detected Enterprise Internal PKI certificates"
+      [ -f "$certs_dir/corp_root_ca.crt" ] && RESOLVED_SSL_CA="$certs_dir/corp_root_ca.crt"
     fi
   fi
 
   # --------------------------------------------------------------------------
-  # STEP 3: Check for User-Space Local Dev CA (Variant 3)
+  # STEP 3: Check for User CA / Local Dev CA (Variant 3)
   # --------------------------------------------------------------------------
   if [ "$RESOLVED_TLS_MODE" = "UNKNOWN" ]; then
-    if [ -f "$certs_dir/user_ca/localhost.crt" ] && [ -f "$certs_dir/user_ca/localhost.key" ] && [ -f "$certs_dir/user_ca/localCA.pem" ]; then
-      RESOLVED_TLS_MODE="USER_LOCAL_CA"
+    if [ -f "$certs_dir/user_ca/localhost.crt" ] && [ -f "$certs_dir/user_ca/localhost.key" ]; then
+      RESOLVED_TLS_MODE="USER_CA"
       RESOLVED_SSL_CERT="$certs_dir/user_ca/localhost.crt"
       RESOLVED_SSL_KEY="$certs_dir/user_ca/localhost.key"
-      RESOLVED_SSL_CA="$certs_dir/user_ca/localCA.pem"
-      RESOLVED_TLS_REASON="Kasutajataseme lokaalne usaldatud CA (0 root/admin õigust)"
-    elif [ -f "$certs_dir/localhost.crt" ] && [ -f "$certs_dir/localhost.key" ] && [ -f "$certs_dir/localCA.pem" ]; then
-      RESOLVED_TLS_MODE="USER_LOCAL_CA"
+      RESOLVED_TLS_REASON="Detected User / Local Dev Root CA certificates"
+      [ -f "$certs_dir/user_ca/localCA.pem" ] && RESOLVED_SSL_CA="$certs_dir/user_ca/localCA.pem"
+    elif [ -f "$certs_dir/localhost.crt" ] && [ -f "$certs_dir/localhost.key" ]; then
+      RESOLVED_TLS_MODE="USER_CA"
       RESOLVED_SSL_CERT="$certs_dir/localhost.crt"
       RESOLVED_SSL_KEY="$certs_dir/localhost.key"
-      RESOLVED_SSL_CA="$certs_dir/localCA.pem"
-      RESOLVED_TLS_REASON="Kasutajataseme lokaalne usaldatud CA (0 root/admin õigust)"
+      RESOLVED_TLS_REASON="Detected local dev CA certificates"
+      [ -f "$certs_dir/localCA.pem" ] && RESOLVED_SSL_CA="$certs_dir/localCA.pem"
     fi
   fi
 
   # --------------------------------------------------------------------------
-  # STEP 4: Fall back to Pure Self-Signed Certificate (Variant 4 - Lowest Tier)
+  # STEP 4: Fallback to Self-Signed Cert (Variant 4)
   # --------------------------------------------------------------------------
   if [ "$RESOLVED_TLS_MODE" = "UNKNOWN" ]; then
     if [ -f "$certs_dir/self_signed/self_signed.crt" ] && [ -f "$certs_dir/self_signed/self_signed.key" ]; then
       RESOLVED_TLS_MODE="SELF_SIGNED"
       RESOLVED_SSL_CERT="$certs_dir/self_signed/self_signed.crt"
       RESOLVED_SSL_KEY="$certs_dir/self_signed/self_signed.key"
-      RESOLVED_TLS_REASON="Jooksvalt genereeritud iseallkirjastatud sertifikaat (Untrusted Fallback)"
-    else
-      RESOLVED_TLS_MODE="SELF_SIGNED"
-      RESOLVED_SSL_CERT="$certs_dir/localhost.crt"
-      RESOLVED_SSL_KEY="$certs_dir/localhost.key"
-      RESOLVED_TLS_REASON="Jooksvalt genereeritud iseallkirjastatud sertifikaat (Untrusted Fallback)"
+      RESOLVED_TLS_REASON="Detected self-signed fallback certificates"
     fi
   fi
 
   # --------------------------------------------------------------------------
-  # POLICY ENFORCEMENT & GATING
+  # STEP 5: Policy Level Verification vs Target Blueprint
   # --------------------------------------------------------------------------
+  local target_policy="${TLS_POLICY_LEVEL:-standard}"
   local policy_violation=false
 
   case "$target_policy" in
-    strict_public)
-      if [ "$RESOLVED_TLS_MODE" != "CUSTOM_CERT" ] && [ "$RESOLVED_TLS_MODE" != "PUBLIC_DNS" ]; then
+    strict_prod)
+      if [ "$RESOLVED_TLS_MODE" != "PUBLIC_CA" ] && [ "$RESOLVED_TLS_MODE" != "CUSTOM_CERT" ]; then
         policy_violation=true
       fi
       ;;
-    corporate_pki)
-      if [ "$RESOLVED_TLS_MODE" != "CUSTOM_CERT" ] && [ "$RESOLVED_TLS_MODE" != "PUBLIC_DNS" ] && [ "$RESOLVED_TLS_MODE" != "CORP_PKI" ]; then
+    corp_enforced)
+      if [ "$RESOLVED_TLS_MODE" = "SELF_SIGNED" ] || [ "$RESOLVED_TLS_MODE" = "UNKNOWN" ]; then
         policy_violation=true
       fi
       ;;
-    trusted_local)
-      if [ "$RESOLVED_TLS_MODE" = "SELF_SIGNED" ]; then
-        policy_violation=true
-      fi
-      ;;
-    permissive|allow_self_signed|auto|*)
-      # All modes (0, 1, 2, 3, 4) allowed
+    standard|permissive|*)
       policy_violation=false
       ;;
   esac
@@ -174,21 +165,21 @@ resolve_tls_mode() {
   if [ "$policy_violation" = "true" ]; then
     echo ""
     echo -e "${RED}╔══════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${RED}║ ❌ TLS NÕUETE VIGA: Blueprint nõuab rangemat TLS taset kui praegune keskkond tagab!          ║${NC}"
+    echo -e "${RED}║ ❌ TLS POLICY ERROR: Blueprint requires higher TLS level than current environment provides!    ║${NC}"
     echo -e "${RED}╠══════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
-    printf "║ • Nõutav tase:     %-73s ║\n" "${CYAN}${target_policy}${NC}"
-    printf "║ • Tuvastatud tase: %-73s ║\n" "${YELLOW}${RESOLVED_TLS_MODE} (${RESOLVED_TLS_REASON})${NC}"
+    printf "║ • Required level:  %-73s ║\n" "${CYAN}${target_policy}${NC}"
+    printf "║ • Detected level:  %-73s ║\n" "${YELLOW}${RESOLVED_TLS_MODE} (${RESOLVED_TLS_REASON})${NC}"
     echo -e "${RED}║                                                                                              ║${NC}"
-    echo -e "${RED}║ 🛠 LAHENDUSVARIANDID KASUTAJALE:                                                             ║${NC}"
+    echo -e "${RED}║ 🛠 USER RESOLUTION OPTIONS:                                                                 ║${NC}"
     echo -e "${RED}║                                                                                              ║${NC}"
-    echo -e "${RED}║ 1. [KIIREIM] Kopeeri olemasolev sertifikaat ja privaatvõti kausta:                           ║${NC}"
+    echo -e "${RED}║ 1. [FASTEST] Copy valid certificate and private key to:                                      ║${NC}"
     echo -e "${RED}║    📁 config/certs/custom/tls.crt                                                            ║${NC}"
     echo -e "${RED}║    📁 config/certs/custom/tls.key                                                            ║${NC}"
     echo -e "${RED}║                                                                                              ║${NC}"
-    echo -e "${RED}║ 2. [ETTEVÕTTE VÕRK] Ühendu ettevõtte VPN-iga ja tõmba sise-PKI sertifikaat:                  ║${NC}"
+    echo -e "${RED}║ 2. [CORP NETWORK] Connect to VPN and pull internal PKI cert:                                 ║${NC}"
     echo -e "${RED}║    👉 ./scripts/certs/sync-corp-cert.sh                                                      ║${NC}"
     echo -e "${RED}║                                                                                              ║${NC}"
-    echo -e "${RED}║ 3. [LOKAALNE ARENDUS] Kui soovid testida isiklikus arvutis, lisa oma .env faili:             ║${NC}"
+    echo -e "${RED}║ 3. [LOCAL DEV] If developing on personal workstation, add to .env:                           ║${NC}"
     echo -e "${RED}║    👉 TLS_ALLOWED_LEVEL=permissive                                                           ║${NC}"
     echo -e "${RED}╚══════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
@@ -210,14 +201,14 @@ resolve_tls_mode() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   if resolve_tls_mode; then
     echo -e "${CYAN}==================================================================${NC}"
-    echo -e "${GREEN}🔒 TLS LAHENDUSE DOKUMENDID JA AKTIIVNE REŽIIM${NC}"
+    echo -e "${GREEN}🔒 TLS RESOLUTION SUMMARY & ACTIVE MODE${NC}"
     echo -e "${CYAN}==================================================================${NC}"
-    echo -e "   ├─ 🛡️ Režiim:        ${GREEN}${RESOLVED_TLS_MODE}${NC}"
-    echo -e "   ├─ ℹ️ Kirjeldus:     ${CYAN}${RESOLVED_TLS_REASON}${NC}"
-    echo -e "   ├─ 📜 Sertifikaat:   ${YELLOW}${RESOLVED_SSL_CERT}${NC}"
-    echo -e "   ├─ 🔑 Privaatvõti:   ${YELLOW}${RESOLVED_SSL_KEY}${NC}"
-    [ -n "$RESOLVED_SSL_CA" ] && echo -e "   ├─ 🏛️ CA Ahel:       ${YELLOW}${RESOLVED_SSL_CA}${NC}"
-    echo -e "   └─ 🌐 Domeen:        ${CYAN}${RESOLVED_TLS_DOMAIN}${NC}"
+    echo -e "   ├─ 🛡️ Mode:          ${GREEN}${RESOLVED_TLS_MODE}${NC}"
+    echo -e "   ├─ ℹ️ Reason:        ${CYAN}${RESOLVED_TLS_REASON}${NC}"
+    echo -e "   ├─ 📜 Certificate:   ${YELLOW}${RESOLVED_SSL_CERT}${NC}"
+    echo -e "   ├─ 🔑 Private key:   ${YELLOW}${RESOLVED_SSL_KEY}${NC}"
+    [ -n "$RESOLVED_SSL_CA" ] && echo -e "   ├─ 🏛️ CA Chain:      ${YELLOW}${RESOLVED_SSL_CA}${NC}"
+    echo -e "   └─ 🌐 Domain:        ${CYAN}${RESOLVED_TLS_DOMAIN}${NC}"
     echo -e "${CYAN}==================================================================${NC}"
   else
     exit 1

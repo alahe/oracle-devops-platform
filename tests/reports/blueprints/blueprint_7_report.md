@@ -1,14 +1,14 @@
-# Blueprinti 7 Testiaruanne (2026-08-30 14:06:41)
+# Blueprinti 7 Testiaruanne (2026-09-01 10:21:40)
 
-- **Aeg ja Kuupäev:** 2026-08-30 14:06:41
-- **Kogu Paigalduse Kestus:** 2m 1s
+- **Aeg ja Kuupäev:** 2026-09-01 10:21:40
+- **Kogu Paigalduse Kestus:** 9m 43s
 - **Blueprinti Fail:** `config/blueprints/.env.7-*`
 
 ---
 
 ## 1. ⏱ Ajakulu ja Tervisekontroll (Duration & Health)
 - **Tulemus:** ✅ Paigaldus ja tervisekontrollid läbitud 100% korrektselt.
-- **Kestus kokku:** 2m 1s
+- **Kestus kokku:** 9m 43s
 
 ---
 
@@ -16,10 +16,9 @@
 
 | Konteineri Nimi | CPU % | Mälukasutus / Limiit | RAM % |
 | :--- | :--- | :--- | :--- |
-| web-ide-dev | 3.13% | 97.6MB / 8.297GB | 1.18% |
-| db-proxy | 22.76% | 682.7MB / 3.221GB | 21.19% |
-| db-alise | 13.88% | 538.9MB / 3.221GB | 16.73% |
-| app-ords | 75.17% | 578.7MB / 1.074GB | 53.89% |
+| db-proxy | 74.99% | 561.1MB / 3.221GB | 17.42% |
+| db-alise | 31.72% | 558.4MB / 3.221GB | 17.33% |
+| app-ords | 48.20% | 954.8MB / 1.074GB | 88.92% |
 
 ---
 
@@ -27,7 +26,6 @@
 
 | Voluumi Nimi | Kettamaht |
 | :--- | :--- |
-| oracle-free-db-in-prod_web_ide_data | N/A |
 | oracle-free-db-in-prod_proxy_oradata | N/A |
 | oracle-free-db-in-prod_apex_images_26_1 | N/A |
 | oracle-free-db-in-prod_alise_oradata | N/A |
@@ -38,10 +36,9 @@
 
 | Konteineri Nimi | Staatus | Pordid |
 | :--- | :--- | :--- |
-| web-ide-dev | Up 2 minutes (starting) | 0.0.0.0:8090->8443/tcp, 0.0.0.0:8091->8091/tcp, 0.0.0.0:8449->8443/tcp |
-| db-proxy | Up 2 minutes (healthy) | 127.0.0.1:1532->1521/tcp |
+| db-proxy | Up 9 minutes (healthy) | 127.0.0.1:1532->1521/tcp |
 | db-alise | Up About a minute (healthy) | 127.0.0.1:1534->1521/tcp |
-| app-ords | Up About a minute (starting) | 127.0.0.1:8088->8088/tcp, 127.0.0.1:8448->8448/tcp |
+| app-ords | Up 42 seconds (starting) | 127.0.0.1:8088->8088/tcp, 127.0.0.1:8448->8448/tcp |
 
 ---
 
@@ -56,7 +53,6 @@
 | APEX Builder (PROXY) | `https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
 | APEX Instance Admin (PROXY) | `https://localhost:8448/ords/proxy/apex_admin` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
 | ORDS Database Actions (PROXY) | `https://localhost:8448/ords/proxy/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
-| Web IDE (HTTP) | `http://localhost:8090` | `HTTP 200` | N/A | ✅ OK |
 
 ---
 

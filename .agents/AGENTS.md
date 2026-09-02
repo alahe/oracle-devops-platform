@@ -41,7 +41,6 @@ To maintain a clean and professionally structured repository, a **modular 3-tier
    - **`scripts/snapshots/`:** Golden Snapshot management (`create-golden-snapshots.sh`, `restore-golden-snapshots.sh`, `clean-golden-snapshots.sh`).
    - **`scripts/certs/`:** OS-specific certificate trust tools (`trust-local-cert-mac.sh`, `trust-local-cert.cmd`, `trust-local-cert.ps1`, etc.).
    - **`scripts/publisher/`:** Analytics Publisher operations (`status-publisher.sh`, `restart-publisher.sh`, `backup-publisher-catalog.sh`, `deploy-publisher-reports.sh`).
-   - **`scripts/patches/`:** Manual patch application utilities (`apply-apex-patch.sh`, `apply-publisher-patch.sh`).
 
 3. **Internal Automation & Engines (`scripts/internal/`):**
    - All internal helper scripts and SQL initializers reside under `scripts/internal/`:
@@ -69,14 +68,20 @@ When local tooling restrictions (Java, SQLcl, Liquibase) occur in enterprise or 
 
 ---
 
-## 5. Oracle Wallet Mandatory Credential Store Rule
+## 5. Oracle Wallet Mandatory Credential Store Rule & Zero-Trust Architecture
 
-All scripts, automated tests (e.g. `test-browser-login.sh`), CLI utilities, and tools must ALWAYS prioritize **Oracle Wallet (SEPS)** for credentials:
+All scripts, automated tests (e.g. `test-browser-login.sh`), CLI utilities, Dev Hub (`docs/dev-hub.html`), and 1-click clipboard helpers must ALWAYS prioritize **Oracle Wallet (SEPS)** for credentials and strictly adhere to **Zero-Trust Principles**:
 
-1. **Retrieve Credentials from Wallet:**
-   - Passwords and connection properties must be queried via: `./scripts/get-password.sh <alias>` (compatibility: `./scripts/internal/view-wallet-credential.sh <alias>`).
+1. **Retrieve Credentials Strictly from Wallet (Just-In-Time In-Memory):**
+   - Passwords and connection properties must be queried dynamically via: `./scripts/get-password.sh <alias>` (compatibility: `./scripts/internal/view-wallet-credential.sh <alias>`).
    - **All Wallet aliases are dynamically loaded from YAML profiles (`config/profiles/*.yaml`).** No hardcoded Wallet aliases (e.g., `DB_APEX_PROXY_SYS`) or usernames are allowed in code.
-2. **Prevent Hardcoding & `ps aux` Leaks:** Credentials must never be written to files in plaintext or exposed as process command-line arguments.
+2. **Strict Prohibition on Plaintext Files & Caches on Disk (Zero-Trust):**
+   - **Credentials must NEVER be written to the filesystem in plaintext** (no `.json`, `.txt`, `.env`, or `.cache` files), regardless of file permissions (`chmod 0600` is NOT an exemption).
+   - **Encryption at Rest (Mandatory):** Secrets must reside strictly in encrypted form inside the Oracle SEPS Auto-Login Wallet (`cwallet.sso` / `ewallet.p12` with AES-256) or Podman encrypted secret store.
+   - **In-Memory JIT Decryption Only:** Passwords may only be decrypted dynamically in-memory at runtime directly from `cwallet.sso` / `mkstore` and destroyed immediately after process execution.
+3. **Strict Wallet-Only Synchronization for Web Hub & Tools:**
+   - Dev Hub (`docs/dev-hub.html`) and 1-click clipboard helpers MUST ALWAYS use genuine credentials extracted directly in-memory from Oracle Wallet (`create-wallet.sh` / `get-password.sh` / `cwallet.sso` / `ewallet.p12`).
+   - **Prohibition on Synthetic / Hash Passwords:** Never generate synthetic or SHA-hashed fallback passwords (`Ora_...`) that do not match the database. Every credential must be verified from the SEPS Wallet.
 
 ---
 
@@ -138,3 +143,22 @@ The platform supports **6 languages (Nordic-Baltic region: 🇬🇧 EN, 🇪🇪
 
 4. **Autonomous Execution:**
    - Translation and synchronization must be performed autonomously without requiring separate user reminders.
+
+---
+
+## 10. Mermaid Visual Design & Multi-Line Decision Formatting Rule
+
+Whenever creating or updating Mermaid diagrams (flowcharts, sequence diagrams, state machines, and architecture blueprints in documentation or Dev Hub):
+
+1. **Multi-Line Decision Nodes (Diamonds `{...}`):**
+   - Text inside decision diamonds (`{...}`) **MUST NEVER be written as a single long line**.
+   - Always break questions/conditions into 2–4 concise lines using HTML `<br/>` tags (e.g., `{1. Kas lokaalne<br/>snapshot olemas<br/>ja versioon klapib?}`).
+   - This prevents disproportionately wide, stretched diamond shapes that ruin layout readability.
+
+2. **Compact & Balanced Node Proportions:**
+   - Keep all process blocks (`[...]`, `(...)`, `[(...)]`) balanced with max 25–35 characters per line, breaking longer sentences across multiple lines with `<br/>`.
+
+3. **High-Contrast Semantic Flow:**
+   - Ensure explicit branch labels on connectors (e.g., `-->|JAH / Kehtiv|` and `-->|EI / Puudub|`).
+   - Group related components into clean, labeled `subgraph` blocks.
+

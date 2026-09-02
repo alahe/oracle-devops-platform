@@ -8,7 +8,7 @@ profile:
 
 database:
   container_name: db-forms
-  container_image: docker.io/gvenzl/oracle-free:latest
+  container_image: container-registry.oracle.com/database/free:latest
   workload_type: NONE
   admin_user: sys
   admin_role: SYSDBA

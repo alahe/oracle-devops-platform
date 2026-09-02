@@ -40,7 +40,7 @@ fi
 APPS_DIR="binaries/apex_apps"
 
 if [ ! -d "$APPS_DIR" ]; then
-  echo "📂 APEX rakenduste kaust puudub ($APPS_DIR). Midagi pole paigaldada."
+  echo "📂 APEX applications directory missing ($APPS_DIR). Nothing to deploy."
   exit 0
 fi
 
@@ -48,7 +48,7 @@ fi
 FILES=$(find "$APPS_DIR" -type f \( -name "*.sql" -o -name "*.apex" \) | sort)
 
 if [ -z "$FILES" ]; then
-  echo "ℹ️  Kaustas $APPS_DIR ei leitud ühtegi .sql või .apex faili."
+  echo "ℹ️  No .sql or .apex application files found in $APPS_DIR."
   exit 0
 fi
 
@@ -81,8 +81,8 @@ exit;
 EOF
         then
           echo "=================================================================="
-          echo "⚠️  HOIATUS: Kohalik CLI ($LOCAL_BIN) ei suutnud walleti abil ühenduda."
-          echo "   Lülitun automaatselt ümber turvalise SQLcl konteineri fallbackile."
+          echo "⚠️  WARNING: Local CLI ($LOCAL_BIN) could not connect using wallet."
+          echo "   Switching automatically to secure ephemeral SQLcl container fallback."
           echo "=================================================================="
           SQLCL_FORCE_CONTAINER=true
         fi
@@ -97,10 +97,9 @@ EOF
 
   local RUN_IMAGE="${SQLCL_CONTAINER_IMAGE:-container-registry.oracle.com/database/sqlcl:latest}"
   local PROJECT_NET="${PROJECT_NAME:-oracle-free-db-in-prod}_default"
-  echo "⚠️  Käivitan APEX paigalduse läbi SQLcl konteineri ($RUN_IMAGE)..."
+  echo "⚠️  Executing APEX deployment via SQLcl container ($RUN_IMAGE)..."
   podman run --rm -i --network="${PROJECT_NET}" \
     -v "${SCRIPT_DIR}/../..:/workspace" \
-
     -v "${SCRIPT_DIR}/../../config/tns_admin_container:/tns:ro" \
     -e JAVA_TOOL_OPTIONS="-Doracle.net.tns_admin=/tns -Doracle.net.wallet_location=(SOURCE=(METHOD=FILE)(METHOD_DATA=(DIRECTORY=/tns)))" \
     -e TNS_ADMIN=/tns \
@@ -108,12 +107,12 @@ EOF
 }
 
 echo "=================================================================="
-echo "🚀 Alustan APEX rakenduste paigaldamist kaustast binaries/apex_apps/"
+echo "🚀 Starting APEX applications deployment from $APPS_DIR/"
 echo "=================================================================="
 
 for file in $FILES; do
   FILENAME=$(basename "$file")
-  echo "📦 Paigaldan rakendust: $FILENAME..."
+  echo "📦 Deploying application: $FILENAME..."
   
   CONN_ARG="/@DB_APEX_PROXY_SYS as sysdba"
   if [ "$IS_ADB" = "true" ]; then
@@ -133,24 +132,24 @@ BEGIN
     p_security_group_id => apex_util.find_security_group_id(p_workspace => 'PROXY_WORKSPACE')
   );
   apex_application_install.set_workspace_id(
-    p_workspace_id => apex_util.find_security_group_id(p_workspace => 'PROXY_WORKSPACE')
+    p_security_group_id => apex_util.find_security_group_id(p_workspace => 'PROXY_WORKSPACE')
   );
   apex_application_install.set_schema('APEX_PROXY_SCHEMA');
   apex_application_install.generate_offset;
 END;
 /
 
--- Run the installation script
+PROMPT >>> Importing $FILENAME...
 @$file
 
 COMMIT;
 EXIT;
 EOF
 
-  echo "✅ Rakendus $FILENAME edukalt paigaldatud!"
+  echo "✅ Application $FILENAME deployment completed."
   echo "------------------------------------------------------------------"
 done
 
 echo "=================================================================="
-echo "🎉 Kõik APEX rakendused on edukalt paigaldatud!"
+echo "🎉 All APEX applications have been deployed successfully!"
 echo "=================================================================="

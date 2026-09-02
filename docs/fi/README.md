@@ -12,8 +12,8 @@
 # 1. Kloonaa repositorio ja siirry hakemistoon
 git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-free-db-in-prod
 
-# 2. Käynnistä 2-kerroksinen tuotantopino (Blueprint 3)
-./scripts/setup-all.sh -b 3 --lang fi
+# 2. Käynnistä 2-kerroksinen tuotantopino (Blueprint 21)
+./scripts/setup-all.sh -b 21 --lang fi
 
 # 3. Tarkastele salasanoja, URL-osoitteita ja leikepöytäapuria (tai avaa Dev Hub: http://localhost:8088/)
 ./scripts/get-password.sh
@@ -28,12 +28,12 @@ flowchart TD
     Start(["🚀 Kehittäjä Aloittaa"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
     Clone --> ChooseBP{"2. Valitse Arkkitehtuurisuunnitelma"}
     
-    ChooseBP -->|Oletus 2-DB Pino| BP3["./scripts/setup-all.sh -b 3"]
-    ChooseBP -->|Forms + Publisher + IDE| BP41["./scripts/setup-all.sh -b 41"]
-    ChooseBP -->|Esikatselu / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 34 --dry-run"]
+    ChooseBP -->|Oletus 2-DB Pino| BP21["./scripts/setup-all.sh -b 21 --lang fi"]
+    ChooseBP -->|Forms + Publisher + IDE| BP31["./scripts/setup-all.sh -b 31 --lang fi"]
+    ChooseBP -->|Esikatselu / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 21 --dry-run"]
     
-    BP3 --> DevHub["3. Avaa DevOps-Komentokeskus<br/>🌐 http://localhost:8088/"]
-    BP41 --> DevHub
+    BP21 --> DevHub["3. Avaa DevOps-Komentokeskus<br/>🌐 http://localhost:8088/"]
+    BP31 --> DevHub
     BPDry --> ChooseBP
     
     DevHub --> PwdSpikker["4. Salasanaopas (SEPS Wallet)<br/>./scripts/get-password.sh DB_PROXY_DEV -c"]
@@ -162,6 +162,21 @@ graph TD
 # 5. Näytä 11 blueprintin taulukko päätteessä:
 ./scripts/deploy-blueprint.sh --list --lang fi
 ```
+
+---
+
+## ⚡ Nopeutettu ~15s Palautus & Automaattinen Versiotarkistus
+
+Oracle Free DB in Prod sisältää **älykkään monikerroksisen Golden Snapshot- ja Skip-moottorin** (`scripts/internal/snapshot-resolver.sh`), joka lyhentää toisen käynnistyskerran keston **~6–12 minuutista vain ~15 sekuntiin**:
+
+1. **Automaattinen Versiotarkistus & Vanhentuneiden Tilannevedosten Mitätöinti (`.meta.json`):**
+   - Jokainen Golden Snapshot sisältää koneluettavan `.meta.json`-sopimuksen, johon tallennetaan APEXin, tietokannan, ORDSin ja väliohjelmistojen versiot.
+   - Ennen palautusta tarkistetaan versioiden yhteensopivuus. Jos havaitaan vanhentunut tilannevedos (esim. kohde `APEX 26.1` vs snapshot `24.2`), järjestelmä antaa `VERSION MISMATCH` -varoituksen, suorittaa puhtaan asennuksen ja luo automaattisesti uuden ajantasaisen tilannevedoksen.
+2. **Profiilipohjainen Uudelleenkäyttö & Skip-Matriisi:**
+   - Koska samat tietokantaprofiilit toistuvat useissa blueprinteissä (esim. `db-proxy-oracle` BP 3, BP 7, BP 21, BP 22, BP 34, BP 43), blueprintin vaihtaminen (esim. BP 3 $\rightarrow$ BP 34 Web IDE:n lisäämiseksi) jättää tietokannan koskemattomaksi ja käynnistää vain puuttuvan lisäkontin **~3 sekunnissa**.
+3. **Shared vs. Dedicated WebLogic -Topologiat:**
+   - **Jaettu WebLogic (BP 41 & BP 43):** Yhteinen All-in-One-tietokanta (`db-dev-full`), yhdistetyt RCU-skeemat (`DEV_`), 1 yhdistetty tilannevedos ja matala RAM-muistin kulutus (~6–8 GB).
+   - **Erillinen WebLogic (BP 11, BP 21 & BP 42):** Itsenäiset tietokannat (`db-forms`, `db-publisher`), modulaariset tilannevedokset ja valikoiva käynnistys, joka säästää jopa 4 GB RAM-muistia.
 
 ---
 

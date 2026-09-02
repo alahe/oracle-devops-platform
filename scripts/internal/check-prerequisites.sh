@@ -28,7 +28,7 @@ echo -e "${CYAN}================================================================
 
 # 1. Check Podman binary availability
 if ! command -v podman >/dev/null 2>&1 && ! command -v docker >/dev/null 2>&1; then
-  echo -e "${RED}❌ VIGA: Podman ega Docker utiliiti ei leitud süsteemist!${NC}"
+  echo -e "${RED}❌ ERROR: Neither Podman nor Docker utility was found on system!${NC}"
   exit 1
 fi
 
@@ -38,11 +38,11 @@ if command -v podman >/dev/null 2>&1; then
   if [[ "$FREE_DISK_MB" =~ ^[0-9]+$ ]]; then
     FREE_DISK_GB=$((FREE_DISK_MB / 1024))
     if [ "$FREE_DISK_GB" -lt 10 ]; then
-      echo -e "${RED}⚠️  KRIITILINE HOIATUS: Podman VM vaba kettaruum on kriitiliselt madal: ${FREE_DISK_GB} GB!${NC}"
-      echo -e "${YELLOW}   💡 Soovitus: Vabasta kiiresti kettaruumi: podman system prune -a või ./scripts/snapshots/clean-golden-snapshots.sh -y${NC}"
+      echo -e "${RED}⚠️  CRITICAL WARNING: Podman VM free disk space is critically low: ${FREE_DISK_GB} GB!${NC}"
+      echo -e "${YELLOW}   💡 Recommendation: Free up disk space: podman system prune -a or ./scripts/snapshots/clean-golden-snapshots.sh -y${NC}"
     elif [ "$FREE_DISK_GB" -lt 20 ]; then
-      echo -e "${YELLOW}⚠️  HOIATUS: Podman VM vaba kettaruum on madal: ${FREE_DISK_GB} GB (Soovitatav vähemalt 20 GB)${NC}"
-      echo -e "${YELLOW}   💡 Soovitus: Vabasta kettaruumi: ./scripts/snapshots/clean-golden-snapshots.sh -y${NC}"
+      echo -e "${YELLOW}⚠️  WARNING: Podman VM free disk space is low: ${FREE_DISK_GB} GB (Recommended at least 20 GB)${NC}"
+      echo -e "${YELLOW}   💡 Recommendation: Free up disk space: ./scripts/snapshots/clean-golden-snapshots.sh -y${NC}"
     else
       echo -e "   ├─ $(msg_str "RES_PODMAN_DISK"): ${GREEN}${FREE_DISK_GB} GB${NC}"
     fi

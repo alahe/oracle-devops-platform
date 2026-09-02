@@ -1,26 +1,21 @@
-# Oracle APEX Patches Directory (`./patches`)
+# 🩹 Oracle Patches Directory (`./patches`)
 
-Sellesse kataloogi saab panna Oracle APEXi paigalduspakettide (Bundle Patch / PSE / One-off Patch) `.zip` failid ja lahtipakitud paigaldusfailid.
+> [!NOTE]
+> Tootespetsiifilised patchid asuvad vastava toote alamkataloogis:
+> - **Oracle APEX:** [`binaries/apex/patches/`](../binaries/apex/patches/)
+> - **Oracle Forms 14c:** [`binaries/forms/patches/`](../binaries/forms/patches/)
+> - **Oracle Analytics Publisher:** [`binaries/publisher/patches/`](../binaries/publisher/patches/)
+> - **Oracle Middleware / WebLogic:** [`binaries/middleware/patches/`](../binaries/middleware/patches/)
+> - **Oracle Java / JDK:** [`binaries/java/patches/`](../binaries/java/patches/)
+>
+> Käesolev `./patches` kataloog säilitatakse tagasiühilduvuse ja universaalsete patchide jaoks.
 
-## Kataloogi struktuur
-
-```
-patches/
-├── README.md                     # Käesolev juhend
-└── p39179920_261_Generic.zip     # APEX 26.1.4 PSE Bundle Patch (Bug 39179920)
-```
-
-## APEXi Patchi Paigaldamise Juhend
-
-1. Pane APEXi patchi `.zip` fail sellesse `./patches` kataloogi (nt `patches/p39179920_261_Generic.zip`).
-2. Käivita automaatne paigaldusskript või lase sellel käivituda automaatselt `setup-all.sh` käigus:
-
+## APEXi Patchi Paigaldamine
 ```bash
-./scripts/internal/apply-apex-patch.sh patches/p39179920_261_Generic.zip
+./scripts/internal/apply-apex-patch.sh binaries/apex/patches/p39179920_261_Generic.zip
 ```
 
-Skript teostab automaatselt järgmised sammud:
-- Tuvastab dünaamiliselt profiilipõhise primaarse andmebaasikonteineri (nt `db-alise`, `db-proxy`).
-- Kopeerib patchi paigaldusfailid konteinerisse ja käivitab `@catpatch.sql` / `@apxpatch.sql` andmebaasis `SYSDBA` õigustes (tõstab APEX versiooni 26.1.0 -> 26.1.4).
-- Uuendab automaatselt `apex_images` volume-is asuvad staatilised pildid ja stiilid (sünkroniseerimine toimub ka juhul, kui SQL patch on andmebaasis juba varasemalt rakendatud).
-- Taaskäivitab dünaamiliselt ORDS teenuse konteineri uute failide ja lahenduste rakendamiseks.
+## Analytics Publisheri Patchi Paigaldamine
+```bash
+./scripts/patches/apply-publisher-patch.sh binaries/publisher/patches/<patch_file>.zip
+```

@@ -472,9 +472,9 @@ run_substep() {
   restore_cursor
 
   if [ $exit_code -eq 0 ]; then
-    echo -e "   ${CYAN}${branch}${NC} [Alamsamm ${sub_id}]: ${title}... ${GREEN}✅ [Valmis: ${total_str}]${NC}"
+    echo -e "   ${CYAN}${branch}${NC} [Step ${sub_id}]: ${title}... ${GREEN}✅ [Done: ${total_str}]${NC}"
   else
-    echo -e "   ${CYAN}${branch}${NC} [Alamsamm ${sub_id}]: ${title}... ${RED}❌ [Viga koodiga ${exit_code}]${NC}"
+    echo -e "   ${CYAN}${branch}${NC} [Step ${sub_id}]: ${title}... ${RED}❌ [Error code ${exit_code}]${NC}"
   fi
   return $exit_code
 }

@@ -18,12 +18,12 @@ mkdir -p "$FORMS_APPS_DIR"
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
-echo "🔍 Otsin Forms mooduleid kaustas: $FORMS_APPS_DIR..."
+echo "🔍 Searching for Forms modules in: $FORMS_APPS_DIR..."
 
 found_count=0
 while IFS= read -r -d '' f; do
   base=$(basename "$f")
-  echo "   ├─ Teisendan mooduli XML formaati: $base..."
+  echo "   ├─ Converting module to XML format: $base..."
   "$SCRIPT_DIR/form-to-xml.sh" "$f" >/dev/null 2>&1 || true
   
   xml_file="${f%.fmb}_fmb.xml"
@@ -50,15 +50,15 @@ XML
   found_count=1
 fi
 
-echo "📦 Pakin $found_count XML faili arhiivi: $OUTPUT_ZIP..."
+echo "📦 Bundling $found_count XML file(s) into archive: $OUTPUT_ZIP..."
 (cd "$TEMP_DIR" && zip -q -r "$OUTPUT_ZIP" ./*.xml)
 
 echo "=================================================================="
-echo "🎉 APEX MIGRATION WORKSHOP PAKK VALMIS!"
-echo "   Fail: $OUTPUT_ZIP"
+echo "🎉 APEX MIGRATION WORKSHOP BUNDLE READY!"
+echo "   File: $OUTPUT_ZIP"
 echo ""
-echo "👉 Kuidas importida APEX-isse:"
-echo "   1. Ava APEX App Builder: http://localhost:8088/ords/r/apex/workspace-sign-in"
-echo "   2. Vali menüüst: App Builder -> Application Migration Workshop"
-echo "   3. Vali 'Create Project' ja laadi üles: $OUTPUT_ZIP"
+echo "👉 How to import into APEX:"
+echo "   1. Open APEX App Builder: http://localhost:8088/ords/r/apex/workspace-sign-in"
+echo "   2. Select menu: App Builder -> Application Migration Workshop"
+echo "   3. Click 'Create Project' and upload: $OUTPUT_ZIP"
 echo "=================================================================="

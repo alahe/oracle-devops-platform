@@ -43,7 +43,7 @@ apply_profile_users() {
   fi
   [ -z "$target_container" ] && target_container=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1 || echo "db-proxy")
 
-  echo "👤 Rakendan profiili '${PROFILE_NAME}' (${target_container}) kasutajaid, rolle ja ORDS seadeid..."
+  echo "👤 Applying profile '${PROFILE_NAME}' (${target_container}) users, roles and ORDS configuration..."
 
   SQLCL_IMG="${SQLCL_CONTAINER_IMAGE:-container-registry.oracle.com/database/sqlcl:latest}"
 
@@ -55,41 +55,55 @@ apply_profile_users() {
     "$WORKSPACE_DIR/scripts/get-password.sh" -p "$a" 2>/dev/null | tr -d '\r\n' || echo ""
   }
 
-  DBA_ADMIN_PASSWORD=$(get_alias_pwd "DB_${c_upper}_DBA_ADMIN")
+  DBA_ADMIN_PASSWORD=$(get_container_secret "$target_container" "dba_admin_password" 2>/dev/null || true)
+  [ -z "$DBA_ADMIN_PASSWORD" ] && DBA_ADMIN_PASSWORD=$(get_alias_pwd "DB_${c_upper}_DBA_ADMIN")
   [ -z "$DBA_ADMIN_PASSWORD" ] && DBA_ADMIN_PASSWORD=$(get_db_user_password "$target_container" "dba_admin" 2>/dev/null || true)
   [ -z "$DBA_ADMIN_PASSWORD" ] && DBA_ADMIN_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20 2>/dev/null)
 
-  USER_DEV_PASSWORD=$(get_alias_pwd "DB_${c_upper}_DEV")
-  [ -z "$USER_DEV_PASSWORD" ] && USER_DEV_PASSWORD=$(get_db_user_password "$target_container" "dev" 2>/dev/null || true)
-  [ -z "$USER_DEV_PASSWORD" ] && USER_DEV_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20 2>/dev/null)
+  DEV_PASSWORD=$(get_container_secret "$target_container" "dev_password" 2>/dev/null || true)
+  [ -z "$DEV_PASSWORD" ] && DEV_PASSWORD=$(get_alias_pwd "DB_${c_upper}_DEV")
+  [ -z "$DEV_PASSWORD" ] && DEV_PASSWORD=$(get_alias_pwd "DB_${c_upper}_USER_DEVELOPER")
+  [ -z "$DEV_PASSWORD" ] && DEV_PASSWORD=$(get_db_user_password "$target_container" "dev" 2>/dev/null || true)
+  [ -z "$DEV_PASSWORD" ] && DEV_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20 2>/dev/null)
+  USER_DEV_PASSWORD="$DEV_PASSWORD"
 
-  USER_VIEWER_PASSWORD=$(get_alias_pwd "DB_${c_upper}_VIEWER")
-  [ -z "$USER_VIEWER_PASSWORD" ] && USER_VIEWER_PASSWORD=$(get_db_user_password "$target_container" "viewer" 2>/dev/null || true)
-  [ -z "$USER_VIEWER_PASSWORD" ] && USER_VIEWER_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20 2>/dev/null)
+  VIEWER_PASSWORD=$(get_container_secret "$target_container" "viewer_password" 2>/dev/null || true)
+  [ -z "$VIEWER_PASSWORD" ] && VIEWER_PASSWORD=$(get_alias_pwd "DB_${c_upper}_VIEWER")
+  [ -z "$VIEWER_PASSWORD" ] && VIEWER_PASSWORD=$(get_alias_pwd "DB_${c_upper}_USER_VIEWER")
+  [ -z "$VIEWER_PASSWORD" ] && VIEWER_PASSWORD=$(get_db_user_password "$target_container" "viewer" 2>/dev/null || true)
+  [ -z "$VIEWER_PASSWORD" ] && VIEWER_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20 2>/dev/null)
+  USER_VIEWER_PASSWORD="$VIEWER_PASSWORD"
 
-  USER_APP_PASSWORD=$(get_alias_pwd "DB_${c_upper}_APP")
-  [ -z "$USER_APP_PASSWORD" ] && USER_APP_PASSWORD=$(get_db_user_password "$target_container" "app" 2>/dev/null || true)
-  [ -z "$USER_APP_PASSWORD" ] && USER_APP_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20 2>/dev/null)
+  APP_USER_PASSWORD=$(get_container_secret "$target_container" "app_password" 2>/dev/null || true)
+  [ -z "$APP_USER_PASSWORD" ] && APP_USER_PASSWORD=$(get_alias_pwd "DB_${c_upper}_APP")
+  [ -z "$APP_USER_PASSWORD" ] && APP_USER_PASSWORD=$(get_alias_pwd "DB_${c_upper}_USER_APP")
+  [ -z "$APP_USER_PASSWORD" ] && APP_USER_PASSWORD=$(get_db_user_password "$target_container" "app" 2>/dev/null || true)
+  [ -z "$APP_USER_PASSWORD" ] && APP_USER_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20 2>/dev/null)
+  USER_APP_PASSWORD="$APP_USER_PASSWORD"
 
-  APEX_SCHEMA_PASSWORD=$(get_alias_pwd "DB_${c_upper}_SCHEMA")
+  APEX_SCHEMA_PASSWORD=$(get_container_secret "$target_container" "schema_password" 2>/dev/null || true)
+  [ -z "$APEX_SCHEMA_PASSWORD" ] && APEX_SCHEMA_PASSWORD=$(get_alias_pwd "DB_${c_upper}_SCHEMA")
   [ -z "$APEX_SCHEMA_PASSWORD" ] && APEX_SCHEMA_PASSWORD=$(get_db_user_password "$target_container" "schema" 2>/dev/null || true)
   [ -z "$APEX_SCHEMA_PASSWORD" ] && APEX_SCHEMA_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20 2>/dev/null)
 
-  PUBLISHER_READER_PASSWORD=$(get_alias_pwd "DB_${c_upper}_PUBLISHER_READER")
+  PUBLISHER_READER_PASSWORD=$(get_container_secret "$target_container" "publisher_reader_password" 2>/dev/null || true)
+  [ -z "$PUBLISHER_READER_PASSWORD" ] && PUBLISHER_READER_PASSWORD=$(get_alias_pwd "DB_${c_upper}_PUBLISHER_READER")
   [ -z "$PUBLISHER_READER_PASSWORD" ] && PUBLISHER_READER_PASSWORD=$(get_alias_pwd "DB_PUBLISHER_READER")
   [ -z "$PUBLISHER_READER_PASSWORD" ] && PUBLISHER_READER_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20 2>/dev/null)
 
-  APEX_LISTENER_PASSWORD=$(get_alias_pwd "DB_${c_upper}_APEX_LISTENER")
-  [ -z "$APEX_LISTENER_PASSWORD" ] && APEX_LISTENER_PASSWORD=$(podman secret inspect --showsecret "ords_listener_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || get_service_admin_password "ords_listener" 2>/dev/null || true)
+  APEX_LISTENER_PASSWORD=$(podman secret inspect --showsecret "ords_listener_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+  [ -z "$APEX_LISTENER_PASSWORD" ] && APEX_LISTENER_PASSWORD=$(get_alias_pwd "DB_${c_upper}_APEX_LISTENER")
+  [ -z "$APEX_LISTENER_PASSWORD" ] && APEX_LISTENER_PASSWORD=$(get_service_admin_password "ords_listener" 2>/dev/null || true)
   [ -z "$APEX_LISTENER_PASSWORD" ] && APEX_LISTENER_PASSWORD="${PROFILE_APEX_LISTENER_PASSWORD:-}"
   [ -z "$APEX_LISTENER_PASSWORD" ] && APEX_LISTENER_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20 2>/dev/null)
 
-  DB_SYS_PASSWORD=$(get_alias_pwd "DB_${c_upper}_SYS")
+  DB_SYS_PASSWORD=$(get_container_secret "$target_container" "db_sys_password" 2>/dev/null || true)
+  [ -z "$DB_SYS_PASSWORD" ] && DB_SYS_PASSWORD=$(get_alias_pwd "DB_${c_upper}_SYS")
   [ -z "$DB_SYS_PASSWORD" ] && DB_SYS_PASSWORD=$(get_db_sys_password "$target_container" 2>/dev/null || true)
 
-  APEX_ADMIN_PWD=$(get_alias_pwd "DB_${c_upper}_APEX_ADMIN")
+  APEX_ADMIN_PWD=$(get_container_secret "$target_container" "apex_admin_password" 2>/dev/null || true)
+  [ -z "$APEX_ADMIN_PWD" ] && APEX_ADMIN_PWD=$(get_alias_pwd "DB_${c_upper}_APEX_ADMIN")
   [ -z "$APEX_ADMIN_PWD" ] && APEX_ADMIN_PWD=$(get_service_admin_password "apex_admin" 2>/dev/null || true)
-  [ -z "$APEX_ADMIN_PWD" ] && APEX_ADMIN_PWD=$(get_container_secret "$target_container" "apex_admin_password" 2>/dev/null || true)
   [ -z "$APEX_ADMIN_PWD" ] && APEX_ADMIN_PWD="$DB_SYS_PASSWORD"
 
   PDB_CONTAINER_SET="ALTER SESSION SET CONTAINER = ${PROFILE_DEFAULT_SERVICE:-FREEPDB1};
@@ -276,6 +290,16 @@ END;
     EXECUTE IMMEDIATE 'ALTER USER DBA_ADMIN GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
     EXECUTE IMMEDIATE 'ALTER USER USER_APP GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
     EXECUTE IMMEDIATE 'ALTER USER USER_VIEWER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
+
+    -- Sise-DB turvalukustus (Lock internal APEX & ORDS web access if requested)
+    IF ('${LOCK_INTERNAL_APEX:-false}' = 'true' OR '${DISABLE_INTERNAL_APEX_WEB:-false}' = 'true') AND ('${c_short}' = 'forms' OR '${c_short}' = 'publisher') THEN
+      BEGIN
+        EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_USER ACCOUNT LOCK';
+        EXECUTE IMMEDIATE 'ALTER USER APEX_LISTENER ACCOUNT LOCK';
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END;
+    END IF;
+
     EXECUTE IMMEDIATE 'ALTER SESSION SET "_oracle_script" = FALSE';
   EXCEPTION WHEN OTHERS THEN NULL;
   END;
@@ -479,12 +503,21 @@ ALTER USER DBA_ADMIN GRANT CONNECT THROUGH ORDS_PUBLIC_USER;
 COMMIT;
 EXIT;
 EOSQL
+    local pool_suffix="${target_container#db-}"
+    pool_suffix="${pool_suffix#oracle-db-}"
+    pool_suffix=$(echo "$pool_suffix" | tr '-' '_' | tr '[:upper:]' '[:lower:]')
 
-    podman exec app-ords bash -c "for pool in \$(find /etc/ords/config/databases/ -name 'pool.xml' 2>/dev/null); do sed -i 's|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$APEX_LISTENER_PASSWORD</entry>|g' \"\$pool\" 2>/dev/null || true; done" 2>/dev/null || true
+    if [ -n "$APEX_LISTENER_PASSWORD" ]; then
+      podman exec app-ords bash -c "
+        for pool in \$(find /etc/ords/config/databases/ -name 'pool.xml' 2>/dev/null); do
+          sed -i 's|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$APEX_LISTENER_PASSWORD</entry>|g' \"\$pool\" 2>/dev/null || true
+        done
+      " 2>/dev/null || true
+    fi
     podman restart app-ords >/dev/null 2>&1 || true
   fi
 
-  echo "✅ Profiili kasutajad ja rollid on konfigureeritud."
+  echo "✅ Profile users and roles configured successfully."
 }
 
 if [ "${BASH_SOURCE[0]}" -ef "$0" ]; then

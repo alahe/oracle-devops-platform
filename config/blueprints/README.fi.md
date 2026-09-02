@@ -1,10 +1,10 @@
-[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](../../docs/sv/README.md) | [ 🇱🇻 Latviešu ](../../docs/lv/README.md) | [ 🇱🇹 Lietuvių ](../../docs/lt/README.md)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🏗️ Ympäristön Arkkitehtuurisuunnitelmat (11 Kuratoitua Mallia)
+# 🏗️ Ympäristön Arkkitehtuurisuunnitelmat (15 Kuratoitua Mallia)
 
-Tämä luettelo on **ympäristön 11 kuratoidun ja kanonisen arkkitehtuurisuunnitelman (Blueprints)** keskitetty tietolähde.
+Tämä luettelo on **ympäristön 15 kuratoidun ja kanonisen arkkitehtuurisuunnitelman (Blueprints)** keskitetty tietolähde, jaettuna **4 loogiseen vuosikymmenpohjaiseen ryhmään**.
 
-Jokainen blueprint (`.env.<N>-*`) määrittää kokonaisvaltaisen infrastruktuurimallin 2-kerroksisesta kehitystietokannasta täydelliseen 8-konttiseen eristettyyn yrityspilvilaboratorioon.
+Jokainen blueprint (`.env.<N>-*`) määrittää kokonaisvaltaisen infrastruktuurimallin erillisestä tietokannasta tai yhdyskäytävästä täydelliseen yrityshybridipinoon Web IDE:llä.
 
 ---
 
@@ -16,141 +16,91 @@ Käytä orkestrointityökalua **`./scripts/deploy-blueprint.sh`** (tai `./script
 # 1. Tarkista aktiivinen blueprint ja palveluiden tila:
 ./scripts/deploy-blueprint.sh --status --lang fi
 
-# 2. Ota käyttöön Blueprint 3 (OLETUS 2-kerroksinen tuotantoratkaisu):
-./scripts/deploy-blueprint.sh -b 3 --lang fi
+# 2. Ota käyttöön Blueprint 21 (OLETUS 2-kerroksinen tuotantoratkaisu Web IDE:llä):
+./scripts/deploy-blueprint.sh -b 21 --lang fi
 
-# 3. Ota käyttöön Blueprint 41 (Kaikki-Yhdessä: Forms 14c + Publisher + APEX SSO + Web IDE yhdellä 23ai DB:llä):
-./scripts/deploy-blueprint.sh -b 41 --lang fi
+# 3. Ota käyttöön Blueprint 31 (Täysi Yrityshybridipino: Forms + Publisher + APEX + Web IDE):
+./scripts/deploy-blueprint.sh -b 31 --lang fi
 
 # 4. Dry-run simulointi (esikatselu ilman konttimuutoksia):
-./scripts/deploy-blueprint.sh -b 42 --dry-run
+./scripts/deploy-blueprint.sh -b 21 --dry-run
 
-# 5. Näytä 11 blueprintin taulukko:
+# 5. Näytä 15 blueprintin taulukko:
 ./scripts/setup-all.sh -lb --lang fi
 
-# 6. Suorita 2-vaiheinen automaattinen matriisitestaus:
-./scripts/internal/run_blueprint_matrix_test.sh
+# 6. Suorita automatisoitu puhdas testaus:
+./scripts/setup-all.sh -tb 21
 ```
 
 ---
 
-## 📊 Kanoninen 11 Blueprintin Arkkitehtuurimatriisi
+## 📊 Kanoninen 15 Blueprintin Arkkitehtuurimatriisi
 
 ```mermaid
 graph TD
-  subgraph Sarja 1-9: Core DB & APEX SSO -Yhdyskäytävä
-    BP3["🌟 BP 3 (OLETUS): 2-Kerroksinen Tuotantopino<br/>db-proxy + db-alise + app-ords (Portit 1532, 1533, 8088)"]
-    BP7["BP 7: Hybridiryhmä<br/>Official Oracle 23ai DB + Gerald Venzl DB + ORDS"]
+  subgraph Ryhmä 1: Erilliset Yksittäistuotteet (1–9)
+    BP1["BP 1: Erillinen ALISE DB<br/>db-alise + app-ords (Portti 1533)"]
+    BP2["BP 2: Erillinen ORDS & Dev Hub<br/>app-ords (Portit 8088/8448)"]
+    BP3["BP 3: Erillinen Proxy DB & APEX SSO<br/>db-proxy + app-ords (Portti 1532)"]
+    BP4["BP 4: Erillinen Web-IDE Työasema<br/>web-ide-dev (Portti 8090)"]
+    BP5["BP 5: Erillinen Analytics Publisher<br/>db-publisher + app-publisher (Portit 1531, 9502)"]
+    BP6["BP 6: Erillinen Oracle Forms 14c<br/>db-forms + app-forms (Portit 1534, 9001, 6082)"]
   end
 
-  subgraph Sarja 10-19: Analytics Publisher
-    BP13["BP 13: All-in-One Publisher DB<br/>Yksi 23ai DB (RCU + Liiketoimintadata) + Publisher + ORDS"]
-    BP11["BP 11: Eristetty Publisher Enterprise<br/>3 erillistä DB:tä + Publisher + ORDS"]
+  subgraph Ryhmä 2: Yhdistetyt Palvelut (10–19)
+    BP10["BP 10: Forms + Publisher Yhteinen DB<br/>db-publisher + app-forms + app-publisher"]
+    BP11["BP 11: Yhdistetty ORDS & Web-IDE<br/>app-ords + web-ide-dev"]
   end
 
-  subgraph Sarja 20-29: Oracle Forms 14c & Modernisointi
-    BP22["BP 22: Minimal Hybrid Forms<br/>Yhdistetty Forms/Proxy DB + ALISE DB + Forms 14c + ORDS"]
-    BP21["BP 21: Full Enterprise Forms<br/>Forms RCU DB + Custom DB + Proxy DB + Forms 14c + ORDS"]
+  subgraph Ryhmä 3: Kerroksellinen Yrityspino (20–29)
+    BP20["BP 20: 1-DB Ydinsovelluspino<br/>db-alise + app-ords + web-ide-dev"]
+    BP21["🌟 BP 21 (ALUSTAN OLETUS): Kanoninen 2-Kerroksinen Pino<br/>db-proxy + db-alise + app-ords + web-ide-dev"]
+    BP22["BP 22: 1-DB Kompakti Raportointipino<br/>db-alise + app-publisher + app-ords + web-ide-dev"]
+    BP23["BP 23: Täysi Eristetty Raportointipino (3 DB:tä)<br/>db-publisher + db-proxy + db-alise + Publisher + ORDS + Web-IDE"]
+    BP24["BP 24: Täysi Eristetty Forms-Pino (3 DB:tä)<br/>db-forms + db-proxy + db-alise + Forms + ORDS + Web-IDE"]
   end
 
-  subgraph Sarja 30-39: Kehitystyöasemat & Web IDE
-    BP34["🌟 BP 34: Standardi 2-Kerroksinen DB + Web IDE<br/>db-proxy + db-alise + app-ords + web-ide-dev (Portti 8090)"]
-    BP31["BP 31: Cloud Autonomous DB + Web IDE<br/>ADB-emulaattori + VS Code Web IDE"]
-  end
-
-  subgraph Sarja 40-49: Ultimate Enterprise -Kokonaisuudet
-    BP41["🌟 BP 41: Ultimate All-in-One Enterprise + Web IDE<br/>Forms + Publisher + APEX SSO + Web IDE 1 DB:llä"]
-    BP42["BP 42: Full Isolated Enterprise Cloud Lab<br/>8 eristettyä konttia, 4 erillistä tietokantaa"]
-    BP43["BP 43: 2-DB Hybridi Enterprise + Web IDE<br/>Proxy DB + Jaettu Forms/Publisher RCU DB"]
+  subgraph Ryhmä 4: Hybridipinot (30–39)
+    BP30["BP 30: Kompakti Yrityshybridipino<br/>db-publisher + db-alise + Forms + Pub + ORDS + Web-IDE"]
+    BP31["🌟 BP 31: Ultimate Yrityshybridipino<br/>db-publisher + db-proxy + db-alise + Forms + Pub + ORDS + Web-IDE"]
   end
 ```
 
 ---
 
-### 🔹 Sarja 1–9: Core Tietokanta & APEX SSO -Yhdyskäytävä
-| Nro | Tiedostonimi | Kontit | Portit | Tarkoitus ja Arkkitehtuuri |
+### 🔹 Ryhmä 1: Erilliset Yksittäistuotteet (1–9)
+| Nro | Tiedostonimi | Kontit | Isännän Portit | Tarkoitus ja Arkkitehtuuri |
 | :--- | :--- | :--- | :--- | :--- |
-| **3** | `.env.3-db-alise-apex-ords-with-proxy` | `db-proxy`, `db-alise`, `app-ords` | `1532`, `1533`, `8088`, `8448` | **🌟 OLETUS TUOTANTORATKAISU:** 2-kerroksinen turvallinen topologia (Proxy DB ja ALISE DB) APEXilla ja ORDSilla. |
-| **7** | `.env.7-hybrid-multi-vendor-db` | `db-proxy`, `db-alise`, `app-ords` | `1532`, `1533`, `8088`, `8448` | **Hybridiryhmä:** Virallinen Oracle 23ai -kuva ja Gerald Venzl -kuva yhdessä. |
-
-```mermaid
-graph LR
-  Client[Selain / SQLcl] -->|8088 / 8448| ORDS[app-ords Gateway]
-  Client -->|1532| ProxyDB[(db-proxy 23ai)]
-  Client -->|1533| AliseDB[(db-alise 23ai)]
-  ORDS -->|JDBC / SEPS| ProxyDB
-  ORDS -->|JDBC / SEPS| AliseDB
-```
+| **1** | `.env.1-standalone-alise-db` | `db-alise`, `app-ords` | `1533`, `8088`, `8448` | **Erillinen ALISE-Liiketoimintatietokanta:** Erillinen sovellustietokanta liiketoimintaskeemoille, PL/SQL-koodille ja sisäiselle APEX/ORDS:lle. |
+| **2** | `.env.2-standalone-ords-devhub` | `app-ords` | `8088`, `8448` | **Erillinen ORDS & Dev Hub:** Erillinen ORDS HTTP/HTTPS -yhdyskäytävä ja Dev Hub etä- ja pilvitietokannoille. |
+| **3** | `.env.3-standalone-proxy-db` | `db-proxy`, `app-ords` | `1532`, `8088`, `8448` | **Erillinen Proxy DB & APEX SSO:** APEX Proxy -tietokanta tietoturvayhdyskäytävänä (REST API, Azure Entra ID, Kafka). |
+| **4** | `.env.4-standalone-web-ide` | `web-ide-dev` | `8090` | **Erillinen Web-IDE Työasema:** Selainpohjainen VS Code Web IDE SQL Developerilla, Antigravitylla ja paikallisella CI-testauksella (`act`). |
+| **5** | `.env.5-standalone-analytics-publisher` | `db-publisher`, `app-publisher` | `1531`, `9502` | **Erillinen Analytics Publisher:** Oracle Analytics Publisher (Pixel-Perfect) erillisellä RCU-infrastruktuuritietokannalla (`db-publisher`). |
+| **6** | `.env.6-standalone-oracle-forms` | `db-forms`, `app-forms` | `1534`, `9001`, `7001`, `6082` | **Erillinen Oracle Forms 14c:** Forms 14c -palvelut ja HTML5 noVNC Forms Builder GUI erillisellä Forms RCU -tietokannalla (`db-forms`). |
 
 ---
 
-### 🔹 Sarja 10–19: Analytics Publisher (Pixel-Perfect Raportointi)
-| Nro | Tiedostonimi | Kontit | Portit | Tarkoitus ja Arkkitehtuuri |
+### 🔹 Ryhmä 2: Yhdistetyt Palvelut (10–19)
+| Nro | Tiedostonimi | Kontit | Isännän Portit | Tarkoitus ja Arkkitehtuuri |
 | :--- | :--- | :--- | :--- | :--- |
-| **11** | `.env.11-publisher-full-enterprise` | `db-publisher`, `db-alise`, `db-proxy`, `app-ords`, `app-publisher` | `1531-1533`, `8088`, `9502` | **Täysin Eristetty Publisher Stack:** Kaikki 3 tietokantaa, ORDS ja Publisher yhdessä. |
-| **13** | `.env.13-publisher-all-in-one-db` | `db-proxy`, `app-ords`, `app-publisher` | `1532`, `8088`, `9502` | **All-in-One Publisher DB:** Kaikki RCU-skeemat ja data yhdessä Free DB:ssä (`db-proxy`). |
-
-```mermaid
-graph LR
-  User[Selain / Asiakas] -->|9502| Pub[app-publisher WebLogic]
-  User -->|8088| ORDS[app-ords Gateway]
-  Pub -->|RCU Schemas| PubDB[(db-publisher / db-proxy)]
-  Pub -->|Direct XML / SQL| BizDB[(db-alise / db-proxy)]
-```
+| **10** | `.env.10-consolidated-forms-publisher-unified-db` | `db-publisher`, `app-forms`, `app-publisher` | `1531`, `9502`, `9001`, `6082` | **Forms + Publisher Yhteinen DB:** Forms 14c ja Analytics Publisher yhdistettynä yhteen 23ai-tietokantaan (`db-publisher`) molemmille RCU-skeemoille (~2.5 GB RAM-säästö). |
+| **11** | `.env.11-consolidated-ords-web-ide` | `app-ords`, `web-ide-dev` | `8088`, `8448`, `8090` | **Yhdistetty ORDS & Web-IDE:** Integroitu verkko- ja kehittäjäkerros (ORDS HTTP/HTTPS + code-server Web IDE) yhtenäisessä verkossa. |
 
 ---
 
-### 🔹 Sarja 20–29: Oracle Forms 14c (Palvelut & Modernisointi)
-| Nro | Tiedostonimi | Kontit | Portit | Tarkoitus ja Arkkitehtuuri |
+### 🔹 Ryhmä 3: Kerroksellinen Yrityspino (20–29)
+| Nro | Tiedostonimi | Kontit | Isännän Portit | Tarkoitus ja Arkkitehtuuri |
 | :--- | :--- | :--- | :--- | :--- |
-| **21** | `.env.21-forms-full-enterprise` | `db-forms`, `db-alise`, `db-proxy`, `app-forms`, `app-ords` | `1531-1534`, `8088`, `9001`, `6082` | **Täysi Enterprise Forms Stack:** Erillinen Forms RCU DB + Custom DB + APEX Proxy DB + Forms 14c + ORDS. |
-| **22** | `.env.22-forms-minimal-hybrid` | `db-proxy`, `db-alise`, `app-forms`, `app-ords` | `1531`, `1532`, `8088`, `9001`, `6082` | **Minimaalinen Forms Hybridi:** Yhdistetty Forms/Proxy DB + ALISE DB + ORDS + Forms (HTML5 noVNC). |
-
-```mermaid
-graph LR
-  User[Kehittäjä / Käyttäjä] -->|6082| VNC[HTML5 noVNC Forms Builder]
-  User -->|9001| FormsRun[Forms 14c Runtime]
-  User -->|8088| APEXProxy[APEX SSO Reverse Proxy]
-  APEXProxy -->|Autentikointi| FormsRun
-  FormsRun -->|SQL / PLSQL| FormsDB[(db-forms / db-proxy)]
-```
+| **20** | `.env.20-stack-alise-ords-webide` | `db-alise`, `app-ords`, `web-ide-dev` | `1533`, `8088`, `8448`, `8090` | **1-DB Ydinsovelluspino:** Yhden tietokannan APEX-ydinpino: ALISE-liiketoimintatietokanta, ORDS-yhdyskäytävä ja selainpohjainen Web IDE. |
+| **21** | `.env.21-stack-alise-ords-proxy-webide` | `db-proxy`, `db-alise`, `app-ords`, `web-ide-dev` | `1532`, `1533`, `8088`, `8448`, `8090` | **🌟 ALUSTAN OLETUS:** Standardi 2-kerroksinen tietoturvallinen topologia (Proxy DB ja ALISE DB) APEX SSO:lla, ORDS:lla ja Web IDE:llä. |
+| **22** | `.env.22-stack-alise-publisher-ords-webide` | `db-alise`, `app-publisher`, `app-ords`, `web-ide-dev` | `1533`, `8088`, `8448`, `9502`, `8090` | **1-DB Kompakti Raportointipino:** Resurssitehokas raportointipino, jossa Analytics Publisher jakaa RCU-skeemat ALISE-tietokannassa. |
+| **23** | `.env.23-stack-alise-ords-proxy-webide-publisher` | `db-publisher`, `db-proxy`, `db-alise`, `app-ords`, `web-ide-dev`, `app-publisher` | `1531-1533`, `8088`, `9502`, `8090` | **Täysi Eristetty 2-Kerroksinen Raportointipino:** 3 erillistä tietokantaa (`db-publisher`, `db-proxy`, `db-alise`), WebLogic Publisher, ORDS ja Web IDE *(vaatii $\ge 12\text{ GB}$ RAM)*. |
+| **24** | `.env.24-stack-alise-ords-proxy-webide-forms` | `db-forms`, `db-proxy`, `db-alise`, `app-ords`, `web-ide-dev`, `app-forms` | `1532-1534`, `8088`, `9001`, `6082`, `8090` | **Täysi Eristetty 2-Kerroksinen Forms-Pino:** 3 erillistä tietokantaa (`db-forms`, `db-proxy`, `db-alise`), Forms 14c, noVNC, ORDS ja Web IDE *(vaatii $\ge 12\text{ GB}$ RAM)*. |
 
 ---
 
-### 🔹 Sarja 30–39: Kehitystyöasemat & Pilvilaboratoriot (Web IDE)
-| Nro | Tiedostonimi | Kontit | Portit | Tarkoitus ja Arkkitehtuuri |
+### 🔹 Ryhmä 4: Hybridipinot (30–39)
+| Nro | Tiedostonimi | Kontit | Isännän Portit | Tarkoitus ja Arkkitehtuuri |
 | :--- | :--- | :--- | :--- | :--- |
-| **31** | `.env.31-cloud-adb-with-web-ide` | `db-proxy`, `app-ords`, `web-ide-dev` | `1532`, `8088`, `8090` | **Cloud ADB -Emulaattori + Web IDE:** Autonomous Database -emulaattori ja selainpohjainen VS Code. |
-| **34** | `.env.34-proxy-alise-apex-ords-with-web-ide` | `db-proxy`, `db-alise`, `app-ords`, `web-ide-dev` | `1532`, `1533`, `8088`, `8090` | **🌟 2-Kerroksinen Yrityspino + Web IDE:** Suositeltu 2-kerroksinen ratkaisu selainpohjaisella Web IDE:llä. |
-
-```mermaid
-graph LR
-  Dev[Kehittäjän Selain] -->|8090| WebIDE[code-server Web IDE<br/>SQL Dev + AI + Git]
-  Dev -->|8088| DevHub[DevOps Komentokeskus / ORDS]
-  WebIDE -->|SEPS Wallet| ProxyDB[(db-proxy 23ai)]
-  WebIDE -->|SEPS Wallet| AliseDB[(db-alise 23ai)]
-```
-
----
-
-### 🔹 Sarja 40–49: Ultimate Enterprise Kaikki-Yhdessä & Pilvilaboratoriot
-| Nro | Tiedostonimi | Kontit | Portit | Tarkoitus ja Arkkitehtuuri |
-| :--- | :--- | :--- | :--- | :--- |
-| **41** | `.env.41-ultimate-all-in-one-enterprise-with-web-ide` | `db-proxy`, `app-forms`, `app-publisher`, `app-ords`, `web-ide-dev` | `1532`, `8088`, `9502`, `9001`, `8090`, `6082` | **🌟 Ultimate Kaikki-Yhdessä:** Forms 14c + Publisher + APEX SSO + ORDS + Web IDE yhdellä 23ai DB:llä (`db-proxy`). |
-| **42** | `.env.42-ultimate-full-enterprise-isolated-with-web-ide` | `db-forms`, `db-publisher`, `db-proxy`, `db-alise`, `app-forms`, `app-publisher`, `app-ords`, `web-ide-dev` | Kaikki portit | **Täysin Eristetty Pilvilaboratorio:** Forms ja Publisher erillisissä konteissa ja tietokannoissa. |
-| **43** | `.env.43-proxy-ords-apex-with-shared-forms-publisher-db-web-ide` | `db-proxy`, `db-publisher`, `app-forms`, `app-publisher`, `app-ords`, `web-ide-dev` | `1531`, `1532`, `8088`, `9502`, `9001`, `8090`, `6082` | **2-Tietokannan Hybridi:** APEX/ORDS Proxy DB + Jaettu Middleware DB (`db-publisher`) Forms ja Publisher RCU:lle. |
-
-```mermaid
-graph TD
-  subgraph Ultimate All-in-One Blueprint 41
-    WebIDE[Web IDE :8090]
-    DevHub[Dev Hub & APEX SSO :8088]
-    Forms[Forms 14c & noVNC :9001 / :6082]
-    Pub[Analytics Publisher :9502]
-    SingleDB[(Yksi Oracle 23ai Free DB :1532<br/>Kaikki skeemat, RCU ja data)]
-    WebIDE --> SingleDB
-    DevHub --> SingleDB
-    Forms --> SingleDB
-    Pub --> SingleDB
-  end
-```
+| **30** | `.env.30-hybrid-alise-forms-pub-ords-webide` | `db-publisher`, `db-alise`, `app-forms`, `app-publisher`, `app-ords`, `web-ide-dev` | `1531`, `1533`, `8088`, `9502`, `9001`, `6082`, `8090` | **Kompakti Yrityshybridipino:** Resurssitehokas hybridipino: ALISE-tietokanta, yhdistetty Forms & Publisher RCU DB (`db-publisher`) ja integroitu ORDS & Web-IDE. |
+| **31** | `.env.31-hybrid-alise-proxy-forms-pub-ords-webide` | `db-publisher`, `db-proxy`, `db-alise`, `app-forms`, `app-publisher`, `app-ords`, `web-ide-dev` | `1531-1533`, `8088`, `9502`, `9001`, `6082`, `8090` | **🌟 ULTIMATE YRITYSHYBRIDIPINO:** Täysi 2-kerroksinen Proxy + ALISE -arkkitehtuuri yhdistetyllä Forms & Publisher RCU -tietokannalla ja integroidulla ORDS & Web-IDE:llä *(vaatii $\ge 12\text{ GB}$ RAM)*. |

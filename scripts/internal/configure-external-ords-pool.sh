@@ -90,15 +90,15 @@ EOF
 )
   ORDS_VER_CHECK=$(echo "$ORDS_VER_CHECK" | tr -d '\r\n' | awk '{print $1}')
   if [ -n "$ORDS_VER_CHECK" ] && [ "$ORDS_VER_CHECK" != "N/A" ]; then
-    echo -e "   ✅ ORDS skeem installeeritud! Versioon: ${GREEN}${ORDS_VER_CHECK}${NC}"
+    echo -e "   ✅ ORDS schema installed. Version: ${GREEN}${ORDS_VER_CHECK}${NC}"
   else
-    echo -e "   ⚠️  ORDS skeemi ei tuvastatud. Käivitan automaatse skeemi initsialiseerimise..."
+    echo -e "   ⚠️  ORDS schema not detected. Starting automatic schema initialization..."
     if [ -f "$INTERNAL_DIR/init-publisher-ords.sh" ]; then
       "$INTERNAL_DIR/init-publisher-ords.sh" || true
     fi
   fi
 else
-  echo -e "   ℹ️  Konteiner $PRIMARY_CONTAINER ei tööta praegu. Eeldatakse olemasolevat andmebaasi pordil $DB_PORT."
+  echo -e "   ℹ️  Container $PRIMARY_CONTAINER is not running currently. Expecting existing database on port $DB_PORT."
 fi
 
 # 2. Retrieve Password from Wallet or Podman Secret (Rule 5)
@@ -107,7 +107,7 @@ if [ -z "$SCHEMA_PWD" ]; then
   SCHEMA_PWD=$("$INTERNAL_DIR/get-password.sh" "DB_PUBLISHER_SYS" 2>/dev/null | grep "Password:" | awk '{print $3}' | sed 's/\x1b\[[0-9;]*m//g' | tr -d '\r\n' || echo "")
 fi
 if [ -z "$SCHEMA_PWD" ]; then
-  echo "❌ VIGA: Ei suutnud leida andmebaasi parooli Walletist ega Podman Secrets store'ist!"
+  echo "❌ ERROR: Could not find database password from Wallet or Podman Secrets store!"
   exit 1
 fi
 

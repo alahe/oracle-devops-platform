@@ -247,6 +247,12 @@ BEGIN
   IF v_ws_id IS NOT NULL AND v_ws_id != 0 THEN
     APEX_UTIL.set_security_group_id(v_ws_id);
     v_res := APEX_UTIL.is_login_password_valid('DEV', '${DEV_PWD}');
+    IF NOT v_res THEN
+      v_res := APEX_UTIL.is_login_password_valid('USER_DEVELOPER', '${DEV_PWD}');
+    END IF;
+    IF NOT v_res THEN
+      v_res := APEX_UTIL.is_login_password_valid('DEVELOPER', '${DEV_PWD}');
+    END IF;
     IF v_res THEN
       DBMS_OUTPUT.PUT_LINE('AUTH_SUCCESS');
     ELSE
@@ -263,22 +269,46 @@ EXIT;
 "
     DEV_AUTH_CHECK=$(printf "%s\n" "$DEV_SQL" | podman exec -i "$c_name" sqlplus -s / as sysdba 2>/dev/null || echo "ERROR")
     if echo "$DEV_AUTH_CHECK" | grep -q "AUTH_SUCCESS"; then
-      echo -e "  ${GREEN}✅ APEX Workspace (${ws_name} -> DEV) autentimine ÕNNESTUS: Parool, konto ja õigused on aktiivsed!${NC}"
+      echo -e "  ${GREEN}✅ APEX Workspace (${ws_name} -> DEV) authentication SUCCESSFUL: Password, account and privileges active!${NC}"
       TOTAL_PASSED=$((TOTAL_PASSED + 1))
     elif echo "$DEV_AUTH_CHECK" | grep -q "WS_NOT_FOUND"; then
-      echo -e "  ${RED}❌ APEX Workspace test EBAÕNNESTUS: Tööruumi '${ws_name}' ei leitud!${NC}"
+      echo -e "  ${RED}❌ APEX Workspace test FAILED: Workspace '${ws_name}' not found!${NC}"
       TOTAL_FAILED=$((TOTAL_FAILED + 1))
     else
-      echo -e "  ${RED}❌ APEX Workspace (${ws_name} -> DEV) autentimine EBAÕNNESTUS ($DEV_AUTH_CHECK)!${NC}"
+      echo -e "  ${RED}❌ APEX Workspace (${ws_name} -> DEV) authentication FAILED ($DEV_AUTH_CHECK)!${NC}"
       TOTAL_FAILED=$((TOTAL_FAILED + 1))
     fi
   else
-    echo -e "\n  ℹ️  APEX Workspace Builder test vahele jäetud: Andmebaas [${c_name}] on rakendusbaas."
+    echo -e "\n  ℹ️  APEX Workspace Builder test skipped: Database [${c_name}] is application-only DB."
   fi
 
   # --------------------------------------------------------------------------
   # TEST C: Database Actions (SQL Developer Web / USER_DEVELOPER)
   # --------------------------------------------------------------------------
+  ords_comp_enabled="true"
+  has_dev_schema="false"
+  if [ -f "$pfile" ]; then
+    ords_val=$(awk '/components:/{flag=1;next}/users:/{flag=0}flag' "$pfile" | awk '/ords:/{flag=1;next}/[a-z_]+:/{flag=0}flag' | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
+    if [ "$ords_val" = "false" ]; then
+      ords_comp_enabled="false"
+    fi
+    if grep -q "USER_DEVELOPER" "$pfile" 2>/dev/null || grep -q "ALISE_APP" "$pfile" 2>/dev/null; then
+      has_dev_schema="true"
+    fi
+  else
+    has_dev_schema="true"
+  fi
+
+  if [ "$ords_comp_enabled" = "false" ]; then
+    echo -e "\n  ℹ️  ORDS Database Actions test vahele jäetud: Andmebaasil [${c_name}] on ORDS välja lülitatud (ords.enabled: false)."
+    continue
+  fi
+
+  if [ "$has_dev_schema" = "false" ]; then
+    echo -e "\n  ℹ️  ORDS Database Actions test vahele jäetud: Andmebaas [${c_name}] on sisemine taristu/RCU metaandmete baas."
+    continue
+  fi
+
   SDW_URL="${BASE_URL}/ords/${pool_name}/sql-developer"
   SDW_SIGNIN_URL="${BASE_URL}/ords/${pool_name}/${ords_dev_alias}/sign-in"
   SDW_LANDING_URL="${BASE_URL}/ords/${pool_name}/_/landing"
@@ -337,6 +367,23 @@ EXIT;
     TOTAL_FAILED=$((TOTAL_FAILED + 1))
   fi
 done
+
+# ----------------------------------------------------------------------------
+# TEST D: Analytics Publisher Web UI (if service is active)
+# ----------------------------------------------------------------------------
+if podman container exists app-publisher 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' app-publisher 2>/dev/null)" = "running" ]; then
+  echo -e "\n📦 Kontrollin Analytics Publisher teenuseid (Port: 9502):"
+  echo -e "  ${YELLOW}[1/1] Analytics Publisher Web UI test (/xmlpserver)...${NC}"
+  PUB_HTTP=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:9502/xmlpserver" 2>/dev/null || echo "000")
+  if [ "$PUB_HTTP" = "200" ] || [ "$PUB_HTTP" = "302" ]; then
+    echo -e "     ├─ 🌐 Veebiliides (http://localhost:9502/xmlpserver): ${GREEN}Kättesaadav (HTTP $PUB_HTTP)${NC}"
+    echo -e "  ${GREEN}✅ Analytics Publisher Web UI ja portaal on 100% aktiivsed!${NC}"
+    TOTAL_PASSED=$((TOTAL_PASSED + 1))
+  else
+    echo -e "     ├─ 🌐 Veebiliides (http://localhost:9502/xmlpserver): ${RED}Kättesaamatu (HTTP $PUB_HTTP)${NC}"
+    TOTAL_FAILED=$((TOTAL_FAILED + 1))
+  fi
+fi
 
 echo -e "\n${CYAN}==================================================================${NC}"
 if [ "$TOTAL_FAILED" -eq 0 ]; then

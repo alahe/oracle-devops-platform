@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # ============================================================================
 # Oracle Free DB in Prod — Profile-Driven Selective & Full Reset Script
-# Peatab ja kustutab valitud komponendid, profiilid või kogu keskkonna.
-# Kasutus: ./scripts/reset-all.sh [all|<konteineri_nimi>] [--profile <profiili_nimi>] [--force] [--system]
+# Stops and resets selected components, profiles, or the entire environment.
+# Usage: ./scripts/reset-all.sh [all|<container_name>] [--profile <profile_name>] [--force] [--system]
 # ============================================================================
 
 set -e
 
-# Vaigistame podman compose hoiatusteate välise teenusepakkuja kohta
+# Silence podman compose warning logs about external providers
 export PODMAN_COMPOSE_WARNING_LOGS=false
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -15,24 +15,24 @@ WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 PROJECT_NAME="oracle-devops-platform"
 COMPOSE_FILE="$WORKSPACE_DIR/podman-compose.yml"
 
-# Kaasame ühise abiteegi ja profiilimootori
+# Source shared common library and profile engine
 if [ -f "$SCRIPT_DIR/internal/common.sh" ]; then
   source "$SCRIPT_DIR/internal/common.sh"
 fi
 
-# Laeme keskkonnamuutujad kui olemas
+# Load environment variables if available
 if [ -f "$WORKSPACE_DIR/.env" ]; then
   set -a
   source "$WORKSPACE_DIR/.env"
   set +a
 fi
 
-# Kaasame profiili laadimise funktsioonid
+# Source profile loader functions
 if [ -f "$SCRIPT_DIR/internal/load-profile.sh" ]; then
   source "$SCRIPT_DIR/internal/load-profile.sh"
 fi
 
-# Argumendid: vaikimisi kustutatakse KÕIK komponendid (COMPONENT="all")
+# Arguments: by default ALL components are removed (COMPONENT="all")
 COMPONENT="all"
 TARGET_PROFILE="${PROXY_DB:-${MAIN_DB_PROFILE:-proxy-adb-oracle}}"
 FORCE=false
@@ -80,32 +80,30 @@ done
 
 if [ "$SYSTEM_RESET" = "true" ]; then
   echo "=================================================================="
-  echo "🚨 OHT: Valitud on kogu Podman süsteemi täielik nullimine (--system)!"
-  echo "   See kustutab KÕIK konteinerid, pildid, andmed ja volumid sinu arvutist."
-  echo "   Kasuta seda vaid siis, kui hoidla on korrumpeerunud või kettaruum kriitiliselt otsas."
+  echo "$(msg_str "RESET_SYSTEM_WARN_HEADER")"
+  echo "$(msg_str "RESET_SYSTEM_WARN_BODY")"
   echo "=================================================================="
   if [ "$FORCE" = "false" ]; then
-    read -p "❓ Kas oled TÄIESTI kindel, et soovid jätkata? (kirjuta 'JAH' suurte tähtedega): " CONFIRM
-    if [ "$CONFIRM" != "JAH" ]; then
-      echo "❌ Süsteemi nullimine tühistatud kasutaja poolt."
+    read -p "$(msg_str "RESET_SYSTEM_CONFIRM_PROMPT")" CONFIRM
+    if [ "$CONFIRM" != "YES" ] && [ "$CONFIRM" != "JAH" ]; then
+      msg_print "RESET_SYSTEM_CANCELLED"
       exit 0
     fi
   fi
   
-  echo "Peatan Podmani virtuaalmasina..."
+  msg_print "RESET_STOPPING_PODMAN_VM"
   podman machine stop || true
   
-  echo "Käivitan Podmani virtuaalmasina..."
+  msg_print "RESET_STARTING_PODMAN_VM"
   podman machine start || true
   
-  echo "Teostan Podman süsteemi täieliku nullimise..."
   podman system prune -a -f --volumes
   
-  echo "✅ Podman süsteem on edukalt nullitud ja valmis puhtaks käivituseks!"
+  msg_print "RESET_COMPLETED_MSG" "0s"
   exit 0
 fi
 
-# Laeme valitud profiili spetsifikatsiooni
+# Load target profile specification
 if declare -f load_db_profile >/dev/null 2>&1; then
   load_db_profile "$TARGET_PROFILE" >/dev/null 2>&1 || true
 fi
@@ -172,7 +170,7 @@ if [ "$FORCE" = "false" ]; then
   fi
 fi
 
-# Seadistame logimise
+# Configure file tee-logging
 LOG_DIR="$SCRIPT_DIR/../install_logs"
 mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
@@ -197,7 +195,7 @@ get_reset_stats() {
   fi
   local count=${#values[@]}
   if [ $count -eq 0 ]; then
-    echo "ootusaeg ~${default_est}"
+    echo "estimated ~${default_est}"
     return 0
   fi
   local sum=0
@@ -252,7 +250,7 @@ case $COMPONENT in
     [ -f "$OVERRIDE_FILE" ] && COMPOSE_ARGS+=(-f "$OVERRIDE_FILE")
     podman-compose "${COMPOSE_ARGS[@]}" --profile dev-ords down -v >> "$LOG_FILE" 2>&1 || true
     
-    # 1. Kustutame dünaamiliselt kõik .env failis määratud aktiivsed konteinerid ja mahud
+    # 1. Dynamically stop and remove all active containers and volumes defined in .env
     get_active_db_instances 2>/dev/null | while IFS='|' read -r container prof env_key; do
       [ -z "$container" ] && continue
       cleanup_container "$container"
@@ -275,7 +273,7 @@ case $COMPONENT in
     cleanup_volume "${PROJECT_NAME}_web_ide_data"
 
 
-    # 2. Otsime .env failist KÕIK reamääratlused ilma mustrita (võtme ja väärtuse täpsed nimed) ja kontrollime Podmanist nende olemasolu
+    # 2. Scan .env for all container definitions and verify existence in Podman
     raw_env_containers=()
     if [ -f "$SCRIPT_DIR/../.env" ]; then
       while IFS= read -r env_line || [ -n "$env_line" ]; do
@@ -315,7 +313,7 @@ case $COMPONENT in
     for v in $live_vols; do
       [ -n "$v" ] && cleanup_volume "$v"
     done
-    # Kustutame Podman Podid
+    # Remove Podman Pods
     echo "$(msg_str "RESET_PODS_REMOVING")"
     folder_basename=$(basename "$(cd "$SCRIPT_DIR/.." && pwd)")
     for pod in $(podman pod ls --format "{{.Name}}" 2>/dev/null | grep -E "${PROJECT_NAME}|${folder_basename}|pod_" || true); do
@@ -327,7 +325,7 @@ case $COMPONENT in
     done
     podman pod prune -f 2>/dev/null || true
 
-    # Kustutame võrgu
+    # Remove container network
     NETWORK="${PROJECT_NAME}_default"
     if podman network exists "$NETWORK" 2>/dev/null; then
       podman network rm "$NETWORK" >/dev/null 2>&1 || true
@@ -337,19 +335,20 @@ case $COMPONENT in
     echo "$(msg_str "RESET_PRUNING_DANGLING")"
     podman system prune -f >> "$LOG_FILE" 2>&1 || true
     
-    # Puhastame patchid
-    PATCHES_DIR="$SCRIPT_DIR/../patches"
-    if [ -d "$PATCHES_DIR" ]; then
-      find "$PATCHES_DIR" -type d -name "unzipped_*" -exec rm -rf {} + 2>/dev/null || true
-    fi
+    # Puhastame lahtipakitud ajutised patchide kataloogid
+    for pdir in "$SCRIPT_DIR/../patches" "$SCRIPT_DIR/../binaries"/*/patches; do
+      if [ -d "$pdir" ]; then
+        find "$pdir" -type d -name "unzipped_*" -exec rm -rf {} + 2>/dev/null || true
+      fi
+    done
 
-    # Kustutame Podmani saladused daemoni tasemel (turvaliselt)
+    # Securely purge Podman secrets at daemon level
     echo "$(msg_str "RESET_SECRETS_REMOVING")"
     for sec in $(get_required_secret_names 2>/dev/null || echo "publisher_db_sys_password apex_db_sys_password apex_schema_password ords_listener_password apex_admin_password test_dev_password"); do
       podman secret rm "$sec" >> "$LOG_FILE" 2>&1 || true
     done
     
-    # Kustutame hosti failid ja konteinerite ajutised paigaldusfailid
+    # Clean host files and temporary installation artifacts
     echo "$(msg_str "RESET_WALLET_REMOVING")"
     rm -rf "$SCRIPT_DIR/../config/tns_admin"
     rm -rf "$SCRIPT_DIR/../config/secrets"
@@ -363,7 +362,7 @@ case $COMPONENT in
       fi
     done
 
-    # Kustutame VS Code registreeritud ühenduste kausta ja konfiguratsiooni
+    # Clean VS Code registered database connections and configurations
     echo "$(msg_str "RESET_VSCODE_REMOVING")"
     folder_name="${VSCODE_FOLDER_NAME:-${DB_CONN_NAME:-${CONTAINER_NAME:-db-dev-full}}}"
     VSCODE_SQLCL=$(find "$HOME/.vscode/extensions" -name "sql" -path "*/oracle.sql-developer-*/dbtools/sqlcl/bin/sql" 2>/dev/null | sort -rV | head -n 1)
@@ -425,7 +424,7 @@ if [ "$CLEAN_LOGS" = "true" ] && [ -x "$SCRIPT_DIR/clean-logs.sh" ]; then
   "$SCRIPT_DIR/clean-logs.sh" -y || true
 fi
 
-# Kontrollime tulemust
+# Verify reset results
 echo ""
 echo "$(msg_str "RESET_CHECKING")"
 CLEAN=true

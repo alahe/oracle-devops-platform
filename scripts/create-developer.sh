@@ -13,7 +13,7 @@ else
   WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
 
-# Laeme keskkonnamuutujad
+# Load environment variables
 if [ -f "$WORKSPACE_DIR/.env" ]; then
   set -a
   source "$WORKSPACE_DIR/.env"
@@ -65,7 +65,7 @@ if [ "${PROFILE_APEX_ENABLED:-true}" = "false" ]; then
   exit 0
 fi
 
-# Andmebaasi ühenduse parameetrid
+# Database connection parameters
 DB_HOST="${APEX_DB_HOST:-${PROFILE_DB_HOST:-localhost}}"
 DB_PORT="${APEX_DB_PORT:-${PROFILE_DB_PORT:-1532}}"
 DB_SERVICE="${APEX_DB_SERVICE:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}"
@@ -92,7 +92,7 @@ if [ -z "$SYS_PASSWORD" ]; then
   fi
 fi
 
-# Tuvastame jooksva PC kasutajanime keskkonnast ja muudame suurtähtedeks (APEX standard)
+# Detect current PC username and convert to uppercase (APEX standard)
 DEFAULT_DEV_USER=$(echo "${DEVELOPER_USER:-$USER}" | tr '[:lower:]' '[:upper:]')
 if [ -z "$DEFAULT_DEV_USER" ]; then
   DEFAULT_DEV_USER="DEV_USER"
@@ -109,15 +109,15 @@ else
   DEV_USER=${DEV_USER:-$DEFAULT_DEV_USER}
 fi
 
-# Eemaldame tühikud
+# Strip spaces
 DEV_USER=$(echo "$DEV_USER" | tr -d ' ')
 
 
-# Genereerime juhusliku tugeva parooli automaatselt (ilma küsimata)
+# Generate random strong password automatically
 RAND_PART=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 12 2>/dev/null || openssl rand -hex 6)
 DEV_PWD="Dev_${RAND_PART}_2026!"
 
-# Määrame logi kausta ja faili
+# Configure log directory and filename
 LOG_DIR="$WORKSPACE_DIR/install_logs"
 mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
@@ -127,7 +127,7 @@ echo "------------------------------------------------------------------"
 msg_print "DEV_CREATOR_CREATING" "$DEV_USER" "PROXY_WORKSPACE"
 msg_print "DEV_CREATOR_LOG_FILE" "$LOG_FILE"
 
-# Tuvastame SQLcl asukoha (eelistades VS Code laienduse sisest binääri parooli salvestamiseks)
+# Resolve SQLcl binary location (prioritizing VS Code extension binary)
 SQLCL_BIN=""
 VSCODE_SQLCL=$(find "$HOME/.vscode/extensions" -name "sql" -path "*/oracle.sql-developer-*/dbtools/sqlcl/bin/sql" 2>/dev/null | head -n 1)
 if [ -n "$VSCODE_SQLCL" ]; then
@@ -159,13 +159,13 @@ PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' 
 PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-dev-full}"
 PRIMARY_UPPER=$(echo "$PRIMARY_CONTAINER" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
 
-# Käivitame kasutaja loomise PL/SQL ploki, suunates kogu väljundi logifaili
+# Execute PL/SQL user provisioning block, redirecting output to log file
 set +e
 if podman container exists "$PRIMARY_CONTAINER" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$PRIMARY_CONTAINER" 2>/dev/null)" = "running" ]; then
   podman exec -i "$PRIMARY_CONTAINER" sqlplus -s / as sysdba <<EOF > "$LOG_FILE" 2>&1
 ALTER SESSION SET CONTAINER = FREEPDB1;
 SET SERVEROUTPUT ON SIZE UNLIMITED;
--- 1. Loo/uuenda andmebaasi kasutaja (DB User) ja määra DB_DEVELOPER_ROLE
+-- 1. Create/update database user and grant DB_DEVELOPER_ROLE
 DECLARE
   v_user_exists NUMBER;
 BEGIN
@@ -180,13 +180,13 @@ BEGIN
   EXECUTE IMMEDIATE 'GRANT CREATE SESSION TO ${DEV_USER}';
   EXECUTE IMMEDIATE 'GRANT DB_DEVELOPER_ROLE TO ${DEV_USER}';
   EXECUTE IMMEDIATE 'ALTER USER ${DEV_USER} DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP QUOTA UNLIMITED ON USERS';
-  DBMS_OUTPUT.PUT_LINE('✅ Roll DB_DEVELOPER_ROLE antud kasutajale ${DEV_USER}.');
+  DBMS_OUTPUT.PUT_LINE('[OK] Role DB_DEVELOPER_ROLE granted to ${DEV_USER}.');
 EXCEPTION WHEN OTHERS THEN
-  DBMS_OUTPUT.PUT_LINE('❌ Viga DB kasutaja loomisel: ' || SQLERRM);
+  DBMS_OUTPUT.PUT_LINE('[ERROR] Failed to create DB user: ' || SQLERRM);
 END;
 /
 
--- 2. Loo/uuenda APEX arendaja
+-- 2. Create/update APEX developer account
 DECLARE
   v_workspace_id NUMBER;
   v_target_ws VARCHAR2(100) := '${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}';
@@ -199,17 +199,17 @@ BEGIN
     END;
   END IF;
   IF v_workspace_id IS NULL OR v_workspace_id = 0 THEN
-    DBMS_OUTPUT.PUT_LINE('❌ Viga: Tööruumi ' || v_target_ws || ' ei leitud! Kas APEX on paigaldatud?');
+    DBMS_OUTPUT.PUT_LINE('[ERROR] Workspace ' || v_target_ws || ' not found. Is APEX installed?');
   ELSE
     APEX_UTIL.set_security_group_id(v_workspace_id);
     
-    -- Eemaldame kasutaja kui see juba eksisteerib (et vältida unikaalsuse vigu)
+    -- Remove user if already exists (to prevent uniqueness errors)
     BEGIN
       APEX_UTIL.remove_user(p_user_name => '${DEV_USER}');
     EXCEPTION WHEN OTHERS THEN NULL;
     END;
     
-    -- Loo uus arendaja konto
+    -- Create new developer account
     APEX_UTIL.create_user(
         p_user_name                    => '${DEV_USER}',
         p_email_address                => '${DEV_USER}@company.local',
@@ -223,10 +223,10 @@ BEGIN
         change_password_on_first_use = 'N'
     WHERE user_name = '${DEV_USER}';
     COMMIT;
-    DBMS_OUTPUT.PUT_LINE('✅ Arendaja kasutajakonto edukalt loodud!');
+    DBMS_OUTPUT.PUT_LINE('[OK] APEX developer account created successfully.');
   END IF;
 EXCEPTION WHEN OTHERS THEN
-  DBMS_OUTPUT.PUT_LINE('❌ Viga APEX kasutaja loomisel: ' || SQLERRM);
+  DBMS_OUTPUT.PUT_LINE('[ERROR] Failed to create APEX user: ' || SQLERRM);
 END;
 /
 EXIT;
@@ -236,28 +236,28 @@ else
   run_sqlcl -s /@DB_${PRIMARY_UPPER}_SYS as sysdba <<EOF > "$LOG_FILE" 2>&1
 ALTER SESSION SET CONTAINER = FREEPDB1;
 SET SERVEROUTPUT ON SIZE UNLIMITED;
--- 1. Loo/uuenda andmebaasi kasutaja (DB User) ja määra DB_DEVELOPER_ROLE
+-- 1. Create/update database user and grant DB_DEVELOPER_ROLE
 DECLARE
   v_user_exists NUMBER;
 BEGIN
   SELECT COUNT(*) INTO v_user_exists FROM dba_users WHERE username = '${DEV_USER}';
   IF v_user_exists = 0 THEN
     EXECUTE IMMEDIATE 'CREATE USER ${DEV_USER} IDENTIFIED BY "${DEV_PWD}"';
-    DBMS_OUTPUT.PUT_LINE('✅ DB kasutaja ${DEV_USER} loodud.');
+    DBMS_OUTPUT.PUT_LINE('[OK] DB user ${DEV_USER} created.');
   ELSE
     EXECUTE IMMEDIATE 'ALTER USER ${DEV_USER} IDENTIFIED BY "${DEV_PWD}"';
-    DBMS_OUTPUT.PUT_LINE('✅ DB kasutaja ${DEV_USER} parool uuendatud.');
+    DBMS_OUTPUT.PUT_LINE('[OK] DB user ${DEV_USER} password updated.');
   END IF;
   EXECUTE IMMEDIATE 'GRANT CREATE SESSION TO ${DEV_USER}';
   EXECUTE IMMEDIATE 'GRANT DB_DEVELOPER_ROLE TO ${DEV_USER}';
   EXECUTE IMMEDIATE 'ALTER USER ${DEV_USER} DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP QUOTA UNLIMITED ON USERS';
-  DBMS_OUTPUT.PUT_LINE('✅ Roll DB_DEVELOPER_ROLE antud kasutajale ${DEV_USER}.');
+  DBMS_OUTPUT.PUT_LINE('[OK] Role DB_DEVELOPER_ROLE granted to user ${DEV_USER}.');
 EXCEPTION WHEN OTHERS THEN
-  DBMS_OUTPUT.PUT_LINE('❌ Viga DB kasutaja loomisel: ' || SQLERRM);
+  DBMS_OUTPUT.PUT_LINE('[ERROR] Error creating DB user: ' || SQLERRM);
 END;
 /
 
--- 2. Loo/uuenda APEX arendaja
+-- 2. Create/update APEX developer account
 DECLARE
   v_workspace_id NUMBER;
   v_target_ws VARCHAR2(100) := '${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}';
@@ -270,17 +270,17 @@ BEGIN
     END;
   END IF;
   IF v_workspace_id IS NULL OR v_workspace_id = 0 THEN
-    DBMS_OUTPUT.PUT_LINE('❌ Viga: Tööruumi ' || v_target_ws || ' ei leitud! Kas APEX on paigaldatud?');
+    DBMS_OUTPUT.PUT_LINE('[ERROR] Workspace ' || v_target_ws || ' not found. Is APEX installed?');
   ELSE
     APEX_UTIL.set_security_group_id(v_workspace_id);
     
-    -- Eemaldame kasutaja kui see juba eksisteerib (et vältida unikaalsuse vigu)
+    -- Remove user if already exists (to prevent uniqueness errors)
     BEGIN
       APEX_UTIL.remove_user(p_user_name => '${DEV_USER}');
     EXCEPTION WHEN OTHERS THEN NULL;
     END;
     
-    -- Loo uus arendaja konto
+    -- Create new developer account
     APEX_UTIL.create_user(
         p_user_name                    => '${DEV_USER}',
         p_email_address                => '${DEV_USER}@company.local',
@@ -294,10 +294,10 @@ BEGIN
         change_password_on_first_use = 'N'
     WHERE user_name = '${DEV_USER}';
     COMMIT;
-    DBMS_OUTPUT.PUT_LINE('✅ Arendaja kasutajakonto edukalt loodud!');
+    DBMS_OUTPUT.PUT_LINE('[OK] Developer account created successfully in APEX workspace.');
   END IF;
 EXCEPTION WHEN OTHERS THEN
-  DBMS_OUTPUT.PUT_LINE('❌ Viga APEX kasutaja loomisel: ' || SQLERRM);
+  DBMS_OUTPUT.PUT_LINE('[ERROR] Error creating APEX user: ' || SQLERRM);
 END;
 /
 EXIT;
@@ -306,8 +306,8 @@ EOF
 fi
 set -e
 
-if [ $STATUS -eq 0 ] && grep -q "Arendaja kasutajakonto edukalt loodud!" "$LOG_FILE"; then
-  # 1. Registreerime uue arendaja parooli Oracle Walletisse (SEPS)
+if [ $STATUS -eq 0 ] && grep -E -q "Developer account created successfully|Arendaja kasutajakonto edukalt loodud" "$LOG_FILE"; then
+  # 1. Register new developer password in Oracle Wallet (SEPS)
   WALLET_PWD=$(cat "$WORKSPACE_DIR/config/secrets/wallet_password.txt" 2>/dev/null || echo "CustomWalletPass123!")
   if podman container exists "$PRIMARY_CONTAINER" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$PRIMARY_CONTAINER" 2>/dev/null)" = "running" ]; then
     podman exec -i "$PRIMARY_CONTAINER" sh -c "
@@ -317,7 +317,7 @@ echo \"$WALLET_PWD\" | mkstore -wrl \$WALLET_PATH -createCredential \"${DEV_USER
 " >/dev/null 2>&1 || true
   fi
 
-  # 2. Delegeerime registreerimise register-connections.sh skriptile
+  # 2. Delegate registration to register-connections.sh script
   export EXTRA_DEV_USER="${DEV_USER}"
   export EXTRA_DEV_PWD="${DEV_PWD}"
   export EXTRA_DEV_COLOR="${DEVELOPER_COLOR:-#F39C12}"
@@ -327,13 +327,13 @@ echo \"$WALLET_PWD\" | mkstore -wrl \$WALLET_PATH -createCredential \"${DEV_USER
   "$SCRIPT_DIR/register-connections.sh" >/dev/null 2>&1 || true
 
   echo "=================================================================="
-  echo "🎉 KASUTAJAKONTO ON LOODUD!"
-  echo "   Tööruum (Workspace): PROXY_WORKSPACE"
-  echo "   Kasutajanimi:        $DEV_USER"
-  echo "   Parool:              Salvestatud turvaliselt Oracle Walletisse (SEPS)"
-  echo "   Parooli lugemine:    ./scripts/get-password.sh $DEV_USER"
-  echo "   Sisselogimise URL:   https://localhost:8448/ords/apex"
-  echo "   Logi asukoht:        $LOG_FILE"
+  msg_print "DEV_CREATOR_ACCOUNT_CREATED"
+  msg_print "DEV_CREATOR_WS_LABEL" "PROXY_WORKSPACE"
+  msg_print "DEV_CREATOR_USER_LABEL" "$DEV_USER"
+  msg_print "DEV_CREATOR_PWD_STORED_LABEL"
+  msg_print "DEV_CREATOR_GET_PWD_HINT" "$DEV_USER"
+  msg_print "DEV_CREATOR_LOGIN_URL_LABEL" "https://localhost:8448/ords/apex"
+  msg_print "DEV_CREATOR_LOG_LOCATION_LABEL" "$LOG_FILE"
   echo "   --------------------------------------------------------------"
   msg_print "DEV_CREATOR_REG_SUCCESS"
   msg_print "DEV_CREATOR_REG_HINT"
@@ -343,7 +343,7 @@ else
   msg_print "DEV_CREATOR_SEE_LOG" "$LOG_FILE"
   if [ -f "$LOG_FILE" ]; then
     echo "------------------------------------------------------------------"
-    grep -E "Viga:|ORA-" "$LOG_FILE" || head -n 10 "$LOG_FILE"
+    grep -E "\[ERROR\]|Error:|ORA-" "$LOG_FILE" || head -n 10 "$LOG_FILE"
     echo "------------------------------------------------------------------"
   fi
 fi

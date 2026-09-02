@@ -55,10 +55,10 @@ Võtmed:
   -h, --help                Kuvab selle abiteksti
 
 Näited:
-  # 1. Kuivkäivitus ja kontroll:
+  # 1. Dry run and inspection:
   ./scripts/publish-image-to-artifactory.sh -r "artifactory.firma.ee/oracle" -i "oracle-free-apex:26.1" --dry-run
 
-  # 2. Reaalne avaldamine koos .env konfiguratsiooni ümbersuunamisega:
+  # 2. Publish images and update .env configuration:
   ./scripts/publish-image-to-artifactory.sh \\
     --registry "artifactory.firma.ee/docker-local/oracle" \\
     --image "oracle-free-apex:26.1" \\
@@ -109,8 +109,8 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 if [ -z "$REGISTRY_URL" ]; then
-  echo -e "${RED}❌ VIGA: Registri URL (--registry) on kohustuslik!${NC}"
-  echo -e "ℹ️  Näide: ./scripts/publish-image-to-artifactory.sh --registry 'artifactory.firma.ee/oracle' --image 'oracle-free-apex:26.1'"
+  echo -e "${RED}❌ ERROR: Registry URL (--registry) is required!${NC}"
+  echo -e "ℹ️  Example: ./scripts/publish-image-to-artifactory.sh --registry 'artifactory.company.local/oracle' --image 'oracle-free-apex:26.1'"
   exit 1
 fi
 
@@ -133,7 +133,7 @@ echo -e "   ├─ 🧪 ${BOLD}Kuivkäivitus:${NC}       ${DRY_RUN}"
 echo -e "   └─ 📝 ${BOLD}Uuenda .env:${NC}        ${UPDATE_ENV}"
 echo -e "${CYAN}==================================================================${NC}\n"
 
-# 1. Autentimine (kui kasutaja ja parool on antud)
+# 1. Authentication (if user & password provided)
 if [ -n "$AUTH_USER" ] && [ -n "$AUTH_PASS" ]; then
   echo -e "🔐 [1/3]: Autentin registrisse: ${REGISTRY_URL} (kasutaja: ${AUTH_USER})..."
   if [ "$DRY_RUN" = "true" ]; then
@@ -146,7 +146,7 @@ else
   echo -e "ℹ️  [1/3]: Autentimistunnuseid ei antud, kasutan olemasolevaid sessiooni volitusi."
 fi
 
-# 2. Piltide nimekiri
+# 2. Image list
 IMAGES_TO_PUBLISH=()
 if [ -z "$LOCAL_IMAGE" ] || [ "$LOCAL_IMAGE" = "all" ] || [ "$LOCAL_IMAGE" = "ALL" ]; then
   IMAGES_TO_PUBLISH=(
@@ -189,7 +189,7 @@ for src_img in "${IMAGES_TO_PUBLISH[@]}"; do
   fi
 done
 
-# 3. .env uuendamine kui --update-env on seatud
+# 3. Update .env if --update-env is set
 if [ "$UPDATE_ENV" = "true" ]; then
   echo -e "\n⚙️  [3/3]: Uuendan projekti .env faili seadistust..."
   ENV_FILE="$WORKSPACE_DIR/.env"
@@ -204,7 +204,7 @@ if [ "$UPDATE_ENV" = "true" ]; then
         sed -i.bak -E "s|^REGISTRY_PREFIX=.*|REGISTRY_PREFIX=\"${REGISTRY_PREFIX_VAL}\"|" "$ENV_FILE" && rm -f "${ENV_FILE}.bak"
       else
         echo "" >> "$ENV_FILE"
-        echo "# Ettevõtte Artifactory registri eesliide (automaatselt lisatud publish-image-to-artifactory.sh poolt)" >> "$ENV_FILE"
+        echo "# Enterprise Artifactory registry prefix (automatically managed by publish-image-to-artifactory.sh)" >> "$ENV_FILE"
         echo "REGISTRY_PREFIX=\"${REGISTRY_PREFIX_VAL}\"" >> "$ENV_FILE"
       fi
       echo -e "   ${GREEN}✅ .env uuendatud: REGISTRY_PREFIX=\"${REGISTRY_PREFIX_VAL}\"${NC}"

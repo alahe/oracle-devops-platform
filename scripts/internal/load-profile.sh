@@ -161,7 +161,7 @@ load_db_profile() {
     profile_file="$WORKSPACE_DIR/config/profiles/${profile_name}.yaml"
   fi
   if [ ! -f "$profile_file" ]; then
-    echo "⚠️  Hoiatus: Profiilifaili '${profile_name}.yaml' ei leitud kaustast config/profiles/databases/. Kasutan vaike-profiili 'db-lis-oracle'."
+    echo "⚠️  Warning: Profile file '${profile_name}.yaml' not found in config/profiles/databases/. Using default profile 'db-lis-oracle'."
     profile_name="db-lis-oracle"
     profile_file="$WORKSPACE_DIR/config/profiles/databases/db-lis-oracle.yaml"
   fi
@@ -385,9 +385,10 @@ get_active_db_instances() {
   local raw_instances=()
   local found_proxy=false
 
-  # 0. Kontrollime kõigepealt mälus olevaid keskkonnamuutujaid (kui need on eksporditud)
+  # 0. Check in-memory environment variables first (if exported)
   for env_k in DB_PROXY DB_PUBLISHER DB_FORMS DB_ALISE; do
-    local prof_val="${!env_k:-}"
+    local prof_val=""
+    eval "prof_val=\"\$$env_k\""
     if [ -n "$prof_val" ] && [ "$prof_val" != "NONE" ]; then
       local c_name=$(echo "$env_k" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
       raw_instances+=("${c_name}|${prof_val}|${env_k}")
@@ -403,7 +404,7 @@ get_active_db_instances() {
         local key="${BASH_REMATCH[1]}"
         local profile="${BASH_REMATCH[2]}"
         
-        # 1. Kontrollime, et võtme nimi viitab andmebaasile või profiilile (algab DB_/ORDS_/PROXY_ või lõppeb _DB/_PROXY/_PROFILE)
+        # 1. Verify key name references a database or profile (starts with DB_/ORDS_/PROXY_ or ends with _DB/_PROXY/_PROFILE)
         if [[ "$key" =~ ^DB_ ]] || [[ "$key" =~ _DB$ ]] || [[ "$key" =~ ^ORDS_ ]] || [[ "$key" =~ _ORDS$ ]] || [[ "$key" =~ ^PROXY_ ]] || [[ "$key" =~ _PROXY$ ]] || [[ "$key" == "MAIN_DB_PROFILE" ]] || [[ "$key" == "PUB_DB" ]]; then
           local res_prof="$profile"
           case "$profile" in
@@ -420,7 +421,7 @@ get_active_db_instances() {
             "cicd-standard-oracle"|"cicd") res_prof="db-cicd" ;;
           esac
 
-          # 2. Kontrollime, et väärtusele vastav profiili YAML fail on tõesti olemas kaustas config/profiles/databases/
+          # 2. Verify corresponding profile YAML file exists under config/profiles/databases/
           local check_profile_file="$WORKSPACE_DIR/config/profiles/databases/${res_prof}.yaml"
           [ ! -f "$check_profile_file" ] && check_profile_file="$WORKSPACE_DIR/config/profiles/databases/${profile}.yaml"
           [ ! -f "$check_profile_file" ] && check_profile_file="$WORKSPACE_DIR/config/profiles/${profile}.yaml"

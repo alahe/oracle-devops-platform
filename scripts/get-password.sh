@@ -13,7 +13,7 @@ else
   WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
 
-# Laeme keskkonnamuutujad ja profiilifunktsioonid
+# Load environment variables and profile functions
 if [ -f "$WORKSPACE_DIR/.env" ]; then
   set -a
   source "$WORKSPACE_DIR/.env"
@@ -78,10 +78,10 @@ copy_to_clipboard() {
 
 if [ -z "$ALIAS" ] || [ "$ALIAS" = "--all" ] || [ "$ALIAS" = "-a" ] || [ "$ALIAS" = "help" ]; then
   echo "=================================================================="
-  echo "🔐 ORACLE SEPS WALLET & SERVICE CREDENTIALS MATRIX"
+  echo "$(msg_str "PWD_MATRIX_HEADER")"
   echo "=================================================================="
   printf "┌──────────────────┬─────────────────────┬──────────────────────────┬────────────────────────────────────────────────────────┐\n"
-  printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "Teenus / DB" "Kasutajanimi" "SEPS Alias" "Otspunkt / URL"
+  printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "$(msg_str "PWD_COL_SERVICE")" "$(msg_str "PWD_COL_USER")" "$(msg_str "PWD_COL_ALIAS")" "$(msg_str "PWD_COL_ENDPOINT")"
   printf "├──────────────────┼─────────────────────┼──────────────────────────┼────────────────────────────────────────────────────────┤\n"
 
   for inst in $(get_active_db_instances 2>/dev/null); do
@@ -113,15 +113,15 @@ if [ -z "$ALIAS" ] || [ "$ALIAS" = "--all" ] || [ "$ALIAS" = "-a" ] || [ "$ALIAS
   fi
 
   if podman container exists web-ide-dev 2>/dev/null; then
-    printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "Web IDE (VSCode)" "developer" "(Parooli pole vaja)" "http://localhost:8090/?folder=/workspace"
+    printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "Web IDE (VSCode)" "developer" "$(msg_str "PWD_NO_PASSWORD_REQUIRED")" "http://localhost:8090/?folder=/workspace"
   fi
 
   printf "└──────────────────┴─────────────────────┴──────────────────────────┴────────────────────────────────────────────────────────┘\n"
   echo ""
-  echo "👉 Parooli kuvamiseks: $0 <ALIAS> (nt '$0 DB_PROXY_DEV')"
-  echo "👉 Parooli kopeerimiseks lõikelauale: $0 <ALIAS> -c (või --copy)"
-  echo "👉 Ainult toorparooli väljastamiseks: $0 <ALIAS> -p (või --raw)"
-  echo "👉 Parooli vahetamiseks: ./scripts/rotate-password.sh <TARGET> <ROLE>"
+  echo "$(msg_str "PWD_HINT_SHOW" "$0" "$0")"
+  echo "$(msg_str "PWD_HINT_COPY" "$0")"
+  echo "$(msg_str "PWD_HINT_RAW" "$0")"
+  echo "$(msg_str "PWD_HINT_ROTATE")"
   echo "=================================================================="
   exit 0
 fi
@@ -161,11 +161,11 @@ case "$ALIAS_UPPER" in
 esac
 
 if ! podman container exists "$PROXY_CONTAINER" 2>/dev/null; then
-  echo "❌ Viga: $PROXY_CONTAINER konteiner ei tööta!"
+  msg_err "PWD_CONTAINER_OFFLINE_ERR" "$PROXY_CONTAINER"
   exit 1
 fi
 
-# Tuvastame, kas kasutusel on ADB või Standard wallet
+# Detect whether ADB or Standard wallet is in use
 IS_ADB=false
 if [ "$APEX_DB_TYPE" = "ADB" ] || [[ "$APEX_DB_IMAGE" == *"adb-free"* ]] || podman exec "$PROXY_CONTAINER" test -d /u01/app/oracle/wallets/tls_wallet 2>/dev/null; then
   IS_ADB=true
@@ -181,17 +181,17 @@ else
 fi
 
 if [ -z "$WALLET_PWD" ]; then
-  echo "❌ Viga: Wallet parool puudub!"
+  msg_err "PWD_WALLET_PASSWORD_MISSING"
   exit 1
 fi
 
-# Otsime listist vastava aliase indeksit
+# Search list for corresponding alias index
 if [ "$RAW_ONLY" != "true" ] && [ "$COPY_CLIPBOARD" != "true" ]; then
-  echo "🔍 Otsin Walletist aliasele '$ALIAS' vastavat indeksit..."
+  msg_print "PWD_SEARCHING_WALLET_INDEX" "$ALIAS"
 fi
 LIST_OUT=$(podman exec -i "$PROXY_CONTAINER" sh -c 'export JAVA_HOME=/usr/java/latest; export PATH=$JAVA_HOME/bin:$PATH; echo "$1" | mkstore -wrl "'"$WALLET_PATH"'" -listCredential' -- "$WALLET_PWD" 2>/dev/null || true)
 
-# Parsime indeksi
+# Parse index
 INDEX=$(echo "$LIST_OUT" | grep -i -E "^[0-9]+: ($ALIAS_SEARCH|$ALIAS)$" | head -n 1 | cut -d':' -f1 | tr -d ' ' | tr -d '\r')
 if [ -z "$INDEX" ]; then
   INDEX=$(echo "$LIST_OUT" | grep -i -E "($ALIAS_SEARCH|$ALIAS)" | head -n 1 | cut -d':' -f1 | tr -d ' ' | tr -d '\r')
@@ -206,11 +206,11 @@ if [ -z "$INDEX" ]; then
     *"VIEWER"*) PWD_VAL=$(podman secret inspect --showsecret user_viewer_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || podman secret inspect --showsecret test_viewer_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true); USER_VAL="USER_VIEWER" ;;
   esac
   if [ -z "$PWD_VAL" ]; then
-    echo "❌ Viga: Walletist ega secret-store'ist ei leitud aliast '$ALIAS' (ega '$ALIAS_SEARCH')!"
+    msg_err "PWD_NOT_FOUND_ERR" "$ALIAS" "$ALIAS_SEARCH"
     exit 1
   fi
 else
-  # Pärime kasutaja ja parooli
+  # Query username and password
   USER_VAL=$(podman exec -i "$PROXY_CONTAINER" sh -c 'export JAVA_HOME=/usr/java/latest; export PATH=$JAVA_HOME/bin:$PATH; echo "$1" | mkstore -wrl "'"$WALLET_PATH"'" -viewEntry "oracle.security.client.username'"$INDEX"'"' -- "$WALLET_PWD" 2>/dev/null | grep "=" | cut -d'=' -f2 | tr -d ' ' | tr -d '\r')
 
   PWD_VAL=$(podman exec -i "$PROXY_CONTAINER" sh -c 'export JAVA_HOME=/usr/java/latest; export PATH=$JAVA_HOME/bin:$PATH; echo "$1" | mkstore -wrl "'"$WALLET_PATH"'" -viewEntry "oracle.security.client.password'"$INDEX"'"' -- "$WALLET_PWD" 2>/dev/null | grep "=" | cut -d'=' -f2 | tr -d ' ' | tr -d '\r')
@@ -276,10 +276,10 @@ if [ "$COPY_CLIPBOARD" = "true" ]; then
 fi
 
 echo "=================================================================="
-echo -e "🔓 Wallet Credential Details for Alias: \033[1;36m$ALIAS\033[0m"
-echo -e "   👤 Username: \033[1;32m$USER_VAL\033[0m"
-echo -e "   🔑 Password: \033[1;33m$PWD_VAL\033[0m"
+echo -e "$(msg_str "PWD_DETAILS_HEADER" "$ALIAS")"
+echo -e "$(msg_str "PWD_DETAILS_USERNAME" "$USER_VAL")"
+echo -e "$(msg_str "PWD_DETAILS_PASSWORD" "$PWD_VAL")"
 echo "=================================================================="
-echo -e "💡 Tip: Use '\033[1;32m$0 $ALIAS -c\033[0m' to copy password directly to clipboard!"
+echo -e "$(msg_str "PWD_DETAILS_CLIPBOARD_TIP" "$0" "$ALIAS")"
 
 

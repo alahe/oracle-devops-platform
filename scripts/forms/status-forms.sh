@@ -17,26 +17,26 @@ FORMS_PORT="${FORMS_HTTP_PORT:-9001}"
 FORMS_ADMIN="${FORMS_ADMIN_PORT:-7001}"
 
 echo -e "\n${CYAN}==================================================================${NC}"
-echo -e "${BOLD}📊 ORACLE FORMS 14c TEENUSTE OLEK (STATUS & DIAGNOSTICS)${NC}"
+echo -e "${BOLD}📊 ORACLE FORMS 14c SERVICE STATUS & DIAGNOSTICS${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 
-# 1. Konteinerite olek
-echo -e "📦 ${BOLD}Konteinerid:${NC}"
+# 1. Container status
+echo -e "📦 ${BOLD}Containers:${NC}"
 for c in "$DB_CONTAINER" "$FORMS_CONTAINER"; do
   if podman container exists "$c" 2>/dev/null; then
-    status=$(podman inspect --format='{{.State.Status}}' "$c" 2>/dev/null || echo "tundmatu")
+    status=$(podman inspect --format='{{.State.Status}}' "$c" 2>/dev/null || echo "unknown")
     if [ "$status" = "running" ]; then
-      echo -e "   ├─ ${GREEN}✅ $c:${NC} TÖÖTAB (running)"
+      echo -e "   ├─ ${GREEN}✅ $c:${NC} RUNNING"
     else
-      echo -e "   ├─ ${YELLOW}⏸️  $c:${NC} PEATATUD ($status)"
+      echo -e "   ├─ ${YELLOW}⏸️  $c:${NC} STOPPED ($status)"
     fi
   else
-    echo -e "   ├─ ${RED}❌ $c:${NC} EI LEITUD"
+    echo -e "   ├─ ${RED}❌ $c:${NC} NOT FOUND"
   fi
 done
 
-# 2. URL-ide kontroll
-echo -e "\n🌐 ${BOLD}Veebiliidesed ja Teenused:${NC}"
+# 2. Endpoints check
+echo -e "\n🌐 ${BOLD}Web Services and Endpoints:${NC}"
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${FORMS_PORT}/forms/frmservlet" 2>/dev/null || echo "000")
 if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
   echo -e "   ├─ Forms Runtime:     ${GREEN}✅ http://localhost:${FORMS_PORT}/forms/frmservlet${NC} (HTTP $HTTP_CODE)"
@@ -46,9 +46,9 @@ fi
 
 HTTP_TEST=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${FORMS_PORT}/forms/frmservlet?form=test.fmx" 2>/dev/null || echo "000")
 if [ "$HTTP_TEST" = "200" ] || [ "$HTTP_TEST" = "302" ]; then
-  echo -e "   ├─ Testvorm (test):   ${GREEN}✅ http://localhost:${FORMS_PORT}/forms/frmservlet?form=test.fmx${NC} (HTTP $HTTP_TEST)"
+  echo -e "   ├─ Test Form (test):  ${GREEN}✅ http://localhost:${FORMS_PORT}/forms/frmservlet?form=test.fmx${NC} (HTTP $HTTP_TEST)"
 else
-  echo -e "   ├─ Testvorm (test):   ${YELLOW}⏳ http://localhost:${FORMS_PORT}/forms/frmservlet?form=test.fmx${NC} (HTTP $HTTP_TEST)"
+  echo -e "   ├─ Test Form (test):  ${YELLOW}⏳ http://localhost:${FORMS_PORT}/forms/frmservlet?form=test.fmx${NC} (HTTP $HTTP_TEST)"
 fi
 
 echo -e "   └─ WebLogic Admin:    ${CYAN}http://localhost:${FORMS_ADMIN}/console${NC}"

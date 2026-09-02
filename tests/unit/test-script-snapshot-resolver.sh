@@ -1,0 +1,1 @@
+test-snapshot-resolver.sh

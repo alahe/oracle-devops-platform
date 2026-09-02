@@ -1,116 +1,176 @@
-# 🏢 Ettevõtte Artifactory Hoidla, Konteineriregister ja Semantiline Nimetamine
+[ 🇬🇧 English ](artifactory-setup.md) | [ 🇪🇪 Eesti ](et/artifactory-setup.md) | [ 🇫🇮 Suomi ](fi/artifactory-setup.md) | [ 🇸🇪 Svenska ](sv/artifactory-setup.md) | [ 🇱🇻 Latviešu ](lv/artifactory-setup.md) | [ 🇱🇹 Lietuvių ](lt/artifactory-setup.md)
 
-Tulemüüriga piiratud, suletud võrguga (*air-gapped*) või rangete turvanõuetega ettevõtte keskkonnas võimaldab platvorm suunata nii binaarpaketid (ORDS ja APEX `.zip` failid) kui ka **kõik konteineripildid** (*Docker/Podman images*) ettevõtte sisesesse **JFrog Artifactory**, **Harbor**, **Nexus** või **GitLab Container Registry** hoidlasse.
+# 🏢 Enterprise Artifactory Repository, Unified Product Catalog & Zero-Trust Metadata Guide
 
----
-
-## 🎯 1. Peamised Eelised Ettevõtte Keskkonnas
-
-1. **🚀 10x Kiirem Paigaldus:** 4 GB andmebaasipildi allalaadimine sisevõrgu LAN-ist võtab 10–20 sekundit (avalikust internetist 5–15 min).
-2. **⚡ FastStart / Eelkompileeritud APEX Piltide Jagamine (TASK-018):** Ettevõte saab ehitada ühtse pildi `oracle-free-apex:23ai-apex26.1`, kus APEX on juba sees $\rightarrow$ andmebaas on püsti **30 sekundiga** ilma iga kord 15 minutit kompileerimata.
-3. **🔒 Tulemüüride ja Suletud Võrkude Tugi:** Töötab täielikult ilma otsese internetiühenduseta.
-4. **🛡️ Automaatne CVE Turvaskänneerimine:** JFrog Xray / Harbor Trivy skaneerib baasteegid enne toodangusse jõudmist.
-5. **🛑 Docker Hub Rate Limitite Vältimine:** Puuduvad allalaadimise piirangud ja väliste serverite katkestuste risk.
+In restricted, air-gapped, or corporate enterprise environments, the platform routes all binary archives (APEX, ORDS, Forms, Publisher `.zip`), bundle patches, container images, and Golden Snapshots to an enterprise artifact repository such as **JFrog Artifactory**, **Harbor**, **Sonatype Nexus**, or **GitLab Container Registry**.
 
 ---
 
-## 🏷️ 2. Konteineripiltide Semantiline Nimetamisstandard (Multi-Component Tag Pattern)
+## 🎯 1. Key Enterprise Benefits & LAN FastPath
 
-Kohandatud ja eelkonfigureeritud andmebaasipiltide (*pre-baked images*) sildistamisel järgitakse **mitmeosalist semantilist mustrit**, mis tagab täieliku auditeeritavuse:
-
-$$\mathbf{\text{oracle-free-}\{\text{TÜÜP}\}\text{:}\{\text{DB\_VER}\}\text{[-allikas][-apex}\{\text{APEX\_VER}\}\text{][-ords}\{\text{ORDS\_VER}\}\text{]}}$$
-
-### Standardnäited:
-* `oracle-free-apex:23ai-apex26.1` $\rightarrow$ Oracle Free DB 23ai + APEX 26.1
-* `oracle-free-full:23ai-apex26.1-ords26.2` $\rightarrow$ DB 23ai + APEX 26.1 + ORDS 26.2
-* `oracle-free-apex:23ai-gvenzl-apex26.1` $\rightarrow$ Gerald Venzl FastStart baaspildil
-* `oracle-free-apex:23ai-ocr-apex26.1` $\rightarrow$ Oracle ametlikul Container Registry (OCR) baaspildil
-* `oracle-publisher-domain:2025-db23ai` $\rightarrow$ Analytics Publisher 2025 koos valmis WebLogic BI domeeniga (TASK-019)
+1. **🚀 ~15s LAN FastPath Recovery:** Golden Snapshots and OCI container images stream over corporate LAN (100–500 MB/s), reducing provisioning from ~12 minutes to ~15 seconds.
+2. **📑 Lightweight `.meta.json` Pre-Validation:** Before downloading gigabytes of archive data, the client queries a tiny `.meta.json` file (< 1 KB) to verify APEX, DB, and middleware versions.
+3. **🔒 Zero-Trust Authentication:** JIT token extraction from **Azure Key Vault** (`az keyvault secret show`) or encrypted **Oracle SEPS Wallet** (`cwallet.sso`). No plaintext secrets on disk.
+4. **🛡️ 1-to-1 Product-Centric Catalog Symmetry:** Identical logical folder layout across Artifactory and local developer workstations.
 
 ---
 
-## 🏗️ 3. Pildi Ehitamine ja Andmebaasisisene Automaatne Sildistamine (In-DB Auto-Tagging)
+## 🏗 2. Unified Product-Centric Catalog Hierarchy (1-to-1 Symmetry)
 
-Skript [`docker/apex/build-apex-prebuilt-image.sh`](../docker/apex/build-apex-prebuilt-image.sh) loeb pärast APEX-i paigaldamist **otse andmebaasi sisevaadetest** (`v$instance`, `dba_registry`, `ords_metadata`) reaalsed paigaldatud versiooninumbrit ja koostab 100% täpse sildise automaatselt:
-
-```bash
-# Täisautomaatne ehitus (tuvastab DB 23ai ja APEX 26.1 otse andmebaasist):
-./docker/apex/build-apex-prebuilt-image.sh
-```
-
-Väljund:
 ```text
-   4. Tuvastan reaalajas andmebaasi sisevaadetest versioonid (In-DB Auto-Tagging)...
-      ├── Tuvastatud DB:   23ai
-      ├── Tuvastatud APEX: 26.1
-      └── Genereeritud Tag: 23ai-apex26.1
-
-✅ APEX Pildi Ehitamine Õnnestus!
-   📦 Pilt:   localhost/oracle-free-apex:23ai-apex26.1
-   🏷️  Sildis: 23ai-apex26.1
-   🔗 Alias:  localhost/oracle-free-apex:latest
+{ARTIFACTORY_URL}/{ARTIFACTORY_REPO}/products/
+  │
+  ├── apex/                               <-- Oracle APEX
+  │     ├── binaries/                     <-- apex_26.1_en.zip, apex-latest.zip
+  │     ├── patches/                      <-- p36758444_latest.zip, patch_latest.meta.json
+  │     ├── snapshots/                    <-- profile_db-proxy-oracle_latest.tar.gz
+  │     └── metadata/                     <-- product.meta.json
+  │
+  ├── ords/                               <-- Oracle REST Data Services
+  │     ├── binaries/                     <-- ords-24.4.1.zip, ords-latest.zip
+  │     ├── patches/
+  │     └── snapshots/
+  │
+  ├── database/                           <-- Oracle 23ai Free DB & OCI FastStart
+  │     ├── images/                       <-- oracle-free-23ai.tar, oracle-free-apex-26.1.tar
+  │     └── snapshots/                    <-- profile_db-proxy-oracle_latest.tar.gz
+  │
+  ├── forms/                              <-- Oracle Forms 14c
+  │     ├── binaries/                     <-- forms-14.1.2.zip, forms-latest.zip
+  │     ├── patches/                      <-- p_forms_patch_latest.zip
+  │     └── snapshots/                    <-- profile_db-forms_latest.tar.gz
+  │
+  ├── publisher/                          <-- Oracle Analytics Publisher
+  │     ├── binaries/                     <-- publisher-2025.zip
+  │     ├── patches/                      <-- p_publisher_patch_latest.zip
+  │     └── snapshots/                    <-- profile_db-publisher_latest.tar.gz
+  │
+  └── blueprints/                         <-- Curated Architecture Blueprints
+        ├── bp_3/                         <-- bp_3_latest.tar.gz, bp_3_latest.meta.json
+        ├── bp_34/                        <-- bp_34_latest.tar.gz, bp_34_latest.meta.json
+        └── bp_41/                        <-- bp_41_latest.tar.gz, bp_41_latest.meta.json
 ```
 
 ---
 
-## 📦 4. Konteineripiltide Üleslaadimine Artifactorysse (`publish-image-to-artifactory.sh`)
+## 📊 3. Visual Architectural & Process Flow Diagrams
 
-Utiliit [`scripts/publish-image-to-artifactory.sh`](../scripts/publish-image-to-artifactory.sh) tagib ja laeb kohalikud või ehitatud pildid sise-Artifactorysse ning seadistab vajadusel `.env` faili:
+### 3.1 Unified Catalog Tree Diagram (Mermaid)
 
-### 4.1 Kuivkäivitus ja Kontroll (`--dry-run`)
-```bash
-./scripts/publish-image-to-artifactory.sh \
-  --registry "artifactory.ettevote.ee/docker-local/oracle" \
-  --image "oracle-free-apex:23ai-apex26.1" \
-  --dry-run
-```
-
-### 4.2 Reaalne Üleslaadimine ja `.env` Konfiguratsiooni Sidumine
-```bash
-./scripts/publish-image-to-artifactory.sh \
-  --registry "artifactory.ettevote.ee/docker-local/oracle" \
-  --image "oracle-free-apex:23ai-apex26.1" \
-  --user "jfrog_deployer" \
-  --password "salajane_api_token" \
-  --update-env
-```
-
-Võti `--update-env` lisab/uuendab failis `.env` automaatselt rea:
-```bash
-REGISTRY_PREFIX="artifactory.ettevote.ee/docker-local/oracle/"
+```mermaid
+graph TD
+    Root["🏢 Artifactory: {ARTIFACTORY_URL}/{REPO}/products/"]
+    
+    subgraph Products["Product Catalog"]
+        APEX["📦 apex/"]
+        ORDS["🌐 ords/"]
+        DB["🗄️ database/"]
+        FORMS["📐 forms/"]
+        PUB["📑 publisher/"]
+        BP["🌟 blueprints/"]
+    end
+    
+    Root --> APEX
+    Root --> ORDS
+    Root --> DB
+    Root --> FORMS
+    Root --> PUB
+    Root --> BP
+    
+    subgraph APEX_Details["apex/ Structure"]
+        A_Bin["binaries/<br/>• apex_26.1_en.zip<br/>• apex-latest.zip"]
+        A_Patch["patches/<br/>• p36758444_latest.zip<br/>• patch_latest.meta.json"]
+        A_Snap["snapshots/<br/>• profile_db-proxy-oracle_latest.tar.gz<br/>• profile_db-proxy-oracle_latest.meta.json"]
+        A_Meta["metadata/<br/>• product.meta.json"]
+    end
+    
+    APEX --> A_Bin
+    APEX --> A_Patch
+    APEX --> A_Snap
+    APEX --> A_Meta
+    
+    subgraph BP_Details["blueprints/ Structure"]
+        BP3["bp_3/<br/>• bp_3_latest.tar.gz<br/>• bp_3_latest.meta.json"]
+        BP34["bp_34/<br/>• bp_34_latest.tar.gz<br/>• bp_34_latest.meta.json"]
+        BP41["bp_41/<br/>• bp_41_latest.tar.gz<br/>• bp_41_latest.meta.json"]
+    end
+    
+    BP --> BP3
+    BP --> BP34
+    BP --> BP41
 ```
 
 ---
 
-## ⚙️ 5. Käsitsi `.env` Seadistamise Näidis
+### 3.2 Discovery, .meta.json Pre-Validation & FastPath Flowchart (Mermaid)
 
-Kopeeri või muuda faili `.env`:
+```mermaid
+flowchart TD
+    Start([Launch: setup-all.sh / install-apex.sh / apply-patch.sh]) --> Step1{1. Valid local file in cache?}
+    
+    Step1 -->|Yes, valid| FastLocal["⚡ Use local cache (binaries/ or golden-snapshots/)"]
+    Step1 -->|No / Missing / Outdated| Step2{2. Is ARTIFACTORY_URL configured?}
+    
+    Step2 -->|No| FallbackPublic["🌐 Download from official public OTN / Clean build"]
+    Step2 -->|Yes| StepAuth["Resolve JIT token: Azure Key Vault or SEPS Wallet"]
+    
+    StepAuth --> FetchMeta["HTTP GET: Fetch ONLY .meta.json (< 1 KB)"]
+    FetchMeta --> CheckHTTP{Found in catalog (200 OK)?}
+    
+    CheckHTTP -->|404 / Missing| FallbackPublic
+    CheckHTTP -->|200 OK| ValidateMeta{verify_snapshot_version_match}
+    
+    ValidateMeta -->|Mismatch: Versions differ| LogMismatch["⚠️ Log Warning: VERSION MISMATCH IN ARTIFACTORY"]
+    LogMismatch --> FallbackPublic
+    
+    ValidateMeta -->|Match: Versions match| DownloadLAN["🚀 Download .zip / .tar.gz at LAN speed (< 10s)"]
+    DownloadLAN --> SaveCache["Cache in symmetric local directory"]
+    SaveCache --> ExecuteFast["⚡ Execute instant install / restore (~15s)"]
+    
+    FastLocal --> ExecuteFast
+    FallbackPublic --> ExecuteClean["🔄 Execute clean build & compile"]
+    
+    ExecuteFast --> Done([✅ Environment ready & healthy])
+    ExecuteClean --> CheckAutoPublish{ARTIFACTORY_AUTO_PUBLISH=true or --publish?}
+    
+    CheckAutoPublish -->|Yes| AutoUpload["Publish new artifact + .meta.json to Artifactory"]
+    CheckAutoPublish -->|No| Done
+    AutoUpload --> Done
+```
+
+---
+
+## 🚀 4. Universal CLI Publisher (`./scripts/publish-to-artifactory.sh`)
+
+```bash
+# 1. Publish Blueprint 3 Golden Snapshot & generated .meta.json:
+./scripts/publish-to-artifactory.sh --product blueprints --blueprint 3
+
+# 2. Publish APEX Patch & companion metadata:
+./scripts/publish-to-artifactory.sh --product apex --category patches --file binaries/apex/patches/p36758444_latest.zip
+
+# 3. Publish ORDS standalone binary:
+./scripts/publish-to-artifactory.sh --product ords --category binaries --file binaries/ords/ords-latest.zip
+```
+
+---
+
+## ⚙️ 5. Configuration Settings (`.env` or `config/repository.env`)
 
 ```bash
 # ============================================================================
-# ETTEVÕTTE ARTIFACTORY JA REGISTRI SEADISTUS
+# ENTERPRISE ARTIFACTORY & REPOSITORY CONFIGURATION
 # ============================================================================
 
-# 1. Konteineripiltide peegelduse eesliide (Container Registry Prefix):
-REGISTRY_PREFIX="artifactory.ettevote.ee/docker-local/oracle/"
+# 1. Base URL & Repository Key:
+ARTIFACTORY_URL="https://artifactory.company.internal/artifactory"
+ARTIFACTORY_REPO="oracle-devops-platform"
+ARTIFACTORY_USER="jfrog_deployer"
 
-# 2. Artifactory tarkvara allalaadimise otselingid (.zip failid):
-ORDS_URL="https://artifactory.ettevote.ee/artifactory/oracle-binaries/ords-latest.zip"
-APEX_URL="https://artifactory.ettevote.ee/artifactory/oracle-binaries/apex-latest.zip"
+# 2. Azure Key Vault JIT Integration (Optional):
+AZURE_KEYVAULT_NAME=""
+ARTIFACTORY_SECRET_NAME="artifactory-token"
 
-# 3. Vajadusel Artifactory autentimistunnused (kasutaja:token):
-# ARTIFACTORY_AUTH="jfrog_user:api_token_või_parool"
+# 3. Automated CI/CD Publishing:
+ARTIFACTORY_AUTO_PUBLISH="false"
 ```
-
-Kõik paigaldusskriptid (`setup-all.sh`, `install-ords-standalone.sh`, `install-apex.sh` ja `generate-compose-override.sh`) rakendavad neid väärtusi automaatselt.
-
----
-
-## 🌐 6. Ametlikud Allalaadimise Otselingid (OTN Välisvõrgus)
-
-Kui pääs välisvõrku on avatud, laevad skriptid vaikimisi failid alla Oracle ametlikest hoidlatest:
-
-* **Ametlik ORDS allalaadimisportaal:** [Oracle ORDS Downloads](https://www.oracle.com/database/sqldeveloper/technologies/dbactions/download/)
-* **Ametlik ORDS OTN otselink:** `https://download.oracle.com/otn_software/java/ords/ords-latest.zip`
-* **Ametlik APEX allalaadimisportaal:** [Oracle APEX Downloads](https://apex.oracle.com/download/)
-* **Ametlik APEX OTN otselink:** `https://download.oracle.com/otn_software/apex/apex-latest.zip`

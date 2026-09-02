@@ -24,34 +24,34 @@ is_cert_valid() {
   return 0
 }
 
-# 1. Genereerime kohaliku Root CA (Sertifitseerimiskeskus)
+# 1. Generate local Root Certificate Authority (Root CA)
 echo "1. Kontrollin kohalikku juursertifikaati (Root CA)..."
 ROOT_REGENERATED=false
 if is_cert_valid "$CERT_DIR/localCA.pem" && [ -f "$CERT_DIR/localCA.key" ]; then
   EXP_DATE=$(openssl x509 -in "$CERT_DIR/localCA.pem" -noout -enddate 2>/dev/null | cut -d= -f2)
-  echo "ℹ️  Kehtiv Root CA on juba olemas (kehtib kuni: $EXP_DATE), uut ei genereerita."
+  echo "ℹ️  Valid Root CA already exists (expires: $EXP_DATE). Skipping creation."
 else
-  echo "👉 Loon uue kohaliku juursertifikaadi (Root CA)..."
+  echo "👉 Generating new local Root CA certificate..."
   openssl genrsa -out "$CERT_DIR/localCA.key" 4096 2>/dev/null
   openssl req -x509 -new -nodes -key "$CERT_DIR/localCA.key" -sha256 -days 1825 \
     -out "$CERT_DIR/localCA.pem" \
-    -subj "/C=EE/O=Arenduskeskkond Local/CN=Local Dev Root CA" 2>/dev/null
+    -subj "/C=EE/O=Local Dev Environment/CN=Local Dev Root CA" 2>/dev/null
   ROOT_REGENERATED=true
-  echo "✅ Uus Root CA loodud: config/certs/localCA.pem"
+  echo "✅ New Root CA created: config/certs/localCA.pem"
 fi
 
-# 2. Genereerime localhost sertifikaadi
+# 2. Generate localhost TLS domain certificate
 echo "------------------------------------------------------------------"
-echo "2. Kontrollin sertifikaati aadressile 'localhost'..."
+echo "2. Checking TLS certificate for 'localhost'..."
 LOCALHOST_REGENERATED=false
 if [ "$ROOT_REGENERATED" = "false" ] && is_cert_valid "$CERT_DIR/localhost.crt" && [ -f "$CERT_DIR/localhost.key" ] && openssl verify -CAfile "$CERT_DIR/localCA.pem" "$CERT_DIR/localhost.crt" >/dev/null 2>&1; then
   EXP_DATE=$(openssl x509 -in "$CERT_DIR/localhost.crt" -noout -enddate 2>/dev/null | cut -d= -f2)
-  echo "ℹ️  Kehtiv localhost sertifikaat on juba olemas (kehtib kuni: $EXP_DATE), uut ei genereerita."
+  echo "ℹ️  Valid localhost certificate already exists (expires: $EXP_DATE). Skipping creation."
 else
-  echo "👉 Loon uue sertifikaadi aadressile 'localhost'..."
+  echo "👉 Generating new certificate for 'localhost'..."
   openssl genrsa -out "$CERT_DIR/localhost.key" 2048 2>/dev/null
 
-  # Loome config faili domeenide ja IP-de jaoks (Subject Alternative Name - SAN)
+  # Generate config file for SAN domains and IPs
   cat > "$CERT_DIR/localhost.ext" <<EOF
 authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
@@ -64,12 +64,12 @@ DNS.2 = *.localhost
 IP.1 = 127.0.0.1
 EOF
 
-  # Luuakse sertifikaadi nõue (CSR)
+  # Certificate Signing Request (CSR)
   openssl req -new -key "$CERT_DIR/localhost.key" \
     -out "$CERT_DIR/localhost.csr" \
-    -subj "/C=EE/O=Arenduskeskkond Local/CN=localhost" 2>/dev/null
+    -subj "/C=EE/O=Local Dev Environment/CN=localhost" 2>/dev/null
 
-  # Allkirjastame sertifikaadi meie oma kohaliku Root CA-ga
+  # Sign certificate with Root CA
   openssl x509 -req -in "$CERT_DIR/localhost.csr" \
     -CA "$CERT_DIR/localCA.pem" -CAkey "$CERT_DIR/localCA.key" \
     -CAcreateserial -out "$CERT_DIR/localhost.crt" \
@@ -78,9 +78,9 @@ EOF
   rm -f "$CERT_DIR/localhost.csr" "$CERT_DIR/localhost.ext" "$CERT_DIR/localCA.srl"
   LOCALHOST_REGENERATED=true
 
-  echo "✅ Uus sertifikaat ja võti loodud:"
-  echo "   Sert: $CERT_DIR/localhost.crt"
-  echo "   Võti: $CERT_DIR/localhost.key"
+  echo "✅ New certificate and key generated:"
+  echo "   Cert: $CERT_DIR/localhost.crt"
+  echo "   Key:  $CERT_DIR/localhost.key"
 fi
 
 # Populate user_ca directory (Variant 3)
@@ -92,17 +92,17 @@ cp -f "$CERT_DIR/localhost.key" "$CERT_DIR/user_ca/localhost.key" 2>/dev/null ||
 # Generate direct self-signed cert in self_signed directory (Variant 4)
 mkdir -p "$CERT_DIR/self_signed"
 if ! is_cert_valid "$CERT_DIR/self_signed/self_signed.crt" || [ ! -f "$CERT_DIR/self_signed/self_signed.key" ]; then
-  echo "👉 Loon puhta iseallkirjastatud varusertifikaadi (Variant 4 - self_signed/)..."
+  echo "👉 Generating clean self-signed fallback certificate (Variant 4 - self_signed/)..."
   openssl req -x509 -newkey rsa:2048 -nodes -keyout "$CERT_DIR/self_signed/self_signed.key" \
     -out "$CERT_DIR/self_signed/self_signed.crt" -days 365 \
-    -subj "/C=EE/O=Arenduskeskkond Local/CN=localhost" \
+    -subj "/C=EE/O=Local Dev Environment/CN=localhost" \
     -addext "subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1" 2>/dev/null || true
-  echo "✅ Iseallkirjastatud varusertifikaat loodud: config/certs/self_signed/self_signed.crt"
+  echo "✅ Self-signed fallback certificate created: config/certs/self_signed/self_signed.crt"
 fi
 
-# 3. Ekspordime sertifikaadid Oracle Wallet PKCS#12 formaati (ewallet.p12)
+# 3. Export certificates to Oracle Wallet PKCS#12 format (ewallet.p12)
 echo "------------------------------------------------------------------"
-echo "3. Kontrollin Oracle Wallet (ewallet.p12) faile..."
+echo "3. Checking Oracle Wallet (ewallet.p12) files..."
 
 WALLET_PROXY_DIR="$WORKSPACE_DIR/config/wallet-apex-proxy"
 WALLET_PUB_DIR="$WORKSPACE_DIR/config/wallet-publisher"
@@ -110,9 +110,9 @@ WALLET_PUB_DIR="$WORKSPACE_DIR/config/wallet-publisher"
 mkdir -p "$WALLET_PROXY_DIR" "$WALLET_PUB_DIR"
 
 if [ "$LOCALHOST_REGENERATED" = "false" ] && [ -f "$WALLET_PROXY_DIR/ewallet.p12" ] && [ -f "$WALLET_PUB_DIR/ewallet.p12" ] && [ -f "$WALLET_PROXY_DIR/cwallet.sso" ] && [ -f "$WALLET_PUB_DIR/cwallet.sso" ]; then
-  echo "ℹ️  Olemasolevad Oracle Walletid (ewallet.p12 / cwallet.sso) on kehtivad, uusi ei genereerita."
+  echo "ℹ️  Existing Oracle Wallets (ewallet.p12 / cwallet.sso) are valid. Skipping creation."
 else
-  echo "👉 Ekspordime uued ewallet.p12 failid..."
+  echo "👉 Exporting new ewallet.p12 files..."
   openssl pkcs12 -export \
     -out "$WALLET_PROXY_DIR/ewallet.p12" \
     -inkey "$CERT_DIR/localhost.key" \
@@ -127,13 +127,13 @@ else
     -certfile "$CERT_DIR/localCA.pem" \
     -passout pass:OracleWallet2026! 2>/dev/null
 
-  echo "✅ ewallet.p12 failid loodud kaustadesse:"
+  echo "✅ ewallet.p12 files created in:"
   echo "   - config/wallet-apex-proxy/"
   echo "   - config/wallet-publisher/"
 
-  # 4. Genereerime cwallet.sso (auto-login) faili kasutades konteineri orapki utiliiti
+  # 4. Generate cwallet.sso (auto-login) using container orapki utility
   echo "------------------------------------------------------------------"
-  echo "4. Genereerin cwallet.sso (auto-login wallet) failid..."
+  echo "4. Generating cwallet.sso (auto-login wallet) files..."
 
   CONTAINER_CMD=""
   if command -v podman &> /dev/null; then
@@ -143,7 +143,7 @@ else
   fi
 
   if [ -n "$CONTAINER_CMD" ]; then
-    echo "🐳 Kasutan konteinerit '$CONTAINER_CMD' ja orapki tööriista..."
+    echo "🐳 Using container engine '$CONTAINER_CMD' and orapki tool..."
     set +e
     $CONTAINER_CMD run --rm --entrypoint bash \
       -v "$WALLET_PROXY_DIR:/wallet-proxy:rw" \
@@ -155,18 +155,18 @@ else
       " 2>/dev/null
     set -e
     if [ -f "$WALLET_PROXY_DIR/cwallet.sso" ] && [ -f "$WALLET_PUB_DIR/cwallet.sso" ]; then
-      echo "✅ cwallet.sso failid edukalt genereeritud!"
+      echo "✅ cwallet.sso files generated successfully!"
     else
-      echo "ℹ️  ewallet.p12 sertifikaadid on loodud."
+      echo "ℹ️  ewallet.p12 certificates generated."
     fi
   else
-    echo "ℹ️  Konteinerplatvormi (podman/docker) ei leitud. cwallet.sso loomine jäeti vahele."
+    echo "ℹ️  Container engine (podman/docker) not found. Skipping cwallet.sso generation."
   fi
 fi
 
-# 5. OS Hoidla Usaldusväärsuse seadistamine (macOS, Windows, WSL)
+# 5. OS Certificate Trust Configuration
 echo "------------------------------------------------------------------"
-echo "5. Usaldusväärsuse seadistamine..."
+echo "5. Configuring OS certificate trust..."
 
 NO_PROMPT=false
 if [[ "$*" == *"--no-prompt"* ]]; then
@@ -177,7 +177,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   USER_KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
   [ ! -f "$USER_KEYCHAIN" ] && USER_KEYCHAIN="$HOME/Library/Keychains/login.keychain"
 
-  # Lisame kasutaja võtmehoidjasse sertifikaadi (100% kasutajaõigustes ilma root/sudo-ta)
+  # Install certificate into macOS user keychain (100% non-root user permissions)
   security add-certificate -k "$USER_KEYCHAIN" "$CERT_DIR/localCA.pem" 2>/dev/null || true
 
   if security find-certificate -c "Local Dev Root CA" "$USER_KEYCHAIN" &>/dev/null; then
