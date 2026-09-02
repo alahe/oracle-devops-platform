@@ -83,7 +83,7 @@ rotate_db_user_password() {
   echo "🔄 Rotating password: Database [${target_db}] -> User [${db_username}]..."
 
   # 1. Update Database & APEX User Password
-  if command -v podman &>/dev/null && podman container exists "$target_db" 2>/dev/null; then
+  if command -v podman &>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$target_db" 2>/dev/null)" = "running" ]; then
     if [ "$is_sys" = "true" ]; then
       podman exec -i "$target_db" sqlplus -s / as sysdba <<EOSQL >/dev/null 2>&1 || true
 ALTER USER sys IDENTIFIED BY "${new_pwd}" CONTAINER=ALL;
@@ -140,7 +140,7 @@ rotate_ords_listener_password() {
   [ -z "$dbs" ] && dbs="db-proxy"
 
   for target_db in $dbs; do
-    if command -v podman &>/dev/null && podman container exists "$target_db" 2>/dev/null; then
+    if command -v podman &>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$target_db" 2>/dev/null)" = "running" ]; then
       podman exec -i "$target_db" sqlplus -s / as sysdba <<EOSQL >/dev/null 2>&1 || true
 ALTER SESSION SET CONTAINER = FREEPDB1;
 ALTER SESSION SET "_oracle_script" = TRUE;
@@ -170,13 +170,13 @@ EOSQL
   done
 
   # 3. Directly patch all ORDS pool XML files in app-ords
-  if command -v podman &>/dev/null && podman container exists "app-ords" 2>/dev/null; then
+  if command -v podman &>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "app-ords" 2>/dev/null)" = "running" ]; then
     podman exec app-ords bash -c "
       for pool in \$(find /etc/ords/config/databases/ -name 'pool.xml' 2>/dev/null); do
         sed -i 's|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$new_pwd</entry>|g' \"\$pool\" 2>/dev/null || true
       done
     " 2>/dev/null || true
-    echo "🔄 Restarting app-ords container with updated credentials..."
+    echo "🔄 Taaskäivitan app-ords konteineri uue parooliga..."
     podman restart app-ords >/dev/null 2>&1 || true
   fi
 
