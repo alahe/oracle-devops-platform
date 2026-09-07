@@ -2477,6 +2477,9 @@ document.addEventListener('keydown', (e) => {
     closeSnippetModal();
     closeProfileModal();
     closeCreateBpModal();
+    if (typeof closeSuiteTestsModal === 'function') {
+      closeSuiteTestsModal();
+    }
   }
 });
 
@@ -5100,7 +5103,9 @@ function renderTestingSuites(suites) {
               <span>${suite.icon || '🧪'}</span>
               <span>${escapeTestHtml(suite.title)}</span>
             </div>
-            <span class="badge badge-info" style="font-size:0.7rem;">${suite.count} ${suite.count === 1 ? 'test' : 'tests'}</span>
+            <span class="badge badge-info test-count-badge-clickable" onclick="openSuiteTestsModal('${suite.key}')" title="${dict.btn_view_tests || 'Kuva testid'}" style="font-size:0.7rem;">
+              ${suite.count} ${suite.count === 1 ? 'test' : 'tests'} 👁️
+            </span>
           </div>
           <div class="test-suite-desc">${escapeTestHtml(suite.desc)}</div>
         </div>
@@ -5111,7 +5116,10 @@ function renderTestingSuites(suites) {
           </div>
         ` : ''}
         <div class="test-suite-actions">
-          <div style="display:flex; align-items:center; gap:6px;">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn-compact btn-compact-secondary" onclick="openSuiteTestsModal('${suite.key}')" title="${dict.btn_view_tests || 'Kuva testid'}" style="font-size:0.75rem;">
+              <span>👁️</span> <span>${dict.btn_view_tests || 'Kuva testid'}</span>
+            </button>
             ${selectOptions}
             ${hasSingleTests ? `
               <button type="button" class="btn-compact btn-compact-secondary" style="font-size:0.75rem;" onclick="runSingleSuiteTest('${suite.key}')" title="${dict.test_run_selected_tooltip || 'Käivita valitud skript'}">
@@ -5127,6 +5135,103 @@ function renderTestingSuites(suites) {
     `;
   });
   grid.innerHTML = html;
+}
+
+let currentModalSuiteKey = null;
+let currentModalSuiteTests = [];
+
+function openSuiteTestsModal(suiteKey) {
+  const suites = (typeof TEST_SUITES_DATA !== 'undefined' ? TEST_SUITES_DATA : window.TEST_SUITES_DATA) || {};
+  const suite = suites[suiteKey];
+  if (!suite) return;
+
+  currentModalSuiteKey = suiteKey;
+  currentModalSuiteTests = Array.isArray(suite.tests) ? suite.tests : [];
+
+  const modal = document.getElementById('modal-suite-tests');
+  const iconEl = document.getElementById('suite-tests-modal-icon');
+  const titleEl = document.getElementById('suite-tests-modal-title');
+  const subEl = document.getElementById('suite-tests-modal-subtitle');
+  const searchInput = document.getElementById('suite-tests-search-input');
+
+  const lang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = (typeof I18N_DICT !== 'undefined' && (I18N_DICT[lang] || I18N_DICT['en'])) || {};
+
+  if (iconEl) iconEl.innerText = suite.icon || '🧪';
+  if (titleEl) titleEl.innerText = suite.title || suiteKey;
+  if (subEl) subEl.innerText = `${suite.count || currentModalSuiteTests.length} tests in ${suite.title}`;
+  if (searchInput) searchInput.value = '';
+
+  renderSuiteTestsModalList('');
+
+  if (modal) {
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+    if (searchInput) setTimeout(() => searchInput.focus(), 100);
+  }
+}
+
+function closeSuiteTestsModal(event) {
+  if (event && event.target && event.target.id !== 'modal-suite-tests') {
+    return;
+  }
+  const modal = document.getElementById('modal-suite-tests');
+  if (modal) {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+  }
+  currentModalSuiteKey = null;
+}
+
+function filterSuiteTestsModal(q) {
+  renderSuiteTestsModalList(q);
+}
+
+function renderSuiteTestsModalList(query) {
+  const container = document.getElementById('suite-tests-list-container');
+  const countInfo = document.getElementById('suite-tests-modal-count-info');
+  if (!container) return;
+
+  const lang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = (typeof I18N_DICT !== 'undefined' && (I18N_DICT[lang] || I18N_DICT['en'])) || {};
+
+  const q = (query || '').toLowerCase().trim();
+  const filtered = currentModalSuiteTests.filter(t => !q || t.toLowerCase().includes(q));
+
+  if (countInfo) {
+    countInfo.innerText = `${filtered.length} / ${currentModalSuiteTests.length} tests`;
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="color:var(--text-muted); text-align:center; padding:30px 10px;">${dict.modal_tests_empty || 'Ühtegi vastavat testskripti ei leitud.'}</div>`;
+    return;
+  }
+
+  let html = '';
+  filtered.forEach((testName) => {
+    const origIdx = currentModalSuiteTests.indexOf(testName) + 1;
+    html += `
+      <div class="suite-test-item">
+        <div class="suite-test-item-left">
+          <span class="suite-test-item-idx">#${origIdx}</span>
+          <span class="suite-test-item-name" title="${escapeTestHtml(testName)}">${escapeTestHtml(testName)}</span>
+        </div>
+        <button type="button" class="btn-compact btn-compact-primary" onclick="runTestFromModal('${currentModalSuiteKey}', '${escapeTestHtml(testName)}')" style="font-size:0.75rem; padding: 4px 10px; flex-shrink: 0;" title="${dict.test_run_selected_tooltip || 'Käivita valitud testskript'}">
+          <span>▶️</span> <span>${dict.btn_run_single || 'Käivita'}</span>
+        </button>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+function runTestFromModal(suiteKey, scriptName) {
+  closeSuiteTestsModal();
+  runTestSuite(suiteKey, scriptName);
+  const term = document.getElementById('testing-terminal-output');
+  if (term) {
+    term.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 function runSingleSuiteTest(suiteKey) {

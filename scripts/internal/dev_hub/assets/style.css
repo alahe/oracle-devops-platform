@@ -2268,4 +2268,59 @@
             max-width: 170px;
         }
 
+        /* Test Suite Modal List Styling */
+        .test-count-badge-clickable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .test-count-badge-clickable:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(56, 189, 248, 0.35);
+            filter: brightness(1.2);
+        }
+
+        .suite-tests-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .suite-test-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .suite-test-item:hover {
+            background: rgba(30, 41, 59, 0.85);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+        .suite-test-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .suite-test-item-idx {
+            font-size: 0.75rem;
+            font-family: ui-monospace, monospace;
+            color: #64748b;
+            min-width: 28px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .suite-test-item-name {
+            font-size: 0.84rem;
+            font-family: ui-monospace, monospace;
+            color: #e2e8f0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
 

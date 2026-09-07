@@ -492,7 +492,12 @@ const I18N_DICT = {
     hist_th_action: "Action",
     btn_run_suite: "Run All",
     test_select_individual: "Single script",
-    test_run_selected_tooltip: "Run selected test script"
+    test_run_selected_tooltip: "Run selected test script",
+    btn_view_tests: "View Tests",
+    modal_tests_search_ph: "Search test script...",
+    modal_tests_close: "Close",
+    modal_tests_empty: "No matching test scripts found.",
+    btn_run_single: "Run"
   },
   et: {
     title_devops_register_conn: "💻 Registreeri VS Code Ühendused",
@@ -986,7 +991,12 @@ const I18N_DICT = {
     hist_th_action: "Tegevus",
     btn_run_suite: "Käivita kõik",
     test_select_individual: "Üksik skript",
-    test_run_selected_tooltip: "Käivita valitud testskript"
+    test_run_selected_tooltip: "Käivita valitud testskript",
+    btn_view_tests: "Kuva testid",
+    modal_tests_search_ph: "Otsi testskripti...",
+    modal_tests_close: "Sulge",
+    modal_tests_empty: "Ühtegi vastavat testskripti ei leitud.",
+    btn_run_single: "Käivita"
   },
   fi: {
     title_devops_register_conn: "💻 Rekisteröi VS Code -yhteydet",
@@ -1480,7 +1490,12 @@ const I18N_DICT = {
     hist_th_action: "Toiminto",
     btn_run_suite: "Suorita kaikki",
     test_select_individual: "Yksittäinen skripti",
-    test_run_selected_tooltip: "Suorita valittu testiskripti"
+    test_run_selected_tooltip: "Suorita valittu testiskripti",
+    btn_view_tests: "Näytä testit",
+    modal_tests_search_ph: "Hae testiskriptiä...",
+    modal_tests_close: "Sulje",
+    modal_tests_empty: "Vastaavia testiskriptejä ei löytynyt.",
+    btn_run_single: "Suorita"
   },
   sv: {
     title_devops_register_conn: "💻 Registrera VS Code-anslutningar",
@@ -1974,7 +1989,12 @@ const I18N_DICT = {
     hist_th_action: "Åtgärd",
     btn_run_suite: "Kör alla",
     test_select_individual: "Individuellt skript",
-    test_run_selected_tooltip: "Kör valt testskript"
+    test_run_selected_tooltip: "Kör valt testskript",
+    btn_view_tests: "Visa tester",
+    modal_tests_search_ph: "Sök testskript...",
+    modal_tests_close: "Stäng",
+    modal_tests_empty: "Inga matchande testskript hittades.",
+    btn_run_single: "Kör"
   },
   lv: {
     title_devops_register_conn: "💻 Reģistrēt VS Code Savienojumus",
@@ -2468,7 +2488,12 @@ const I18N_DICT = {
     hist_th_action: "Darbība",
     btn_run_suite: "Palaist visu",
     test_select_individual: "Atsevišķs skripts",
-    test_run_selected_tooltip: "Palaist izvēlēto testa skriptu"
+    test_run_selected_tooltip: "Palaist izvēlēto testa skriptu",
+    btn_view_tests: "Skatīt testus",
+    modal_tests_search_ph: "Meklēt testa skriptu...",
+    modal_tests_close: "Aizvērt",
+    modal_tests_empty: "Nav atrasts neviens atbilstošs testa skripts.",
+    btn_run_single: "Palaist"
   },
   lt: {
     title_devops_register_conn: "💻 Registruoti VS Code Ryšius",
@@ -2962,7 +2987,12 @@ const I18N_DICT = {
     hist_th_action: "Veiksmas",
     btn_run_suite: "Vykdyti viską",
     test_select_individual: "Atskiras skriptas",
-    test_run_selected_tooltip: "Vykdyti pasirinktą testo scenarijų"
+    test_run_selected_tooltip: "Vykdyti pasirinktą testo scenarijų",
+    btn_view_tests: "Rodyti testus",
+    modal_tests_search_ph: "Ieškoti testo scenarijaus...",
+    modal_tests_close: "Uždaryti",
+    modal_tests_empty: "Atitinkamų testo scenarijų nerasta.",
+    btn_run_single: "Vykdyti"
   }
 };
 

@@ -38,8 +38,10 @@ assert_contains "$LAYOUT_HTML" 'id="testing-subtab-reports"' "Sub-tab reports ex
 assert_contains "$LAYOUT_HTML" 'id="testing-subtab-coverage"' "Sub-tab coverage exists in layout"
 assert_contains "$LAYOUT_HTML" 'id="testing-subtab-history"' "Sub-tab history exists in layout"
 assert_contains "$LAYOUT_HTML" 'id="testing-terminal-output"' "Embedded terminal console exists in layout"
+assert_contains "$LAYOUT_HTML" 'id="modal-suite-tests"' "Suite tests inspection modal exists in layout"
 
 assert_contains "$DEV_HUB_HTML" 'id="tab-testing"' "Testing tab container exists in dev-hub.html"
+assert_contains "$DEV_HUB_HTML" 'id="modal-suite-tests"' "Suite tests inspection modal exists in dev-hub.html"
 assert_contains "$DEV_HUB_HTML" 'const TEST_SUITES_DATA = {' "TEST_SUITES_DATA embedded in dev-hub.html"
 assert_contains "$DEV_HUB_HTML" 'const TEST_REPORTS_DATA = [' "TEST_REPORTS_DATA embedded in dev-hub.html"
 assert_contains "$DEV_HUB_HTML" 'const TEST_COVERAGE_DATA = {' "TEST_COVERAGE_DATA embedded in dev-hub.html"

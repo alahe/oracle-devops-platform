@@ -1,5 +1,25 @@
 [
   {
+    "id": "run_20260907_124218",
+    "timestamp": "2026-09-07 12:42:18",
+    "suite": "unit",
+    "target": "unit",
+    "duration_sec": 250.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_unit_20260907_123808.log"
+  },
+  {
+    "id": "run_20260907_123752",
+    "timestamp": "2026-09-07 12:37:52",
+    "suite": "ci_sim",
+    "target": "ci_sim",
+    "duration_sec": 4.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_ci_sim_20260907_123747.log"
+  },
+  {
     "id": "run_20260907_123647",
     "timestamp": "2026-09-07 12:36:47",
     "suite": "ci_sim",
