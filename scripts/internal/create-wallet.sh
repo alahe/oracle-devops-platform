@@ -586,6 +586,23 @@ DB_${pfx}_SCHEMA =
       (SERVICE_NAME = ${service})
     )
   )
+EOF
+
+    if [ "$pfx" = "PROXY" ]; then
+      cat << EOF >> "$TNS_DIR/tnsnames.ora"
+
+DB_APEX_PROXY_SCHEMA =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = ${port}))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = ${service})
+    )
+  )
+EOF
+    fi
+
+    cat << EOF >> "$TNS_DIR/tnsnames.ora"
 
 DB_${pfx}_DEV =
   (DESCRIPTION =
@@ -687,6 +704,23 @@ DB_${pfx}_SCHEMA =
       (SERVICE_NAME = ${service})
     )
   )
+EOF
+
+    if [ "$pfx" = "PROXY" ]; then
+      cat << EOF >> "$CONTAINER_TNS_DIR/tnsnames.ora"
+
+DB_APEX_PROXY_SCHEMA =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = ${cname})(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = ${service})
+    )
+  )
+EOF
+    fi
+
+    cat << EOF >> "$CONTAINER_TNS_DIR/tnsnames.ora"
 
 DB_${pfx}_DEV =
   (DESCRIPTION =

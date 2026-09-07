@@ -88,19 +88,46 @@ else
     act -W ".github/workflows/$WORKFLOW" --secret-file "$SECRET_FILE"
   else
     echo "🚀 Executing SQLcl Projects deployment in ephemeral container..."
-    PRIMARY_CONTAINER=$(podman ps --format "{{.Names}}" 2>/dev/null | grep -E "^(db-|oracle-)" | head -n 1 || echo "db-dev-full")
-    TNS_DIR="$WORKSPACE_DIR/config/tns_admin_container"
+    PRIMARY_CONTAINER=$(podman ps --format "{{.Names}}" 2>/dev/null | grep -E "^(db-|oracle-)" | head -n 1 || echo "db-proxy")
+    PRIMARY_UPPER=$(echo "$PRIMARY_CONTAINER" | sed 's/^db[-_]//' | tr '-' '_' | tr '[:lower:]' '[:upper:]')
+    PROJECT_NET="${COMPOSE_PROJECT_NAME:-oracle-free-db-in-prod}_default"
+
+    if podman network exists "$PROJECT_NET" 2>/dev/null; then
+      NET_ARG="--network=$PROJECT_NET"
+      TNS_DIR="$WORKSPACE_DIR/config/tns_admin_container"
+    else
+      NET_ARG="--network=host"
+      TNS_DIR="$WORKSPACE_DIR/config/tns_admin"
+    fi
     [ ! -d "$TNS_DIR" ] && TNS_DIR="$WORKSPACE_DIR/config/tns_admin"
 
+    # Resolve target alias dynamically from tnsnames.ora (Rule 5 & 8)
+    TARGET_ALIAS="DB_${PRIMARY_UPPER}_SCHEMA"
+    if ! grep -q "^${TARGET_ALIAS} =" "$TNS_DIR/tnsnames.ora" 2>/dev/null; then
+      if grep -q "^DB_${PRIMARY_UPPER}_DEV =" "$TNS_DIR/tnsnames.ora" 2>/dev/null; then
+        TARGET_ALIAS="DB_${PRIMARY_UPPER}_DEV"
+      elif grep -q "^DB_PROXY_SCHEMA =" "$TNS_DIR/tnsnames.ora" 2>/dev/null; then
+        TARGET_ALIAS="DB_PROXY_SCHEMA"
+      elif grep -q "^DB_PROXY_DEV =" "$TNS_DIR/tnsnames.ora" 2>/dev/null; then
+        TARGET_ALIAS="DB_PROXY_DEV"
+      elif grep -q "^DB_DEV =" "$TNS_DIR/tnsnames.ora" 2>/dev/null; then
+        TARGET_ALIAS="DB_DEV"
+      else
+        TARGET_ALIAS=$(grep -E '^[A-Z0-9_]+ =' "$TNS_DIR/tnsnames.ora" 2>/dev/null | awk '{print $1}' | grep -v '_SYS$' | grep -v '_ADMIN$' | head -n 1 || echo "DB_PROXY_SCHEMA")
+      fi
+    fi
+
+    echo "🔗 Connecting to database via alias: $TARGET_ALIAS"
     podman run --rm \
-      --network=host \
+      $NET_ARG \
       -v "$WORKSPACE_DIR:/workspace" \
-      -v "$TNS_DIR:/root/.oracle/tns_admin" \
-      -e TNS_ADMIN=/root/.oracle/tns_admin \
-      -e JAVA_TOOL_OPTIONS="-Doracle.net.tns_admin=/root/.oracle/tns_admin" \
+      -v "$TNS_DIR:/tns:ro" \
+      -v "$TNS_DIR:/root/.oracle/tns_admin:ro" \
+      -e TNS_ADMIN=/tns \
+      -e JAVA_TOOL_OPTIONS="-Doracle.net.tns_admin=/tns -Doracle.net.wallet_location=(SOURCE=(METHOD=FILE)(METHOD_DATA=(DIRECTORY=/tns)))" \
       -w /workspace \
       container-registry.oracle.com/database/sqlcl:latest \
-      /@DB_APEX_PROXY_SCHEMA <<'EOF'
+      "/@${TARGET_ALIAS}" <<'EOF'
     lb status
     project deploy -file artifact/*.zip || project deploy
     exit;

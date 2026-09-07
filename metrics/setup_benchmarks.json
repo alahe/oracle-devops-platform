@@ -25,5 +25,5 @@
     "step10_deploy_apex_apps_seconds": 1,
     "step11_snapshot_seconds": 0
   },
-  "test_local_ci_duration_seconds": 0
+  "test_local_ci_duration_seconds": 3
 }
