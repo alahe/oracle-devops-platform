@@ -1,22 +1,8 @@
-# 🩹 Oracle Analytics Publisher Patches (`binaries/publisher/patches/`)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-Sellesse kataloogi asetatakse Oracle Analytics Publisheri (Pixel Perfect / OAS / BIP) OPatchi `.zip` paketid ja SPB arhiivid.
+# 📦 Oracle Analytics Publisher Patches (`binaries/publisher/patches/`)
 
-## 📁 Kataloogi Struktuur
+Analytics Publisher OPatch archives.
 
-```
-binaries/publisher/patches/
-├── README.md                     # Käesolev juhend
-└── pXXXXXXX_141200_Generic.zip   # Nt: Analytics Publisher OPatchi arhiiv
-```
-
-## 🚀 Paigaldamine
-
-Automaatne paigaldus Analytics Publisheri konteineris:
-```bash
-./scripts/internal/apply-publisher-patch.sh binaries/publisher/patches/pXXXXXXX.zip
-```
-
-## 🔒 Git Versioonihalduse Reegel
-- `.zip` arhiivid on `.gitignore` failis ega jõua Git repositooriumisse.
-- Kataloogi struktuur ja `README.md` on versioonihaldusega tagatud.
+- **Supported Archives:** Local ZIP / RPM / JAR packages.
+- **Git Status:** Binary files are gitignored (strictly local).

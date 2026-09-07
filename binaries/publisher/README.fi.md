@@ -1,0 +1,8 @@
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
+
+# 📦 Oracle Analytics Publisher Packages (`binaries/publisher/`)
+
+Analytics Publisher (BIP) installation archives.
+
+- **Tuetut arkistot:** Paikalliset ZIP / RPM / JAR -paketit.
+- **Git-tila:** Binaaritiedostot ovat gitignored (vain paikallisia).

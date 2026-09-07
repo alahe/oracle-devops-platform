@@ -1,14 +1,8 @@
-# APEX Tarkvarapakettide Kaust (`binaries/apex/`)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-Sellesse kausta talletatakse kohalikud ja allalaaditud Oracle APEX ZIP-paigalduspaketid.
+# 📦 Oracle APEX Distribution Packages (`binaries/apex/`)
 
-## 📦 Toetatud Failinimed:
-- `apex-latest.zip` (Vaikimisi värskeim stabiilne versioon)
-- `apex_26.1_en.zip` (Spetsiifiline APEX 26.1 ingliskeelne versioon)
-- `apex_24.2.zip` (APEX 24.2 versioon)
-- `apex_*.zip` (Igasugune muu versiooni zip-fail)
+Local Oracle APEX installation archives (e.g. apex-latest.zip, apex_26.1_en.zip).
 
-## ⚙️ Kuidas Töötab:
-1. Skriptid `scripts/setup-all.sh` ja `scripts/internal/install-apex.sh` kontrollivad esmalt siit kaustast nõutud versiooni ZIP-arhiivi olemasolu.
-2. Kui kehtiv ZIP on olemas, kasutatakse seda otse ja välistatakse uuesti allalaadimine.
-3. Kui fail puudub, laetakse see aktiivse YAML profiili URL-ilt automaatselt siia kausta.
+- **Supported Archives:** Local ZIP / RPM / JAR packages.
+- **Git Status:** Binary files are gitignored (strictly local).

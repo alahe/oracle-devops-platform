@@ -1,11 +1,8 @@
-# APEX Rakenduste Kaust (`binaries/apex_apps/`)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-Siia kausta saavad arendajad ja CI/CD torud asetada paigaldatavad Oracle APEX rakenduste ekspordifailid.
+# 📦 Packaged APEX Application Exports (`binaries/apex_apps/`)
 
-## 📦 Toetatud Failiformaadid:
-- Klassikalised SQL ekspordid: `f100.sql`, `f101.sql` jne.
-- Uued APEXlang zip/pakendatud rakendused: `f100.apex`, `app_crm.apex` jne.
+Exported SQL files and APEX applications for automated deployment.
 
-## ⚙️ Automaatne Paigaldus:
-- Skript `scripts/internal/deploy-apex-apps.sh` (käivitatakse ka `setup-all.sh` sammus 8) otsib siit kaustast faile ja impordib need tähestikulises/numbrilises järjekorras aktiivsesse APEX keskkonda.
-- Täpsem kasutusjuhend: [`docs/apex-apps-deployment.md`](../../docs/apex-apps-deployment.md).
+- **Supported Archives:** Local ZIP / RPM / JAR packages.
+- **Git Status:** Binary files are gitignored (strictly local).

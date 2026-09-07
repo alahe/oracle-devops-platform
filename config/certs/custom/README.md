@@ -1,15 +1,17 @@
-# Käsitsi Lisatud Sertifikaadid (Custom Certificate Drop-In)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-Sellesse kataloogi saab arendaja või administraator kopeerida oma olemasoleva SSL/TLS sertifikaadi ja privaatvõtme, mida süsteem kasutab automaatselt esmase prioriteedina (**Samm 0**).
+# 🛠️ Custom Certificate Drop-In (Priority Step 0)
 
-## Failide Nimetamise Reeglid:
-Paiguta siia kausta järgmised failid:
-* **Sertifikaat:** `tls.crt` (või `cert.crt`, `fullchain.pem`)
-* **Privaatvõti:** `tls.key` (või `key.key`, `privkey.pem`)
-* *(Valikuline)* **CA Ahel:** `ca.crt` (või `chain.pem`)
+Developers or system administrators can place an existing SSL/TLS certificate and private key here, which the platform automatically detects as top priority (**Step 0**).
 
-## Kuidas süsteem seda kasutab:
-1. Kui kaustas on `.crt` ja `.key` failid, lülitub TLS režiimiks automaatselt:
+## File Naming Conventions:
+Place the following files in this directory:
+* **Certificate:** `tls.crt` (or `cert.crt`, `fullchain.pem`)
+* **Private Key:** `tls.key` (or `key.key`, `privkey.pem`)
+* *(Optional)* **CA Chain:** `ca.crt` (or `chain.pem`)
+
+## Automatic Platform Detection:
+1. When `.crt` and `.key` files are detected, the system sets:
    `RESOLVED_TLS_MODE=CUSTOM_CERT`
-2. ORDS, Analytics Publisher ja veebiteenused võtavad automaatselt kasutusele antud sertifikaadi.
-3. Failid selles kataloogis on `.gitignore` poolt kaitstud ning ei satu kunagi Giti versioonihaldusse.
+2. ORDS, Analytics Publisher, and web services automatically bind this certificate.
+3. Directory contents are protected by `.gitignore` and never committed to Git.

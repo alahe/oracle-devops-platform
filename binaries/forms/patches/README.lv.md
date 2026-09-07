@@ -1,0 +1,8 @@
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
+
+# 📦 Oracle Forms 14c Patches (`binaries/forms/patches/`)
+
+OPatch archives and interim updates for Oracle Forms 14c.
+
+- **Atbalstītie arhīvi:** Lokālās ZIP / RPM / JAR pakotnes.
+- **Git statuss:** Binārie faili ir gitignored (tikai lokāli).

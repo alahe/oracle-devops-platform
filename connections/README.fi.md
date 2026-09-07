@@ -1,64 +1,104 @@
-<!-- [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md) -->
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔌 Tietokantayhteyksien ja VS Coden Asennusopas
+# 🔌 Tietokantayhteydet ja VS Coden Asetusopas
 
-Tämä opas kuvaa Oracle-tietokantayhteyksien automaattista ja manuaalista rekisteröintiä **Oracle SQL Developer for VS Code** -laajennukselle (sekä paikallisella isäntäkoneella että konttipohjaisessa Web IDE:ssä) ja salasanatonta yhdistämistä Oracle Walletin (SEPS) avulla.
+Tämä opas kuvaa Oracle-tietokantayhteyksien automaattisen ja manuaalisen rekisteröinnin **Oracle SQL Developer for VS Code** -laajennukselle (sekä paikallisella isäntäkoneella että säilöidyssä Web-IDE:ssä) ja salasanattomat yhteydet Oracle SEPS Walletin kautta.
 
 ---
 
 ## 🔄 Kaksitasoinen Automaattinen Rekisteröinti (Host PC & Web IDE)
 
-Koko alusta käyttää keskitettyä yhteyksien rekisteröintimoottoria (`scripts/register-connections.sh`), joka luo ja synkronoi tietokantayhteydet samanaikaisesti **paikalliseen VS Codeen (Host PC)** ja **konttipohjaiseen Web IDE:hen (`web-ide-dev`)**:
+Koko alusta käyttää keskitettyä yhteyksien rekisteröintimoottoria (`scripts/register-connections.sh`), joka luo ja synkronoi tietokantayhteydet samanaikaisesti **paikalliseen VS Codeen (Host PC)** ja **Säilöityyn Web-IDE:hen (`web-ide-dev`)**:
 
-### 📊 Yhteyksien Rekisteröinnin Prosessikaavio
+### 📊 Yhteyksien Rekisteröintiprosessin Työnkulkukaavio
 
 ```mermaid
 flowchart TD
-  START(["🚀 Käynnistys:<br/>./scripts/setup-all.sh<br/>tai register-connections.sh"]) --> DISCOVER["🔍 1. Tunnista aktiiviset tietokannat<br/>ja lataa YAML-profiilit"]
+  START(["🚀 Aloitus:<br/>./scripts/setup-all.sh<br/>tai register-connections.sh"]) --> DISCOVER["🔍 1. Tunnista aktiiviset DB:t<br/>& Lataa YAML-profiilit"]
   
-  DISCOVER --> WALLET["🔐 2. Hae salasanat<br/>suoraan SEPS Walletista<br/>(Zero-Trust muistissa)"]
+  DISCOVER --> WALLET["🔐 2. Pura salasanat<br/>JIT SEPS Walletista<br/>(Zero-Trust muistissa)"]
   
-  WALLET --> BUILD_CONNS["📦 3. Muodosta yhteydet<br/>(Host TCP & Konttiverkko)"]
+  WALLET --> BUILD_CONNS["📦 3. Rakenna kaksitasoiset<br/>yhteyspaketit<br/>(Isäntä TCP & Säilö)"]
   
-  BUILD_CONNS --> HOST_REG["💻 4. Rekisteröi isäntäkoneella<br/>- SQLcl connect -save<br/>- ~/.dbtools & ~/.sqldev<br/>- Värikoodit profiilista"]
+  BUILD_CONNS --> HOST_REG["💻 4. Rekisteröi isännälle<br/>- SQLcl connect -save<br/>- ~/.dbtools & ~/.sqldev<br/>- Värikoodaus käytössä"]
   
-  HOST_REG --> CHECK_WEBIDE{"❓ Onko Web IDE<br/>(web-ide-dev)<br/>kontti käynnissä?"}
+  HOST_REG --> CHECK_WEBIDE{"❓ Onko Web IDE<br/>(web-ide-dev)<br/>käynnissä?"}
   
-  CHECK_WEBIDE -->|"✅ KYLLÄ / Käynnissä"| WEBIDE_REG["🌐 5. Rekisteröi Web IDE:ssä<br/>- Kontin SQLcl batch<br/>- /config/.dbtools/conns<br/>- /config/.sqldev/conns.json<br/>- Tiedosto-oikeudet chown abc"]
+  CHECK_WEBIDE -->|"✅ KYLLÄ / Käynnissä"| WEBIDE_REG["🌐 5. Rekisteröi Web-IDE:ssä<br/>- Säilön SQLcl batch<br/>- /config/.dbtools/conns<br/>- /config/.sqldev/conns.json<br/>- Oikeudet chown abc"]
   
-  CHECK_WEBIDE -->|"❌ EI / Ei käynnissä"| SANITIZE["🧹 6. Siivoa folders.json<br/>(Poista orvot GUID-tunnisteet<br/>Estä DBTU-03001)"]
+  CHECK_WEBIDE -->|"❌ EI / Poissa"| SANITIZE["🧹 6. Siivoa folders.json<br/>(Poista orvot GUID:t<br/>Estä DBTU-03001)"]
   
   WEBIDE_REG --> SANITIZE
   
-  SANITIZE --> READY(["🎉 Valmis:<br/>1-Klikkauksen yhteydet<br/>isännässä ja Web IDE:ssä!"])
+  SANITIZE --> READY(["🎉 Valmis:<br/>1-klikkauksen DB-yhteydet<br/>Isännässä & Web-IDE:ssä!"])
 ```
 
-### Komentorivikäyttö:
+### CLI-Käynnistys:
 
 ```bash
 ./scripts/register-connections.sh
 ```
 
-- **Host PC:** Rekisteröi yhteydet hakemistoihin `~/.dbtools/connections/` ja `~/.sqldev/connections.json` (isäntäportit `localhost:1532`, `localhost:1533` jne.).
-- **Web IDE:** Kun `web-ide-dev` on aktiivinen, luo yhteydet kontin sisällä (`db-proxy:1521`, `db-alise:1521` jne.) ja tallentaa salasanat kontin säilöön.
-- **Järjestyksestä riippumaton:** Web IDE voi käynnistyä ennen tai jälkeen tietokantojen. Yhteydet synkronoidaan automaattisesti.
+- **Isäntäkone (Host PC):** Rekisteröi yhteydet hakemistoihin `~/.dbtools/connections/` ja `~/.sqldev/connections.json` (isännän portit `localhost:1532`, `localhost:1533` jne.).
+- **Web-IDE:** Jos `web-ide-dev` on aktiivinen, luo yhteydet säilön sisälle (`db-proxy:1521`, `db-alise:1521` jne.) ja tallentaa salasanat säilön salausvarastoon.
+- **Järjestyksestä Riippumaton:** Web-IDE voi käynnistyä ennen tietokantoja tai niiden jälkeen. Yhteydet synkronoidaan aina automaattisesti.
 
 ---
 
-## 🔐 Salasanaton Yhdistäminen Oracle Walletin (SEPS) Avulla
+## 📥 Yhteyksien Manuaalinen Tuonti VS Code SQL Developer UI:ssa
 
-Paikallisessa kehitysympäristössä todennus suojataan **Oracle Walletin (SEPS)** avulla ilman selkokielisiä salasanoja.
+Yhteydet voidaan tuoda suoraan tiedostosta **`connections/sqldev-connections.json`**:
 
-### Isäntäkoneen asetukset:
+1. Avaa VS Code ja siirry vasemman sivupalkin **Oracle SQL Developer** -välilehdelle.
+2. Napsauta **Database Connections** -paneelin otsikossa **`...`** (Lisää toimintoja) tai napsauta hiiren kakkospainikkeella ja valitse **`Import Connections`**.
+3. Valitse tiedostonvalitsimesta:
+   `connections/sqldev-connections.json`
+4. Napsauta **Import**. Kaikki yhteydet tulevat heti näkyviin!
+
+---
+
+## 🔑 Salasanojen Haku Käyttäjille ja Ylläpitäjille
+
+Jos haluat määrittää yhteydet manuaalisesti DBeaver- tai IntelliJ-työkaluissa:
+* **APEX Admin (INTERNAL):** `./scripts/get-password.sh APEX_ADMIN`
+* **Proxy SYS:** `./scripts/get-password.sh DB_PROXY_SYS`
+* **Kehittäjä (USER_DEVELOPER):** `./scripts/get-password.sh DB_PROXY_DEV`
+* **ALISE Business DB SYS:** `./scripts/get-password.sh DB_ALISE_SYS`
+* **ALISE Kehittäjä:** `./scripts/get-password.sh DB_ALISE_DEV`
+* **Analytics Publisher:** `./scripts/get-password.sh DB_PUBLISHER_DEV`
+
+---
+
+## 🔐 Salasanattomat Yhteydet Oracle Walletin Kautta (SEPS)
+
+Paikallisessa kehityksessä todennus on suojattu **Oracle Wallet (SEPS)** -lompakolla ilman selkokielisiä salasanoja tiedostoissa.
+
+### Isäntäympäristön Asetus:
 ```bash
 export TNS_ADMIN=$(pwd)/config/tns_admin
 ```
 
-### 🔌 Yhdistäminen SQLcl:llä:
+### Pikayhteys SQLcl:n Kautta:
 ```bash
-# Kehittäjänä
+# Kirjaudu kehittäjänä:
 sql /@DB_PROXY_DEV
 
-# SYSDBA-oikeuksilla
+# Kirjaudu SYSDBA:na:
 sql /@DB_PROXY_SYS as sysdba
+```
+
+---
+
+## 🔒 Windows & SSL/TLS-Sertifikaattien Luottamus
+
+Jos kehität Windowsilla (WSL2) ja haluat poistaa selaimen SSL-varoitukset:
+
+```cmd
+certutil -user -addstore TrustedPeople ssl/cert.crt
+```
+
+Podman-virtuaalikoneen asetus yrityksen CA:n luottamiseksi:
+```bash
+podman machine ssh sudo cp /mnt/c/path/ca.crt /etc/pki/ca-trust/source/anchors/
+podman machine ssh sudo update-ca-trust
 ```

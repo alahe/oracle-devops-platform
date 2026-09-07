@@ -1,6 +1,10 @@
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
+
 # 📦 Packaged APEX Applications (`applications/`)
 
 This directory is designated for declarative Oracle APEX applications defined using the [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) or standard SQLcl split exports.
+
+---
 
 ## 🚀 Usage
 

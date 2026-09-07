@@ -1,74 +1,44 @@
-# 📋 Oracle DevOps Platform — Arendus- ja Arhitektuuri Backlog
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-See kataloog sisaldab projekti tsentraalset ja modulaarset **Backlog süsteemi**, kus igal funktsionaalsusel, täiendusel ja turvakomponendil on oma eraldiseisev Markdown fail.
+# 📋 Oracle DevOps Platform — Architecture & Task Backlog
+
+This directory hosts the project's modular **Task & Backlog System**, where architectural enhancements, features, and security components are tracked in structured Markdown files.
 
 ---
 
-## 🧭 Backlogi Struktuur ja Elutsükli Reeglid
+## 🧭 Backlog Structure & Lifecycle Rules
 
 ```text
 backlog/
-├── README.md               # Backlogi reeglid, elutsükkel ja staatuse koondmaatriks
-├── template.md             # Standardne mall uute ülesannete lisamiseks
-├── todo/                   # Ootel / kavandamisel / teostamisel olevad ülesanded
-└── done/                   # Teostatud, testitud ja valideeritud funktsionaalsused
+├── README.md               # Backlog rules, workflow, and status matrix
+├── template.md             # Standard template for authoring new task specifications
+├── todo/                   # Pending, planned, and in-progress tasks
+└── done/                   # Implemented, tested, and verified features
 ```
 
-### Elutsükli Reeglid (Workflow):
-1. **Uue idee lisamine:** Kopeeri [`template.md`](template.md) fail kausta `todo/` nimega `TASK-XXX-[nimi].md` ja täida vastavad jaotised.
-2. **Teostamine:** Kui ülesanne võetakse töösse, märgitakse selle staatus faili päises: `IN_PROGRESS`.
-3. **Valmimine ja Arhiveerimine:** Kui kood on realiseeritud, dokumenteeritud ja kõik testid (`tests/unit/`, `tests/integration/`) läbivad 100%, liigutatakse fail kausta `done/` käsuga:
+### Lifecycle Workflow:
+1. **Adding a New Task:** Copy [`template.md`](template.md) into `todo/` as `TASK-XXX-[name].md` and complete all sections.
+2. **Implementation:** When work begins, update status in file header to `IN_PROGRESS`.
+3. **Completion & Archival:** Once code is implemented, documented, and all tests pass 100%, move file to `done/`:
    ```bash
    mv backlog/todo/TASK-XXX-*.md backlog/done/
    ```
-4. **Indeksi uuendamine:** Märgi tabelis staatus `✅ REALISEERITUD` ja uuenda viidet.
+4. **Update Index:** Mark status as `✅ IMPLEMENTED` in the status matrix below.
 
 ---
 
-## 📊 KOKKUVÕTLIK STAATUSE MAATRIKS (STATUS MATRIX)
+## 📊 Summary Status Matrix
 
-### 🟢 Teostatud ja Valideeritud Funktsionaalsused (`done/`)
+### 🟢 Implemented & Verified Features (`done/`)
 
-| ID | Teema / Funktsionaalsus | Valdkond | Fail | Reaalne Staatus |
-| :--- | :--- | :--- | :--- | :--- |
-| **001** | Konteineriseeritud Web IDE (`code-server`) | `Tooling` | [`TASK-001-web-ide.md`](done/TASK-001-web-ide.md) | **✅ REALISEERITUD** |
-| **002** | GitHub Actions & Offline `act` CI/CD | `Tooling` | [`TASK-002-github-actions-act-cicd.md`](done/TASK-002-github-actions-act-cicd.md) | **✅ REALISEERITUD** |
-| **003** | Analytics Publisher (Pixel Perfect) paigaldus | `Architecture` | [`TASK-003-analytics-publisher.md`](done/TASK-003-analytics-publisher.md) | **✅ REALISEERITUD** |
-| **004** | VS Code SQL Developer ühenduste automaatne registreering | `Tooling` | [`TASK-004-vscode-connections.md`](done/TASK-004-vscode-connections.md) | **✅ REALISEERITUD** |
-| **005** | Ristplatvormne SSL Juursertifikaadi usaldamine (0-admin) | `Security` | [`TASK-005-cross-platform-ssl-trust.md`](done/TASK-005-cross-platform-ssl-trust.md) | **✅ REALISEERITUD** |
-| **006** | Dünaamiline YAML Andmebaasi Profiilide Mootor | `Architecture` | [`TASK-006-dynamic-db-profiles.md`](done/TASK-006-dynamic-db-profiles.md) | **✅ REALISEERITUD** |
-| **007** | Automaattestimise Raamistik (Unit, E2E, TLS) | `Tooling` | [`TASK-007-automated-testing-suite.md`](done/TASK-007-automated-testing-suite.md) | **✅ REALISEERITUD** |
-| **008** | Logide & Diagnostikafailide Puhastamine (`clean-logs.sh`) | `Tooling` | [`TASK-008-clean-logs.md`](done/TASK-008-clean-logs.md) | **✅ REALISEERITUD** |
-| **009** | Vaikimisi Varuparoolide Eemaldamine & SEPS Wallet | `Security` | [`TASK-009-remove-default-passwords.md`](done/TASK-009-remove-default-passwords.md) | **✅ REALISEERITUD** |
-| **010** | Konteinerite Pordi Isoleerimine (`127.0.0.1`) | `Security` | [`TASK-010-port-isolation-localhost.md`](done/TASK-010-port-isolation-localhost.md) | **✅ REALISEERITUD** |
-| **011** | WebLogic REST & Publisher HTTPS Reverse Proxy | `Security` | [`TASK-011-weblogic-reverse-proxy.md`](done/TASK-011-weblogic-reverse-proxy.md) | **✅ REALISEERITUD** |
-| **012** | Rootless Konteinerite Režiim & Privileegide Piiramine | `Security` | [`TASK-012-rootless-privilege-limits.md`](done/TASK-012-rootless-privilege-limits.md) | **✅ REALISEERITUD** |
-| **013** | Artifactory & Git žetoonide maskeerimine logides | `Security` | [`TASK-013-sanitize-token-logging.md`](done/TASK-013-sanitize-token-logging.md) | **✅ REALISEERITUD** |
-| **014** | Universaalne Reaalaegne Progress ja Puhverdamata Väljund | `Tooling` | [`TASK-014-realtime-progress-output.md`](done/TASK-014-realtime-progress-output.md) | **✅ REALISEERITUD** |
-| **015** | Viivitatud Tsentraalne Tervisekontrolli Arhitektuur | `Architecture` | [`TASK-015-deferred-health-checks.md`](done/TASK-015-deferred-health-checks.md) | **✅ REALISEERITUD** |
-| **016** | LIS Süsteemi Üldine Põhiarhitektuur (4-Kihiline Mudel) | `Architecture` | [`TASK-016-lis-4-tier-architecture.md`](done/TASK-016-lis-4-tier-architecture.md) | **✅ REALISEERITUD** |
-| **017** | Automaatne Versiooni Tuvastamine (DB, APEX, ORDS) | `Tooling` | [`TASK-017-auto-version-detection.md`](done/TASK-017-auto-version-detection.md) | **✅ REALISEERITUD** |
-| **026** | `setup-all.sh` Blueprintide Nimekirja ja Info CLI Parameetrid | `Tooling` | [`TASK-026-blueprint-cli-params.md`](done/TASK-026-blueprint-cli-params.md) | **✅ REALISEERITUD** |
-| **027** | Multi-DB SEPS Walleti & TNS Aliaste Sünkroniseerimine ja Ülevaatus | `Security` | [`TASK-027-multi-db-seps-wallet-and-tns-alignment.md`](done/TASK-027-multi-db-seps-wallet-and-tns-alignment.md) | **✅ REALISEERITUD** |
-| **028** | VS Code SQL Developer Ühenduste Sünkroonimine Walletiga & Test | `Tooling` | [`TASK-028-vscode-wallet-all-users-sync.md`](done/TASK-028-vscode-wallet-all-users-sync.md) | **✅ REALISEERITUD** |
-| **030** | SEPS Walleti, Terminali Aruande ja VS Code Ühenduste Kanooniline Ühtlustamine | `Architecture` | [`TASK-030-canonical-container-prefix-wallets.md`](done/TASK-030-canonical-container-prefix-wallets.md) | **✅ REALISEERITUD** |
-| **025** | Terminali Progressi, Ajakulu ja Blueprintide Ajalooliste Mõõdikute Süsteem | `Tooling` | [`TASK-025-compact-terminal-ux.md`](done/TASK-025-compact-terminal-ux.md) | **✅ REALISEERITUD** |
-| **018** | Paigalduse Ajakulu Optimeerimine (APEX DB Kiirendus 15m ➔ 1–2m) | `Performance` | [`TASK-018-apex-install-speedup.md`](done/TASK-018-apex-install-speedup.md) | **✅ REALISEERITUD** |
-| **019** | Analytics Publisheri & Multi-DB Paigalduse Kiirendus | `Performance` | [`TASK-019-publisher-speedup.md`](done/TASK-019-publisher-speedup.md) | **✅ REALISEERITUD** |
-
----
-
-### 🟡 Ootel ja Kavandatavad Ülesanded (`todo/`)
-
-| ID | Teema / Funktsionaalsus | Valdkond | Fail | Staatus |
-| :--- | :--- | :--- | :--- | :--- |
-| **020** | Oracle Cloud (OCI) Always Free Kaug-Paigalduse Katse | `Orchestration` | [`TASK-020-cloud-oci-deployment.md`](todo/TASK-020-cloud-oci-deployment.md) | **🟡 OSALISELT VALMIS** |
-| **021** | Automaatne TDE (Transparent Data Encryption) Tugi | `Security` | [`TASK-021-tde-encryption.md`](todo/TASK-021-tde-encryption.md) | **🟡 OSALISELT VALMIS** |
-| **022** | Loetav Juurfailisüsteem ja Hardening (`--read-only`) | `Security` | [`TASK-022-readonly-hardening.md`](todo/TASK-022-readonly-hardening.md) | **🟡 OSALISELT VALMIS** |
-| **023** | Keskne Auditilogi ja SIEM Integratsioon (Unified Auditing) | `Security` | [`TASK-023-unified-auditing-siem.md`](todo/TASK-023-unified-auditing-siem.md) | **❌ OOTEL** |
-| **024** | WAF & OAuth2 / OIDC Entra-ID Lõiming REST API-dele | `Security` | [`TASK-024-waf-oauth2-entra-id.md`](todo/TASK-024-waf-oauth2-entra-id.md) | **🟡 OSALISELT VALMIS** |
-| **029** | Oracle Forms 14c Konteiner, Metaandmete Baas ja Profiilid | `Architecture` | [`TASK-029-oracle-forms-container-and-profiles.md`](done/TASK-029-oracle-forms-container-and-profiles.md) | **🟡 KAVANDATUD** |
-| **031** | Ettevõtte Sise-Artifactory Live-Ühenduse ja Piltide Pushimise Valideerimine | `Tooling` | [`TASK-031-enterprise-artifactory-live-testing.md`](todo/TASK-031-enterprise-artifactory-live-testing.md) | **🟡 OOTEL (Võrk)** |
-| **032** | LIS Nime ja Viidete Asendamine Üldise 'db-custom' Mudeliga | `Architecture` | [`TASK-032-generalize-lis-to-custom-db.md`](todo/TASK-032-generalize-lis-to-custom-db.md) | **🟡 KAVANDATUD** |
-| **033** | Developer Hub Realiseerimine ja Automaatne Paigaldus APEX Rakendusena | `Tooling` | [`TASK-033-apex-developer-hub-app.md`](todo/TASK-033-apex-developer-hub-app.md) | **🟡 KAVANDATUD** |
-| **034** | Deterministliku Paroolide ja Saladuste Haldussüsteemi Standardiseerimine (Credential Matrix) | `Security` | [`TASK-034-deterministic-credential-matrix.md`](todo/TASK-034-deterministic-credential-matrix.md) | **🚀 TÖÖS (IN_PROGRESS)** |
+| Task ID | Component & Feature | Status | Description |
+| :--- | :--- | :---: | :--- |
+| **[TASK-001](done/TASK-001-container-naming.md)** | Canonical Container Naming | ✅ DONE | Deterministic container prefixes and hostname topology. |
+| **[TASK-002](done/TASK-002-auto-ords-install.md)** | Automated Standalone ORDS | ✅ DONE | Automated non-interactive ORDS installation. |
+| **[TASK-003](done/TASK-003-single-source-of-truth.md)** | Single Source of Truth Config | ✅ DONE | Centralized `.env` and YAML profiles. |
+| **[TASK-004](done/TASK-004-developer-role-automation.md)** | Oracle 23ai DB_DEVELOPER_ROLE | ✅ DONE | Least-privilege developer user provisioning. |
+| **[TASK-005](done/TASK-005-ords-auto-rest-mapping.md)** | ORDS AutoREST API Auto-mapping | ✅ DONE | Automatic REST enablement on schemas. |
+| **[TASK-006](done/TASK-006-seps-wallet-architecture.md)** | Zero-Trust Oracle SEPS Wallet | ✅ DONE | Passwordless database connections. |
+| **[TASK-007](done/TASK-007-multi-cloud-deployment.md)** | Remote Multi-Cloud Automation | ✅ DONE | Deploy blueprints to Azure VM & OCI ADB. |
+| **[TASK-008](done/TASK-008-dev-hub-spa.md)** | Developer Hub Web SPA | ✅ DONE | Zero-trust developer portal & 1-click clipboard. |
+| **[TASK-009](done/TASK-009-multilingual-support.md)** | 6-Language Localization Engine | ✅ DONE | Full EN/ET/FI/SV/LV/LT parity across scripts and docs. |

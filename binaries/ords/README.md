@@ -1,12 +1,8 @@
-# ORDS Tarkvarapakettide Kaust (`binaries/ords/`)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-Sellesse kausta talletatakse kohalikud ja allalaaditud Oracle REST Data Services (ORDS) ZIP-paigalduspaketid.
+# 📦 Oracle REST Data Services Packages (`binaries/ords/`)
 
-## 📦 Toetatud Failinimed:
-- `ords-latest.zip` (Vaikimisi värskeim stabiilne versioon)
-- `ords-*.zip` (Versioonispetsiifilised paketid)
+ORDS standalone and WAR installation packages.
 
-## ⚙️ Kuidas Töötab:
-1. Skriptid `scripts/setup-all.sh` ja `scripts/internal/install-ords-standalone.sh` kontrollivad esmalt selle kausta sisu.
-2. Kui kehtiv ZIP on olemas, kasutatakse seda otse ORDS konteineri või standalone instantsi käivitamiseks.
-3. Kui fail puudub, laetakse vajalik versioon alla aktiivse YAML profiili parameetrist `PROFILE_ORDS_DOWNLOAD_URL`.
+- **Supported Archives:** Local ZIP / RPM / JAR packages.
+- **Git Status:** Binary files are gitignored (strictly local).

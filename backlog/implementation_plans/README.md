@@ -1,9 +1,11 @@
-# Tehnilised Teostusplaanid (`backlog/implementation_plans/`)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-Sellesse kataloogi talletatakse projektide ja ülesannete detailsed tehnilised teostusplaanid (Implementation Plans), arhitektuurilised otsused ja komponentide kavandid.
+# 📐 Technical Implementation Plans (`backlog/implementation_plans/`)
+
+This directory archives detailed technical implementation plans, architectural decisions, and RFC blueprints for the Oracle DevOps Platform.
 
 ---
 
-## 📋 Olemasolevad Plaanid
+## 📋 Available Plans
 
-- **[`TASK-029-oracle-forms-implementation-plan.md`](TASK-029-oracle-forms-implementation-plan.md):** Oracle Forms 14c (14.1.2) konteineri, pühendatud metaandmete andmebaasi (`db-forms`), RCU 14c, testvormi valideerimise tsükli ja profiilide täielik teostusplaan.
+- **[`TASK-029-oracle-forms-implementation-plan.md`](TASK-029-oracle-forms-implementation-plan.md):** Oracle Forms 14c (14.1.2) container architecture, dedicated metadata database (`db-forms`), RCU 14c schemas, test form validation lifecycle, and YAML profiles.

@@ -610,6 +610,105 @@ print("|".join([f"{l}:{doc_counts[l]}" for l in langs]))
     TESTS_FAILED=$((TESTS_FAILED + 1))
     log_ui "     ${RED}❌ Mõnedel keeltel puuduvad lokaliseeritud failid!${NC}"
   fi
+
+  # 2.3 Directory 6-Language Parity Check across Platform Modules
+  TESTS_TOTAL=$((TESTS_TOTAL + 1))
+  log_ui "  └─ 3. Platvormi kataloogide 6-keelse pariteedi kontroll (Rule 9.1)..."
+
+  DIR_PARITY_RESULT=$(python3 -c '
+import os, glob
+
+workspace = "'"$WORKSPACE_DIR"'"
+target_dirs = ["config", "connections", "scripts", "docs", "applications", "forms_apps", "publisher-reports", "docker", "tests", "metrics", "patches", "binaries", "backlog", "apex_app"]
+
+all_readmes = []
+for td in target_dirs:
+    full_d = os.path.join(workspace, td)
+    if os.path.exists(full_d):
+        all_readmes.extend(glob.glob(os.path.join(full_d, "**/README.md"), recursive=True))
+
+dirs_to_check = sorted(list(set(os.path.dirname(r) for r in all_readmes if not any(x in r for x in ["install_logs", "node_modules", "tests/reports", "scratch"]))))
+
+langs = ["et", "fi", "sv", "lv", "lt"]
+missing = []
+for d in dirs_to_check:
+    rel_d = os.path.relpath(d, workspace)
+    if rel_d in ["docs/et", "docs/fi", "docs/sv", "docs/lv", "docs/lt"]:
+        continue
+    for l in langs:
+        lf = os.path.join(d, f"README.{l}.md")
+        if not os.path.exists(lf):
+            missing.append(f"{rel_d}/README.{l}.md")
+
+print(f"{len(dirs_to_check)}|{len(missing)}")
+for m in missing:
+    print(f"❌ Puuduv keelepeegel: {m}")
+')
+
+  CHECKED_DIRS=$(echo "$DIR_PARITY_RESULT" | head -n 1 | cut -d'|' -f1)
+  MISSING_MIRRORS=$(echo "$DIR_PARITY_RESULT" | head -n 1 | cut -d'|' -f2)
+
+  if [ "$MISSING_MIRRORS" -eq 0 ]; then
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+    log_ui "     ${GREEN}✅ Kõik ${CHECKED_DIRS} platvormi kataloogi omavad täielikku 6-keelset tuge!${NC}"
+  else
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    log_ui "     ${RED}❌ Tuvastati ${MISSING_MIRRORS} puuduvat keelepeeglit kataloogides!${NC}"
+    if [ "$JSON_MODE" = "false" ]; then
+      echo "$DIR_PARITY_RESULT" | tail -n +2
+    fi
+  fi
+
+  # 2.4 Canonical English Default README Validation (Rule 9.1)
+  TESTS_TOTAL=$((TESTS_TOTAL + 1))
+  log_ui "  └─ 4. Vaikefailide (README.md) kanoonilise inglise keele kontroll..."
+
+  CANONICAL_EN_RESULT=$(python3 -c '
+import os, glob, re
+
+workspace = "'"$WORKSPACE_DIR"'"
+target_dirs = ["config", "connections", "scripts", "docs", "applications", "forms_apps", "publisher-reports", "docker", "tests", "metrics", "patches", "binaries", "backlog", "apex_app"]
+
+all_readmes = []
+for td in target_dirs:
+    full_d = os.path.join(workspace, td)
+    if os.path.exists(full_d):
+        all_readmes.extend(glob.glob(os.path.join(full_d, "**/README.md"), recursive=True))
+
+et_patterns = [
+    r"\b(See kataloog sisaldab|Käesolev fail sisaldab|Antud kaust koondab)\b",
+    r"\b(Kõik skriptid järgivad|See kaust on automaatselt)\b",
+    r"\b(Sellesse kausta talletatakse|Selles kataloogis säilitatakse)\b"
+]
+
+non_en = []
+for md in sorted(list(set(all_readmes))):
+    rel = os.path.relpath(md, workspace)
+    if any(rel.startswith(f"docs/{l}/") for l in ["et", "fi", "sv", "lv", "lt"]):
+        continue
+    with open(md, "r", encoding="utf-8", errors="ignore") as f:
+        content = f.read()
+    for p in et_patterns:
+        if re.search(p, content, re.IGNORECASE):
+            non_en.append(f"{rel} -> leiti eestikeelne fraas")
+            break
+
+print(f"{len(non_en)}")
+for item in non_en:
+    print(f"❌ Mitte-ingliskeelne vaikefail: {item}")
+')
+
+  NON_EN_CNT=$(echo "$CANONICAL_EN_RESULT" | head -n 1)
+  if [ "$NON_EN_CNT" -eq 0 ]; then
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+    log_ui "     ${GREEN}✅ Kõik platvormi vaikefailid (README.md) on kanoonilises inglise keeles!${NC}"
+  else
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    log_ui "     ${RED}❌ Tuvastati ${NON_EN_CNT} mitte-ingliskeelset vaikefaili!${NC}"
+    if [ "$JSON_MODE" = "false" ]; then
+      echo "$CANONICAL_EN_RESULT" | tail -n +2
+    fi
+  fi
   return 0
 }
 

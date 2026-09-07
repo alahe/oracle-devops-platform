@@ -1,80 +1,48 @@
-# 🧪 Keskkonna Automaattestimise ja Blueprintide Juhend (Testing Suite)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-Antud kaust koondab projekti kogu automaattestimise taristu: testiraportid, automaatsed mõõdikud ja ressursside auditid.
+# 🧪 Automated Testing & Blueprints Verification Suite (`tests/`)
 
-Kõik 13 ametlikku arhitektuurset kavandit (Blueprints) asuvad keskse tõeallikana kaustas **[`config/blueprints/`](../config/blueprints/)**.
+This directory houses the end-to-end testing infrastructure, automated benchmark reports, and blueprint verification suites for the Oracle DevOps Platform.
 
----
-
-## 📁 Kataloogi Struktuur
-
-- **`config/blueprints/`** ➔ 13 ametlikku arhitektuurset blueprinti (`.env.1-*` kuni `.env.13-*`).
-- **`tests/reports/`** ➔ Blueprintide koondmaatriks ([`blueprint_benchmark_matrix.md`](reports/blueprint_benchmark_matrix.md)).
-- **`tests/reports/blueprints/`** ➔ Automaatselt genereeritud ja Git-is jälgitavad testiaruanded (`blueprint_1_report.md` kuni `blueprint_13_report.md`).
+All 12 canonical architecture blueprints are defined centrally in **[`config/blueprints/`](../config/blueprints/)**.
 
 ---
 
-## 🚀 Käivitamine Käsuliinilt (Terminal)
+## 📁 Directory Structure
 
-Testide käivitamiseks puhtalt lehelt (automaatse `reset-all -y` ja verifitseerimisega):
+- **`config/blueprints/`** ➔ 12 canonical architecture blueprints (`.env.0-*` through `.env.11-*`).
+- **`tests/reports/`** ➔ Architecture test reports and benchmark matrix ([`blueprint_benchmark_matrix.md`](reports/blueprint_benchmark_matrix.md)).
+- **`tests/reports/blueprints/`** ➔ Automatically generated test reports (`blueprint_0_report.md` through `blueprint_11_report.md`).
+- **`tests/unit/`** ➔ Modular unit test scripts verifying CLI stability contracts, DevHub generators, and credential safety.
+
+---
+
+## 🚀 CLI Test Execution
+
+To run automated blueprint tests from a clean baseline (with automatic `reset-all.sh -y`):
 
 ```bash
-# Automaatne ühe käsuga testimine (Üksik blueprint):
+# 1. Test single blueprint from scratch:
 ./scripts/setup-all.sh -tb 3
 
-# Konkreetse nimekirja testimine (Koma eraldajaga):
+# 2. Test specific list of blueprints:
 ./scripts/setup-all.sh -tb 1,5,8,10
 
-# KÕIGI 13 blueprinti automaatne laus-testimine järjestikku:
+# 3. Test ALL 12 blueprints sequentially:
 ./scripts/setup-all.sh -tb all
+
+# 4. Multi-Language & i18n Verification:
+./tests/test-multilingual-support.sh --all
+
+# 5. Remote Multi-Cloud Test Suite:
+./tests/test-remote-multicloud.sh --dry-run
 ```
 
 ---
 
-## 📊 Kõigi 13 Blueprinti Ülevaade
+## 🔍 Validation Invariants
 
-| Blueprint | Nimi | Käivitatavad Konteinerid | Peamine Eesmärk |
-| :--- | :--- | :--- | :--- |
-| **1** | `.env.1-only-db-alise` | `db-alise` | Ainult LIS Andmebaas ilma veebiteenusteta. |
-| **2** | `.env.2-db-alise-with-apex-ords` | `db-alise`, `app-ords` | LIS Baas + APEX 26.2 + ORDS üheskoos. |
-| **3** | `.env.3-db-alise-apex-ords-with-proxy` | `db-proxy`, `db-alise`, `app-ords` | 2-Kihiline andmebaasi arhitektuur (Proxy + LIS). |
-| **4** | `.env.4-only-app-publisher` | `db-publisher` | Eraldiseisev Analytics Publisheri andmebaas. |
-| **5** | `.env.5-only-ords` | `app-ords` | Lokaalne ORDS Gateway kaug-andmebaasiga. |
-| **6** | `.env.6-ords-with-apex` | `db-proxy`, `app-ords` | Proxy andmebaas + APEX + ORDS gateway. |
-| **7** | `.env.7-all-services-together` | `db-publisher`, `db-proxy`, `db-alise`, `app-ords`, `app-publisher` | Täielik 4-Kihiline Ettevõtte Tootmiskeskkond. |
-| **8** | `.env.8-gvenzl-dev-light` | `db-alise-gvenzl` | Kergekaaluline Gerald Venzl DB CI/CD testideks. |
-| **9** | `.env.9-dev-workstation-with-web-ide` | `db-alise`, `app-ords`, `web-ide-dev` | **Zero-Install Arendaja Töōkoht** (VS Code Brauseris). |
-| **10** | `.env.10-hybrid-multi-vendor-db` | `db-proxy-oracle`, `db-alise-gvenzl`, `app-ords` | Mitme eri andmebaasi pildi (Oracle + Gvenzl) klaster. |
-| **11** | `.env.11-cloud-adb-with-web-ide` | `db-proxy-adb`, `app-ords`, `web-ide-dev` | Pilve Autonomous DB emuleerimine + Web IDE. |
-| **12** | `.env.12-publisher-gvenzl-with-web-ide` | `db-publisher-gvenzl`, `app-publisher`, `web-ide-dev` | Pixel-Perfect aruandlus kergel Gvenzl DB-l. |
-| **13** | `.env.13-full-enterprise-sandbox-web-ide` | 3 DB-d, `app-ords`, `app-publisher`, `web-ide-dev` | **Täielik ettevõtte pilvelabor (5 konteinerit).** |
-
----
-
-## 🔍 Kuidas Automaatne Testimine Töötama Peab?
-
-Iga katse käivitamisel loetakse mälumaht, CPU kasutus, võrgupordid ning sooritatakse kaks kohustuslikku kontrolli:
-
-1. **🌐 Veebiteenuste HTTP Health Audit (`scripts/check-urls.sh`):**
-   Kontrollib reaalsete HTTP/HTTPS võrgupäringutega iga veebiteenuse vastust (HTTP 200/302).
-2. **🔑 SEPS Paroolivaba Oracle Walleti Audit (`scripts/check-wallet.sh`):**
-   Kontrollib paroolivabalt kõiki registreeritud TNS aliaseid (`/@ALIAS`) ilma ühegi paroolita.
-3. **🔒 TLS ja Sertifikaatide Poliitika Testikomplekt (`tests/test-tls-scenarios.sh`):**
-   Testib 5-astmelist TLS hierarhiat (`CUSTOM_CERT`, `PUBLIC_DNS`, `CORP_PKI`, `USER_LOCAL_CA`, `SELF_SIGNED`) ja Blueprinti rangusastmete kontrolli.
-4. **🌐 Brauseri ja UI Automaatne E2E Sisselogimise Test (`tests/test-browser-login.sh`):**
-   Teostab reaalse veebipõhise sisselogimise ja valideerib sessiooni andmebaasis (`apex_workspace_activity_log`).
-
----
-
-## 🧪 Eraldiseisvad Testikäsud
-
-```bash
-# Käivita TLS ja poliitikate automaatne test:
-./tests/test-tls-scenarios.sh
-
-# Käivita brauseri ja UI E2E sisselogimise test:
-./tests/test-browser-login.sh
-
-# Käivita kõik 55 ühiktesti:
-for t in tests/unit/test-*.sh; do bash "$t"; done
-```
+Every automated test run validates:
+1. **🌐 Web Endpoints HTTP Health (`scripts/check-urls.sh`):** Real HTTP/HTTPS requests verifying status 200/302.
+2. **🔑 SEPS Wallet Passwordless Connectivity (`scripts/check-wallet.sh`):** Passwordless SQLcl connection checks (`SELECT status FROM v$instance`).
+3. **📊 Resource & Duration Benchmarks (Rule 1):** Measurement of step durations saved in `metrics/setup_benchmarks.json`.

@@ -1,40 +1,104 @@
-<!-- [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md) -->
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔌 Datu Bāzu Savienojumu un VS Code Konfigurācijas Rokasgrāmata
+# 🔌 Datubāzes Savienojumi un VS Code Iestatīšanas Rokasgrāmata
 
-Šī rokasgrāmata apraksta Oracle datubāzu savienojumu automātisku un manuālu reģistrāciju paplašinājumam **Oracle SQL Developer for VS Code** (gan lokālajā datorā, gan Web IDE konteinerā), kā arī bezparoļu savienojumus ar Oracle Wallet (SEPS).
+Šī rokasgrāmata apraksta automātisku un manuālu Oracle datubāzes savienojumu reģistrāciju paplašinājumam **Oracle SQL Developer for VS Code** (gan lokālajā resursdatorā, gan konteinerizētajā Web IDE), kā arī bezparoles savienojumus, izmantojot Oracle SEPS Wallet.
 
 ---
 
-## 🔄 Divlīmeņu Automātiskā Reģistrācija (Host PC & Web IDE)
+## 🔄 Divlīmeņu Automatizēta Reģistrācija (Host PC & Web IDE)
 
-Visa platforma izmanto centralizētu savienojumu reģistrācijas dzinēju (`scripts/register-connections.sh`), kas vienlaikus izveido un sinhronizē savienojumus jūsu **lokālajā VS Code (Host PC)** un **Web IDE konteinerā (`web-ide-dev`)**:
+Visa platforma izmanto centralizētu savienojumu reģistrācijas dzinēju (`scripts/register-connections.sh`), kas vienlaikus izveido un sinhronizē datubāzes savienojumus **lokālajā VS Code (Host PC)** un **Konteinerizētajā Web IDE (`web-ide-dev`)**:
 
-### 📊 Savienojumu Reģistrācijas Procesa Shēma
+### 📊 Savienojumu Reģistrācijas Procesu Shēma
 
 ```mermaid
 flowchart TD
-  START(["🚀 Sākums:<br/>./scripts/setup-all.sh<br/>vai register-connections.sh"]) --> DISCOVER["🔍 1. Noteikt aktīvās DB<br/>un ielādēt YAML profilus"]
+  START(["🚀 Sākums:<br/>./scripts/setup-all.sh<br/>vai register-connections.sh"]) --> DISCOVER["🔍 1. Noteikt aktīvās DB<br/>& Ielādēt YAML profilus"]
   
-  DISCOVER --> WALLET["🔐 2. Nolasīt paroles<br/>tieši no SEPS Wallet<br/>(Zero-Trust atmiņā)"]
+  DISCOVER --> WALLET["🔐 2. Iegūt paroles<br/>JIT no SEPS Wallet<br/>(Zero-Trust atmiņā)"]
   
-  WALLET --> BUILD_CONNS["📦 3. Izveidot savienojumus<br/>(Datora TCP & Konteinera tīkls)"]
+  WALLET --> BUILD_CONNS["📦 3. Izveidot dubultos<br/>savienojumu datus<br/>(Resursdators TCP & Konteiners)"]
   
-  BUILD_CONNS --> HOST_REG["💻 4. Reģistrēt lokālajā datorā<br/>- SQLcl connect -save<br/>- ~/.dbtools & ~/.sqldev<br/>- Krāsu kodi no profila"]
+  BUILD_CONNS --> HOST_REG["💻 4. Reģistrēt resursdatorā<br/>- SQLcl connect -save<br/>- ~/.dbtools & ~/.sqldev<br/>- Krāsu kodēšana aktīva"]
   
   HOST_REG --> CHECK_WEBIDE{"❓ Vai Web IDE<br/>(web-ide-dev)<br/>konteiners darbojas?"}
   
-  CHECK_WEBIDE -->|"✅ JĀ / Darbojas"| WEBIDE_REG["🌐 5. Reģistrēt Web IDE<br/>- Konteinera SQLcl batch<br/>- /config/.dbtools/conns<br/>- /config/.sqldev/conns.json<br/>- Piekļuves tiesības chown abc"]
+  CHECK_WEBIDE -->|"✅ JĀ / Darbojas"| WEBIDE_REG["🌐 5. Reģistrēt Web IDE<br/>- Konteinera SQLcl batch<br/>- /config/.dbtools/conns<br/>- /config/.sqldev/conns.json<br/>- Tiesības chown abc"]
   
-  CHECK_WEBIDE -->|"❌ NĒ / Trūkst"| SANITIZE["🧹 6. Tīrīt folders.json<br/>(Noņemt neesošus GUID<br/>Novērst DBTU-03001)"]
+  CHECK_WEBIDE -->|"❌ NĒ / Nav"| SANITIZE["🧹 6. Notīrīt folders.json<br/>(Dzēst bāreņu GUID<br/>Novērst DBTU-03001)"]
   
   WEBIDE_REG --> SANITIZE
   
-  SANITIZE --> READY(["🎉 Gatavs:<br/>1-Klikšķa savienojumi<br/>datorā un Web IDE!"])
+  SANITIZE --> READY(["🎉 Gatavs:<br/>1-klikšķa DB savienojumi<br/>Resursdatorā & Web IDE!"])
 ```
 
-### Palaišana no komandrindas:
+### CLI Izsaukšana:
 
 ```bash
 ./scripts/register-connections.sh
+```
+
+- **Resursdators (Host PC):** Reģistrē savienojumus mapēs `~/.dbtools/connections/` un `~/.sqldev/connections.json` (resursdatora porti `localhost:1532`, `localhost:1533` utt.).
+- **Web IDE:** Ja `web-ide-dev` ir aktīvs, izveido savienojumus konteinerā (`db-proxy:1521`, `db-alise:1521` utt.) un saglabā paroles drošā glabātuvē.
+- **Neatkarīgs no Secības:** Web IDE var startēt pirms vai pēc datubāzēm. Savienojumi vienmēr tiek automātiski sinhronizēti.
+
+---
+
+## 📥 Savienojumu Manuāla Importēšana VS Code SQL Developer UI
+
+Savienojumus var importēt tieši no faila **`connections/sqldev-connections.json`**:
+
+1. Atveriet VS Code un kreisajā panelī izvēlieties cilni **Oracle SQL Developer**.
+2. Panelī **Database Connections** noklikšķiniet uz **`...`** (Papildu darbības) vai ar labo peles pogu izvēlieties **`Import Connections`**.
+3. Failu atlasē izvēlieties:
+   `connections/sqldev-connections.json`
+4. Noklikšķiniet uz **Import**. Visi savienojumi uzreiz būs redzami!
+
+---
+
+## 🔑 Paroļu Nolasīšana Izstrādātājiem un Administratoriem
+
+Ja vēlaties konfigurēt savienojumus manuāli tādās programmās kā DBeaver vai IntelliJ:
+* **APEX Admin (INTERNAL):** `./scripts/get-password.sh APEX_ADMIN`
+* **Proxy SYS:** `./scripts/get-password.sh DB_PROXY_SYS`
+* **Izstrādātājs (USER_DEVELOPER):** `./scripts/get-password.sh DB_PROXY_DEV`
+* **ALISE Business DB SYS:** `./scripts/get-password.sh DB_ALISE_SYS`
+* **ALISE Izstrādātājs:** `./scripts/get-password.sh DB_ALISE_DEV`
+* **Analytics Publisher:** `./scripts/get-password.sh DB_PUBLISHER_DEV`
+
+---
+
+## 🔐 Bezparoles Savienojumi caur Oracle Wallet (SEPS)
+
+Lokālajā izstrādē autentifikācija tiek aizsargāta ar **Oracle Wallet (SEPS)** bez atklāta teksta parolēm uz diska.
+
+### Resursdatora Vides Iestatīšana:
+```bash
+export TNS_ADMIN=$(pwd)/config/tns_admin
+```
+
+### Ātrais Savienojums caur SQLcl:
+```bash
+# Pieslēgties kā izstrādātājam:
+sql /@DB_PROXY_DEV
+
+# Pieslēgties kā SYSDBA:
+sql /@DB_PROXY_SYS as sysdba
+```
+
+---
+
+## 🔒 Windows & SSL/TLS Sertifikātu Uzticamība
+
+Izstrādājot operētājsistēmā Windows (WSL2), lai novērstu pārlūkprogrammas drošības brīdinājumus:
+
+```cmd
+certutil -user -addstore TrustedPeople ssl/cert.crt
+```
+
+Konfigurēt Podman VM, lai tā uzticētos uzņēmuma CA:
+```bash
+podman machine ssh sudo cp /mnt/c/path/ca.crt /etc/pki/ca-trust/source/anchors/
+podman machine ssh sudo update-ca-trust
 ```

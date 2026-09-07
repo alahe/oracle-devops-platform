@@ -1,22 +1,18 @@
-# ORDS (Oracle REST Data Services) Profiilid (`config/profiles/ords/`)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-Selles kaustas asuvad **ORDS-i deklareeritud profiilid (Explicit ORDS Profiles)**, mis kirjeldavad ORDS-i käitusmudeleid ja võrguseadistusi vastavalt Rule 11 (Clean Blueprint Single Source of Truth) nõuetele.
+# 🌐 ORDS Gateway Profiles (`config/profiles/ords/`)
 
----
+This directory contains explicit **ORDS (Oracle REST Data Services)** runtime and networking profiles conforming to Rule 11 (Clean Blueprint Single Source of Truth).
 
-## 📁 Saadaval Profiilid
-
+## 📂 Available ORDS Profiles
 1. **`ords-image.yaml`** (id: `app-ords-image`)
-   - Ametlikul Oracle OCR konteineripildil (`container-registry.oracle.com/database/ords:latest`) põhinev tsentraalne multi-pool ORDS server.
-   - Pordid: HTTP `8088`, HTTPS `8448`.
-
+   - Central multi-pool ORDS container based on official Oracle OCR image (`container-registry.oracle.com/database/ords:latest`).
+   - Ports: HTTP `8088`, HTTPS `8448`.
 2. **`ords-local-custom.yaml`** (id: `app-ords-local-custom`)
-   - Lokaalne skriptipõhine paigaldus allalaaditud ORDS zip-arhiivist kohalikku failisüsteemi (`/opt/oracle/ords`).
-   - Pordid: HTTP `8088`, HTTPS `8448`.
-
+   - Local script-based installation unpacked directly inside container filesystem (`/tmp`).
+   - Ports: HTTP `8088`, HTTPS `8448`.
 3. **`ords-remote-custom.yaml`** (id: `app-ords-remote-custom`)
-   - Kaugserveri ORDS paigaldus SSH vahendusel eraldiseisvasse vahevara serverisse (`remote_host: "ords.internal.local"`).
-   - Pordid: HTTP `8088`, HTTPS `8448`.
-
+   - Remote middleware server ORDS gateway routing requests to enterprise databases.
+   - Ports: HTTP `8088`, HTTPS `8448`.
 4. **`ords-standalone.yaml`** (id: `app-ords-standalone`)
-   - Eraldiseisev autonoomne ORDS testimiseks isoleeritud portidel `8085` / `8445`.
+   - Standalone edge proxy for cloud ADB or remote gateways on isolated ports `8085` / `8445`.

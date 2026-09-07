@@ -1,3 +1,5 @@
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
+
 # ⚙️ Internal Scripts Directory (`scripts/internal/`)
 
 According to **Rule 3 (Directory Layout Rule for Scripts)**, this directory contains auxiliary automation engines, profile parsers, database initializers, automated setup steps, and SQL files used internally by the environment orchestrator (`setup-all.sh`).
@@ -51,6 +53,3 @@ According to **Rule 3 (Directory Layout Rule for Scripts)**, this directory cont
 | **[generate-compose-override.sh](generate-compose-override.sh)** | Dynamic Podman Compose override generator (`podman-compose.override.yml`) based on active database profiles and Podman secrets. |
 | **[wait-db-healthy.sh](wait-db-healthy.sh)** | 2-phase adaptive healthcheck & self-healing engine verifying container health, TCP listeners, and PDB READ WRITE status. |
 | **[generate-setup-report.sh](generate-setup-report.sh)** | Benchmark & setup report generator exporting JSON benchmarks, ENV metrics, and blueprint audit Markdown reports. |
-
-
-

@@ -1,13 +1,8 @@
-# Analytics Publisher Paigaldusfailide Kaust (`binaries/publisher/`)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-Sellesse kausta talletatakse Oracle Analytics Publisheri (BIP / OAS) ametlikud paigalduspaketid ja binaarid.
+# 📦 Oracle Analytics Publisher Packages (`binaries/publisher/`)
 
-## 📦 Toetatud Failid:
-- `Oracle_Analytics_Server_Linux_2026.zip`
-- `Oracle_Analytics_Server_Linux_2024.zip`
-- `Oracle_Analytics_Server*.jar`
-- `bieeconfiglogs*.zip`
+Analytics Publisher (BIP) installation archives.
 
-## ⚙️ Kuidas Töötab:
-- Utiliit `scripts/internal/download-publisher-binary.sh` laeb puudumisel paketi siia kausta.
-- Kujutise ehitamisel (`docker/publisher/build-publisher-image.sh`) kopeeritakse failid siit automaatselt ehituskonteksti.
+- **Supported Archives:** Local ZIP / RPM / JAR packages.
+- **Git Status:** Binary files are gitignored (strictly local).

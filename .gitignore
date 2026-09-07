@@ -32,19 +32,19 @@ config/certs/*.p12
 config/certs/*.sso
 config/certs/*.csr
 config/certs/custom/**
-!config/certs/custom/README.md
+!config/certs/custom/README*.md
 !config/certs/custom/.gitkeep
 config/certs/public/**
-!config/certs/public/README.md
+!config/certs/public/README*.md
 !config/certs/public/.gitkeep
 config/certs/corp/**
-!config/certs/corp/README.md
+!config/certs/corp/README*.md
 !config/certs/corp/.gitkeep
 config/certs/user_ca/**
-!config/certs/user_ca/README.md
+!config/certs/user_ca/README*.md
 !config/certs/user_ca/.gitkeep
 config/certs/self_signed/**
-!config/certs/self_signed/README.md
+!config/certs/self_signed/README*.md
 !config/certs/self_signed/.gitkeep
 *.sso
 *.p12
@@ -87,8 +87,8 @@ META-INF/
 binaries/**
 !binaries/
 !binaries/**/
-!binaries/**/README.md
-!binaries/**/readme.md
+!binaries/**/README*.md
+!binaries/**/readme*.md
 !binaries/**/.gitkeep
 
 apex-latest.zip

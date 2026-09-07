@@ -1,32 +1,24 @@
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
+
 # 🗄️ Database Profiles (`config/profiles/databases/`)
 
 This directory contains domain-isolated YAML profiles for configuring **Oracle Database containers** (Standard 23ai Free, Autonomous ADB Free, Gvenzl 23c).
-
----
 
 ## 📂 Database Profiles Matrix
 
 | Profile Filename | Description | DB Type | Wallet Required | Use Case |
 | :--- | :--- | :--- | :--- | :--- |
-| **`db-alise-oracle.yaml`** | Primary Application DB on Official Oracle Free DB 23ai/26ai | `standard` | Yes | Primary LIS Application |
-| **`db-alise-adb.yaml`** | Primary Application DB on Autonomous DB Free | `adb` | Yes | Primary LIS Cloud Emulation |
-| **`db-proxy-oracle.yaml`** | APEX Outbound Proxy DB on Official Oracle Free DB 23ai | `standard` | Yes | APEX Outbound Proxy |
-| **`db-proxy-adb.yaml`** | APEX Proxy DB on Autonomous DB Free | `adb` | Yes | APEX Proxy on ADB |
-| **`db-proxy-gvenzl.yaml`** | APEX Proxy DB on Gvenzl 23c Faststart | `standard` | Yes | APEX Proxy Lightweight |
-| **`db-infra-gvenzl.yaml`** | Infrastructure DB for Publisher & Forms (RCU) on Gvenzl | `standard` | Yes | App Infra & Publisher RCU |
-| **`db-publisher-oracle.yaml`** | Analytics Publisher Database on Official Oracle Free | `standard` | Yes | Analytics Publisher Dedicated |
-| **`db-publisher-gvenzl.yaml`** | Analytics Publisher Database on Gvenzl 23c Faststart | `standard` | Yes | Analytics Publisher Lightweight |
-| **`db-cicd.yaml`** | Ephemeral DB for CI/CD Automated Testing | `standard` | No | CI/CD Testing |
+| **`db-alise-oracle.yaml`** | Primary Application DB on Official Oracle Free DB 23ai | `standard` | Yes | Primary LIS Business DB |
+| **`db-proxy-oracle.yaml`** | APEX Proxy & SSO Gateway on Official Oracle Free DB 23ai | `standard` | Yes | APEX Proxy & SSO Gateway |
+| **`db-proxy-standalone.yaml`** | Standalone APEX Proxy DB on Isolated Port 1537 | `standard` | Yes | Dedicated SSO Gateway |
+| **`db-gvenzl.yaml`** | Gerald Venzl 23c Community Engine | `standard` | Yes | Benchmarking & Fast Start |
+| **`db-adb.yaml`** | Autonomous Database Cloud Simulation | `adb` | Yes | Cloud Wallet mTLS Connectivity |
+| **`db-publisher-oracle.yaml`** | Dedicated Analytics Publisher Repository DB | `standard` | Yes | Publisher RCU Metadata |
+| **`db-forms-oracle.yaml`** | Dedicated Oracle Forms 14c Repository DB | `standard` | Yes | Forms RCU Metadata |
 
----
-
-## ⚙️ Configuration in `.env`
-
-Map active database instances in `.env` using `<NAME>_DB=<profile-name>`, `DB_<NAME>=<profile-name>`, or `<NAME>_PROXY=<profile-name>`:
-
+## ⚙️ Configuration in Blueprints
+Blueprints reference database profiles cleanly without hardcoding:
 ```bash
-# Primary Application Database Container
 DB_ALISE=db-alise-oracle
-# DB_PROXY=db-proxy-oracle
-# DB_PUBLISHER=db-publisher-gvenzl
+DB_PROXY=db-proxy-oracle
 ```

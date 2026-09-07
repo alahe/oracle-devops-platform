@@ -1,11 +1,8 @@
-# Java Runtime Tarkvarapakettide Kaust (`binaries/java/`)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-Sellesse kausta talletatakse ametlikud Java / JDK paigalduspaketid (RPM, tar.gz):
+# 📦 Oracle Java JDK Runtime Packages (`binaries/java/`)
 
-- `jdk-17.0.12_linux-x64_bin.rpm` (x86_64 arhitektuurile)
-- `jdk-17.0.12_linux-aarch64_bin.rpm` (ARM64 / Apple Silicon arhitektuurile)
+Shared JDK 17 RPM / tar.gz packages for container builds.
 
-Neid JDK pakette jagatakse ja taaskasutatakse mitme komponendi konteinerite ehitamisel:
-- **Oracle Analytics Publisher** (`docker/publisher/build-publisher-image.sh`)
-- **Oracle Forms 14c** (`docker/forms/build-forms-image.sh`)
-- **WebLogic Infrastructure**
+- **Supported Archives:** Local ZIP / RPM / JAR packages.
+- **Git Status:** Binary files are gitignored (strictly local).

@@ -1,15 +1,8 @@
-# 🩹 Oracle Java (JDK) Updates & Patches (`binaries/java/patches/`)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-Sellesse kataloogi asetatakse Oracle Java / GraalVM värskendused, turvapaigad (Critical Patch Updates / CPU) ja hotfix-paketid.
+# 📦 Oracle Java Updates & Patches (`binaries/java/patches/`)
 
-## 📁 Kataloogi Struktuur
+Quarterly Java Critical Patch Updates (CPU).
 
-```
-binaries/java/patches/
-├── README.md                     # Käesolev juhend
-└── jdk-17.0.X_linux-x64_bin.rpm  # Nt: Java turvapaik või vaheversioon
-```
-
-## 🔒 Git Versioonihalduse Reegel
-- Binaarsed paketid on `.gitignore` failis ega jõua Git repositooriumisse.
-- Kataloogi struktuur ja `README.md` on versioonihaldusega tagatud.
+- **Supported Archives:** Local ZIP / RPM / JAR packages.
+- **Git Status:** Binary files are gitignored (strictly local).
