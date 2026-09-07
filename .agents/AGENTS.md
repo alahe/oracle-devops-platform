@@ -212,3 +212,29 @@ To eliminate false browser timeouts, UI freezes, and premature "active" indicato
      - ⏳ **Installing (`status-installing`)**: Setup or rebuild actively executing.
      - 🟡 **Starting / Initializing (`status-init`)**: Container running but container healthcheck is `starting` or database initializations are pending.
      - 🟢 **Online / Healthy (`status-online`)**: Database healthy, SEPS Wallet connected, and web endpoints responsive.
+
+---
+
+## 13. Cross-Platform Filename & Path Portability Rule (Windows / macOS / Linux)
+
+To guarantee flawless Git clones, checkouts, and builds across all supported operating systems (Windows NTFS/FAT, macOS APFS, and Linux ext4/btrfs):
+
+1. **Strict Prohibition of OS-Reserved Characters:**
+   - Filenames and directory paths **MUST NEVER** contain Windows NTFS/FAT forbidden characters:
+     `<` (less than), `>` (greater than), `:` (colon), `"` (double quote), `/` (slash in filenames), `\` (backslash in filenames), `|` (pipe), `?` (question mark), or `*` (asterisk).
+   - Filenames and directory names **MUST NOT** end with a trailing dot (`.`) or trailing whitespace (e.g. `file. ` or `dir.`), as Windows filesystems automatically strip or fail on these.
+   - Filenames **MUST NOT** collide with Windows DOS/NTFS reserved device names (case-insensitive, standalone or with any extension):
+     `CON`, `PRN`, `AUX`, `NUL`, `COM1` through `COM9`, `LPT1` through `LPT9` (e.g., `aux.h`, `nul.json`, `COM1.txt`).
+
+2. **Repository Naming Standards (ASCII & Kebab-Case):**
+   - All repository files, scripts, configurations, and documentation paths must strictly use **ASCII alphanumeric characters, dots, hyphens, and underscores** (`[a-z0-9._-]`).
+   - **No spaces in file or directory paths:** Use hyphens (`-`) or underscores (`_`) instead of whitespace.
+   - **No non-ASCII diacritics in paths:** Do not use accented characters or umlauts (`ä`, `ö`, `õ`, `ü`, `š`, `ž`) in filenames or paths, even if the content inside the file is localized.
+
+3. **Case Sensitivity & Path Length Constraints:**
+   - **No Case-Only Collisions:** Never create files in the same directory whose names differ only by letter casing (e.g., `README.md` and `readme.md`, or `Setup.sh` and `setup.sh`), as Windows NTFS and macOS APFS are case-preserving but case-insensitive by default.
+   - **Path Length Discipline:** Keep relative paths well within limits (prefer $< 180$ characters) to avoid hitting the Windows legacy `MAX_PATH` (260-character) limit during checkouts.
+   - **Recommended Git Client Flags:** Windows developers should ensure `git config --global core.protectNTFS true` and `git config --global core.longpaths true` are enabled.
+
+4. **Automated CI Enforcement:**
+   - Every file added or modified in the repository must be verified by `tests/unit/test-filename-portability.sh` during local CI (`scripts/test-local-ci.sh`) and pull request pipelines.

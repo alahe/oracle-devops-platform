@@ -10,7 +10,7 @@ if [ ! -f "$WORKSPACE_DIR/scripts/test-local-ci.sh" ]; then
 fi
 
 OUT=$("$WORKSPACE_DIR/scripts/test-local-ci.sh" --dry-run)
-if ! echo "$OUT" | grep -q "LOKAALNE CI/CD TEST EDUKALT LÕPETATUD"; then
+if ! echo "$OUT" | grep -qiE "(LOKAALNE CI/CD TEST EDUKALT LÕPETATUD|LOCAL CI/CD TEST COMPLETED SUCCESSFULLY)"; then
   echo "❌ Viga: test-local-ci.sh --dry-run ebaõnnestus!"
   exit 1
 fi

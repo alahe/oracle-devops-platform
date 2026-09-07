@@ -19,6 +19,15 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 ./scripts/get-password.sh
 ```
 
+> [!TIP]
+> **Windows Git Konfigūracija (13 taisyklė):**
+> Prieš klonuodami sistemoje Windows, sukonfigūruokite Git palaikyti ilgus kelius ir apsaugoti NTFS failų sistemą:
+> ```powershell
+> git config --global core.protectNTFS true
+> git config --global core.longpaths true
+> git config --global core.autocrlf input
+> ```
+
 ---
 
 ## 🗺️ Naujo Kūrėjo Įtraukimo Kelias (Onboarding Journey)
@@ -72,6 +81,23 @@ Kūrėjams nereikia įsiminti dešimčių atskirų prievadų. **Dev Hub** veikia
 - **Realaus Laiko Būklės Diagnostika:** Automatinis delsos tikrinimas kas 6 sekundes.
 - **Integruota Markdown Dokumentacijos Skaityyklė:** Skaitykite ir ieškokite vadovų tiesiogiai naršyklėje.
 - **Planų Diegimas ir Valdymas:** Įdiekite ir perjunkite planus žiniatinklyje arba komanda `./scripts/deploy-blueprint.sh`.
+- **ORDS Išmaniųjų Vartų Skydelis:** Realaus laiko centrinio ORDS konteinerio būsena, ryšių telkiniai (connection pools), delsa (ms) ir 1-paspaudimo sinchronizavimas.
+
+---
+
+## 🌐 ORDS Išmanieji Vartai ir Autonominė Mikroregistracija (Variant 3)
+
+Platforma pašalina prievadų konfliktus ir ORDS dubliavimą taikydama **Išmaniųjų Vartų ir Autonominės Mikroregistracijos modelį**:
+
+- **Centriniai Vartai:** Vienas `app-ords` konteineris veikia prievaduose 8088 (HTTP) ir 8448 (HTTPS), aptarnaudamas visas aktyvias duomenų bazes.
+- **Autonominis Mikroregistratorius:** Kiekviena duomenų bazė valdo savo ryšių telkinio konfigūraciją (`config/ords/proxy/databases/<pool_name>/pool.xml`).
+- **Virtualūs Paslaugų Žetonai (`ords/<pool>`):** Planai deklaruoja virtualius žetonus (pvz., `ords/proxy`, `ords/alise`). Dev Hub įvertina parengtį pagal konteinerį ir realaus laiko HTTP delsą.
+- **Telkinių Valdymo CLI:**
+  ```bash
+  ./scripts/internal/manage-ords-pools.sh status
+  ./scripts/internal/manage-ords-pools.sh status json
+  ./scripts/internal/manage-ords-pools.sh sync
+  ```
 
 ---
 

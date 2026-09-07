@@ -288,7 +288,7 @@ DOC_SPECS = [
 
 BP_CATALOG = {
     0: {
-        "cat": "core", "ram": "2-3 GB", "conts": "db-proxy, app-ords",
+        "cat": "core", "ram": "2-3 GB", "conts": "db-proxy, ords/proxy",
         "en": ("Default Proxy DB & ORDS Gateway", "Canonical system default: dedicated Proxy DB 23ai Free on port 1532 with ORDS REST gateway on port 8448/8088."),
         "et": ("Vaikimisi Proxy DB & ORDS Lüüs", "Süsteemi kanooniline vaikekonfiguratsioon: pühendatud Proxy DB 23ai Free pordil 1532 ja ORDS lüüs pordil 8448/8088."),
         "fi": ("Oletus-Proxy DB & ORDS -Yhdyskäytävä", "Järjestelmän oletusarkkitehtuuri: Proxy DB 23ai Free portissa 1532 ja ORDS portissa 8448/8088."),
@@ -297,7 +297,7 @@ BP_CATALOG = {
         "lt": ("Numatytoji Proxy DB & ORDS Šliuzas", "Sistemos numatytoji architektūra: Proxy DB 23ai Free prievade 1532 ir ORDS prievade 8448/8088.")
     },
     1: {
-        "cat": "database", "ram": "2-3 GB", "conts": "db-alise, app-ords",
+        "cat": "database", "ram": "2-3 GB", "conts": "db-alise, ords/alise",
         "en": ("Standalone ALISE Business Database", "Dedicated custom application database holding business schemas, PL/SQL code, DDL/DML, and internal APEX/ORDS on port 1533."),
         "et": ("Eraldiseisev ALISE Äriandmebaas", "Äriandmete, kohandatud skeemide, PL/SQL koodi ja DDL/DML andmebaas pordil 1533 koos sisemise APEX & ORDS toega."),
         "fi": ("Erillinen ALISE-Liiketoimintatietokanta", "Erillinen sovellustietokanta liiketoimintaskeemoille ja PL/SQL-koodille portissa 1533 sisäisellä APEX/ORDS:lla."),
@@ -306,7 +306,7 @@ BP_CATALOG = {
         "lt": ("Atskira ALISE Verslo Duomenų Bazė", "Skirta taikomoji duomenų bazė verslo schemoms ir PL/SQL kodui prievade 1533 su vidiniu APEX/ORDS.")
     },
     2: {
-        "cat": "database", "ram": "2-3 GB", "conts": "db-proxy-standalone, app-ords",
+        "cat": "database", "ram": "2-3 GB", "conts": "db-proxy-standalone, ords/proxy_standalone",
         "en": ("Standalone APEX Proxy DB & SSO Gateway", "APEX Proxy database on isolated port 1537 acting as external security gateway (REST API, Azure Entra ID, Kafka) with ORDS."),
         "et": ("Eraldiseisev Proxy DB & APEX SSO", "Isoleeritud pordil 1537 töötav APEX Proxy andmebaas, mis toimib välisühenduste ja autentimise turvaväravana koos ORDS-iga."),
         "fi": ("Erillinen Proxy DB & APEX SSO", "Eristetyssä portissa 1537 toimiva APEX Proxy -tietokanta, joka toimii ulkoisena tietoturvayhdyskäytävänä ORDS:n kera."),
@@ -315,7 +315,7 @@ BP_CATALOG = {
         "lt": ("Atskira Proxy DB & APEX SSO", "APEX Proxy duomenų bazė izoliuotame prievade 1537, veikianti kaip išorinis saugumo šliuzas su ORDS.")
     },
     3: {
-        "cat": "database", "ram": "2-3 GB", "conts": "db-alise, app-ords",
+        "cat": "database", "ram": "2-3 GB", "conts": "db-gvenzl, ords/gvenzl",
         "en": ("Standalone Community Vendor DB (gvenzl)", "Standalone APEX & ORDS database on Docker Hub community container image (gvenzl/oracle-free) on port 1535 for performance and patch benchmarking."),
         "et": ("Alternatiivne Kogukonna Baas (gvenzl)", "APEX ja ORDS andmebaas Docker Hubi kogukonnapildi (gvenzl/oracle-free) baasil pordil 1535 kiiruse ja turvapaikade võrdlemiseks."),
         "fi": ("Vaihtoehtoinen Yhteisötietokanta (gvenzl)", "APEX- ja ORDS-tietokanta Docker Hubin yhteisökuvalla (gvenzl/oracle-free) portissa 1535 suorituskyvyn vertailuun."),
@@ -324,7 +324,7 @@ BP_CATALOG = {
         "lt": ("Alternatyvi Bendruomenės DB (gvenzl)", "Atskira APEX ir ORDS duomenų bazė Docker Hub bendruomenės atvaizde (gvenzl/oracle-free) prievade 1535 našumo palyginimui.")
     },
     4: {
-        "cat": "database", "ram": "1-2 GB", "conts": "db-alise, app-ords",
+        "cat": "database", "ram": "1-2 GB", "conts": "db-adb, ords/adb",
         "en": ("Oracle Autonomous Database Cloud (ADB)", "Autonomous Database Cloud connectivity on simulated port 1536 leveraging encrypted mTLS SEPS client wallets."),
         "et": ("Autonoomne Pilvebaas (Oracle ADB)", "Oracle Autonomous Database pilveühendus pordil 1536 krüpteeritud mTLS kliendi SEPS Walletiga."),
         "fi": ("Autonominen Pilvitietokanta (Oracle ADB)", "Oracle Autonomous Database -pilviyhteys portissa 1536 salatulla mTLS SEPS Walletilla."),

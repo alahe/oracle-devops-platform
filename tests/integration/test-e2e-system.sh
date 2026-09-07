@@ -60,7 +60,7 @@ echo -e "${GREEN}✅ E2E Samm 2 Edukas: Kõik 8 sisemist abiskripti ja SQL-i on 
 
 # Step 3: Validate Dynamic Profiles Matrix
 echo -e "\n${YELLOW}[E2E Samm 3] Kontrollin profiilide maatriksit (config/profiles/databases/*.yaml)...${NC}"
-PROFILES=("db-proxy-adb" "db-proxy-oracle" "db-proxy-gvenzl" "db-lis-oracle" "db-lis-adb" "db-infra-gvenzl" "db-cicd" "db-publisher-oracle" "db-publisher-gvenzl")
+PROFILES=("db-adb" "db-alise-oracle" "db-forms-oracle" "db-gvenzl" "db-oracle" "db-proxy-oracle" "db-proxy-standalone" "db-publisher-oracle")
 
 for profile in "${PROFILES[@]}"; do
   if [ -f "$WORKSPACE_DIR/config/profiles/databases/${profile}.yaml" ]; then
@@ -70,7 +70,7 @@ for profile in "${PROFILES[@]}"; do
     exit 1
   fi
 done
-echo -e "${GREEN}✅ E2E Samm 3 Edukas: Kõik 9 YAML profiili on valmis!${NC}"
+echo -e "${GREEN}✅ E2E Samm 3 Edukas: Kõik ${#PROFILES[@]} YAML andmebaasiprofiili on valmis!${NC}"
 
 # Step 4: Validate Topology Specification
 echo -e "\n${YELLOW}[E2E Samm 4] Kontrollin topoloogia spetsifikatsiooni (config/topology.yaml)...${NC}"

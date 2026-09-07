@@ -19,6 +19,15 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 ./scripts/get-password.sh
 ```
 
+> [!TIP]
+> **Windows Git Konfigurācija (13. noteikums):**
+> Pirms klonēšanas operētājsistēmā Windows konfigurējiet Git atbalstīt garus ceļus un aizsargāt NTFS failu sistēmu:
+> ```powershell
+> git config --global core.protectNTFS true
+> git config --global core.longpaths true
+> git config --global core.autocrlf input
+> ```
+
 ---
 
 ## 🗺️ Jauna Izstrādātāja Ceļvedis (Onboarding Journey)
@@ -72,6 +81,23 @@ Izstrādātājiem nav jāatceras desmitiem dažādu portu. **Dev Hub** kalpo kā
 - **Reāllaika Veselības Diagnostika:** Automātiska aiztures pārbaude ik pēc 6 sekundēm.
 - **Integrēts Markdown Dokumentācijas Lasītājs:** Lasiet un meklējiet rokasgrāmatas tieši pārlūkprogrammā.
 - **Plānu Izvēršana un Pārvaldība:** Izvērsiet un pārslēdziet plānus tīmekļa saskarnē vai ar komandu `./scripts/deploy-blueprint.sh`.
+- **ORDS Viedās Vārtejas Panelis:** Reāllaika pārskats par centrālā ORDS konteinera stāvokli, savienojumu pūliem (connection pools), aizturi (ms) un 1-klikšķa sinhronizāciju.
+
+---
+
+## 🌐 ORDS Viedā Vārteja un Autonomā Mikroreģistrācija (Variant 3)
+
+Platforma novērš portu konfliktus un ORDS dublēšanos ar **Viedās Vārtejas un Autonomās Mikroreģistrācijas modeli**:
+
+- **Centrālā Vārteja:** Viens `app-ords` konteiners darbojas portos 8088 (HTTP) un 8448 (HTTPS), apkalpojot visas aktīvās datubāzes.
+- **Autonoms Mikroreģistrators:** Katra datubāze pārvalda savu savienojumu pūlu (`config/ords/proxy/databases/<pool_name>/pool.xml`).
+- **Virtuālie Servisa Marķieri (`ords/<pool>`):** Plāni deklarē virtuālos marķierus (piem., `ords/proxy`, `ords/alise`). Dev Hub novērtē gatavību pēc konteinera un reāllaika HTTP aiztures.
+- **Pūlu Pārvaldības CLI:**
+  ```bash
+  ./scripts/internal/manage-ords-pools.sh status
+  ./scripts/internal/manage-ords-pools.sh status json
+  ./scripts/internal/manage-ords-pools.sh sync
+  ```
 
 ---
 

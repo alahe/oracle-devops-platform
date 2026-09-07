@@ -77,6 +77,24 @@
             </div>
         </div>
 
+        <!-- ORDS GATEWAY & CONNECTION POOLS STRIP (Variant 3) -->
+        <div id="ords-gateway-strip" class="ords-gateway-strip">
+            <div class="ords-strip-left">
+                <div class="ords-gateway-title">
+                    <span>🌐</span> <span data-i18n="ords_gateway_title">ORDS Smart Gateway</span>
+                    <span id="ords-gateway-status-badge" class="badge badge-success" style="font-size:0.7rem; padding:2px 7px;">🟢 :8088 / :8448</span>
+                </div>
+                <div class="ords-pools-container" id="ords-pools-list">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" class="btn-compact btn-compact-secondary" onclick="syncOrdsPools()" title="Sync ORDS pools with running databases" style="font-size:0.75rem; padding:4px 10px;">
+                    <span>🔄</span> <span data-i18n="ords_btn_sync">Sync Pools</span>
+                </button>
+            </div>
+        </div>
+
         <div class="grid" id="cockpit-cards-grid">
 %SERVICES_CARDS_HTML%
         </div>
@@ -522,7 +540,7 @@
                 <div class="code-box" style="font-size: 0.75rem; margin-top: 10px;">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     # Testi arve genereerimist PDF-iks:<br/>
-                    ./scripts/publisher/test-render.sh templates/publisher/samples/arve_eesti_standard.rtf templates/publisher/samples/arve_näidisandmed.xml
+                    ./scripts/publisher/test-render.sh templates/publisher/samples/arve_eesti_standard.rtf templates/publisher/samples/arve_naidisandmed.xml
                 </div>
                 <div style="margin-top: 10px;">
                     <button class="slide-link-btn" onclick="navigateToDoc('publisher-template-builder')" style="font-size: 0.78rem;">📖 Loe Kujundaja Juhendit →</button>
@@ -1542,6 +1560,7 @@ let serviceStates = {};
 const BRIDGE_URL = (!window.location.hostname || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:8089' : ('http://' + window.location.hostname + ':8089');
 
 let LIVE_RUNNING_CONTAINERS = %RUNNING_CONTAINERS_JSON%;
+let LIVE_ORDS_POOLS = %ORDS_POOLS_JSON%;
 let LIVE_MODULE_STATUSES = %LIVE_MODULES_JSON%;
 let LIVE_ACTIVE_BP = ACTIVE_BP_NUM;
 let CACHED_PROFILES = [];

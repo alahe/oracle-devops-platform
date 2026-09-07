@@ -360,6 +360,14 @@ EOF
         limits:
           cpus: '1.00'
           memory: ${PROFILE_ORDS_MEMORY:-3072M}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - (curl -k -f -s -o /dev/null http://localhost:${ords_http_val}/ords/ || curl -k -f -s -o /dev/null https://localhost:${ords_ssl_val}/ords/ || timeout 1 bash -c "exec 3<>/dev/tcp/localhost/${ords_http_val}" 2>/dev/null) || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 25s
     volumes:
       - ${apex_img_vol}:/opt/oracle/apex_images:ro
       - ./config/ords/$ords_mount_target:/etc/ords/config:rw
@@ -423,6 +431,14 @@ if [ "${#active_instances[@]}" -eq 0 ] && is_ords_enabled; then
         limits:
           cpus: '1.00'
           memory: 1024M
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - (curl -k -f -s -o /dev/null http://localhost:${ords_http_val}/ords/ || curl -k -f -s -o /dev/null https://localhost:${ords_ssl_val}/ords/ || timeout 1 bash -c "exec 3<>/dev/tcp/localhost/${ords_http_val}" 2>/dev/null) || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 25s
     volumes:
       - ./config/ords/standalone:/etc/ords/config:rw
       - ./config/certs:/etc/ords/certs:ro

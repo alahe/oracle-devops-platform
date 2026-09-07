@@ -22,6 +22,15 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 ./scripts/get-password.sh
 ```
 
+> [!TIP]
+> **Windowsi Giti Seadistus (Reegel 13):**
+> Enne Windowsis kloonimist seadista Git toetama pikki failiteid ja kaitsma NTFS failisüsteemi:
+> ```powershell
+> git config --global core.protectNTFS true
+> git config --global core.longpaths true
+> git config --global core.autocrlf input
+> ```
+
 ---
 
 ## 🗺️ Uue Arendaja Onboarding Teekond
@@ -138,6 +147,28 @@ Dev Hub toimib tervikliku juhtpaneelina teenuste ja blueprintide haldamiseks:
   - 🟢 **`status-online` (Roheline):** Andmebaas terve, SEPS Wallet ühendatud ja veebilingid vastavad.
 - **Edasilükatud `.active_blueprint` lukk:** Salvestatakse kettale rangelt alles pärast 100% verifitseerimise õnnestumist.
 - **1-Kliki Parooli Kopeerimine:** Paroolid dekrüpteeritakse vajaduspõhiselt otse mälus Oracle SEPS Walletist.
+- **ORDS Nutivärava Paneel:** Reaalajas ülevaade keskse ORDS konteineri tervisest, dünaamilistest ühenduste poolidest, reageerimisajast (ms) ja 1-kliki sünkroonimisest.
+
+---
+
+## 🌐 ORDS Nutivärav ja Autonoomne Mikroregistraator (Variant 3)
+
+Platvorm lahendab mitme blueprinti vahelised pordikonfliktid ja mitmekordsed ORDS konteinerid läbi **Nutivärava ja Autonoomse Mikroregistraatori mustri**:
+
+- **Keskne Tuumvärav:** Üksainus `app-ords` konteiner töötab portidel 8088 (HTTP) ja 8448 (HTTPS), teenindades kõiki aktiivseid andmebaase.
+- **Autonoomne Mikroregistraator:** Iga andmebaas omab oma ühenduste pooli konfiguratsiooni (`config/ords/proxy/databases/<pool_name>/pool.xml`). Andmebaasi käivitamisel registreeritakse tema pool automaatselt ORDS-i.
+- **Virtuaalsed Teenuselipikud (`ords/<pool>`):** Blueprintid deklareerivad virtuaalsed märgid (nt `ords/proxy`, `ords/alise`, `ords/proxy_standalone`). Dev Hub hindab valmisolekut nii konteineri kui ka HTTP vastuse latentsuse alusel.
+- **Poolide Halduse Käsurida (CLI):**
+  ```bash
+  # Kontrolli aktiivseid poole, sihtbaase ja latentsust:
+  ./scripts/internal/manage-ords-pools.sh status
+
+  # Väljasta masinloetav JSON monitooringu ja bridge jaoks:
+  ./scripts/internal/manage-ords-pools.sh status json
+
+  # Sünkrooni poolid töötavate andmebaasi konteineritega:
+  ./scripts/internal/manage-ords-pools.sh sync
+  ```
 
 ---
 
@@ -200,6 +231,9 @@ Oracle Free DB in Prod sisaldab **kuldsnapshottide mootorit**, mis vähendab taa
 ./scripts/clean-logs.sh --older-than-hours=20 -y
 ./scripts/clean-logs.sh -y
 ./scripts/snapshots/clean-golden-snapshots.sh -y
+
+# 8. Kontrolli failinimede platvormiülest ühilduvust (Reegel 13):
+./tests/unit/test-filename-portability.sh
 ```
 
 ---

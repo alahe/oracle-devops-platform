@@ -208,6 +208,9 @@ async function pollBridgeStatus(manual = false) {
       if (data.system_resources) {
         LIVE_SYSTEM_RESOURCES = data.system_resources;
       }
+      if (data.ords_pools) {
+        LIVE_ORDS_POOLS = data.ords_pools;
+      }
       if (connBadge) {
         connBadge.innerHTML = '🟢 Bridge :8089 Online';
         connBadge.style.color = '#4ade80';
@@ -216,6 +219,7 @@ async function pollBridgeStatus(manual = false) {
       renderModulePills();
       renderBlueprints(currentActiveFilter);
       updateServiceCardsUI();
+      renderOrdsGatewayStrip();
       if (manual) showToast('✅ Bridge staatus uuendatud!');
     }
   } catch (e) {
@@ -227,6 +231,7 @@ async function pollBridgeStatus(manual = false) {
     renderModulePills();
     renderBlueprints(currentActiveFilter);
     updateServiceCardsUI();
+    renderOrdsGatewayStrip();
   }
 }
 
@@ -352,6 +357,12 @@ function getBlueprintState(card) {
     let isRunning = false;
     if (runningList.includes(req)) {
       isRunning = true;
+    } else if (req.startsWith('ords/')) {
+      const poolName = req.substring(5);
+      const poolData = (typeof LIVE_ORDS_POOLS === 'object' && LIVE_ORDS_POOLS) ? LIVE_ORDS_POOLS[poolName] : null;
+      if (poolData ? (poolData.status === 'online' || poolData.status === 'degraded') : runningList.includes('app-ords')) {
+        isRunning = true;
+      }
     } else if (req === 'app-publisher' && runningList.includes('oracle-publisher-dev')) {
       isRunning = true;
     } else if (req === 'oracle-publisher-dev' && runningList.includes('app-publisher')) {
@@ -427,6 +438,12 @@ function getBlueprintState(card) {
 
   // Check if any required container is still in 'starting' or unready health state
   const anyStarting = requiredContainers.some(req => {
+    if (req.startsWith('ords/')) {
+      const poolName = req.substring(5);
+      const poolData = (typeof LIVE_ORDS_POOLS === 'object' && LIVE_ORDS_POOLS) ? LIVE_ORDS_POOLS[poolName] : null;
+      if (poolData && poolData.status === 'starting') return true;
+      return false;
+    }
     return typeof LIVE_CONTAINER_HEALTH === 'object' && LIVE_CONTAINER_HEALTH[req] === 'starting';
   });
 
@@ -487,7 +504,14 @@ function updateCardState(card, bpStateInfo, currentLang) {
     const isChipOnline = !!containerStates[cname];
     chip.classList.toggle('chip-online', isChipOnline);
     chip.classList.toggle('chip-offline', !isChipOnline);
-    chip.setAttribute('title', `${cname} (${isChipOnline ? 'online' : 'offline'})`);
+    if (cname && cname.startsWith('ords/')) {
+      const poolName = chip.getAttribute('data-ords-pool') || cname.substring(5);
+      const pData = (typeof LIVE_ORDS_POOLS === 'object' && LIVE_ORDS_POOLS) ? LIVE_ORDS_POOLS[poolName] : null;
+      const latInfo = (pData && pData.latency_ms !== undefined && pData.latency_ms > 0) ? ` · ${pData.latency_ms}ms` : '';
+      chip.setAttribute('title', `ORDS Pool: ${poolName} (${isChipOnline ? 'online' + latInfo : 'offline'})`);
+    } else {
+      chip.setAttribute('title', `${cname} (${isChipOnline ? 'online' : 'offline'})`);
+    }
   });
 
   const actionFlex = card.querySelector('.card-action-flex');
@@ -561,6 +585,91 @@ async function checkServiceHealth() {
 
 function updateServiceCardsUI() {
   checkServiceHealth();
+}
+
+function renderOrdsGatewayStrip() {
+  const strip = document.getElementById('ords-gateway-strip');
+  if (!strip) return;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  const badge = document.getElementById('ords-gateway-status-badge');
+  const isOrdsUp = isContainerRunning('app-ords');
+  if (badge) {
+    if (isOrdsUp) {
+      badge.className = 'badge badge-success';
+      badge.innerHTML = '🟢 :8088 / :8448';
+      badge.style.background = 'rgba(34, 197, 94, 0.15)';
+      badge.style.color = '#4ade80';
+    } else {
+      badge.className = 'badge badge-danger';
+      badge.innerHTML = '🔴 ' + (dict.status_offline || 'Offline') + ' (:8088)';
+      badge.style.background = 'rgba(239, 68, 68, 0.15)';
+      badge.style.color = '#f87171';
+    }
+  }
+
+  const listContainer = document.getElementById('ords-pools-list');
+  if (!listContainer) return;
+
+  const pools = (typeof LIVE_ORDS_POOLS === 'object' && LIVE_ORDS_POOLS) ? LIVE_ORDS_POOLS : {};
+  const poolKeys = Object.keys(pools);
+
+  if (poolKeys.length === 0) {
+    listContainer.innerHTML = `<span style="font-size:0.75rem; color:#64748b;">${dict.ords_pools_label || 'Active Pools:'} <em>${dict.status_none || 'None'}</em></span>`;
+    return;
+  }
+
+  let html = `<span style="font-size:0.75rem; color:#94a3b8; margin-right:4px;">${dict.ords_pools_label || 'Active Pools:'}</span>`;
+  poolKeys.forEach(pname => {
+    const p = pools[pname];
+    const isOnline = p && p.status === 'online';
+    const isStarting = p && p.status === 'starting';
+    let pillCls = 'pool-offline';
+    let dot = '🔴';
+    if (isOnline) {
+      pillCls = 'pool-online';
+      dot = '🟢';
+    } else if (isStarting) {
+      pillCls = 'pool-starting';
+      dot = '🟡';
+    }
+    const latStr = (isOnline && p.latency_ms !== undefined && p.latency_ms > 0) ? `<span class="ords-pool-latency">(${p.latency_ms}ms)</span>` : '';
+    const poolUrl = (p && p.url) ? p.url : `http://localhost:8088/ords/${pname}/`;
+    const targetStr = (p && p.target) ? ` -> ${p.target}` : '';
+    html += `<a href="${poolUrl}" target="_blank" rel="noopener noreferrer" class="ords-pool-pill ${pillCls}" title="ORDS Pool: ${pname}${targetStr} (${p ? p.status : 'unknown'})"><span>${dot}</span> <span>ords/${pname}</span>${latStr}</a>`;
+  });
+
+  listContainer.innerHTML = html;
+}
+
+async function syncOrdsPools() {
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  showToast('🔄 Sünkroonin ORDS poole...');
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const resp = await fetch(`${BRIDGE_URL}/api/ords/refresh`, {
+      method: 'POST',
+      mode: 'cors',
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.pools) {
+        LIVE_ORDS_POOLS = data.pools;
+      }
+      renderOrdsGatewayStrip();
+      checkServiceHealth();
+      showToast(dict.ords_sync_success || '✅ ORDS connection pools successfully synchronized!');
+    } else {
+      showToast('⚠️ ORDS poolide sünkroniseerimine ebaõnnestus.');
+    }
+  } catch (e) {
+    showToast('⚠️ Bridge offline – kasuta käsku: <code>./scripts/internal/manage-ords-pools.sh sync</code>');
+  }
 }
 
 async function handleStartServiceFromCard(btn, modKey) {
@@ -1246,7 +1355,9 @@ function isBlueprintActiveOrRunning(b) {
   if (!b) return false;
   const runningList = Array.isArray(LIVE_RUNNING_CONTAINERS) ? LIVE_RUNNING_CONTAINERS : [];
   if (b.num === 0) {
-    return runningList.includes('db-proxy') && runningList.includes('app-ords');
+    const pData = (typeof LIVE_ORDS_POOLS === 'object' && LIVE_ORDS_POOLS) ? LIVE_ORDS_POOLS['proxy'] : null;
+    const ordsUp = pData ? (pData.status === 'online') : runningList.includes('app-ords');
+    return runningList.includes('db-proxy') && ordsUp;
   }
   if (b.num === 1 && !runningList.includes('db-alise')) return false;
   if (b.num === 2 && !runningList.includes('db-proxy-standalone')) return false;
@@ -1257,6 +1368,11 @@ function isBlueprintActiveOrRunning(b) {
   let matched = 0;
   for (const cn of cnames) {
     if (runningList.includes(cn)) matched++;
+    else if (cn && cn.startsWith('ords/')) {
+      const pName = cn.substring(5);
+      const pData = (typeof LIVE_ORDS_POOLS === 'object' && LIVE_ORDS_POOLS) ? LIVE_ORDS_POOLS[pName] : null;
+      if (pData ? (pData.status === 'online' || pData.status === 'degraded') : runningList.includes('app-ords')) matched++;
+    }
     else if (cn === 'app-publisher' && runningList.includes('oracle-publisher-dev')) matched++;
     else if (cn === 'oracle-publisher-dev' && runningList.includes('app-publisher')) matched++;
     else if (['publisher-designer', 'app-publisher-designer'].includes(cn) && runningList.some(x => ['publisher-designer', 'app-publisher-designer'].includes(x))) matched++;
@@ -1325,7 +1441,7 @@ async function triggerBlueprintActionModal(bNum, action) {
 
   const b = BLUEPRINTS_DATA.find(item => item.num === bNum);
   const cnames = (b && b.container_names) ? b.container_names : [];
-  const toStop = cnames.filter(c => !['db-proxy', 'app-ords'].includes(c));
+  const toStop = cnames.filter(c => !['db-proxy', 'app-ords'].includes(c) && !c.startsWith('ords/'));
   const stopTarget = toStop.length > 0 ? toStop.join(' ') : (cnames.join(' ') || `blueprint-${bNum}`);
 
   const isAlreadyUp = isBlueprintActiveOrRunning(b);
@@ -1774,7 +1890,7 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
   if (actionsGrid) {
     const hasDb = (b.components || []).some(c => (c.type && (c.type.toLowerCase().includes('database') || c.type.toLowerCase().includes('pdb'))) || (c.name && c.name.startsWith('db-')));
     const cnames = (b && b.container_names) ? b.container_names : [];
-    const toStop = cnames.filter(c => !['db-proxy', 'app-ords'].includes(c));
+    const toStop = cnames.filter(c => !['db-proxy', 'app-ords'].includes(c) && !c.startsWith('ords/'));
     const stopTarget = toStop.length > 0 ? toStop.join(' ') : (cnames.join(' ') || `blueprint-${b.num}`);
 
     let cardsHtml = '';
@@ -4859,6 +4975,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   checkServiceHealth();
+  renderOrdsGatewayStrip();
   setInterval(checkServiceHealth, 5000);
   pollBridgeStatus();
   setInterval(pollBridgeStatus, 5000);

@@ -39,11 +39,11 @@ echo "  ✅ Profile-Driven Zero-Database Invariant verified (0 DBs, Designer ena
 
 # 3. Verify Sample RTF templates and XML datasets
 test -f "$WORKSPACE_DIR/templates/publisher/samples/arve_eesti_standard.rtf"
-test -f "$WORKSPACE_DIR/templates/publisher/samples/arve_näidisandmed.xml"
+test -f "$WORKSPACE_DIR/templates/publisher/samples/arve_naidisandmed.xml"
 test -f "$WORKSPACE_DIR/templates/publisher/samples/saateleht_standard.rtf"
 test -f "$WORKSPACE_DIR/templates/publisher/samples/saateleht_andmed.xml"
 grep -q "<?for-each:G_LINES?>" "$WORKSPACE_DIR/templates/publisher/samples/arve_eesti_standard.rtf"
-grep -q "<INVOICE_NUM>" "$WORKSPACE_DIR/templates/publisher/samples/arve_näidisandmed.xml"
+grep -q "<INVOICE_NUM>" "$WORKSPACE_DIR/templates/publisher/samples/arve_naidisandmed.xml"
 echo "  ✅ Sample RTF templates and XML datasets verified."
 
 # 4. Verify CLI Tools

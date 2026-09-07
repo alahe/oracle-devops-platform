@@ -19,6 +19,15 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 ./scripts/get-password.sh
 ```
 
+> [!TIP]
+> **Windows Git-Konfiguration (Regel 13):**
+> Innan du klonar på Windows, konfigurera Git för att stödja långa sökvägar och skydda NTFS-filsystem:
+> ```powershell
+> git config --global core.protectNTFS true
+> git config --global core.longpaths true
+> git config --global core.autocrlf input
+> ```
+
 ---
 
 ## 🗺️ Introduktionsresa för Nya Utvecklare (Onboarding Journey)
@@ -72,6 +81,23 @@ Utvecklare behöver inte memorera dussintals olika portar. **Dev Hub** fungerar 
 - **Hälsodiagnostik i Realtid:** Automatisk latenskontroll var 6:e sekund.
 - **Integrerad Markdown Dokumentationsläsare:** Läs och sök guider direkt i webbläsaren.
 - **Blueprint Driftsättning och Hantering:** Driftsätt och byt blueprints via webbläsaren eller kommandot `./scripts/deploy-blueprint.sh`.
+- **ORDS Smart Gateway-panel:** Realtidsvy över central ORDS-containerstatus, anslutningspooler (connection pools), svarstid (ms) och 1-klicksynkronisering.
+
+---
+
+## 🌐 ORDS Smart Gateway och Autonom Mikroregistrering (Variant 3)
+
+Plattformen eliminerar portkonflikter och duplicerade ORDS-containrar genom mönstret **Smart Gateway + Autonom Mikroregistrerare**:
+
+- **Central Kärngateway:** En enda `app-ords`-container körs på portarna 8088 (HTTP) och 8448 (HTTPS) och betjänar alla aktiva databaser.
+- **Autonom Mikroregistrerare:** Varje databas hanterar sin egen poolkonfiguration (`config/ords/proxy/databases/<pool_name>/pool.xml`).
+- **Virtuella Tjänstetoken (`ords/<pool>`):** Blueprints deklarerar virtuella token (t.ex. `ords/proxy`, `ords/alise`). Dev Hub utvärderar beredskap via containerhälsa och realtidsrespons.
+- **CLI för Poolhantering:**
+  ```bash
+  ./scripts/internal/manage-ords-pools.sh status
+  ./scripts/internal/manage-ords-pools.sh status json
+  ./scripts/internal/manage-ords-pools.sh sync
+  ```
 
 ---
 

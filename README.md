@@ -22,6 +22,15 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 ./scripts/get-password.sh
 ```
 
+> [!TIP]
+> **Windows Git Configuration (Rule 13):**
+> Before cloning on Windows, configure Git to support long paths and protect NTFS filesystems:
+> ```powershell
+> git config --global core.protectNTFS true
+> git config --global core.longpaths true
+> git config --global core.autocrlf input
+> ```
+
 ---
 
 ## 🗺️ New Developer Onboarding Journey
@@ -138,6 +147,28 @@ The **Dev Hub** acts as the unified cockpit for managing services and blueprints
   - 🟢 **`status-online` (Green):** Database healthy, SEPS Wallet connected, and web endpoints responsive.
 - **Delayed Verified `.active_blueprint` Confirmation:** The active blueprint marker is persisted strictly after 100% of PDB initializations, SEPS Wallet tests, and URL checks succeed.
 - **1-Click Password Copying:** Decrypts passwords dynamically in-memory from Oracle Wallet straight to clipboard.
+- **ORDS Smart Gateway Strip:** Real-time visibility into central ORDS container health, dynamic connection pools, live probe latency (ms), and 1-click pool synchronization.
+
+---
+
+## 🌐 ORDS Smart Gateway & Autonomous Micro-Registrar (Variant 3)
+
+The platform eliminates duplicate ORDS container instances and multi-blueprint port collisions through the **Smart Gateway + Autonomous Micro-Registrar pattern**:
+
+- **Central Core Gateway:** A single `app-ords` container runs on ports 8088 (HTTP) and 8448 (HTTPS), serving REST and APEX traffic for all active database blueprints.
+- **Autonomous Micro-Registrar:** Each database instance owns its connection pool configuration (`config/ords/proxy/databases/<pool_name>/pool.xml`). When a database is provisioned, its pool is automatically registered into ORDS.
+- **Virtual Service Tokens (`ords/<pool>`):** Blueprints declare virtual tokens (e.g. `ords/proxy`, `ords/alise`, `ords/proxy_standalone`). The Dev Hub evaluates pool readiness by verifying both container health and live HTTP response latency.
+- **Pool Management CLI:**
+  ```bash
+  # Check live pool status, targets, and response latency:
+  ./scripts/internal/manage-ords-pools.sh status
+
+  # Output JSON for automation and bridge monitoring:
+  ./scripts/internal/manage-ords-pools.sh status json
+
+  # Synchronize pools with currently running DB containers:
+  ./scripts/internal/manage-ords-pools.sh sync
+  ```
 
 ---
 
@@ -217,6 +248,9 @@ Oracle Free DB in Prod incorporates an **intelligent multi-tier Golden Snapshot 
 ./scripts/clean-logs.sh --older-than-hours=20 -y                  # Clean logs older than 20h
 ./scripts/clean-logs.sh -y                                        # Clean all logs
 ./scripts/snapshots/clean-golden-snapshots.sh -y
+
+# 8. Audit cross-platform filename and path portability (Rule 13):
+./tests/unit/test-filename-portability.sh
 ```
 
 ---

@@ -109,7 +109,7 @@ log_step "▶️  [FAAS 3/6]: Publisher Designer & Trükiste Kiir-Renderdamine (
 
 # 3.1 Verify sample RTF templates and XML datasets
 test -f "$WORKSPACE_DIR/templates/publisher/samples/arve_eesti_standard.rtf"
-test -f "$WORKSPACE_DIR/templates/publisher/samples/arve_näidisandmed.xml"
+test -f "$WORKSPACE_DIR/templates/publisher/samples/arve_naidisandmed.xml"
 test -f "$WORKSPACE_DIR/templates/publisher/samples/saateleht_standard.rtf"
 test -f "$WORKSPACE_DIR/templates/publisher/samples/saateleht_andmed.xml"
 assert_pass "Eesti standardse arve ja saatelehe näidismallid (.rtf) ja andmed (.xml) on olemas"

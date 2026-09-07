@@ -8,6 +8,8 @@ from .topology import load_yaml_profile
 def is_container_online(cn, running_containers):
     if running_containers is None:
         return True
+    if cn.startswith("ords/"):
+        return "app-ords" in running_containers
     if cn in running_containers:
         return True
     if cn == "app-publisher" and "oracle-publisher-dev" in running_containers:
@@ -68,8 +70,13 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
                 if cn_online:
                     matched += 1
                 chip_cls = "chip-online" if cn_online else "chip-offline"
-                chip_title = f"{cn} (online)" if cn_online else f"{cn} (offline)"
-                container_chips.append(f'<span class="container-chip {chip_cls}" data-cname="{cn}" title="{chip_title}"><span class="chip-dot"></span>{cn}</span>')
+                if cn.startswith("ords/"):
+                    pname = cn.replace("ords/", "")
+                    chip_title = f"ORDS Pool: {pname} ({'online' if cn_online else 'offline'})"
+                    container_chips.append(f'<span class="container-chip {chip_cls} chip-ords" data-cname="{cn}" data-ords-pool="{pname}" title="{chip_title}"><span class="chip-dot"></span>🌐 {cn}</span>')
+                else:
+                    chip_title = f"{cn} (online)" if cn_online else f"{cn} (offline)"
+                    container_chips.append(f'<span class="container-chip {chip_cls}" data-cname="{cn}" title="{chip_title}"><span class="chip-dot"></span>{cn}</span>')
 
             is_up = (matched == len(cnames))
             is_partial = (0 < matched < len(cnames))
@@ -94,7 +101,11 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
             is_up = False
             is_partial = False
             for cn in cnames:
-                container_chips.append(f'<span class="container-chip chip-offline" data-cname="{cn}" title="{cn}"><span class="chip-dot"></span>{cn}</span>')
+                if cn.startswith("ords/"):
+                    pname = cn.replace("ords/", "")
+                    container_chips.append(f'<span class="container-chip chip-offline chip-ords" data-cname="{cn}" data-ords-pool="{pname}" title="ORDS Pool: {pname}"><span class="chip-dot"></span>🌐 {cn}</span>')
+                else:
+                    container_chips.append(f'<span class="container-chip chip-offline" data-cname="{cn}" title="{cn}"><span class="chip-dot"></span>{cn}</span>')
 
         if is_up:
             card_cls = ""

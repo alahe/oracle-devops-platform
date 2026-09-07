@@ -40,7 +40,7 @@ echo "  ✅ SQLcl Projects konfiguratsioonifailid on olemas."
 # 3. Kontrolli SEPS Walleti Base64 eksporti
 echo "▶️ [Test 3]: Testin SEPS Walleti Base64 eksportija skripti..."
 B64_OUT=$("$WORKSPACE_DIR/scripts/internal/export-ci-secrets.sh")
-if ! echo "$B64_OUT" | grep -q "SEPS Wallet edukalt pakitud"; then
+if ! echo "$B64_OUT" | grep -qiE "SEPS Wallet (edukalt pakitud|compressed and converted)"; then
   echo "❌ Viga: export-ci-secrets.sh ei edastanud oodatud Base64 väljundit!"
   exit 1
 fi
@@ -49,7 +49,7 @@ echo "  ✅ SEPS Wallet Base64 eksportija toimib puhtalt."
 # 4. Testi lokaalset CI/CD simulaatorit dry-run režiimis
 echo "▶️ [Test 4]: Käivitan ./scripts/test-local-ci.sh --dry-run..."
 DRY_RUN_OUT=$("$WORKSPACE_DIR/scripts/test-local-ci.sh" --dry-run)
-if ! echo "$DRY_RUN_OUT" | grep -q "LOKAALNE CI/CD TEST EDUKALT LÕPETATUD"; then
+if ! echo "$DRY_RUN_OUT" | grep -qiE "(LOKAALNE CI/CD TEST EDUKALT LÕPETATUD|LOCAL CI/CD TEST COMPLETED SUCCESSFULLY)"; then
   echo "❌ Viga: test-local-ci.sh --dry-run ei lõpetanud edukalt!"
   exit 1
 fi

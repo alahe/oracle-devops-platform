@@ -33,6 +33,14 @@ services:
         limits:
           cpus: '1.00'
           memory: 1024M
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - (curl -k -f -s -o /dev/null http://localhost:8088/ords/ || curl -k -f -s -o /dev/null https://localhost:8448/ords/ || timeout 1 bash -c "exec 3<>/dev/tcp/localhost/8088" 2>/dev/null) || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 25s
     volumes:
       - apex_images:/opt/ords/apex
       - ./config/certs:/etc/ords/certs:ro

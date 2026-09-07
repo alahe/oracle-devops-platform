@@ -124,14 +124,18 @@ except Exception:
                     except Exception:
                         pass
 
-    # 2. Extract dynamically from running container wallet via mkstore in-memory
+    # 2. Extract dynamically from running container wallet via mkstore in-memory (fallback)
     for db_info in all_dbs:
         c_name = db_info.get("c_name", "")
         if c_name:
             if running_c_names and c_name not in running_c_names:
                 continue
+            c_short = db_info.get("short", "").upper()
+            needed = [f"DB_{c_short}_{role}" for role in ["SYS", "DBA_ADMIN", "DEV", "VIEWER", "APP", "APEX_ADMIN"]]
+            if all(a in pwd_map for a in needed):
+                continue
             try:
-                res = subprocess.run(["podman", "exec", "-i", c_name, "python3", "-c", script], capture_output=True, text=True, timeout=10)
+                res = subprocess.run(["podman", "exec", "-i", c_name, "python3", "-c", script], capture_output=True, text=True, timeout=3)
                 if res.returncode == 0 and res.stdout.strip().startswith("{"):
                     w_data = json.loads(res.stdout.strip())
                     for a, p in w_data.items():
@@ -142,12 +146,12 @@ except Exception:
 
     # 3. Dynamic fallback: Podman Secret Store in-memory
     try:
-        res = subprocess.run(["podman", "secret", "list", "-q"], capture_output=True, text=True)
+        res = subprocess.run(["podman", "secret", "list", "-q"], capture_output=True, text=True, timeout=5)
         if res.returncode == 0:
             sec_ids = [s.strip() for s in res.stdout.splitlines() if s.strip()]
             if sec_ids:
                 cmd = ["podman", "secret", "inspect", "--showsecret"] + sec_ids
-                res_ins = subprocess.run(cmd, capture_output=True, text=True)
+                res_ins = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
                 if res_ins.returncode == 0:
                     data = json.loads(res_ins.stdout)
                     for item in data:

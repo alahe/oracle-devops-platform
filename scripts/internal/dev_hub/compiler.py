@@ -101,7 +101,7 @@ def build_dev_hub(output_file=None, workspace_dir=None):
                 "titles": titles,
                 "descs": descs,
                 "components": details["components"],
-                "container_names": details["container_names"],
+                "container_names": [s.strip() for s in conts.split(",") if s.strip()] if conts else details["container_names"],
                 "container_ports": details["container_ports"],
                 "env_vars": details["env_vars"],
                 "users": details["users"],
@@ -247,7 +247,7 @@ def build_dev_hub(output_file=None, workspace_dir=None):
         for def_c, def_k, def_prof in fallback_candidates:
             try:
                 import subprocess
-                res = subprocess.run(["podman", "container", "exists", def_c], capture_output=True)
+                res = subprocess.run(["podman", "container", "exists", def_c], capture_output=True, timeout=2)
                 if res.returncode == 0:
                     p_data = load_yaml_profile(def_prof)
                     c_short = def_c.replace("db-", "").replace("-", "_").upper()
@@ -352,6 +352,22 @@ def build_dev_hub(output_file=None, workspace_dir=None):
     diagrams_js = read_asset("diagrams.js")
     layout_tpl = read_asset("templates/layout.html")
 
+    # 9.5 Scan static ORDS pools for initial bootstrap
+    ords_pools_init = {}
+    ords_db_dir = os.path.join(ws, "config", "ords", "proxy", "databases")
+    if os.path.exists(ords_db_dir):
+        for p in sorted(os.listdir(ords_db_dir)):
+            if p == "default":
+                continue
+            pdir = os.path.join(ords_db_dir, p)
+            if os.path.isdir(pdir) and os.path.exists(os.path.join(pdir, "pool.xml")):
+                ords_pools_init[p] = {
+                    "configured": True,
+                    "status": "online" if "app-ords" in running_containers else "offline",
+                    "url": f"http://localhost:8088/ords/{p}/",
+                    "latency_ms": 0
+                }
+
     # 10. Assemble Standalone HTML
     replacements = {
         "%STYLE_CSS%": style_css,
@@ -368,6 +384,7 @@ def build_dev_hub(output_file=None, workspace_dir=None):
         "%RESET_BENCHMARKS_DATA_JSON%": json.dumps(benchmarks_raw["reset"]),
         "%LOGS_DATA_JSON%": json.dumps(benchmarks_raw["logs"]),
         "%RUNNING_CONTAINERS_JSON%": json.dumps(list(running_containers)),
+        "%ORDS_POOLS_JSON%": json.dumps(ords_pools_init),
         "%LIVE_MODULES_JSON%": json.dumps(live_modules),
         "%SLIDES_CONTENT_JSON%": json.dumps(SLIDES_CONTENT),
         "%PASSWORDS_MAP_JSON%": json.dumps(passwords_map)

@@ -19,6 +19,15 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 ./scripts/get-password.sh
 ```
 
+> [!TIP]
+> **Windows Git -Asetukset (Sääntö 13):**
+> Ennen kuin kloonaat Windowsissa, määritä Git tukemaan pitkiä polkuja ja suojaamaan NTFS-tiedostojärjestelmää:
+> ```powershell
+> git config --global core.protectNTFS true
+> git config --global core.longpaths true
+> git config --global core.autocrlf input
+> ```
+
 ---
 
 ## 🗺️ Uuden Kehittäjän Perehdytyspolku (Onboarding Journey)
@@ -72,6 +81,23 @@ Kehittäjän ei tarvitse opetella ulkoa kymmeniä eri portteja. **Dev Hub** toim
 - **Reaaliaikainen Terveydentilan Diagnostiikka:** Automaattinen latenssitarkistus 6 sekunnin välein.
 - **Integroitu Markdown-Dokumentaatiolukija:** Lue ja hae oppaita suoraan selaimessa.
 - **Blueprintien Käyttöönotto ja Hallinta:** Ota käyttöön ja vaihda blueprintejä selaimesta tai komennolla `./scripts/deploy-blueprint.sh`.
+- **ORDS Älykäs Yhdyskäytäväpaneeli:** Reaaliaikainen näkyvyys keskitetyn ORDS-kontin tilaan, yhteysjoukkoihin (connection pools), vasteaikaan (ms) ja 1-klikkauksen synkronointiin.
+
+---
+
+## 🌐 ORDS Älykäs Yhdyskäytävä ja Autonominen Mikrorekisteröinti (Variant 3)
+
+Alusta eliminoi useiden rinnakkaisten ORDS-konttien aiheuttamat porttiristiriidat **älykkään yhdyskäytävän ja mikrokirjaajan mallilla**:
+
+- **Keskitetty Yhdyskäytävä:** Yksi `app-ords`-kontti toimii porteissa 8088 (HTTP) ja 8448 (HTTPS) palvellen kaikkia aktiivisia tietokantapinoja.
+- **Autonominen Mikrorekisteröinti:** Jokainen tietokanta hallitsee omaa yhteysjoukkoaan (`config/ords/proxy/databases/<pool_name>/pool.xml`).
+- **Virtuaaliset Palvelutunnisteet (`ords/<pool>`):** Blueprintit määrittelevät virtuaaliset tunnisteet (esim. `ords/proxy`, `ords/alise`). Dev Hub arvioi valmiuden sekä kontin että reaaliaikaisen vasteajan perusteella.
+- **Yhteysjoukkojen Hallintatyökalu (CLI):**
+  ```bash
+  ./scripts/internal/manage-ords-pools.sh status
+  ./scripts/internal/manage-ords-pools.sh status json
+  ./scripts/internal/manage-ords-pools.sh sync
+  ```
 
 ---
 

@@ -21,20 +21,20 @@ echo -e "${CYAN}================================================================
 # Source profile loader
 source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
 
-# Test 1: Load db-proxy-adb profile
-echo -e "\n${YELLOW}[Test 1] Laen ADB profiili (db-proxy-adb)...${NC}"
-load_db_profile "db-proxy-adb"
+# Test 1: Load db-adb profile
+echo -e "\n${YELLOW}[Test 1] Laen ADB profiili (db-adb)...${NC}"
+load_db_profile "db-adb"
 
-if [ "$IS_ADB" = "true" ] && [[ "$RAW_CONTAINER_IMAGE" == *"adb-free"* ]]; then
+if [ "$IS_ADB" = "true" ] && [[ "$RAW_CONTAINER_IMAGE" == *"database/free"* || "$RAW_CONTAINER_IMAGE" == *"adb"* ]]; then
   echo -e "${GREEN}✅ Test 1 Edukas: ADB profiil laeti korrektselt (IS_ADB=true)!${NC}"
 else
-  echo -e "${RED}❌ Test 1 Ebaõnnestus: ADB profiili parameetrid olid valed!${NC}"
+  echo -e "${RED}❌ Test 1 Ebaõnnestus: ADB profiili parameetrid olid valed! (IS_ADB=$IS_ADB, IMAGE=$RAW_CONTAINER_IMAGE)${NC}"
   exit 1
 fi
 
-# Test 2: Load db-proxy-gvenzl profile
-echo -e "\n${YELLOW}[Test 2] Laen Gvenzl profiili (db-proxy-gvenzl)...${NC}"
-load_db_profile "db-proxy-gvenzl"
+# Test 2: Load db-gvenzl profile
+echo -e "\n${YELLOW}[Test 2] Laen Gvenzl profiili (db-gvenzl)...${NC}"
+load_db_profile "db-gvenzl"
 
 if [ "$IS_ADB" = "false" ] && [[ "$RESOLVED_DB_IMAGE" == *"gvenzl"* ]]; then
   echo -e "${GREEN}✅ Test 2 Edukas: Gvenzl profiil laeti korrektselt!${NC}"

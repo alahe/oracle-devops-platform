@@ -23,7 +23,7 @@ Oracle Analytics Publisherin **Pixel-Perfect -liiketoimintatulosteiden (laskut, 
 ./scripts/publisher/open-designer.sh
 
 # 3. Testaa PDF-renderöintiä:
-./scripts/publisher/test-render.sh templates/publisher/samples/arve_eesti_standard.rtf templates/publisher/samples/arve_näidisandmed.xml
+./scripts/publisher/test-render.sh templates/publisher/samples/arve_eesti_standard.rtf templates/publisher/samples/arve_naidisandmed.xml
 
 # 4. Pysäytä kontti:
 ./scripts/publisher/stop-designer.sh

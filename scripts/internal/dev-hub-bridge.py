@@ -265,10 +265,24 @@ def get_live_container_status():
                 st = parts[1].lower() if len(parts) > 1 else ""
                 if "healthy" in st:
                     container_health[name] = "healthy"
-                elif "starting" in st or "init" in st:
-                    container_health[name] = "starting"
                 elif "unhealthy" in st:
                     container_health[name] = "unhealthy"
+                elif "starting" in st or "init" in st:
+                    if name == "app-ords":
+                        try:
+                            import socket
+                            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                            s.settimeout(0.5)
+                            ords_p = int(os.environ.get("ORDS_PORT", "8088"))
+                            if s.connect_ex(("127.0.0.1", ords_p)) == 0:
+                                container_health[name] = "healthy"
+                            else:
+                                container_health[name] = "starting"
+                            s.close()
+                        except Exception:
+                            container_health[name] = "starting"
+                    else:
+                        container_health[name] = "starting"
                 else:
                     container_health[name] = "running"
 
@@ -297,6 +311,65 @@ def get_live_container_status():
             pass
 
     return status_map, running_names, active_bp, container_health, setup_prog
+
+def get_live_ords_pools():
+    """Query status and latency of configured ORDS database pools (Variant 3)."""
+    ords_pools = {}
+    pools_dir = os.path.join(WORKSPACE_DIR, "config/ords/proxy/databases")
+    if not os.path.isdir(pools_dir):
+        pools_dir = os.path.join(WORKSPACE_DIR, "config/ords/standalone/databases")
+    if not os.path.isdir(pools_dir):
+        return ords_pools
+
+    ords_port = os.environ.get("ORDS_PORT", "8088")
+    import ssl, urllib.request, time, glob
+    ctx = ssl._create_unverified_context()
+    opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx))
+
+    pool_dirs = [d for d in glob.glob(os.path.join(pools_dir, "*")) if os.path.isdir(d) and os.path.basename(d) != "default"]
+    for pd in sorted(pool_dirs):
+        pname = os.path.basename(pd)
+        pxml = os.path.join(pd, "pool.xml")
+        target = "unknown"
+        if os.path.isfile(pxml):
+            try:
+                with open(pxml, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    m_h = re.search(r"<entry key=\"db.hostname\">([^<]+)</entry>", content)
+                    m_p = re.search(r"<entry key=\"db.port\">([^<]+)</entry>", content)
+                    m_s = re.search(r"<entry key=\"db.servicename\">([^<]+)</entry>", content)
+                    if m_h and m_p and m_s:
+                        target = f"{m_h.group(1)}:{m_p.group(1)}/{m_s.group(1)}"
+            except Exception:
+                pass
+
+        t0 = time.time()
+        url = f"http://127.0.0.1:{ords_port}/ords/{pname}/"
+        status = "offline"
+        lat = 0
+        http_code = 0
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "DevHubBridge"})
+            with opener.open(req, timeout=1.2) as resp:
+                lat = int((time.time() - t0) * 1000)
+                http_code = resp.status
+                status = "online" if resp.status in [200, 301, 302, 303, 307, 308, 404] else "degraded"
+        except urllib.error.HTTPError as e:
+            lat = int((time.time() - t0) * 1000)
+            http_code = e.code
+            status = "online" if e.code in [200, 301, 302, 303, 307, 308, 404] else "degraded"
+        except Exception:
+            status = "offline"
+
+        ords_pools[pname] = {
+            "configured": True,
+            "status": status,
+            "url": f"http://localhost:{ords_port}/ords/{pname}/",
+            "target": target,
+            "latency_ms": lat,
+            "http_code": http_code
+        }
+    return ords_pools
 
 def get_system_resources():
     total_ram_gb = 16.0
@@ -738,11 +811,13 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             statuses, running_names, active_bp, container_health, setup_prog = get_live_container_status()
             conflicts = detect_port_conflicts()
             resources = get_system_resources()
+            ords_pools = get_live_ords_pools()
             data = {
                 "status": "ok",
                 "modules": statuses,
                 "running_containers": running_names,
                 "container_health": container_health,
+                "ords_pools": ords_pools,
                 "setup_in_progress": setup_prog,
                 "active_blueprint": active_bp,
                 "conflicts": conflicts,
@@ -759,6 +834,34 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(200)
             self._send_cors_headers()
             self.send_header("Content-Type", ct)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        elif parsed.path == "/api/ords/pools":
+            ords_pools = get_live_ords_pools()
+            data = {"status": "ok", "ords_pools": ords_pools}
+            json_str = json.dumps(data)
+            body = json_str.encode("utf-8")
+            self.send_response(200)
+            self._send_cors_headers()
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        elif parsed.path == "/api/ords/refresh":
+            try:
+                subprocess.run([os.path.join(WORKSPACE_DIR, "scripts/internal/manage-ords-pools.sh"), "sync"], capture_output=True, timeout=5)
+            except Exception:
+                pass
+            ords_pools = get_live_ords_pools()
+            data = {"status": "ok", "message": "ORDS pools synchronized", "ords_pools": ords_pools}
+            json_str = json.dumps(data)
+            body = json_str.encode("utf-8")
+            self.send_response(200)
+            self._send_cors_headers()
+            self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)

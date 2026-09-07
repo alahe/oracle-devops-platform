@@ -73,7 +73,7 @@ Or via standalone script:
 ### Step 3: Design Your Template in Word
 Inside the noVNC browser window:
 1. Click the **Publisher** tab on the top Word ribbon.
-2. Click **Sample XML** and choose `/u01/templates/samples/arve_näidisandmed.xml`.
+2. Click **Sample XML** and choose `/u01/templates/samples/arve_naidisandmed.xml`.
 3. Use **Insert $\rightarrow$ Table/Form Wizard** or **Field** to place data tags.
 4. Click **Preview $\rightarrow$ PDF** to inspect the rendered invoice instantly.
 5. Save the document (`Ctrl+S`) — the `.rtf` file is automatically saved into your Git repository.
@@ -81,7 +81,7 @@ Inside the noVNC browser window:
 ### Step 4: Test Render via CLI
 You can test compile templates without opening the GUI:
 ```bash
-./scripts/publisher/test-render.sh templates/publisher/samples/arve_eesti_standard.rtf templates/publisher/samples/arve_näidisandmed.xml
+./scripts/publisher/test-render.sh templates/publisher/samples/arve_eesti_standard.rtf templates/publisher/samples/arve_naidisandmed.xml
 ```
 
 ### Step 5: Stop Designer to Free Resources

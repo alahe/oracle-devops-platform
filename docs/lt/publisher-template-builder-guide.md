@@ -19,6 +19,6 @@ Oracle Analytics Publisher **Pixel-Perfect dokumentų (sąskaitų faktūrų, va�
 ./scripts/setup-all.sh -b 9
 # arba: ./scripts/publisher/start-designer.sh
 ./scripts/publisher/open-designer.sh
-./scripts/publisher/test-render.sh templates/publisher/samples/arve_eesti_standard.rtf templates/publisher/samples/arve_näidisandmed.xml
+./scripts/publisher/test-render.sh templates/publisher/samples/arve_eesti_standard.rtf templates/publisher/samples/arve_naidisandmed.xml
 ./scripts/publisher/stop-designer.sh
 ```

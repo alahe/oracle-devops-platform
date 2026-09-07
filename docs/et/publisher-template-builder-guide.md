@@ -40,14 +40,14 @@ Või eraldiseisva skriptiga:
 
 ### Samm 3: Kujunda Trükis Wordis
 1. Klõpsa Wordi ülemisel menüüribal sakki **Publisher**.
-2. Vali **Sample XML** ja ava `/u01/templates/samples/arve_näidisandmed.xml`.
+2. Vali **Sample XML** ja ava `/u01/templates/samples/arve_naidisandmed.xml`.
 3. Kasuta **Insert $\rightarrow$ Table/Form Wizard** tabelite lisamiseks.
 4. Vajuta **Preview $\rightarrow$ PDF**, et näha koheselt genereeritud trükist.
 5. Salvesta dokument (`Ctrl+S`).
 
 ### Samm 4: Testi Renderdamist Käsurealt
 ```bash
-./scripts/publisher/test-render.sh templates/publisher/samples/arve_eesti_standard.rtf templates/publisher/samples/arve_näidisandmed.xml
+./scripts/publisher/test-render.sh templates/publisher/samples/arve_eesti_standard.rtf templates/publisher/samples/arve_naidisandmed.xml
 ```
 
 ### Samm 5: Peata Konteiner Mälu Vabastamiseks

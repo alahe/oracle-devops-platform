@@ -45,6 +45,11 @@ echo "   Workflow: .github/workflows/$WORKFLOW"
 echo "   Mode:     $([ "$DRY_RUN" = "true" ] && echo "Dry-run (--dry-run)" || echo "Full Execution (Local Execution)")"
 echo "=================================================================="
 
+# 0. Audit cross-platform filename portability (Rule 13)
+if [ -f "$WORKSPACE_DIR/tests/unit/test-filename-portability.sh" ]; then
+  bash "$WORKSPACE_DIR/tests/unit/test-filename-portability.sh"
+fi
+
 # 1. Generate .env.secrets from SEPS Wallet
 echo "🔑 Preparing local CI/CD secrets (.env.secrets)..."
 SECRET_FILE="$WORKSPACE_DIR/.env.secrets"
