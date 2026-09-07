@@ -5193,13 +5193,13 @@ function runTestSuite(suiteKey, scriptName) {
   })
   .then(r => r.json())
   .then(data => {
-    if (data.status === 'started' || data.status === 'running') {
+    if (data.status === 'ok' || data.status === 'started' || data.status === 'running') {
       activeTestTaskId = data.task_id || 'test_runner';
-      currentTestLogPath = data.log_file || null;
+      currentTestLogPath = data.log_relative_path || data.log_file || null;
       if (dlBtn && currentTestLogPath) dlBtn.style.display = 'inline-flex';
       startPollingTestRunner();
     } else {
-      throw new Error(data.message || 'Failed to start test');
+      throw new Error(data.message || data.error || 'Failed to start test');
     }
   })
   .catch(err => {
@@ -5226,16 +5226,18 @@ function pollTestRunnerStatus() {
       const termEl = document.getElementById('testing-terminal-output');
       const autoScroll = document.getElementById('test-terminal-autoscroll')?.checked;
 
-      if (data.stdout && termEl) {
-        termEl.innerText = data.stdout;
+      const text = data.stdout || (Array.isArray(data.log_tail) ? data.log_tail.join('\n') : '');
+      if (text && termEl) {
+        termEl.innerText = text;
         if (autoScroll) {
           termEl.scrollTop = termEl.scrollHeight;
         }
       }
 
-      if (data.status === 'completed') {
+      const state = data.state || data.status;
+      if (state === 'completed') {
         finishActiveTest('PASSED', 0);
-      } else if (data.status === 'failed') {
+      } else if (state === 'failed') {
         finishActiveTest('FAILED', data.exit_code || 1);
       }
     })

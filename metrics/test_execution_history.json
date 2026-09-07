@@ -1,5 +1,15 @@
 [
   {
+    "id": "run_20260907_123000",
+    "timestamp": "2026-09-07 12:30:00",
+    "suite": "portability",
+    "target": "portability",
+    "duration_sec": 5.7,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_portability_20260907_122955.log"
+  },
+  {
     "id": "run_20260907_122206",
     "timestamp": "2026-09-07 12:22:06",
     "suite": "i18n",

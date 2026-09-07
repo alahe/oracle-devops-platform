@@ -2158,10 +2158,13 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         log_full_path = os.path.join(WORKSPACE_DIR, "install_logs", log_file) if log_file else None
 
         tail_lines = []
+        full_content = ""
         if log_full_path and os.path.isfile(log_full_path):
             try:
                 with open(log_full_path, "r", encoding="utf-8", errors="replace") as lf:
-                    tail_lines = [ln.rstrip("\r\n") for ln in lf.readlines()[-15:]]
+                    lines = lf.readlines()
+                    tail_lines = [ln.rstrip("\r\n") for ln in lines[-30:]]
+                    full_content = "".join(lines)
             except Exception:
                 pass
 
@@ -2170,6 +2173,7 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             "task": task_name,
             "state": state,
             "exit_code": poll_res,
+            "stdout": full_content,
             "log_file": log_file,
             "log_relative_path": f"install_logs/{log_file}",
             "log_tail": tail_lines,
@@ -2351,6 +2355,7 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
 
             self._send_json({
                 "status": "ok",
+                "state": "started",
                 "task": "test_runner",
                 "task_id": task_key,
                 "target": target_label,
