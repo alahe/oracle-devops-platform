@@ -38,6 +38,14 @@ while [[ $# -gt 0 ]]; do
       fi
       shift 2
       ;;
+    -h=*|--hours=*|--older-than-hours=*)
+      OLDER_THAN_HOURS="${1#*=}"
+      shift
+      ;;
+    -h|--hours|--older-than-hours)
+      OLDER_THAN_HOURS="$2"
+      shift 2
+      ;;
     -y|--force|--yes|-y*|--y*|-Y|--YES)
       FORCE=true
       shift
@@ -47,6 +55,8 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+OLDER_THAN_HOURS="${OLDER_THAN_HOURS:-0}"
 
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${CYAN}$(msg_str "CLEAN_LOGS_TITLE")${NC}"
@@ -64,15 +74,22 @@ COUNT_LOGS=0
 COUNT_DIRS=0
 COUNT_ZIPS=0
 
-# 1. Clear install_logs/*.log and install_logs/*.sql
+# 1. Clear install_logs/*.log and install_logs/*.sql (optionally filtered by hours)
 if [ -d "$LOG_DIR" ]; then
-  shopt -s nullglob
-  log_files=("$LOG_DIR"/*.log "$LOG_DIR"/*.sql)
-  shopt -u nullglob
-  COUNT_LOGS=${#log_files[@]}
-  if [ $COUNT_LOGS -gt 0 ]; then
-    rm -f "$LOG_DIR"/*.log "$LOG_DIR"/*.sql
+  if [ "$OLDER_THAN_HOURS" -gt 0 ] 2>/dev/null; then
+    mins=$((OLDER_THAN_HOURS * 60))
+    COUNT_LOGS=$(find "$LOG_DIR" -type f \( -name "*.log" -o -name "*.sql" \) -mmin "+$mins" | wc -l | tr -d ' ')
+    find "$LOG_DIR" -type f \( -name "*.log" -o -name "*.sql" \) -mmin "+$mins" -delete 2>/dev/null || true
     msg_print "CLEAN_LOGS_DELETED_LOGS" "$COUNT_LOGS"
+  else
+    shopt -s nullglob
+    log_files=("$LOG_DIR"/*.log "$LOG_DIR"/*.sql)
+    shopt -u nullglob
+    COUNT_LOGS=${#log_files[@]}
+    if [ $COUNT_LOGS -gt 0 ]; then
+      rm -f "$LOG_DIR"/*.log "$LOG_DIR"/*.sql
+      msg_print "CLEAN_LOGS_DELETED_LOGS" "$COUNT_LOGS"
+    fi
   fi
 fi
 

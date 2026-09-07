@@ -24,8 +24,8 @@ out_sql="$OUTPUT_DIR/pkg_${base_name}_forms_logic.sql"
 echo "=================================================================="
 echo "🔍 ORACLE FORMS PL/SQL LOGIC EXTRACTOR"
 echo "=================================================================="
-echo "📄 Lähtefail:  $INPUT_XML"
-echo "💾 Sihtfail:   $out_sql"
+echo "📄 Source file: $INPUT_XML"
+echo "💾 Target file: $out_sql"
 
 cat << 'HEADER' > "$out_sql"
 -- =============================================================================

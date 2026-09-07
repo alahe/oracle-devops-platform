@@ -58,7 +58,7 @@ if [ -f "$SCRIPT_DIR/init-forms-rcu.sh" ]; then
   "$SCRIPT_DIR/init-forms-rcu.sh" || true
 fi
 
-# 2. Samm: Kontrolli ja ehita/käivita Forms 14c konteiner
+# Step 2: Verify and build/start Forms 14c container
 print_header "2" "$(msg_str "FORMS_STEP_2_TITLE" "$FORMS_IMAGE")" "" "5s"
 if ! podman image exists "$FORMS_IMAGE" 2>/dev/null; then
   if [ -x "$WORKSPACE_DIR/docker/forms/build-forms-image.sh" ]; then
@@ -66,7 +66,7 @@ if ! podman image exists "$FORMS_IMAGE" 2>/dev/null; then
   fi
 fi
 
-# 3. Samm: Käivita app-forms konteiner
+# Step 3: Start app-forms container
 NET_NAME=$(podman inspect "db-forms" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || podman inspect "db-proxy" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || podman inspect "db-lis" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || echo "")
 NET_ARG=""
 [ -n "$NET_NAME" ] && NET_ARG="--network $NET_NAME"

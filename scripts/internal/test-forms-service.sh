@@ -30,7 +30,7 @@ if [ ! -f "$WORKSPACE_DIR/forms_apps/test.fmx" ]; then
   echo "Oracle Forms 14c Test Form" > "$WORKSPACE_DIR/forms_apps/test.fmx"
 fi
 
-# 2. Ootamise tsükkel reaalajas loenduriga
+# 2. Wait loop with real-time counter
 echo "$(msg_str "FORMS_TEST_WAITING")"
 START_T=$(date +%s)
 READY=false

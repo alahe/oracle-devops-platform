@@ -38,20 +38,23 @@ fi
 
 # Ensure SYS and SYSTEM passwords are synchronized
 if podman container exists "$PRIMARY_CONTAINER" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$PRIMARY_CONTAINER" 2>/dev/null)" = "running" ]; then
-  podman exec -i "$PRIMARY_CONTAINER" sh -c "sqlplus -S / as sysdba" << SYSSYNC >/dev/null 2>&1 || true
+  in_sql=$(podman exec "$PRIMARY_CONTAINER" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+  if [ -n "$in_sql" ]; then
+    podman exec -i "$PRIMARY_CONTAINER" "$in_sql" -s / as sysdba << SYSSYNC >/dev/null 2>&1 || true
 ALTER USER sys IDENTIFIED BY "${SYS_PWD}" CONTAINER=ALL;
 ALTER USER system IDENTIFIED BY "${SYS_PWD}" CONTAINER=ALL;
 EXIT;
 SYSSYNC
+  fi
 fi
 
 echo "🚀 Initializing Oracle Forms 14c RCU Schemas (${RCU_PREFIX}_*) on Database ${DB_HOST}:${DB_PORT}/${DB_SERVICE}..."
 
 TMP_SQL="/tmp/init_forms_rcu_$$.sql"
-cat << 'SQL_BLOCK' > "$TMP_SQL"
+cat << SQL_BLOCK > "$TMP_SQL"
 SET FEEDBACK OFF;
 SET SERVEROUTPUT ON;
-ALTER SESSION SET CONTAINER = FREEPDB1;
+ALTER SESSION SET CONTAINER = ${DB_SERVICE};
 
 DECLARE
   v_count NUMBER;
@@ -92,7 +95,10 @@ EXIT;
 SQL_BLOCK
 
 if podman container exists "$PRIMARY_CONTAINER" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$PRIMARY_CONTAINER" 2>/dev/null)" = "running" ]; then
-  podman exec -i "$PRIMARY_CONTAINER" sqlplus -s "sys/${SYS_PWD}@localhost:1521/${DB_SERVICE} as sysdba" < "$TMP_SQL" >/dev/null 2>&1 || true
+  in_sql=$(podman exec "$PRIMARY_CONTAINER" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+  if [ -n "$in_sql" ]; then
+    podman exec -i "$PRIMARY_CONTAINER" "$in_sql" -s / as sysdba < "$TMP_SQL" >/dev/null 2>&1 || true
+  fi
   echo "✅ Forms 14c RCU schemas successfully initialized inside container ${PRIMARY_CONTAINER}!"
 else
   echo "⚠️  $(msg_str "FORMS_RCU_CONTAINER_OFFLINE" "$PRIMARY_CONTAINER")"

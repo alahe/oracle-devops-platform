@@ -38,13 +38,13 @@ resolve_instance_ports() {
 
   # Resolve DB listener port collision
   while is_port_in_use "$target_db_port"; do
-    echo "⚠️  Port $target_db_port on hõivatud. Otsin järgmist vaba porti..."
+    echo "⚠️  Port $target_db_port is in use. Searching for next available port..."
     target_db_port=$((target_db_port + 1))
   done
 
   # Resolve HTTPS port collision
   while is_port_in_use "$target_https_port"; do
-    echo "⚠️  Port $target_https_port on hõivatud. Otsin järgmist vaba porti..."
+    echo "⚠️  Port $target_https_port is in use. Searching for next available port..."
     target_https_port=$((target_https_port + 1))
   done
 

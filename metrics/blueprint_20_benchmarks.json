@@ -40,10 +40,22 @@
     {
       "timestamp": "2026-09-02T07:09:58.854355",
       "duration_seconds": 237
+    },
+    {
+      "timestamp": "2026-09-02T12:27:10.805992",
+      "duration_seconds": 164
+    },
+    {
+      "timestamp": "2026-09-02T15:12:51.162558",
+      "duration_seconds": 476
+    },
+    {
+      "timestamp": "2026-09-02T15:22:06.195629",
+      "duration_seconds": 485
     }
   ],
-  "runs_count": 10,
-  "average_duration_seconds": 205,
+  "runs_count": 13,
+  "average_duration_seconds": 244,
   "min_duration_seconds": 47,
-  "max_duration_seconds": 326
+  "max_duration_seconds": 485
 }

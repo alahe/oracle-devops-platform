@@ -218,6 +218,30 @@ Oracle Free DB in Prod innehåller en **intelligent flernivåbaserad Golden Snap
 
 ---
 
+---
+
+## 🧭 Oracle APEX DevHub-Applikation och APEXlang CI/CD
+
+Förutom den fristående HTML Dev Hub (`docs/dev-hub.html`) innehåller plattformen en **Oracle APEX-applikation (App 101: DevHub)** skapad deklarativt med [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) i katalogen [`applications/devhub/`](../../applications/devhub/):
+
+- **Noll-Fotavtryck Dokumentation i Databasen:** Dokumentationen sparas aldrig som CLOB-fält i databasen. En lokal REST-dokumentationsbrygga (`scripts/internal/dev-hub-bridge.py` på port 8089) strömmar lokaliserad Markdown direkt från Git till APEX, där den renderas med `APEX_MARKDOWN.TO_HTML`.
+- **Interaktiv Presentation och Översikt (Sida 7):** Innehåller en interaktiv presentation med 8 bilder som täcker plattformsvisionen, utvecklarnas utmaningar, rollbaserade fördelar, 11 arkitekturmodeller, Zero-Trust SEPS Wallet-säkerhet, ~15s Golden Snapshot-återställning och svar på kritiska frågor från chefsarkitekter och f.d. DBA:er.
+- **Databas- och Schemamotor:** Bygger på ett dedikerat schema `DEVHUB` och paketet `DEVHUB.DEV_HUB_PKG`, som utför snabba hälsokontroller (`UTL_HTTP`) över alla lokala tjänster med sub-100 ms latens.
+- **Officiella SQLcl 26.2 APEXlang-Verktyg:**
+  ```bash
+  # Validera APEXlang deklarativ kod mot kompilatorreglerna:
+  node .agents/skills/apexlang/tools/apexctl.mjs apexlang validate --app-path applications/devhub
+
+  # Validera och importera App 101 till PROXY_WORKSPACE via SQLcl:
+  ./scripts/sqlcl.sh DEVHUB/<lösenord>@localhost:1533/FREEPDB1
+  SQL> apex validate -input ./applications/devhub -workspace PROXY_WORKSPACE
+  SQL> apex import -input ./applications/devhub -id 101 -workspace PROXY_WORKSPACE
+  ```
+- **Automatiserat CI/CD-Arbetsflöde:** Dedikerat GitHub Actions-arbetsflöde [`.github/workflows/deploy-devhub-apexlang.yml`](../../.github/workflows/deploy-devhub-apexlang.yml) med lokal offline-emulering via `./scripts/test-local-ci.sh deploy-devhub-apexlang.yml --dry-run`.
+- **Enhetstestsystem:** Kör `./tests/unit/test-apex-devhub.sh` för att verifiera schemat, PL/SQL-kompilering, REST markdown-åtkomst och 6 språk.
+
+---
+
 ## 📑 Användarguider
 
 - 🚀 **[docs/sv/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Moderniserings- och Migreringsguide** — Affärsnytta, TCO-jämförelse, 5-stegs automatiserat arbetsflöde och [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
@@ -225,6 +249,7 @@ Oracle Free DB in Prod innehåller en **intelligent flernivåbaserad Golden Snap
 - 📑 **[docs/publisher-setup.md](../../docs/publisher-setup.md):** Analytics Publisher Guide.
 - 💻 **[docs/web-ide-artifactory.md](../../docs/web-ide-artifactory.md):** Web IDE Guide.
 - 🌐 **[docs/dev-hub.html](../../docs/dev-hub.html):** **Developer & DevOps Command Center** (`http://localhost:8088/` och `http://localhost:6082/vnc.html`).
+- 🧪 **[docs/sv/apex-devhub-test-plan.md](apex-devhub-test-plan.md):** **Oracle APEX DevHub Testplan** — Flernivåig teststrategi (utPLSQL-enhetstester, REST-bryggsonder, hybrida Playwright/curl E2E-flöden och APEX Advisor-kvalitetsgranskning) med Golden Snapshot-isolering.
 - 📊 **[config/blueprints/README.md](../../config/blueprints/README.md):** 11 Blueprints-katalog.
 - 📖 **[Oracle APEX 26.1 APEXlang Reference Manual](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/):** Officiell specifikation för deklarativ `.apx`-grammatik och kompilatorkommandon.
 - 📜 **[Officiell APEXlang EBNF-grammatik (`apexlang.ebnf`)](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf):** Maskinläsbar formell EBNF-specifikation för begränsad AI-avkodning (GBNF) och statiska säkerhetsverktyg.

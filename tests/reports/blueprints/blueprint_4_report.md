@@ -1,14 +1,14 @@
-# Blueprinti 4 Testiaruanne (2026-08-30 13:59:40)
+# Blueprinti 4 Testiaruanne (2026-09-03 08:40:19)
 
-- **Aeg ja Kuupäev:** 2026-08-30 13:59:40
-- **Kogu Paigalduse Kestus:** 57s
+- **Aeg ja Kuupäev:** 2026-09-03 08:40:19
+- **Kogu Paigalduse Kestus:** 1m 20s
 - **Blueprinti Fail:** `config/blueprints/.env.4-*`
 
 ---
 
 ## 1. ⏱ Ajakulu ja Tervisekontroll (Duration & Health)
 - **Tulemus:** ✅ Paigaldus ja tervisekontrollid läbitud 100% korrektselt.
-- **Kestus kokku:** 57s
+- **Kestus kokku:** 1m 20s
 
 ---
 
@@ -16,8 +16,7 @@
 
 | Konteineri Nimi | CPU % | Mälukasutus / Limiit | RAM % |
 | :--- | :--- | :--- | :--- |
-| web-ide-dev | 5.68% | 96.05MB / 8.297GB | 1.16% |
-| db-apex-proxy | 25.89% | 588.2MB / 3.221GB | 18.26% |
+| web-ide-dev | 71.12% | 90.46MB / 12.5GB | 0.72% |
 
 ---
 
@@ -26,8 +25,7 @@
 | Voluumi Nimi | Kettamaht |
 | :--- | :--- |
 | oracle-free-db-in-prod_web_ide_data | N/A |
-| oracle-free-db-in-prod_apex_proxy_oradata | N/A |
-| oracle-free-db-in-prod_apex_images_26_1 | N/A |
+| oracle-free-db-in-prod_proxy_oradata | N/A |
 
 ---
 
@@ -36,7 +34,6 @@
 | Konteineri Nimi | Staatus | Pordid |
 | :--- | :--- | :--- |
 | web-ide-dev | Up About a minute (starting) | 0.0.0.0:8090->8443/tcp, 0.0.0.0:8091->8091/tcp, 0.0.0.0:8449->8443/tcp |
-| db-apex-proxy | Up About a minute (healthy) | 127.0.0.1:1532->1522/tcp, 1521/tcp |
 
 ---
 
@@ -49,8 +46,8 @@
 ---
 
 ## 6. 🔒 TLS / HTTPS Turvalisuse ja Sertifikaatide Audit (TLS Trust Matrix)
-- **Aktiivne TLS Režiim:** `USER_LOCAL_CA`
-- **Režiimi Kirjeldus:** Kasutajataseme lokaalne usaldatud CA (0 root/admin õigust)
+- **Aktiivne TLS Režiim:** `USER_CA`
+- **Režiimi Kirjeldus:** Detected User / Local Dev Root CA certificates
 - **Kasutatav Sertifikaat:** `/Users/allanlahe/Oracle/oracle-free-db-in-prod/config/certs/user_ca/localhost.crt`
 - **Lubatud Poliitika Tase:** `permissive`
 - **Mitte-Admin Usalduse Olek:** ✅ Usaldatud kasutaja tasemel (`Cert:\CurrentUser\Root` / `login.keychain-db`).
@@ -63,13 +60,24 @@
 
 | SEPS Walleti Alias | Ühenduse Staatus | Tuvastatud Kasutaja & Baas |
 | :--- | :--- | :--- |
-| `DB_APEX_PROXY_DBA_ADMIN` | ✅ OK | `SYS@FREE` |
-| `DB_APEX_PROXY_DEV` | ✅ OK | `SYS@FREE` |
-| `DB_APEX_PROXY_SCHEMA` | ✅ OK | `SYS@FREE` |
-| `DB_APEX_PROXY_SYS` | ✅ OK | `SYS@FREE` |
-| `DB_APEX_PROXY_VIEWER` | ✅ OK | `SYS@FREE` |
-| `DB_PROXY_APP` | ✅ OK | `SYS@FREE` |
-| `DB_PROXY_DBA_ADMIN` | ✅ OK | `SYS@FREE` |
+| `DB_ALISE_DBA_ADMIN` | ✅ OK | `SYS@FREE` |
+| `DB_ALISE_DEV` | ✅ OK | `SYS@FREE` |
+| `DB_ALISE_SCHEMA` | ✅ OK | `SYS@FREE` |
+| `DB_ALISE_SYS` | ✅ OK | `SYS@FREE` |
+| `DB_ALISE_VIEWER` | ✅ OK | `SYS@FREE` |
+| `DB_DB_ALISE_APP` | ✅ OK | `SYS@FREE` |
+| `DB_DB_ALISE_DBA_ADMIN` | ✅ OK | `SYS@FREE` |
+| `DB_DB_ALISE_DEV` | ✅ OK | `SYS@FREE` |
+| `DB_DB_ALISE_SCHEMA` | ✅ OK | `SYS@FREE` |
+| `DB_DB_ALISE_SYS` | ✅ OK | `SYS@FREE` |
+| `DB_DB_ALISE_VIEWER` | ✅ OK | `SYS@FREE` |
+| `DB_DB_PROXY_APP` | ✅ OK | `SYS@FREE` |
+| `DB_DB_PROXY_DBA_ADMIN` | ✅ OK | `SYS@FREE` |
+| `DB_DB_PROXY_DEV` | ✅ OK | `SYS@FREE` |
+| `DB_DB_PROXY_SCHEMA` | ✅ OK | `SYS@FREE` |
+| `DB_DB_PROXY_SYS` | ✅ OK | `SYS@FREE` |
+| `DB_DB_PROXY_VIEWER` | ✅ OK | `SYS@FREE` |
+| `DB_PROXY_DBA_ADMIN` | ✅ OK | `DBA_ADMIN@FREEPDB1        ` |
 | `DB_PROXY_DEV` | ✅ OK | `SYS@FREE` |
 | `DB_PROXY_SCHEMA` | ✅ OK | `SYS@FREE` |
 | `DB_PROXY_SYS` | ✅ OK | `SYS@FREE` |

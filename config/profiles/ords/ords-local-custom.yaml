@@ -1,0 +1,18 @@
+profile:
+  id: app-ords-local-custom
+  name: app-ords-local-custom
+  description: "Local custom script installation using downloaded ORDS archive and standalone Java runtime."
+  type: application
+  component: ords
+
+ords:
+  enabled: true
+  version: "26.2.2"
+  container_name: app-ords
+  service_name: app-ords
+  download_url: "https://download.oracle.com/otn_software/java/ords/ords-latest.zip"
+  http_port: 8088
+  https_port: 8448
+  standalone_mode: true
+  install_type: local-custom
+  install_dir: "/opt/oracle/ords"

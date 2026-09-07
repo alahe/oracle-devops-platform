@@ -137,13 +137,30 @@ elif command -v sql &> /dev/null; then
 fi
 
 run_sqlcl() {
+  local target="$1"
+  shift
+
+  # Tier 1: In-container SQLcl (preferred for local containers)
+  if [ -n "$target" ] && podman container exists "$target" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$target" 2>/dev/null)" = "running" ]; then
+    local in_c_sql=$(podman exec "$target" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+    if [ -n "$in_c_sql" ]; then
+      podman exec -i "$target" "$in_c_sql" "$@"
+      return $?
+    fi
+  fi
+
+  # Tier 2: Host SQLcl wrapper with SEPS Wallet
+  if [ -x "$WORKSPACE_DIR/scripts/sqlcl.sh" ]; then
+    "$WORKSPACE_DIR/scripts/sqlcl.sh" "$@"
+    return $?
+  fi
+
+  # Tier 3: Local binary
   local LOCAL_BIN=""
   if [ -n "$SQLCL_BIN" ]; then
     LOCAL_BIN="$SQLCL_BIN"
   elif command -v sql &> /dev/null; then
     LOCAL_BIN="sql"
-  elif command -v sqlplus &> /dev/null; then
-    LOCAL_BIN="sqlplus"
   fi
 
   if [ -n "$LOCAL_BIN" ]; then
@@ -151,8 +168,14 @@ run_sqlcl() {
     return $?
   fi
 
+  # Tier 4: Ephemeral container
   local RUN_IMAGE="${SQLCL_CONTAINER_IMAGE:-container-registry.oracle.com/database/sqlcl:latest}"
-  podman run --rm -i --network=host "$RUN_IMAGE" "$@"
+  if [ -d "$WORKSPACE_DIR/config/tns_admin" ]; then
+    podman run --rm -i -v "$WORKSPACE_DIR/config/tns_admin:/config/tns_admin:ro" -e TNS_ADMIN=/config/tns_admin --network=host "$RUN_IMAGE" "$@"
+    return $?
+  fi
+
+  return 1
 }
 
 PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
@@ -162,9 +185,10 @@ PRIMARY_UPPER=$(echo "$PRIMARY_CONTAINER" | tr '-' '_' | tr '[:lower:]' '[:upper
 # Execute PL/SQL user provisioning block, redirecting output to log file
 set +e
 if podman container exists "$PRIMARY_CONTAINER" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$PRIMARY_CONTAINER" 2>/dev/null)" = "running" ]; then
-  podman exec -i "$PRIMARY_CONTAINER" sqlplus -s / as sysdba <<EOF > "$LOG_FILE" 2>&1
-ALTER SESSION SET CONTAINER = FREEPDB1;
+  run_sqlcl "$PRIMARY_CONTAINER" -s / as sysdba <<EOF > "$LOG_FILE" 2>&1
+ALTER SESSION SET CONTAINER = ${DB_SERVICE};
 SET SERVEROUTPUT ON SIZE UNLIMITED;
+WHENEVER SQLERROR CONTINUE;
 -- 1. Create/update database user and grant DB_DEVELOPER_ROLE
 DECLARE
   v_user_exists NUMBER;
@@ -217,13 +241,17 @@ BEGIN
         p_developer_privs              => 'CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE',
         p_change_password_on_first_use => 'N'
     );
-    UPDATE wwv_flow_fnd_user
-    SET account_expiry = NULL,
-        account_locked = 'N',
-        change_password_on_first_use = 'N'
-    WHERE user_name = '${DEV_USER}';
+    BEGIN
+      DECLARE
+        v_apex_schema VARCHAR2(128);
+      BEGIN
+        SELECT username INTO v_apex_schema FROM all_users WHERE username LIKE 'APEX_%' AND username NOT IN ('APEX_PUBLIC_USER','APEX_LISTENER','APEX_REST_PUBLIC_USER','APEX_PUBLIC_ROUTER','APEX_PROXY_SCHEMA') AND ROWNUM = 1;
+        EXECUTE IMMEDIATE 'UPDATE ' || v_apex_schema || '.wwv_flow_fnd_user SET account_expiry = NULL, account_locked = ''N'', change_password_on_first_use = ''N'' WHERE user_name = :1' USING '${DEV_USER}';
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END;
+    END;
     COMMIT;
-    DBMS_OUTPUT.PUT_LINE('[OK] APEX developer account created successfully.');
+    DBMS_OUTPUT.PUT_LINE('[OK] Developer account created successfully in APEX workspace.');
   END IF;
 EXCEPTION WHEN OTHERS THEN
   DBMS_OUTPUT.PUT_LINE('[ERROR] Failed to create APEX user: ' || SQLERRM);
@@ -233,9 +261,10 @@ EXIT;
 EOF
   STATUS=$?
 else
-  run_sqlcl -s /@DB_${PRIMARY_UPPER}_SYS as sysdba <<EOF > "$LOG_FILE" 2>&1
-ALTER SESSION SET CONTAINER = FREEPDB1;
+  run_sqlcl "" -s "/@DB_${PRIMARY_UPPER}_SYS" as sysdba <<EOF > "$LOG_FILE" 2>&1
+ALTER SESSION SET CONTAINER = ${DB_SERVICE};
 SET SERVEROUTPUT ON SIZE UNLIMITED;
+WHENEVER SQLERROR CONTINUE;
 -- 1. Create/update database user and grant DB_DEVELOPER_ROLE
 DECLARE
   v_user_exists NUMBER;
@@ -288,11 +317,15 @@ BEGIN
         p_developer_privs              => 'CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE',
         p_change_password_on_first_use => 'N'
     );
-    UPDATE wwv_flow_fnd_user
-    SET account_expiry = NULL,
-        account_locked = 'N',
-        change_password_on_first_use = 'N'
-    WHERE user_name = '${DEV_USER}';
+    BEGIN
+      DECLARE
+        v_apex_schema VARCHAR2(128);
+      BEGIN
+        SELECT username INTO v_apex_schema FROM all_users WHERE username LIKE 'APEX_%' AND username NOT IN ('APEX_PUBLIC_USER','APEX_LISTENER','APEX_REST_PUBLIC_USER','APEX_PUBLIC_ROUTER','APEX_PROXY_SCHEMA') AND ROWNUM = 1;
+        EXECUTE IMMEDIATE 'UPDATE ' || v_apex_schema || '.wwv_flow_fnd_user SET account_expiry = NULL, account_locked = ''N'', change_password_on_first_use = ''N'' WHERE user_name = :1' USING '${DEV_USER}';
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END;
+    END;
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('[OK] Developer account created successfully in APEX workspace.');
   END IF;

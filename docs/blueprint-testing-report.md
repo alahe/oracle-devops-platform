@@ -10,7 +10,7 @@
 - **Matrix Pass Rate:** `✅ 100% PASS`
 - **Total Cold Provisioning Duration:** `17m 44s` (1064s)
 - **Total Warm Recovery Duration:** `29s` (29s)
-- **Audit Log:** [`install_logs/blueprint_matrix_test_20260901_041916.log`](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/install_logs/blueprint_matrix_test_20260901_041916.log)
+- **Audit Log:** `install_logs/blueprint_matrix_test_20260901_041916.log`
 
 ### 📋 Executive Scorecard Table
 

@@ -109,6 +109,81 @@ if [ "$MODE_3" != "standard" ]; then
 fi
 echo "   ✅ WebLogic topoloogiad (Shared / Dedicated / Standard) tuvastatud korrektselt."
 
+# --- TEST 6: 30-Day Snapshot Age & Retention Policy ---
+echo "▶️ [6/6] Testin 30-päevase vanuse reeglit ja hetktõmmise loomise otsust..."
+SNAP_POLICY_DIR="$TEST_TEMP_DIR/policy_test"
+mkdir -p "$SNAP_POLICY_DIR"
+
+# 6.1: Missing snapshot -> must create
+unset FORCE_SNAPSHOT SKIP_SNAPSHOT_CREATION
+if ! should_create_golden_snapshot "99" "unknown-profile" "30" "$SNAP_POLICY_DIR"; then
+  echo "❌ Viga: Puuduva snapshot'i puhul peaks looma uue!"
+  exit 1
+fi
+if [ "$EVALUATED_SNAPSHOT_ACTION" != "create" ]; then
+  echo "❌ Viga: Oodati action='create', saadi '$EVALUATED_SNAPSHOT_ACTION'!"
+  exit 1
+fi
+echo "   ✅ Puuduv snapshot suunatakse loomisele (action=create)."
+
+# 6.2: Fresh snapshot (5 days old) -> should skip
+FRESH_SNAP="$SNAP_POLICY_DIR/bp_99_latest.tar.gz"
+touch "$FRESH_SNAP"
+DATE_5_DAYS_AGO=$(python3 -c "from datetime import datetime, timezone, timedelta; print((datetime.now(timezone.utc) - timedelta(days=5)).isoformat())")
+write_snapshot_metadata "$FRESH_SNAP" "99" "test-profile" "26.1" "free:latest" "24.4.1" "NONE" "NONE" "FREEPDB1"
+# Override created_at in metadata to 5 days ago
+python3 -c "import json; f='$SNAP_POLICY_DIR/bp_99_latest.meta.json'; d=json.load(open(f)); d['created_at']='$DATE_5_DAYS_AGO'; json.dump(d, open(f, 'w'))"
+
+AGE_CALC=$(get_snapshot_age_days "$FRESH_SNAP")
+if [ "$AGE_CALC" -lt 4 ] || [ "$AGE_CALC" -gt 6 ]; then
+  echo "❌ Viga: 5-päevase snapshot'i arvutatud vanus on $AGE_CALC!"
+  exit 1
+fi
+
+if should_create_golden_snapshot "99" "test-profile" "30" "$SNAP_POLICY_DIR"; then
+  echo "❌ Viga: Värske snapshot (5 päeva vana <= 30 päeva) peaks vahele jääma!"
+  exit 1
+fi
+if [ "$EVALUATED_SNAPSHOT_ACTION" != "skip_fresh" ]; then
+  echo "❌ Viga: Oodati action='skip_fresh', saadi '$EVALUATED_SNAPSHOT_ACTION'!"
+  exit 1
+fi
+echo "   ✅ Värske snapshot (<30 päeva) jäetakse korrektselt vahele (action=skip_fresh)."
+
+# 6.3: Expired snapshot (35 days old) -> should recreate
+DATE_35_DAYS_AGO=$(python3 -c "from datetime import datetime, timezone, timedelta; print((datetime.now(timezone.utc) - timedelta(days=35)).isoformat())")
+python3 -c "import json; f='$SNAP_POLICY_DIR/bp_99_latest.meta.json'; d=json.load(open(f)); d['created_at']='$DATE_35_DAYS_AGO'; json.dump(d, open(f, 'w'))"
+
+AGE_EXPIRED=$(get_snapshot_age_days "$FRESH_SNAP")
+if [ "$AGE_EXPIRED" -lt 34 ] || [ "$AGE_EXPIRED" -gt 36 ]; then
+  echo "❌ Viga: 35-päevase snapshot'i arvutatud vanus on $AGE_EXPIRED!"
+  exit 1
+fi
+
+if ! should_create_golden_snapshot "99" "test-profile" "30" "$SNAP_POLICY_DIR"; then
+  echo "❌ Viga: Aegunud snapshot (35 päeva vana > 30 päeva) peaks minema uuestiloomisele!"
+  exit 1
+fi
+if [ "$EVALUATED_SNAPSHOT_ACTION" != "recreate_expired" ]; then
+  echo "❌ Viga: Oodati action='recreate_expired', saadi '$EVALUATED_SNAPSHOT_ACTION'!"
+  exit 1
+fi
+echo "   ✅ Aegunud snapshot (>30 päeva) suunatakse uuendamisele (action=recreate_expired)."
+
+# 6.4: Force snapshot (--force-snapshot / -fs) overrides fresh snapshot
+python3 -c "import json; f='$SNAP_POLICY_DIR/bp_99_latest.meta.json'; d=json.load(open(f)); d['created_at']='$DATE_5_DAYS_AGO'; json.dump(d, open(f, 'w'))"
+export FORCE_SNAPSHOT=true
+if ! should_create_golden_snapshot "99" "test-profile" "30" "$SNAP_POLICY_DIR"; then
+  echo "❌ Viga: FORCE_SNAPSHOT=true peaks alati looma tõmmise!"
+  exit 1
+fi
+if [ "$EVALUATED_SNAPSHOT_ACTION" != "force" ]; then
+  echo "❌ Viga: Oodati action='force', saadi '$EVALUATED_SNAPSHOT_ACTION'!"
+  exit 1
+fi
+unset FORCE_SNAPSHOT
+echo "   ✅ Sunnitud loomine (--force-snapshot) töötab sõltumata tõmmise vanusest (action=force)."
+
 echo "=================================================================="
 echo "🎉 KÕIK SNAPSHOT RESOLVERI JA VERSIOONIKONTROLLI TESTID LÄBITUD!"
 echo "=================================================================="

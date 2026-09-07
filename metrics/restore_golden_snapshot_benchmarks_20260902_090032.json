@@ -1,7 +1,0 @@
-{
-  "last_updated": "2026-09-02T06:04:34Z",
-  "restore_duration_seconds": 241,
-  "snapshot_file": "bp_1_latest.tar.gz",
-  "blueprint_id": "1",
-  "profile_name": "db-proxy-oracle"
-}

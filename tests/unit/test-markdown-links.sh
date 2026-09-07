@@ -22,7 +22,7 @@ workspace = "'"$WORKSPACE_DIR"'"
 for md in glob.glob(os.path.join(workspace, "**/*.md"), recursive=True):
     # Ignore hidden folders, logs, .git, etc.
     rel_md = os.path.relpath(md, workspace)
-    if "/." in rel_md or rel_md.startswith(".") or "install_logs" in rel_md or "node_modules" in rel_md:
+    if "/." in rel_md or rel_md.startswith(".") or "install_logs" in rel_md or "node_modules" in rel_md or "db-install" in rel_md:
         continue
     
     try:

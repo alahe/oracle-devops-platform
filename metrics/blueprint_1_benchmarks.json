@@ -100,10 +100,130 @@
     {
       "timestamp": "2026-09-02T09:06:36.229367",
       "duration_seconds": 275
+    },
+    {
+      "timestamp": "2026-09-02T09:26:47.568488",
+      "duration_seconds": 219
+    },
+    {
+      "timestamp": "2026-09-02T09:34:41.424468",
+      "duration_seconds": 287
+    },
+    {
+      "timestamp": "2026-09-02T09:49:39.534056",
+      "duration_seconds": 225
+    },
+    {
+      "timestamp": "2026-09-02T10:03:57.157491",
+      "duration_seconds": 226
+    },
+    {
+      "timestamp": "2026-09-02T10:12:19.905437",
+      "duration_seconds": 298
+    },
+    {
+      "timestamp": "2026-09-02T15:31:26.852941",
+      "duration_seconds": 493
+    },
+    {
+      "timestamp": "2026-09-02T16:18:06.347549",
+      "duration_seconds": 503
+    },
+    {
+      "timestamp": "2026-09-02T19:33:53.853659",
+      "duration_seconds": 192
+    },
+    {
+      "timestamp": "2026-09-02T21:23:35.809932",
+      "duration_seconds": 201
+    },
+    {
+      "timestamp": "2026-09-02T22:27:36.125068",
+      "duration_seconds": 191
+    },
+    {
+      "timestamp": "2026-09-03T07:03:05.994276",
+      "duration_seconds": 279
+    },
+    {
+      "timestamp": "2026-09-03T10:10:39.039510",
+      "duration_seconds": 752
+    },
+    {
+      "timestamp": "2026-09-03T11:49:24.717269",
+      "duration_seconds": 691
+    },
+    {
+      "timestamp": "2026-09-03T20:31:38.115466",
+      "duration_seconds": 590
+    },
+    {
+      "timestamp": "2026-09-04T07:43:20.756304",
+      "duration_seconds": 131
+    },
+    {
+      "timestamp": "2026-09-04T07:46:40.585774",
+      "duration_seconds": 127
+    },
+    {
+      "timestamp": "2026-09-04T07:55:39.313527",
+      "duration_seconds": 133
+    },
+    {
+      "timestamp": "2026-09-04T07:58:47.064837",
+      "duration_seconds": 122
+    },
+    {
+      "timestamp": "2026-09-04T09:23:52.516647",
+      "duration_seconds": 204
+    },
+    {
+      "timestamp": "2026-09-04T09:28:04.471232",
+      "duration_seconds": 182
+    },
+    {
+      "timestamp": "2026-09-04T15:10:58.666287",
+      "duration_seconds": 311
+    },
+    {
+      "timestamp": "2026-09-05T02:41:19.012823",
+      "duration_seconds": 249
+    },
+    {
+      "timestamp": "2026-09-05T10:09:08.150751",
+      "duration_seconds": 193
+    },
+    {
+      "timestamp": "2026-09-05T19:23:51.306415",
+      "duration_seconds": 261
+    },
+    {
+      "timestamp": "2026-09-06T08:03:52.222916",
+      "duration_seconds": 234
+    },
+    {
+      "timestamp": "2026-09-06T09:16:39.872120",
+      "duration_seconds": 239
+    },
+    {
+      "timestamp": "2026-09-06T09:37:38.652016",
+      "duration_seconds": 179
+    },
+    {
+      "timestamp": "2026-09-06T11:29:43.292972",
+      "duration_seconds": 163
+    },
+    {
+      "timestamp": "2026-09-06T23:33:41.076728",
+      "duration_seconds": 233
+    },
+    {
+      "timestamp": "2026-09-07T00:05:11.689056",
+      "duration_seconds": 316
     }
   ],
-  "runs_count": 25,
-  "average_duration_seconds": 244,
+  "runs_count": 55,
+  "average_duration_seconds": 264,
   "min_duration_seconds": 70,
-  "max_duration_seconds": 436
+  "max_duration_seconds": 752
 }

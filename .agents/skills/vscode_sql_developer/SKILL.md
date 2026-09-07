@@ -70,14 +70,38 @@ fi
 
 ---
 
-## 4. Multi-Folder Synchronization & Web IDE Mounts
+## 4. Multi-Folder Synchronization & Dual Registration (Host PC & Web IDE)
 
 To support multi-database topologies (`db-publisher`, `db-proxy`, `db-lis`):
 1. **GUID Properties:** `$HOME/.dbtools/connections/<GUID>/dbtools.properties` generates dedicated GUIDs with ports and UI colors (`color=#HEX`).
 2. **Folder Mapping:** `$HOME/.dbtools/connection_folders/folders.json` binds GUIDs to database folder names.
-3. **Web IDE Sync:** Volume mounting `~/.dbtools` into `web-ide-dev` makes all host connections immediately available in browser-based VS Code.
+3. **Dual Host & Web IDE Sync:** `register-connections.sh` simultaneously registers connections for both the Host PC (`~/.dbtools`, `~/.sqldev`) and the containerized Web IDE (`/config/.dbtools`, `/config/.sqldev`) using embedded Linux SQLcl.
+4. **Order Independence:** Web IDE can start before or after databases. Whenever databases start or restart, connections propagate dynamically.
 
-Run registration CLI:
+### Dual Registration Architecture
+
+```mermaid
+flowchart TD
+  START(["🚀 Start:<br/>./scripts/setup-all.sh<br/>or register-connections.sh"]) --> DISCOVER["🔍 1. Discover Active DBs<br/>& Load YAML Profiles"]
+  
+  DISCOVER --> WALLET["🔐 2. Extract Passwords<br/>JIT from SEPS Wallet<br/>(Zero-Trust in Memory)"]
+  
+  WALLET --> BUILD_CONNS["📦 3. Build Dual<br/>Connection Payloads<br/>(Host TCP & Container Host)"]
+  
+  BUILD_CONNS --> HOST_REG["💻 4. Register on Host PC<br/>- SQLcl connect -save<br/>- ~/.dbtools & ~/.sqldev<br/>- Color coding applied"]
+  
+  HOST_REG --> CHECK_WEBIDE{"❓ Is Web IDE<br/>(web-ide-dev)<br/>container running?"}
+  
+  CHECK_WEBIDE -->|"✅ YES / Running"| WEBIDE_REG["🌐 5. Register in Web IDE<br/>- Container SQLcl batch<br/>- /config/.dbtools/conns<br/>- /config/.sqldev/conns.json<br/>- Permissions chown abc"]
+  
+  CHECK_WEBIDE -->|"❌ NO / Absent"| SANITIZE["🧹 6. Sanitize folders.json<br/>(Prune orphaned GUIDs<br/>Prevent DBTU-03001)"]
+  
+  WEBIDE_REG --> SANITIZE
+  
+  SANITIZE --> READY(["🎉 Ready:<br/>1-Click DB Connections<br/>in Host & Web IDE!"])
+```
+
+Run registration CLI on demand:
 ```bash
 ./scripts/register-connections.sh
 ```

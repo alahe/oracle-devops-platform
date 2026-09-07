@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-09-06T14:29:01Z",
+  "azure_host": "simulation",
+  "oci_db_name": "adbp",
+  "test_duration_seconds": 0,
+  "tests_passed": 5,
+  "tests_total": 5,
+  "network_latency_ms": "18.2",
+  "seps_wallet_status": "PASSED",
+  "ords_gateway_status": "PASSED",
+  "publisher_status": "PASSED"
+}

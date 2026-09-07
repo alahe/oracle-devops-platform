@@ -103,7 +103,7 @@ get_blueprint_meta() {
     title=$(head -n 1 "$bp_file" 2>/dev/null | grep "^#" | sed -E 's/^#[[:space:]]*//' || echo "")
   fi
 
-  desc=$(grep -m 1 -E "^# Kasutus:|^# Usage:|^# Eesmärk:" "$bp_file" 2>/dev/null | sed -E 's/^#[[:space:]]*(Kasutus:|Usage:|Eesmärk:)[[:space:]]*//' || echo "")
+  desc=$(grep -m 1 -E "^# Usage:|^# Description:|^# Purpose:" "$bp_file" 2>/dev/null | sed -E 's/^#[[:space:]]*(Usage:|Description:|Purpose:)[[:space:]]*//' || echo "")
   if [ -z "$desc" ]; then
     desc=$(sed -n '2p' "$bp_file" 2>/dev/null | grep "^#" | sed -E 's/^#[[:space:]]*//' || echo "")
   fi
@@ -112,7 +112,7 @@ get_blueprint_meta() {
     title="Blueprint ${num} ($(basename "$bp_file"))"
   fi
   if [ -z "$desc" ]; then
-    desc="Konfiguratsioonimudel ${num}"
+    desc="Configuration Blueprint ${num}"
   fi
 
   echo "${title}:::${desc}"
@@ -128,63 +128,104 @@ extract_blueprint_containers() {
 
   local db_publisher=""
   local db_proxy=""
-  local db_lis=""
+  local db_alise=""
+  local db_publisher=""
   local db_forms=""
-  local skip_ords=""
-  local skip_publisher=""
-  local skip_forms=""
-  local skip_web_ide=""
+  local web_ide_prof=""
+  local ords_prof=""
+  local publisher_prof=""
+  local forms_prof=""
+  local designer_prof=""
+  local forms_publisher_prof=""
 
   # Parse variables directly from file safely
-  db_publisher=$(grep -E "^DB_PUBLISHER=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
-  db_proxy=$(grep -E "^DB_PROXY=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
-  db_alise=$(grep -E "^(DB_ALISE|DB_LIS)=" "$bp_file" 2>/dev/null | tail -n 1 | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
-  db_forms=$(grep -E "^DB_FORMS=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
-  skip_ords=$(grep -E "^SKIP_ORDS=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
-  skip_publisher=$(grep -E "^SKIP_PUBLISHER=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
-  skip_forms=$(grep -E "^SKIP_FORMS=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
-  skip_web_ide=$(grep -E "^SKIP_WEB_IDE=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
+  local db_profs=()
+  for k in $(grep -E "^DB_[A-Z0-9_]+=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || true); do
+    [ -n "$k" ] && [ "$k" != "NONE" ] && db_profs+=("$k")
+  done
   web_ide_prof=$(grep -E "^WEB_IDE_PROFILE=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
+  ords_prof=$(grep -E "^ORDS_PROFILE=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
+  publisher_prof=$(grep -E "^PUBLISHER_PROFILE=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
+  forms_prof=$(grep -E "^FORMS_PROFILE=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
+  designer_prof=$(grep -E "^PUBLISHER_DESIGNER_PROFILE=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
+  forms_publisher_prof=$(grep -E "^FORMS_PUBLISHER_PROFILE=" "$bp_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
 
   local containers=()
 
   # Database containers
-  if [ -n "$db_publisher" ] && [ "$db_publisher" != "NONE" ]; then
-    if [ "$db_publisher" != "$db_proxy" ] && [ "$db_publisher" != "$db_alise" ]; then
-      containers+=("db-publisher")
+  for prof in "${db_profs[@]}"; do
+    [ -z "$prof" ] || [ "$prof" = "NONE" ] && continue
+    local pfile="$WORKSPACE_DIR/config/profiles/databases/${prof}.yaml"
+    [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/${prof}.yaml"
+    local c_name=""
+    if [ -f "$pfile" ]; then
+      c_name=$(grep -E '^[[:space:]]*container_name:' "$pfile" | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^" #]+)"?.*/\1/' | tr -d '\r\n')
     fi
-  fi
-  if [ -n "$db_proxy" ] && [ "$db_proxy" != "NONE" ]; then
-    containers+=("db-proxy")
-  fi
-  if [ -n "$db_alise" ] && [ "$db_alise" != "NONE" ]; then
-    if [ "$db_alise" != "$db_proxy" ]; then
-      containers+=("db-alise")
+    [ -z "$c_name" ] && c_name="db-${prof#db-}"
+    if [[ ! " ${containers[*]} " =~ " ${c_name} " ]]; then
+      containers+=("$c_name")
     fi
-  fi
-  if [ -n "$db_forms" ] && [ "$db_forms" != "NONE" ]; then
-    if [ "$db_forms" != "$db_proxy" ] && [ "$db_forms" != "$db_alise" ] && [ "$db_forms" != "$db_publisher" ]; then
-      containers+=("db-forms")
+  done
+
+  # Check embedded ORDS enablement from DB profiles
+  local has_db_ords=false
+  for prof in "${db_profs[@]}"; do
+    [ -z "$prof" ] || [ "$prof" = "NONE" ] && continue
+    local pfile="$WORKSPACE_DIR/config/profiles/databases/${prof}.yaml"
+    [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/${prof}.yaml"
+    if [ -f "$pfile" ]; then
+      local o_en
+      o_en=$(awk '/ords:/{flag=1;next}/forms:|apex:|publisher:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^" #]+)"?.*/\1/' | tr -d '\r\n')
+      if [ "$o_en" = "true" ]; then
+        has_db_ords=true
+        break
+      fi
     fi
-  fi
+  done
 
   # Application containers
-  if [ "$skip_ords" = "false" ] || { [ -z "$skip_ords" ] && [ "${#containers[@]}" -gt 0 ] && [ "$skip_forms" != "false" ]; }; then
+  if [ -n "$ords_prof" ] && [ "$ords_prof" != "NONE" ] && [ "$ords_prof" != "disabled" ]; then
+    containers+=("app-ords")
+  elif [ "$ords_prof" != "NONE" ] && [ "$ords_prof" != "disabled" ] && [ "$has_db_ords" = "true" ]; then
     containers+=("app-ords")
   fi
 
-  if [ "$skip_publisher" = "false" ]; then
+  if [ -n "$publisher_prof" ] && [ "$publisher_prof" != "NONE" ] && [ "$publisher_prof" != "disabled" ]; then
+    containers+=("app-publisher")
+  elif [ -n "$db_publisher" ] && [ "$db_publisher" != "NONE" ] && [ -n "$publisher_prof" ] && [ "$publisher_prof" != "NONE" ]; then
     containers+=("app-publisher")
   fi
 
-  if [ "$skip_forms" = "false" ]; then
+  if [ -n "$forms_prof" ] && [ "$forms_prof" != "NONE" ] && [ "$forms_prof" != "disabled" ]; then
+    containers+=("app-forms")
+  elif [ -n "$db_forms" ] && [ "$db_forms" != "NONE" ] && [ -n "$forms_prof" ] && [ "$forms_prof" != "NONE" ]; then
     containers+=("app-forms")
   fi
 
+  if [ -n "$designer_prof" ] && [ "$designer_prof" != "NONE" ] && [ "$designer_prof" != "disabled" ]; then
+    containers+=("app-publisher-designer")
+  fi
+
+  if [ -n "$forms_publisher_prof" ] && [ "$forms_publisher_prof" != "NONE" ]; then
+    local pfile="$WORKSPACE_DIR/config/profiles/forms-publisher/${forms_publisher_prof}.yaml"
+    [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/${forms_publisher_prof}.yaml"
+    local c_name=""
+    if [ -f "$pfile" ]; then
+      c_name=$(grep -E '^[[:space:]]*container_name:' "$pfile" | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^" #]+)"?.*/\1/' | tr -d '\r\n')
+    fi
+    if [ "$c_name" = "app-forms-publisher" ] && ! podman container exists app-forms-publisher 2>/dev/null; then
+      [[ ! " ${containers[*]} " =~ " app-forms " ]] && containers+=("app-forms")
+      [[ ! " ${containers[*]} " =~ " app-publisher " ]] && containers+=("app-publisher")
+    else
+      [ -z "$c_name" ] && c_name="app-forms-publisher"
+      if [[ ! " ${containers[*]} " =~ " ${c_name} " ]]; then
+        containers+=("$c_name")
+      fi
+    fi
+  fi
+
   # Web IDE container detection
-  local bp_basename
-  bp_basename=$(basename "$bp_file")
-  if [ "$web_ide_prof" = "web-ide-dev" ] || [ "$skip_web_ide" = "false" ]; then
+  if [ -n "$web_ide_prof" ] && [ "$web_ide_prof" != "NONE" ] && [ "$web_ide_prof" != "web-ide-disabled" ] && [ "$web_ide_prof" != "disabled" ] && [ "$web_ide_prof" != "false" ]; then
     containers+=("web-ide-dev")
   fi
 
@@ -198,12 +239,9 @@ print_blueprints_table() {
   local filter="${1:-}"
   filter=$(echo "$filter" | tr '[:upper:]' '[:lower:]')
 
-  echo -e "\n${CYAN}=========================================================================================================${NC}"
-  echo -e "${BOLD}🏗️   ORACLE DEVOPS PLATFORM — AMETLIKUD ARHITEKTUURSED KAVANDID (BLUEPRINTS)${NC}"
-  echo -e "${CYAN}=========================================================================================================${NC}"
-  printf "┌────┬──────────────────────────────────────────┬─────────────────────────────┬──────────────────────────────────────────────┐\n"
-  printf "│ %-2s │ %-40s │ %-27s │ %-44s │\n" "Nr" "Blueprint (Kavandi Fail)" "Käivitatavad Konteinerid" "Otstarve ja Kirjeldus"
-  printf "├────┼──────────────────────────────────────────┼─────────────────────────────┼──────────────────────────────────────────────┤\n"
+  echo -e "\n${CYAN}==================================================================${NC}"
+  echo -e "${BOLD}🚀 ORACLE DEVOPS PLATFORM — ARCHITECTURAL BLUEPRINTS${NC}"
+  echo -e "${CYAN}==================================================================${NC}"
 
   # Find all blueprints and sort numerically
   local all_files=()
@@ -211,84 +249,70 @@ print_blueprints_table() {
     [ -n "$f" ] && all_files+=("$f")
   done < <(find "$BLUEPRINTS_DIR" -maxdepth 1 -type f -name ".env.*" 2>/dev/null | sed -E 's/.*\.env\.([0-9]+).*/\1 &/' | sort -n -k1,1 | awk '{print $2}')
 
-  local match_count=0
   local last_group=""
+  local match_count=0
 
   for bp_file in "${all_files[@]}"; do
     local bp_name
-    bp_name=$(basename "$bp_file")
+    bp_name=$(basename "$bp_file" | sed -E 's/^\.env\.//')
     local num
-    num=$(echo "$bp_name" | sed -E 's/^\.env\.([0-9]+).*/\1/')
+    num=$(echo "$bp_name" | sed -E 's/^([0-9]+).*/\1/')
 
     # Extract containers
     local containers
-    containers=$(extract_blueprint_containers "$num")
+    containers=$(extract_blueprint_containers "$num" 2>/dev/null || echo "")
     containers="${containers:-None}"
-    if [ ${#containers} -gt 27 ]; then
-      containers="${containers:0:24}..."
-    fi
 
     # Extract metadata
     local meta
-    meta=$(get_blueprint_meta "$num")
-    local title
-    title=$(echo "$meta" | awk -F':::' '{print $1}')
+    meta=$(get_blueprint_meta "$num" 2>/dev/null || echo "")
     local desc
     desc=$(echo "$meta" | awk -F':::' '{print $2}')
+    [ -z "$desc" ] && desc=$(echo "$meta" | awk -F':::' '{print $1}')
 
     # Apply optional filter
     if [ -n "$filter" ]; then
-      local combined_text="$num $bp_file $containers $title $desc"
-      if ! echo "$combined_text" | grep -qi "$filter"; then
+      local combined_text="$num $bp_name $containers $desc"
+      if ! echo "$combined_text" | grep -qi -- "$filter"; then
         continue
       fi
     fi
 
     match_count=$((match_count + 1))
 
-    # Decade group header
+    # Group header
     local cur_group=""
-    if [ "$num" -lt 10 ]; then
-      cur_group="Grupp 1: Üksiktooted Eraldi (Standalone Isolates 1–9)"
-    elif [ "$num" -lt 20 ]; then
-      cur_group="Grupp 2: Konsolideeritud Teenused (Combined Subsystems 10–19)"
-    elif [ "$num" -lt 30 ]; then
-      cur_group="Grupp 3: Kihiline Ettevõtte Virn (Layered Stacks 20–29)"
+    if [ "$num" -eq 0 ]; then
+      cur_group="Default Standard"
+    elif [ "$num" -le 4 ]; then
+      cur_group="Database Stacks (1–4)"
+    elif [ "$num" -le 7 ]; then
+      cur_group="Enterprise Middleware (5–7)"
+    elif [ "$num" -le 9 ]; then
+      cur_group="Developer Studio (8–9)"
     else
-      cur_group="Grupp 4: Hübriidsed Virnad (Hybrid Stacks 30–39)"
+      cur_group="Remote & Edge Gateways (10–11)"
     fi
 
     if [ -z "$filter" ] && [ "$cur_group" != "$last_group" ]; then
-      if [ -n "$last_group" ]; then
-        printf "├────┼──────────────────────────────────────────┼─────────────────────────────┼──────────────────────────────────────────────┤\n"
-      fi
-      printf "│ \033[1;33m%-2s\033[0m │ \033[1;33m%-40s\033[0m │ %-27s │ %-44s │\n" "::" "🔹 ${cur_group}" "" ""
-      printf "├────┼──────────────────────────────────────────┼─────────────────────────────┼──────────────────────────────────────────────┤\n"
+      echo -e "\n ${BOLD}🔹 ${cur_group}:${NC}"
       last_group="$cur_group"
     fi
 
-    if [ ${#bp_name} -gt 40 ]; then
-      bp_name="${bp_name:0:37}..."
+    local tag=""
+    if [ "$num" -eq 0 ]; then
+      tag=" ${GREEN}(Default)${NC}"
     fi
 
-    local summary="${desc:-$title}"
-    if [ ${#summary} -gt 44 ]; then
-      summary="${summary:0:41}..."
-    fi
-
-    printf "│ %2d │ %-40s │ %-27s │ %-44s │\n" "$num" "$bp_name" "$containers" "$summary"
+    printf "   ${CYAN}[%2d]${NC} ${BOLD}%-35s${NC} ${YELLOW}%-28s${NC}%b\n" "$num" "$bp_name" "$containers" "$tag"
   done
-
-  echo -e "└────┴──────────────────────────────────────────┴─────────────────────────────┴──────────────────────────────────────────────┘\n"
 
   if [ -n "$filter" ] && [ "$match_count" -eq 0 ]; then
     echo -e "   ℹ️  No blueprints found matching search keyword: '${YELLOW}$filter${NC}'"
   fi
 
-  echo -e "💡 ${YELLOW}Run in production/development (no reset):${NC}    ./scripts/setup-all.sh -b <NUM|NAME>"
-  echo -e "🧪 ${YELLOW}Run in automated test mode (clean slate):${NC}    ./scripts/setup-all.sh -tb <NUM|NAME|all>"
-  echo -e "🔍 ${YELLOW}Inspect detailed configuration:${NC}              ./scripts/setup-all.sh -sb <NUM|NAME>"
-  echo -e "🔎 ${YELLOW}Search blueprints by keyword:${NC}                ./scripts/setup-all.sh --search <KEYWORD>\n"
+  echo -e "\n${CYAN}==================================================================${NC}"
+  echo -e "💡 Commands:  ${YELLOW}-b <NUM>${NC} (Deploy) | ${YELLOW}-tb <NUM>${NC} (Test) | ${YELLOW}-sb <NUM>${NC} (Inspect)\n"
 }
 
 # ----------------------------------------------------------------------------
@@ -320,59 +344,78 @@ show_blueprint_details() {
   containers=$(extract_blueprint_containers "$num")
 
   echo -e "\n${CYAN}==================================================================${NC}"
-  echo -e "${BOLD}🏗️   DETAILNE BLUEPRINTI ÜLEVAADE (BLUEPRINT INSPECTION)${NC}"
+  echo -e "${BOLD}🏗️   DETAILED BLUEPRINT INSPECTION${NC}"
   echo -e "${CYAN}==================================================================${NC}"
   echo -e "🔹 ${BOLD}Number:${NC}        ${YELLOW}$num${NC}"
-  echo -e "🔹 ${BOLD}Kavandi fail:${NC}  ${CYAN}$bp_name${NC}"
-  echo -e "🔹 ${BOLD}Pealkiri:${NC}      ${BOLD}$title${NC}"
-  echo -e "🔹 ${BOLD}Kirjeldus:${NC}     $desc"
+  echo -e "🔹 ${BOLD}Blueprint file:${NC} ${CYAN}$bp_name${NC}"
+  echo -e "🔹 ${BOLD}Title:${NC}          ${BOLD}$title${NC}"
+  echo -e "🔹 ${BOLD}Description:${NC}    $desc"
 
   local bp_stats=""
   if [ -f "$WORKSPACE_DIR/scripts/internal/common.sh" ]; then
     bp_stats=$(get_blueprint_stats "$num" 2>/dev/null || echo "")
   fi
   if [ -n "$bp_stats" ]; then
-    local hist_lbl="Ajalooline kestus"
+    local hist_lbl="Historical duration"
     if declare -f msg_str >/dev/null 2>&1; then
       hist_lbl="$(msg_str "LABEL_HIST_DURATION")"
     fi
     echo -e "🔹 ${BOLD}${hist_lbl}:${NC} ${YELLOW}$bp_stats${NC}"
   fi
 
-  echo -e "\n🔹 ${BOLD}Plaanis käivitada järgmised konteinerid:${NC}"
+  echo -e "\n🔹 ${BOLD}Planned containers to start:${NC}"
   for c in $containers; do
     case "$c" in
-      db-publisher)
-        echo -e "      ├── 🗄️  ${GREEN}db-publisher${NC}   [Publisher RCU]    Port: 1531 -> 1521/FREEPDB1"
+      db-publisher|db-publisher-*)
+        local pfile="$WORKSPACE_DIR/config/profiles/databases/${c}.yaml"
+        [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/databases/db-publisher-oracle.yaml"
+        p_port=$(grep -E '^[[:space:]]*db_port:' "$pfile" 2>/dev/null | head -n 1 | awk -F: '{print $2}' | sed -E 's/#.*//' | tr -d ' "\r\n')
+        p_svc=$(grep -E '^[[:space:]]*default_service:' "$pfile" 2>/dev/null | head -n 1 | awk -F: '{print $2}' | sed -E 's/#.*//' | tr -d ' "\r\n')
+        echo -e "      ├── 🗄️  ${GREEN}${c}${NC}   [Publisher RCU]    Port: ${p_port:-1531} -> 1521/${p_svc:-FREEPDB1}"
         ;;
-      db-proxy)
-        echo -e "      ├── 🗄️  ${GREEN}db-proxy${NC}       [APEX/SSO Proxy]   Port: 1532 -> 1521/FREEPDB1"
+      db-proxy|db-proxy-*)
+        local pfile="$WORKSPACE_DIR/config/profiles/databases/${c}.yaml"
+        [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/databases/db-proxy-oracle.yaml"
+        p_port=$(grep -E '^[[:space:]]*db_port:' "$pfile" 2>/dev/null | head -n 1 | awk -F: '{print $2}' | sed -E 's/#.*//' | tr -d ' "\r\n')
+        p_svc=$(grep -E '^[[:space:]]*default_service:' "$pfile" 2>/dev/null | head -n 1 | awk -F: '{print $2}' | sed -E 's/#.*//' | tr -d ' "\r\n')
+        echo -e "      ├── 🗄️  ${GREEN}${c}${NC}       [APEX/SSO Proxy]   Port: ${p_port:-1532} -> 1521/${p_svc:-FREEPDB1}"
         ;;
-      db-alise|db-lis)
-        echo -e "      ├── 🗄️  ${GREEN}db-alise${NC}       [ALISE Schema Engine] Port: 1533 -> 1521/FREEPDB1"
+      db-alise*|db-lis*)
+        local pfile="$WORKSPACE_DIR/config/profiles/databases/${c}.yaml"
+        [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/databases/db-alise-oracle.yaml"
+        p_port=$(grep -E '^[[:space:]]*db_port:' "$pfile" 2>/dev/null | head -n 1 | awk -F: '{print $2}' | sed -E 's/#.*//' | tr -d ' "\r\n')
+        p_svc=$(grep -E '^[[:space:]]*default_service:' "$pfile" 2>/dev/null | head -n 1 | awk -F: '{print $2}' | sed -E 's/#.*//' | tr -d ' "\r\n')
+        echo -e "      ├── 🗄️  ${GREEN}${c}${NC}       [ALISE Schema Engine] Port: ${p_port:-1533} -> 1521/${p_svc:-FREEPDB1}"
         ;;
-      db-forms)
-        echo -e "      ├── 🗄️  ${GREEN}db-forms${NC}       [Forms RCU DB]     Port: 1534 -> 1521/FREEPDB1"
+      db-forms|db-forms-*)
+        local pfile="$WORKSPACE_DIR/config/profiles/databases/${c}.yaml"
+        [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/databases/db-forms-oracle.yaml"
+        p_port=$(grep -E '^[[:space:]]*db_port:' "$pfile" 2>/dev/null | head -n 1 | awk -F: '{print $2}' | sed -E 's/#.*//' | tr -d ' "\r\n')
+        p_svc=$(grep -E '^[[:space:]]*default_service:' "$pfile" 2>/dev/null | head -n 1 | awk -F: '{print $2}' | sed -E 's/#.*//' | tr -d ' "\r\n')
+        echo -e "      ├── 🗄️  ${GREEN}${c}${NC}       [Forms RCU DB]     Port: ${p_port:-1534} -> 1521/${p_svc:-FREEPDB1}"
         ;;
       app-ords)
-        echo -e "      ├── 🌐  ${CYAN}app-ords${NC}       [ORDS & APEX Web]  Pordid: 8088 (HTTP), 8448 (HTTPS)"
+        echo -e "      ├── 🌐  ${CYAN}app-ords${NC}       [ORDS & APEX Web]  Ports: 8088 (HTTP), 8448 (HTTPS)"
         ;;
       app-publisher)
-        echo -e "      ├── 📊  ${MAGENTA}app-publisher${NC}  [Pixel Perfect]    Pordid: 9502 (HTTP), 9503 (HTTPS)"
+        echo -e "      ├── 📊  ${MAGENTA}app-publisher${NC}  [Pixel Perfect]    Ports: 9502 (HTTP), 9503 (HTTPS)"
+        ;;
+      app-publisher-designer)
+        echo -e "      ├── 🎨  ${MAGENTA}app-publisher-designer${NC} [Template Studio] Ports: 6083 (noVNC), 5903 (VNC)"
         ;;
       app-forms)
-        echo -e "      ├── 📐  ${MAGENTA}app-forms${NC}      [Forms 14c Services] Pordid: 9001, 7001, 6082"
+        echo -e "      ├── 📐  ${MAGENTA}app-forms${NC}      [Forms 14c Services] Ports: 9001, 7001, 6082"
         ;;
       web-ide-dev)
-        echo -e "      └── 💻  ${BLUE}web-ide-dev${NC}    [VS Code Web IDE]  Pordid: 8090 (HTTP), 8449 (HTTPS)"
+        echo -e "      └── 💻  ${BLUE}web-ide-dev${NC}    [VS Code Web IDE]  Ports: 8090 (HTTP), 8449 (HTTPS)"
         ;;
     esac
   done
 
   echo -e "${CYAN}==================================================================${NC}"
-  echo -e "🚀 ${BOLD}Käivituskäsk (Toodang / Arendus):${NC}  ./scripts/setup-all.sh -b ${num}"
-  echo -e "🧪 ${BOLD}Testimiskäsk (Puhas Algseis):${NC}       ./scripts/setup-all.sh -tb ${num}"
-  echo -e "🔍 ${BOLD}Simuleerimise käsk (Dry-run):${NC}       ./scripts/setup-all.sh -b ${num} --dry-run\n"
+  echo -e "🚀 ${BOLD}Launch Command (Production / Dev):${NC}  ./scripts/setup-all.sh -b ${num}"
+  echo -e "🧪 ${BOLD}Testing Command (Clean Scratch):${NC}    ./scripts/setup-all.sh -tb ${num}"
+  echo -e "🔍 ${BOLD}Simulation Command (Dry-run):${NC}       ./scripts/setup-all.sh -b ${num} --dry-run\n"
 }
 
 # ----------------------------------------------------------------------------
@@ -451,3 +494,23 @@ list_blueprint_test_reports() {
   printf "└────┴──────────────────────────────────────────┴──────────────┴─────────────────────────────┘\n"
   echo -e "📁 ${YELLOW}Reports directory:${NC} $reports_dir\n"
 }
+
+# ----------------------------------------------------------------------------
+# CLI Execution Entry Point (when run directly)
+# ----------------------------------------------------------------------------
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  case "${1:-}" in
+    -l|--list|--list-blueprints|list|--summary|summary)
+      print_blueprints_table "${2:-}"
+      ;;
+    -s|-sb|--show|--inspect|inspect)
+      show_blueprint_details "${2:-0}"
+      ;;
+    --reports|reports)
+      list_blueprint_test_reports
+      ;;
+    *)
+      print_blueprints_table "${1:-}"
+      ;;
+  esac
+fi

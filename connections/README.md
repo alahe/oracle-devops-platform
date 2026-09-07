@@ -1,79 +1,51 @@
-## Kuidas Importida Ühendused VS Code SQL Developer UI-sse
+<!-- [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md) -->
 
-Oracle SQL Developer Extension for VS Code laienduses saab kõik 4 ühendust korraga sisse importida failist **`sqldev-connections.json`**:
+# 🔌 Database Connections and VS Code Setup Guide
 
-### Samm-sammuline juhend:
-1. Ava VS Code-is vasakult külgribalt **Oracle SQL Developer** vahekaart (Oracle logo).
-2. **Database Connections** paneeli päises vajuta nuppudele **`...`** (More Actions) või teosta paremklõps ja vali **`Import Connections`**.
-3. Avanenud faili sirvimise aknas navigeeri selle projekti kausta:
-   `Oracle/oracle-free-db-in-prod/connections/sqldev-connections.json`
-4. Vali fail `sqldev-connections.json` ja vajuta **Import**.
-5. Kõik 4 ühendust ilmuvad koheselt teie **Database Connections** nimekirja!
+This guide describes automatic and manual registration of Oracle database connections for **Oracle SQL Developer for VS Code** (on both the local Host PC and the containerized Web IDE), as well as passwordless connection handling via Oracle Wallet (SEPS).
 
 ---
 
-## Kuidas Lisada Käsitsi (Käsitsi sisestamisel)
+## 🔄 Dual-Level Automated Registration (Host PC & Web IDE)
 
-Kui soovid lisada ühenduse käsitsi `+` nupuga (nt DBeaver, IntelliJ, Basic-ühendus), saad jooksvad paroolid turvaliselt teada abiskriptiga:
-*   **APEX Admin (ADMIN) parool:**
-    ```bash
-    ./scripts/get-password.sh APEX_ADMIN
-    ```
-*   **APEX Proxy SYS parool:**
-    ```bash
-    ./scripts/get-password.sh DB_PROXY_SYS
-    ```
-*   **Publisher SYS parool:**
-    ```bash
-    ./scripts/get-password.sh DB_PUBLISHER_SYS
-    ```
-*   **Arendaja USER_DEVELOPER parool:**
-    ```bash
-    ./scripts/get-password.sh DB_PROXY_DEV
-    ```
-*   **Forms rakenduskasutaja USER_APP parool:**
-    ```bash
-    ./scripts/get-password.sh DB_FORMS_APP
-    ```
-*   **Vaatleja USER_VIEWER parool:**
-    ```bash
-    ./scripts/get-password.sh DB_PROXY_VIEWER
-    ```
+The entire platform uses the centralized connection registration engine (`scripts/register-connections.sh`), creating and synchronizing database connections simultaneously in your **local VS Code (Host PC)** and **Containerized Web IDE (`web-ide-dev`)**:
 
-*   **LIS SYS parool:**
-    ```bash
-    ./scripts/get-password.sh DB_ALISE_SYS
-    ```
-*   **LIS Arendaja USER_DEVELOPER parool:**
-    ```bash
-    ./scripts/get-password.sh DB_ALISE_DEV
-    ```
+### 📊 Connection Registration Process Flow
 
-- **Publisher DB (SYS):** Host `localhost`, Port `1531`, Service `FREEPDB1`, User `sys` (Role: `SYSDBA`), Password `<Skripti_Väljund>`
-- **APEX Proxy DB (SYS):** Host `localhost`, Port `1532`, Service `FREEPDB1`, User `sys` (Role: `SYSDBA`), Password `<Skripti_Väljund>`
-- **LIS Äribaas DB (SYS):** Host `localhost`, Port `1533`, Service `FREEPDB1`, User `sys` (Role: `SYSDBA`), Password `<Skripti_Väljund>`
-- **Forms DB (SYS):** Host `localhost`, Port `1534`, Service `FREEPDB1`, User `sys` (Role: `SYSDBA`), Password `<Skripti_Väljund>`
-- **APEX Proxy DB (Developer User):** Host `localhost`, Port `1532`, Service `FREEPDB1`, User `USER_DEVELOPER` (Role: `NORMAL`), Password `<Skripti_Väljund>`
-  *Märkus: Kasutajale on määratud süsteemne roll **`DB_DEVELOPER_ROLE`**, mis tagab vajalikud õigused arendustöödeks.*
+```mermaid
+flowchart TD
+  START(["🚀 Start:<br/>./scripts/setup-all.sh<br/>or register-connections.sh"]) --> DISCOVER["🔍 1. Discover Active DBs<br/>& Load YAML Profiles"]
+  
+  DISCOVER --> WALLET["🔐 2. Extract Passwords<br/>JIT from SEPS Wallet<br/>(Zero-Trust in Memory)"]
+  
+  WALLET --> BUILD_CONNS["📦 3. Build Dual<br/>Connection Payloads<br/>(Host TCP & Container Host)"]
+  
+  BUILD_CONNS --> HOST_REG["💻 4. Register on Host PC<br/>- SQLcl connect -save<br/>- ~/.dbtools & ~/.sqldev<br/>- Color coding applied"]
+  
+  HOST_REG --> CHECK_WEBIDE{"❓ Is Web IDE<br/>(web-ide-dev)<br/>container running?"}
+  
+  CHECK_WEBIDE -->|"✅ YES / Running"| WEBIDE_REG["🌐 5. Register in Web IDE<br/>- Container SQLcl batch<br/>- /config/.dbtools/conns<br/>- /config/.sqldev/conns.json<br/>- Permissions chown abc"]
+  
+  CHECK_WEBIDE -->|"❌ NO / Absent"| SANITIZE["🧹 6. Sanitize folders.json<br/>(Prune orphaned GUIDs<br/>Prevent DBTU-03001)"]
+  
+  WEBIDE_REG --> SANITIZE
+  
+  SANITIZE --> READY(["🎉 Ready:<br/>1-Click DB Connections<br/>in Host & Web IDE!"])
+```
 
----
+### CLI Invocation:
 
-## Automaatne registreerimine SQLcl abil (Soovituslik lokaalselt)
+```bash
+./scripts/register-connections.sh
+```
 
-Projekti juurest leiad abiskriptid, mis registreerivad andmebaasi ühendused automaatselt otse VS Code SQL Developer Connection Manageri:
+- **Host PC:** Registers connections in `~/.dbtools/connections/` and `~/.sqldev/connections.json` (host exposed ports `localhost:1532`, `localhost:1533`, etc.).
+- **Web IDE:** If `web-ide-dev` is active, creates connections inside the container (`db-proxy:1521`, `db-alise:1521`, etc.) and stores passwords in container storage.
+- **Order-Independent:** Web IDE can start before or after databases. Connections are automatically synchronized whenever new databases start or via CLI.
 
-1.  **Süsteemsed ühendused (`sys`/`admin` ja skeemid):**
-    ```bash
-    ./scripts/internal/register-connections.sh
-    ```
-    See tuvastab automaatselt VS Code laienduse sees asuva SQLcl binääri ja registreerib ühendused kaustapõhiselt (`/APEX` või `/MYATP` ning `/Publisher`).
+### Automated Workspace Registration (`.vscode/tasks.json`)
 
-2.  **Isiklikud arendajate ühendused (`create-developer.sh`):**
-    Kui arendaja loob endale isikliku konto (kas käsitsi või `./scripts/setup-all.sh` paigalduse lõpus), registreerib skript uue arendaja ühenduse (`5. Dev <KASUTAJANIMI>`) automaatselt SQLcl-i abil kausta `/APEX` või `/MYATP`. Arendaja ei pea mingeid andmeid käsitsi kopeerima.
-
-### Automaatne käivitamine projekti avamisel (`.vscode/tasks.json`)
-
-Et ühendused tekitataks automaatselt iga kord, kui projekti kaust VS Code-is avatakse, on loodud task failis **`.vscode/tasks.json`**:
+To auto-register connections whenever the project is opened in VS Code:
 
 ```json
 {
@@ -82,7 +54,7 @@ Et ühendused tekitataks automaatselt iga kord, kui projekti kaust VS Code-is av
     {
       "label": "Auto-Register Oracle Connections",
       "type": "shell",
-      "command": "./scripts/internal/register-connections.sh",
+      "command": "./scripts/register-connections.sh",
       "runOptions": {
         "runOn": "folderOpen"
       },
@@ -97,70 +69,82 @@ Et ühendused tekitataks automaatselt iga kord, kui projekti kaust VS Code-is av
 
 ---
 
-## 🔐 Paroolivaba Ühendus Oracle Wallet (SEPS) Abil
+## 📥 How to Import Connections into VS Code SQL Developer UI
 
-Kohalikus arenduskeskkonnas on andmebaasi ja kliendi vaheline autentimine täielikult turvatud **Oracle Walleti** ja **SEPS (Secure External Password Store)** abil. See võimaldab teha andmebaasi ühendusi ilma plaintext paroolide sisestamiseta või koodi/skripti sisse kirjutamiseta.
+Connections can be imported directly via **`sqldev-connections.json`**:
 
-### Eeltingimused host-masinas:
-1. `TNS_ADMIN` keskkonnamuutuja peab viitama hoidlas olevale `config/tns_admin` kataloogile:
+### Step-by-Step Guide:
+1. Open VS Code and navigate to the **Oracle SQL Developer** tab on the left activity bar.
+2. In the **Database Connections** panel header, click **`...`** (More Actions) or right-click and choose **`Import Connections`**.
+3. In the file picker, select:
+   `connections/sqldev-connections.json`
+4. Click **Import**.
+5. All connections appear immediately in your **Database Connections** view!
+
+---
+
+## 🔑 Manual Credential Retrieval
+
+If you wish to configure connections manually in tools like DBeaver or IntelliJ:
+*   **APEX Admin (ADMIN):**
+    ```bash
+    ./scripts/get-password.sh APEX_ADMIN
+    ```
+*   **APEX Proxy SYS:**
+    ```bash
+    ./scripts/get-password.sh DB_PROXY_SYS
+    ```
+*   **Publisher SYS:**
+    ```bash
+    ./scripts/get-password.sh DB_PUBLISHER_SYS
+    ```
+*   **Developer USER_DEVELOPER:**
+    ```bash
+    ./scripts/get-password.sh DB_PROXY_DEV
+    ```
+*   **ALISE Business DB SYS:**
+    ```bash
+    ./scripts/get-password.sh DB_ALISE_SYS
+    ```
+*   **ALISE Developer USER_DEVELOPER:**
+    ```bash
+    ./scripts/get-password.sh DB_ALISE_DEV
+    ```
+
+---
+
+## 🔐 Passwordless Connection via Oracle Wallet (SEPS)
+
+In local development, authentication is secured using **Oracle Wallet (SEPS)** without plaintext credentials in code.
+
+### Host Environment Setup:
+1. Set `TNS_ADMIN` to the repository's `config/tns_admin` folder:
    ```bash
    export TNS_ADMIN=$(pwd)/config/tns_admin
    ```
 
-### 🐳 TNS & Wallet Konteinerite Fallback režiimis
-Kui lokaalne host-süsteem ei oma SQLcl tarkvara või see on piiratud (näiteks VS Code SQL Developer laienduse sise-SQLcl, millel puudub PKI walleti tugi), kasutavad paigaldusskriptid automaatselt **SQLcl konteineri fallbacki**.
-Konteineri jaoks genereeritakse automaatselt isoleeritud konfiguratsiooni kaust **`config/tns_admin_container`**, mis:
-1. Kaardistab TNS aliased (nt `DB_APEX_PROXY_SCHEMA`) otse konteinerite sisevõrgu hostinimedele (`oracle-db-apex-proxy:1521`).
-2. Määrab walleti otsinguteeks `/tns` kausta konteineri sees, vältides hosti ja VM-i vahelise failisüsteemi overlay ja inode-ide caching probleeme Java käivitusel.
+### 🔌 Quick Connect via SQLcl (Host CLI):
+```bash
+# Connect as Developer
+sql /@DB_PROXY_DEV
 
-### 🔌 Ühendamine SQLcl abil (Host-masinast)
-Kui `TNS_ADMIN` on seadistatud, saad andmebaasi sisse logida paroolivabalt kasutades järgmisi aliaseid:
-
-*   **APEX Proxy DB:**
-    ```bash
-    sql /@DB_PROXY_SYS as sysdba
-    sql /@DB_PROXY_DEV
-    ```
-*   **LIS Äribaas DB:**
-    ```bash
-    sql /@DB_ALISE_SYS as sysdba
-    sql /@DB_ALISE_DEV
-    ```
-*   **Publisher DB:**
-    ```bash
-    sql /@DB_PUBLISHER_SYS as sysdba
-    ```
-
-### 📂 Ühendamine VS Code SQL Developer Extensionis (TNS & Wallet)
-VS Code SQL Developer extension toetab paroolivaba Wallet ühendust. Selleks:
-1. Ava VS Code-is **Oracle SQL Developer** laiendus.
-2. Ava **Database Connections** paneel ja vajuta uue ühenduse lisamiseks **`+`**.
-3. Ühenduse seadistused:
-   *   **Connection Type:** Vali **`TNS`** (mitte `Basic`).
-   *   **Network Alias:** Vali rippmenüüst soovitud alias (nt `db_apex_proxy_sys` või `db_test_dev`).
-   *   **Authentication:** Vali **`External`** (see ütleb laiendusele, et kasutajanimi ja parool loetakse automaatselt Walletist).
-   *   **TNS_ADMIN path:** Kui küsitakse, sisesta oma projekti `config/tns_admin` kataloogi täielik absoluutne tee.
-4. Testi ja salvesta ühendus!
+# Connect as SYSDBA
+sql /@DB_PROXY_SYS as sysdba
+```
 
 ---
 
-## 🔒 Windows Host ja Korporatiivvõrgu SSL/TLS sertifikaatide usaldamine
+## 🔒 Windows Host & Corporate Network SSL/TLS Certificate Trust
 
-Kui arendad Windows masinas (WSL2 kaudu) ja soovid, et lokaalne HTTPS (ORDS-i isesekreeritud sertifikaat) oleks sinu veebibrauseris (Edge/Chrome/Chrome-headless) usaldatud ilma SSL-i hoiatusteta:
+If developing on Windows (via WSL2) and configuring local HTTPS without browser SSL warnings:
 
-### 1. ORDS-i lokaalse sertifikaadi usaldamine Windowsis (ilma administraatori õigusteta)
-Kuna Windows nõuab Root CA-de lisamisel interaktiivset kinnitusakent, saab üksiku serveri sertifikaadi usaldada headless-režiimis (ilma kinnituseta ja ilma admin-õigusteta) Windowsi käsurealt:
+### 1. Trust Local Certificate on Windows:
 ```cmd
 certutil -user -addstore TrustedPeople ssl/cert.crt
 ```
-*(Käivita Windowsi Command Promptist või PowerShellist projekti juurkaustast. See teeb `localhost:8448` ühenduse brauseris roheliseks).*
 
-### 2. Podman VM-i (WSL) seadistamine sisevõrgu CA usaldamiseks (kui sise-Artifactory pulls ebaõnnestuvad SSL veaga)
-Kui su ettevõte kasutab sisevõrgu CA-d ja Podman VM ei saa pilte alla laadida SSL-vea tõttu, saad CA sertifikaadi kopeerida ja aktiveerida Podmani virtuaalmasinas järgmiselt:
+### 2. Configure Podman VM to Trust Corporate CA:
 ```bash
-# Kopeeri CA sertifikaat Podman VM-i anchors kausta:
-podman machine ssh sudo cp /mnt/c/tee/ca.crt /etc/pki/ca-trust/source/anchors/
-
-# Uuenda usaldatavate CA-de nimekirja virtuaalmasinas:
+podman machine ssh sudo cp /mnt/c/path/ca.crt /etc/pki/ca-trust/source/anchors/
 podman machine ssh sudo update-ca-trust
 ```

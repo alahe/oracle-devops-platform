@@ -24,7 +24,7 @@ Instead of searching for or typing passwords on screen, copy passwords directly 
 
 | Service / Portal | Direct Web URL (Auto-Prefilled) | Default User / Workspace | Password Command (Instant Copy) |
 | :--- | :--- | :--- | :--- |
-| **🛠️ APEX Builder** | [Open APEX Workspace (Prefilled)](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company=DEV_WS&f4550_p1_username=DEV) | Workspace: `DEV_WS`<br/>User: `DEV` *(Auto-prefilled)* | `./scripts/get-password.sh DB_PROXY_DEV -c` |
+| **🛠️ APEX Builder** | [Open APEX Workspace (Prefilled)](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company=PROXY_WORKSPACE&f4550_p1_username=DEV) | Workspace: `PROXY_WORKSPACE`<br/>User: `DEV` *(Auto-prefilled)* | `./scripts/get-password.sh DB_PROXY_DEV -c` |
 | **⚙️ APEX Instance Admin** | [Open APEX Admin (Prefilled)](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/administration-sign-in?p10_username=ADMIN) | Workspace: `INTERNAL`<br/>User: `ADMIN` *(Auto-prefilled)* | `./scripts/get-password.sh DB_PROXY_APEX_ADMIN -c` |
 | **📊 Database Actions (SDW)** | [Open SQL Developer Web](https://localhost:8448/ords/proxy/user_developer/sign-in?r=_sdw) | Schema: `user_developer`<br/>User: `USER_DEVELOPER` | `./scripts/get-password.sh DB_PROXY_DEV -c` |
 | **📑 Analytics Publisher** | [Open Analytics Publisher](http://localhost:9502/xmlpserver) | User: `weblogic` | `./scripts/get-password.sh DB_PUBLISHER_SYS -c` |

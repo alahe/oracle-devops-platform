@@ -1,13 +1,36 @@
-# Local Environment & Security Files (MUST NOT BE IN GIT)
+# ==============================================================================
+# Oracle DevOps Platform — Git Ignore Configuration (Zero-Trust Compliant)
+# ==============================================================================
+
+# 1. Local Environment & Security Files (MUST NOT BE IN GIT - ZERO-TRUST)
 .env
 .env.secrets
-config/secrets/
-config/tns_admin/
-config/tns_admin_container/
-config/cookies.txt
+.env.local
+.actrc
+
+# 2. Oracle SEPS Wallets & Host/Container TNS Configuration
+config/secrets/*
+!config/secrets/.gitkeep
+config/tns_admin/*
+!config/tns_admin/.gitkeep
+config/tns_admin_container/*
+!config/tns_admin_container/.gitkeep
+config/container_tns_admin/*
+!config/container_tns_admin/.gitkeep
 config/oracle_db_wallet.zip
-config/wallet-*/
+config/wallet-*/*
+!config/wallet-*/.gitkeep
 config/ords/*/**
+!config/ords/.gitkeep
+
+# 3. SSL/TLS Certificates, Private Keys & Local Root CAs
+config/certs/*.crt
+config/certs/*.der
+config/certs/*.pem
+config/certs/*.key
+config/certs/*.p12
+config/certs/*.sso
+config/certs/*.csr
 config/certs/custom/**
 !config/certs/custom/README.md
 !config/certs/custom/.gitkeep
@@ -28,22 +51,39 @@ config/certs/self_signed/**
 *.key
 *.lck
 
-# Dynamically generated Docker/Podman compose manifests
+# 4. Session Cookies & Temporary Auth Artifacts (Zero-Trust Plaintext Cache)
+cookie*.txt
+cookies*.txt
+*.cookies
+response*.html
+
+# 5. Local Runtime State & Lifecycle Locks
+.active_blueprint
+.setup_in_progress
 podman-compose.override.yml
 
-# Local Installation Logs, Debug Logs & Test History
-install_logs/
-golden-snapshots/
-backups/
-scratch/
-tests/reports/history/
+# 6. Local Installation Logs, Diagnostics & Temp IPC Files
+install_logs/*
+!install_logs/.gitkeep
+golden-snapshots/*
+!golden-snapshots/.gitkeep
+backups/*
+!backups/.gitkeep
+scratch/*
+!scratch/.gitkeep
+tests/reports/history/*
+!tests/reports/history/.gitkeep
+tests/reports/audit/*
+!tests/reports/audit/.gitkeep
+metrics/*_temp.md
+metrics/*_temp.*
 AdminServer.log
 biee_log*.txt
 config_logs*/
 *.log
 META-INF/
 
-# Temporary and Downloaded Archives & Binaries
+# 7. Temporary and Downloaded Archives & Binaries
 binaries/**
 !binaries/
 !binaries/**/
@@ -57,11 +97,15 @@ patches/unzipped_*
 db_install/
 db-install/
 
-# Large Docker Build Artifacts & Downloads
+# 8. Large Docker Build Artifacts & Downloads
 docker/publisher/dockerfiles/*/*.rpm
 docker/publisher/dockerfiles/*/*.zip
+docker/forms/dockerfiles/*/*.rpm
+docker/forms/dockerfiles/*/*.zip
 
-# OS / Editor Files
+# 9. OS / Editor Files / Python Cache
 .DS_Store
 .vscode/
 .idea/
+__pycache__/
+*.pyc

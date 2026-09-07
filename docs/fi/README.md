@@ -218,6 +218,30 @@ Oracle Free DB in Prod sisältää **älykkään monikerroksisen Golden Snapshot
 
 ---
 
+---
+
+## 🧭 Oracle APEX DevHub -Sovellus ja APEXlang CI/CD
+
+Erillisen HTML Dev Hubin (`docs/dev-hub.html`) lisäksi alusta sisältää yritystason **Oracle APEX -sovelluksen (Sovellus 101: DevHub)**, joka on luotu deklaratiivisesti [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) -kielellä kansioon [`applications/devhub/`](../../applications/devhub/):
+
+- **Nollajalanjälkidokumentaatio Tietokannassa:** Dokumentaatiota ei koskaan monisteta tai tallenneta tietokantaan CLOB-kenttinä. Kevyt paikallinen REST-dokumentaatiosilta (`scripts/internal/dev-hub-bridge.py` portissa 8089) suoratoistaa lokalisoidun Markdownin suoraan Git-tiedostoista APEXiin, jossa se muunnetaan natiivisti `APEX_MARKDOWN.TO_HTML` -funktiolla.
+- **Interaktiivinen Esittely ja Yleiskatsaus (Sivu 7):** Sisältää 8 dian interaktiivisen esityksen, joka kattaa alustan vision, kehittäjien kipupisteet, roolikohtaiset hyödyt, 11 arkkitehtuurimallia, Zero-Trust SEPS Wallet -tietoturvan, ~15s Golden Snapshot -palautuksen ja vastaukset kriittisen arkkitehdin / entisen DBA:n kysymyksiin.
+- **Tietokantamoottori ja Erillinen Skeema:** Taustalla toimii dedikoitu skeema `DEVHUB` ja paketti `DEVHUB.DEV_HUB_PKG`, joka suorittaa palvelintason terveystarkastukset (`UTL_HTTP`) kaikille palveluille alle 100 ms viiveellä.
+- **Viralliset SQLcl 26.2 APEXlang -Työkalut:**
+  ```bash
+  # Validoi APEXlang-tiedostot paikallisia sääntöjä vasten:
+  node .agents/skills/apexlang/tools/apexctl.mjs apexlang validate --app-path applications/devhub
+
+  # Validoi ja tuo sovellus 101 työtilaan PROXY_WORKSPACE SQLcl:n kautta:
+  ./scripts/sqlcl.sh DEVHUB/<salasana>@localhost:1533/FREEPDB1
+  SQL> apex validate -input ./applications/devhub -workspace PROXY_WORKSPACE
+  SQL> apex import -input ./applications/devhub -id 101 -workspace PROXY_WORKSPACE
+  ```
+- **Automatisoitu CI/CD -Putki:** Oma GitHub Actions -työnkulku [`.github/workflows/deploy-devhub-apexlang.yml`](../../.github/workflows/deploy-devhub-apexlang.yml) paikallisella emuloinnilla komennolla `./scripts/test-local-ci.sh deploy-devhub-apexlang.yml --dry-run`.
+- **Yksikkötestit:** Aja `./tests/unit/test-apex-devhub.sh` skeeman, PL/SQL:n, REST-siltojen ja 6 kielen kattavuuden testaamiseksi.
+
+---
+
 ## 📑 Moduulikohtaiset Käyttöoppaat
 
 - 🚀 **[docs/fi/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Modernisointi- ja Migraatio-opas** — Liiketoimintaperusteet, TCO-kustannusvertailu, 5-vaiheinen automaattinen työnkulku, PL/SQL-logiikan eristäminen ja [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) Vibe-Coding.
@@ -225,6 +249,7 @@ Oracle Free DB in Prod sisältää **älykkään monikerroksisen Golden Snapshot
 - 📑 **[docs/fi/publisher-setup.md](publisher-setup.md):** Analytics Publisherin käyttöohje — portti 9502 (`/xmlpserver`), RCU-metatietokanta, `PUBLISHER_READER` Wallet -tili, JDBC-tietolähteiden liittäminen ja raporttien jakelu.
 - 💻 **[docs/fi/web-ide-artifactory.md](web-ide-artifactory.md):** Web IDE -käyttöohje — VS Code -laajennukset (Oracle SQL Developer, Antigravity AI, GitHub Actions), isäntäyhteyksien reaaliaikainen synkronointi ja offline GitHub Actions -testaus (`act`).
 - 🌐 **[docs/dev-hub.html](../../docs/dev-hub.html):** **Kehittäjän ja DevOpsin Komentokeskus (Developer Hub)** — Saatavilla osoitteissa **`http://localhost:8088/`** ja **`https://localhost:8448/`** (ORDS) sekä **`http://localhost:6082/vnc.html`** (Forms). Sisältää reaaliaikaisen latenssin seurannan, interaktiiviset Mermaid-arkkitehtuurikaaviot, 11 Blueprintin luettelon, selaimensisäisen Markdown-lukijan ja DevOps-pikakomennot 6 kielellä.
+- 🧪 **[docs/fi/apex-devhub-test-plan.md](apex-devhub-test-plan.md):** **Oracle APEX DevHub Testaussuunnitelma** — Monitasoinen testausstrategia (utPLSQL-yksikkötestit, REST-siltakyselyt, hybridit Playwright/curl E2E -työnkulut ja APEX Advisor -laadunvarmistus) Golden Snapshot -eristyksellä.
 - 📊 **[config/blueprints/README.fi.md](../../config/blueprints/README.fi.md):** Kaikkien 11 arkkitehtuurisuunnitelman tekninen matriisi.
 - 📖 **[Oracle APEX 26.1 APEXlang Reference Manual](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/):** Oraclen virallinen spesifikaatio deklaratiivisesta `.apx`-kieliopista, kääntäjän AST-solmuista ja CLI-komennoista.
 - 📜 **[Virallinen APEXlang EBNF -Kielioppi (`apexlang.ebnf`)](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf):** Koneluettava virallinen EBNF-kielioppitiedosto tekoälyn rajoitettuun dekoodaukseen (GBNF) ja staattisiin turvallisuustyökaluihin.

@@ -40,10 +40,82 @@
     {
       "timestamp": "2026-09-02T06:03:54.133183",
       "duration_seconds": 236
+    },
+    {
+      "timestamp": "2026-09-02T11:02:15.873782",
+      "duration_seconds": 29
+    },
+    {
+      "timestamp": "2026-09-02T12:06:13.509612",
+      "duration_seconds": 21
+    },
+    {
+      "timestamp": "2026-09-02T12:55:58.614214",
+      "duration_seconds": 12
+    },
+    {
+      "timestamp": "2026-09-02T12:57:53.980114",
+      "duration_seconds": 13
+    },
+    {
+      "timestamp": "2026-09-02T13:00:49.462599",
+      "duration_seconds": 82
+    },
+    {
+      "timestamp": "2026-09-02T15:41:57.385190",
+      "duration_seconds": 238
+    },
+    {
+      "timestamp": "2026-09-02T16:50:50.611474",
+      "duration_seconds": 225
+    },
+    {
+      "timestamp": "2026-09-03T08:41:21.232636",
+      "duration_seconds": 80
+    },
+    {
+      "timestamp": "2026-09-03T08:52:47.767002",
+      "duration_seconds": 284
+    },
+    {
+      "timestamp": "2026-09-03T21:06:44.797580",
+      "duration_seconds": 73
+    },
+    {
+      "timestamp": "2026-09-03T21:13:44.721900",
+      "duration_seconds": 85
+    },
+    {
+      "timestamp": "2026-09-05T03:39:52.020840",
+      "duration_seconds": 156
+    },
+    {
+      "timestamp": "2026-09-05T03:44:03.438959",
+      "duration_seconds": 183
+    },
+    {
+      "timestamp": "2026-09-06T10:14:58.669741",
+      "duration_seconds": 1456
+    },
+    {
+      "timestamp": "2026-09-06T11:50:53.588183",
+      "duration_seconds": 137
+    },
+    {
+      "timestamp": "2026-09-07T02:05:09.990370",
+      "duration_seconds": 512
+    },
+    {
+      "timestamp": "2026-09-07T02:21:31.847062",
+      "duration_seconds": 604
+    },
+    {
+      "timestamp": "2026-09-07T02:32:29.615227",
+      "duration_seconds": 529
     }
   ],
-  "runs_count": 10,
-  "average_duration_seconds": 211,
-  "min_duration_seconds": 37,
-  "max_duration_seconds": 743
+  "runs_count": 28,
+  "average_duration_seconds": 244,
+  "min_duration_seconds": 12,
+  "max_duration_seconds": 1456
 }

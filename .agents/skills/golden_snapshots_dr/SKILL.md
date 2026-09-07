@@ -29,21 +29,61 @@ A Golden Snapshot captures the atomic state of:
 
 ---
 
-## 3. Snapshot Operations CLI
+## 3. Snapshot Operations CLI & Developer Workflows
+
+### When to use Variant A vs Variant B:
+- **Variant A: Rapid Restore from Golden Snapshot (~15–45s)**
+  - *Use Case:* Daily developer reset. Rolls back broken test tables, experimental data, corrupted APEX applications, or failed migrations to pristine baseline without re-running full 5-8 minute setup.
+  - *Preservation:* Always uses pristine baseline (`bp_<N>_latest.tar.gz`).
+- **Variant B: Deep Clean & Cold Rebuild from Scratch (~4–8 min)**
+  - *Use Case:* Starting from 100% clean sheet, upgrading APEX version/patches, modifying underlying base Docker images, or generating a brand new golden baseline release for the engineering team.
+  - *Impact:* Completely wipes all local volumes, Podman secrets, and certificates, running full Pass 1 cold setup.
 
 ```bash
-# 1. Create a fresh Golden Snapshot:
+# 1. Create a fresh Golden Baseline Snapshot:
 ./scripts/snapshots/create-golden-snapshots.sh
+./scripts/snapshots/create-golden-snapshots.sh --check-age   # Skips if snapshot <= 30 days old
+./scripts/snapshots/create-golden-snapshots.sh --force       # Forces snapshot creation
 
-# 2. Restore environment from the latest Golden Snapshot (~15s recovery):
-./scripts/snapshots/restore-golden-snapshots.sh
+# 2. Create a Custom Developer Snapshot (preserves baseline):
+./scripts/snapshots/create-golden-snapshots.sh --tag "before_crm_migration" --desc "Pre-migration checkpoint"
 
-# 3. List existing snapshots:
-ls -lh snapshots/golden/
+# 3. Setup orchestration with snapshot control:
+./scripts/setup-all.sh -y                   # Skips snapshot creation if snapshot <= 30 days old
+./scripts/setup-all.sh --force-snapshot     # Forces creation regardless of age (-fs / --create-snapshot)
+./scripts/setup-all.sh --skip-snapshot      # Explicitly bypasses snapshot step
 
-# 4. Clean old snapshots:
+# 4. Variant A: Restore environment from baseline (~15s recovery):
+./scripts/snapshots/restore-golden-snapshots.sh --force
+./scripts/snapshots/restore-golden-snapshots.sh -b 21 --force
+
+# 5. Restore specific custom snapshot:
+./scripts/snapshots/restore-golden-snapshots.sh --file "custom_bp0_before_crm_migration_20260904_183000.tar.gz" --force
+./scripts/snapshots/restore-golden-snapshots.sh --tag "before_crm_migration" --force
+
+# 6. Variant B: Deep clean and rebuild from scratch:
+./scripts/reset-all.sh -y && ./scripts/setup-all.sh -y
+
+# 7. List existing snapshots:
+ls -lh golden-snapshots/
+
+# 8. Clean old snapshots:
 ./scripts/snapshots/clean-golden-snapshots.sh -y
 ```
+
+---
+
+## 3.1. Developer Hub UI Integration (Dev Hub & DR Cockpit)
+
+In `docs/dev-hub.html`:
+- **Tab 8 (Snapshots & DR Hub):**
+  - Interactive table of all standard and custom snapshots (with badges, size, timestamps, APEX/DB version).
+  - 1-click **Restore** (`[ ⏪ Restore ]`), **Copy CLI Command** (`[ 📋 ]`), and **Delete** (`[ 🗑️ ]`) for custom snapshots.
+  - Form to create named custom snapshots on the fly.
+  - Automated bridge integration (`/api/snapshots/list`, `/api/snapshots/restore`, `/api/snapshots/create`, `/api/snapshots/delete`).
+- **Blueprint Modal (Architectural View):**
+  - Displays dynamic **Clean Baseline & Disaster Recovery** card for database blueprints.
+  - 1-click execution for **Variant A (Rapid Restore)** and **Variant B (Deep Reset)**.
 
 ---
 

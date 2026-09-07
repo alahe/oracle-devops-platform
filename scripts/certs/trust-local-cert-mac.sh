@@ -2,7 +2,7 @@
 # ============================================================================
 # Oracle DevOps Platform - macOS User Certificate Installer
 # Installs local Dev Root CA into current macOS user keychain (login.keychain).
-# Runs 100% in user space without requiring sudo / root privileges.
+# Runs 100% in user space without requiring root privileges.
 # ============================================================================
 set -e
 
@@ -29,13 +29,27 @@ fi
 USER_KEYCHAIN="$HOME/Library/Keychains/login.keychain-db"
 [ ! -f "$USER_KEYCHAIN" ] && USER_KEYCHAIN="$HOME/Library/Keychains/login.keychain"
 
-echo -e "${YELLOW}[INFO] Adding certificate to macOS user keychain: ${USER_KEYCHAIN}${NC}"
-security add-certificate -k "$USER_KEYCHAIN" "$CERT_FILE" 2>/dev/null || true
+if security verify-cert -c "$WORKSPACE_DIR/config/certs/localhost.crt" &>/dev/null; then
+  echo -e "${GREEN}✅ 'Local Dev Root CA' and localhost certificate are already trusted in macOS system. Continuing.${NC}"
+  exit 0
+elif security find-certificate -c "Local Dev Root CA" "$USER_KEYCHAIN" &>/dev/null; then
+  echo -e "${GREEN}✅ 'Local Dev Root CA' is already added to macOS user keychain (${USER_KEYCHAIN}). Continuing.${NC}"
+  exit 0
+fi
 
-if security find-certificate -c "Local Dev Root CA" "$USER_KEYCHAIN" &>/dev/null; then
+if [ "${SKIP_CERT_TRUST:-false}" = "true" ] || [ "${IS_TEST_MODE:-false}" = "true" ] || [ ! -t 0 ]; then
+  echo -e "${YELLOW}ℹ️  [TEST_MODE] Automated testing or background mode: skipping interactive macOS keychain trust.${NC}"
+  echo -e "${YELLOW}   (Using direct certificate file: ${CERT_FILE})${NC}"
+  exit 0
+fi
+
+echo -e "${YELLOW}[INFO] Adding certificate to macOS user keychain: ${USER_KEYCHAIN}${NC}"
+security add-trusted-cert -r trustRoot -p ssl -k "$USER_KEYCHAIN" "$CERT_FILE" 2>/dev/null || security add-trusted-cert -d -r trustRoot -k "$USER_KEYCHAIN" "$CERT_FILE" 2>/dev/null || security add-certificate -k "$USER_KEYCHAIN" "$CERT_FILE" 2>/dev/null || true
+
+if security verify-cert -c "$WORKSPACE_DIR/config/certs/localhost.crt" &>/dev/null || security find-certificate -c "Local Dev Root CA" "$USER_KEYCHAIN" &>/dev/null; then
   echo ""
   echo -e "${GREEN}==================================================================${NC}"
-  echo -e "${GREEN}✅ [SUCCESS] 'Local Dev Root CA' added to user keychain!${NC}"
+  echo -e "${GREEN}✅ [SUCCESS] 'Local Dev Root CA' trusted in macOS keychain!${NC}"
   echo -e "${GREEN}   (User Space, 0-Root / No Sudo)${NC}"
   echo -e "${GREEN}==================================================================${NC}"
 else

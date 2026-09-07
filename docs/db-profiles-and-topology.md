@@ -224,4 +224,46 @@ sequenceDiagram
     LisAPEX->>LisDB: LIS APEX rakendus luges kohalikust tabelist andmed
 ```
 
+---
+
+## 🧩 Clean Blueprints & Profile Inter-Relationships (Rule 11)
+
+### 1. Separation of Concerns & Positive References
+In the modern platform architecture, architecture blueprints (`config/blueprints/.env.*`) are **pure, high-level declarations**:
+- They **only declare positive references** to YAML profiles:
+  ```bash
+  DB_ALISE=db-alise-oracle
+  DB_PROXY=db-proxy-oracle
+  ORDS_PROFILE=ords-standard
+  PUBLISHER_PROFILE=publisher-standard
+  WEB_IDE_PROFILE=web-ide-standard
+  ```
+- They **never contain negative flags** (e.g. `SKIP_ORDS`, `SKIP_FORMS`), port numbers, or credentials.
+- They specify **which container instances are activated**.
+
+### 2. Profile Encapsulation & Inter-Database Relations
+100% of configuration details live in YAML profiles (`config/profiles/**/*.yaml`):
+- **Container settings:** Images, memory limits, host port bindings (`db_port`, `http_port`).
+- **Database internals:** PDB service names (`default_service: FREEPDB1`), tablespaces, user quotas, and least-privilege roles (`DBA_ADMIN`, `DEV`, `APP`, `VIEWER`).
+- **Inter-service relationships:** 
+  - ORDS connection pools (`databases: [alise, proxy, default]`) automatically map URLs (`/ords/alise/`, `/ords/proxy/`) to specific target database instances.
+  - Middleware services (Forms 14c, Analytics Publisher) connect either to a dedicated RCU database or to a shared infrastructure database as declared in the profile.
+
+### 3. Adding Custom Blueprints (1-by-1 Extensibility)
+Any developer or AI can add a custom blueprint anytime without touching any core engine scripts:
+1. Create a file `config/blueprints/.env.<ID>-<name>`:
+   ```bash
+   # Custom Blueprint 12: Integrated Developer Stack
+   DB_ALISE=db-alise-oracle
+   ORDS_PROFILE=ords-standard
+   WEB_IDE_PROFILE=web-ide-standard
+   ```
+2. Run or test immediately:
+   ```bash
+   ./scripts/setup-all.sh -b 12
+   ./scripts/setup-all.sh -b 12 --dry-run
+   ```
+   The engine automatically resolves the referenced profiles, provisions container instances, calculates ports, and configures the SEPS Wallet.
+
+
 

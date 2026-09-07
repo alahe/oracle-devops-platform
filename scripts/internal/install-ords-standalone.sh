@@ -23,16 +23,16 @@ elif [ -f ".env" ]; then
   set +a
 fi
 
-# 1. Lokaalsed paigalduse logid (ei lähe Git-i)
+# 1. Local installation logs (excluded from Git)
 LOG_DIR="$SCRIPT_DIR/../install_logs"
 mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 LOG_FILE="$LOG_DIR/ords_standalone_install_${TIMESTAMP}.log"
 
-# Suuname kogu väljundi nii ekraanile kui lokaalsesse logifaili
+# Redirect entire output to both terminal and local log file
 exec > >(tee -a "$LOG_FILE") 2>&1
 
-# 2. Git-is jälgitav metrics kataloog
+# 2. Version-controlled metrics directory (tracked in Git)
 METRICS_DIR="$SCRIPT_DIR/../metrics"
 mkdir -p "$METRICS_DIR"
 JSON_BENCHMARK="$METRICS_DIR/ords_setup_benchmarks.json"
@@ -52,8 +52,8 @@ format_duration() {
 
 echo "=================================================================="
 echo "1. Oracle REST Data Services (ORDS) Standalone Setup"
-echo "📝 Lokaalne logi: $LOG_FILE"
-echo "📊 Git mõõdikud:   $JSON_BENCHMARK"
+echo "📝 Local log:       $LOG_FILE"
+echo "📊 Git benchmarks:  $JSON_BENCHMARK"
 echo "=================================================================="
 
 # Configuration Parameters from active profile & .env
@@ -188,8 +188,8 @@ cp "$JSON_TS_ORDS" "$JSON_BENCHMARK"
 (cd "$METRICS_DIR" && ls -t ords_setup_benchmarks_*.json 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null || true)
 
 echo "=================================================================="
-echo "⏱   ORDS PAIGALDUSE KESTUS: $ORDS_TOTAL_TIME ($ORDS_TOTAL_SECSs)"
-echo "📊 Mõõdikud salvestati Git-i: $JSON_BENCHMARK"
-echo "📝 Logifail salvestati:       $LOG_FILE"
+echo "⏱   ORDS SETUP DURATION:      $ORDS_TOTAL_TIME ($ORDS_TOTAL_SECSs)"
+echo "📊 Metrics saved to Git:      $JSON_BENCHMARK"
+echo "📝 Log file saved:            $LOG_FILE"
 echo "✅ ORDS Standalone Setup Completed Successfully!"
 echo "=================================================================="

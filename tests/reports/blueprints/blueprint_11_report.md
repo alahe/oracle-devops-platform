@@ -1,14 +1,14 @@
-# Blueprinti 11 Testiaruanne (2026-09-01 12:44:07)
+# Blueprinti 11 Testiaruanne (2026-09-03 23:53:13)
 
-- **Aeg ja Kuupäev:** 2026-09-01 12:44:07
-- **Kogu Paigalduse Kestus:** 26m 20s
+- **Aeg ja Kuupäev:** 2026-09-03 23:53:13
+- **Kogu Paigalduse Kestus:** 8m 19s
 - **Blueprinti Fail:** `config/blueprints/.env.11-*`
 
 ---
 
 ## 1. ⏱ Ajakulu ja Tervisekontroll (Duration & Health)
 - **Tulemus:** ✅ Paigaldus ja tervisekontrollid läbitud 100% korrektselt.
-- **Kestus kokku:** 26m 20s
+- **Kestus kokku:** 8m 19s
 
 ---
 
@@ -16,11 +16,8 @@
 
 | Konteineri Nimi | CPU % | Mälukasutus / Limiit | RAM % |
 | :--- | :--- | :--- | :--- |
-| db-proxy | 24.63% | 516.8MB / 3.221GB | 16.04% |
-| db-publisher | 18.92% | 661.6MB / 3.221GB | 20.54% |
-| db-alise | 26.08% | 510.1MB / 3.221GB | 15.84% |
-| app-ords | 6.45% | 915.5MB / 1.074GB | 85.27% |
-| app-publisher | 221.26% | 3.642GB / 12.5GB | 29.12% |
+| db-proxy | 38.94% | 635.5MB / 3.221GB | 19.73% |
+| app-ords | 41.67% | 888MB / 1.074GB | 82.70% |
 
 ---
 
@@ -28,10 +25,9 @@
 
 | Voluumi Nimi | Kettamaht |
 | :--- | :--- |
-| oracle-free-db-in-prod_proxy_oradata | N/A |
+| oracle-free-db-in-prod_publisher_data | N/A |
 | oracle-free-db-in-prod_apex_images_26_1 | N/A |
-| oracle-free-db-in-prod_publisher_oradata | N/A |
-| oracle-free-db-in-prod_alise_oradata | N/A |
+| oracle-free-db-in-prod_proxy_oradata | N/A |
 
 ---
 
@@ -39,11 +35,8 @@
 
 | Konteineri Nimi | Staatus | Pordid |
 | :--- | :--- | :--- |
-| db-proxy | Up About a minute (healthy) | 127.0.0.1:1532->1521/tcp |
-| db-publisher | Up 11 minutes (healthy) | 127.0.0.1:1531->1521/tcp |
-| db-alise | Up About a minute (healthy) | 127.0.0.1:1533->1521/tcp |
-| app-ords | Up 9 minutes (starting) | 127.0.0.1:8088->8088/tcp, 127.0.0.1:8448->8448/tcp |
-| app-publisher | Up 9 minutes (starting) | 127.0.0.1:9500->9500/tcp, 127.0.0.1:9502-9503->9502-9503/tcp, 9501/tcp, 9504-9999/tcp |
+| db-proxy | Up 32 seconds (healthy) | 0.0.0.0:1532->1521/tcp |
+| app-ords | Up 31 seconds (starting) | 0.0.0.0:8088->8088/tcp, 0.0.0.0:8448->8448/tcp |
 
 ---
 
@@ -51,23 +44,13 @@
 
 | Veebiteenuse Nimi | Kontrollitud URL | HTTP Kood | TLS Usaldus | Staatus |
 | :--- | :--- | :--- | :--- | :--- |
-| ORDS Root HTTP | `http://localhost:8088/ords/` | `HTTP 302` | N/A | ✅ OK |
-| Developer Hub (HTTPS) | `https://localhost:8448/dev-hub.html` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
-| ORDS Root HTTPS | `https://localhost:8448/ords/` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
-| ORDS Database Actions (Default) | `https://localhost:8448/ords/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
-| APEX Builder (PROXY) | `https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
-| APEX Instance Admin (PROXY) | `https://localhost:8448/ords/proxy/apex_admin` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
-| ORDS Database Actions (PROXY) | `https://localhost:8448/ords/proxy/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
-| APEX Builder (ALISE) | `https://localhost:8448/ords/alise/r/apex/workspace-sign-in/oracle-apex-sign-in` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
-| APEX Instance Admin (ALISE) | `https://localhost:8448/ords/alise/apex_admin` | `HTTP 302` | ⚠️ Self-Signed | ✅ OK |
-| ORDS Database Actions (ALISE) | `https://localhost:8448/ords/alise/_/landing` | `HTTP 200` | ⚠️ Self-Signed | ✅ OK |
-| Publisher UI (HTTP) | `http://localhost:9502/xmlpserver` | `HTTP 200` | N/A | ✅ OK |
+| Publisher UI (HTTP) | `http://localhost:9502/xmlpserver` | `HTTP 000` | N/A | ❌ Kättesaamatu |
 
 ---
 
 ## 6. 🔒 TLS / HTTPS Turvalisuse ja Sertifikaatide Audit (TLS Trust Matrix)
-- **Aktiivne TLS Režiim:** `USER_LOCAL_CA`
-- **Režiimi Kirjeldus:** Kasutajataseme lokaalne usaldatud CA (0 root/admin õigust)
+- **Aktiivne TLS Režiim:** `USER_CA`
+- **Režiimi Kirjeldus:** Detected User / Local Dev Root CA certificates
 - **Kasutatav Sertifikaat:** `/Users/allanlahe/Oracle/oracle-free-db-in-prod/config/certs/user_ca/localhost.crt`
 - **Lubatud Poliitika Tase:** `permissive`
 - **Mitte-Admin Usalduse Olek:** ✅ Usaldatud kasutaja tasemel (`Cert:\CurrentUser\Root` / `login.keychain-db`).
@@ -80,27 +63,17 @@
 
 | SEPS Walleti Alias | Ühenduse Staatus | Tuvastatud Kasutaja & Baas |
 | :--- | :--- | :--- |
-| `DB_ALISE_APP` | ✅ OK | `USER_APP@FREEPDB1         ` |
-| `DB_ALISE_APP_USER` | ✅ OK | `USER_APP@FREEPDB1         ` |
-| `DB_ALISE_DBA_ADMIN` | ✅ OK | `DBA_ADMIN@FREEPDB1        ` |
-| `DB_ALISE_DEV` | ✅ OK | `USER_DEVELOPER@FREEPDB1    ` |
-| `DB_ALISE_SCHEMA` | ✅ OK | `APEX_PROXY_SCHEMA@FREEPDB1    ` |
-| `DB_ALISE_SYS` | ✅ OK | `SYS@FREEPDB1              ` |
-| `DB_ALISE_VIEWER` | ✅ OK | `USER_VIEWER@FREEPDB1      ` |
-| `DB_PROXY_APP` | ✅ OK | `USER_APP@FREEPDB1         ` |
-| `DB_PROXY_DBA_ADMIN` | ✅ OK | `DBA_ADMIN@FREEPDB1        ` |
-| `DB_PROXY_DEV` | ✅ OK | `USER_DEVELOPER@FREEPDB1    ` |
-| `DB_PROXY_SCHEMA` | ✅ OK | `APEX_PROXY_SCHEMA@FREEPDB1    ` |
-| `DB_PROXY_SYS` | ✅ OK | `SYS@FREEPDB1              ` |
-| `DB_PROXY_VIEWER` | ✅ OK | `USER_VIEWER@FREEPDB1      ` |
-| `DB_PUBLISHER_BIPLATFORM` | ✅ OK | `SYS@FREE` |
-| `DB_PUBLISHER_DBA_ADMIN` | ✅ OK | `DBA_ADMIN@FREEPDB1        ` |
-| `DB_PUBLISHER_DEV` | ✅ OK | `USER_DEVELOPER@FREEPDB1    ` |
-| `DB_PUBLISHER_RCU` | ✅ OK | `SYS@FREE` |
-| `DB_PUBLISHER_READER` | ✅ OK | `SYS@FREE` |
-| `DB_PUBLISHER_SCHEMA` | ✅ OK | `APEX_PROXY_SCHEMA@FREEPDB1    ` |
-| `DB_PUBLISHER_SYS` | ✅ OK | `SYS@FREEPDB1              ` |
-| `DB_PUBLISHER_VIEWER` | ✅ OK | `USER_VIEWER@FREEPDB1      ` |
+| `DB_DB_PROXY_APP` | ℹ️ Skipped | `Proxy profile is not active` |
+| `DB_DB_PROXY_DBA_ADMIN` | ℹ️ Skipped | `Proxy profile is not active` |
+| `DB_DB_PROXY_DEV` | ℹ️ Skipped | `Proxy profile is not active` |
+| `DB_DB_PROXY_SCHEMA` | ℹ️ Skipped | `Proxy profile is not active` |
+| `DB_DB_PROXY_SYS` | ℹ️ Skipped | `Proxy profile is not active` |
+| `DB_DB_PROXY_VIEWER` | ℹ️ Skipped | `Proxy profile is not active` |
+| `DB_PROXY_DBA_ADMIN` | ℹ️ Skipped | `Proxy profile is not active` |
+| `DB_PROXY_DEV` | ℹ️ Skipped | `Proxy profile is not active` |
+| `DB_PROXY_SCHEMA` | ℹ️ Skipped | `Proxy profile is not active` |
+| `DB_PROXY_SYS` | ℹ️ Skipped | `Proxy profile is not active` |
+| `DB_PROXY_VIEWER` | ℹ️ Skipped | `Proxy profile is not active` |
 
 ### 💡 Parooli Pärimine Walletist
 Kui arendajal või administraatoril on vaja tekstilist parooli (nt DBeaveri, DataGripi või välise tööriista jaoks), saab selle turvaliselt pärida käsuga:

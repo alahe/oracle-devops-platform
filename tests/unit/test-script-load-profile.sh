@@ -28,30 +28,30 @@ bash -n "$TARGET_SCRIPT"
 source "$TARGET_SCRIPT"
 
 # ----------------------------------------------------------------------------
-# Test 1: Load proxy-adb Profile & Verify Attributes
+# Test 1: Load db-adb Profile & Verify Attributes
 # ----------------------------------------------------------------------------
-echo -e "${YELLOW}[Test 1] Kontrollin proxy-adb profiili laadimist ja APEX/ORDS parameetreid...${NC}"
-load_db_profile "proxy-adb"
+echo -e "${YELLOW}[Test 1] Kontrollin db-adb profiili laadimist ja APEX/ORDS parameetreid...${NC}"
+load_db_profile "db-adb"
 
-if [ "$PROFILE_DB_TYPE" = "adb" ] && [ "$IS_ADB" = "true" ] && [ "$PROFILE_CONTAINER_PORT" = "1522" ]; then
-  echo -e "   ├─ ${GREEN}ADB profiil tuvastati korrektselt (IS_ADB=true, container_port=1522)${NC}"
+if [ "$PROFILE_DB_TYPE" = "adb" ] && [ "$IS_ADB" = "true" ] && [ "$PROFILE_CONTAINER_PORT" = "1521" ]; then
+  echo -e "   ├─ ${GREEN}ADB profiil tuvastati korrektselt (IS_ADB=true, container_port=1521)${NC}"
 else
   echo -e "${RED}❌ Test 1 Ebaõnnestus: ADB profiili parameetrid vigased (IS_ADB=$IS_ADB, port=$PROFILE_CONTAINER_PORT)${NC}"
   exit 1
 fi
 
-if [ -n "$PROFILE_APEX_VERSION" ] && [ -n "$PROFILE_APEX_DOWNLOAD_URL" ] && [ -n "$PROFILE_ORDS_DOWNLOAD_URL" ]; then
-  echo -e "   └─ ${GREEN}APEX/ORDS komponendid parsiti korrektselt (APEX ver: $PROFILE_APEX_VERSION, ORDS http: $PROFILE_ORDS_HTTP_PORT)${NC}"
+if [ -n "$PROFILE_DEFAULT_SERVICE" ] && [ "$IS_ADB" = "true" ]; then
+  echo -e "   └─ ${GREEN}ADB komponendid parsiti korrektselt (Service: $PROFILE_DEFAULT_SERVICE, IS_ADB: $IS_ADB)${NC}"
 else
   echo -e "${RED}❌ Test 1 Ebaõnnestus: Komponentide parsimine YAML failist ebaõnnestus!${NC}"
   exit 1
 fi
 
 # ----------------------------------------------------------------------------
-# Test 2: Load proxy-gvenzl Profile & Verify Image Resolution
+# Test 2: Load db-gvenzl Profile & Verify Image Resolution
 # ----------------------------------------------------------------------------
-echo -e "${YELLOW}[Test 2] Kontrollin proxy-gvenzl profiili laadimist...${NC}"
-load_db_profile "proxy-gvenzl"
+echo -e "${YELLOW}[Test 2] Kontrollin db-gvenzl profiili laadimist...${NC}"
+load_db_profile "db-gvenzl"
 
 if [ "$PROFILE_VENDOR" = "gvenzl" ] && [ "$IS_ADB" = "false" ] && [[ "$RESOLVED_DB_IMAGE" == *"gvenzl"* ]]; then
   echo -e "   └─ ${GREEN}Gvenzl profiil laeti korrektselt (RESOLVED_DB_IMAGE=$RESOLVED_DB_IMAGE)${NC}"
@@ -61,34 +61,17 @@ else
 fi
 
 # ----------------------------------------------------------------------------
-# Test 3: Test Dynamic .env Key Parsing with Hyphenated Names (e.g. DB_DEV_FULL=proxy-gvenzl)
+# Test 3: Test Dynamic .env Key Parsing for Active DB Instances
 # ----------------------------------------------------------------------------
-echo -e "${YELLOW}[Test 3] Testin get_active_db_instances sidekriipsudega võtmete ja profiilide tuletamist...${NC}"
+echo -e "${YELLOW}[Test 3] Testin get_active_db_instances võtmete ja profiilide tuletamist...${NC}"
 
-TEST_ENV_TEMP="$WORKSPACE_DIR/.env.test_tmp"
-cat <<EOF > "$TEST_ENV_TEMP"
-# Ajutine testkeskkonna fail
-DB_DEV_FULL=proxy-gvenzl
-DB_CUSTOM_TEST=app-free
-EOF
-
-# Temporarily point WORKSPACE_DIR .env to test file logic
-saved_env="$WORKSPACE_DIR/.env"
-if [ -f "$saved_env" ]; then
-  mv "$saved_env" "${saved_env}.bak_unittest"
-fi
-cp "$TEST_ENV_TEMP" "$saved_env"
-
+export DB_PROXY="db-proxy-oracle"
+export DB_ALISE="db-alise-oracle"
 active_instances=($(get_active_db_instances 2>/dev/null))
-rm -f "$TEST_ENV_TEMP"
+unset DB_PROXY DB_ALISE
 
-# Restore original .env
-if [ -f "${saved_env}.bak_unittest" ]; then
-  mv "${saved_env}.bak_unittest" "$saved_env"
-fi
-
-if [ "${#active_instances[@]}" -eq 2 ] && [[ "${active_instances[0]}" == *"db-dev-full|proxy-gvenzl|DB_DEV_FULL"* ]]; then
-  echo -e "   └─ ${GREEN}Sidekriipsudega võti DB_DEV_FULL ja profiil proxy-gvenzl tuletati puhtalt!${NC}"
+if [ "${#active_instances[@]}" -eq 2 ] && [[ "${active_instances[0]}" == *"db-proxy|db-proxy-oracle|DB_PROXY"* ]] && [[ "${active_instances[1]}" == *"db-alise|db-alise-oracle|DB_ALISE"* ]]; then
+  echo -e "   └─ ${GREEN}Aktiivsed DB rollid (db-proxy ja db-alise) tuletati puhtalt!${NC}"
 else
   echo -e "${RED}❌ Test 3 Ebaõnnestus: get_active_db_instances ei parsitud korrektselt! Saadud: ${active_instances[*]}${NC}"
   exit 1

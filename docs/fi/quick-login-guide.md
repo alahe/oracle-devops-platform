@@ -24,7 +24,7 @@ Salasanojen etsimisen tai ruudulta kirjoittamisen sijaan voit kopioida salasanat
 
 | Palvelu / Portaali | Suora Verkkolinkki | Oletuskäyttäjä / Työtila | Salasanakomento (Välitön Kopiointi) |
 | :--- | :--- | :--- | :--- |
-| **🛠️ APEX Builder** | [Avaa APEX-Työtila](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in) | Työtila: `DEV_WS`<br/>Käyttäjä: `USER_DEVELOPER` | `./scripts/get-password.sh DB_PROXY_DEV -c` |
+| **🛠️ APEX Builder** | [Avaa APEX-Työtila](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in) | Työtila: `PROXY_WORKSPACE`<br/>Käyttäjä: `DEV` | `./scripts/get-password.sh DB_PROXY_DEV -c` |
 | **⚙️ APEX Instance Admin** | [Avaa APEX Admin](https://localhost:8448/ords/proxy/apex_admin) | Työtila: `INTERNAL`<br/>Käyttäjä: `ADMIN` | `./scripts/get-password.sh DB_PROXY_APEX_ADMIN -c` |
 | **📊 Database Actions (SDW)** | [Avaa SQL Developer Web](https://localhost:8448/ords/proxy/sql-developer) | Skeema / Käyttäjä: `USER_DEVELOPER` | `./scripts/get-password.sh DB_PROXY_DEV -c` |
 | **📑 Analytics Publisher** | [Avaa Analytics Publisher](http://localhost:9502/xmlpserver) | Käyttäjä: `weblogic` | `./scripts/get-password.sh DB_PUBLISHER_SYS -c` |

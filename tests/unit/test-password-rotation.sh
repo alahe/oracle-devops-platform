@@ -22,7 +22,7 @@ fi
 
 # Test 2: Rotate password help output
 HELP_OUT=$("$REPO_ROOT/scripts/rotate-password.sh" 2>&1 || true)
-if echo "$HELP_OUT" | grep -q "Kasutus:"; then
+if echo "$HELP_OUT" | grep -qiE "Usage:|Kasutus:"; then
   echo "  ✅ rotate-password.sh displays usage message on missing arguments."
 else
   echo "  ❌ rotate-password.sh failed to show usage!"

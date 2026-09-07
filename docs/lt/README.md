@@ -218,6 +218,30 @@ Oracle Free DB in Prod apima **išmanų kelių lygių Golden Snapshot ir Skip va
 
 ---
 
+---
+
+## 🧭 Oracle APEX DevHub Programa ir APEXlang CI/CD
+
+Be atskiro HTML Dev Hub (`docs/dev-hub.html`), platformoje yra verslo klasės **Oracle APEX programa (Programa 101: DevHub)**, sukurta deklaratyviai naudojant [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) kataloge [`applications/devhub/`](../../applications/devhub/):
+
+- **Nulinio Pėdsako Dokumentacija Duomenų Bazėje:** Dokumentacija niekada nedubliuojama ir nesaugoma duomenų bazės lentelėse kaip CLOB laukai. Vietinis REST dokumentacijos tiltas (`scripts/internal/dev-hub-bridge.py` 8089 prievade) srautiniu būdu perduoda lokalizuotą Markdown tiesiai iš Git failų į APEX, kur jis atvaizduojamas naudojant `APEX_MARKDOWN.TO_HTML`.
+- **Interaktyvus Pristatymas ir Apžvalga (7 Puslapis):** Apima 8 skaidrių interaktyvų pristatymą, kuriame pristatoma platformos vizija, programuotojų problemos, rolių nauda, 11 architektūros planų, Zero-Trust SEPS Wallet sauga, ~15s Golden Snapshot atkūrimas bei atsakymai į architekto ir buvusio DBA klausimus.
+- **Duomenų Bazės Variklis ir Dedikuota Schema:** Paremtas atskira schema `DEVHUB` ir paketu `DEVHUB.DEV_HUB_PKG`, atliekančiu greitus serverio pusės būsenos patikrinimus (`UTL_HTTP`) visoms paslaugoms su mažesne nei 100 ms delsa.
+- **Oficialūs SQLcl 26.2 APEXlang Įrankiai:**
+  ```bash
+  # Patikrinti APEXlang deklaratyvius failus pagal kompiliatoriaus taisykles:
+  node .agents/skills/apexlang/tools/apexctl.mjs apexlang validate --app-path applications/devhub
+
+  # Patikrinti ir importuoti programą 101 į PROXY_WORKSPACE per SQLcl:
+  ./scripts/sqlcl.sh DEVHUB/<slaptažodis>@localhost:1533/FREEPDB1
+  SQL> apex validate -input ./applications/devhub -workspace PROXY_WORKSPACE
+  SQL> apex import -input ./applications/devhub -id 101 -workspace PROXY_WORKSPACE
+  ```
+- **Automatizuotas CI/CD Konvejeris:** Dedikuotas GitHub Actions procesas [`.github/workflows/deploy-devhub-apexlang.yml`](../../.github/workflows/deploy-devhub-apexlang.yml) su autonominiu vietiniu emuliavimu per `./scripts/test-local-ci.sh deploy-devhub-apexlang.yml --dry-run`.
+- **Vienetų Testai:** Paleiskite `./tests/unit/test-apex-devhub.sh`, kad patikrintumėte schemą, PL/SQL kompiliavimą, REST markdown gavimą ir 6 kalbų aprėptį.
+
+---
+
 ## 📑 Vartotojo Vadovai
 
 - 🚀 **[docs/lt/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Modernizavimo bei Perkėlimo Vadovas** — Verslo paskatos, TCO kaštų palyginimas, 5 žingsnių automatizuotas procesas ir [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
@@ -225,6 +249,7 @@ Oracle Free DB in Prod apima **išmanų kelių lygių Golden Snapshot ir Skip va
 - 📑 **[docs/publisher-setup.md](../../docs/publisher-setup.md):** Analytics Publisher Vadovas.
 - 💻 **[docs/web-ide-artifactory.md](../../docs/web-ide-artifactory.md):** Web IDE Vadovas.
 - 🌐 **[docs/dev-hub.html](../../docs/dev-hub.html):** **Developer & DevOps Command Center** (`http://localhost:8088/` ir `http://localhost:6082/vnc.html`).
+- 🧪 **[docs/lt/apex-devhub-test-plan.md](apex-devhub-test-plan.md):** **Oracle APEX DevHub Testavimo Planas** — Kelių lygių testavimo strategija (utPLSQL vienetų testai, REST tilto patikros, hibridiniai Playwright/curl E2E srautai ir APEX Advisor auditas) su Golden Snapshot izoliacija.
 - 📊 **[config/blueprints/README.md](../../config/blueprints/README.md):** 11 Planų Katalogas.
 - 📖 **[Oracle APEX 26.1 APEXlang Reference Manual](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/):** Oficiali deklaratyvios `.apx` gramatikos ir kompiliatoriaus komandų specifikacija.
 - 📜 **[Oficiali APEXlang EBNF Gramatika (`apexlang.ebnf`)](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf):** Mašīnlasāma formālā EBNF specifikacija DI ribotam dekodavimui (GBNF) ir statiniams saugumo skeneriams.

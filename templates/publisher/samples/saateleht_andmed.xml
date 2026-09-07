@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DELIVERY_NOTE_DATA>
+  <DOC_NUM>SL-2026-0412</DOC_NUM>
+  <DATE>2026-09-02</DATE>
+  <SENDER>
+    <NAME>Eesti Pilveplatvorm OÜ</NAME>
+    <WAREHOUSE>Tallinna Logistikakeskus (Ladu A1)</WAREHOUSE>
+    <ADDRESS>Lõõtsa tn 8a, 11415 Tallinn</ADDRESS>
+  </SENDER>
+  <RECEIVER>
+    <NAME>Nordic Retail Grupp AS</NAME>
+    <ADDRESS>Riia mnt 42, 51010 Tartu</ADDRESS>
+    <CONTACT>Peeter Kask (+372 555 12345)</CONTACT>
+  </RECEIVER>
+  <PACKAGES>
+    <PACKAGE>
+      <NR>1</NR>
+      <PRODUCT_CODE>HW-SRV-23AI</PRODUCT_CODE>
+      <DESCRIPTION>Oracle 23ai Dedicated Edge Server Appliance</DESCRIPTION>
+      <QTY>2</QTY>
+      <WEIGHT_KG>34.5</WEIGHT_KG>
+    </PACKAGE>
+    <PACKAGE>
+      <NR>2</NR>
+      <PRODUCT_CODE>ACC-CAB-10G</PRODUCT_CODE>
+      <DESCRIPTION>10GbE SFP+ Direct Attach Copper Cable (3m)</DESCRIPTION>
+      <QTY>4</QTY>
+      <WEIGHT_KG>1.2</WEIGHT_KG>
+    </PACKAGE>
+  </PACKAGES>
+  <TOTAL_WEIGHT>35.7 kg</TOTAL_WEIGHT>
+  <DRIVER>Mait Tamm (Auto reg: 891 TLL)</DRIVER>
+</DELIVERY_NOTE_DATA>

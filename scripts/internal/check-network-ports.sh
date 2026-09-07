@@ -66,7 +66,7 @@ check_ports_and_analyze_network() {
     if echo "$seen_ports" | grep -q "|$port|"; then
       has_conflict=true
       prev_svc=$(grep ":${port}:" "$temp_file" | head -n 1 | cut -d':' -f1)
-      conflict_details+=("   - Port ${RED}${port}${NC} on määratud korraga teenusele '${CYAN}${svc}${NC}' ja teenusele '${CYAN}${prev_svc}${NC}' (${note})")
+      conflict_details+=("   - Port ${RED}${port}${NC} is assigned to both service '${CYAN}${svc}${NC}' and service '${CYAN}${prev_svc}${NC}' (${note})")
     else
       seen_ports="${seen_ports}|${port}|"
     fi

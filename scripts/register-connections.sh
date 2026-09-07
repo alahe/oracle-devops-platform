@@ -180,6 +180,10 @@ print(json.dumps(users))
   SQL_COMMANDS+=("connmgr delete -folder /${folder_name} -force")
   SQL_COMMANDS+=("connmgr add -folder /${folder_name}")
 
+  CONTAINER_SQL_COMMANDS=()
+  CONTAINER_SQL_COMMANDS+=("connmgr delete -folder /${folder_name} -force")
+  CONTAINER_SQL_COMMANDS+=("connmgr add -folder /${folder_name}")
+
   BUILT_CONNS=()
   idx=1
   while read -r user_obj; do
@@ -226,12 +230,17 @@ print(json.dumps(users))
 
     # Build SQLcl connect command
     conn_str="${real_db_user}/${pwd_val}@localhost:${port}/${service}"
+    container_conn_str="${real_db_user}/${pwd_val}@${c_name}:1521/${service}"
     if [ "$urole" = "SYSDBA" ]; then
       conn_str="${conn_str} as sysdba"
+      container_conn_str="${container_conn_str} as sysdba"
     fi
 
     SQL_COMMANDS+=("connect -save \"${pretty_name}\" -savepwd -replace ${conn_str}")
     SQL_COMMANDS+=("connmgr move -conn \"${pretty_name}\" /${folder_name}")
+
+    CONTAINER_SQL_COMMANDS+=("connect -save \"${pretty_name}\" -savepwd -replace ${container_conn_str}")
+    CONTAINER_SQL_COMMANDS+=("connmgr move -conn \"${pretty_name}\" /${folder_name}")
 
     final_user_color=$(get_existing_user_color "$real_db_user" "$ucolor")
     user_json_str=$(jq -n \
@@ -288,8 +297,13 @@ print(json.dumps(users))
     pretty_dev_name="${idx}. ${dev_u_upper} (${folder_name})"
 
     conn_dev_str="${dev_u_upper}/${dev_pwd_val}@localhost:${port}/${service}"
+    container_conn_dev_str="${dev_u_upper}/${dev_pwd_val}@${c_name}:1521/${service}"
+
     SQL_COMMANDS+=("connect -save \"${pretty_dev_name}\" -savepwd -replace ${conn_dev_str}")
     SQL_COMMANDS+=("connmgr move -conn \"${pretty_dev_name}\" /${folder_name}")
+
+    CONTAINER_SQL_COMMANDS+=("connect -save \"${pretty_dev_name}\" -savepwd -replace ${container_conn_dev_str}")
+    CONTAINER_SQL_COMMANDS+=("connmgr move -conn \"${pretty_dev_name}\" /${folder_name}")
     
     final_dev_color=$(get_existing_user_color "$dev_u_upper" "${EXTRA_DEV_COLOR:-#F39C12}")
 
@@ -307,7 +321,10 @@ print(json.dumps(users))
   SQL_COMMANDS+=("connmgr list -folder /${folder_name}")
   SQL_COMMANDS+=("EXIT")
 
-  # Run SQLcl batch commands (saves encrypted passwords to OS Keychain via SQLcl connect -save -savepwd)
+  CONTAINER_SQL_COMMANDS+=("connmgr list -folder /${folder_name}")
+  CONTAINER_SQL_COMMANDS+=("EXIT")
+
+  # 1. Run SQLcl batch commands on Host PC (saves encrypted passwords to OS Keychain)
   if [ "${SKIP_SQLCL_EXEC:-false}" != "true" ]; then
     if [ -n "$VSCODE_SQLCL" ] && { command -v "$VSCODE_SQLCL" &>/dev/null || [ -x "$VSCODE_SQLCL" ]; }; then
       printf '%s\n' "${SQL_COMMANDS[@]}" | "$VSCODE_SQLCL" /nolog >/dev/null 2>&1 || true
@@ -319,10 +336,19 @@ EOF
     fi
   fi
 
+  # 2. Run SQLcl batch commands inside Web IDE container (if active)
+  WEB_IDE_CONTAINER="${WEB_IDE_CONTAINER_NAME:-web-ide-dev}"
+  if podman container exists "$WEB_IDE_CONTAINER" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$WEB_IDE_CONTAINER" 2>/dev/null)" = "running" ]; then
+    CONTAINER_SQLCL=$(podman exec -i "$WEB_IDE_CONTAINER" find /config/extensions -name "sql" -path "*/oracle.sql-developer-*/dbtools/sqlcl/bin/sql" 2>/dev/null | head -n 1)
+    if [ -n "$CONTAINER_SQLCL" ]; then
+      printf '%s\n' "${CONTAINER_SQL_COMMANDS[@]}" | podman exec -i -u abc "$WEB_IDE_CONTAINER" "$CONTAINER_SQLCL" /nolog >/dev/null 2>&1 || true
+    fi
+  fi
+
   # Combine built connections into JSON array
   CONNS_ARRAY_JSON=$(printf '%s\n' "${BUILT_CONNS[@]}" | jq -s .)
 
-  # Synchronize colors and JSON files without overwriting SQLcl OS Keychain encrypted properties
+  # Synchronize colors and JSON files for Host PC
   CONNS_JSON="$CONNS_ARRAY_JSON" FOLDER_NAME="$folder_name" PORT_VAL="$port" SERVICE_VAL="$service" python3 - << 'PYEOF'
 import json, os, sys, shutil
 
@@ -357,7 +383,14 @@ if os.path.exists(dbtools_dir):
                     uname = u.get('username')
                     ucolor = u.get('color', '#2980B9')
                     if any(f'userName={uname}' in l for l in lines) or any(f'userName={uname.lower()}' in l for l in lines):
-                        new_lines = [l for l in lines if not l.startswith('color=')]
+                        new_lines = []
+                        for l in lines:
+                            if l.startswith('color='):
+                                continue
+                            if l.startswith('connectionString='):
+                                new_lines.append(f'connectionString=localhost\\:{port}/{service}\n')
+                                continue
+                            new_lines.append(l)
                         new_lines.append(f'color={ucolor}\n')
                         with open(prop_file, 'w', encoding='utf-8') as pf:
                             pf.writelines(new_lines)
@@ -406,11 +439,91 @@ for json_path in [conns_path, os.path.expanduser('~/.dbtools/connections.json')]
         json.dump(data, f, indent=2)
 PYEOF
 
+  # Synchronize colors and JSON files inside Web IDE container (if active)
+  if podman container exists "$WEB_IDE_CONTAINER" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$WEB_IDE_CONTAINER" 2>/dev/null)" = "running" ]; then
+    podman exec -i -e CONNS_JSON="$CONNS_ARRAY_JSON" -e FOLDER_NAME="$folder_name" -e PORT_VAL="1521" -e SERVICE_VAL="$service" -e HOST_VAL="$c_name" "$WEB_IDE_CONTAINER" /app/code-server/lib/node -e '
+const fs = require("fs");
+const path = require("path");
 
+const connsIn = JSON.parse(process.env.CONNS_JSON || "[]");
+const folder = process.env.FOLDER_NAME || "pub-db";
+const port = process.env.PORT_VAL || "1521";
+const host = process.env.HOST_VAL || "localhost";
+const service = process.env.SERVICE_VAL || "FREEPDB1";
+
+const validPnames = connsIn.map(u => u.pretty_name).filter(Boolean);
+
+const dbtoolsDir = "/config/.dbtools/connections";
+if (fs.existsSync(dbtoolsDir)) {
+  const folders = fs.readdirSync(dbtoolsDir);
+  for (const entry of folders) {
+    const entryPath = path.join(dbtoolsDir, entry);
+    if (!fs.statSync(entryPath).isDirectory()) continue;
+    const propFile = path.join(entryPath, "dbtools.properties");
+    if (fs.existsSync(propFile)) {
+      try {
+        let lines = fs.readFileSync(propFile, "utf8").split("\n");
+        for (const u of connsIn) {
+          const uname = u.username;
+          const ucolor = u.color || "#2980B9";
+          if (lines.some(l => l.toLowerCase().includes("username=" + uname.toLowerCase()))) {
+            lines = lines.filter(l => !l.startsWith("color="));
+            lines = lines.map(l => l.startsWith("connectionString=") ? `connectionString=${host}\\:${port}/${service}` : l);
+            lines.push("color=" + ucolor);
+            fs.writeFileSync(propFile, lines.join("\n"));
+          }
+        }
+      } catch (err) {}
+    }
+  }
+}
+
+const connsPath = "/config/.sqldev/connections.json";
+let existingConns = [];
+if (fs.existsSync(connsPath)) {
+  try {
+    const d = JSON.parse(fs.readFileSync(connsPath, "utf8"));
+    existingConns = (d.connections || []).filter(c => c.folder !== "/" + folder);
+  } catch (err) {
+    existingConns = [];
+  }
+}
+
+for (const u of connsIn) {
+  const uname = u.username;
+  const pwd = u.password || "";
+  const role = u.role || "NORMAL";
+  const color = u.color || "#2980B9";
+  const prettyName = u.pretty_name || uname;
+  const connName = prettyName.endsWith("(" + folder + ")") ? prettyName : prettyName + " (" + folder + ")";
+
+  existingConns.push({
+    name: connName,
+    folder: "/" + folder,
+    color: color,
+    type: "Oracle",
+    connType: "Basic",
+    host: host,
+    port: String(port),
+    serviceName: service,
+    user: uname,
+    password: pwd,
+    role: role === "SYSDBA" ? "SYSDBA" : "NORMAL",
+    savePassword: true
+  });
+}
+
+const data = { connections: existingConns };
+for (const p of [connsPath, "/config/.dbtools/connections.json"]) {
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.writeFileSync(p, JSON.stringify(data, null, 2));
+}
+' 2>/dev/null || true
+  fi
 
 done
 
-# 5. Sanitize folders.json to prevent DBTU-03001 error per skill vscode_sql_developer
+# 5. Sanitize folders.json to prevent DBTU-03001 error on Host PC
 FOLDERS_FILE="$HOME/.dbtools/connection_folders/folders.json"
 DBTOOLS_CONNS_DIR="$HOME/.dbtools/connections"
 
@@ -427,5 +540,36 @@ if [ -f "$FOLDERS_FILE" ] && command -v jq &>/dev/null && [ -d "$DBTOOLS_CONNS_D
   ' "$FOLDERS_FILE" > "${FOLDERS_FILE}.tmp" 2>/dev/null && mv "${FOLDERS_FILE}.tmp" "$FOLDERS_FILE" 2>/dev/null || true
 fi
 
-echo "✅ Database connections with custom colors and folder '${folder_name}' successfully registered in VS Code SQL Developer!"
+# 6. Sanitize folders.json and set permissions inside Web IDE container
+WEB_IDE_CONTAINER="${WEB_IDE_CONTAINER_NAME:-web-ide-dev}"
+if podman container exists "$WEB_IDE_CONTAINER" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$WEB_IDE_CONTAINER" 2>/dev/null)" = "running" ]; then
+  podman exec -i "$WEB_IDE_CONTAINER" /app/code-server/lib/node -e '
+const fs = require("fs");
+const path = require("path");
+
+const foldersFile = "/config/.dbtools/connection_folders/folders.json";
+const connsDir = "/config/.dbtools/connections";
+
+if (fs.existsSync(foldersFile) && fs.existsSync(connsDir)) {
+  try {
+    const validIds = new Set(fs.readdirSync(connsDir).filter(d => fs.statSync(path.join(connsDir, d)).isDirectory()));
+    const data = JSON.parse(fs.readFileSync(foldersFile, "utf8"));
+    const cleanedFolders = [];
+    for (const folder of (data.folders || [])) {
+      const conns = (folder.connections || []).filter(c => validIds.has(c));
+      if (conns.length > 0) {
+        folder.connections = conns;
+        cleanedFolders.push(folder);
+      }
+    }
+    data.folders = cleanedFolders;
+    fs.writeFileSync(foldersFile, JSON.stringify(data, null, 2));
+  } catch (err) {}
+}
+' 2>/dev/null || true
+  podman exec -u root -i "$WEB_IDE_CONTAINER" bash -c 'chown -R abc:abc /config/.dbtools /config/.sqldev 2>/dev/null || true' 2>/dev/null || true
+fi
+
+echo "✅ Database connections with custom colors and folder '${folder_name}' successfully registered in VS Code SQL Developer (Host & Web IDE)!"
+echo "👉 Refresh (🔄) Oracle SQL Developer extension in VS Code to view folder, colors & saved connections!"
 echo "👉 Refresh (🔄) Oracle SQL Developer extension in VS Code to view folder, colors & saved connections!"

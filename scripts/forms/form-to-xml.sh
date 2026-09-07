@@ -18,15 +18,15 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -h|--help)
-      echo "Kasutus: $0 [VALIKUD] <FAIL...>"
+      echo "Usage: $0 [OPTIONS] <FILE...>"
       echo ""
-      echo "Valikud:"
-      echo "  --to-fmb, --xml2f   Teisenda XML fail tagasi binaarseks Forms .fmb failiks"
-      echo "  -h, --help          Kuva see abiinfo"
+      echo "Options:"
+      echo "  --to-fmb, --xml2f   Convert XML file back to binary Forms .fmb file"
+      echo "  -h, --help          Show this help message"
       echo ""
-      echo "Näited:"
-      echo "  $0 forms_apps/test.fmb           # Teisendab test.fmb -> test_fmb.xml"
-      echo "  $0 --to-fmb forms_apps/test.xml  # Teisendab test.xml -> test.fmb"
+      echo "Examples:"
+      echo "  $0 forms_apps/test.fmb           # Converts test.fmb -> test_fmb.xml"
+      echo "  $0 --to-fmb forms_apps/test.xml  # Converts test.xml -> test.fmb"
       exit 0
       ;;
     *)
@@ -37,8 +37,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ ${#TARGET_FILES[@]} -eq 0 ]; then
-  echo "⚠️  Ühtegi faili ei määratud!"
-  echo "   Kasuta: $0 forms_apps/minuvorm.fmb"
+  echo "⚠️  No files specified!"
+  echo "   Usage: $0 forms_apps/myform.fmb"
   exit 1
 fi
 
@@ -48,14 +48,14 @@ if ! command -v podman >/dev/null 2>&1 && command -v docker >/dev/null 2>&1; the
 fi
 
 echo "=================================================================="
-echo "📄 ORACLE FORMS <-> XML TEISENDAJA (GIT DIFF & APEX COMPATIBLE)"
+echo "📄 ORACLE FORMS <-> XML CONVERTER (GIT DIFF & APEX COMPATIBLE)"
 echo "=================================================================="
 
 for src_file in "${TARGET_FILES[@]}"; do
   base_name=$(basename "$src_file")
   
   if [ "$TO_FMB" = "true" ]; then
-    echo "🔄 Teisendan XML -> Forms (.fmb): $base_name..."
+    echo "🔄 Converting XML -> Forms (.fmb): $base_name..."
     out_file="${src_file%.xml}.fmb"
     
     if $CTR_CMD ps --format "{{.Names}}" 2>/dev/null | grep -q "^${CONTAINER_NAME}$"; then
@@ -68,9 +68,9 @@ for src_file in "${TARGET_FILES[@]}"; do
         fi
       " || true
     fi
-    echo "   ✅ Forms fail genereeritud: $out_file"
+    echo "   ✅ Forms file generated: $out_file"
   else
-    echo "🔄 Teisendan Forms (.fmb) -> XML: $base_name..."
+    echo "🔄 Converting Forms (.fmb) -> XML: $base_name..."
     out_file="${src_file%.fmb}_fmb.xml"
     
     if $CTR_CMD ps --format "{{.Names}}" 2>/dev/null | grep -q "^${CONTAINER_NAME}$"; then
@@ -93,10 +93,10 @@ for src_file in "${TARGET_FILES[@]}"; do
       echo "  </FormModule>" >> "$out_file"
       echo "</Module>" >> "$out_file"
     fi
-    echo "   ✅ XML fail genereeritud: $out_file"
+    echo "   ✅ XML file generated: $out_file"
   fi
 done
 
 echo "=================================================================="
-echo "🎉 Teisendamine lõpetatud!"
+echo "🎉 Conversion completed!"
 echo "=================================================================="

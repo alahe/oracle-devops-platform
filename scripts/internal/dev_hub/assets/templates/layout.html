@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oracle DevOps Platform - Developer Hub</title>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    <!-- Mermaid & Marked via unpkg CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <style>
+%STYLE_CSS%
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+    <header class="header">
+        <div class="header-brand">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <h1>🚀 Oracle DevOps Platform</h1>
+            </div>
+            <p data-i18n="header_subtitle">Unified Command Center, Real-Time Service Health & Multilingual Architecture Portal</p>
+        </div>
+        <div class="lang-switcher">
+            <button class="lang-btn active" id="btn-en" onclick="setLanguage('en')">🇬🇧 EN</button>
+            <button class="lang-btn" id="btn-et" onclick="setLanguage('et')">🇪🇪 ET</button>
+            <button class="lang-btn" id="btn-fi" onclick="setLanguage('fi')">🇫🇮 FI</button>
+            <button class="lang-btn" id="btn-sv" onclick="setLanguage('sv')">🇸🇪 SV</button>
+            <button class="lang-btn" id="btn-lv" onclick="setLanguage('lv')">🇱🇻 LV</button>
+            <button class="lang-btn" id="btn-lt" onclick="setLanguage('lt')">🇱🇹 LT</button>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs-nav">
+        <button class="tab-btn active" onclick="switchTab('tab-services')">🚀 <span data-i18n="tab_cockpit">Juhtpaneel</span></button>
+        <button class="tab-btn" onclick="switchTab('tab-podman')">🐳 <span data-i18n="tab_podman">Podman</span></button>
+        <button class="tab-btn" onclick="switchTab('tab-presentation')">📽️ <span data-i18n="tab_presentation">Overview</span></button>
+        <button class="tab-btn" onclick="switchTab('tab-onboarding')">🚀 <span data-i18n="tab_onboarding">Alustamine</span></button>
+        <button class="tab-btn" onclick="switchTab('tab-docs')">📚 <span data-i18n="tab_docs">Dokumendid</span></button>
+        <button class="tab-btn" onclick="switchTab('tab-devops')">⚡ <span data-i18n="tab_devops">DevOps</span></button>
+        <button class="tab-btn" onclick="switchTab('tab-benchmarks')">📊 <span data-i18n="tab_benchmarks">Logid</span></button>
+    </nav>
+
+    <!-- TAB 1: COCKPIT (SERVICES & BLUEPRINTS) -->
+    <div id="tab-services" class="tab-content active">
+        <div class="section-title">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                <span data-i18n="title_endpoints">🌐 Live Services & Access Portals</span>
+                <span id="cockpit-ram-indicator" class="ram-indicator-badge ram-ok" title="Estimated RAM consumption vs Host RAM">
+                    <span>💾</span> <span id="cockpit-ram-text">RAM: ~3.0 GB / 16.0 GB</span>
+                </span>
+            </div>
+            <span style="font-size: 0.8rem; color: #64748b;" data-i18n="auto_refresh_hint">Auto-refreshes every 6 seconds</span>
+        </div>
+
+        <!-- Action Toolbar: Filters, Search & Profile Manager -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+            <div class="bp-filters" style="margin-bottom: 0;">
+                <button class="bp-filter-btn active" onclick="filterBlueprints('all')" data-i18n="filter_all">🌟 All (12)</button>
+                <button class="bp-filter-btn" onclick="filterBlueprints('active')" data-i18n="filter_active">🟢 Active</button>
+                <button class="bp-filter-btn" onclick="filterBlueprints('core')" data-i18n="filter_core">📦 Core & DBs (0–4)</button>
+                <button class="bp-filter-btn" onclick="filterBlueprints('specialized')" data-i18n="filter_specialized">⚙️ Middleware (5–7)</button>
+                <button class="bp-filter-btn" onclick="filterBlueprints('developer')" data-i18n="filter_developer">💻 Developer (8–9)</button>
+                <button class="bp-filter-btn" onclick="filterBlueprints('gateway')" data-i18n="filter_gateway">🌐 Remote (10–11)</button>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <input type="text" id="cockpit-search-input" onkeyup="searchCockpitCards(this.value)" placeholder="🔍 Otsi teenuseid või blueprinte..." style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); color: #f8fafc; padding: 6px 12px; border-radius: 6px; font-size: 0.82rem; width: 200px;" />
+                <button class="btn-compact btn-compact-secondary" onclick="openProfileManager()" title="YAML Profiles Manager">
+                    <span>⚙️</span> <span data-i18n="btn_manage_profiles">Profile Manager (YAML)</span>
+                </button>
+                <button class="btn-compact btn-compact-primary" onclick="openBlueprintManager()" title="Blueprint Manager">
+                    <span>📋</span> <span data-i18n="btn_create_blueprint">Blueprint Manager</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid" id="cockpit-cards-grid">
+%SERVICES_CARDS_HTML%
+        </div>
+
+        <!-- COLLAPSIBLE SEPS WALLET CREDENTIALS DRAWER -->
+        <div class="wallet-matrix-container" style="margin-top: 36px;">
+            <div class="wallet-matrix-header" onclick="toggleWalletMatrix()">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.25rem;">🔐</span>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.1rem; color: #f8fafc;" data-i18n="title_wallet_matrix">Oracle SEPS Wallet Credential Matrix</h3>
+                        <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: var(--text-dim);" data-i18n="desc_wallet_matrix">Zero-Trust high-entropy credentials securely provisioned via SEPS Wallets & Podman Secrets</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="wallet-toggle-badge" class="badge badge-primary" style="font-size: 0.75rem;">SEPS WALLET</span>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; pointer-events: none;">
+                        <span id="wallet-toggle-icon">➕</span> <span id="wallet-toggle-label" data-i18n="toggle_show_matrix">Show Matrix</span>
+                    </button>
+                </div>
+            </div>
+            <div id="wallet-matrix-drawer" class="wallet-matrix-body" style="max-height: 0px; opacity: 0;">
+                <div class="table-responsive" style="margin-top: 16px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-i18n="th_db">Database</th>
+                                <th data-i18n="th_status">Status</th>
+                                <th data-i18n="th_user">Account</th>
+                                <th data-i18n="th_scope">Scope / Role</th>
+                                <th data-i18n="th_alias">TNS Connection Alias</th>
+                                <th data-i18n="th_pwd">1-Click Password</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+%WALLET_TABLE_ROWS_HTML%
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: PODMAN INFRASTRUCTURE & SYSTEM RESOURCES -->
+    <div id="tab-podman" class="tab-content">
+        <div class="podman-drawer-container" style="margin-top: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.75rem;">🐳</span>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #38bdf8;" data-i18n="title_podman_infra">Podman Taristu ja Süsteemiressursid</h2>
+                            <span id="podman-status-pill" class="badge badge-primary" style="font-size: 0.75rem; padding: 3px 10px;">Podman OK</span>
+                        </div>
+                        <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-dim);" data-i18n="desc_podman_infra">Aktiivsed konteinerid, andmemahud, virtuaalvõrgud ja kohalikud tõmmised</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="loadPodmanResources(true);" style="padding: 7px 14px; font-size: 0.82rem; font-weight: 600;" title="Refresh Podman Resources">
+                        <span id="podman-refresh-icon">🔄</span> <span data-i18n="btn_refresh">Värskenda</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sub-tabs navigation & search bar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button class="btn btn-tab active" id="btn-podman-tab-containers" onclick="switchPodmanSubTab('containers')" style="padding: 7px 16px; font-size: 0.85rem; font-weight: 600;">
+                        <span>📦</span> <span data-i18n="podman_tab_containers">Konteinerid</span> <span class="badge badge-primary" id="podman-count-containers" style="margin-left: 6px; font-size: 0.72rem;">0</span>
+                    </button>
+                    <button class="btn btn-tab" id="btn-podman-tab-volumes" onclick="switchPodmanSubTab('volumes')" style="padding: 7px 16px; font-size: 0.85rem; font-weight: 600;">
+                        <span>💾</span> <span data-i18n="podman_tab_volumes">Andmemahud</span> <span class="badge badge-primary" id="podman-count-volumes" style="margin-left: 6px; font-size: 0.72rem;">0</span>
+                    </button>
+                    <button class="btn btn-tab" id="btn-podman-tab-networks" onclick="switchPodmanSubTab('networks')" style="padding: 7px 16px; font-size: 0.85rem; font-weight: 600;">
+                        <span>🌐</span> <span data-i18n="podman_tab_networks">Võrgud</span> <span class="badge badge-primary" id="podman-count-networks" style="margin-left: 6px; font-size: 0.72rem;">0</span>
+                    </button>
+                    <button class="btn btn-tab" id="btn-podman-tab-images" onclick="switchPodmanSubTab('images')" style="padding: 7px 16px; font-size: 0.85rem; font-weight: 600;">
+                        <span>🖼️</span> <span data-i18n="podman_tab_images">Tõmmised</span> <span class="badge badge-primary" id="podman-count-images" style="margin-left: 6px; font-size: 0.72rem;">0</span>
+                    </button>
+                </div>
+
+                <!-- Search & Filter Controls -->
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <div id="podman-container-status-filters" style="display: flex; gap: 4px; align-items: center;">
+                        <button class="btn btn-sm active" id="btn-filter-status-all" onclick="filterPodmanContainersByStatus('all')" style="padding: 5px 10px; font-size: 0.78rem;" data-i18n="filter_all">Kõik</button>
+                        <button class="btn btn-sm" id="btn-filter-status-running" onclick="filterPodmanContainersByStatus('running')" style="padding: 5px 10px; font-size: 0.78rem; color: #22c55e;" data-i18n="filter_running">🟢 Töötavad</button>
+                        <button class="btn btn-sm" id="btn-filter-status-stopped" onclick="filterPodmanContainersByStatus('stopped')" style="padding: 5px 10px; font-size: 0.78rem; color: #94a3b8;" data-i18n="filter_stopped">⚪ Seisatud</button>
+                    </div>
+                    <div style="position: relative;">
+                        <input type="text" id="podman-search-input" oninput="filterPodmanTable(this.value)" placeholder="🔍 Otsi ressurssi..." style="background: #030712; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 0.82rem; color: #f8fafc; width: 200px; outline: none;" data-i18n-placeholder="placeholder_search_resources">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sub-tab Content: Containers -->
+            <div id="podman-subtab-containers" class="podman-subtab-view">
+                <div class="table-responsive" style="margin-bottom: 0;">
+                    <table id="podman-table-containers">
+                        <thead>
+                            <tr>
+                                <th data-i18n="th_container_name">Konteineri nimi</th>
+                                <th data-i18n="th_container_id">ID</th>
+                                <th data-i18n="th_container_image">Tõmmis (Image)</th>
+                                <th data-i18n="th_container_state">Olek</th>
+                                <th data-i18n="th_container_status">Staatus</th>
+                                <th data-i18n="th_container_ports">Pordid</th>
+                                <th data-i18n="th_container_created">Loodud</th>
+                            </tr>
+                        </thead>
+                        <tbody id="podman-tbody-containers">
+                            <tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--text-dim);" data-i18n="loading_resources">Laadin ressursse...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sub-tab Content: Volumes -->
+            <div id="podman-subtab-volumes" class="podman-subtab-view" style="display: none;">
+                <div class="table-responsive" style="margin-bottom: 0;">
+                    <table id="podman-table-volumes">
+                        <thead>
+                            <tr>
+                                <th data-i18n="th_volume_name">Mahu nimi (Volume Name)</th>
+                                <th data-i18n="th_volume_used_by">Kasutab konteiner</th>
+                                <th data-i18n="th_volume_driver">Draiver</th>
+                                <th data-i18n="th_volume_scope">Ulatus (Scope)</th>
+                                <th data-i18n="th_volume_mountpoint">Paigaldustee (Mountpoint)</th>
+                                <th data-i18n="th_volume_created">Loodud</th>
+                            </tr>
+                        </thead>
+                        <tbody id="podman-tbody-volumes">
+                            <tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--text-dim);" data-i18n="loading_resources">Laadin ressursse...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sub-tab Content: Networks -->
+            <div id="podman-subtab-networks" class="podman-subtab-view" style="display: none;">
+                <div class="table-responsive" style="margin-bottom: 0;">
+                    <table id="podman-table-networks">
+                        <thead>
+                            <tr>
+                                <th data-i18n="th_network_name">Võrgu nimi</th>
+                                <th data-i18n="th_network_id">ID</th>
+                                <th data-i18n="th_network_driver">Draiver</th>
+                                <th data-i18n="th_network_subnets">Alamvõrgud (Subnets / Gateway)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="podman-tbody-networks">
+                            <tr><td colspan="4" style="text-align:center; padding: 24px; color: var(--text-dim);" data-i18n="loading_resources">Laadin ressursse...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sub-tab Content: Images -->
+            <div id="podman-subtab-images" class="podman-subtab-view" style="display: none;">
+                <div class="table-responsive" style="margin-bottom: 0;">
+                    <table id="podman-table-images">
+                        <thead>
+                            <tr>
+                                <th data-i18n="th_image_repo">Hoidla ja tõmmis (Repository)</th>
+                                <th data-i18n="th_image_tag">Silt (Tag)</th>
+                                <th data-i18n="th_image_id">Tõmmise ID</th>
+                                <th data-i18n="th_image_size">Maht</th>
+                                <th data-i18n="th_image_created">Loodud</th>
+                            </tr>
+                        </thead>
+                        <tbody id="podman-tbody-images">
+                            <tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--text-dim);" data-i18n="loading_resources">Laadin ressursse...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: PRESENTATION & OVERVIEW (INTERACTIVE SLIDE DECK) -->
+    <div id="tab-presentation" class="tab-content">
+        <div class="presentation-container" id="presentation-deck">
+            <!-- DECK HEADER -->
+            <div class="deck-header">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <span style="font-size: 1.5rem;">🎬</span>
+                    <div>
+                        <h2 style="font-size: 1.25rem; font-weight: 700; color: #38bdf8; margin: 0;" data-i18n="deck_main_title">Oracle DevOps Platform — Executive Presentation Deck</h2>
+                        <p style="font-size: 0.8rem; color: #94a3b8; margin: 2px 0 0 0;" data-i18n="deck_subtitle">Interactive Overview, Problem Solving, Value Proposition, Workflows & Future Roadmap</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <div class="lang-switcher" style="margin: 0; padding: 2px;">
+                        <button class="lang-btn" id="deck-btn-en" onclick="setLanguage('en')">🇬🇧 EN</button>
+                        <button class="lang-btn" id="deck-btn-et" onclick="setLanguage('et')">🇪🇪 ET</button>
+                        <button class="lang-btn" id="deck-btn-fi" onclick="setLanguage('fi')">🇫🇮 FI</button>
+                        <button class="lang-btn" id="deck-btn-sv" onclick="setLanguage('sv')">🇸🇪 SV</button>
+                        <button class="lang-btn" id="deck-btn-lv" onclick="setLanguage('lv')">🇱🇻 LV</button>
+                        <button class="lang-btn" id="deck-btn-lt" onclick="setLanguage('lt')">🇱🇹 LT</button>
+                    </div>
+                    <button class="btn btn-secondary" onclick="toggleFullscreenPresentation()" style="padding: 6px 12px; font-size: 0.8rem;">
+                        <span>⛶</span> <span data-i18n="btn_fullscreen">Täisekraan</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TOP NAVIGATION & CONTROLS -->
+            <div class="slide-nav-top" id="slide-nav-top">
+                <div class="slide-nav-group">
+                    <button class="slide-num-btn" id="btn-top-prev" onclick="prevSlide()" title="Eelmine slaid (←)">◀</button>
+                    <div id="top-slide-numbers" style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
+                        <!-- Generated by JS: 1..12 buttons -->
+                    </div>
+                    <button class="slide-num-btn" id="btn-top-next" onclick="nextSlide()" title="Järgmine slaid (→)">▶</button>
+                </div>
+                <div class="slide-nav-group">
+                    <button class="btn-speaker-notes" id="btn-toggle-speaker-notes" onclick="toggleSpeakerNotes()">
+                        <span>🎙️</span> <span id="label-speaker-notes">Esitaja märkmed</span>
+                    </button>
+                    <button class="btn-cinema-modal" id="btn-top-cinema-mode" onclick="openSlideModal()" title="Ava täisekraani esitlus (Kinorežiim)">
+                        <span>🖥️</span> <span id="label-cinema-mode">Esitlusrežiim</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SPEAKER NOTES DRAWER -->
+            <div class="speaker-notes-drawer" id="speaker-notes-drawer">
+                <div class="speaker-notes-header">
+                    <div class="speaker-notes-title">
+                        <span>🎙️</span> <span id="speaker-notes-header-text">Esitaja märkmed &amp; suunised</span>
+                    </div>
+                    <button class="slide-copy-btn" onclick="toggleSpeakerNotes()" style="background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); color: #94a3b8;">✕ Sulge</button>
+                </div>
+                <div class="speaker-notes-content" id="speaker-notes-body">
+                    <!-- Loaded dynamically per slide & language -->
+                </div>
+            </div>
+
+            <!-- SLIDES WRAPPER -->
+            <div class="slides-viewport">
+                <div class="slide active" id="slide-1"></div>
+                <div class="slide" id="slide-2"></div>
+                <div class="slide" id="slide-3"></div>
+                <div class="slide" id="slide-4"></div>
+                <div class="slide" id="slide-5"></div>
+                <div class="slide" id="slide-6"></div>
+                <div class="slide" id="slide-7"></div>
+                <div class="slide" id="slide-8"></div>
+                <div class="slide" id="slide-9"></div>
+                <div class="slide" id="slide-10"></div>
+                <div class="slide" id="slide-11"></div>
+                <div class="slide" id="slide-12"></div>
+            </div>
+
+            <!-- DECK FOOTER & CONTROLS -->
+            <div class="deck-footer">
+                <button class="btn btn-secondary" id="btn-prev-slide" onclick="prevSlide()" style="padding: 8px 16px; font-weight: 600;">
+                    <span>◀</span> <span data-i18n="btn_prev_slide">Eelmine Slaid</span>
+                </button>
+                <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center;">
+                    <button class="btn-cinema-modal" id="btn-footer-cinema-mode" onclick="openSlideModal()" style="padding: 6px 14px; font-size: 0.82rem;" title="Ava täisekraani esitlus (Kinorežiim)">
+                        <span>🖥️</span> <span id="label-footer-cinema-mode">Esitlusrežiim</span>
+                    </button>
+                    <div class="slide-dots" id="slide-dots-container">
+                        <span class="slide-dot active" onclick="goToSlide(0)"></span>
+                        <span class="slide-dot" onclick="goToSlide(1)"></span>
+                        <span class="slide-dot" onclick="goToSlide(2)"></span>
+                        <span class="slide-dot" onclick="goToSlide(3)"></span>
+                        <span class="slide-dot" onclick="goToSlide(4)"></span>
+                        <span class="slide-dot" onclick="goToSlide(5)"></span>
+                        <span class="slide-dot" onclick="goToSlide(6)"></span>
+                        <span class="slide-dot" onclick="goToSlide(7)"></span>
+                        <span class="slide-dot" onclick="goToSlide(8)"></span>
+                        <span class="slide-dot" onclick="goToSlide(9)"></span>
+                        <span class="slide-dot" onclick="goToSlide(10)"></span>
+                        <span class="slide-dot" onclick="goToSlide(11)"></span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="btn-next-slide" onclick="nextSlide()" style="padding: 8px 16px; font-weight: 600;">
+                    <span data-i18n="btn_next_slide">Järgmine Slaid</span> <span>▶</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    
+    <!-- TAB: SNAPSHOTS & DR HUB -->
+    <div id="tab-snapshots" class="tab-content">
+        <div class="section-title">
+            <span data-i18n="title_snapshots_hub">💾 Golden Snapshots & Instant Disaster Recovery (~15s)</span>
+            <span style="font-size: 0.8rem; color: #64748b;">15-Second Instant Recovery vs 4-5 Minute Cold Setup</span>
+        </div>
+
+        <!-- BENCHMARK COMPARISON BAR -->
+        <div class="card" style="border: 1px solid rgba(34, 197, 94, 0.4); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%); margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                <h4 style="color: #4ade80; margin: 0; font-size: 1.05rem;">⚡ Ajakulu Võrdlus: Kiirtaastamine vs Külm Paigaldus</h4>
+                <span class="badge badge-success" style="font-size: 0.8rem; font-weight: 700;">94% Kiirem Taastamine (~15s)</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 12px;">
+                    <div style="font-size: 0.85rem; color: #94a3b8;">🚀 Golden Snapshot FastStart (Pass 2 / DR)</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: #4ade80; margin: 4px 0;">~15 – 22 sekundit</div>
+                    <div style="font-size: 0.75rem; color: #cbd5e1;">Taastab valmis Oracle andmemahu + APEX + kasutajad + paroolide rotatsiooni</div>
+                </div>
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 12px;">
+                    <div style="font-size: 0.85rem; color: #94a3b8;">❄️ Täielik Külm Paigaldus Nullist (Pass 1)</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: #f87171; margin: 4px 0;">~3m 45s – 5m 20s</div>
+                    <div style="font-size: 0.75rem; color: #cbd5e1;">Tõmbab imagid, initsialiseerib baasid, kompileerib APEX PL/SQL mootori</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SNAPSHOT MANAGER INTERACTIVE CARD -->
+        <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35); margin-bottom: 28px; background: rgba(15, 23, 42, 0.7);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                <div>
+                    <h4 style="color: #38bdf8; margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                        <span>🗄️ Snapshotide Haldur & Arhiiv</span>
+                        <span id="snapshots-count-badge" class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); font-size: 0.75rem;">...</span>
+                    </h4>
+                    <p style="font-size: 0.82rem; color: #94a3b8; margin: 4px 0 0 0;">Halda ametlikke Golden Snapshot standardeid ja arendaja kohandatud hetktõmmiseid</p>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" style="padding: 6px 14px; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 6px;" onclick="triggerRestoreActiveBaseline(this)">
+                        <span>⚡</span> <span data-i18n="snap_btn_restore_active">Taasta Aktiivne Golden Snapshot</span>
+                    </button>
+                    <button class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 6px;" onclick="toggleSnapshotCustomForm()">
+                        <span>📸</span> <span data-i18n="snap_btn_create_custom">Loo Kohandatud Snapshot</span>
+                    </button>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 6px;" onclick="triggerCleanOldSnapshots(this)">
+                        <span>🧹</span> <span data-i18n="snap_btn_clean_old">Puhasta Vanad</span>
+                    </button>
+                    <button class="btn btn-secondary" style="padding: 6px 10px; font-size: 0.82rem;" onclick="loadSnapshotsTable(true)" title="Värskenda nimekirja">
+                        <span>🔄</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- COLLAPSIBLE CUSTOM SNAPSHOT FORM -->
+            <div id="snapshot-custom-form" style="display: none; background: rgba(3, 7, 18, 0.6); border: 1px dashed rgba(56, 189, 248, 0.4); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                <h5 style="color: #38bdf8; margin: 0 0 10px 0; font-size: 0.92rem;" data-i18n="modal_dr_custom_title">📸 Salvesta Hetkeseis (Loo Kohandatud Snapshot)</h5>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px;">Silt / Tunnus (Tag):</label>
+                        <input type="text" id="custom-snap-tag" placeholder="nt. enne_skeemiuuendust" style="width: 100%; padding: 7px 10px; font-size: 0.82rem; background: #0b1120; border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; outline: none; font-family: ui-monospace, monospace;" />
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px;">Kirjeldus (Description):</label>
+                        <input type="text" id="custom-snap-desc" placeholder="nt. Testandmed kliendi demoks" style="width: 100%; padding: 7px 10px; font-size: 0.82rem; background: #0b1120; border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; outline: none;" />
+                    </div>
+                    <div style="display: flex; align-items: flex-end; gap: 8px;">
+                        <button class="btn btn-primary" id="btn-submit-custom-snap" style="padding: 7px 16px; font-size: 0.82rem;" onclick="triggerSubmitCustomSnapshot()">
+                            <span>📸</span> <span data-i18n="modal_dr_custom_btn">Loo Snapshot</span>
+                        </button>
+                        <button class="btn btn-secondary" style="padding: 7px 12px; font-size: 0.82rem;" onclick="toggleSnapshotCustomForm()">
+                            Sulge
+                        </button>
+                    </div>
+                </div>
+                <div id="tab-snapshots-console" style="display: none; margin-top: 14px;"></div>
+            </div>
+
+            <!-- SNAPSHOTS TABLE CONTAINER -->
+            <div id="snapshots-table-container" style="overflow-x: auto; min-height: 120px;">
+                <div style="display: flex; align-items: center; justify-content: center; padding: 30px; color: #94a3b8; font-size: 0.85rem; gap: 8px;">
+                    <span>⏳</span> <span>Laen snapshotide nimekirja...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CLI QUICK REFERENCE CARDS -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 28px;">
+            <div class="card" style="border: 1px solid rgba(34, 197, 94, 0.35);">
+                <h4 style="color: #4ade80; margin-bottom: 8px;">⚡ 1. FastStart Taastamine (~15s)</h4>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Taasta kogu Oracle 23ai andmemaht, APEX ja skeemid eelnevalt genereeritud tihendatud Golden Snapshotist:</p>
+                <div class="code-box" style="margin-top: 10px;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    # Taasta valitud kavand instant kiirusega (~15s):<br/>
+                    ./scripts/snapshots/restore-golden-snapshots.sh -b 21
+                </div>
+            </div>
+            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35);">
+                <h4 style="color: #38bdf8; margin-bottom: 8px;">💾 2. Uue Release Snapshoti Loomine</h4>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Peale uue versiooni valmimist või andmebaasimuudatusi salvesta värske Golden Snapshot:</p>
+                <div class="code-box" style="margin-top: 10px;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    # Salvesta puhas Golden Snapshot:<br/>
+                    ./scripts/snapshots/create-golden-snapshots.sh
+                </div>
+            </div>
+            <div class="card" style="border: 1px solid rgba(234, 179, 8, 0.35);">
+                <h4 style="color: #facc15; margin-bottom: 8px;">🧹 3. Snapshotide Puhastamine & Haldus</h4>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Eemalda vananenud või mitteühilduvad hetktõmmised kettamahu vabastamiseks:</p>
+                <div class="code-box" style="margin-top: 10px;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    # Kustuta vanad snapshotid:<br/>
+                    ./scripts/snapshots/clean-golden-snapshots.sh
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    
+    <!-- TAB: FORMS & PUBLISHER STUDIO -->
+    <div id="tab-forms-pub" class="tab-content">
+        <div class="section-title">
+            <span>📄 Oracle Forms 14c & Analytics Publisher Studio</span>
+            <span style="font-size: 0.8rem; color: #64748b;">Pixel-Perfect Document Workstation, noVNC GUI & REST API Studio</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 24px;">
+            <!-- CARD 1: Oracle Publisher Desktop Word noVNC -->
+            <div class="card" style="border: 1px solid rgba(168, 85, 247, 0.4); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <h4 style="color: #c084fc; margin: 0;">🖥️ Oracle BI Publisher Desktop (Word GUI)</h4>
+                    <span class="badge badge-primary" style="font-size: 0.75rem;">Port 6083</span>
+                </div>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Ametlik MS Word + Oracle Analytics Publisher Desktop (Template Builder) lisandmoodul brauseris läbi HTML5 noVNC:</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0;">
+                    <a href="http://localhost:6083/vnc.html" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 0.82rem;">
+                        <span>🚀</span> <span>Ava Template Builder (noVNC 6083) →</span>
+                    </a>
+                </div>
+                <div class="code-box" style="font-size: 0.75rem;">
+                    # Käivita ja peata on-demand (0 MB idle RAM):<br/>
+                    ./scripts/publisher/start-designer.sh<br/>
+                    ./scripts/publisher/stop-designer.sh
+                </div>
+            </div>
+
+            <!-- CARD 2: Fast-Render CLI Lab -->
+            <div class="card" style="border: 1px solid rgba(34, 197, 94, 0.4);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <h4 style="color: #4ade80; margin: 0;">⚡ Kiir-Renderdamise Labor (Java XDO CLI)</h4>
+                    <span class="badge badge-success" style="font-size: 0.75rem;">Fast-Render</span>
+                </div>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Kompileeri ja kontrolli trükise (.rtf) ja XML andmete väljundit sekundiga kohapeal:</p>
+                <div class="code-box" style="font-size: 0.75rem; margin-top: 10px;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    # Testi arve genereerimist PDF-iks:<br/>
+                    ./scripts/publisher/test-render.sh templates/publisher/samples/arve_eesti_standard.rtf templates/publisher/samples/arve_näidisandmed.xml
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="slide-link-btn" onclick="navigateToDoc('publisher-template-builder')" style="font-size: 0.78rem;">📖 Loe Kujundaja Juhendit →</button>
+                </div>
+            </div>
+
+            <!-- CARD 3: Forms Builder noVNC -->
+            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35);">
+                <h4 style="color: #38bdf8; margin-bottom: 8px;">🖥️ Oracle Forms 14c Builder noVNC</h4>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Ava Oracle Forms 14.1.2 visuaalne disainer (Forms Builder) otse brauseris läbi noVNC:</p>
+                <div style="margin: 10px 0;">
+                    <a href="http://localhost:6082/vnc.html" target="_blank" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 0.82rem;">
+                        <span>🚀</span> <span>Ava Forms Builder (noVNC 6082) →</span>
+                    </a>
+                </div>
+                <div class="code-box" style="font-size: 0.75rem;">
+                    Headless kompileerimine:<br/>
+                    ./scripts/internal/compile-forms-headless.sh
+                </div>
+            </div>
+
+            <!-- CARD 4: Analytics Publisher Server REST API -->
+            <div class="card" style="border: 1px solid rgba(234, 179, 8, 0.35);">
+                <h4 style="color: #facc15; margin-bottom: 8px;">📊 Publisher Server REST API</h4>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Päri Pixel-Perfect PDF ja Excel väljundeid reaalajas REST teenusest:</p>
+                <div class="code-box" style="font-size: 0.75rem; margin-top: 8px;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    curl -X POST "http://localhost:9502/xmlpserver/services/rest/v1/reports" \<br/>
+                      -H "Content-Type: application/json" \<br/>
+                      -d '{"reportRequest": {"attributeFormat": "pdf"}}'
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- TAB: APEXLANG STUDIO -->
+    <div id="tab-apexlang" class="tab-content">
+        <div class="section-title">
+            <span>🪄 Oracle APEXlang DSL & AI Studio</span>
+            <span style="font-size: 0.8rem; color: #64748b;">Official Declarative .apx Domain Specific Language for Oracle APEX 26.1</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 24px;">
+            <!-- CARD 1: Syntax & Compiler -->
+            <div class="card" style="border: 1px solid rgba(168, 85, 247, 0.4); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <h4 style="color: #c084fc; margin: 0;">🪄 APEXlang Deklaratiivne Süntaks (.apx)</h4>
+                    <span class="badge badge-primary" style="font-size: 0.75rem;">EBNF Grammar</span>
+                </div>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Tekstipõhine range EBNF grammatikaga DSL, mis võimaldab AI mudelitel ja arendajatel kirjeldada täielikke APEX rakendusi:</p>
+                <div class="code-box" style="font-size: 0.75rem; margin-top: 8px;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    # Peamised direktiivid:<br/>
+                    #app &lt;Nimi&gt; "[Pealkiri]" [theme: 42, nav: side]<br/>
+                    &nbsp;&nbsp;#page 1 "Avaleht" [icon: "fa-home"]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;#card "Statistika" [sql: "SELECT ..."]<br/>
+                    &nbsp;&nbsp;#page 2 "Kliendid" [interactive_grid: true]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;#report "Kliendibaas" [table: "CLIENTS"]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;#form "Muuda Klienti" [table: "CLIENTS"]
+                </div>
+            </div>
+
+            <!-- CARD 2: CLI Commands -->
+            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.4);">
+                <h4 style="color: #38bdf8; margin-bottom: 8px;">⚡ Kompileerimise & Tarnimise Käsud</h4>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Valideeri ja impordi <code>.apx</code> fail otse Oracle APEX andmebaasi läbi SQLcl CLI või MCP serveri:</p>
+                <div class="code-box" style="font-size: 0.75rem; margin-top: 8px;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    # 1. Valideeri süntaksit reeglite vastu:<br/>
+                    sql /@DB_ALISE_DEV apex validate app.apx<br/><br/>
+                    # 2. Impordi ja ehita APEX rakendus:<br/>
+                    sql /@DB_ALISE_DEV apex import app.apx<br/><br/>
+                    # 3. Ekspordi olemasolev äpp APEXlang formaati:<br/>
+                    sql /@DB_ALISE_DEV apex export -appId 101 -apexlang
+                </div>
+            </div>
+
+            <!-- CARD 3: AI Vibe-Coding Prompt Templates -->
+            <div class="card" style="border: 1px solid rgba(34, 197, 94, 0.4);">
+                <h4 style="color: #4ade80; margin-bottom: 8px;">🤖 AI Prompti Generaator (Vibe-Coding)</h4>
+                <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Kopeeri valmismall oma AI agendile (Claude, Antigravity, Copilot, ChatGPT) veatu APEXlang koodi genereerimiseks:</p>
+                <div class="code-box" style="font-size: 0.75rem; margin-top: 8px;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    "Genereeri Oracle APEX 26.1 ametlikule APEXlang EBNF grammatikale vastav (.apx) deklaratiivne rakenduse kood tabelile INVOICES (arved, kliendid, read) koos interaktiivse ruudustiku, modaalse redigeerimisvormi, kinnitusprotsessi ja KPI kaartidega."
+                </div>
+            </div>
+        </div>
+
+        <!-- SAMPLE APEXLANG APPLICATIONS VIEWER -->
+        <div class="card" style="border: 1px solid rgba(168, 85, 247, 0.35); margin-top: 10px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
+                <h4 style="color: #f8fafc; margin: 0; font-size: 1.05rem;">📦 Näidisrakendused (Production-Ready APEXlang Templates)</h4>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" onclick="showApxSample('crm')" id="btn-apx-crm" style="padding: 4px 10px; font-size: 0.8rem; background: #38bdf8; color: #030712; font-weight: 600;">CRM & Kliendihaldus</button>
+                    <button class="btn btn-secondary" onclick="showApxSample('helpdesk')" id="btn-apx-helpdesk" style="padding: 4px 10px; font-size: 0.8rem;">Kasutajatugi & Piletid</button>
+                    <button class="btn btn-secondary" onclick="showApxSample('incidents')" id="btn-apx-incidents" style="padding: 4px 10px; font-size: 0.8rem;">Intsidentide Juhtimine</button>
+                </div>
+            </div>
+            <div class="code-box" id="apx-sample-code" style="max-height: 280px; overflow-y: auto; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.8rem; line-height: 1.5;">
+                <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+#app CRM_Platform "Äriklientide CRM ja Müügitoru" [id: 101, theme: 42, nav: side]
+  #auth "Oracle APEX Account Credentials"
+  
+  #page 1 "Töölaud & KPI-d" [icon: "fa-dashboard", nav: true]
+    #card "Aktiivsed Müügivõimalused" [sql: "SELECT count(*) total, sum(amount) val FROM deals WHERE status = 'OPEN'"]
+    #card "Kuu Müügikäive" [sql: "SELECT sum(amount) revenue FROM invoices WHERE invoice_date >= trunc(sysdate, 'MM')"]
+    #chart "Müügitoru Faasid" [type: donut, sql: "SELECT stage, count(*) qty FROM deals GROUP BY stage"]
+
+  #page 10 "Kliendid" [icon: "fa-users", nav: true]
+    #report "Kliendibaas" [type: interactive_grid, table: "CUSTOMERS"]
+      #column ID [primary_key: true, hidden: true]
+      #column COMPANY_NAME "Ettevõtte Nimi" [required: true]
+      #column CONTACT_EMAIL "E-post" [format: email]
+      #column SEGMENT "Kliendisegment" [lov: "SELECT code, label FROM customer_segments"]
+      #action "Uus Klient" [type: redirect_page, target: 11]
+
+  #page 11 "Kliendi Andmed" [type: modal, title: "Muuda Kliendi Profiili"]
+    #form "Kliendi Vorm" [table: "CUSTOMERS"]
+      #item COMPANY_NAME "Ettevõtte Nimi" [type: text, required: true]
+      #item REG_CODE "Registrikood" [type: text]
+      #item PHONE "Telefon" [type: text]
+      #item IS_ACTIVE "Aktiivne" [type: switch, default: "Y"]
+      #button "Salvesta" [type: submit, style: primary, action: process_form]
+      #button "Loobu" [type: cancel]
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!-- TAB 2: ONBOARDING & QUICKSTART -->
+    <div id="tab-onboarding" class="tab-content">
+        <div class="section-title">
+            <span data-i18n="title_onboarding">🚀 Developer Onboarding & Quickstart Guide</span>
+            <span style="font-size: 0.8rem; color: #64748b;" data-i18n="onboarding_subtitle">Master the Zero-Trust 1-Click workflow and developer tooling</span>
+        </div>
+
+        <!-- HERO CARD: MIDA TEHA (6 LIHTSAT SAMMU) -->
+        <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.45); background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(3, 7, 18, 0.98) 100%); margin-bottom: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.15);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 12px;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 10px;">
+                        <span>⚡</span> <span data-i18n="ob_start_title">Mida Teha: Kiirstardi 6 Lihtsat Sammu</span>
+                    </h3>
+                    <p style="margin: 4px 0 0 0; font-size: 0.875rem; color: #94a3b8;" data-i18n="ob_start_desc">
+                        Täielik tegevuskava repo kloonimisest kuni töötava Oracle 23ai & APEX keskkonna ja ühendusteni:
+                    </p>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span class="badge badge-success" style="font-size: 0.8rem; padding: 4px 10px; font-weight: 700;">Zero-Trust Ready</span>
+                </div>
+            </div>
+
+            <!-- 6 STEPS GRID -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+                <!-- Step 1 -->
+                <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px; position: relative;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #0284c7; color: white; font-weight: 800; font-size: 0.85rem;">1</span>
+                        <strong style="color: #f8fafc; font-size: 0.95rem;" data-i18n="ob_step_1_name">1. Lae Alla Koodihoidla (Clone Repo)</strong>
+                    </div>
+                    <p style="font-size: 0.82rem; color: #94a3b8; margin: 0 0 8px 0;" data-i18n="ob_step_1_desc">Klooni koodihoidla oma kohalikku arvutisse Git käsurealt:</p>
+                    <div class="code-box" style="margin: 0; padding: 8px 10px; font-size: 0.8rem;">
+                        <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                        <code>git clone https://github.com/alahe/oracle-devops-platform.git</code>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px; position: relative;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #0284c7; color: white; font-weight: 800; font-size: 0.85rem;">2</span>
+                        <strong style="color: #f8fafc; font-size: 0.95rem;" data-i18n="ob_step_2_name">2. Ava Kaust VS Code'is</strong>
+                    </div>
+                    <p style="font-size: 0.82rem; color: #94a3b8; margin: 0 0 8px 0;" data-i18n="ob_step_2_desc">Liigu projekti kausta ja ava see Visual Studio Code'is:</p>
+                    <div class="code-box" style="margin: 0; padding: 8px 10px; font-size: 0.8rem;">
+                        <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                        <code>cd oracle-devops-platform && code .</code>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px; position: relative;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #0284c7; color: white; font-weight: 800; font-size: 0.85rem;">3</span>
+                        <strong style="color: #f8fafc; font-size: 0.95rem;" data-i18n="ob_step_3_name">3. Ava Terminal</strong>
+                    </div>
+                    <p style="font-size: 0.82rem; color: #94a3b8; margin: 0 0 8px 0;" data-i18n="ob_step_3_desc">Ava VS Code redaktori integreeritud terminaliakken:</p>
+                    <div style="background: rgba(3, 7, 18, 0.8); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 0.82rem; color: #38bdf8; font-family: monospace;">
+                        ⌨️ <strong>Ctrl + `</strong> (Windows/Linux) &nbsp;|&nbsp; <strong>Cmd + `</strong> (macOS)
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 8px; padding: 14px; position: relative;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #16a34a; color: white; font-weight: 800; font-size: 0.85rem;">4</span>
+                            <strong style="color: #4ade80; font-size: 0.95rem;" data-i18n="ob_step_4_name">4. Käivita Paigaldusskript</strong>
+                        </div>
+                        <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 0.72rem; font-weight: 700;">⏱️ Esimene kord ~12 min</span>
+                    </div>
+                    <p style="font-size: 0.82rem; color: #cbd5e1; margin: 0 0 8px 0;" data-i18n="ob_step_4_desc">Laeb tõmmised, seadistab Oracle 23ai baasi, paigaldab APEXi ja genereerib SEPS Walleti:</p>
+                    <div class="code-box" style="margin: 0; padding: 8px 10px; font-size: 0.8rem;">
+                        <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                        <code>./scripts/setup-all.sh -y</code>
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px; position: relative;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #0284c7; color: white; font-weight: 800; font-size: 0.85rem;">5</span>
+                        <strong style="color: #f8fafc; font-size: 0.95rem;" data-i18n="ob_step_5_name">5. Ava Dev Hub Juhtpaneel</strong>
+                    </div>
+                    <p style="font-size: 0.82rem; color: #94a3b8; margin: 0 0 8px 0;" data-i18n="ob_step_5_desc">Ava portaal oma veebibrauseris kohaliku failina või ORDS veebiserveri kaudu:</p>
+                    <div class="code-box" style="margin: 0; padding: 8px 10px; font-size: 0.8rem;">
+                        <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                        <code>open ./docs/dev-hub.html</code>
+                    </div>
+                </div>
+
+                <!-- Step 6 -->
+                <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 8px; padding: 14px; position: relative;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: #9333ea; color: white; font-weight: 800; font-size: 0.85rem;">6</span>
+                        <strong style="color: #c084fc; font-size: 0.95rem;" data-i18n="ob_step_6_name">6. Kasuta Kiirlinke & Ühendusi</strong>
+                    </div>
+                    <p style="font-size: 0.82rem; color: #94a3b8; margin: 0 0 8px 0;" data-i18n="ob_step_6_desc">Ava APEX / DB Actions portaalid Juhtpaneelilt või ühendu SQLcl terminaliga:</p>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                        <button class="btn btn-primary" onclick="switchTab('tab-services')" style="padding: 5px 10px; font-size: 0.78rem;">
+                            <span>🌐</span> <span data-i18n="tab_cockpit">Juhtpaneel</span>
+                        </button>
+                        <button class="copy-btn" style="position: static; padding: 5px 10px; font-size: 0.78rem;" onclick="copyBadge(this, 'sql /@DB_PROXY_DEV')">
+                            <span>💻</span> <code>sql /@DB_PROXY_DEV</code>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title" style="margin-top: 28px; margin-bottom: 16px;">
+            <span data-i18n="title_onboarding_deepdive">📚 Töövoogude Juhendid & Tööriistad</span>
+            <span style="font-size: 0.8rem; color: #64748b;" data-i18n="subtitle_onboarding_deepdive">Põhjalik ülevaade arhitektuuridest, paroolivabast autentimisest ja taastamisest</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 28px;">
+            <!-- CARD 1: Creating a New Environment & Choosing a Blueprint -->
+            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);">
+                <div class="card-top">
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <span>🏗️</span> <span data-i18n="ob_step0_title">1. Uue Keskkonna Loomine & Blueprinti Valik</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: #94a3b8; line-height: 1.5;" data-i18n="ob_step0_desc">
+                        Paigalda ja käivita täielik Oracle 23ai & APEX arenduskeskkond minutitega:
+                    </p>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; margin: 12px 0 16px 20px; line-height: 1.6;">
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step0_p1">Vali sobiv mudel:</strong> 11 kureeritud blueprinti (DB, Forms, Publisher, Web IDE).</li>
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step0_p2">Täisautomaatne käivitus:</strong> üks käsk seadistab andmebaasid, APEXi ja SEPS Walleti.</li>
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step0_p3">Sujuv ümberlülitus:</strong> vaheta blueprintide vahel puhtalt ja andmekaota.</li>
+                    </ul>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
+                        <button class="btn btn-primary" onclick="switchTab('tab-blueprints')" style="flex: 1; justify-content: center; padding: 8px 12px; font-weight: 600;">
+                            <span data-i18n="ob_step0_btn">📋 Vali Blueprint (11 Mudelit) →</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="openSnippetModal('cmd_modal_setup_title', 'cmd_modal_setup_desc', '# 1. Launch default 2-Layer Production Stack (Blueprint 3):\n./scripts/setup-all.sh -b 3\n\n# 2. Or switch to Ultimate Enterprise All-in-One:\n./scripts/deploy-blueprint.sh -b 41\n\n# 3. Preview configuration (Dry-Run):\n./scripts/deploy-blueprint.sh -b 34 --dry-run')" style="padding: 8px 12px; font-size: 0.8rem;">
+                            <span data-i18n="btn_view_commands">💻 Vaata Käske</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 2: 1-Click Launch & Auto-Copy Workflow -->
+            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.3); background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(3, 7, 18, 0.95) 100%);">
+                <div class="card-top">
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <span>🖱️</span> <span data-i18n="ob_step1_title">2. 1-Kliki Zero-Trust Portaalide Avamine</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: #94a3b8; line-height: 1.5;" data-i18n="ob_step1_desc">
+                        Mugav ja turvaline autentimine ilma paroolide lekkimiseta brauseri URL-is:
+                    </p>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; margin: 12px 0 16px 20px; line-height: 1.6;">
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step1_p1">1. Klõpsa teenuse nupule:</strong> nt <code>🛠️ Ava APEX Tööruum →</code>.</li>
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step1_p2">2. Sihtkoht avaneb uuel vahekaardil:</strong> kasutajanimi on automaatselt eeltäidetud.</li>
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step1_p3">3. Parool kopeeritakse mällu:</strong> dekrüpteeritakse turvaliselt SEPS Walletist.</li>
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step1_p4">4. Kleebi ja logi sisse:</strong> vajuta parooliväljal <code>Ctrl+V</code> või <code>Cmd+V</code>.</li>
+                        <li><strong style="color:#f59e0b;" data-i18n="ob_step1_sdw_hint">⏱️ SQL Developer Web:</strong> esmasel avamisel võtab lehe laadimine ja sessiooni käivitus ~10–15 sekundit aega.</li>
+                    </ul>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
+                        <button class="btn btn-primary" onclick="switchTab('tab-services')" style="flex: 1; justify-content: center; padding: 8px 12px; font-weight: 600;">
+                            <span data-i18n="ob_step1_btn">🌐 Ava Teenused & Tööruumid →</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3: Credential Matrix & Clipboard Helpers -->
+            <div class="card" style="border: 1px solid rgba(168, 85, 247, 0.3); background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(3, 7, 18, 0.95) 100%);">
+                <div class="card-top">
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #c084fc; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <span>🔑</span> <span data-i18n="ob_step2_title">3. SEPS Wallet & Paroolide Haldus</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: #94a3b8; line-height: 1.5;" data-i18n="ob_step2_desc">
+                        Kõik andmebaasi kontod ja volitused ühes turvalises krüpteeritud maatriksis:
+                    </p>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; margin: 12px 0 16px 20px; line-height: 1.6;">
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step2_p1">Kasutajanimi:</strong> klõps kopeerib konto nime (nt <code>USER_DEVELOPER</code>).</li>
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step2_p2">Parooli nupp:</strong> kopeerib dekrüpteeritud parooli otse lõikelauale.</li>
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step2_p3">TNS Alias:</strong> kopeerib ühenduse nime (nt <code>DB_PROXY_DEV</code>).</li>
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step2_p4">Zero-Trust:</strong> paroolid ei salvestu tekstifailidesse ega käsurea logidesse.</li>
+                    </ul>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
+                        <button class="btn-pwd-copy" onclick="handleCopyPassword('DB_PROXY_DEV', this)" style="flex: 1; justify-content: center; padding: 8px;">
+                            <span>🧪 Testi: Kopeeri DB_PROXY_DEV Parool</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="openSnippetModal('cmd_modal_wallet_title', 'cmd_modal_wallet_desc', '# 1. View full credentials matrix table:\n./scripts/get-password.sh\n\n# 2. Copy specific password directly to clipboard:\n./scripts/get-password.sh DB_PROXY_DEV -c\n\n# 3. Rotate password with zero downtime:\n./scripts/internal/rotate-password.sh db-proxy dev')" style="padding: 8px 12px; font-size: 0.8rem;">
+                            <span data-i18n="btn_view_commands">💻 Vaata Käske</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 4: VS Code & SQLcl Instant Setup -->
+            <div class="card" style="border: 1px solid rgba(34, 197, 94, 0.3); background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(3, 7, 18, 0.95) 100%);">
+                <div class="card-top">
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #4ade80; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <span>💻</span> <span data-i18n="ob_step3_title">4. VS Code & SQLcl Terminali Seadistus</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: #94a3b8; line-height: 1.5;" data-i18n="ob_step3_desc">
+                        Ühenda kohalikud arendustööriistad paroolivabalt läbi SEPS Walleti:
+                    </p>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; margin: 12px 0 16px 20px; line-height: 1.6;">
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step3_p1">VS Code Integratsioon:</strong> automaatne ühenduste registreerimine SQL Developeri laiendusse.</li>
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step3_p2">Paroolivaba SQLcl:</strong> ava SQLcl ilma paroole sisestamata (<code>sql /@DB_PROXY_DEV</code>).</li>
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step3_p3">Keychain integreeritus:</strong> turvaline sünkroonimine operatsioonisüsteemi võtmehoidlaga.</li>
+                    </ul>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
+                        <button class="btn btn-secondary" onclick="openSnippetModal('cmd_modal_vscode_title', 'cmd_modal_vscode_desc', '# 1. Register connections in VS Code Oracle Developer extension:\n./scripts/register-connections.sh\n\n# 2. Open SQLcl without typing passwords:\n./scripts/sqlcl.sh\n# or directly in any terminal:\nsql /@DB_PROXY_DEV')" style="width: 100%; justify-content: center; padding: 8px 12px; font-size: 0.84rem; font-weight: 600;">
+                            <span data-i18n="ob_step3_btn_code">💻 Vaata Seadistamise Käske & Näiteid →</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 5: Blueprint Lifecycles & Diagnostics -->
+            <div class="card" style="border: 1px solid rgba(234, 179, 8, 0.3); background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(3, 7, 18, 0.95) 100%);">
+                <div class="card-top">
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #facc15; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <span>⚙️</span> <span data-i18n="ob_step4_title">5. Tervisekontroll & Diagnostika</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: #94a3b8; line-height: 1.5;" data-i18n="ob_step4_desc">
+                        Keskkonna elutsükli, võrguühenduste ja hetktõmmiste kiirkäsud:
+                    </p>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; margin: 12px 0 16px 20px; line-height: 1.6;">
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step4_p1">Veebiteenuste test:</strong> kontrolli HTTP/HTTPS otspunkte (APEX, ORDS, Forms, Publisher).</li>
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step4_p2">Walleti test:</strong> verifitseeri andmebaasi SEPS Wallet ühenduvus ja TNS aliased.</li>
+                        <li><strong style="color:#f8fafc;" data-i18n="ob_step4_p3">Kuldne hetktõmmis:</strong> taasta keskkond vigadeta algseisu ~15 sekundiga.</li>
+                    </ul>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
+                        <button class="btn btn-secondary" onclick="openSnippetModal('cmd_modal_diag_title', 'cmd_modal_diag_desc', '# 1. Test all web services and endpoints:\n./scripts/check-urls.sh\n\n# 2. Test SEPS Wallet connectivity:\n./scripts/check-wallet.sh\n\n# 3. Create Golden Snapshot (~15s FastStart):\n./scripts/snapshots/create-golden-snapshots.sh\n\n# 4. Restore Golden Snapshot:\n./scripts/snapshots/restore-golden-snapshots.sh')" style="width: 100%; justify-content: center; padding: 8px 12px; font-size: 0.84rem; font-weight: 600;">
+                            <span data-i18n="ob_step4_btn_code">💻 Vaata Diagnostika & Taastamise Käske →</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION: TROUBLESHOOTING & FAQ FOR BEGINNERS -->
+        <div class="section-title" style="margin-top: 32px; margin-bottom: 16px;">
+            <span data-i18n="ob_faq_title">💡 Algaja Meelespea & Levinumad Mured (FAQ & Veaotsing)</span>
+            <span style="font-size: 0.8rem; color: #64748b;" data-i18n="ob_faq_subtitle">Praktilised lahendused mälu, portide, sertifikaatide ja andmebaasi taastamise küsimustes</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 28px;">
+            <!-- FAQ 1: RAM Requirements -->
+            <div class="card" style="border: 1px solid rgba(239, 68, 68, 0.35); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);">
+                <h4 style="color: #f87171; margin: 0 0 8px 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                    <span>🧠</span> <span data-i18n="faq_ram_title">Konteineri Muutmälu (RAM) Nõue (Min 4–8 GB)</span>
+                </h4>
+                <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.5; margin: 0 0 10px 0;" data-i18n="faq_ram_desc">
+                    Oracle 23ai Free vajab töötamiseks vähemalt 2.5 GB RAM-i. Kui Podmani või Dockeri virtuaalmasinal on alla 4 GB mälu, peatub konteiner ootamatult (OOM Killer / exit code 137).
+                </p>
+                <div class="code-box" style="margin: 0; font-size: 0.78rem;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    # Kontrolli ja suurenda Podman VM muutmälu:<br/>
+                    podman machine stop<br/>
+                    podman machine set --memory 8192 --cpus 4<br/>
+                    podman machine start
+                </div>
+            </div>
+
+            <!-- FAQ 2: Port Conflicts -->
+            <div class="card" style="border: 1px solid rgba(234, 179, 8, 0.35); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);">
+                <h4 style="color: #facc15; margin: 0 0 8px 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                    <span>🔌</span> <span data-i18n="faq_ports_title">Pordi Konfliktid (8448, 1521, 8080 Hõivatud)</span>
+                </h4>
+                <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.5; margin: 0 0 10px 0;" data-i18n="faq_ports_desc">
+                    Kui terminal annab vea <code>bind: address already in use</code>, töötab taustal teine veebiserver või Oracle listener.
+                </p>
+                <div class="code-box" style="margin: 0; font-size: 0.78rem;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    # Tuvasta porti hõivav protsess:<br/>
+                    lsof -i :8448   # või lsof -i :1521<br/>
+                    # Porti saab muuta ka failis .env (nt HOST_HTTPS_PORT=8449)
+                </div>
+            </div>
+
+            <!-- FAQ 3: SSL Warning -->
+            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);">
+                <h4 style="color: #38bdf8; margin: 0 0 8px 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                    <span>🔒</span> <span data-i18n="faq_ssl_title">Brauseri "Ühendus pole privaatne" Hoiatus (SSL)</span>
+                </h4>
+                <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.5; margin: 0 0 10px 0;" data-i18n="faq_ssl_desc">
+                    HTTPS (<code>https://localhost:8448</code>) kasutab lokaalset isesertifitseeritud sertifikaati. Klõpsa brauseris "Advanced" → "Proceed to localhost" või lisa sertifikaat süsteemi usaldusnimekirja:
+                </p>
+                <div class="code-box" style="margin: 0; font-size: 0.78rem;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    # macOS usaldus (lisab Keychaini):<br/>
+                    ./scripts/certs/trust-local-cert-mac.sh<br/>
+                    # Windows usaldus (Run as Administrator):<br/>
+                    ./scripts/certs/trust-local-cert.cmd
+                </div>
+            </div>
+
+            <!-- FAQ 4: Wallet Passwords -->
+            <div class="card" style="border: 1px solid rgba(168, 85, 247, 0.35); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);">
+                <h4 style="color: #c084fc; margin: 0 0 8px 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                    <span>🔐</span> <span data-i18n="faq_wallet_title">Kus Asuvad Paroolid? (SEPS Wallet vs .txt failid)</span>
+                </h4>
+                <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.5; margin: 0 0 10px 0;" data-i18n="faq_wallet_desc">
+                    Zero-Trust reeglite järgi ei kirjutata paroole KUNAGI kettale tekstifailidesse. Need asuvad krüpteeritult SEPS Walletis (<code>config/wallet/</code>).
+                </p>
+                <div class="code-box" style="margin: 0; font-size: 0.78rem;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    # Kuva parool käsureal või kopeeri lõikelauale (-c):<br/>
+                    ./scripts/get-password.sh DB_PROXY_DEV<br/>
+                    ./scripts/get-password.sh DB_PROXY_DEV -c
+                </div>
+            </div>
+
+            <!-- FAQ 5: Golden Snapshot Recovery -->
+            <div class="card" style="border: 1px solid rgba(34, 197, 94, 0.35); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);">
+                <h4 style="color: #4ade80; margin: 0 0 8px 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                    <span>⚡</span> <span data-i18n="faq_snapshot_title">Algseisu Taastamine Ilma 12 Minutit Ootamata (~15s)</span>
+                </h4>
+                <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.5; margin: 0 0 10px 0;" data-i18n="faq_snapshot_desc">
+                    Kui katsetuste käigus läks andmebaas sassi, ei pea uuesti tegema pikka paigaldust. Kuldne hetktõmmis taastab puhta algseisu umbes 15 sekundiga:
+                </p>
+                <div class="code-box" style="margin: 0; font-size: 0.78rem;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    # Taasta valitud kavandi puhas algseis:<br/>
+                    ./scripts/snapshots/restore-golden-snapshots.sh
+                </div>
+            </div>
+
+            <!-- FAQ 6: Shutdown & Restart -->
+            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);">
+                <h4 style="color: #38bdf8; margin: 0 0 8px 0; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                    <span>🌙</span> <span data-i18n="faq_shutdown_title">Keskkonna Peatamine ja Uuesti Käivitamine</span>
+                </h4>
+                <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.5; margin: 0 0 10px 0;" data-i18n="faq_shutdown_desc">
+                    Tööpäeva lõpus peata konteinerid arvuti ressursside vabastamiseks (andmed jäävad alles). Hommikul taaskäivita sekunditega:
+                </p>
+                <div class="code-box" style="margin: 0; font-size: 0.78rem;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    # Peata konteinerid ilma andmekaota:<br/>
+                    ./scripts/reset-all.sh<br/>
+                    # Käivita olemasolevad konteinerid uuesti:<br/>
+                    ./scripts/start-containers.sh
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <!-- TAB 4: DOCUMENTATION BROWSER -->
+    <div id="tab-docs" class="tab-content">
+        <div class="docs-container">
+            <aside class="docs-sidebar">
+                <div class="docs-search-box">
+                    <input type="text" id="docs-search-input" placeholder="🔍 Search documentation..." data-i18n-placeholder="docs_search_placeholder" oninput="filterDocsList(this.value)">
+                </div>
+                <nav class="docs-nav-list" id="docs-sidebar-nav"></nav>
+            </aside>
+            <main class="docs-content" id="docs-markdown-view">
+                <div id="docs-content-header" class="docs-content-header"></div>
+                <div id="docs-rendered-body" class="docs-rendered-body">
+                    <p style="color: var(--text-dim);" data-i18n="docs_empty_hint">Select a document from the left navigation menu to view its full formatted guide.</p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- TAB 5: DEVOPS & CLI COMMANDS -->
+    <div id="tab-devops" class="tab-content">
+        <div class="section-title">
+            <span data-i18n="title_cheatsheet">⚡ Developer & DevOps Quick Commands</span>
+        </div>
+        <div class="grid">
+            <div class="card">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_health">🌐 Service Health Diagnostics</h4>
+                <p data-i18n="desc_devops_health">Test active web service HTTP/HTTPS endpoints (APEX, ORDS, Forms, Publisher).</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/check-urls.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('check-urls', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_wallet">🔑 Check SEPS Wallet Connections</h4>
+                <p data-i18n="desc_devops_wallet">Test SEPS Wallet database auto-login connections and TNS alias reachability.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/check-wallet.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('check-wallet', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_list_pwd">📋 Read Wallet Credentials</h4>
+                <p data-i18n="desc_devops_list_pwd">Query or inspect decrypted credentials from SEPS Wallet safely in-memory.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/get-password.sh --list
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('get-passwords', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_register_conn">💻 Register VS Code Connections</h4>
+                <p data-i18n="desc_devops_register_conn">Register database connections in VS Code Oracle SQL Developer extension & OS Keychain.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/register-connections.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('register-connections', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_test_ci">🧪 Local CI/CD Platform Pipeline</h4>
+                <p data-i18n="desc_devops_test_ci">Simulates offline CI/CD pipeline: validates scripts, environment variables, and platform integrity.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/test-local-ci.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('test-ci', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_test_containers">🐳 Container Health & Sockets</h4>
+                <p data-i18n="desc_devops_test_containers">Inspects active Podman containers, open socket ports, and resource health in real-time.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./tests/test-containers-live.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('test-containers', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_trust_cert">🔒 Trust SSL/TLS Certificate in OS</h4>
+                <p data-i18n="desc_devops_trust_cert">Installs local Dev Root CA certificate into user trust store for zero-warning HTTPS.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/certs/trust-local-cert-mac.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('trust-cert', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_clean_logs">🧹 Clean Execution Logs</h4>
+                <p data-i18n="desc_devops_clean_logs">Cleans up temporary files and rotates execution logs under install_logs/.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/clean-logs.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('clean-logs', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_createsnap">📸 Create New Golden Snapshots</h4>
+                <p data-i18n="desc_devops_createsnap">Generate new byte-for-byte compressed Golden Snapshot from running containers.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/snapshots/create-golden-snapshots.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('create-snapshot', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_deploy">🚀 Blueprint Deployment & Status</h4>
+                <p data-i18n="desc_devops_deploy">Inspect active architecture blueprint status, topology configuration, and health.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/deploy-blueprint.sh --status
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('deploy-status', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 6: LOGS & BENCHMARKS -->
+    <div id="tab-benchmarks" class="tab-content">
+        <div class="section-title">
+            <span data-i18n="tab_benchmarks">📝 Performance Metrics & Step Benchmarks</span>
+            <span style="font-size: 0.8rem; color: #64748b;" data-i18n="bench_rule_hint">Rule 1: Git-Tracked Metrics & Local Logs</span>
+        </div>
+
+        <!-- 4 Summary Stat Cards -->
+        <div id="benchmarks-stats-cards" style="margin-bottom: 24px;"></div>
+
+        <!-- Step Benchmarks Breakdown Table -->
+        <div id="benchmarks-table-container"></div>
+
+        <!-- Execution Logs Console -->
+        <div style="margin-top: 32px;">
+            <div class="section-title">
+                <span data-i18n="bench_logs_title">📄 Recent Execution Logs (install_logs/)</span>
+                <span style="font-size: 0.8rem; color: #64748b;">Click a log file to inspect execution transcript</span>
+            </div>
+            <div id="benchmarks-logs-container"></div>
+        </div>
+    </div>
+
+    <!-- Blueprint Architecture & Topology Modal Dialog -->
+    <!-- Blueprint Architecture & Operations Modal Dialog -->
+    <div id="bp-modal-backdrop" class="modal-backdrop" onclick="closeBlueprintModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <h3 id="bp-modal-title" style="color: var(--primary); font-size: 1.25rem; margin: 0;">Blueprint Architecture & Topology</h3>
+                    </div>
+                    <p id="bp-modal-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;"></p>
+                </div>
+                <button class="modal-close-btn" onclick="closeBlueprintModal()" title="Close dialog">✕</button>
+            </div>
+
+            <!-- Tab Navigation Bar -->
+            <div class="modal-tabs" id="bp-modal-tabs">
+                <button class="modal-tab-btn active" id="tab-btn-bp-arch" onclick="switchBlueprintModalTab('arch')">
+                    <span>📐</span> <span data-i18n="modal_tab_arch">Arhitektuur & Topoloogia</span>
+                </button>
+                <button class="modal-tab-btn" id="tab-btn-bp-users" onclick="switchBlueprintModalTab('users')">
+                    <span>🔑</span> <span data-i18n="modal_tab_users">Kasutajad & Turvalisus</span>
+                </button>
+                <button class="modal-tab-btn" id="tab-btn-bp-ops" onclick="switchBlueprintModalTab('ops')">
+                    <span>⚡</span> <span data-i18n="modal_tab_ops">Käivitused & Haldus</span>
+                </button>
+                <button class="modal-tab-btn" id="tab-btn-bp-diag" onclick="switchBlueprintModalTab('diag')">
+                    <span>🧪</span> <span data-i18n="modal_tab_diag">Testimine & Diagnostika</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- TAB 1: Architecture & Topology -->
+                <div id="bp-modal-tab-arch" class="bp-tab-content active">
+                    <!-- 1. Mermaid Topology Diagram -->
+                    <div class="modal-section">
+                        <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 1.05rem;" data-i18n="modal_sec_topology">🏗️ Network Topology & Architecture Diagram</h4>
+                        <div id="bp-modal-mermaid" class="mermaid" style="background: #030712; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; min-height: 180px; overflow-x: auto;"></div>
+                    </div>
+
+                    <!-- 2. Hardware & Resource Usage -->
+                    <div class="modal-section" style="margin-top: 22px;">
+                        <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 1.05rem;" data-i18n="modal_sec_resources">💾 Hardware & Resource Requirements</h4>
+                        <div id="bp-modal-resources" class="grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 0;"></div>
+                    </div>
+
+                    <!-- 3. Components and Network Ports -->
+                    <div class="modal-section" style="margin-top: 22px;">
+                        <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 1.05rem;" data-i18n="modal_sec_components">📦 Containers, Services & Port Bindings</h4>
+                        <div id="bp-modal-components" class="table-responsive" style="margin-bottom: 0;"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Users & Security -->
+                <div id="bp-modal-tab-users" class="bp-tab-content">
+                    <div class="modal-section">
+                        <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 1.05rem;" data-i18n="modal_sec_users">🔑 Provisioned Database Accounts & SEPS Wallet Aliases</h4>
+                        <div id="bp-modal-users" class="table-responsive" style="margin-bottom: 0;"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: Operations & Execution (Control Center) -->
+                <div id="bp-modal-tab-ops" class="bp-tab-content">
+                    <!-- Stack Status Header -->
+                    <div class="modal-section" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span id="bp-ops-status-dot" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #94a3b8;"></span>
+                                    <strong id="bp-ops-target-title" style="font-size: 1.05rem; color: #f8fafc;">Blueprint Stack</strong>
+                                    <span id="bp-ops-status-badge" class="badge" style="background: rgba(148,163,184,0.15); color: #94a3b8; font-size: 0.78rem;">STOPPED</span>
+                                </div>
+                                <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px;" id="bp-ops-target-desc">Käivita või peata selle arhitektuurikavandi konteinerid ja teenused.</div>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;" id="bp-ops-container-badges"></div>
+                        </div>
+                    </div>
+
+                    <!-- Unified Actions Grid (Lifecycle & Disaster Recovery) -->
+                    <div class="modal-section" style="margin-bottom: 22px;">
+                        <h4 style="color: var(--primary); margin-bottom: 12px; font-size: 1.05rem;" id="bp-modal-actions-heading" data-i18n="modal_actions_heading">⚡ Operations, Lifecycle & Disaster Recovery</h4>
+                        <div id="bp-modal-actions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;"></div>
+                    </div>
+
+                    <!-- Live Progress & Timer Console Container -->
+                    <div id="modal-ops-console" style="display: none; margin-bottom: 22px;"></div>
+
+                    <!-- Benchmarks & Performance Metrics -->
+                    <div class="modal-section" style="margin-bottom: 22px;">
+                        <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 1.05rem;" data-i18n="modal_sec_benchmarks">⏱️ Benchmark & Performance History</h4>
+                        <div id="bp-modal-benchmarks" style="background: #090d16; border: 1px solid var(--border); border-radius: 8px; padding: 14px;"></div>
+                    </div>
+
+                    <!-- Execution Logs -->
+                    <div class="modal-section" style="margin-bottom: 22px;">
+                        <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 1.05rem;" data-i18n="modal_sec_logs">📄 Latest Execution Log</h4>
+                        <div id="bp-modal-logs" style="background: #090d16; border: 1px solid var(--border); border-radius: 8px; padding: 14px;"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: Testing & Diagnostics -->
+                <div id="bp-modal-tab-diag" class="bp-tab-content">
+                    <div class="modal-section" style="margin-bottom: 22px;">
+                        <h4 style="color: var(--primary); margin-bottom: 12px; font-size: 1.05rem;" id="bp-modal-diag-heading" data-i18n="modal_diag_heading">🧪 Testing & Diagnostics</h4>
+                        <div id="bp-modal-diag-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;"></div>
+                    </div>
+
+                    <!-- Live Progress & Timer Console Container for Diagnostics -->
+                    <div id="modal-diag-console" style="display: none; margin-bottom: 22px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Command & Snippet Popup Modal -->
+    <div id="snippet-modal-backdrop" class="modal-backdrop" onclick="closeSnippetModal(event)">
+        <div class="modal-content" style="max-width: 680px;" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <h3 id="snippet-modal-title" style="color: var(--primary); font-size: 1.2rem;">💻 Command & Code Snippet</h3>
+                    <p id="snippet-modal-desc" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;"></p>
+                </div>
+                <button class="modal-close-btn" onclick="closeSnippetModal()" title="Close dialog">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="snippet-modal-code" class="code-box" style="margin-bottom: 0;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- YAML Profiles Manager Modal -->
+    <div id="profile-modal-backdrop" class="modal-backdrop" onclick="closeProfileModal(event)">
+        <div class="modal-content" style="max-width: 980px; height: 85vh; display: flex; flex-direction: column;" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <h3 id="profile-modal-title" style="color: var(--primary); font-size: 1.25rem;">⚙️ YAML Profiles Manager</h3>
+                    <p id="profile-modal-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;">Inspect, modify or clone database, ORDS, Web-IDE, and middleware profiles directly</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeProfileModal()" title="Close dialog">✕</button>
+            </div>
+            <div class="modal-body" style="flex: 1; display: flex; gap: 16px; overflow: hidden; padding: 16px 24px;">
+                <!-- Profile List Sidebar -->
+                <div style="width: 290px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid var(--border); padding-right: 14px; overflow-y: auto;">
+                    <div style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">📂 Profiilid (YAML)</div>
+                    <div id="profile-list-container" style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="color: var(--text-dim); font-size: 0.8rem;">Loading profiles from bridge...</span>
+                    </div>
+                </div>
+                <!-- Profile Editor Main Area -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <div>
+                            <span id="profile-editor-path" style="font-family: ui-monospace, monospace; font-size: 0.85rem; color: #38bdf8; font-weight: 600;">Select a profile</span>
+                            <div id="profile-editor-badges" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;"></div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button class="btn btn-secondary" id="btn-edit-profile" onclick="enableProfileEdit()" style="padding: 5px 12px; font-size: 0.8rem;">
+                                <span data-i18n="btn_edit_profile">✏️ Edit</span>
+                            </button>
+                            <button class="btn btn-secondary" id="btn-clone-profile" onclick="promptCloneProfile()" style="padding: 5px 12px; font-size: 0.8rem;">
+                                <span data-i18n="btn_clone_profile">📋 Clone</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Inline Clone Input Bar (hidden by default) -->
+                    <div id="profile-clone-bar" style="display: none; background: rgba(56, 189, 248, 0.08); border: 1px dashed #38bdf8; padding: 8px 12px; border-radius: 6px; align-items: center; gap: 8px;">
+                        <span style="font-size: 0.8rem; color: #38bdf8; font-weight: 600;">Uue profiili failinimi:</span>
+                        <input type="text" id="profile-clone-name" style="flex: 1; background: #030712; border: 1px solid var(--border); color: #f8fafc; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-family: ui-monospace, monospace;" placeholder="nt db-custom-oracle.yaml" />
+                        <button class="btn btn-primary" onclick="confirmCloneProfile()" style="padding: 4px 10px; font-size: 0.78rem;">Klooni</button>
+                        <button class="btn btn-secondary" onclick="cancelCloneProfile()" style="padding: 4px 10px; font-size: 0.78rem;">Loobu</button>
+                    </div>
+                    <div style="flex: 1; position: relative;">
+                        <textarea id="profile-editor-textarea" readonly style="width: 100%; height: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.82rem; background: #030712; color: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; resize: none; line-height: 1.5; outline: none;" spellcheck="false" placeholder="Profile YAML content will appear here..."></textarea>
+                    </div>
+                    <!-- Status / Validation Bar -->
+                    <div id="profile-editor-status" style="font-size: 0.82rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; padding-top: 4px;">
+                        <span id="profile-editor-msg" style="color: #94a3b8;">Vali profiil vasakult selle vaatamiseks</span>
+                        <button class="btn btn-primary" id="btn-save-profile" onclick="saveProfileFromEditor()" style="padding: 6px 16px; font-weight: 600; display: none;">💾 Salvesta Profiil</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blueprint Manager Modal -->
+    <div id="bp-manager-modal-backdrop" class="modal-backdrop" onclick="closeBlueprintManagerModal(event)">
+        <div class="modal-content" style="max-width: 980px; height: 85vh; display: flex; flex-direction: column;" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <h3 id="bpm-modal-title" style="color: var(--primary); font-size: 1.25rem;" data-i18n="btn_create_blueprint">📋 Blueprintide Haldur</h3>
+                    <p id="bpm-modal-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;">Vaata, muuda, klooni või loo arhitektuurseid blueprinte (.env.*)</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeBlueprintManagerModal()" title="Close dialog">✕</button>
+            </div>
+            <div class="modal-body" style="flex: 1; display: flex; gap: 16px; overflow: hidden; padding: 16px 24px;">
+                <!-- Blueprint List Sidebar -->
+                <div style="width: 290px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid var(--border); padding-right: 14px; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <div style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">📂 Blueprints</div>
+                        <button class="btn btn-primary" onclick="showNewBlueprintForm()" style="padding: 2px 8px; font-size: 0.75rem;" data-i18n="btn_new_bp">➕ Uus</button>
+                    </div>
+                    <div id="bp-list-container" style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="color: var(--text-dim); font-size: 0.8rem;">Loading blueprints from bridge...</span>
+                    </div>
+                </div>
+
+                <!-- Right Area: View/Edit Pane OR Builder Form -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
+                    <!-- Pane 1: View / Edit Blueprint Content -->
+                    <div id="bp-view-pane" style="flex: 1; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <div>
+                                <span id="bp-view-path" style="font-family: ui-monospace, monospace; font-size: 0.85rem; color: #38bdf8; font-weight: 600;">Select a blueprint</span>
+                                <div id="bp-view-badges" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;"></div>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <button class="btn btn-secondary" id="btn-edit-bp" onclick="enableBlueprintEdit()" style="padding: 5px 12px; font-size: 0.8rem;">
+                                    <span data-i18n="btn_edit_bp">✏️ Muuda</span>
+                                </button>
+                                <button class="btn btn-secondary" id="btn-clone-bp" onclick="cloneCurrentBlueprint()" style="padding: 5px 12px; font-size: 0.8rem;">
+                                    <span data-i18n="btn_clone_bp">📋 Klooni</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div style="flex: 1; position: relative;">
+                            <textarea id="bp-view-textarea" readonly style="width: 100%; height: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.82rem; background: #030712; color: #38bdf8; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; resize: none; line-height: 1.5; outline: none;" spellcheck="false" placeholder="Blueprint .env content will appear here..."></textarea>
+                        </div>
+                        <div id="bp-view-status" style="font-size: 0.82rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; padding-top: 4px;">
+                            <span id="bp-view-msg" style="color: #94a3b8;">Vali vasakult blueprint selle sisu vaatamiseks</span>
+                            <button class="btn btn-primary" id="btn-save-bp" onclick="saveBlueprintFromView()" style="padding: 6px 16px; font-weight: 600; display: none;">💾 Salvesta Blueprint</button>
+                        </div>
+                    </div>
+
+                    <!-- Pane 2: Blueprint Interactive Builder / Clone Form (hidden by default) -->
+                    <div id="bp-builder-pane" style="display: none; flex-direction: column; gap: 14px; overflow-y: auto; padding-right: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                            <h4 id="bp-builder-title" style="margin: 0; color: var(--primary); font-size: 1.05rem;">➕ Uus Blueprint</h4>
+                            <button class="btn btn-secondary" onclick="showBlueprintView()" style="padding: 4px 10px; font-size: 0.78rem;">← Tagasi vaatesse</button>
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <div style="flex: 1;">
+                                <label style="font-size: 0.82rem; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 4px;">Blueprint Number</label>
+                                <input type="number" id="cbp-number" value="12" min="12" max="99" style="width: 100%; background: #0b1120; border: 1px solid var(--border); color: #f8fafc; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem;" oninput="updateCbpEnvPreview()">
+                            </div>
+                            <div style="flex: 2;">
+                                <label style="font-size: 0.82rem; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 4px;">Slug Name</label>
+                                <input type="text" id="cbp-name" value="custom-cluster" placeholder="e.g. bi-analytics-hub" style="width: 100%; background: #0b1120; border: 1px solid var(--border); color: #f8fafc; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem;" oninput="updateCbpEnvPreview()">
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <div style="flex: 1;">
+                                <label style="font-size: 0.82rem; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 4px;">Database Profile</label>
+                                <select id="cbp-db" style="width: 100%; background: #0b1120; border: 1px solid var(--border); color: #f8fafc; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;" onchange="updateCbpEnvPreview()">
+                                    <option value="NONE">NONE (No local DB)</option>
+                                    <option value="db-proxy-oracle" selected>db-proxy-oracle (Port 1532)</option>
+                                    <option value="db-alise-oracle">db-alise-oracle (Port 1533)</option>
+                                    <option value="db-publisher-oracle">db-publisher-oracle (Port 1531)</option>
+                                    <option value="db-forms-oracle">db-forms-oracle (Port 1534)</option>
+                                    <option value="db-gvenzl">db-gvenzl (Port 1535)</option>
+                                    <option value="db-adb">db-adb (Autonomous Cloud mTLS)</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="font-size: 0.82rem; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 4px;">ORDS Profile</label>
+                                <select id="cbp-ords" style="width: 100%; background: #0b1120; border: 1px solid var(--border); color: #f8fafc; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;" onchange="updateCbpEnvPreview()">
+                                    <option value="ords-image" selected>ords-image (Port 8088/8448)</option>
+                                    <option value="ords-standalone">ords-standalone</option>
+                                    <option value="NONE">NONE</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px;">
+                            <div style="flex: 1;">
+                                <label style="font-size: 0.82rem; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 4px;">Middleware / Add-on Service</label>
+                                <select id="cbp-service" style="width: 100%; background: #0b1120; border: 1px solid var(--border); color: #f8fafc; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;" onchange="updateCbpEnvPreview()">
+                                    <option value="NONE" selected>NONE (No extra middleware)</option>
+                                    <option value="web-ide-standard">Web IDE Standard (Port 8090)</option>
+                                    <option value="publisher-standard">Publisher Standard (Port 9502)</option>
+                                    <option value="forms-standard">Forms Standard (Port 9001/6082)</option>
+                                    <option value="forms-publisher-unified">Unified Forms + Publisher (Port 9001/9502)</option>
+                                    <option value="publisher-designer">Publisher Designer (Port 6083)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.82rem; color: #94a3b8; font-weight: 600; display: block; margin-bottom: 4px;">Generated Blueprint .env Content (Editable)</label>
+                            <textarea id="cbp-env-content" style="width: 100%; height: 130px; font-family: ui-monospace, monospace; font-size: 0.82rem; background: #030712; color: #38bdf8; border: 1px solid var(--border); border-radius: 6px; padding: 10px; resize: vertical; line-height: 1.4; outline: none;"></textarea>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px;">
+                            <button class="btn btn-secondary" onclick="showBlueprintView()">Loobu</button>
+                            <button class="btn btn-primary" onclick="submitCreateBlueprint()">💾 Loo Blueprint</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Attribution & Platform Footer -->
+    <footer class="hub-footer" style="margin-top: 50px; padding: 24px 0 16px 0; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.8rem; color: var(--text-dim);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2)); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 5px;">
+                <span>✨</span> <span>AI-Assisted Architecture</span>
+            </span>
+            <span data-i18n="footer_ai_attribution">Crafted with Antigravity & Google Gemini 3.7 Flash</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span>© 2026 Oracle DevOps Platform</span>
+            <span>•</span>
+            <span>Zero-Trust Enterprise Architecture</span>
+        </div>
+    </footer>
+
+</div>
+
+<!-- FULLSCREEN CINEMA MODAL SLIDE SHOW -->
+<div class="slide-modal-backdrop" id="slide-modal-backdrop" style="display: none;" onmousemove="handleModalMouseMove()">
+    <!-- Auto-hide floating top bar -->
+    <div class="modal-floating-top" id="modal-floating-top">
+        <div class="modal-top-left">
+            <span class="modal-slide-indicator" id="modal-slide-counter">Slaid 1 / 12</span>
+            <span class="modal-key-hint">⌨️ ◀ ▶ / Space / Esc</span>
+        </div>
+        <div class="modal-top-right">
+            <button class="modal-btn-action" onclick="toggleModalFullscreen()" title="Täisekraan (F11)">⛶</button>
+            <button class="modal-close-btn" onclick="closeSlideModal()" title="Välju esitlusrežiimist (Esc)">✕ <span id="label-modal-exit">Välju (Esc)</span></button>
+        </div>
+    </div>
+
+    <!-- Floating Left Arrow -->
+    <button class="modal-nav-arrow modal-nav-prev" id="modal-nav-prev" onclick="modalPrevSlide()" title="Eelmine (←)">
+        ❮
+    </button>
+
+    <!-- Centered Slide Stage -->
+    <div class="modal-stage-wrapper">
+        <div class="modal-slide-content" id="modal-slide-content">
+            <!-- Current slide content injected dynamically -->
+        </div>
+    </div>
+
+    <!-- Floating Right Arrow -->
+    <button class="modal-nav-arrow modal-nav-next" id="modal-nav-next" onclick="modalNextSlide()" title="Järgmine (→)">
+        ❯
+    </button>
+
+    <!-- Auto-hide floating bottom dots -->
+    <div class="modal-floating-bottom" id="modal-floating-bottom">
+        <div class="slide-dots" id="modal-slide-dots">
+            <!-- 1..12 dots injected dynamically -->
+        </div>
+    </div>
+</div>
+
+<script>
+const ACTIVE_BP_NUM = %ACTIVE_BP_NUM%;
+const DOCS_DATA = %DOCS_DATA_JSON%;
+const BLUEPRINTS_DATA = %BLUEPRINTS_DATA_JSON%;
+const ACTIVE_BP_MERMAID = %ACTIVE_BP_MERMAID_JSON%;
+const BENCHMARKS_DATA = %BENCHMARKS_DATA_JSON%;
+const RESET_BENCHMARKS_DATA = %RESET_BENCHMARKS_DATA_JSON%;
+const LOGS_DATA = %LOGS_DATA_JSON%;
+
+let currentSelectedDocIdx = 0;
+let currentSelectedLogIdx = 0;
+let currentActiveFilter = 'all';
+let serviceStates = {};
+const BRIDGE_URL = (!window.location.hostname || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:8089' : ('http://' + window.location.hostname + ':8089');
+
+let LIVE_RUNNING_CONTAINERS = %RUNNING_CONTAINERS_JSON%;
+let LIVE_MODULE_STATUSES = %LIVE_MODULES_JSON%;
+let LIVE_ACTIVE_BP = ACTIVE_BP_NUM;
+let CACHED_PROFILES = [];
+%DIAGRAMS_JS%
+
+%I18N_JS%
+
+let currentSlideIdx = 0;
+const totalSlides = 12;
+const SLIDES_CONTENT = %SLIDES_CONTENT_JSON%;
+const LOCAL_PASSWORDS = %PASSWORDS_MAP_JSON%;
+
+%APP_JS%
+</script>
+</body>
+</html>

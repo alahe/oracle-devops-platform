@@ -24,7 +24,7 @@ Paroolide ekraanile kuvamise või käsitsi kopeerimise asemel saab parooli kopee
 
 | Teenus / Veebiliides | Otselink Brauseris (Eeltäidetud) | Vaikekasutaja / Workspace | Parooli Hankimine (Lõikelaud) |
 | :--- | :--- | :--- | :--- |
-| **🛠️ APEX Builder** | [Ava APEX Tööruum (Eeltäidetud)](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company=DEV_WS&f4550_p1_username=DEV) | Workspace: `DEV_WS`<br/>Kasutaja: `DEV` *(Eeltäidetud)* | `./scripts/get-password.sh DB_PROXY_DEV -c` |
+| **🛠️ APEX Builder** | [Ava APEX Tööruum (Eeltäidetud)](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company=PROXY_WORKSPACE&f4550_p1_username=DEV) | Workspace: `PROXY_WORKSPACE`<br/>Kasutaja: `DEV` *(Eeltäidetud)* | `./scripts/get-password.sh DB_PROXY_DEV -c` |
 | **⚙️ APEX Instance Admin** | [Ava APEX Admin (Eeltäidetud)](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/administration-sign-in?p10_username=ADMIN) | Tööruum: `INTERNAL`<br/>Kasutaja: `ADMIN` *(Eeltäidetud)* | `./scripts/get-password.sh DB_PROXY_APEX_ADMIN -c` |
 | **📊 Database Actions (SDW)** | [Ava SQL Developer Web](https://localhost:8448/ords/proxy/user_developer/sign-in?r=_sdw) | Skeem: `user_developer`<br/>Kasutaja: `USER_DEVELOPER` | `./scripts/get-password.sh DB_PROXY_DEV -c` |
 | **📑 Analytics Publisher** | [Ava Analytics Publisher](http://localhost:9502/xmlpserver) | Kasutaja: `weblogic` | `./scripts/get-password.sh DB_PUBLISHER_SYS -c` |

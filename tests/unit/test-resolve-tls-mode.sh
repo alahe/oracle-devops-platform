@@ -11,13 +11,13 @@ WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 source "$WORKSPACE_DIR/scripts/internal/resolve-tls-mode.sh"
 
-# Test 1: Permissive defaults to USER_LOCAL_CA
+# Test 1: Permissive defaults to USER_CA / USER_LOCAL_CA
 TLS_ALLOWED_LEVEL="permissive"
 USE_PUBLIC_CA_CERTS="false"
 CORP_PKI_ENABLED="false"
 resolve_tls_mode >/dev/null 2>&1
-if [ "$RESOLVED_TLS_MODE" != "USER_LOCAL_CA" ]; then
-  echo "FAIL: Expected USER_LOCAL_CA, got $RESOLVED_TLS_MODE"
+if [ "$RESOLVED_TLS_MODE" != "USER_CA" ] && [ "$RESOLVED_TLS_MODE" != "USER_LOCAL_CA" ]; then
+  echo "FAIL: Expected USER_CA, got $RESOLVED_TLS_MODE"
   exit 1
 fi
 

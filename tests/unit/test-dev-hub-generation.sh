@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Unit Test: Developer Hub HTML Generation & Architecture Visualizer
-# Validates SPA structure, 6 tabs, i18n dictionary, and Blueprints catalog
+# Validates SPA structure, 9 tabs, i18n dictionary (6 languages), and Blueprints catalog
 # ==============================================================================
 set -euo pipefail
 
@@ -12,7 +12,7 @@ echo "🔍 Testing Developer Hub generation across Blueprints..."
 
 # Test 1: Generate for default blueprint
 TMP_OUT="$WORKSPACE_DIR/docs/dev-hub-test.html"
-ACTIVE_BP_ID=41 "$WORKSPACE_DIR/scripts/internal/generate-dev-hub.sh" "$TMP_OUT"
+ACTIVE_BP_ID=21 "$WORKSPACE_DIR/scripts/internal/generate-dev-hub.sh" "$TMP_OUT"
 
 if [ ! -f "$TMP_OUT" ]; then
   echo "❌ Error: $TMP_OUT was not created!"
@@ -20,7 +20,7 @@ if [ ! -f "$TMP_OUT" ]; then
 fi
 
 # Verify required tabs and sections
-for expected in "tab-services" "tab-architecture" "tab-blueprints" "tab-docs" "tab-devops" "tab-benchmarks"; do
+for expected in "tab-services" "tab-presentation" "tab-blueprints" "tab-snapshots" "tab-forms-pub" "tab-apexlang" "tab-docs" "tab-devops" "tab-benchmarks"; do
   if ! grep -q "$expected" "$TMP_OUT"; then
     echo "❌ Missing expected tab ID in HTML: $expected"
     rm -f "$TMP_OUT"
@@ -28,8 +28,8 @@ for expected in "tab-services" "tab-architecture" "tab-blueprints" "tab-docs" "t
   fi
 done
 
-# Verify i18n languages
-for lang in "en:" "et:" "sv:" "lv:" "lt:"; do
+# Verify i18n languages across all 6 languages
+for lang in "en:" "et:" "fi:" "sv:" "lv:" "lt:"; do
   if ! grep -q "$lang" "$TMP_OUT"; then
     echo "❌ Missing language dictionary block: $lang"
     rm -f "$TMP_OUT"
@@ -52,5 +52,4 @@ if ! grep -q "BLUEPRINTS_DATA = \[" "$TMP_OUT"; then
 fi
 
 rm -f "$TMP_OUT"
-echo "✅ Developer Hub HTML generation test passed!"
-echo "test-dev-hub-generation: PASS"
+echo "✅ Developer Hub generation unit tests passed successfully across all 6 languages & 9 tabs!"

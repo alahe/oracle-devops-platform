@@ -92,7 +92,10 @@ apply_profile_users() {
   [ -z "$PUBLISHER_READER_PASSWORD" ] && PUBLISHER_READER_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20 2>/dev/null)
 
   APEX_LISTENER_PASSWORD=$(podman secret inspect --showsecret "ords_listener_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+  [ -z "$APEX_LISTENER_PASSWORD" ] && APEX_LISTENER_PASSWORD=$(get_alias_pwd "DB_${c_upper}_ORDS_PUBLIC_USER")
   [ -z "$APEX_LISTENER_PASSWORD" ] && APEX_LISTENER_PASSWORD=$(get_alias_pwd "DB_${c_upper}_APEX_LISTENER")
+  [ -z "$APEX_LISTENER_PASSWORD" ] && APEX_LISTENER_PASSWORD=$(get_alias_pwd "DB_PROXY_ORDS_PUBLIC_USER")
+  [ -z "$APEX_LISTENER_PASSWORD" ] && APEX_LISTENER_PASSWORD=$(get_alias_pwd "DB_ORDS_PUBLIC_USER")
   [ -z "$APEX_LISTENER_PASSWORD" ] && APEX_LISTENER_PASSWORD=$(get_service_admin_password "ords_listener" 2>/dev/null || true)
   [ -z "$APEX_LISTENER_PASSWORD" ] && APEX_LISTENER_PASSWORD="${PROFILE_APEX_LISTENER_PASSWORD:-}"
   [ -z "$APEX_LISTENER_PASSWORD" ] && APEX_LISTENER_PASSWORD=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 20 2>/dev/null)
@@ -109,21 +112,75 @@ apply_profile_users() {
   PDB_CONTAINER_SET="ALTER SESSION SET CONTAINER = ${PROFILE_DEFAULT_SERVICE:-FREEPDB1};
 ALTER SESSION SET \"_oracle_script\" = FALSE;"
 
+  run_db_sqlcl() {
+    local target="$1"
+    local sql_log="$WORKSPACE_DIR/install_logs/apply_profile_users_sql_${target}.log"
+    mkdir -p "$WORKSPACE_DIR/install_logs"
+
+    # Tier 1: In-container SQLcl (preferred) or sqlplus fallback
+    if podman container exists "$target" 2>/dev/null; then
+      local in_c_sql=$(podman exec "$target" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' || echo "")
+      if [ -n "$in_c_sql" ]; then
+        podman exec -i "$target" "$in_c_sql" -s / as sysdba >> "$sql_log" 2>&1
+        return $?
+      elif podman exec "$target" bash -c 'command -v sqlplus >/dev/null 2>&1'; then
+        podman exec -i "$target" bash -c 'sqlplus -s / as sysdba' >> "$sql_log" 2>&1
+        return $?
+      fi
+    fi
+
+    # Tier 2: Host SQLcl wrapper with SEPS Wallet
+    if [ -x "$WORKSPACE_DIR/scripts/sqlcl.sh" ]; then
+      "$WORKSPACE_DIR/scripts/sqlcl.sh" -s "/@DB_${c_upper}_SYS" as sysdba >> "$sql_log" 2>&1
+      return $?
+    fi
+
+    # Tier 3: Ephemeral SQLcl container
+    local sqlcl_img="${SQLCL_CONTAINER_IMAGE:-container-registry.oracle.com/database/sqlcl:latest}"
+    if command -v podman &>/dev/null && [ -d "$WORKSPACE_DIR/config/tns_admin" ]; then
+      podman run --rm -i -v "$WORKSPACE_DIR/config/tns_admin:/config/tns_admin:ro" -e TNS_ADMIN=/config/tns_admin --network host "$sqlcl_img" -s "/@DB_${c_upper}_SYS" as sysdba >> "$sql_log" 2>&1
+      return $?
+    fi
+
+    return 1
+  }
+
+  run_db_sqlcl_capture() {
+    local target="$1"
+    if podman container exists "$target" 2>/dev/null; then
+      local in_c_sql=$(podman exec "$target" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' || echo "")
+      if [ -n "$in_c_sql" ]; then
+        podman exec -i "$target" "$in_c_sql" -s / as sysdba
+        return $?
+      elif podman exec "$target" bash -c 'command -v sqlplus >/dev/null 2>&1'; then
+        podman exec -i "$target" bash -c 'sqlplus -s / as sysdba'
+        return $?
+      fi
+    fi
+    if [ -x "$WORKSPACE_DIR/scripts/sqlcl.sh" ]; then
+      "$WORKSPACE_DIR/scripts/sqlcl.sh" -s "/@DB_${c_upper}_SYS" as sysdba
+      return $?
+    fi
+    return 1
+  }
+
   if podman container exists "$target_container" 2>/dev/null; then
-    # 0. Tagame SYS ja SYSTEM paroolide sünkroonsuse kõigis konteinerites (CDB + PDB)
+    # 0. Synchronize SYS and SYSTEM passwords across all containers (CDB + PDB)
     if [ -n "$DB_SYS_PASSWORD" ] && [ "$IS_ADB" != "true" ]; then
-      podman exec -i "$target_container" sqlplus -s / as sysdba << EOF >/dev/null 2>&1 || true
+      run_db_sqlcl "$target_container" << EOF || true
+WHENEVER SQLERROR CONTINUE;
 ALTER USER sys IDENTIFIED BY "${DB_SYS_PASSWORD}" CONTAINER=ALL;
 ALTER USER system IDENTIFIED BY "${DB_SYS_PASSWORD}" CONTAINER=ALL;
 EXIT;
 EOF
     fi
 
-    podman exec -i "$target_container" sqlplus -s / as sysdba << EOF >/dev/null 2>&1 || true
+    run_db_sqlcl "$target_container" << EOF || true
+WHENEVER SQLERROR CONTINUE;
 ${PDB_CONTAINER_SET}
 SET SERVEROUTPUT ON SIZE UNLIMITED;
 
--- 1. Luuakse DB kasutaja APEX_PROXY_SCHEMA
+-- 1. Create DB user APEX_PROXY_SCHEMA
 DECLARE
   v_user_exists NUMBER;
 BEGIN
@@ -141,7 +198,7 @@ BEGIN
 END;
 /
 
--- 1.5 Luuakse eraldi DBA administraatori kasutaja DBA_ADMIN (vältimaks SYS kasutamist igapäevaselt)
+-- 1.5 Create dedicated DBA admin user DBA_ADMIN (avoids using SYS daily)
 DECLARE
   v_user_exists NUMBER;
 BEGIN
@@ -156,10 +213,30 @@ BEGIN
   END IF;
   EXECUTE IMMEDIATE 'GRANT CREATE SESSION, DBA TO DBA_ADMIN';
   EXECUTE IMMEDIATE 'ALTER USER DBA_ADMIN DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP QUOTA UNLIMITED ON USERS';
+
+  -- Grant INHERIT PRIVILEGES to ORDS_METADATA so SYS can execute ORDS.ENABLE_SCHEMA for DBA users
+  BEGIN
+    EXECUTE IMMEDIATE 'GRANT INHERIT PRIVILEGES ON USER SYS TO ORDS_METADATA';
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
+
+  -- Enable ORDS REST / SQL Developer Web interface for DBA_ADMIN user
+  BEGIN
+    EXECUTE IMMEDIATE 'BEGIN
+      ORDS.ENABLE_SCHEMA(
+          p_enabled             => TRUE,
+          p_schema              => ''DBA_ADMIN'',
+          p_url_mapping_type    => ''BASE_PATH'',
+          p_url_mapping_pattern => ''dba_admin'',
+          p_auto_rest_auth      => FALSE
+      );
+    END;';
+  EXCEPTION WHEN OTHERS THEN NULL;
+  END;
 END;
 /
 
--- 2. Luuakse DB kasutaja USER_DEVELOPER ja määratakse profiilikohased rollid
+-- 2. Create DB user USER_DEVELOPER and assign profile roles
 DECLARE
   v_user_exists NUMBER;
 BEGIN
@@ -196,7 +273,7 @@ BEGIN
 END;
 /
 
--- 2.5 Luuakse rakenduse käitus- ja skeemikasutaja USER_APP (Forms ja äriobjektid)
+-- 2.5 Create application runtime and schema user USER_APP (Forms and business objects)
 DECLARE
   v_user_exists NUMBER;
 BEGIN
@@ -214,7 +291,7 @@ BEGIN
 END;
 /
 
--- 3. Luuakse piiratud vaataja kasutaja USER_VIEWER (kõikide skeemide lugemisõigus)
+-- 3. Create restricted viewer user USER_VIEWER (read-only for all schemas)
 DECLARE
   v_user_exists NUMBER;
 BEGIN
@@ -236,7 +313,7 @@ BEGIN
 END;
 /
 
--- 4. Luuakse piiratud õigustega süsteemne aruandluse kasutaja PUBLISHER_READER (Analytics Publisher)
+-- 4. Create restricted system reporting user PUBLISHER_READER (Analytics Publisher)
 DECLARE
   v_user_exists NUMBER;
 BEGIN
@@ -263,16 +340,41 @@ END;
     EXECUTE IMMEDIATE 'ALTER PROFILE DEFAULT LIMIT FAILED_LOGIN_ATTEMPTS UNLIMITED PASSWORD_LIFE_TIME UNLIMITED';
   EXCEPTION WHEN OTHERS THEN NULL;
   END;
+/
 
   -- Set passwords and unlock all ORDS & APEX service accounts
   BEGIN
     EXECUTE IMMEDIATE 'ALTER SESSION SET "_oracle_script" = TRUE';
-    FOR u IN (SELECT username FROM dba_users WHERE username IN ('ORDS_PUBLIC_USER', 'APEX_PUBLIC_USER', 'APEX_PUBLIC_ROUTER', 'APEX_LISTENER', 'APEX_REST_PUBLIC_USER')) LOOP
-      BEGIN
-        EXECUTE IMMEDIATE 'ALTER USER ' || u.username || ' IDENTIFIED BY "' || '${APEX_LISTENER_PASSWORD}' || '" ACCOUNT UNLOCK';
-      EXCEPTION WHEN OTHERS THEN NULL;
-      END;
-    END LOOP;
+    -- Ensure ORDS_PUBLIC_USER exists if needed
+    DECLARE
+      v_ords_cnt NUMBER := 0;
+      v_ts VARCHAR2(30) := 'USERS';
+    BEGIN
+      SELECT COUNT(*) INTO v_ords_cnt FROM dba_users WHERE username = 'ORDS_PUBLIC_USER';
+      IF v_ords_cnt = 0 AND '${APEX_LISTENER_PASSWORD}' IS NOT NULL AND LENGTH('${APEX_LISTENER_PASSWORD}') > 0 THEN
+        BEGIN
+          SELECT tablespace_name INTO v_ts FROM (
+            SELECT tablespace_name FROM dba_tablespaces WHERE contents = 'PERMANENT' AND status = 'ONLINE' ORDER BY CASE WHEN tablespace_name IN ('USERS', 'DATA') THEN 1 ELSE 2 END
+          ) WHERE ROWNUM = 1;
+        EXCEPTION WHEN OTHERS THEN v_ts := 'SYSAUX';
+        END;
+        BEGIN
+          EXECUTE IMMEDIATE 'CREATE USER ORDS_PUBLIC_USER IDENTIFIED BY "' || '${APEX_LISTENER_PASSWORD}' || '" DEFAULT TABLESPACE ' || v_ts || ' TEMPORARY TABLESPACE TEMP';
+          EXECUTE IMMEDIATE 'GRANT CREATE SESSION TO ORDS_PUBLIC_USER';
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+      END IF;
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+
+    IF '${APEX_LISTENER_PASSWORD}' IS NOT NULL AND LENGTH('${APEX_LISTENER_PASSWORD}') > 0 THEN
+      FOR u IN (SELECT username FROM dba_users WHERE username IN ('ORDS_PUBLIC_USER', 'APEX_PUBLIC_USER', 'APEX_PUBLIC_ROUTER', 'APEX_LISTENER', 'APEX_REST_PUBLIC_USER')) LOOP
+        BEGIN
+          EXECUTE IMMEDIATE 'ALTER USER ' || u.username || ' IDENTIFIED BY "' || '${APEX_LISTENER_PASSWORD}' || '" ACCOUNT UNLOCK';
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
+      END LOOP;
+    END IF;
 
     FOR u IN (SELECT username FROM dba_users WHERE username IN ('ORDS_METADATA', 'USER_DEVELOPER', 'DBA_ADMIN', 'USER_APP', 'USER_VIEWER', 'APEX_PROXY_SCHEMA', 'ALISE_APP')) LOOP
       BEGIN
@@ -291,7 +393,7 @@ END;
     EXECUTE IMMEDIATE 'ALTER USER USER_APP GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
     EXECUTE IMMEDIATE 'ALTER USER USER_VIEWER GRANT CONNECT THROUGH ORDS_PUBLIC_USER';
 
-    -- Sise-DB turvalukustus (Lock internal APEX & ORDS web access if requested)
+    -- Internal DB security lockdown (Lock internal APEX & ORDS web access if requested)
     IF ('${LOCK_INTERNAL_APEX:-false}' = 'true' OR '${DISABLE_INTERNAL_APEX_WEB:-false}' = 'true') AND ('${c_short}' = 'forms' OR '${c_short}' = 'publisher') THEN
       BEGIN
         EXECUTE IMMEDIATE 'ALTER USER APEX_PUBLIC_USER ACCOUNT LOCK';
@@ -305,7 +407,7 @@ END;
   END;
 /
 
--- 5. Seadistatakse aktiivseks APEX skeem
+-- 5. Set active APEX schema
 BEGIN
   FOR s IN (SELECT username FROM dba_users WHERE username LIKE 'APEX_%' AND REGEXP_LIKE(username, '^APEX_[0-9]+$') AND ROWNUM = 1) LOOP
     EXECUTE IMMEDIATE 'ALTER SESSION SET CURRENT_SCHEMA = ' || s.username;
@@ -313,7 +415,7 @@ BEGIN
 END;
 /
 
--- 6. Luuakse APEX töökohad ja kasutajad
+-- 6. Create APEX workspaces and users
 DECLARE
   v_workspace_id NUMBER;
   v_target_ws VARCHAR2(100) := '${PROFILE_APEX_WORKSPACE:-ALISE_WORKSPACE}';
@@ -336,9 +438,20 @@ BEGIN
     END IF;
     SELECT COUNT(*) INTO v_user_cnt FROM dba_users WHERE username = v_primary_schema;
     IF v_user_cnt = 0 THEN
-      EXECUTE IMMEDIATE 'CREATE USER ' || v_primary_schema || ' IDENTIFIED BY "${USER_DEV_PASSWORD}"';
-      EXECUTE IMMEDIATE 'GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE PROCEDURE, CREATE SEQUENCE, CREATE SYNONYM TO ' || v_primary_schema;
-      EXECUTE IMMEDIATE 'ALTER USER ' || v_primary_schema || ' DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP QUOTA UNLIMITED ON USERS';
+      FOR u IN (SELECT username FROM dba_users WHERE username IN ('APP_SCHEMA', '${c_upper}_SCHEMA', 'USER_DEVELOPER') AND ROWNUM = 1) LOOP
+        v_primary_schema := u.username;
+        v_user_cnt := 1;
+      END LOOP;
+    END IF;
+    IF v_user_cnt = 0 THEN
+      BEGIN
+        EXECUTE IMMEDIATE 'ALTER SESSION SET "_oracle_script" = TRUE';
+        EXECUTE IMMEDIATE 'CREATE USER ' || v_primary_schema || ' IDENTIFIED BY "${USER_DEV_PASSWORD}"';
+        EXECUTE IMMEDIATE 'GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE PROCEDURE, CREATE SEQUENCE, CREATE SYNONYM TO ' || v_primary_schema;
+        EXECUTE IMMEDIATE 'ALTER USER ' || v_primary_schema || ' DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP QUOTA UNLIMITED ON USERS';
+        EXECUTE IMMEDIATE 'ALTER SESSION SET "_oracle_script" = FALSE';
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END;
     END IF;
   EXCEPTION WHEN OTHERS THEN NULL;
   END;
@@ -353,44 +466,54 @@ BEGIN
   DECLARE
     v_ws_id NUMBER;
   BEGIN
-    BEGIN
-      SELECT workspace_id INTO v_ws_id FROM apex_workspaces WHERE workspace = v_target_ws;
-    EXCEPTION WHEN OTHERS THEN v_ws_id := NULL;
-    END;
-
-    IF v_ws_id IS NULL OR v_ws_id = 0 THEN
+    FOR target_name IN (SELECT v_target_ws AS ws_name FROM dual UNION SELECT '${c_upper}_WS' AS ws_name FROM dual WHERE '${c_upper}_WS' != v_target_ws) LOOP
       BEGIN
-        FOR s IN (SELECT username FROM dba_users WHERE username LIKE 'APEX_%' AND REGEXP_LIKE(username, '^APEX_[0-9]+$') AND ROWNUM = 1) LOOP
-          EXECUTE IMMEDIATE 'BEGIN ' || s.username || '.WWV_FLOW_INSTANCE_ADMIN.add_workspace(p_workspace_id => NULL, p_workspace => ''' || v_target_ws || ''', p_primary_schema => ''' || v_primary_schema || '''); COMMIT; END;';
-        END LOOP;
-      EXCEPTION WHEN OTHERS THEN NULL;
+        SELECT workspace_id INTO v_ws_id FROM apex_workspaces WHERE workspace = target_name.ws_name;
+      EXCEPTION WHEN OTHERS THEN v_ws_id := NULL;
       END;
-    END IF;
 
-    BEGIN
-      SELECT workspace_id INTO v_ws_id FROM apex_workspaces WHERE workspace = v_target_ws;
-    EXCEPTION WHEN OTHERS THEN v_ws_id := NULL;
-    END;
-
-    IF v_ws_id IS NOT NULL AND v_ws_id != 0 THEN
-      FOR s IN (SELECT username FROM dba_users WHERE username LIKE 'APEX_%' AND REGEXP_LIKE(username, '^APEX_[0-9]+$') AND ROWNUM = 1) LOOP
-        EXECUTE IMMEDIATE 'BEGIN ' || s.username || '.HTMLDB_UTIL.set_security_group_id(' || v_ws_id || '); END;';
-        
-        -- 1. DEV user
+      IF v_ws_id IS NULL OR v_ws_id = 0 THEN
         BEGIN
-          EXECUTE IMMEDIATE 'BEGIN ' || s.username || '.HTMLDB_UTIL.remove_user(p_user_name => ''DEV''); EXCEPTION WHEN OTHERS THEN NULL; END;';
-          EXECUTE IMMEDIATE 'BEGIN ' || s.username || '.HTMLDB_UTIL.create_user(p_user_name => ''DEV'', p_email_address => ''dev@company.local'', p_web_password => ''' || '${USER_DEV_PASSWORD}' || ''', p_developer_privs => ''ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE'', p_account_expiry => sysdate + 3650, p_account_locked => ''N'', p_change_password_on_first_use => ''N''); COMMIT; EXCEPTION WHEN OTHERS THEN NULL; END;';
+          FOR s IN (SELECT username FROM dba_users WHERE username LIKE 'APEX_%' AND REGEXP_LIKE(username, '^APEX_[0-9]+$') AND ROWNUM = 1) LOOP
+            EXECUTE IMMEDIATE 'BEGIN ' || s.username || '.WWV_FLOW_INSTANCE_ADMIN.add_workspace(p_workspace_id => NULL, p_workspace => ''' || target_name.ws_name || ''', p_primary_schema => ''' || v_primary_schema || '''); COMMIT; END;';
+          END LOOP;
         EXCEPTION WHEN OTHERS THEN NULL;
         END;
+      END IF;
+    END LOOP;
 
-        -- 2. USER_DEVELOPER user
+    -- Provision DEV and USER_DEVELOPER across all active application workspaces
+    FOR w IN (SELECT workspace_id, workspace FROM apex_workspaces WHERE workspace IN (v_target_ws, '${c_upper}_WS', 'PROXY_WORKSPACE')) LOOP
+      FOR s IN (SELECT username FROM dba_users WHERE username LIKE 'APEX_%' AND REGEXP_LIKE(username, '^APEX_[0-9]+$') AND ROWNUM = 1) LOOP
         BEGIN
-          EXECUTE IMMEDIATE 'BEGIN ' || s.username || '.HTMLDB_UTIL.remove_user(p_user_name => ''USER_DEVELOPER''); EXCEPTION WHEN OTHERS THEN NULL; END;';
-          EXECUTE IMMEDIATE 'BEGIN ' || s.username || '.HTMLDB_UTIL.create_user(p_user_name => ''USER_DEVELOPER'', p_email_address => ''user_developer@company.local'', p_web_password => ''' || '${USER_DEV_PASSWORD}' || ''', p_developer_privs => ''ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE'', p_account_expiry => sysdate + 3650, p_account_locked => ''N'', p_change_password_on_first_use => ''N''); COMMIT; EXCEPTION WHEN OTHERS THEN NULL; END;';
+          EXECUTE IMMEDIATE 'BEGIN ' || s.username || '.HTMLDB_UTIL.set_security_group_id(' || w.workspace_id || '); END;';
+          
+          -- 1. DEV user
+          BEGIN
+            EXECUTE IMMEDIATE 'BEGIN ' || s.username || '.HTMLDB_UTIL.remove_user(p_user_name => ''DEV''); EXCEPTION WHEN OTHERS THEN NULL; END;';
+            EXECUTE IMMEDIATE 'BEGIN ' || s.username || '.HTMLDB_UTIL.create_user(p_user_name => ''DEV'', p_email_address => ''dev_' || lower(w.workspace) || '@company.local'', p_web_password => ''' || '${USER_DEV_PASSWORD}' || ''', p_developer_privs => ''ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE'', p_account_expiry => sysdate + 3650, p_account_locked => ''N'', p_change_password_on_first_use => ''N''); COMMIT; EXCEPTION WHEN OTHERS THEN NULL; END;';
+          EXCEPTION WHEN OTHERS THEN NULL;
+          END;
+
+          -- 2. USER_DEVELOPER user
+          BEGIN
+            EXECUTE IMMEDIATE 'BEGIN ' || s.username || '.HTMLDB_UTIL.remove_user(p_user_name => ''USER_DEVELOPER''); EXCEPTION WHEN OTHERS THEN NULL; END;';
+            EXECUTE IMMEDIATE 'BEGIN ' || s.username || '.HTMLDB_UTIL.create_user(p_user_name => ''USER_DEVELOPER'', p_email_address => ''user_dev_' || lower(w.workspace) || '@company.local'', p_web_password => ''' || '${USER_DEV_PASSWORD}' || ''', p_developer_privs => ''ADMIN:CREATE:DATA_LOADER:EDIT:HELP:MONITOR:VARIABLE'', p_account_expiry => sysdate + 3650, p_account_locked => ''N'', p_change_password_on_first_use => ''N''); COMMIT; EXCEPTION WHEN OTHERS THEN NULL; END;';
+          EXCEPTION WHEN OTHERS THEN NULL;
+          END;
         EXCEPTION WHEN OTHERS THEN NULL;
         END;
       END LOOP;
-    END IF;
+    END LOOP;
+
+    -- Unlock all developer users across all schemas
+    FOR s IN (SELECT username FROM dba_users WHERE username LIKE 'APEX_%' AND REGEXP_LIKE(username, '^APEX_[0-9]+$') AND ROWNUM = 1) LOOP
+      BEGIN
+        EXECUTE IMMEDIATE 'UPDATE ' || s.username || '.wwv_flow_fnd_user SET account_locked = ''N'', change_password_on_first_use = ''N'', account_expiry = sysdate + 3650 WHERE user_name IN (''DEV'', ''USER_DEVELOPER'', ''ADMIN'')';
+        COMMIT;
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END;
+    END LOOP;
   EXCEPTION WHEN OTHERS THEN NULL;
   END;
 
@@ -440,16 +563,29 @@ EXIT;
 EOF
   fi
 
-  if podman container exists app-ords 2>/dev/null; then
-    # Check if ORDS is installed in database
-    local ords_installed=$(podman exec -i "$target_container" sqlplus -s / as sysdba << EOSQL 2>/dev/null | grep "ORDS_READY" || true
+  local should_install_ords=true
+  if ! is_db_ords_install_required "$target_profile"; then
+    should_install_ords=false
+    echo "   ℹ️  ORDS in-database schema installation skipped (install_in_db: false for profile '$target_profile')."
+  fi
+
+  # Check if ORDS is installed in database
+  local ords_installed=$(run_db_sqlcl_capture "$target_container" << EOSQL 2>/dev/null | grep "ORDS_READY" || true
 ALTER SESSION SET CONTAINER = ${PROFILE_DEFAULT_SERVICE:-FREEPDB1};
 SELECT 'ORDS_READY' FROM dba_objects WHERE owner = 'ORDS_METADATA' AND object_name = 'ORDS' AND object_type = 'PACKAGE BODY' AND status = 'VALID';
 EXIT;
 EOSQL
 )
-    if [ -z "$ords_installed" ] && [ "$IS_ADB" != "true" ]; then
-      podman exec -i "$target_container" sqlplus -s / as sysdba << EOSQL >/dev/null 2>&1 || true
+
+  if [ "$should_install_ords" = "true" ] && [ -z "$ords_installed" ]; then
+    local target_ords_ver=$(resolve_target_ords_version)
+    local ords_container_img="container-registry.oracle.com/database/ords:latest"
+    if [ "$target_ords_ver" != "latest" ] && [ -n "$target_ords_ver" ]; then
+      ords_container_img="container-registry.oracle.com/database/ords:${target_ords_ver}"
+    fi
+
+    run_db_sqlcl "$target_container" << EOSQL || true
+WHENEVER SQLERROR CONTINUE;
 ALTER SESSION SET "_oracle_script" = TRUE;
 ALTER SESSION SET CONTAINER = ${PROFILE_DEFAULT_SERVICE:-FREEPDB1};
 ALTER SESSION SET "_oracle_script" = TRUE;
@@ -465,27 +601,28 @@ END;
 EXIT;
 EOSQL
 
-      printf "%s\n%s\n" "$DB_SYS_PASSWORD" "$APEX_LISTENER_PASSWORD" | podman run --rm -i --network oracle-free-db-in-prod_default \
-        --memory 2048m \
-        container-registry.oracle.com/database/ords:latest \
-        install \
-        --admin-user SYS \
-        --db-hostname "$target_container" \
-        --db-port 1521 \
-        --db-servicename "${PROFILE_DEFAULT_SERVICE:-FREEPDB1}" \
-        --feature-db-api true \
-        --feature-rest-enabled-sql true \
-        --feature-sdw true \
-        --gateway-mode proxied \
-        --gateway-user APEX_PUBLIC_USER \
-        --proxy-user \
-        --schema-tablespace USERS \
-        --schema-temp-tablespace TEMP \
-        --password-stdin >/dev/null 2>&1 || true
-    fi
+    printf "%s\n%s\n" "$DB_SYS_PASSWORD" "$APEX_LISTENER_PASSWORD" | podman run --rm -i --network oracle-free-db-in-prod_default \
+      --memory 2048m \
+      "$ords_container_img" \
+      install \
+      --admin-user SYS \
+      --db-hostname "$target_container" \
+      --db-port 1521 \
+      --db-servicename "${PROFILE_DEFAULT_SERVICE:-FREEPDB1}" \
+      --feature-db-api true \
+      --feature-rest-enabled-sql true \
+      --feature-sdw true \
+      --gateway-mode proxied \
+      --gateway-user APEX_PUBLIC_USER \
+      --proxy-user \
+      --schema-tablespace USERS \
+      --schema-temp-tablespace TEMP \
+      --password-stdin >/dev/null 2>&1 || true
+  fi
 
-    # Enable USER_DEVELOPER schema in ORDS
-    podman exec -i "$target_container" sqlplus -s / as sysdba << 'EOSQL' >/dev/null 2>&1 || true
+  # Enable USER_DEVELOPER schema in ORDS
+  run_db_sqlcl "$target_container" << 'EOSQL' || true
+WHENEVER SQLERROR CONTINUE;
 ALTER SESSION SET CONTAINER = FREEPDB1;
 BEGIN
   ORDS_METADATA.ORDS_ADMIN.ENABLE_SCHEMA(
@@ -496,6 +633,7 @@ BEGIN
       p_auto_rest_auth      => TRUE
   );
   COMMIT;
+EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
 ALTER USER USER_DEVELOPER GRANT CONNECT THROUGH ORDS_PUBLIC_USER;
@@ -503,18 +641,45 @@ ALTER USER DBA_ADMIN GRANT CONNECT THROUGH ORDS_PUBLIC_USER;
 COMMIT;
 EXIT;
 EOSQL
+
+  # Automatic pool registration with running central ORDS (env0)
+  if is_ords_running; then
     local pool_suffix="${target_container#db-}"
     pool_suffix="${pool_suffix#oracle-db-}"
     pool_suffix=$(echo "$pool_suffix" | tr '-' '_' | tr '[:upper:]' '[:lower:]')
+    local pool_name="${PROFILE_ORDS_POOL_NAME:-$pool_suffix}"
+    [ -z "$pool_name" ] && pool_name="$pool_suffix"
 
-    if [ -n "$APEX_LISTENER_PASSWORD" ]; then
-      podman exec app-ords bash -c "
-        for pool in \$(find /etc/ords/config/databases/ -name 'pool.xml' 2>/dev/null); do
-          sed -i 's|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$APEX_LISTENER_PASSWORD</entry>|g' \"\$pool\" 2>/dev/null || true
-        done
-      " 2>/dev/null || true
+    local can_register_pool=true
+    if [ "${PROFILE_ORDS_VERIFY_VERSION_MATCH:-false}" = "true" ]; then
+      if ! check_adb_ords_version_match "$target_container"; then
+        echo "   ⚠️  ADB ORDS version does not match running central ORDS. Pool registration skipped."
+        can_register_pool=false
+      fi
     fi
-    podman restart app-ords >/dev/null 2>&1 || true
+
+    if [ "$can_register_pool" = "true" ]; then
+      local central_ords_dir="$WORKSPACE_DIR/config/ords/proxy/databases/$pool_name"
+      mkdir -p "$central_ords_dir"
+      cat << POOLEOF > "$central_ords_dir/pool.xml"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<entry key="db.connectionType">basic</entry>
+<entry key="db.hostname">${target_container}</entry>
+<entry key="db.port">1521</entry>
+<entry key="db.servicename">${PROFILE_DEFAULT_SERVICE:-FREEPDB1}</entry>
+<entry key="db.username">ORDS_PUBLIC_USER</entry>
+<entry key="db.password">${APEX_LISTENER_PASSWORD}</entry>
+<entry key="feature.sdw">true</entry>
+<entry key="feature.apex">true</entry>
+<entry key="plsql.gateway.mode">proxied</entry>
+<entry key="restEnabledSql.active">true</entry>
+</properties>
+POOLEOF
+      echo "   ✅ Registered ORDS pool '$pool_name' in central ORDS (env0)."
+      podman restart app-ords >/dev/null 2>&1 || true
+    fi
   fi
 
   echo "✅ Profile users and roles configured successfully."

@@ -107,6 +107,34 @@ format_custom_image_tag() {
   echo "$tag_result"
 }
 
+# ----------------------------------------------------------------------------
+# 2.5 Standardized In-Container SQLcl Invocation (Rule 6)
+# ----------------------------------------------------------------------------
+run_container_sqlcl() {
+  local target="$1"
+  shift
+  local cli="podman"
+  if ! command -v podman >/dev/null 2>&1 && command -v docker >/dev/null 2>&1; then
+    cli="docker"
+  fi
+
+  local in_c_sql
+  in_c_sql=$($cli exec "$target" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+  if [ -n "$in_c_sql" ]; then
+    $cli exec -i "$target" "$in_c_sql" "$@"
+    return $?
+  elif $cli exec "$target" bash -c 'command -v sqlplus >/dev/null 2>&1'; then
+    $cli exec -i "$target" sqlplus "$@"
+    return $?
+  fi
+
+  if [ -x "$WORKSPACE_DIR/scripts/sqlcl.sh" ]; then
+    "$WORKSPACE_DIR/scripts/sqlcl.sh" "$@"
+    return $?
+  fi
+  return 1
+}
+
 detect_container_db_versions() {
   local c_name="$1"
   [ -z "$c_name" ] && return 1
@@ -116,19 +144,31 @@ detect_container_db_versions() {
     cli="docker"
   fi
 
-  local db_info
-  db_info=$($cli exec -i "$c_name" sh -c 'export ORACLE_HOME=$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n "$ORACLE_HOME" ] && export PATH="$ORACLE_HOME/bin:$PATH"; sqlplus -s / as sysdba << '\''EOF'\''
-SET FEEDBACK OFF
+  local db_info=""
+  local in_c_sql
+  in_c_sql=$($cli exec "$c_name" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+  local sql_script="SET FEEDBACK OFF
 SET HEADING OFF
 SET PAGESIZE 0
 SET VERIFY OFF
-ALTER SESSION SET CONTAINER = FREEPDB1;
-SELECT (SELECT version_full FROM v$instance) || '\''|'\'' ||
-       NVL((SELECT version FROM dba_registry WHERE comp_id = '\''APEX'\''), '\''NONE'\'') || '\''|'\'' ||
-       NVL((SELECT version FROM ords_metadata.ords_version WHERE ROWNUM = 1), '\''NONE'\'')
+BEGIN
+  FOR p IN (SELECT name FROM v\$pdbs WHERE open_mode = 'READ WRITE' AND name != 'PDB\$SEED' AND ROWNUM = 1) LOOP
+    EXECUTE IMMEDIATE 'ALTER SESSION SET CONTAINER = ' || p.name;
+  END LOOP;
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+SELECT (SELECT version_full FROM v\$instance) || '|' ||
+       NVL((SELECT version FROM dba_registry WHERE comp_id = 'APEX'), 'NONE') || '|' ||
+       NVL((SELECT version FROM ords_metadata.ords_version WHERE ROWNUM = 1), 'NONE')
 FROM dual;
 EXIT;
-EOF' 2>/dev/null | grep "|" | tr -d ' \r\n' | head -n 1 || echo "")
+"
+  if [ -n "$in_c_sql" ]; then
+    db_info=$(printf "%s\n" "$sql_script" | $cli exec -i "$c_name" "$in_c_sql" -s / as sysdba 2>/dev/null | grep "|" | tr -d ' \r\n' | head -n 1 || echo "")
+  elif $cli exec "$c_name" bash -c 'command -v sqlplus >/dev/null 2>&1'; then
+    db_info=$(printf "%s\n" "$sql_script" | $cli exec -i "$c_name" bash -c 'sqlplus -s / as sysdba' 2>/dev/null | grep "|" | tr -d ' \r\n' | head -n 1 || echo "")
+  fi
 
   if [ -n "$db_info" ]; then
     local d_ver=$(echo "$db_info" | cut -d'|' -f1)
@@ -137,6 +177,8 @@ EOF' 2>/dev/null | grep "|" | tr -d ' \r\n' | head -n 1 || echo "")
 
     if [[ "$d_ver" =~ ^23\. ]]; then
       d_ver="23ai"
+    elif [[ "$d_ver" =~ ^26\. ]]; then
+      d_ver="26ai"
     fi
     echo "${d_ver}:${a_ver}:${o_ver}"
   else
@@ -183,7 +225,7 @@ get_step_stats() {
     if [ $val -gt $max ]; then max=$val; fi
   done
   local avg=$((sum / count))
-  msg_str "BENCHMARK_AVG" "$(format_duration $avg)" "$(format_duration $min)" "$(format_duration $max)"
+  msg_str "BENCHMARK_AVG" "$(format_duration $avg)"
 }
 
 get_total_setup_stats() {
@@ -194,6 +236,7 @@ get_blueprint_stats() {
   local bp_id="$1"
   local m_dir="$WORKSPACE_DIR/metrics"
   local bp_file="$m_dir/blueprint_${bp_id}_benchmarks.json"
+  [ ! -f "$bp_file" ] && bp_file="$m_dir/blueprint_${bp_id}_benchmark.json"
   if [ ! -f "$bp_file" ]; then
     echo ""
     return 0
@@ -210,18 +253,7 @@ try:
     def fmt(s):
         return f'{s}s' if s < 60 else f'{s//60}m {s%60}s'
     if cnt > 0:
-        import subprocess
-        # Invoke msg_str via environment
-        import os
-        lang = os.environ.get('CLI_LANG', os.environ.get('ACTIVE_CLI_LANG', 'en'))
-        labels = {
-            'en': f'avg: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, measurements: {cnt})',
-            'et': f'keskmine: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, mõõtmisi: {cnt})',
-            'sv': f'medel: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, mätningar: {cnt})',
-            'lv': f'vid: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, mērījumi: {cnt})',
-            'lt': f'vid: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, bandymai: {cnt})'
-        }
-        print(labels.get(lang[:2], labels['en']))
+        print(f'avg: {fmt(avg)} (min: {fmt(min_d)}, max: {fmt(max_d)}, measurements: {cnt})')
 except Exception:
     pass
 " 2>/dev/null || echo ""
@@ -268,18 +300,20 @@ get_container_secret() {
   local name="$2"
   local val=""
 
-  # 1. Otsene vaste saladuse nimele
-  val=$(podman secret inspect --showsecret "$name" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
-
-  # 2. Konteineripõhised saladuste nimed (nt lis_db_sys_password, proxy_db_sys_password)
-  if [ -z "$val" ] && [ -n "$container" ]; then
+  # 1. Container-specific secret names (e.g. proxy_dev_password, proxy_db_sys_password)
+  if [ -n "$container" ]; then
     local c_short=$(echo "$container" | sed 's/^db-//' | tr '-' '_')
     val=$(podman secret inspect --showsecret "${c_short}_${name}" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
     [ -z "$val" ] && val=$(podman secret inspect --showsecret "${c_short}_db_${name}" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
     [ -z "$val" ] && val=$(podman secret inspect --showsecret "${container}_${name}" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
   fi
 
-  # 3. Käimasoleva konteineri /run/secrets/ failid
+  # 2. Direct match for generic secret name (fallback)
+  if [ -z "$val" ]; then
+    val=$(podman secret inspect --showsecret "$name" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+  fi
+
+  # 3. Running container /run/secrets/ files
   if [ -z "$val" ] && [ -n "$container" ] && podman container exists "$container" 2>/dev/null; then
     val=$(podman exec "$container" cat "/run/secrets/$name" 2>/dev/null | tr -d '\r\n' || true)
   fi
@@ -487,8 +521,8 @@ prompt_user_confirm() {
   local target_var="$2"
   local timeout_seconds="${3:-30}"
   local default_val="${4:-N}"
-  local desc_yes="${5:-Nõustu}"
-  local desc_no="${6:-Loobu}"
+  local desc_yes="${5:-Yes}"
+  local desc_no="${6:-No}"
 
   if [ "${FORCE:-false}" = "true" ] || [ "${IS_TEST_MODE:-false}" = "true" ]; then
     eval "$target_var=\"$default_val\""
@@ -497,11 +531,11 @@ prompt_user_confirm() {
 
   echo -e "\n${YELLOW}${question}${NC}"
   echo -e "   [Y] - ${desc_yes}"
-  echo -e "   [N] - ${desc_no} (Vaikimisi ${timeout_seconds}s möödumisel)"
+  echo -e "   [N] - ${desc_no} (Default after ${timeout_seconds}s)"
 
   local answer=""
   if [ -t 0 ]; then
-    read -t "$timeout_seconds" -p "👉 Sinu valik (Y/N, vaikimisi $default_val): " answer || true
+    read -t "$timeout_seconds" -p "👉 Your choice (Y/N, default $default_val): " answer || true
     echo ""
   fi
 

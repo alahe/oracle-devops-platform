@@ -1,0 +1,7 @@
+{
+  "last_updated": "2026-09-06T20:37:07Z",
+  "restore_duration_seconds": 108,
+  "snapshot_file": "bp_0_latest.tar.gz",
+  "blueprint_id": "2",
+  "profile_name": "db-proxy-standalone"
+}

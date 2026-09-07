@@ -22,6 +22,7 @@ fi
 
 if [ -f "$WORKSPACE_DIR/scripts/internal/load-profile.sh" ]; then
   source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
+  resolve_active_blueprint 2>/dev/null || true
   load_db_profile >/dev/null 2>&1 || true
 fi
 
@@ -91,12 +92,30 @@ if [ -z "$ALIAS" ] || [ "$ALIAS" = "--all" ] || [ "$ALIAS" = "-a" ] || [ "$ALIAS
     c_upper=$(echo "$c_short" | tr '[:lower:]' '[:upper:]')
     load_db_profile "$c_prof" >/dev/null 2>&1 || true
     c_port="${PROFILE_DB_PORT:-1532}"
+    c_service="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
 
-    printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "$c_name" "sys (SYSDBA)" "DB_${c_upper}_SYS" "localhost:${c_port}/FREEPDB1"
-    printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "$c_name" "DBA_ADMIN" "DB_${c_upper}_DBA_ADMIN" "localhost:${c_port}/FREEPDB1"
-    printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "$c_name" "USER_DEVELOPER" "DB_${c_upper}_DEV" "localhost:${c_port}/FREEPDB1"
-    printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "$c_name" "USER_VIEWER" "DB_${c_upper}_VIEWER" "localhost:${c_port}/FREEPDB1"
-    printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "$c_name" "USER_APP" "DB_${c_upper}_APP" "localhost:${c_port}/FREEPDB1"
+    printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "$c_name" "sys (SYSDBA)" "DB_${c_upper}_SYS" "localhost:${c_port}/${c_service}"
+
+    if [ -f "$PROFILE_YAML" ]; then
+      python3 - "$PROFILE_YAML" "$c_upper" "$c_name" "$c_port" "$c_service" << 'PYEOF' 2>/dev/null
+import sys, yaml
+pfile, c_upper, c_name, c_port, c_svc = sys.argv[1:6]
+with open(pfile) as f:
+    data = yaml.safe_load(f) or {}
+for u in data.get('users', []):
+    uname = u.get('username')
+    if not uname or uname.upper() == 'SYS':
+        continue
+    alias_suf = u.get('alias_suffix', uname.replace('USER_', ''))
+    alias = f"DB_{c_upper}_{alias_suf}"
+    print(f"│ {c_name:<16} │ {uname:<19} │ {alias:<24} │ localhost:{c_port}/{c_svc:<54} │")
+PYEOF
+    else
+      printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "$c_name" "DBA_ADMIN" "DB_${c_upper}_DBA_ADMIN" "localhost:${c_port}/${c_service}"
+      printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "$c_name" "USER_DEVELOPER" "DB_${c_upper}_DEV" "localhost:${c_port}/${c_service}"
+      printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "$c_name" "USER_VIEWER" "DB_${c_upper}_VIEWER" "localhost:${c_port}/${c_service}"
+      printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "$c_name" "USER_APP" "DB_${c_upper}_APP" "localhost:${c_port}/${c_service}"
+    fi
   done
 
   if [ "${PROFILE_APEX_ENABLED:-true}" != "false" ]; then
@@ -127,7 +146,7 @@ if [ -z "$ALIAS" ] || [ "$ALIAS" = "--all" ] || [ "$ALIAS" = "-a" ] || [ "$ALIAS
 fi
 
 PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
-PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-pub-db}"
+PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-proxy}"
 if ! podman container exists "$PRIMARY_CONTAINER" 2>/dev/null; then
   for c_entry in $(get_active_db_instances 2>/dev/null); do
     c_name=$(echo "$c_entry" | cut -d'|' -f1)
@@ -197,22 +216,9 @@ if [ -z "$INDEX" ]; then
   INDEX=$(echo "$LIST_OUT" | grep -i -E "($ALIAS_SEARCH|$ALIAS)" | head -n 1 | cut -d':' -f1 | tr -d ' ' | tr -d '\r')
 fi
 
-if [ -z "$INDEX" ]; then
-  case "$ALIAS_UPPER" in
-    *"SYS"*) PWD_VAL=$(podman secret inspect --showsecret publisher_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || podman secret inspect --showsecret apex_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true); USER_VAL="sys" ;;
-    *"SCHEMA"*) PWD_VAL=$(podman secret inspect --showsecret apex_schema_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true); USER_VAL="${ALIAS_UPPER#DB_}" ;;
-    *"DEV"*) PWD_VAL=$(podman secret inspect --showsecret user_developer_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || podman secret inspect --showsecret test_dev_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true); USER_VAL="USER_DEVELOPER" ;;
-    *"APP"*) PWD_VAL=$(podman secret inspect --showsecret user_app_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true); USER_VAL="USER_APP" ;;
-    *"VIEWER"*) PWD_VAL=$(podman secret inspect --showsecret user_viewer_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || podman secret inspect --showsecret test_viewer_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true); USER_VAL="USER_VIEWER" ;;
-  esac
-  if [ -z "$PWD_VAL" ]; then
-    msg_err "PWD_NOT_FOUND_ERR" "$ALIAS" "$ALIAS_SEARCH"
-    exit 1
-  fi
-else
-  # Query username and password
+if [ -n "$INDEX" ]; then
+  # Query username and password from Wallet
   USER_VAL=$(podman exec -i "$PROXY_CONTAINER" sh -c 'export JAVA_HOME=/usr/java/latest; export PATH=$JAVA_HOME/bin:$PATH; echo "$1" | mkstore -wrl "'"$WALLET_PATH"'" -viewEntry "oracle.security.client.username'"$INDEX"'"' -- "$WALLET_PWD" 2>/dev/null | grep "=" | cut -d'=' -f2 | tr -d ' ' | tr -d '\r')
-
   PWD_VAL=$(podman exec -i "$PROXY_CONTAINER" sh -c 'export JAVA_HOME=/usr/java/latest; export PATH=$JAVA_HOME/bin:$PATH; echo "$1" | mkstore -wrl "'"$WALLET_PATH"'" -viewEntry "oracle.security.client.password'"$INDEX"'"' -- "$WALLET_PWD" 2>/dev/null | grep "=" | cut -d'=' -f2 | tr -d ' ' | tr -d '\r')
 fi
 
@@ -256,6 +262,11 @@ if [ -z "$PWD_VAL" ] || [[ "$PWD_VAL" == *"?"* ]] || echo "$PWD_VAL" | grep -q '
       [ -n "$target_c_prefix" ] && PWD_VAL=$(podman secret inspect --showsecret "${target_c_prefix}_apex_admin_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
       [ -z "$PWD_VAL" ] && PWD_VAL=$(podman secret inspect --showsecret apex_admin_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
       [ -z "$PWD_VAL" ] && PWD_VAL=$(podman exec "$PROXY_CONTAINER" cat /run/secrets/apex_admin_password 2>/dev/null | tr -d '\r\n' || true)
+      ;;
+    "SCHEMA"|"APEX_SCHEMA"|"APEX_PROXY_SCHEMA"|*"_SCHEMA")
+      target_c_prefix=$(echo "$ALIAS_UPPER" | sed -E 's/^DB_//; s/_SCHEMA$//' | sed 's/^DB_//' | tr '[:upper:]' '[:lower:]')
+      [ -n "$target_c_prefix" ] && PWD_VAL=$(podman secret inspect --showsecret "${target_c_prefix}_schema_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+      [ -z "$PWD_VAL" ] && PWD_VAL=$(podman secret inspect --showsecret apex_schema_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
       ;;
   esac
 fi

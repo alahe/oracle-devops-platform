@@ -104,97 +104,97 @@ if [ "${IS_TEST_MODE:-false}" = "true" ] || [ -n "${TEST_BLUEPRINTS:-}" ] || [ -
   # 1. RAM / CPU Metrics Markdown Table
   PODMAN_STATS_MD=$(podman stats --no-stream --format "| {{.Name}} | {{.CPUPerc}} | {{.MemUsage}} | {{.MemPerc}} |" 2>/dev/null | grep -v '^| NAME' || echo "")
   if [ -z "$PODMAN_STATS_MD" ]; then
-    PODMAN_STATS_TABLE="| Konteineri Nimi | CPU % | Mälukasutus / Limiit | RAM % |\n| :--- | :--- | :--- | :--- |\n| *(Aktiivseid konteinereid ei ole)* | - | - | - |"
+    PODMAN_STATS_TABLE="| Container Name | CPU % | Memory Usage / Limit | RAM % |\n| :--- | :--- | :--- | :--- |\n| *(No active containers)* | - | - | - |"
   else
-    PODMAN_STATS_TABLE="| Konteineri Nimi | CPU % | Mälukasutus / Limiit | RAM % |\n| :--- | :--- | :--- | :--- |\n${PODMAN_STATS_MD}"
+    PODMAN_STATS_TABLE="| Container Name | CPU % | Memory Usage / Limit | RAM % |\n| :--- | :--- | :--- | :--- |\n${PODMAN_STATS_MD}"
   fi
 
   # 2. Volumes Storage Markdown Table
   PODMAN_VOL_MD=$(podman volume ls --format "{{.Name}}" 2>/dev/null | xargs -I {} sh -c 'sz=$(du -sh "$HOME/.local/share/containers/storage/volumes/{}" 2>/dev/null | cut -f1); echo "| {} | ${sz:-N/A} |"' 2>/dev/null || echo "")
   if [ -z "$PODMAN_VOL_MD" ]; then
-    PODMAN_VOL_TABLE="| Voluumi Nimi | Kettamaht |\n| :--- | :--- |\n| *(Aktiivseid voluume ei ole)* | - |"
+    PODMAN_VOL_TABLE="| Volume Name | Storage Size |\n| :--- | :--- |\n| *(No active volumes)* | - |"
   else
-    PODMAN_VOL_TABLE="| Voluumi Nimi | Kettamaht |\n| :--- | :--- |\n${PODMAN_VOL_MD}"
+    PODMAN_VOL_TABLE="| Volume Name | Storage Size |\n| :--- | :--- |\n${PODMAN_VOL_MD}"
   fi
 
   # 3. Active Containers Markdown Table
   ACTIVE_CONTAINERS_MD=$(podman ps --format "| {{.Names}} | {{.Status}} | {{.Ports}} |" 2>/dev/null || echo "")
   if [ -z "$ACTIVE_CONTAINERS_MD" ]; then
-    ACTIVE_CONTAINERS_TABLE="| Konteineri Nimi | Staatus | Pordid |\n| :--- | :--- | :--- |\n| *(Aktiivseid konteinereid ei ole)* | - | - |"
+    ACTIVE_CONTAINERS_TABLE="| Container Name | Status | Ports |\n| :--- | :--- | :--- |\n| *(No active containers)* | - | - |"
   else
-    ACTIVE_CONTAINERS_TABLE="| Konteineri Nimi | Staatus | Pordid |\n| :--- | :--- | :--- |\n${ACTIVE_CONTAINERS_MD}"
+    ACTIVE_CONTAINERS_TABLE="| Container Name | Status | Ports |\n| :--- | :--- | :--- |\n${ACTIVE_CONTAINERS_MD}"
   fi
 
   URL_AUDIT_CONTENT=$(cat "$WORKSPACE_DIR/metrics/urls_audit_temp.md" 2>/dev/null || echo "No active URLs detected.")
   WALLET_AUDIT_CONTENT=$(cat "$WORKSPACE_DIR/metrics/wallet_audit_temp.md" 2>/dev/null || echo "No SEPS Wallet connections detected.")
 
   cat <<EOF > "$REPORT_FILE"
-# Blueprinti ${BP_ID} Testiaruanne (${RUN_TIMESTAMP})
+# Blueprint ${BP_ID} Test Report (${RUN_TIMESTAMP})
 
-- **Aeg ja Kuupäev:** ${RUN_TIMESTAMP}
-- **Kogu Paigalduse Kestus:** ${TOTAL_MASTER_TIME}
-- **Blueprinti Fail:** \`config/blueprints/.env.${BP_ID}-*\`
-
----
-
-## 1. ⏱ Ajakulu ja Tervisekontroll (Duration & Health)
-- **Tulemus:** ✅ Paigaldus ja tervisekontrollid läbitud 100% korrektselt.
-- **Kestus kokku:** ${TOTAL_MASTER_TIME}
+- **Date and Time:** ${RUN_TIMESTAMP}
+- **Total Setup Duration:** ${TOTAL_MASTER_TIME}
+- **Blueprint File:** \`config/blueprints/.env.${BP_ID}-*\`
 
 ---
 
-## 2. 💻 Konteinerite Mälukasutus & CPU (RAM / CPU Metrics)
+## 1. ⏱ Duration & Health Checks
+- **Result:** ✅ Installation and health checks completed 100% successfully.
+- **Total Duration:** ${TOTAL_MASTER_TIME}
+
+---
+
+## 2. 💻 Container RAM & CPU Metrics
 
 $(echo -e "$PODMAN_STATS_TABLE")
 
 ---
 
-## 3. 💾 Kettamaht (Podman Volumes & Storage)
+## 3. 💾 Storage Volume Metrics (Podman Volumes)
 
 $(echo -e "$PODMAN_VOL_TABLE")
 
 ---
 
-## 4. 🗄️ Aktiivsed Konteinerid ja Pordid (Active Containers)
+## 4. 🗄️ Active Containers & Ports
 
 $(echo -e "$ACTIVE_CONTAINERS_TABLE")
 
 ---
 
-## 5. 🌐 Veebiteenuste URL Audit (URL Health Matrix)
+## 5. 🌐 Web Services Health Matrix
 
 ${URL_AUDIT_CONTENT}
 
 ---
 
-## 6. 🔒 TLS / HTTPS Turvalisuse ja Sertifikaatide Audit (TLS Trust Matrix)
-- **Aktiivne TLS Režiim:** \`${RESOLVED_TLS_MODE:-USER_LOCAL}\`
-- **Režiimi Kirjeldus:** ${RESOLVED_TLS_REASON:-Kasutajataseme lokaalne arendussertifikaat (0 root/admin õigust)}
-- **Kasutatav Sertifikaat:** \`${RESOLVED_SSL_CERT:-config/certs/localhost.crt}\`
-- **Lubatud Poliitika Tase:** \`${TLS_ALLOWED_LEVEL:-permissive}\`
-- **Mitte-Admin Usalduse Olek:** ✅ Usaldatud kasutaja tasemel (\`Cert:\\CurrentUser\\Root\` / \`login.keychain-db\`).
+## 6. 🔒 TLS / HTTPS Trust Matrix
+- **Active TLS Mode:** \`${RESOLVED_TLS_MODE:-USER_LOCAL}\`
+- **Mode Description:** ${RESOLVED_TLS_REASON:-User-space local development certificate (0 root/admin required)}
+- **Certificate Path:** \`${RESOLVED_SSL_CERT:-config/certs/localhost.crt}\`
+- **Allowed Policy Level:** \`${TLS_ALLOWED_LEVEL:-permissive}\`
+- **Non-Admin Trust Status:** ✅ Trusted at user space (\`Cert:\\CurrentUser\\Root\` / \`login.keychain-db\`).
 
 ---
 
-## 7. 🔑 SEPS Paroolivabade Oracle Wallet Ühenduste Audit (SEPS Wallet Connection Audit)
+## 7. 🔑 SEPS Passwordless Oracle Wallet Connection Audit
 
-> 🛡️ **Turvalisus:** Aruanne ei sisalda avatud kujul ega salvestatud paroole. Kõik ühendused teostati SEPS (Simple Explicit Password Security) paroolivaba Walleti kaudu.
+> 🛡️ **Security:** Report does not contain plaintext or stored passwords. All connections were verified via SEPS (Simple Explicit Password Security) passwordless Wallet.
 
 ${WALLET_AUDIT_CONTENT}
 
-### 💡 Parooli Pärimine Walletist
-Kui arendajal või administraatoril on vaja tekstilist parooli (nt DBeaveri, DataGripi või välise tööriista jaoks), saab selle turvaliselt pärida käsuga:
+### 💡 Password Retrieval from Wallet
+When developer or administrator needs plaintext credentials (e.g. for DBeaver, DataGrip, or external tools), retrieve securely using:
 \`\`\`bash
 ./scripts/get-password.sh <WALLET_ALIAS>
 \`\`\`
-Näiteks:
-- \`./scripts/get-password.sh ${PRIMARY_ALIAS_DEV:-DB_DEV}\` *(Arendaja parool)*
-- \`./scripts/get-password.sh ${PRIMARY_ALIAS_SYS:-DB_SYS}\` *(Administraatori parool)*
+Examples:
+- \`./scripts/get-password.sh ${PRIMARY_ALIAS_DEV:-DB_DEV}\` *(Developer password)*
+- \`./scripts/get-password.sh ${PRIMARY_ALIAS_SYS:-DB_SYS}\` *(Administrator password)*
 
 ---
 
-## 8. ⚠️ Tuvastatud Probleemid ja Iseparanemised (Log & Self-Healing Audit)
-- Vead / Iseparanemised: 0 kriitilist viga. Automaatne kontroll sooritatud.
+## 8. ⚠️ Log & Self-Healing Audit
+- Errors / Self-healing: 0 critical errors. Automated verification completed.
 EOF
 
   echo -e "$(msg_str "REPORT_SAVED_MSG" "[blueprint_${BP_ID}_report.md](file://${REPORT_FILE})")"

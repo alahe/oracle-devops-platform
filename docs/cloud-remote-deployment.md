@@ -58,12 +58,23 @@ Kui kaug-server on loodud ja IP teada (nt `130.61.12.34`):
 **Mida skript automaatselt teeb:**
 1. Ühendub üle SSH kaug-serverisse.
 2. Paigaldab vajadusel `podman`-i, `git`-i ja `curl`-i.
-3. Avab serveri Linux tulemüüris pordid 9502, 9500 ja 8088 (`firewall-cmd`).
+3. Avab serveri Linux tulemüüris pordid 9502, 9500, 8448 ja 8088 (`firewall-cmd`).
 4. Sünkroniseerib koodi ja käivitab peaskripti `./scripts/setup-all.sh -y`.
 
 ---
 
-## 🤖 4. GitHub Actions CI/CD Seadistamine
+## 🌐 4. Multi-Cloud Arhitektuur (Azure VM + OCI Autonomous Database)
+
+Kui andmebaas asub OCI Pilves (Autonomous Database Serverless) ja rakenduskiht (ORDS / Publisher) Azure Linux virtuaalmasinas:
+* Vaata detailset samm-sammulist juhendit: **[docs/remote-multicloud-setup-guide.md](remote-multicloud-setup-guide.md)** (eesti keeles: **[docs/et/remote-multicloud-setup-guide.md](et/remote-multicloud-setup-guide.md)**).
+* Valideeri paigaldust automaatse testskriptiga:
+  ```bash
+  ./tests/test-remote-multicloud.sh --azure-ip <AZURE_IP> --oci-ip <OCI_IP> --db-alias DB_ADB_ADMIN
+  ```
+
+---
+
+## 🤖 5. GitHub Actions CI/CD Seadistamine
 
 Kui kood asub GitHubis, saab paigalduse automatiseerida iga uue `git push main` korral!
 

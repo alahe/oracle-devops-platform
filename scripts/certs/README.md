@@ -25,10 +25,16 @@ Iga käivituse ja seadistuse ajal tuvastab [`scripts/internal/resolve-tls-mode.s
 
 * **macOS:**
   * [`trust-local-cert-mac.sh`](trust-local-cert-mac.sh): Lisab CA kasutaja võtmehoidlasse `~/Library/Keychains/login.keychain-db` ilma `sudo` õigusteta.
+  * [`untrust-local-cert-mac.sh`](untrust-local-cert-mac.sh): Eemaldab CA kasutaja võtmehoidjast.
 * **Windows (PowerShell):**
   * [`trust-local-cert.ps1`](trust-local-cert.ps1): Lisab CA kasutaja isiklikku hoidlasse `Cert:\CurrentUser\Root` ilma administraatori või UAC kinnituseta.
 * **Windows (CMD):**
   * [`trust-local-cert.cmd`](trust-local-cert.cmd): Käivitab PowerShell skripti tavakasutaja õigustes.
+  * [`untrust-local-cert.cmd`](untrust-local-cert.cmd): Eemaldab CA Windowsi kasutaja hoidlast.
+* **Platvormiülene Puhastus (All OS):**
+  * [`clean-certs.sh`](clean-certs.sh) (CLI wrapper: `./scripts/clean-certs.sh`): Puhastab vanad sertifikaadid nii OS võtmehoidjast kui kettalt (`config/certs/`, `config/wallet-*/`).
+  * Toetab lippe: `--all`, `--keychain-only`, `--files-only`, `--regenerate`, `-y`.
+  * Integreeritud ka keskkonna lähtestamisse: `./scripts/reset-all.sh --clean-certs`.
 
 ---
 

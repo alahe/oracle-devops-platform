@@ -49,21 +49,83 @@ if command -v podman >/dev/null 2>&1; then
   fi
 fi
 
-# 3. Check System Memory (RAM)
+# 3. Check System Memory (RAM) Cross-Platform (Windows / macOS / Linux / WSL2)
 TOTAL_RAM_MB=8192
-if command -v sysctl >/dev/null 2>&1; then
+AVAIL_RAM_MB=4096
+
+if [ -f /proc/meminfo ]; then
+  # Linux / WSL2
+  TOT_KB=$(grep -i MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}')
+  AVAIL_KB=$(grep -i MemAvailable /proc/meminfo 2>/dev/null | awk '{print $2}')
+  [ -n "$TOT_KB" ] && TOTAL_RAM_MB=$((TOT_KB / 1024))
+  [ -n "$AVAIL_KB" ] && AVAIL_RAM_MB=$((AVAIL_KB / 1024))
+elif command -v sysctl >/dev/null 2>&1 && sysctl -n hw.memsize >/dev/null 2>&1; then
+  # macOS
   TOTAL_RAM_BYTES=$(sysctl -n hw.memsize 2>/dev/null || echo "8589934592")
   TOTAL_RAM_MB=$((TOTAL_RAM_BYTES / 1024 / 1024))
-elif [ -f /proc/meminfo ]; then
-  TOTAL_RAM_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
-  TOTAL_RAM_MB=$((TOTAL_RAM_KB / 1024))
+  if command -v vm_stat >/dev/null 2>&1; then
+    PAGE_SIZE=$(vm_stat 2>/dev/null | grep "page size of" | awk '{print $8}' || echo "4096")
+    FREE_PAGES=$(vm_stat 2>/dev/null | grep "Pages free:" | awk '{print $3}' | tr -d '.' || echo "0")
+    INACT_PAGES=$(vm_stat 2>/dev/null | grep "Pages inactive:" | awk '{print $3}' | tr -d '.' || echo "0")
+    SPEC_PAGES=$(vm_stat 2>/dev/null | grep "Pages speculative:" | awk '{print $3}' | tr -d '.' || echo "0")
+    AVAIL_BYTES=$(( (FREE_PAGES + INACT_PAGES + SPEC_PAGES) * PAGE_SIZE ))
+    AVAIL_RAM_MB=$(( AVAIL_BYTES / 1024 / 1024 ))
+  else
+    AVAIL_RAM_MB=$((TOTAL_RAM_MB / 2))
+  fi
+elif command -v powershell.exe >/dev/null 2>&1; then
+  # Windows Native (Git Bash / CMD / PowerShell)
+  WIN_MEM=$(powershell.exe -NoProfile -NonInteractive -Command "
+    \$os = Get-CimInstance Win32_OperatingSystem;
+    [math]::Round(\$os.TotalVisibleMemorySize / 1024); [math]::Round(\$os.FreePhysicalMemory / 1024)
+  " 2>/dev/null | tr -d '\r')
+  P_TOT=$(echo "$WIN_MEM" | sed -n '1p')
+  P_FREE=$(echo "$WIN_MEM" | sed -n '2p')
+  [[ "$P_TOT" =~ ^[0-9]+$ ]] && TOTAL_RAM_MB="$P_TOT"
+  [[ "$P_FREE" =~ ^[0-9]+$ ]] && AVAIL_RAM_MB="$P_FREE"
+elif command -v wmic.exe >/dev/null 2>&1; then
+  # Windows Fallback
+  W_FREE=$(wmic.exe OS get FreePhysicalMemory /Value 2>/dev/null | grep -i FreePhysicalMemory | cut -d= -f2 | tr -d '\r\n ')
+  W_TOT=$(wmic.exe OS get TotalVisibleMemorySize /Value 2>/dev/null | grep -i TotalVisibleMemorySize | cut -d= -f2 | tr -d '\r\n ')
+  [[ "$W_TOT" =~ ^[0-9]+$ ]] && TOTAL_RAM_MB=$((W_TOT / 1024))
+  [[ "$W_FREE" =~ ^[0-9]+$ ]] && AVAIL_RAM_MB=$((W_FREE / 1024))
+fi
+
+# Account for Podman Linux VM memory limit on macOS/Windows
+if command -v podman >/dev/null 2>&1 && podman machine list 2>/dev/null | grep -q "Currently running"; then
+  VM_AVAIL=$(podman machine ssh "grep MemAvailable /proc/meminfo" 2>/dev/null | awk '{print int($2/1024)}' || true)
+  if [ -n "$VM_AVAIL" ] && [ "$VM_AVAIL" -gt 0 ] 2>/dev/null; then
+    if [ "$VM_AVAIL" -lt "$AVAIL_RAM_MB" ]; then
+      AVAIL_RAM_MB="$VM_AVAIL"
+    fi
+  fi
 fi
 
 TOTAL_RAM_GB=$((TOTAL_RAM_MB / 1024))
-echo -e "   ├─ $(msg_str "RES_HOST_RAM"): ${GREEN}${TOTAL_RAM_GB} GB${NC}"
+AVAIL_RAM_GB=$((AVAIL_RAM_MB / 1024))
+echo -e "   ├─ $(msg_str "RES_HOST_RAM"): ${GREEN}${TOTAL_RAM_GB} GB${NC} (${TOTAL_RAM_MB} MB)"
+echo -e "   ├─ $(msg_str "RES_AVAIL_RAM"): ${CYAN}${AVAIL_RAM_GB} GB${NC} (${AVAIL_RAM_MB} MB)"
+
+# Live Container Memory Inspection (podman stats / cgroups)
+if command -v podman >/dev/null 2>&1; then
+  LIVE_MEM_SUM=$(podman stats --no-stream --format "{{.MemUsage}}" 2>/dev/null | awk -F'/' '{print $1}' | tr '\n' ' ' || true)
+  if [ -n "$LIVE_MEM_SUM" ]; then
+    echo -e "   ├─ Container Memory Load: ${YELLOW}${LIVE_MEM_SUM}${NC}"
+  fi
+fi
+
+# Safety Buffer Check (< 2048 MB free RAM guard)
+MIN_SAFE_RAM_MB=${MIN_SAFE_RAM_MB:-2048}
+if [ "$AVAIL_RAM_MB" -lt "$MIN_SAFE_RAM_MB" ] && [ "${FORCE_DEPLOY:-false}" != "true" ] && [ "${SKIP_RAM_CHECK:-false}" != "true" ] && [ "${IS_TEST_MODE:-false}" != "true" ]; then
+  echo -e "\n${RED}==================================================================${NC}"
+  msg_print "RES_INSUFFICIENT_RAM" "$AVAIL_RAM_MB" "$MIN_SAFE_RAM_MB"
+  echo -e "${YELLOW}💡 Recommendation: Close unused containers or apps, or bypass with: --force${NC}"
+  echo -e "${RED}==================================================================${NC}\n"
+  exit 1
+fi
 
 # Auto-tune STRICT_SEQUENTIAL_MODE if RAM is limited (< 8GB) or multi-container active
-if [ "$TOTAL_RAM_GB" -lt 8 ] || [ "${FORCE_SEQUENTIAL:-true}" = "true" ]; then
+if [ "$TOTAL_RAM_GB" -lt 8 ] || [ "$AVAIL_RAM_GB" -lt 4 ] || [ "${FORCE_SEQUENTIAL:-true}" = "true" ]; then
   export STRICT_SEQUENTIAL_MODE=true
   echo -e "   └─ $(msg_str "RES_EXEC_MODE"): ${YELLOW}$(msg_str "RES_MODE_SEQ")${NC}"
 else

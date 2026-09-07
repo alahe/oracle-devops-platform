@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-09-04 21:10:43",
+  "total_blueprints": 3,
+  "passed": 3,
+  "failed": 0,
+  "total_duration_seconds": 1,
+  "fast_mode": false,
+  "dry_run": true,
+  "results": [
+    {
+      "blueprint_num": "5",
+      "name": "5-standalone-publisher",
+      "status": "PASS",
+      "duration_seconds": 0,
+      "containers": "db-publisher app-publisher",
+      "fail_reason": "",
+      "log_file": ""
+    },
+    {
+      "blueprint_num": "6",
+      "name": "6-standalone-forms",
+      "status": "PASS",
+      "duration_seconds": 1,
+      "containers": "db-forms app-forms",
+      "fail_reason": "",
+      "log_file": ""
+    },
+    {
+      "blueprint_num": "7",
+      "name": "7-consolidated-forms-publisher",
+      "status": "PASS",
+      "duration_seconds": 0,
+      "containers": "db-publisher app-publisher app-forms-publisher",
+      "fail_reason": "",
+      "log_file": ""
+    }
+  ]
+}

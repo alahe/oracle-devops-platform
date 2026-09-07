@@ -82,12 +82,18 @@ PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | grep -i "publisher" | 
 PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-main-db-profile}"
 
 if podman ps --format "{{.Names}}" 2>/dev/null | grep -q "$PRIMARY_CONTAINER"; then
-  ORDS_VER_CHECK=$(podman exec -i "$PRIMARY_CONTAINER" sh -c "sqlplus -S / as sysdba" <<EOF 2>/dev/null || echo "N/A"
+  ORDS_VER_CHECK=$(podman exec -i "$PRIMARY_CONTAINER" bash -c '
+    in_sql=$(ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1)
+    if [ -n "$in_sql" ]; then
+      "$in_sql" -s / as sysdba <<EOF 2>/dev/null || echo "N/A"
 SET PAGESIZE 0 FEEDBACK OFF VERIFY OFF HEADING OFF;
 SELECT ords.version_number FROM dual;
 EXIT;
 EOF
-)
+    else
+      echo "N/A"
+    fi' || echo "N/A"
+  )
   ORDS_VER_CHECK=$(echo "$ORDS_VER_CHECK" | tr -d '\r\n' | awk '{print $1}')
   if [ -n "$ORDS_VER_CHECK" ] && [ "$ORDS_VER_CHECK" != "N/A" ]; then
     echo -e "   ✅ ORDS schema installed. Version: ${GREEN}${ORDS_VER_CHECK}${NC}"
@@ -131,7 +137,7 @@ cat <<EOF > "$POOL_FILE"
 </properties>
 EOF
 
-echo -e "   ✅ Loodud ühendusbasseini konfiguratsioonifail: ${CYAN}${POOL_FILE}${NC}\n"
+echo -e "   ✅ Connection pool configuration file created: ${CYAN}${POOL_FILE}${NC}\n"
 
 # 4. Deployment or Instructions
 if [ "$DEPLOY_REMOTE" = "true" ] && [ -n "$REMOTE_ORDS_HOST" ]; then
@@ -139,23 +145,23 @@ if [ "$DEPLOY_REMOTE" = "true" ] && [ -n "$REMOTE_ORDS_HOST" ]; then
   if [ -z "$REMOTE_SSH_USER" ]; then
     SSH_TARGET="${REMOTE_ORDS_HOST}"
   fi
-  echo -e "${YELLOW}🚀 2. Kopeerin pool konfiguratsiooni välisesse ORDS serverisse (${SSH_TARGET})...${NC}"
+  echo -e "${YELLOW}🚀 2. Copying pool configuration to external ORDS server (${SSH_TARGET})...${NC}"
   scp "$POOL_FILE" "${SSH_TARGET}:/etc/ords/config/databases/${POOL_NAME}.xml" || true
   ssh "${SSH_TARGET}" "ords config set --db-pool ${POOL_NAME} db.hostname ${DB_HOST} && ords --config /etc/ords/config serve" || true
-  echo -e "   ✅ Kopeeritud ja seadistatud kaugedukalt!"
+  echo -e "   ✅ Successfully copied and configured remotely!"
 else
-  echo -e "${YELLOW}📋 2. JUHEND VÄLISE ORDS SERVERI (KÄSITSI VÕI CLI) SEADISTAMISEKS:${NC}"
-  echo -e "   1. Kopeeri loodud XML fail välise ORDS serveri konfiguratsioonikausta:"
+  echo -e "${YELLOW}📋 2. INSTRUCTIONS FOR CONFIGURING EXTERNAL ORDS SERVER (MANUAL OR CLI):${NC}"
+  echo -e "   1. Copy generated XML file to external ORDS configuration folder:"
   echo -e "      ${CYAN}cp ${POOL_FILE} /etc/ords/config/databases/${POOL_NAME}.xml${NC}"
-  echo -e "   2. Või käivita välises ORDS serveris ametlik CLI käsk:"
+  echo -e "   2. Or run official CLI command on external ORDS server:"
   echo -e "      ${CYAN}ords config set --db-pool ${POOL_NAME} db.hostname ${DB_HOST} db.port ${DB_PORT} db.servicename ${DB_SERVICE} db.username ORDS_PUBLIC_USER${NC}"
-  echo -e "   3. Taaskäivita või laadi uuesti välise ORDS-i teenus:"
-  echo -e "      ${CYAN}systemctl restart ords${NC}  või  ${CYAN}ords serve${NC}"
+  echo -e "   3. Restart or reload external ORDS service:"
+  echo -e "      ${CYAN}systemctl restart ords${NC}  or  ${CYAN}ords serve${NC}"
 fi
 
-echo -e "\n${YELLOW}🧪 3. TESTIMINE JA VERIFITSEERIMINE:${NC}"
-echo -e "   - Testi ühendust ja reageerimist välisest ORDS-ist:"
+echo -e "\n${YELLOW}🧪 3. TESTING AND VERIFICATION:${NC}"
+echo -e "   - Test connection and responsiveness from external ORDS:"
 echo -e "     ${GREEN}curl -k -I ${TARGET_URL}${POOL_NAME}/${NC}"
-echo -e "   - Kontrolli andmebaasi ORDS versiooni päringuga:"
+echo -e "   - Verify database ORDS version with query:"
 echo -e "     ${GREEN}sql /@DB_PUBLISHER_SYS as sysdba <<< \"SELECT ords.version_number FROM dual;\"${NC}\n"
 echo -e "${CYAN}==================================================================${NC}"

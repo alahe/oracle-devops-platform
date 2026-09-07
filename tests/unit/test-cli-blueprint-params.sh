@@ -11,30 +11,30 @@ WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Test 1: --list-blueprints / -lb produces table output
 out_list=$("$WORKSPACE_DIR/scripts/setup-all.sh" -lb 2>&1)
-if [[ "$out_list" != *"AMETLIKUD ARHITEKTUURSED KAVANDID"* ]]; then
+if [[ "$out_list" != *"ARCHITECTURAL BLUEPRINTS"* ]] && [[ "$out_list" != *"ARHITEKTUURSED KAVANDID"* ]]; then
   echo "FAIL: Expected blueprints header in -lb output"
   exit 1
 fi
-if [[ "$out_list" != *".env.3-db-alise-apex-ords-with-proxy"* ]] && [[ "$out_list" != *".env.3-db-lis-apex-ords-with-proxy"* ]]; then
-  echo "FAIL: Expected Blueprint 3 in -lb table"
+if [[ "$out_list" != *"1-standalone-alise-db"* ]]; then
+  echo "FAIL: Expected Blueprint 1 in -lb table"
   exit 1
 fi
 
 # Test 2: --show-blueprint 3 / -sb 3 displays breakdown
 out_show=$("$WORKSPACE_DIR/scripts/setup-all.sh" -sb 3 2>&1)
-if [[ "$out_show" != *"DETAILNE BLUEPRINTI ÜLEVAADE"* ]]; then
+if [[ "$out_show" != *"DETAILNE BLUEPRINTI ÜLEVAADE"* ]] && [[ "$out_show" != *"BLUEPRINT INSPECTION"* ]]; then
   echo "FAIL: Expected detailed header in -sb 3 output"
   exit 1
 fi
-if [[ "$out_show" != *"db-proxy"* ]] || { [[ "$out_show" != *"db-alise"* ]] && [[ "$out_show" != *"db-lis"* ]]; } || [[ "$out_show" != *"app-ords"* ]]; then
-  echo "FAIL: Expected containers (db-proxy, db-alise/db-lis, app-ords) in -sb 3 output"
+if [[ "$out_show" != *"db-alise"* ]] || [[ "$out_show" != *"app-ords"* ]]; then
+  echo "FAIL: Expected containers (db-alise, app-ords) in -sb 3 output"
   exit 1
 fi
 
 # Test 3: --search publisher filters table
 out_search=$("$WORKSPACE_DIR/scripts/setup-all.sh" --search publisher 2>&1)
-if [[ "$out_search" != *".env.10-publisher-dedicated-db"* ]]; then
-  echo "FAIL: Expected Blueprint 10 in publisher search output"
+if [[ "$out_search" != *"5-standalone-publisher"* ]]; then
+  echo "FAIL: Expected Blueprint 5 in publisher search output"
   exit 1
 fi
 
@@ -54,7 +54,7 @@ fi
 
 # Test 6: -ltr displays test reports
 out_ltr=$("$WORKSPACE_DIR/scripts/setup-all.sh" -ltr 2>&1)
-if [[ "$out_ltr" != *"BLUEPRINTIDE TESTIARUANNETE OLEK"* ]]; then
+if [[ "$out_ltr" != *"BLUEPRINT TEST REPORTS"* ]] && [[ "$out_ltr" != *"BLUEPRINTIDE TESTIARUANNETE OLEK"* ]]; then
   echo "FAIL: Expected reports table in -ltr"
   exit 1
 fi

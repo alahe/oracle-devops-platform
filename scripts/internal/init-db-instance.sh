@@ -20,15 +20,27 @@ init_db_instance() {
   echo "⚙️  Starting database initialization for profile '${PROFILE_NAME}' (${container_name})..."
 
   if [ -f "$SCRIPT_DIR/init-db-instance.sql" ]; then
-    run_sqlcl -s "$CONN_STR_SYS" @"$SCRIPT_DIR/init-db-instance.sql" >/dev/null 2>&1 || true
+    run_sqlcl -s "$CONN_STR_SYS" @"$SCRIPT_DIR/init-db-instance.sql" "${PROFILE_DEFAULT_SERVICE:-FREEPDB1}" >/dev/null 2>&1 || true
     if podman container exists "$container_name" 2>/dev/null; then
-      podman exec -i -u oracle "$container_name" sh -c 'export ORACLE_HOME=$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n "$ORACLE_HOME" ] && "$ORACLE_HOME/bin/sqlplus" -s / as sysdba << EOF
+      podman exec -i -u oracle "$container_name" bash -c '
+        in_c_sql=$(ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1)
+        if [ -n "$in_c_sql" ]; then
+          "$in_c_sql" -s / as sysdba << "EOF"
 ALTER SESSION SET CONTAINER = CDB$ROOT;
 SHUTDOWN IMMEDIATE;
 STARTUP;
 ALTER PLUGGABLE DATABASE ALL OPEN;
 EXIT;
-EOF' >/dev/null 2>&1 || true
+EOF
+        elif command -v sqlplus >/dev/null 2>&1; then
+          sqlplus -s / as sysdba << "EOF"
+ALTER SESSION SET CONTAINER = CDB$ROOT;
+SHUTDOWN IMMEDIATE;
+STARTUP;
+ALTER PLUGGABLE DATABASE ALL OPEN;
+EXIT;
+EOF
+        fi' >/dev/null 2>&1 || true
     fi
   fi
 
@@ -39,6 +51,14 @@ EOF' >/dev/null 2>&1 || true
   # Apply profile users and roles
   if [ -x "$SCRIPT_DIR/apply-profile-users.sh" ]; then
     "$SCRIPT_DIR/apply-profile-users.sh" "$target_profile" "$container_name"
+  fi
+
+  # Initialize DevHub Schema and Seeds for proxy database
+  if [[ "$container_name" == *"proxy"* ]] && [ -f "$SCRIPT_DIR/init-devhub-schema.sql" ]; then
+    run_sqlcl -s "$CONN_STR_SYS" @"$SCRIPT_DIR/init-devhub-schema.sql" >/dev/null 2>&1 || true
+    if [ -f "$SCRIPT_DIR/init-devhub-seed.sql" ]; then
+      run_sqlcl -s "$CONN_STR_SYS" @"$SCRIPT_DIR/init-devhub-seed.sql" >/dev/null 2>&1 || true
+    fi
   fi
 
   echo "✅ Instance '${container_name}' (${PROFILE_NAME}) initialized successfully!"

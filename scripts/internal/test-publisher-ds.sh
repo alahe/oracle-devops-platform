@@ -35,12 +35,16 @@ fi
 
 # Verify FREEPDB1 database connection directly
 if command -v podman >/dev/null 2>&1 && podman ps --format "{{.Names}}" | grep -q "main-db-profile"; then
-  DB_TEST=$(podman exec -i main-db-profile sh -c "sqlplus -S / as sysdba" <<EOF
+  DB_TEST=$(podman exec -i main-db-profile bash -c '
+    in_sql=$(ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1)
+    if [ -n "$in_sql" ]; then
+      "$in_sql" -s / as sysdba << EOF
 ALTER SESSION SET CONTAINER = FREEPDB1;
 SELECT status FROM v\$instance;
 EXIT;
 EOF
-)
+    fi' 2>/dev/null || true
+  )
   if echo "${DB_TEST}" | grep -q "OPEN"; then
     echo -e "2. Target Database FREEPDB1 Status: ${GREEN}OPEN & READY${NC}"
   else

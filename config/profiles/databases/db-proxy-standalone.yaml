@@ -1,0 +1,60 @@
+# ==============================================================================
+# Database Profile: Dedicated Standalone Proxy DB (db-proxy-standalone)
+# ==============================================================================
+# Purpose: APEX Proxy, SSO Gateway, and public REST services running on port 1537.
+# ==============================================================================
+
+profile:
+  id: db-proxy-standalone
+  name: db-proxy-standalone
+  description: "Dedicated Oracle Free DB 23ai Standalone Proxy & SSO Gateway container on port 1537."
+  functionality: proxy
+  db_type: standard                     # Options: standard | adb | gvenzl
+  image_vendor: oracle                  # Options: oracle | gvenzl | custom
+
+database:
+  container_image: container-registry.oracle.com/database/free:latest
+  container_name: db-proxy-standalone
+  workload_type: NONE                   # Workload type (OLTP, DW, NONE)
+  admin_user: sys                       # Built-in superuser (automatically managed by engine)
+  admin_role: SYSDBA
+  default_service: FREEPDB1             # Target Pluggable Database (PDB) service name
+  db_port: 1537                         # Standalone Proxy host TCP listener port
+  wallet_required: false                # Cloud mTLS wallet requirement
+  configure_tde: true                   # Transparent Data Encryption enabled
+  encrypt_tablespaces: ALL              # Tablespace encryption policy
+  kafka_bootstrap_servers: "localhost:9092"
+  db_memory_limit: "3072M"
+
+database_features:
+  apex:
+    enabled: true                       # Install Oracle APEX Engine into PDB
+    version: latest
+    workspace: PROXY_STANDALONE_WORKSPACE
+  ords:
+    enabled: true
+    pool_name: proxy_standalone
+
+users:
+  - username: DBA_ADMIN
+    role: DBA
+    alias_suffix: DBA_ADMIN
+    color: "#E67E22"
+
+  - username: APP_SCHEMA
+    role: NORMAL
+    roles: [DB_DEVELOPER_ROLE]
+    tablespace: DATA
+    quota: unlimited
+    ords_enabled: true
+    alias_suffix: APP
+    color: "#2980B9"
+
+  - username: USER_DEVELOPER
+    role: NORMAL
+    roles: [DB_DEVELOPER_ROLE]
+    tablespace: DATA
+    quota: unlimited
+    ords_enabled: true
+    alias_suffix: DEV
+    color: "#27AE60"

@@ -1,0 +1,7 @@
+{
+  "last_updated": "2026-09-06T20:09:51Z",
+  "restore_duration_seconds": 139,
+  "snapshot_file": "bp_1_latest.tar.gz",
+  "blueprint_id": "1",
+  "profile_name": "db-alise-oracle"
+}

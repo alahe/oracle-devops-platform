@@ -60,10 +60,54 @@
     {
       "timestamp": "2026-09-01T10:22:09.231866",
       "duration_seconds": 583
+    },
+    {
+      "timestamp": "2026-09-02T17:25:58.725821",
+      "duration_seconds": 500
+    },
+    {
+      "timestamp": "2026-09-04T00:16:25.363460",
+      "duration_seconds": 175
+    },
+    {
+      "timestamp": "2026-09-04T00:21:42.359198",
+      "duration_seconds": 129
+    },
+    {
+      "timestamp": "2026-09-04T00:35:17.158901",
+      "duration_seconds": 660
+    },
+    {
+      "timestamp": "2026-09-04T00:48:37.228588",
+      "duration_seconds": 601
+    },
+    {
+      "timestamp": "2026-09-05T05:00:41.855779",
+      "duration_seconds": 657
+    },
+    {
+      "timestamp": "2026-09-05T05:13:38.490661",
+      "duration_seconds": 667
+    },
+    {
+      "timestamp": "2026-09-05T05:26:30.425976",
+      "duration_seconds": 686
+    },
+    {
+      "timestamp": "2026-09-06T12:26:23.416379",
+      "duration_seconds": 621
+    },
+    {
+      "timestamp": "2026-09-06T12:48:33.855566",
+      "duration_seconds": 662
+    },
+    {
+      "timestamp": "2026-09-07T03:34:25.008809",
+      "duration_seconds": 1124
     }
   ],
-  "runs_count": 15,
-  "average_duration_seconds": 580,
+  "runs_count": 26,
+  "average_duration_seconds": 583,
   "min_duration_seconds": 115,
-  "max_duration_seconds": 823
+  "max_duration_seconds": 1124
 }

@@ -1,0 +1,83 @@
+name: Deploy DevHub APEXlang Application (Oracle APEX CI/CD)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'applications/devhub/**'
+      - 'scripts/internal/init-devhub-*'
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: 'Target Environment (DEV / TEST / PROD)'
+        required: true
+        default: 'DEV'
+
+jobs:
+  validate_and_deploy:
+    name: Validate APEXlang DSL & Deploy DevHub App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js for APEXlang Compiler
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 3. Validate APEXlang Declarative Code
+        run: |
+          echo "🔍 Compiling and validating APEXlang DSL specs..."
+          node .agents/skills/apexlang/tools/apexctl.mjs apexlang validate --app-path applications/devhub
+          echo "✅ APEXlang validation successful (0 errors)!"
+
+      - name: 4. Setup Oracle Wallet (mTLS SEPS Zero-Trust Credentials)
+        run: |
+          mkdir -p $HOME/.oracle/tns_admin
+          if [ -n "${{ secrets.DB_WALLET_BASE64 }}" ]; then
+            echo "${{ secrets.DB_WALLET_BASE64 }}" | base64 -d > $HOME/.oracle/tns_admin/wallet.zip
+            unzip -o $HOME/.oracle/tns_admin/wallet.zip -d $HOME/.oracle/tns_admin/
+            rm -f $HOME/.oracle/tns_admin/wallet.zip
+            echo "✅ Oracle SEPS Wallet decrypted in memory."
+          else
+            echo "ℹ️ DB_WALLET_BASE64 absent; using local TNS_ADMIN configuration."
+          fi
+
+      - name: 5. Deploy DEVHUB PL/SQL Engine & Seed Data
+        run: |
+          echo "🚀 Deploying DEVHUB schema, tables, and DEV_HUB_PKG package..."
+          docker run --rm \
+            --network=host \
+            -v "$(pwd):/workspace" \
+            -v "$HOME/.oracle/tns_admin:/root/.oracle/tns_admin" \
+            -e TNS_ADMIN=/root/.oracle/tns_admin \
+            -e JAVA_TOOL_OPTIONS="-Doracle.net.tns_admin=/root/.oracle/tns_admin" \
+            -w /workspace \
+            container-registry.oracle.com/database/sqlcl:latest \
+            /@DB_PROXY_SYS as sysdba <<'EOF'
+          ALTER SESSION SET CONTAINER = FREEPDB1;
+          @scripts/internal/init-devhub-schema.sql
+          @scripts/internal/init-devhub-seed.sql
+          EXIT;
+          EOF
+
+      - name: 6. Deploy APEX DevHub Application via SQLcl APEXlang Import
+        run: |
+          echo "🚀 Validating and importing APEX Application 101 via SQLcl 26.2..."
+          docker run --rm \
+            --network=host \
+            -v "$(pwd):/workspace" \
+            -v "$HOME/.oracle/tns_admin:/root/.oracle/tns_admin" \
+            -e TNS_ADMIN=/root/.oracle/tns_admin \
+            -e JAVA_TOOL_OPTIONS="-Doracle.net.tns_admin=/root/.oracle/tns_admin" \
+            -w /workspace \
+            container-registry.oracle.com/database/sqlcl:latest \
+            /@DB_PROXY_DEVHUB <<'EOF'
+          apex validate -input ./applications/devhub -workspace PROXY_WORKSPACE
+          apex import -input ./applications/devhub -id 101 -workspace PROXY_WORKSPACE
+          EXIT;
+          EOF
+          echo "✅ Oracle APEX Application 101 deployed successfully!"

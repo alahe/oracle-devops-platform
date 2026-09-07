@@ -1,0 +1,10 @@
+{
+  "test_suite": "ords-lifecycle-matrix",
+  "timestamp": "20260904_091426",
+  "passed": 8,
+  "failed": 0,
+  "scenarios": {
+    "scenario_a_central_gateway": "PASSED",
+    "scenario_b_no_ords_server": "PASSED"
+  }
+}

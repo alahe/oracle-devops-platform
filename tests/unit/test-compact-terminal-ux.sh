@@ -61,7 +61,7 @@ fi
 
 # Test 4: Test run_substep execution
 substep_out=$(run_substep "1.1" "Test Substep" false "" 5 true)
-if [[ "$substep_out" != *"Alamsamm 1.1"* ]] || [[ "$substep_out" != *"Valmis"* ]]; then
+if { [[ "$substep_out" != *"Alamsamm 1.1"* ]] && [[ "$substep_out" != *"Step 1.1"* ]]; } || { [[ "$substep_out" != *"Valmis"* ]] && [[ "$substep_out" != *"Done"* ]]; }; then
   echo "FAIL: run_substep failed: $substep_out"
   exit 1
 fi

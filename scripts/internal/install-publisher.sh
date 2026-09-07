@@ -92,7 +92,7 @@ get_pub_stats() {
     fi
   done
   local avg=$((sum / count))
-  msg_str "BENCHMARK_AVG" "$(format_duration $avg)" "$(format_duration $min)" "$(format_duration $max)"
+  msg_str "BENCHMARK_AVG" "$(format_duration $avg)"
 }
 
 print_pub_header() {
@@ -212,12 +212,11 @@ if [ "$INSTALL_MODE" = "container" ]; then
       echo -e "${RED}$(msg_str "PUB_BUILD_FAILED" "$BUILD_STATUS" "$LOG_FILE")${NC}"
     fi
   fi
-  # Self-healing check: if app-publisher is already running but domain configuration failed (config.xml missing), clean incomplete domain
-  if podman ps --format "{{.Names}}" 2>/dev/null | grep -q "app-publisher"; then
+  # Ensure clean container initialization if WebLogic domain was not completed
+  if podman container exists app-publisher 2>/dev/null; then
     if ! podman exec app-publisher test -f /u01/oracle/user_projects/domains/bi/config/config.xml 2>/dev/null; then
-      echo -e "   ⚠️ Incomplete WebLogic domain detected — cleaning and re-initializing..."
-      podman exec app-publisher rm -rf /u01/oracle/user_projects/domains/bi 2>/dev/null || true
-      podman exec -d app-publisher /u01/createAndStartDomain.sh 2>/dev/null || true
+      echo -e "   ⚠️ Incomplete WebLogic domain detected — recreating container with environment secrets..."
+      podman rm -f app-publisher 2>/dev/null || true
     fi
   fi
 
@@ -227,15 +226,7 @@ if [ "$INSTALL_MODE" = "container" ]; then
     TARGET_PUB_DB=$(resolve_service_target_db "publisher")
     TARGET_PUB_DB="${TARGET_PUB_DB:-db-proxy}"
 
-    # Conditional memory safeguard: only stop other DBs if NOT using prebuilt domain and parallel init is disabled
-    if [ "$IS_PREBUILT_DOMAIN" != "true" ] && [ "${ENABLE_PARALLEL_INIT:-false}" != "true" ]; then
-      echo -e "   🛡️  Freeing RAM for WebLogic domain creation (temporarily pausing non-publisher DBs)..."
-      for other_db in $(get_active_db_instances 2>/dev/null | cut -d'|' -f1); do
-        if [ "$other_db" != "$TARGET_PUB_DB" ]; then
-          podman stop "$other_db" 2>/dev/null || true
-        fi
-      done
-    fi
+
 
     # Ensure target publisher DB is running
     if podman container exists "$TARGET_PUB_DB" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$TARGET_PUB_DB" 2>/dev/null)" != "running" ]; then
@@ -252,25 +243,44 @@ if [ "$INSTALL_MODE" = "container" ]; then
       exit 1
     fi
 
-    if ! podman image exists "${PUBLISHER_CONTAINER_IMAGE:-oracle/analyticsserver:2025}" 2>/dev/null; then
-      echo -e "${RED}❌ Error: Publisher container image (${PUBLISHER_CONTAINER_IMAGE:-oracle/analyticsserver:2025}) not found!${NC}"
+    pub_img="${PUBLISHER_CONTAINER_IMAGE:-}"
+    if [ -z "$pub_img" ]; then
+      if podman image exists "localhost/oracle/analyticsserver:2025" 2>/dev/null; then
+        pub_img="localhost/oracle/analyticsserver:2025"
+      elif podman image exists "localhost/oracle-publisher:latest" 2>/dev/null; then
+        pub_img="localhost/oracle-publisher:latest"
+      else
+        pub_img="oracle/analyticsserver:2025"
+      fi
+    fi
+
+    if ! podman image exists "$pub_img" 2>/dev/null; then
+      echo -e "${RED}❌ Error: Publisher container image ($pub_img) not found!${NC}"
       exit 1
     fi
 
+    # Ensure publisher_data volume exists and has oracle (1000:1000) ownership
+    podman volume exists oracle-free-db-in-prod_publisher_data 2>/dev/null || podman volume create oracle-free-db-in-prod_publisher_data >/dev/null 2>&1 || true
+    podman run --rm --user 0 -v oracle-free-db-in-prod_publisher_data:/u01/oracle/user_projects "$pub_img" /bin/bash -c "PATH=/usr/bin:/bin chown -R 1000:1000 /u01/oracle/user_projects && PATH=/usr/bin:/bin chmod 775 /u01/oracle/user_projects" >/dev/null 2>&1 || true
+
+    pub_db_svc="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
+    [ "$pub_db_svc" = "none" ] && pub_db_svc="FREEPDB1"
+
     podman run -d --name app-publisher --security-opt=no-new-privileges --network="$NET_NAME" \
+      -v oracle-free-db-in-prod_publisher_data:/u01/oracle/user_projects:rw \
       -v "$WORKSPACE_DIR/docker/publisher/dockerfiles/2025/createAndStartDomain.sh:/u01/createAndStartDomain.sh:ro" \
       -e ADMIN_USERNAME=weblogic \
       -e ADMIN_PASSWORD="$SYS_PWD" \
       -e DB_HOST="$TARGET_PUB_DB" \
       -e DB_PORT=1521 \
-      -e DB_SERVICE="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}" \
+      -e DB_SERVICE="$pub_db_svc" \
       -e DB_USERNAME=sys \
       -e DB_PASSWORD="$SYS_PWD" \
       -e SCHEMA_PREFIX=OAS \
       -e SCHEMA_PASSWORD="$SYS_PWD" \
       -e BI_APP_LITE_PASSWORD="$SYS_PWD" \
       -e USER_MEM_ARGS="-Xms512m -Xmx1024m" \
-      -p 127.0.0.1:9500:9500 -p 127.0.0.1:9502:9502 -p 127.0.0.1:9503:9503 "${PUBLISHER_CONTAINER_IMAGE:-oracle/analyticsserver:2025}" >> "$LOG_FILE" 2>&1 || true
+      -p 127.0.0.1:9500:9500 -p 127.0.0.1:9502:9502 -p 127.0.0.1:9503:9503 "$pub_img" >> "$LOG_FILE" 2>&1 || true
   fi
   END_STEP3=$(date +%s)
   ELAPSED_STEP3=$(( END_STEP3 - START_STEP3 ))

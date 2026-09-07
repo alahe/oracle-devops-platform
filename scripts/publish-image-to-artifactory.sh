@@ -39,28 +39,28 @@ DRY_RUN=false
 show_help() {
   cat << EOF
 ${CYAN}==================================================================${NC}
-${BOLD}📦 Ettevõtte Artifactory / Registri Piltide Avaldaja${NC}
+${BOLD}📦 Enterprise Artifactory / Registry Image Publisher${NC}
 ${CYAN}==================================================================${NC}
-Kasutus:
-  ./scripts/publish-image-to-artifactory.sh [VÕTMED]
+Usage:
+  ./scripts/publish-image-to-artifactory.sh [OPTIONS]
 
-Võtmed:
-  -r, --registry <URL>      Ettevõtte registri URL (nt: artifactory.firma.ee/docker-local/oracle)
-  -i, --image <NIMI>        Kohalik pilt, mida avaldada (nt: oracle-free-apex:26.1 või all)
-  -t, --tag <TAG>           Sihtmärgis / versioonitähis (vaikimisi sama mis lähte-tag)
-  -u, --user <USER>         Artifactory kasutajanimi sisselogimiseks
-  -p, --password <PASS>     Artifactory API token või parool
-      --update-env          Kirjutab REGISTRY_PREFIX väärtuse automaatselt faili .env
-      --dry-run             Simuleerib käske ilma tegeliku võrguliikluse ja muudatusteta
-  -h, --help                Kuvab selle abiteksti
+Options:
+  -r, --registry <URL>      Enterprise registry URL (e.g.: artifactory.company.com/docker-local/oracle)
+  -i, --image <NAME>        Local image to publish (e.g.: oracle-free-apex:26.1 or all)
+  -t, --tag <TAG>           Target tag / version (default: same as source tag)
+  -u, --user <USER>         Artifactory username for authentication
+  -p, --password <PASS>     Artifactory API token or password
+      --update-env          Automatically write REGISTRY_PREFIX to .env file
+      --dry-run             Simulate commands without actual network traffic or changes
+  -h, --help                Show this help text
 
-Näited:
+Examples:
   # 1. Dry run and inspection:
-  ./scripts/publish-image-to-artifactory.sh -r "artifactory.firma.ee/oracle" -i "oracle-free-apex:26.1" --dry-run
+  ./scripts/publish-image-to-artifactory.sh -r "artifactory.company.com/oracle" -i "oracle-free-apex:26.1" --dry-run
 
   # 2. Publish images and update .env configuration:
   ./scripts/publish-image-to-artifactory.sh \\
-    --registry "artifactory.firma.ee/docker-local/oracle" \\
+    --registry "artifactory.company.com/docker-local/oracle" \\
     --image "oracle-free-apex:26.1" \\
     --update-env
 EOF
@@ -100,7 +100,7 @@ while [[ "$#" -gt 0 ]]; do
       exit 0
       ;;
     *)
-      echo -e "${RED}❌ Tundmatu parameeter: $1${NC}"
+      echo -e "${RED}❌ Unknown parameter: $1${NC}"
       show_help
       exit 1
       ;;
@@ -124,26 +124,26 @@ if ! command -v podman >/dev/null 2>&1 && command -v docker >/dev/null 2>&1; the
 fi
 
 echo -e "\n${CYAN}==================================================================${NC}"
-echo -e "${BOLD}🚀 ETTEVÕTTE ARTIFACTORY PILTIDE AVALDAMINE${NC}"
+echo -e "${BOLD}🚀 ENTERPRISE ARTIFACTORY IMAGE PUBLISHER${NC}"
 echo -e "${CYAN}==================================================================${NC}"
-echo -e "   ├─ 🏢 ${BOLD}Sihtregister:${NC}       ${GREEN}${REGISTRY_URL}${NC}"
-echo -e "   ├─ 📦 ${BOLD}Lähtepilt:${NC}          ${YELLOW}${LOCAL_IMAGE:-Kõik projekti pildid}${NC}"
-echo -e "   ├─ ⚙️  ${BOLD}Konteineri mootor:${NC}  ${CONTAINER_CLI}"
-echo -e "   ├─ 🧪 ${BOLD}Kuivkäivitus:${NC}       ${DRY_RUN}"
-echo -e "   └─ 📝 ${BOLD}Uuenda .env:${NC}        ${UPDATE_ENV}"
+echo -e "   ├─ 🏢 ${BOLD}Target Registry:${NC}  ${GREEN}${REGISTRY_URL}${NC}"
+echo -e "   ├─ 📦 ${BOLD}Source Image:${NC}     ${YELLOW}${LOCAL_IMAGE:-All project images}${NC}"
+echo -e "   ├─ ⚙️  ${BOLD}Container Engine:${NC} ${CONTAINER_CLI}"
+echo -e "   ├─ 🧪 ${BOLD}Dry Run:${NC}          ${DRY_RUN}"
+echo -e "   └─ 📝 ${BOLD}Update .env:${NC}       ${UPDATE_ENV}"
 echo -e "${CYAN}==================================================================${NC}\n"
 
 # 1. Authentication (if user & password provided)
 if [ -n "$AUTH_USER" ] && [ -n "$AUTH_PASS" ]; then
-  echo -e "🔐 [1/3]: Autentin registrisse: ${REGISTRY_URL} (kasutaja: ${AUTH_USER})..."
+  echo -e "🔐 [1/3]: Authenticating to registry: ${REGISTRY_URL} (user: ${AUTH_USER})..."
   if [ "$DRY_RUN" = "true" ]; then
     echo -e "   ${YELLOW}[DRY-RUN]${NC} $CONTAINER_CLI login -u \"$AUTH_USER\" -p \"********\" \"$REGISTRY_URL\""
   else
     echo "$AUTH_PASS" | $CONTAINER_CLI login -u "$AUTH_USER" --password-stdin "$REGISTRY_URL"
-    echo -e "   ${GREEN}✅ Sisselogimine õnnestus!${NC}"
+    echo -e "   ${GREEN}✅ Login successful!${NC}"
   fi
 else
-  echo -e "ℹ️  [1/3]: Autentimistunnuseid ei antud, kasutan olemasolevaid sessiooni volitusi."
+  echo -e "ℹ️  [1/3]: No credentials provided, using existing session credentials."
 fi
 
 # 2. Image list
@@ -161,7 +161,7 @@ else
   IMAGES_TO_PUBLISH=("$LOCAL_IMAGE")
 fi
 
-echo -e "\n📦 [2/3]: Tag'in ja laen üles ${#IMAGES_TO_PUBLISH[@]} pilti..."
+echo -e "\n📦 [2/3]: Tagging and pushing ${#IMAGES_TO_PUBLISH[@]} image(s)..."
 
 for src_img in "${IMAGES_TO_PUBLISH[@]}"; do
   img_base=$(basename "$src_img")
@@ -172,31 +172,31 @@ for src_img in "${IMAGES_TO_PUBLISH[@]}"; do
 
   target_ref="${REGISTRY_URL}/${img_name}:${img_tag}"
 
-  echo -e "\n   👉 Töötlen pilti: ${BOLD}${src_img}${NC}"
-  echo -e "      ├── Sihtmärgis: ${CYAN}${target_ref}${NC}"
+  echo -e "\n   👉 Processing image: ${BOLD}${src_img}${NC}"
+  echo -e "      ├── Target tag: ${CYAN}${target_ref}${NC}"
 
   if [ "$DRY_RUN" = "true" ]; then
     echo -e "      ├── ${YELLOW}[DRY-RUN]${NC} $CONTAINER_CLI tag \"$src_img\" \"$target_ref\""
     echo -e "      └── ${YELLOW}[DRY-RUN]${NC} $CONTAINER_CLI push \"$target_ref\""
   else
-    echo -n "      ├── Tag'in pildi... "
+    echo -n "      ├── Tagging image... "
     $CONTAINER_CLI tag "$src_img" "$target_ref"
     echo -e "${GREEN}OK${NC}"
 
-    echo -n "      └── Laen üles Artifactorysse... "
+    echo -n "      └── Pushing to Artifactory... "
     $CONTAINER_CLI push "$target_ref"
-    echo -e "${GREEN}VALMIS${NC}"
+    echo -e "${GREEN}DONE${NC}"
   fi
 done
 
 # 3. Update .env if --update-env is set
 if [ "$UPDATE_ENV" = "true" ]; then
-  echo -e "\n⚙️  [3/3]: Uuendan projekti .env faili seadistust..."
+  echo -e "\n⚙️  [3/3]: Updating project .env configuration..."
   ENV_FILE="$WORKSPACE_DIR/.env"
   REGISTRY_PREFIX_VAL="${REGISTRY_URL}/"
 
   if [ "$DRY_RUN" = "true" ]; then
-    echo -e "   ${YELLOW}[DRY-RUN]${NC} Seadistan failis $ENV_FILE: REGISTRY_PREFIX=\"${REGISTRY_PREFIX_VAL}\""
+    echo -e "   ${YELLOW}[DRY-RUN]${NC} Configuring in $ENV_FILE: REGISTRY_PREFIX=\"${REGISTRY_PREFIX_VAL}\""
   else
     if [ -f "$ENV_FILE" ]; then
       if grep -q "^REGISTRY_PREFIX=" "$ENV_FILE"; then
@@ -207,16 +207,16 @@ if [ "$UPDATE_ENV" = "true" ]; then
         echo "# Enterprise Artifactory registry prefix (automatically managed by publish-image-to-artifactory.sh)" >> "$ENV_FILE"
         echo "REGISTRY_PREFIX=\"${REGISTRY_PREFIX_VAL}\"" >> "$ENV_FILE"
       fi
-      echo -e "   ${GREEN}✅ .env uuendatud: REGISTRY_PREFIX=\"${REGISTRY_PREFIX_VAL}\"${NC}"
+      echo -e "   ${GREEN}✅ .env updated: REGISTRY_PREFIX=\"${REGISTRY_PREFIX_VAL}\"${NC}"
     else
       echo "REGISTRY_PREFIX=\"${REGISTRY_PREFIX_VAL}\"" > "$ENV_FILE"
-      echo -e "   ${GREEN}✅ Loodud uus .env fail: REGISTRY_PREFIX=\"${REGISTRY_PREFIX_VAL}\"${NC}"
+      echo -e "   ${GREEN}✅ Created new .env file: REGISTRY_PREFIX=\"${REGISTRY_PREFIX_VAL}\"${NC}"
     fi
   fi
 else
-  echo -e "\nℹ️  [3/3]: .env faili ei muudetud (kasuta --update-env kui soovid registri prefiksi kohest rakendamist)."
+  echo -e "\nℹ️  [3/3]: .env file unchanged (use --update-env to apply registry prefix immediately)."
 fi
 
 echo -e "\n${GREEN}==================================================================${NC}"
-echo -e "${GREEN}✅ ARTIFACTORY PILTIDE AVALDAMISE PROTSESS LÕPETATUD!${NC}"
+echo -e "${GREEN}✅ ARTIFACTORY IMAGE PUBLISHING PROCESS COMPLETED!${NC}"
 echo -e "${GREEN}==================================================================${NC}\n"

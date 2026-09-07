@@ -141,3 +141,25 @@ set history filter show,history,clear,secret,pass,connect
 -- Context-aware colored prompt: USER @ TNS_ALIAS >
 set sqlprompt "@|bold,green _USER|@@@|bold,cyan _CONNECT_IDENTIFIER|@@|bold,magenta  > |@"
 ```
+
+---
+
+## 8. Mandatory SQLcl Exclusive Execution Rule (Prohibition of Legacy SQL*Plus)
+
+To guarantee consistent behavior across local containers, remote hosts, and cloud Autonomous Databases (ADB), all database execution scripts must adhere to the **Exclusive SQLcl Usage Contract**:
+
+1. **Strict Prohibition of SQL\*Plus:** Direct invocation of legacy `sqlplus` is prohibited in automation scripts. SQLcl (`sql`) is the sole authorized database client.
+2. **Multi-Tier Execution Resolution:**
+   - **Tier 1 (In-Container Execution):** In containerized Oracle Free databases (`db-proxy`, `db-alise`, `db-publisher`, `db-forms`), execute via the official embedded binary:
+     ```bash
+     podman exec -i "$target_container" /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql -s / as sysdba
+     ```
+   - **Tier 2 (Host CLI Execution):** On the host, invoke `./scripts/sqlcl.sh /@DB_${c_upper}_SYS as sysdba` with automatic SEPS Wallet credential resolution.
+   - **Tier 3 (Ephemeral Container Fallback):** In locked-down environments, run via ephemeral container with `--rm`:
+     ```bash
+     podman run --rm -i --network=host container-registry.oracle.com/database/sqlcl:latest -s /@DB_${c_upper}_SYS as sysdba
+     ```
+3. **Mandatory Script Safety Invariants:**
+   - Always include `WHENEVER SQLERROR EXIT FAILURE ROLLBACK;` at the beginning of scripted SQL files.
+   - Never pipe SQL outputs to `/dev/null 2>&1`; always tee or redirect to `$WORKSPACE_DIR/install_logs/*.log` to preserve failure diagnostics and prevent silent errors.
+

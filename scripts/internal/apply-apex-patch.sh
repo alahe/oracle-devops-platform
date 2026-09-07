@@ -28,7 +28,7 @@ if [ -f "$WORKSPACE_DIR/scripts/internal/common.sh" ]; then
   source "$WORKSPACE_DIR/scripts/internal/common.sh"
 fi
 
-# Värvide seadistamine (ainult siis kui terminal seda toetab)
+# Setup colors (only if supported by terminal)
 if [ -t 0 ] || { [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; }; then
   GREEN='\033[1;32m'
   YELLOW='\033[0;33m'
@@ -49,7 +49,7 @@ mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 LOG_FILE="$LOG_DIR/apex_patch_apply_${TIMESTAMP}.log"
 
-# Suuname kogu väljundi nii ekraanile kui logifaili (ainult eraldiseisval käivitamisel)
+# Redirect entire output to both screen and logfile (standalone execution only)
 if [ "${MASTER_SETUP:-false}" != "true" ]; then
   exec > >(tee -a "$LOG_FILE") 2>&1
 fi
@@ -57,7 +57,7 @@ fi
 if [ "$MASTER_SETUP" != "true" ]; then
   echo -e "${CYAN}==================================================================${NC}"
   echo "------------------------------------------------------------------"
-  echo -e "📝 APEX Patchi paigalduse logi salvestatakse faili:"
+  echo -e "📝 APEX Patch installation log will be saved to:"
   echo -e "   ${CYAN}$LOG_FILE${NC}"
   echo -e "${CYAN}==================================================================${NC}"
 fi
@@ -88,17 +88,26 @@ else
   CONTAINER_NAME="${found_apex_c:-$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)}"
   CONTAINER_NAME="${CONTAINER_NAME:-db-dev-full}"
 fi
-PRIMARY_UPPER=$(echo "$CONTAINER_NAME" | tr '-' '_' | tr '[:lower:]' '[:upper:]')
+PRIMARY_NAME=$(echo "$CONTAINER_NAME" | sed 's/^db-//' | tr '-' '_')
+PRIMARY_UPPER=$(echo "$PRIMARY_NAME" | tr '[:lower:]' '[:upper:]')
 
 SYS_PASSWORD="${APEX_DB_SYS_PASSWORD:-}"
+if [ -z "$SYS_PASSWORD" ] && [ -x "$WORKSPACE_DIR/scripts/get-password.sh" ]; then
+  SYS_PASSWORD=$("$WORKSPACE_DIR/scripts/get-password.sh" "DB_${PRIMARY_UPPER}_SYS" 2>/dev/null | grep "Password:" | awk '{print $NF}' | tr -d '\r\n')
+fi
 if [ -z "$SYS_PASSWORD" ]; then
   if podman container exists "$CONTAINER_NAME" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null)" = "running" ]; then
-    SYS_PASSWORD=$(podman exec "$CONTAINER_NAME" cat "/run/secrets/oracle_pwd" 2>/dev/null || podman exec "$CONTAINER_NAME" cat "/run/secrets/apex_db_sys_password" 2>/dev/null || true)
+    SYS_PASSWORD=$(podman exec "$CONTAINER_NAME" cat "/run/secrets/oracle_pwd" 2>/dev/null || podman exec "$CONTAINER_NAME" cat "/run/secrets/${PRIMARY_NAME}_db_sys_password" 2>/dev/null || podman exec "$CONTAINER_NAME" cat "/run/secrets/apex_db_sys_password" 2>/dev/null || true)
+  fi
+  if [ -z "$SYS_PASSWORD" ]; then
+    SYS_PASSWORD=$(podman secret inspect --showsecret "${PRIMARY_NAME}_db_sys_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+  fi
+  if [ -z "$SYS_PASSWORD" ]; then
+    SYS_PASSWORD=$(podman secret inspect --showsecret "${PRIMARY_NAME}_sys_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
   fi
   if [ -z "$SYS_PASSWORD" ]; then
     SYS_PASSWORD=$(podman secret inspect --showsecret apex_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
   fi
-  SYS_PASSWORD="${SYS_PASSWORD:-$APEX_DB_SYS_PASSWORD}"
 fi
 DB_HOST="${APEX_DB_HOST:-${PROFILE_DB_HOST:-localhost}}"
 DB_PORT="${APEX_DB_PORT:-${PROFILE_DB_PORT:-1532}}"
@@ -193,7 +202,7 @@ copy_patch_images_to_volume() {
   fi
 }
 
-# Automaatne lokaalse konteineri kontroll ja režiimi valik
+# Automatic local container check and execution mode selection
 IS_CONTAINER_AVAIL=false
 if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ] || [ "$DB_HOST" = "db-apex-proxy" ]; then
   if podman container exists "$CONTAINER_NAME" 2>/dev/null; then
@@ -202,14 +211,14 @@ if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ] || [ "$DB_HOST" 
 fi
 
 EXEC_MODE="CLIENT"
-# Eelistame alati CONTAINER režiimi kohalikus arenduses (et vältida Defenderi lag-i lahtipakkimisel)
+# Prefer CONTAINER mode in local development (prevents Defender lag during unzip)
 if [ "$IS_CONTAINER_AVAIL" = "true" ]; then
-  echo "Tuvastati kohalik konteiner $CONTAINER_NAME."
-  echo "Kasutan konteineri režiimi (unzip + paigaldus otse konteineris)..."
+  echo "Detected local container $CONTAINER_NAME."
+  echo "Using container mode (unzip + install directly inside container)..."
   EXEC_MODE="CONTAINER"
   
   PSTEP1_START=$(date +%s)
-  print_sub_header "1" "Kopeerin ja pakin APEX patchi lahti konteineris..." "step6_apex_copy_container_seconds" "step6_apex_copy_container_seconds" "5s"
+  print_sub_header "1" "Copying and unzipping APEX patch inside container..." "step6_apex_copy_container_seconds" "step6_apex_copy_container_seconds" "5s"
   podman exec "$CONTAINER_NAME" rm -rf /tmp/apex_patch_install /tmp/apex-patch.zip || true
   podman exec "$CONTAINER_NAME" mkdir -p /tmp/apex_patch_install
   podman cp "$PATCH_ZIP" "$CONTAINER_NAME":/tmp/apex-patch.zip
@@ -231,8 +240,8 @@ if [ "$IS_CONTAINER_AVAIL" = "true" ]; then
   echo -e "⏱  [Patch step 1 completed (unpacking in container): ${YELLOW}$PSTEP1_TIME${NC}]"
   
   PSTEP2_START=$(date +%s)
-  DB_CLI="podman exec -i -w $PATCH_DIR $CONTAINER_NAME sqlplus -s"
-  CONN_STR="sys/${SYS_PASSWORD}@localhost:1521/${DB_SERVICE} as sysdba"
+  in_sql=$(podman exec "$CONTAINER_NAME" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+  DB_CLI="podman exec -i -u oracle -w $PATCH_DIR $CONTAINER_NAME ${in_sql:-sqlplus} -s / as sysdba"
   PSTEP2_TIME=$(format_duration $(($(date +%s) - PSTEP2_START)))
   echo -e "⏱  [Patch step 2 completed (container setup): ${YELLOW}$PSTEP2_TIME${NC}]"
 else
@@ -259,12 +268,12 @@ else
   PSTEP1_TIME=$(format_duration $(($(date +%s) - PSTEP1_START)))
   echo -e "⏱  [Patch step 1 completed (unpacking on host): ${YELLOW}$PSTEP1_TIME${NC}]"
   
-  if command -v sql &> /dev/null; then
+  if [ -x "$WORKSPACE_DIR/scripts/sqlcl.sh" ]; then
+    DB_CLI="$WORKSPACE_DIR/scripts/sqlcl.sh -s"
+  elif command -v sql &> /dev/null; then
     DB_CLI="sql -s"
-  elif command -v sqlplus &> /dev/null; then
-    DB_CLI="sqlplus -s"
   else
-    echo "❌ Error: Neither SQLcl nor SQL*Plus CLI utilities were found on host system!"
+    echo "❌ Error: SQLcl CLI utility was not found on host system!"
     exit 1
   fi
 
@@ -285,10 +294,11 @@ else
   echo -e "⏱  [Patchi samm 2 valmis (kliendi seadistus): ${YELLOW}$PSTEP2_TIME${NC}]"
 fi
 
-# Check whether the database already has the same or newer APEX patch version
 DB_APEX_INFO=""
 if [ "$EXEC_MODE" = "CONTAINER" ]; then
-  DB_APEX_INFO=$(podman exec -i "$CONTAINER_NAME" sqlplus -s "$CONN_STR" <<EOF 2>/dev/null | grep -v -E "Connected to|Oracle Database|version" || echo ""
+  in_sql=$(podman exec "$CONTAINER_NAME" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+  DB_APEX_INFO=$(podman exec -i -u oracle "$CONTAINER_NAME" ${in_sql:-sql} -s / as sysdba <<EOF 2>/dev/null | grep -v -E "Connected to|Oracle Database|version" || echo ""
+ALTER SESSION SET CONTAINER = ${DB_SERVICE};
 SET FEEDBACK OFF
 SET HEADING OFF
 SET PAGESIZE 0
@@ -309,8 +319,9 @@ EOF
 )
 fi
 
-DB_APEX_VER=$(echo "$DB_APEX_INFO" | grep -v -E "ORA-|Error" | cut -d':' -f1 | tr -d ' \r\n')
-DB_APEX_STATUS=$(echo "$DB_APEX_INFO" | grep -v -E "ORA-|Error" | cut -d':' -f2 | tr -d ' \r\n')
+local_ver_line=$(echo "$DB_APEX_INFO" | grep -E '^[[:space:]]*[0-9]+\.[0-9]+' | head -n 1)
+DB_APEX_VER=$(echo "$local_ver_line" | cut -d':' -f1 | tr -d ' \r\n')
+DB_APEX_STATUS=$(echo "$local_ver_line" | cut -d':' -f2 | tr -d ' \r\n')
 
 # Parse target patch version from README inside the zip
 TARGET_PATCH_VER=$(unzip -p "$PATCH_ZIP" "*/README.txt" 2>/dev/null | grep -i "Oracle APEX Product Version" | grep -o -E "[0-9]+\.[0-9]+\.[0-9]+" | head -n 1 || echo "")
@@ -320,8 +331,8 @@ if [ "$DB_APEX_STATUS" = "VALID" ] && [ -n "$DB_APEX_VER" ] && [ -n "$TARGET_PAT
   patch_val=$(version_to_int "$TARGET_PATCH_VER")
   if [ $db_val -ge $patch_val ]; then
     echo "=================================================================="
-    echo "✅ APEX patch on juba paigaldatud (andmebaasi versioon: $DB_APEX_VER, soovitud: $TARGET_PATCH_VER)."
-    echo "   Jätan SQL patchimise vahele."
+    echo "✅ APEX patch is already applied (database version: $DB_APEX_VER, requested: $TARGET_PATCH_VER)."
+    echo "   Skipping SQL patch installation."
     echo "=================================================================="
     copy_patch_images_to_volume
     exit 0
@@ -329,7 +340,7 @@ if [ "$DB_APEX_STATUS" = "VALID" ] && [ -n "$DB_APEX_VER" ] && [ -n "$TARGET_PAT
 fi
 
 # ----------------------------------------------------------------------------
-# 3. Patchi paigaldus andmebaasis
+# 3. Patch installation in database
 # ----------------------------------------------------------------------------
 PSTEP3_START=$(date +%s)
 PATCH_SQL_LOG_FILE="$LOG_DIR/apex_patch_apply_sql_${TIMESTAMP}.log"
@@ -342,13 +353,11 @@ if [ "$EXEC_MODE" = "CLIENT" ]; then
   cd "$PATCH_DIR"
 fi
 
-  OTHER_CONTAINERS=$(podman ps --format '{{.Names}}' 2>/dev/null | grep -E '^db-|^oracle-db-' | grep -v "^${CONTAINER_NAME}$" || echo "")
-  if [ -n "$OTHER_CONTAINERS" ]; then
-    echo "ℹ️  Freeing memory for APEX patch: temporarily stopping containers: $OTHER_CONTAINERS..."
-    podman stop $OTHER_CONTAINERS >/dev/null 2>&1 || true
-  fi
 
-  $DB_CLI "$CONN_STR" > "$PATCH_SQL_LOG_FILE" 2>&1 << EOF &
+
+  if [ "$EXEC_MODE" = "CONTAINER" ]; then
+    $DB_CLI > "$PATCH_SQL_LOG_FILE" 2>&1 << EOF &
+ALTER SESSION SET CONTAINER = ${DB_SERVICE};
 ALTER SESSION SET "_oracle_script" = TRUE;
 
 -- Execute patch script
@@ -356,6 +365,16 @@ ALTER SESSION SET "_oracle_script" = TRUE;
 
 EXIT;
 EOF
+  else
+    $DB_CLI "$CONN_STR" > "$PATCH_SQL_LOG_FILE" 2>&1 << EOF &
+ALTER SESSION SET "_oracle_script" = TRUE;
+
+-- Execute patch script
+@$PATCH_SCRIPT_NAME
+
+EXIT;
+EOF
+  fi
 
   SQL_PID=$!
 
@@ -412,19 +431,19 @@ PATCH_TOTAL_TIME=$(format_duration $(($(date +%s) - START_PATCH_TOTAL)))
 
 echo ""
 echo "=================================================================="
-echo "⏱   APEX PATCHI AJALINE KOKKUVÕTE (PATCH TIMING METRICS)"
+echo "⏱   APEX PATCH TIMING SUMMARY (PATCH TIMING METRICS)"
 echo "=================================================================="
-echo "  1. Patchi lahtipakkimine:       $PSTEP1_TIME"
-echo "  2. Failide seadistus/kopeerimine: $PSTEP2_TIME"
-echo "  3. Patchi SQL paigaldus (DB):   $PSTEP3_TIME"
-echo "  4. Piltide uuendamine:          $PSTEP4_TIME"
-echo "  5. ORDS taaskäivitus:           $PSTEP5_TIME"
+echo "  1. Patch unzipping:             $PSTEP1_TIME"
+echo "  2. File setup/copy:             $PSTEP2_TIME"
+echo "  3. Patch SQL install (DB):      $PSTEP3_TIME"
+echo "  4. Image sync:                  $PSTEP4_TIME"
+echo "  5. ORDS restart:                $PSTEP5_TIME"
 echo "  ------------------------------------------------------------"
-echo "  ⌛ PATCHI PAIGALDUSE KESTUS:     $PATCH_TOTAL_TIME"
+echo "  ⌛ TOTAL PATCH DURATION:         $PATCH_TOTAL_TIME"
 echo "=================================================================="
 if [ "$MASTER_SETUP" != "true" ]; then
   echo "------------------------------------------------------------------"
-  echo "📝 Logifail salvestati: $LOG_FILE"
-  echo "✅ Oracle APEX Patch (Bundle Patch) edukalt paigaldatud!"
+  echo "📝 Log file saved: $LOG_FILE"
+  echo "✅ Oracle APEX Patch (Bundle Patch) applied successfully!"
   echo "=================================================================="
 fi

@@ -1,0 +1,81 @@
+{
+  "timestamp": "2026-09-04 21:10:44",
+  "container": "web-ide-dev",
+  "container_running": false,
+  "total_extensions": 8,
+  "updates_available": 0,
+  "extensions": [
+    {
+      "id": "Oracle.sql-developer",
+      "name": "Oracle SQL Developer for VS Code",
+      "publisher": "Oracle",
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
+    },
+    {
+      "id": "google.google-antigravity",
+      "name": "Google Antigravity AI Assistant",
+      "publisher": "Google",
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
+    },
+    {
+      "id": "ms-python.python",
+      "name": "Python Extension for VS Code",
+      "publisher": "Microsoft",
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
+    },
+    {
+      "id": "ms-python.vscode-pylance",
+      "name": "Pylance Language Server",
+      "publisher": "Microsoft",
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
+    },
+    {
+      "id": "ms-python.debugpy",
+      "name": "Python Debugger",
+      "publisher": "Microsoft",
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
+    },
+    {
+      "id": "ms-python.vscode-python-envs",
+      "name": "Python Environments",
+      "publisher": "Microsoft",
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
+    },
+    {
+      "id": "github.vscode-github-actions",
+      "name": "GitHub Actions",
+      "publisher": "GitHub",
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
+    },
+    {
+      "id": "redhat.vscode-yaml",
+      "name": "YAML Language Support",
+      "publisher": "Red Hat",
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
+    }
+  ]
+}

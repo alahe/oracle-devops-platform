@@ -1,0 +1,45 @@
+# Copyright (c) 2026 Oracle DevOps Platform
+# Oracle Analytics Publisher Designer Workstation Profile
+# On-Demand Pixel-Perfect Template Design & Fast-Render Container
+
+version: "1.0"
+profile: "publisher-designer"
+description: "Oracle Analytics Publisher Desktop & MS Word Pixel-Perfect Workstation (noVNC Port 6083)"
+
+container:
+  name: "app-publisher-designer"
+  image: "localhost/oracle-publisher-designer:latest"
+  hostname: "publisher-designer-dev"
+  build_local: true
+  build_context: "./docker/publisher-designer"
+  memory_limit: "1536m"
+  cpu_limit: "2.0"
+  restart_policy: "unless-stopped"
+
+network:
+  mode: "bridge"
+  ports:
+    - host_port: 6083
+      container_port: 6080
+      protocol: "tcp"
+      description: "HTML5 noVNC Web Browser Desktop Interface"
+    - host_port: 5903
+      container_port: 5900
+      protocol: "tcp"
+      description: "Direct VNC Desktop Protocol"
+
+volumes:
+  - host_path: "./templates/publisher"
+    container_path: "/u01/templates"
+    mode: "z"
+    description: "Git-versioned Publisher RTF templates and sample XML data"
+  - host_path: "./install_logs"
+    container_path: "/u01/logs"
+    mode: "z"
+    description: "Audit and rendering log files"
+
+environment:
+  DISPLAY: ":1"
+  VNC_PORT: "5900"
+  NOVNC_PORT: "6080"
+  LANG: "en_US.UTF-8"

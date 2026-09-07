@@ -30,7 +30,7 @@ PUBLISHER_DB_SERVICE=FREEPDB1
 > 
 > Walleti haldamise, paroolide lisamise ja vaatamise kohta vaata juhendit: **[docs/oracle-wallet-architecture-plan.md](oracle-wallet-architecture-plan.md)**.
 
-Skriptid tuvastavad automaatselt, kas sul on lokaalselt olemas **SQLcl (`sql`)** või **SQL*Plus (`sqlplus`)** ja teostavad päringud üle võrgu (kliendi-režiimis). Kui kohalikke CLI tööriistu pole, kasutatakse automaatselt Podmani konteineri fallback režiimi.
+Skriptid kasutavad vaikimisi ja kohustuslikuna **Oracle SQLcl (`sql`)** klienti (Reegel 6 Leping 6) koos Oracle SEPS Walletiga (`./scripts/sqlcl.sh /@ALIAS`), mis tagab paroolivaba ja turvalise ühenduse ilma parooli lekkimiseta protsessitabelis (`ps aux`). Kui kohalikku SQLcl-i pole paigaldatud, käivitatakse automaatselt ephemeral SQLcl konteiner (`container-registry.oracle.com/database/sqlcl:latest`). Vananenud `sqlplus` on platvormi automatiseerimises keelatud.
 
 ---
 
@@ -49,4 +49,15 @@ Käivita komponente ja haldustoiminguid järgmiselt:
 *   **APEX Mootori installeerimine:** `./scripts/internal/install-apex.sh`
 *   **APEX Patchi paigaldamine:** `./scripts/internal/apply-apex-patch.sh patches/<patch_filename>.zip`
 
+---
+
+## 🌐 Multi-Cloud (Azure VM + OCI Autonomous DB) ja Kaugtestimine
+
+Ettevõtte tasemel hajutatud pilvekeskkonna (Blueprint 4 Cloud ADB + Blueprint 10 ORDS Gateway + Blueprint 11 Analytics Publisher) seadistamiseks ja valideerimiseks:
+
+*   **Samm-sammuline paigaldusjuhend:** **[docs/remote-multicloud-setup-guide.md](remote-multicloud-setup-guide.md)** (eesti keeles: **[docs/et/remote-multicloud-setup-guide.md](et/remote-multicloud-setup-guide.md)**)
+*   **Pilveserverisse paigaldamine:** `./scripts/deploy-remote.sh --host <AZURE_IP> --user azureuser --key ~/.ssh/id_rsa --blueprint 10 --wallet ~/Downloads/Wallet_FREEADB.zip`
+*   **Automaatne Multi-Cloud valideerimistest:** `./tests/test-remote-multicloud.sh --azure-ip <AZURE_IP> --oci-ip <OCI_IP> --db-alias DB_ADB_ADMIN`
+
 > 💡 *Üksikasjaliku kirjelduse kõigi skriptide parameetrite ja lisalipude kohta leiad failist **[scripts/README.md](../scripts/README.md)**.*
+

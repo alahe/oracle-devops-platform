@@ -218,6 +218,30 @@ Oracle Free DB in Prod ietver **inteliģentu daudzlīmeņu Golden Snapshot un Sk
 
 ---
 
+---
+
+## 🧭 Oracle APEX DevHub Lietotne un APEXlang CI/CD
+
+Papildus atsevišķajam HTML Dev Hub (`docs/dev-hub.html`) platformā ir iekļauta uzņēmuma līmeņa **Oracle APEX lietotne (Lietotne 101: DevHub)**, kas deklaratīvi izveidota ar [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) direktorijā [`applications/devhub/`](../../applications/devhub/):
+
+- **Nulles Pēdas Dokumentācija Datu Bāzē:** Dokumentācija nekad netiek dublēta vai glabāta datubāzes tabulās kā CLOB lauki. Vietējais REST dokumentācijas tilts (`scripts/internal/dev-hub-bridge.py` portā 8089) straumē lokalizētu Markdown tieši no Git failiem uz APEX, kur tas tiek attēlots ar `APEX_MARKDOWN.TO_HTML`.
+- **Interaktīva Prezentācija un Pārskats (7. Lapa):** Ietver 8 slaidu interaktīvu prezentāciju, kas aptver platformas vīziju, izstrādātāju problēmas, lomu ieguvumus, 11 arhitektūras plānus, Zero-Trust SEPS Wallet drošību, ~15s Golden Snapshot atjaunošanu un atbildes uz bijušā DBA un arhitekta jautājumiem.
+- **Datu Bāzes Dzinējs un Shēma:** Balstīts uz atsevišķu shēmu `DEVHUB` un pakotni `DEVHUB.DEV_HUB_PKG`, veicot ātras servera puses veselības pārbaudes (`UTL_HTTP`) ar mazāk nekā 100 ms aizturi.
+- **Oficiālie SQLcl 26.2 APEXlang Rīki:**
+  ```bash
+  # Validēt APEXlang deklaratīvos failus pret kompilatora noteikumiem:
+  node .agents/skills/apexlang/tools/apexctl.mjs apexlang validate --app-path applications/devhub
+
+  # Validēt un importēt lietotni 101 darba telpā PROXY_WORKSPACE ar SQLcl:
+  ./scripts/sqlcl.sh DEVHUB/<parole>@localhost:1533/FREEPDB1
+  SQL> apex validate -input ./applications/devhub -workspace PROXY_WORKSPACE
+  SQL> apex import -input ./applications/devhub -id 101 -workspace PROXY_WORKSPACE
+  ```
+- **Automatizēta CI/CD Darbplūsma:** Atsevišķa GitHub Actions darbplūsma [`.github/workflows/deploy-devhub-apexlang.yml`](../../.github/workflows/deploy-devhub-apexlang.yml) ar bezsaistes lokālu emulāciju, izmantojot `./scripts/test-local-ci.sh deploy-devhub-apexlang.yml --dry-run`.
+- **Vienību Testēšana:** Palaidiet `./tests/unit/test-apex-devhub.sh`, lai pārbaudītu shēmu, PL/SQL kompilāciju, REST markdown saņemšanu un 6 valodu pārklājumu.
+
+---
+
 ## 📑 Lietotāja Rokasgrāmatas
 
 - 🚀 **[docs/lv/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Modernizācijas un Pārejas Rokasgrāmata** — Biznesa pamatojums, TCO salīdzinājums, 5 posmu automatizēta darba plūsma un [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
@@ -225,6 +249,7 @@ Oracle Free DB in Prod ietver **inteliģentu daudzlīmeņu Golden Snapshot un Sk
 - 📑 **[docs/publisher-setup.md](../../docs/publisher-setup.md):** Analytics Publisher Rokasgrāmata.
 - 💻 **[docs/web-ide-artifactory.md](../../docs/web-ide-artifactory.md):** Web IDE Rokasgrāmata.
 - 🌐 **[docs/dev-hub.html](../../docs/dev-hub.html):** **Developer & DevOps Command Center** (`http://localhost:8088/` un `http://localhost:6082/vnc.html`).
+- 🧪 **[docs/lv/apex-devhub-test-plan.md](apex-devhub-test-plan.md):** **Oracle APEX DevHub Testēšanas Plāns** — Daudzlīmeņu testēšanas stratēģija (utPLSQL vienību testi, REST tilta pārbaudes, hibrīdās Playwright/curl E2E plūsmas un APEX Advisor audits) ar Golden Snapshot izolāciju.
 - 📊 **[config/blueprints/README.md](../../config/blueprints/README.md):** 11 Plānu Katalogs.
 - 📖 **[Oracle APEX 26.1 APEXlang Reference Manual](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/):** Oficiālā specifikācija deklaratīvajai `.apx` sintaksei un kompilatora komandām.
 - 📜 **[Oficiālā APEXlang EBNF Gramatika (`apexlang.ebnf`)](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf):** Mašīnlasāma formālā EBNF specifikācija MI ierobežotai dekodēšanai (GBNF) un statiskajiem drošības skeneriem.

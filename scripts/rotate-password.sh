@@ -84,14 +84,17 @@ rotate_db_user_password() {
 
   # 1. Update Database & APEX User Password
   if command -v podman &>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$target_db" 2>/dev/null)" = "running" ]; then
+    local in_c_sql=$(podman exec "$target_db" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+    local sql_cmd="${in_c_sql:-sql} -s / as sysdba"
+
     if [ "$is_sys" = "true" ]; then
-      podman exec -i "$target_db" sqlplus -s / as sysdba <<EOSQL >/dev/null 2>&1 || true
+      podman exec -i "$target_db" $sql_cmd <<EOSQL >/dev/null 2>&1 || true
 ALTER USER sys IDENTIFIED BY "${new_pwd}" CONTAINER=ALL;
 ALTER USER system IDENTIFIED BY "${new_pwd}" CONTAINER=ALL;
 EXIT;
 EOSQL
     elif [ "$role" = "apex_admin" ] || [ "$role" = "admin" ]; then
-      podman exec -i "$target_db" sqlplus -s / as sysdba <<EOSQL >/dev/null 2>&1 || true
+      podman exec -i "$target_db" $sql_cmd <<EOSQL >/dev/null 2>&1 || true
 ALTER SESSION SET CONTAINER = FREEPDB1;
 DECLARE
   v_schema VARCHAR2(30);
@@ -110,7 +113,7 @@ END;
 EXIT;
 EOSQL
     else
-      podman exec -i "$target_db" sqlplus -s / as sysdba <<EOSQL >/dev/null 2>&1 || true
+      podman exec -i "$target_db" $sql_cmd <<EOSQL >/dev/null 2>&1 || true
 ALTER SESSION SET CONTAINER = FREEPDB1;
 ALTER USER ${db_username} IDENTIFIED BY "${new_pwd}";
 EXIT;
@@ -120,6 +123,27 @@ EOSQL
 
   # 2. Update Podman Secret Store
   store_secret "$secret_name" "$new_pwd"
+  case "$role" in
+    dev|developer)
+      store_secret "user_developer_password" "$new_pwd"
+      ;;
+    viewer)
+      store_secret "user_viewer_password" "$new_pwd"
+      ;;
+    app)
+      store_secret "user_app_password" "$new_pwd"
+      ;;
+    schema|apex_schema)
+      store_secret "apex_schema_password" "$new_pwd"
+      ;;
+    apex_admin|admin)
+      store_secret "apex_admin_password" "$new_pwd"
+      ;;
+    sys|system)
+      store_secret "proxy_db_sys_password" "$new_pwd"
+      store_secret "db_sys_password" "$new_pwd"
+      ;;
+  esac
 
   # 3. Synchronize SEPS Wallet & APEX users
   if [ -x "$SCRIPT_DIR/internal/create-wallet.sh" ]; then
@@ -141,7 +165,9 @@ rotate_ords_listener_password() {
 
   for target_db in $dbs; do
     if command -v podman &>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$target_db" 2>/dev/null)" = "running" ]; then
-      podman exec -i "$target_db" sqlplus -s / as sysdba <<EOSQL >/dev/null 2>&1 || true
+      local in_c_sql=$(podman exec "$target_db" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+      local sql_cmd="${in_c_sql:-sql} -s / as sysdba"
+      podman exec -i "$target_db" $sql_cmd <<EOSQL >/dev/null 2>&1 || true
 ALTER SESSION SET CONTAINER = FREEPDB1;
 ALTER SESSION SET "_oracle_script" = TRUE;
 ALTER USER ORDS_PUBLIC_USER IDENTIFIED BY "${new_pwd}" ACCOUNT UNLOCK;
@@ -169,14 +195,18 @@ EOSQL
     fi
   done
 
-  # 3. Directly patch all ORDS pool XML files in app-ords
+  # 3. Directly patch all ORDS pool XML files on host and in app-ords
+  for pool in $(find "$WORKSPACE_DIR/config/ords" -name 'pool.xml' 2>/dev/null); do
+    sed -i '' "s|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$new_pwd</entry>|g" "$pool" 2>/dev/null || sed -i "s|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$new_pwd</entry>|g" "$pool" 2>/dev/null || true
+  done
+
   if command -v podman &>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "app-ords" 2>/dev/null)" = "running" ]; then
     podman exec app-ords bash -c "
       for pool in \$(find /etc/ords/config/databases/ -name 'pool.xml' 2>/dev/null); do
         sed -i 's|<entry key=\"db.password\">.*</entry>|<entry key=\"db.password\">$new_pwd</entry>|g' \"\$pool\" 2>/dev/null || true
       done
     " 2>/dev/null || true
-    echo "🔄 Taaskäivitan app-ords konteineri uue parooliga..."
+    echo "🔄 Restarting app-ords container with new password..."
     podman restart app-ords >/dev/null 2>&1 || true
   fi
 
@@ -217,10 +247,10 @@ TARGET="${1:-}"
 ROLE="${2:-}"
 
 if [ -z "$TARGET" ]; then
-  echo "Kasutus: $0 <TARGET_DB_OR_SERVICE> [ROLE]"
-  echo "         $0 all"
+  echo "Usage: $0 <TARGET_DB_OR_SERVICE> [ROLE]"
+  echo "       $0 all"
   echo ""
-  echo "Näited:"
+  echo "Examples:"
   echo "  $0 db-proxy dev"
   echo "  $0 db-proxy sys"
   echo "  $0 ords_listener"
@@ -237,7 +267,7 @@ case "$TARGET" in
     ;;
   *)
     if [ -z "$ROLE" ]; then
-      echo "❌ Palun määra roll (nt 'dev', 'sys', 'viewer', 'app'): $0 $TARGET dev"
+      echo "❌ Please specify role (e.g. 'dev', 'sys', 'viewer', 'app'): $0 $TARGET dev"
       exit 1
     fi
     rotate_db_user_password "$TARGET" "$ROLE" "$(gen_strong_password)"

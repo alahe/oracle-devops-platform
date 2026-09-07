@@ -1,0 +1,65 @@
+# ==============================================================================
+# Database Profile: Oracle Autonomous Database Cloud Engine (db-adb)
+# ==============================================================================
+# Purpose: Universal Autonomous Database (ADB-S / Serverless) cloud profile.
+# In ADB, APEX and ORDS are preinstalled in Oracle Cloud Infrastructure (OCI).
+# Local installation into the database is skipped, and mTLS wallet is enforced.
+# ==============================================================================
+
+profile:
+  id: db-adb
+  name: db-adb
+  description: "Oracle Autonomous Database (ADB) Cloud engine with preinstalled APEX, built-in ORDS, and mTLS cloud wallet security."
+  functionality: standard
+  db_type: adb
+  image_vendor: oracle
+
+database:
+  container_image: container-registry.oracle.com/database/free:latest # Fallback simulation image if running locally
+  container_name: db-adb
+  workload_type: ATP                   # Autonomous Transaction Processing
+  admin_user: ADMIN                    # ADB uses ADMIN instead of SYS
+  admin_role: DBA
+  default_service: FREEPDB1            # Target PDB service (or cloud service name e.g. alise_high)
+  db_port: 1536                        # Host listener port
+  wallet_required: true                # Cloud mTLS wallet (cwallet.sso) mandatory
+  configure_tde: true                  # Always encrypted at rest
+  container_port: 1521
+  db_memory_limit: "3072M"
+
+# Database-side features: preinstalled in ADB Cloud, no local install needed
+database_features:
+  apex:
+    enabled: false                     # Local APEX engine installation skipped (preinstalled in cloud)
+    preinstalled: true
+    install_required: false
+    workspace: ADB_WORKSPACE
+  ords:
+    enabled: true                      # Enable local ORDS Gateway alongside ADB
+    install_in_db: true                # Install ORDS schema into local DB container
+    pool_name: adb
+
+# Declarative users and roles for ADB instances
+users:
+  - username: DBA_ADMIN
+    role: DBA
+    alias_suffix: DBA_ADMIN             # Resulting wallet alias: DB_${PREFIX}_DBA_ADMIN
+    color: "#2980B9"
+
+  - username: APP_SCHEMA
+    role: NORMAL
+    roles: [DB_DEVELOPER_ROLE]
+    tablespace: DATA
+    quota: unlimited
+    ords_enabled: true
+    alias_suffix: APP                   # Resulting wallet alias: DB_${PREFIX}_APP
+    color: "#2980B9"
+
+  - username: USER_DEVELOPER
+    role: NORMAL
+    roles: [DB_DEVELOPER_ROLE]
+    tablespace: DATA
+    quota: unlimited
+    ords_enabled: true
+    alias_suffix: DEV                   # Resulting wallet alias: DB_${PREFIX}_DEV
+    color: "#27AE60"

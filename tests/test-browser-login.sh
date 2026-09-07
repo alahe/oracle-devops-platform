@@ -47,11 +47,40 @@ BASE_URL="https://localhost:${BASE_PORT}"
 COOKIE_JAR=$(mktemp)
 trap 'rm -f "$COOKIE_JAR"' EXIT
 
-ACTIVE_INSTANCES=$(get_active_db_instances 2>/dev/null || echo "db-alise|db-alise-oracle|DB_ALISE")
+ACTIVE_INSTANCES=()
+for inst in $(get_active_db_instances 2>/dev/null); do
+  ACTIVE_INSTANCES+=("$inst")
+done
+if command -v podman >/dev/null 2>&1; then
+  for c in $(podman ps --format '{{.Names}}' 2>/dev/null | grep -E '^(db-.*|oracle-db-.*)$'); do
+    already=false
+    for inst in "${ACTIVE_INSTANCES[@]}"; do
+      if [ "$(echo "$inst" | cut -d'|' -f1)" = "$c" ]; then
+        already=true
+        break
+      fi
+    done
+    if [ "$already" = "false" ]; then
+      ACTIVE_INSTANCES+=("${c}|app-free|${c#db-}")
+    fi
+  done
+fi
 TOTAL_PASSED=0
 TOTAL_FAILED=0
 
-for inst in $ACTIVE_INSTANCES; do
+exec_c_sql() {
+  local target="$1"
+  podman exec -i "$target" bash -c '
+    in_sql=$(ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1)
+    if [ -n "$in_sql" ]; then
+      "$in_sql" -s / as sysdba
+    elif command -v sqlplus >/dev/null 2>&1; then
+      sqlplus -s / as sysdba
+    fi
+  '
+}
+
+for inst in "${ACTIVE_INSTANCES[@]}"; do
   c_name=$(echo "$inst" | cut -d'|' -f1)
   p_name=$(echo "$inst" | cut -d'|' -f2)
   [ -z "$c_name" ] && continue
@@ -67,15 +96,33 @@ for inst in $ACTIVE_INSTANCES; do
   service=""
   ords_dev_alias=""
   if [ -f "$pfile" ]; then
-    ws_name=$(awk '/apex:/{flag=1;next}/ords:|publisher:|forms:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*workspace:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
-    service=$(awk '/database:/{flag=1;next}/components:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*default_service:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
-    ords_dev_alias=$(awk '/USER_DEVELOPER/{flag=1;next}/roles:|wallet_alias:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*ords_alias:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
+    pool_override=$(awk '/ords:/{flag=1;next}/forms:|apex:|publisher:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*pool_name:' | head -n 1 | sed -E 's/#.*//' | sed -E 's/.*:[[:space:]]*"?([^" #]+)"?.*/\1/' | tr -d '\r\n')
+    [ -n "$pool_override" ] && pool_name="$pool_override"
+    ws_name=$(awk '/apex:/{flag=1;next}/ords:|publisher:|forms:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*workspace:' | head -n 1 | sed -E 's/#.*//' | sed -E 's/.*:[[:space:]]*"?([^" #]+)"?.*/\1/' | tr -d '\r\n')
+    service=$(awk '/database:/{flag=1;next}/components:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*default_service:' | head -n 1 | sed -E 's/#.*//' | sed -E 's/.*:[[:space:]]*"?([^" #]+)"?.*/\1/' | tr -d '\r\n')
+    ords_dev_alias=$(awk '/USER_DEVELOPER/{flag=1;next}/roles:|wallet_alias:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*ords_alias:' | head -n 1 | sed -E 's/#.*//' | sed -E 's/.*:[[:space:]]*"?([^" #]+)"?.*/\1/' | tr -d '\r\n')
   fi
   [ -z "$ws_name" ] && ws_name="${c_upper}_WORKSPACE"
   [ -z "$service" ] && service="FREEPDB1"
   [ -z "$ords_dev_alias" ] && ords_dev_alias="user_developer"
 
-  echo -e "\n📦 Kontrollin andmebaasi [${c_name}] teenuseid (Pool: /ords/${pool_name}/):"
+  # Dynamically discover existing workspace name from database if possible
+  if command -v podman >/dev/null 2>&1 && podman container exists "$c_name" 2>/dev/null; then
+    actual_ws=$(podman exec -i "$c_name" bash -c '
+      in_sql=$(ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1)
+      cmd="$in_sql"
+      [ -z "$cmd" ] && cmd="sqlplus"
+      "$cmd" -s / as sysdba << "EOF"
+ALTER SESSION SET CONTAINER = '"${service}"';
+SET HEADING OFF FEEDBACK OFF;
+SELECT workspace FROM apex_workspaces WHERE workspace IN ('"'"'"$ws_name"'"'"', '"'"'"${c_upper}_WORKSPACE"'"'"', '"'"'"${c_upper}_WS"'"'"', '"'"'"${ws_name%_WORKSPACE}_WS"'"'"') AND ROWNUM = 1;
+EXIT;
+EOF
+    ' 2>/dev/null | awk 'NF && !/Session altered/ && !/connected/ {print $1}' | tail -n 1 || echo "")
+    [ -n "$actual_ws" ] && ws_name="$actual_ws"
+  fi
+
+  echo -e "\n📦 Checking database [${c_name}] services (Pool: /ords/${pool_name}/):"
 
   # Retrieve credentials
   APEX_ADMIN_PWD=$(get_credential_pwd "DB_${c_upper}_APEX_ADMIN")
@@ -92,19 +139,19 @@ for inst in $ACTIVE_INSTANCES; do
   fi
 
   if [ "$IS_ORDS_ACTIVE" = "false" ]; then
-    echo -e "  ℹ️  ORDS veebiliidesed on vahele jäetud (SKIP_ORDS=true või app-ords ei tööta)."
+    echo -e "  ℹ️  ORDS web interfaces skipped (SKIP_ORDS=true or app-ords not running)."
     # Verify DB connectivity via SQL
-    DB_PING=$(podman exec -i "$c_name" sqlplus -s / as sysdba <<EOF 2>/dev/null || echo "ERROR"
+    DB_PING=$(exec_c_sql "$c_name" <<EOF 2>/dev/null || echo "ERROR"
 ALTER SESSION SET CONTAINER = ${service};
 SELECT 'DB_PONG' FROM dual;
 EXIT;
 EOF
 )
     if echo "$DB_PING" | grep -q "DB_PONG"; then
-      echo -e "  ${GREEN}✅ Andmebaasi [${c_name}] SQL ja SEPS Wallet ühenduvus on 100% töökorras!${NC}"
+      echo -e "  ${GREEN}✅ Database [${c_name}] SQL and SEPS Wallet connectivity is 100% operational!${NC}"
       TOTAL_PASSED=$((TOTAL_PASSED + 1))
     else
-      echo -e "  ${RED}❌ Andmebaasi [${c_name}] SQL ühendus ebaõnnestus!${NC}"
+      echo -e "  ${RED}❌ Database [${c_name}] SQL connection failed!${NC}"
       TOTAL_FAILED=$((TOTAL_FAILED + 1))
     fi
     continue
@@ -149,7 +196,7 @@ END;
 /
 EXIT;
 "
-  APEX_WS_CHECK=$(printf "%s\n" "$APEX_CHECK_SQL" | podman exec -i "$c_name" sqlplus -s / as sysdba 2>/dev/null || echo "NO_APEX_WS")
+  APEX_WS_CHECK=$(printf "%s\n" "$APEX_CHECK_SQL" | exec_c_sql "$c_name" 2>/dev/null || echo "NO_APEX_WS")
 
   HAS_APEX_WS=false
   if echo "$APEX_WS_CHECK" | grep -q "APEX_WS_FOUND"; then
@@ -161,7 +208,7 @@ EXIT;
   # --------------------------------------------------------------------------
   ADMIN_URL="${BASE_URL}/ords/${pool_name}/apex_admin"
   if [ "$HAS_APEX_WS" = "true" ]; then
-    echo -e "\n  ${YELLOW}[1/3] APEX Instance Admin sisselogimise test (INTERNAL -> ADMIN)...${NC}"
+    echo -e "\n  ${YELLOW}[1/3] Testing APEX Instance Admin login (INTERNAL -> ADMIN)...${NC}"
     
     # Step A1: Verify HTTP endpoint availability
     ADMIN_HTTP=$(curl -k -s -o /dev/null -w "%{http_code}" "${ADMIN_URL}" 2>/dev/null || echo "000")
@@ -175,9 +222,9 @@ EXIT;
     fi
 
     if [ "$ADMIN_HTTP" = "200" ] || [ "$ADMIN_HTTP" = "301" ] || [ "$ADMIN_HTTP" = "302" ]; then
-      echo -e "     ├─ 🌐 Veebiliides (${ADMIN_URL}): ${GREEN}Kättesaadav (HTTP $ADMIN_HTTP)${NC}"
+      echo -e "     ├─ 🌐 Web UI (${ADMIN_URL}): ${GREEN}Reachable (HTTP $ADMIN_HTTP)${NC}"
     else
-      echo -e "     ├─ 🌐 Veebiliides (${ADMIN_URL}): ${RED}Kättesaamatu (HTTP $ADMIN_HTTP)${NC}"
+      echo -e "     ├─ 🌐 Web UI (${ADMIN_URL}): ${RED}Unreachable (HTTP $ADMIN_HTTP)${NC}"
     fi
 
     # Step A2: Authenticate in APEX Engine
@@ -204,16 +251,16 @@ END;
 /
 EXIT;
 "
-    ADMIN_AUTH_CHECK=$(printf "%s\n" "$ADMIN_SQL" | podman exec -i "$c_name" sqlplus -s / as sysdba 2>/dev/null || echo "ERROR")
+    ADMIN_AUTH_CHECK=$(printf "%s\n" "$ADMIN_SQL" | exec_c_sql "$c_name" 2>/dev/null || echo "ERROR")
     if echo "$ADMIN_AUTH_CHECK" | grep -q "AUTH_SUCCESS"; then
-      echo -e "  ${GREEN}✅ APEX Admin (INTERNAL -> ADMIN) autentimine ÕNNESTUS: Parool ja konto on aktiivsed!${NC}"
+      echo -e "  ${GREEN}✅ APEX Admin (INTERNAL -> ADMIN) authentication SUCCESSFUL: Password and account are active!${NC}"
       TOTAL_PASSED=$((TOTAL_PASSED + 1))
     else
-      echo -e "  ${RED}❌ APEX Admin autentimine EBAÕNNESTUS: Parool või konto ei kehti andmebaasis ($ADMIN_AUTH_CHECK)!${NC}"
+      echo -e "  ${RED}❌ APEX Admin authentication FAILED: Password or account invalid in database ($ADMIN_AUTH_CHECK)!${NC}"
       TOTAL_FAILED=$((TOTAL_FAILED + 1))
     fi
   else
-    echo -e "\n  ℹ️  APEX Instance Admin test vahele jäetud: Andmebaas [${c_name}] on rakendusbaas (APEX asub Proxy andmebaasis)."
+    echo -e "\n  ℹ️  APEX Instance Admin test skipped: Database [${c_name}] is application DB (APEX resides in Proxy DB)."
   fi
 
   # --------------------------------------------------------------------------
@@ -221,14 +268,14 @@ EXIT;
   # --------------------------------------------------------------------------
   BUILDER_URL="${BASE_URL}/ords/${pool_name}/r/apex/workspace-sign-in/oracle-apex-sign-in"
   if [ "$HAS_APEX_WS" = "true" ]; then
-    echo -e "\n  ${YELLOW}[2/3] APEX Workspace sisselogimise test (${ws_name} -> DEV)...${NC}"
+    echo -e "\n  ${YELLOW}[2/3] Testing APEX Workspace login (${ws_name} -> DEV)...${NC}"
 
     # Step B1: Verify HTTP endpoint availability
     BUILDER_HTTP=$(curl -k -s -o /dev/null -w "%{http_code}" "${BUILDER_URL}" 2>/dev/null || echo "000")
     if [ "$BUILDER_HTTP" = "200" ] || [ "$BUILDER_HTTP" = "301" ] || [ "$BUILDER_HTTP" = "302" ]; then
-      echo -e "     ├─ 🌐 Veebiliides (${BUILDER_URL}): ${GREEN}Kättesaadav (HTTP $BUILDER_HTTP)${NC}"
+      echo -e "     ├─ 🌐 Web UI (${BUILDER_URL}): ${GREEN}Reachable (HTTP $BUILDER_HTTP)${NC}"
     else
-      echo -e "     ├─ 🌐 Veebiliides (${BUILDER_URL}): ${RED}Kättesaamatu (HTTP $BUILDER_HTTP)${NC}"
+      echo -e "     ├─ 🌐 Web UI (${BUILDER_URL}): ${RED}Unreachable (HTTP $BUILDER_HTTP)${NC}"
     fi
 
     # Step B2: Authenticate in APEX Engine
@@ -244,6 +291,12 @@ BEGIN
   SELECT username INTO v_schema FROM all_users WHERE username LIKE 'APEX_%' AND REGEXP_LIKE(username, '^APEX_[0-9]+$') AND ROWNUM = 1;
   EXECUTE IMMEDIATE 'ALTER SESSION SET CURRENT_SCHEMA = ' || v_schema;
   v_ws_id := APEX_UTIL.find_security_group_id('${ws_name}');
+  IF v_ws_id IS NULL OR v_ws_id = 0 THEN
+    BEGIN
+      SELECT workspace_id INTO v_ws_id FROM apex_workspaces WHERE workspace NOT IN ('INTERNAL', 'COM.ORACLE.APEX.RESTRICTED') AND ROWNUM = 1;
+    EXCEPTION WHEN OTHERS THEN v_ws_id := NULL;
+    END;
+  END IF;
   IF v_ws_id IS NOT NULL AND v_ws_id != 0 THEN
     APEX_UTIL.set_security_group_id(v_ws_id);
     v_res := APEX_UTIL.is_login_password_valid('DEV', '${DEV_PWD}');
@@ -267,7 +320,7 @@ END;
 /
 EXIT;
 "
-    DEV_AUTH_CHECK=$(printf "%s\n" "$DEV_SQL" | podman exec -i "$c_name" sqlplus -s / as sysdba 2>/dev/null || echo "ERROR")
+    DEV_AUTH_CHECK=$(printf "%s\n" "$DEV_SQL" | exec_c_sql "$c_name" 2>/dev/null || echo "ERROR")
     if echo "$DEV_AUTH_CHECK" | grep -q "AUTH_SUCCESS"; then
       echo -e "  ${GREEN}✅ APEX Workspace (${ws_name} -> DEV) authentication SUCCESSFUL: Password, account and privileges active!${NC}"
       TOTAL_PASSED=$((TOTAL_PASSED + 1))
@@ -300,19 +353,19 @@ EXIT;
   fi
 
   if [ "$ords_comp_enabled" = "false" ]; then
-    echo -e "\n  ℹ️  ORDS Database Actions test vahele jäetud: Andmebaasil [${c_name}] on ORDS välja lülitatud (ords.enabled: false)."
+    echo -e "\n  ℹ️  ORDS Database Actions test skipped: Database [${c_name}] has ORDS disabled (ords.enabled: false)."
     continue
   fi
 
   if [ "$has_dev_schema" = "false" ]; then
-    echo -e "\n  ℹ️  ORDS Database Actions test vahele jäetud: Andmebaas [${c_name}] on sisemine taristu/RCU metaandmete baas."
+    echo -e "\n  ℹ️  ORDS Database Actions test skipped: Database [${c_name}] is internal infrastructure/RCU metadata DB."
     continue
   fi
 
   SDW_URL="${BASE_URL}/ords/${pool_name}/sql-developer"
   SDW_SIGNIN_URL="${BASE_URL}/ords/${pool_name}/${ords_dev_alias}/sign-in"
   SDW_LANDING_URL="${BASE_URL}/ords/${pool_name}/_/landing"
-  echo -e "\n  ${YELLOW}[3/3] ORDS Database Actions sisselogimise test (${ords_dev_alias})...${NC}"
+  echo -e "\n  ${YELLOW}[3/3] Testing ORDS Database Actions login (${ords_dev_alias})...${NC}"
 
   # Step C1: Verify Direct Schema Login Endpoint or Landing
   SDW_HTTP=$(curl -k -s -o /dev/null -w "%{http_code}" "${SDW_SIGNIN_URL}" 2>/dev/null || echo "000")
@@ -321,9 +374,9 @@ EXIT;
   fi
 
   if [ "$SDW_HTTP" = "200" ] || [ "$SDW_HTTP" = "301" ] || [ "$SDW_HTTP" = "302" ]; then
-    echo -e "     ├─ 🌐 Veebiliides (${SDW_SIGNIN_URL}): ${GREEN}Kättesaadav (HTTP $SDW_HTTP)${NC}"
+    echo -e "     ├─ 🌐 Web UI (${SDW_SIGNIN_URL}): ${GREEN}Reachable (HTTP $SDW_HTTP)${NC}"
   else
-    echo -e "     ├─ 🌐 Veebiliides (${SDW_SIGNIN_URL}): ${RED}Kättesaamatu (HTTP $SDW_HTTP)${NC}"
+    echo -e "     ├─ 🌐 Web UI (${SDW_SIGNIN_URL}): ${RED}Unreachable (HTTP $SDW_HTTP)${NC}"
   fi
 
   # Step C2: Authenticate in Database and verify user status
@@ -358,12 +411,12 @@ END;
 /
 EXIT;
 "
-  SDW_AUTH_CHECK=$(printf "%s\n" "$SDW_SQL" | podman exec -i "$c_name" sqlplus -s / as sysdba 2>/dev/null || echo "ERROR")
+  SDW_AUTH_CHECK=$(printf "%s\n" "$SDW_SQL" | exec_c_sql "$c_name" 2>/dev/null || echo "ERROR")
   if echo "$SDW_AUTH_CHECK" | grep -q "ORDS_SCHEMA_ENABLED" && ([ "$SDW_HTTP" = "200" ] || [ "$SDW_HTTP" = "301" ] || [ "$SDW_HTTP" = "302" ]); then
-    echo -e "  ${GREEN}✅ ORDS Database Actions (${ords_dev_alias}) autentimine ÕNNESTUS: REST teenused ja SQL Developer Web aktiivsed!${NC}"
+    echo -e "  ${GREEN}✅ ORDS Database Actions (${ords_dev_alias}) authentication SUCCESSFUL: REST services and SQL Developer Web active!${NC}"
     TOTAL_PASSED=$((TOTAL_PASSED + 1))
   else
-    echo -e "  ${RED}❌ ORDS Database Actions autentimine EBAÕNNESTUS (HTTP $SDW_HTTP / Status: $SDW_AUTH_CHECK)!${NC}"
+    echo -e "  ${RED}❌ ORDS Database Actions authentication FAILED (HTTP $SDW_HTTP / Status: $SDW_AUTH_CHECK)!${NC}"
     TOTAL_FAILED=$((TOTAL_FAILED + 1))
   fi
 done
@@ -372,26 +425,26 @@ done
 # TEST D: Analytics Publisher Web UI (if service is active)
 # ----------------------------------------------------------------------------
 if podman container exists app-publisher 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' app-publisher 2>/dev/null)" = "running" ]; then
-  echo -e "\n📦 Kontrollin Analytics Publisher teenuseid (Port: 9502):"
-  echo -e "  ${YELLOW}[1/1] Analytics Publisher Web UI test (/xmlpserver)...${NC}"
+  echo -e "\n📦 Checking Analytics Publisher services (Port: 9502):"
+  echo -e "  ${YELLOW}[1/1] Testing Analytics Publisher Web UI (/xmlpserver)...${NC}"
   PUB_HTTP=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:9502/xmlpserver" 2>/dev/null || echo "000")
   if [ "$PUB_HTTP" = "200" ] || [ "$PUB_HTTP" = "302" ]; then
-    echo -e "     ├─ 🌐 Veebiliides (http://localhost:9502/xmlpserver): ${GREEN}Kättesaadav (HTTP $PUB_HTTP)${NC}"
-    echo -e "  ${GREEN}✅ Analytics Publisher Web UI ja portaal on 100% aktiivsed!${NC}"
+    echo -e "     ├─ 🌐 Web UI (http://localhost:9502/xmlpserver): ${GREEN}Reachable (HTTP $PUB_HTTP)${NC}"
+    echo -e "  ${GREEN}✅ Analytics Publisher Web UI and portal are 100% active!${NC}"
     TOTAL_PASSED=$((TOTAL_PASSED + 1))
   else
-    echo -e "     ├─ 🌐 Veebiliides (http://localhost:9502/xmlpserver): ${RED}Kättesaamatu (HTTP $PUB_HTTP)${NC}"
+    echo -e "     ├─ 🌐 Web UI (http://localhost:9502/xmlpserver): ${RED}Unreachable (HTTP $PUB_HTTP)${NC}"
     TOTAL_FAILED=$((TOTAL_FAILED + 1))
   fi
 fi
 
 echo -e "\n${CYAN}==================================================================${NC}"
 if [ "$TOTAL_FAILED" -eq 0 ]; then
-  echo -e "${GREEN}🎉 KÕIK E2E SISSELOGIMISE TESTID (${TOTAL_PASSED}/${TOTAL_PASSED}) LÄBITI EDUKALT!${NC}"
+  echo -e "${GREEN}🎉 ALL E2E LOGIN TESTS (${TOTAL_PASSED}/${TOTAL_PASSED}) PASSED SUCCESSFULLY!${NC}"
   echo -e "${CYAN}==================================================================${NC}"
   exit 0
 else
-  echo -e "${RED}⚠️  E2E SISSELOGIMISE TESTIDEL OLI TÕRKEID: ${TOTAL_PASSED} õnnestus, ${TOTAL_FAILED} ebaõnnestus.${NC}"
+  echo -e "${RED}⚠️  E2E LOGIN TEST FAILURES OCCURRED: ${TOTAL_PASSED} passed, ${TOTAL_FAILED} failed.${NC}"
   echo -e "${CYAN}==================================================================${NC}"
   exit 1
 fi

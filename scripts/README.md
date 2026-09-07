@@ -380,17 +380,26 @@ Kõik andmebaasi mahutite varundamise ja taastamise käsud asuvad kaustas `scrip
 ### 5.1. Hetktõmmise loomine (`create-golden-snapshots.sh`)
 Peatab konteinerid ja loob andmebaasi mahutist tihendatud `.tar.gz` arhiivi kausta `golden-snapshots/`:
 ```bash
+# 1. Standardne baas-tõmmis (uuendab ka bp_0_latest.tar.gz viidet):
 ./scripts/snapshots/create-golden-snapshots.sh
+
+# 2. Eraldi nimega custom-tõmmis (EI kirjuta baas-tõmmist üle!):
+./scripts/snapshots/create-golden-snapshots.sh --name "crm-rakendus"
+./scripts/snapshots/create-golden-snapshots.sh -n "suur-app" -d "Peale 15m paigaldust"
 ```
 
 ### 5.2. Hetktõmmisest taastamine (`restore-golden-snapshots.sh`)
-Taastab andmebaasi seisu alla 1 minutiga viimasesse tuntud-töötavasse olekusse:
+Taastab andmebaasi seisu viimasesse tuntud-töötavasse olekusse:
 ```bash
-# Taasta viimane hetktõmmis (latest):
-./scripts/snapshots/restore-golden-snapshots.sh
+# 1. Taasta vaikimisi viimane puhas baastõmmis (latest):
+./scripts/snapshots/restore-golden-snapshots.sh --force
 
-# Taasta konkreetne arhiiv:
-./scripts/snapshots/restore-golden-snapshots.sh apex_proxy_oradata_20260827_120000.tar.gz
+# 2. Taasta nime järgi loodud custom-tõmmis:
+./scripts/snapshots/restore-golden-snapshots.sh --name "crm-rakendus"
+./scripts/snapshots/restore-golden-snapshots.sh crm-rakendus
+
+# 3. Vali interaktiivsest menüüst:
+./scripts/snapshots/restore-golden-snapshots.sh
 ```
 
 ### 5.3. Vanade hetktõmmiste puhastamine (`clean-golden-snapshots.sh`)
@@ -426,21 +435,91 @@ Kõik Oracle Analytics Publisheri (Pixel Perfect) operatsioonid:
 
 ---
 
-## 8. Patchide Käsitsi Rakendamine (`scripts/patches/`)
+## 8. Pilve Kaugpaigaldus ja Multi-Cloud Testimine (`deploy-remote.sh` & `tests/test-remote-multicloud.sh`)
+
+Skript `./scripts/deploy-remote.sh` võimaldab lokaalsest masinast ühe käsuga paigaldada ja käivitada valitud arhitektuuri blueprinti (nt Blueprint 10 ORDS Gateway või Blueprint 11 Analytics Publisher) kaugserverisse (Azure VM või OCI Compute instance):
+
+**Süntaks:**
+```bash
+./scripts/deploy-remote.sh --host <IP> --user <USER> --key <SSH_KEY> [--blueprint <ID>] [--wallet <PATH>] [--target-dir <DIR>] [--dry-run]
+```
+
+**Parameetrid:**
+- `--host` / `-h`: Kaugserveri avalik IP või domeeninimi (kohustuslik).
+- `--user` / `-u`: SSH kasutajanimi (nt `azureuser` või `opc`, vaikimisi `azureuser`).
+- `--key` / `-k`: SSH privaatvõtme asukoht (vaikimisi `~/.ssh/id_rsa`).
+- `--blueprint` / `-b`: Paigaldatava blueprinti number (nt `10` ORDS Gateway või `11` Publisher, vaikimisi `10`).
+- `--wallet` / `-w`: Valikuline OCI Cloud Wallet arhiiv (`Wallet_<dbname>.zip`), mis laetakse ja pakitakse lahti kaugserveri kausta `config/tns_admin/`.
+- `--target-dir` / `-t`: Sihtkaust kaugserveris (vaikimisi `~/oracle-devops-platform`).
+- `--dry-run`: Kuvab teostatavad SSH ja rsync käsud ilma serveriga ühendumata.
+
+**Näidiskäsk (Multi-Cloud: Azure VM + OCI Cloud Wallet):**
+```bash
+./scripts/deploy-remote.sh \
+  --host 20.123.45.67 \
+  --user azureuser \
+  --key ~/.ssh/id_rsa \
+  --blueprint 10 \
+  --wallet ~/Downloads/Wallet_FREEADB.zip
+```
+
+### Automaatne Multi-Cloud valideerimistest (`tests/test-remote-multicloud.sh`)
+
+Täielik 5-astmeline automatiseeritud testipakett, mis valideerib võrgu latentsuse, mTLS SEPS Walleti, ORDS Web ja APEX ligipääsu, Analytics Publisheri ning OCI tulemüüri (ACL):
+
+```bash
+# Käivita testid Azure VM ja OCI ADB vastu:
+./tests/test-remote-multicloud.sh \
+  --azure-ip 20.123.45.67 \
+  --oci-ip 130.61.12.34 \
+  --db-alias DB_ADB_ADMIN
+
+# Testi dry-run režiimis:
+./tests/test-remote-multicloud.sh --dry-run
+```
+
+Tulemused salvestatakse automaatselt failidesse:
+- `metrics/remote_multicloud_benchmarks.json`
+- `tests/reports/remote_multicloud_test_report.md`
+
+### Dev-Hub Brauseri Blueprintide E2E Testimine (`tests/test-devhub-browser-blueprints.sh`)
+
+Testib kõigi 12 arhitektuurse blueprinti (#0 kuni #11) käivitamist ja haldamist läbi Dev-Hub veebiliidese, kontrollib kõigi veebiteenuste URL-e, testib parooli mälupõhist kleepimist vormidesse ning rakendab automaatset RAM Watchdogi koos vanemate konteinerite peatamise ja Tuumbaasi (Blueprint #0) kaitsega:
+
+```bash
+# Testi kõiki 12 blueprinti järjest:
+./tests/test-devhub-browser-blueprints.sh --all
+
+# Testi kindlat blueprinti:
+./tests/test-devhub-browser-blueprints.sh -b 0
+./tests/test-devhub-browser-blueprints.sh -b 9
+
+# Dry-run režiimis simulatsioon:
+./tests/test-devhub-browser-blueprints.sh --dry-run
+```
+
+Tulemused salvestatakse automaatselt:
+- `metrics/devhub_browser_blueprints_benchmarks.json`
+- `tests/reports/devhub_browser_blueprints_test_report.md`
+- `install_logs/devhub_browser_blueprints_*.log`
+
+---
+
+## 9. Patchide Käsitsi Rakendamine (`scripts/patches/`)
 
 *   🩹 **APEX Patch Set Exception (PSE) paigaldus:** `./scripts/patches/apply-apex-patch.sh`
 *   🩹 **Analytics Publisher OPatch paigaldus:** `./scripts/patches/apply-publisher-patch.sh`
 
 ---
 
-## 9. Sisemised Abiskriptid (`scripts/internal/`)
+## 10. Sisemised Abiskriptid (`scripts/internal/`)
 
 Kõik sisemised paigaldus-, profiili-, SQL- ja abiskriptid asuvad alamkataloogis `scripts/internal/`:
 *   📁 **[`scripts/internal/README.md`](internal/README.md)** (Profiilimootor, SEPS Walletid, sisemised SQL failid ja paigaldusmootorid).
 
 ---
 
-## 10. Veaotsing: Millal teostada Podman Machine taaskäivitus? (`podman machine stop && podman machine start`)
+## 11. Veaotsing: Millal teostada Podman Machine taaskäivitus? (`podman machine stop && podman machine start`)
 
 Kui arenduskeskkonnas või terminalis tekivad järgmised sümptomid:
 1. Käsk `./scripts/setup-all.sh` annab vea: `❌ Viga: Konteiner db-dev-full ei saavutanud 'healthy' olekut 450 sekundi jooksul!`.

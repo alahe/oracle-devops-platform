@@ -1,0 +1,20 @@
+profile:
+  id: app-ords-remote-custom
+  name: app-ords-remote-custom
+  description: "Remote custom server ORDS installation executed over SSH on a dedicated middleware host."
+  type: application
+  component: ords
+
+ords:
+  enabled: true
+  version: "26.2.2"
+  container_name: app-ords
+  service_name: app-ords
+  download_url: "https://download.oracle.com/otn_software/java/ords/ords-latest.zip"
+  http_port: 8088
+  https_port: 8448
+  standalone_mode: true
+  install_type: remote-custom
+  remote_host: "ords.internal.local"
+  remote_ssh_user: "oracle"
+  remote_path: "/opt/oracle/ords"

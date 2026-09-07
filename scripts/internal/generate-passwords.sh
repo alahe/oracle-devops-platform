@@ -17,7 +17,7 @@ for arg in "$@"; do
   fi
 done
 
-# Värvide seadistamine (ainult siis kui terminal seda toetab)
+# Setup colors (only if supported by terminal)
 if [ -t 0 ] || { [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; }; then
   GREEN='\033[1;32m'
   YELLOW='\033[0;33m'
@@ -28,8 +28,8 @@ else
   NC=''
 fi
 
-# Parooli genereerimise abifunktsioon
-# Tagab 100% vastavuse Oracle ADB paroolipoliitikale: 12-30 tähemärki, min 1 suurtäht, min 1 väiketäht, min 1 number (puhtalt alfanumeeriline)
+# Password generation helper function
+# Ensures 100% compliance with Oracle ADB password policy: 12-30 characters, min 1 uppercase, min 1 lowercase, min 1 digit (strictly alphanumeric)
 gen_random_password() {
   local uppers=$(LC_ALL=C tr -dc 'A-Z' < /dev/urandom | head -c 4 2>/dev/null || echo "KWMX")
   local lowers=$(LC_ALL=C tr -dc 'a-z' < /dev/urandom | head -c 8 2>/dev/null || echo "abcdefgh")
@@ -39,37 +39,30 @@ gen_random_password() {
 }
 
 generate_all_passwords() {
-  # Kui .env on olemas ja force pole määratud, küsime üle ainult interaktiivses terminalis
+  # If .env exists and force is not set, prompt only in interactive terminal
   if [ -f "$ENV_PATH" ] && [ "$FORCE" = "false" ] && [ -t 0 ]; then
-    echo "⚠️  Fail .env on juba olemas."
-    read -t 15 -p "❓ Kas soovid kõik paroolid uute juhuslike väärtustega asendada? (y/N): " CONFIRM || CONFIRM="n"
+    echo "⚠️  File .env already exists."
+    read -t 15 -p "❓ Do you want to replace all passwords with new random values? (y/N): " CONFIRM || CONFIRM="n"
     if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
-      echo "ℹ️  Olemasolevaid paroole ei kirjutata üle. Täiendan ainult puuduvaid saladusi..."
+      echo "ℹ️  Existing passwords will not be overwritten. Adding only missing secrets..."
     fi
   fi
 
-  # Kui faili pole, kopeerime näidisest
-  if [ ! -f "$ENV_PATH" ]; then
-    echo "   ℹ️  Loome uue .env faili näidise (.env.example) põhjal..."
-    cp "$WORKSPACE_DIR/.env.example" "$ENV_PATH"
-  fi
-
-  # Load environment variables to resolve ADDITIONAL_DATABASES
-  if [ -f "$ENV_PATH" ]; then
-    set -a
-    source "$ENV_PATH"
-    set +a
-  fi
-
-  # Load profile engine and active database instances
+  # Load profile engine and active blueprint
   if [ -f "$WORKSPACE_DIR/scripts/internal/load-profile.sh" ]; then
     source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
+    resolve_active_blueprint
+  fi
+
+  local EXISTING_SECRETS=""
+  if [ "${FORCE:-false}" != "true" ] && command -v podman >/dev/null 2>&1; then
+    EXISTING_SECRETS=$(podman secret ls --format "{{.Name}}" 2>/dev/null || true)
   fi
 
   create_podman_secret() {
     local name="$1"
     local val="$2"
-    if [ "$FORCE" = "true" ] || ! podman secret exists "$name" 2>/dev/null; then
+    if [ "$FORCE" = "true" ] || ! echo "$EXISTING_SECRETS" | grep -qx "$name"; then
       podman secret rm "$name" >/dev/null 2>&1 || true
       echo -n "$val" | podman secret create "$name" - >/dev/null 2>&1
     fi
@@ -112,13 +105,13 @@ generate_all_passwords() {
     done < <(get_active_db_instances 2>/dev/null)
   fi
 
-  # 2. Ühised teenuste ja middleware administraatorite saladused
+  # 2. Shared service and middleware administrator secrets
   create_podman_secret "apex_admin_password" "$(gen_random_password)"
   create_podman_secret "ords_listener_password" "$(gen_random_password)"
   create_podman_secret "publisher_admin_password" "$(gen_random_password)"
   create_podman_secret "forms_admin_password" "$(gen_random_password)"
 
-  # 3. Tagasiühilduvuse ühised aliased primaarse baasi järgi
+  # 3. Backward-compatibility shared aliases matching primary database
   create_podman_secret "dba_admin_password" "${primary_dba_pwd:-$(gen_random_password)}"
   create_podman_secret "user_developer_password" "${primary_dev_pwd:-$(gen_random_password)}"
   create_podman_secret "user_viewer_password" "${primary_viewer_pwd:-$(gen_random_password)}"

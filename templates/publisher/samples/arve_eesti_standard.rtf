@@ -1,0 +1,58 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Segoe UI;}{\f1\fnil\fcharset0 Arial;}}
+{\colortbl ;\red15\green23\blue42;\red56\green189\blue248;\red100\green116\blue139;\red241\green245\blue249;}
+{\*\generator Oracle BI Publisher Desktop 2026;}
+\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\b\fs32\cf1 <?HEADER/COMPANY_NAME?>\b0\fs20\cf0\par
+\pard\sa100\sl240\slmult1\fs18\cf2 Registrikood: \cf0 <?HEADER/REG_CODE?> | \cf2 KMKR nr: \cf0 <?HEADER/VAT_NUMBER?>\par
+Aadress: <?HEADER/ADDRESS?> | E-post: <?HEADER/EMAIL?> | Tel: <?HEADER/PHONE?>\par
+Pank: <?HEADER/BANK_NAME?> | IBAN: <?HEADER/IBAN?> | SWIFT: <?HEADER/SWIFT?>\par
+\pard\sa200\sl240\slmult1\cf2\hr\par
+
+\pard\sa200\sl276\slmult1\b\fs28\cf1 ARVE NR: <?INVOICE/INVOICE_NUM?>\b0\fs20\cf0\par
+\pard\sa100\sl240\slmult1\fs18 Kuup\'e4ev: \b <?INVOICE/INVOICE_DATE?>\b0  | Makset\'e4htaeg: \b <?INVOICE/DUE_DATE?>\b0  | Maksetingimus: <?INVOICE/PAYMENT_TERMS?>\par
+Viitenumber: \b <?INVOICE/PAYMENT_REFERENCE?>\b0\par
+
+\pard\sa100\sl240\slmult1\b\fs20\cf1 TELLIJA / MAKSJA:\b0\fs18\par
+Nimi: \b <?INVOICE/CUSTOMER/NAME?>\b0\par
+Registrikood: <?INVOICE/CUSTOMER/REG_CODE?> | KMKR: <?INVOICE/CUSTOMER/VAT_NUMBER?>\par
+Aadress: <?INVOICE/CUSTOMER/ADDRESS?>\par
+Kontaktisik: <?INVOICE/CUSTOMER/CONTACT_PERSON?>\par
+\pard\sa200\sl240\slmult1\par
+
+\trowd\trgaph108\trleft-108\trbrdrt\brdrs\brdrw10\brdrcf2\trbrdrb\brdrs\brdrw10\brdrcf2
+\clvertalt\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10\clcbpat4\cellx700
+\clvertalt\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10\clcbpat4\cellx4800
+\clvertalt\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10\clcbpat4\cellx5800
+\clvertalt\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10\clcbpat4\cellx6600
+\clvertalt\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10\clcbpat4\cellx7800
+\clvertalt\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10\clcbpat4\cellx9200
+\pard\intbl\qc\b\fs16\cf1 Nr\cell
+\pard\intbl\ql\b\fs16\cf1 Kirjeldus / Teenus\cell
+\pard\intbl\qr\b\fs16\cf1 Kogus\cell
+\pard\intbl\qc\b\fs16\cf1 \'dchik\cell
+\pard\intbl\qr\b\fs16\cf1 Hind (EUR)\cell
+\pard\intbl\qr\b\fs16\cf1 Summa (EUR)\cell
+\row
+
+\trowd\trgaph108\trleft-108
+\clvertalt\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10\cellx700
+\clvertalt\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10\cellx4800
+\clvertalt\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10\cellx5800
+\clvertalt\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10\cellx6600
+\clvertalt\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10\cellx7800
+\clvertalt\clbrdrt\brdrs\brdrw10\clbrdrl\brdrs\brdrw10\clbrdrb\brdrs\brdrw10\clbrdrr\brdrs\brdrw10\cellx9200
+\pard\intbl\qc\fs16 <?for-each:G_LINES?><?LINE_NUM?>\cell
+\pard\intbl\ql\fs16 <?ITEM_DESC?>\cell
+\pard\intbl\qr\fs16 <?QTY?>\cell
+\pard\intbl\qc\fs16 <?UNIT?>\cell
+\pard\intbl\qr\fs16 <?UNIT_PRICE?>\cell
+\pard\intbl\qr\fs16 <?LINE_TOTAL?><?end for-each?>\cell
+\row
+
+\pard\sa100\sl240\slmult1\par
+\pard\qr\fs18
+Vahesumma: \b <?INVOICE/TOTALS/SUBTOTAL?> EUR\b0\par
+K\'e4ibemaks (<?INVOICE/TOTALS/VAT_RATE?>): \b <?INVOICE/TOTALS/VAT_AMOUNT?> EUR\b0\par
+\fs22\cf1 KOKKU TASUDA: \b <?INVOICE/TOTALS/GRAND_TOTAL?> EUR\b0\cf0\par
+\pard\ql\sa200\sl240\slmult1\fs16\cf2 <?INVOICE/NOTES?>\cf0\par
+}

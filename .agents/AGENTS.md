@@ -87,13 +87,14 @@ All scripts, automated tests (e.g. `test-browser-login.sh`), CLI utilities, Dev 
 
 ## 6. SQLcl & VS Code CLI Stability Contract Rule
 
-All scripts, wrappers, and connection generators must adhere to **5 stability contracts**:
+All scripts, wrappers, and connection generators must adhere to **6 stability contracts**:
 
 1. **Prioritize Latest VS Code SQLcl (Binary Resolution Order):** Always prefer the latest SQLcl embedded in the VS Code extension (`find "$HOME/.vscode/extensions" ... | sort -rV | head -n 1`) before falling back to system `$PATH`.
 2. **Environment Sanitization (`unset JAVA_HOME` & Clean `JAVA_TOOL_OPTIONS`):** Always run `unset JAVA_HOME` before invoking SQLcl to prevent Java 11/17 conflicts with Java 21+. `JAVA_TOOL_OPTIONS` must only contain `-Doracle.net.tns_admin=$TNS_DIR` without duplicate wallet flags.
 3. **Binary Password Fallback:** If `mkstore` returns binary/corrupted characters (`[[ "$PWD_VAL" == *"?"* ]]`), query the credential directly from the Podman secret store.
 4. **POSIX & Shell Compatibility:** Do not use non-portable bashisms (like `${ALIAS,,}` or `declare -A`) that fail under `/bin/bash` 3.2 on macOS or `/bin/sh` / `zsh`. Use portable `tr '[:upper:]' '[:lower:]'` and standard arrays.
 5. **Multi-Shell Registration:** Auto-export `TNS_ADMIN` and alias `sql` across all shell profiles (`~/.zshrc`, `~/.zshenv`, `~/.bashrc`, `~/.bash_profile`) and maintain the wrapper at `~/Applications/sqlcl/bin/sql`.
+6. **Exclusive SQLcl Usage Contract (Strict Prohibition of Legacy SQL*Plus):** SQLcl (`sql`) is the mandatory standard database CLI across all platform automation scripts (`apply-profile-users.sh`, `create-developer.sh`, `init-db-instance.sh`), user provisioning, schema migrations, and CI/CD pipelines. Legacy `sqlplus` is prohibited in automation scripts. In containerized databases, invoke the embedded SQLcl binary at `/opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql -s / as sysdba`. For host and cloud ADB execution, invoke via `./scripts/sqlcl.sh /@ALIAS` or ephemeral container (`container-registry.oracle.com/database/sqlcl:latest`), leveraging Oracle SEPS auto-login wallet.
 
 ---
 
@@ -162,3 +163,52 @@ Whenever creating or updating Mermaid diagrams (flowcharts, sequence diagrams, s
    - Ensure explicit branch labels on connectors (e.g., `-->|JAH / Kehtiv|` and `-->|EI / Puudub|`).
    - Group related components into clean, labeled `subgraph` blocks.
 
+---
+
+## 11. Clean Blueprint & YAML Profile Single Source of Truth Rule
+
+To guarantee total separation of architecture concerns and zero hardcoding:
+
+1. **Ultra-Clean Blueprints (`config/blueprints/.env.*`):**
+   - Blueprints only declare high-level positive profile references for services and databases that are actually needed (`DB_ALISE=db-alise-oracle`, `ORDS_PROFILE=ords-standard`, `FORMS_PROFILE=forms-standard`, `PUBLISHER_PROFILE=publisher-standard`, `WEB_IDE_PROFILE=web-ide-standard`, `PUBLISHER_DESIGNER_PROFILE=publisher-designer-standard`).
+   - **Strict Prohibition of `SKIP_*` and Redundant Negative Declarations:** Blueprints and `.env` files **MUST NEVER** contain negative `SKIP_*` variables (e.g. `SKIP_ORDS`, `SKIP_PUBLISHER`, `SKIP_FORMS`, `SKIP_WEB_IDE`). Furthermore, declaring `MAIN_DB_PROFILE=NONE` is **not required**: if no database profile is declared in the blueprint, the orchestration engine automatically detects a 0-database environment (`DB_ENABLED=false`).
+   - Blueprints **MUST NEVER** contain low-level database details, port numbers, usernames, roles, or container configurations.
+
+2. **Domain Encapsulation in YAML Profiles (`config/profiles/**/*.yaml`):**
+   - 100% of domain specifics, database ports, default services (PDBs), container images, memory limits, tablespaces, quotas, and user definitions reside exclusively in YAML profiles (`config/profiles/databases/*.yaml`, `config/profiles/web-ide/*.yaml`, `config/profiles/publisher/*.yaml`).
+   - All users, roles, and wallet aliases are declared in YAML.
+   - Built-in `SYS` superuser is automatically managed by the engine without cluttering YAML `users:` arrays.
+
+3. **Multi-Instance Prefix Disambiguation:**
+   - When multiple databases share the same profile, the orchestration engine automatically isolates namespaces and wallet aliases using the formula: `DB_${INSTANCE_PREFIX}_${ALIAS_SUFFIX}`.
+
+4. **Zero Hardcoded Configuration in Code:**
+   - No database names, ports, PDB services, or usernames may be hardcoded into shell scripts or SQL files.
+   - If changes are needed in the future, administrators update the YAML profile or blueprint—never the shell scripts!
+
+5. **Profile-Driven Zero-Database Invariant & Just-In-Time (JIT) Custom Images:**
+   - When a blueprint only declares standalone application profiles without any database profiles (e.g., BP 8 Web-IDE or BP 9 Publisher Designer), `get_active_db_instances` returns an empty list, database healthchecks and APEX installations are cleanly skipped (`STATUS_SKIPPED`), and no default database (`db-oracle`) is ever fabricated.
+   - Custom images built from local Dockerfiles (`build_local: true` in YAML profile, e.g. `docker/publisher-designer` or `docker/web-ide`) must declare `build: { context: ... }` in `podman-compose.yml` and be checked during orchestration to ensure automatic Just-In-Time compilation if not already present in the local container store.
+
+---
+
+## 12. Asynchronous Long-Running Task & Lifecycle State Contract Rule
+
+To eliminate false browser timeouts, UI freezes, and premature "active" indicators during container installations and cold database builds:
+
+1. **Mandatory Asynchronous Background Task Dispatch:**
+   - Any operation requiring more than 10 seconds (e.g. `setup-all.sh`, `deploy-blueprint.sh`, full rebuilds, deep resets, container orchestration) **MUST NEVER** be executed as a synchronous blocking HTTP request with a browser-side timeout (e.g. 300s AbortController).
+   - In Dev-Hub and bridge architectures, long-running operations must be dispatched as asynchronous background tasks (`ACTIVE_TASKS` via `subprocess.Popen`) returning an immediate acknowledgement (`task_id`, `pid`, `log_file`).
+   - The UI client must track progress by polling `/api/task/status?task=<name>` and stream live logs. It must keep terminal progress active until the backend explicitly returns `completed` (exit code 0) or `failed` (exit code $\neq 0$).
+
+2. **Delayed Active Blueprint Confirmation & Lifecycle Lock:**
+   - `.active_blueprint` **MUST NOT** be written at the beginning of `setup-all.sh` or before container health is verified. It is strictly persisted only after 100% of PDB initializations, SEPS Wallet tests, and URL health checks succeed.
+   - While setup is running, a lifecycle indicator (`.setup_in_progress`) must declare the ongoing task and blueprint ID, and automatically be cleaned up via `trap` upon script termination.
+
+3. **Multi-Tiered Service Health Reporting:**
+   - Container presence in `podman ps` does NOT equal service readiness.
+   - The UI and status API must distinguish between:
+     - 🔴 **Offline (`status-offline`)**: Container not running.
+     - ⏳ **Installing (`status-installing`)**: Setup or rebuild actively executing.
+     - 🟡 **Starting / Initializing (`status-init`)**: Container running but container healthcheck is `starting` or database initializations are pending.
+     - 🟢 **Online / Healthy (`status-online`)**: Database healthy, SEPS Wallet connected, and web endpoints responsive.

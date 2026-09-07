@@ -34,10 +34,11 @@ fi
 
 # Arguments: by default ALL components are removed (COMPONENT="all")
 COMPONENT="all"
-TARGET_PROFILE="${PROXY_DB:-${MAIN_DB_PROFILE:-proxy-adb-oracle}}"
+TARGET_PROFILE=""
 FORCE=false
 SYSTEM_RESET=false
 CLEAN_LOGS=false
+CLEAN_CERTS=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -61,6 +62,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --logs)
       CLEAN_LOGS=true
+      shift
+      ;;
+    --clean-certs|--certs)
+      CLEAN_CERTS=true
       shift
       ;;
     --system)
@@ -103,8 +108,13 @@ if [ "$SYSTEM_RESET" = "true" ]; then
   exit 0
 fi
 
-# Load target profile specification
-if declare -f load_db_profile >/dev/null 2>&1; then
+# Load target profile specification dynamically
+if [ -z "$TARGET_PROFILE" ]; then
+  FIRST_PROF=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f2)
+  TARGET_PROFILE="${FIRST_PROF:-${MAIN_DB_PROFILE:-${ORDS_PROFILE:-${WEB_IDE_PROFILE:-}}}}"
+fi
+
+if [ -n "$TARGET_PROFILE" ] && declare -f load_db_profile >/dev/null 2>&1; then
   load_db_profile "$TARGET_PROFILE" >/dev/null 2>&1 || true
 fi
 
@@ -120,17 +130,32 @@ APEX_SERVICE="${PROFILE_DEFAULT_SERVICE:-${APEX_DB_SERVICE:-FREEPDB1}}"
 PUB_HOST="${PUBLISHER_DB_HOST:-localhost}"
 PUB_PORT="${PUBLISHER_DB_PORT:-1531}"
 PUB_SERVICE="${PUBLISHER_DB_SERVICE:-FREEPDB1}"
+# Active Blueprint and Profile resolution
+ACTIVE_BP_NAME=$(grep -E "^# Blueprint [0-9]+" "$WORKSPACE_DIR/.env" 2>/dev/null | head -n 1 | sed -E 's/^#[[:space:]]*//' || echo "")
+FIRST_PROF=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f2)
+RESOLVED_PROFILE="${FIRST_PROF:-${ORDS_PROFILE:-${WEB_IDE_PROFILE:-$TARGET_PROFILE}}}"
+
+# Query live Podman state
+LIVE_CONTAINERS=($(podman ps -a --format "{{.Names}}" 2>/dev/null || echo ""))
+LIVE_VOLUMES=($(podman volume ls --format "{{.Name}}" 2>/dev/null || echo ""))
+
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${RED}$(msg_str "RESET_WARN_TITLE")${NC}"
-echo -e "   $(msg_str "LABEL_PROJECT"):   ${CYAN}$PROJECT_NAME${NC}"
+echo -e "   $(msg_str "LABEL_PROJECT"):     ${CYAN}$PROJECT_NAME${NC}"
 if [ "$COMPONENT" = "all" ]; then
-  echo -e "   $(msg_str "LABEL_TARGET"):  ${YELLOW}$(msg_str "RESET_TARGET_ALL")${NC}"
+  echo -e "   $(msg_str "LABEL_TARGET"):    ${YELLOW}$(msg_str "RESET_TARGET_ALL")${NC}"
 else
-  echo -e "   $(msg_str "LABEL_COMPONENT"): ${YELLOW}$COMPONENT${NC}"
+  echo -e "   $(msg_str "LABEL_COMPONENT"):   ${YELLOW}$COMPONENT${NC}"
 fi
-echo -e "   $(msg_str "LABEL_PROFILE"):   ${CYAN}${PROFILE_NAME:-$TARGET_PROFILE}${NC}"
+[ -n "$ACTIVE_BP_NAME" ] && echo -e "   $(msg_str "LABEL_BLUEPRINT")     ${CYAN}${ACTIVE_BP_NAME}${NC}"
+echo -e "   $(msg_str "LABEL_PROFILE"):     ${CYAN}${PROFILE_NAME:-$RESOLVED_PROFILE}${NC}"
+echo -e "   📦 $(msg_str "LABEL_LIVE_PODMAN") ${YELLOW}$(msg_str "LABEL_CONTAINERS_COUNT" "${#LIVE_CONTAINERS[@]}")${NC}${LIVE_CONTAINERS:+ (${LIVE_CONTAINERS[*]})}, ${YELLOW}$(msg_str "LABEL_VOLUMES_COUNT" "${#LIVE_VOLUMES[@]}")${NC}"
 echo -e "${CYAN}==================================================================${NC}"
-if [ "$COMPONENT" = "all" ]; then
+
+if [ "${#LIVE_CONTAINERS[@]}" -eq 0 ] && [ "${#LIVE_VOLUMES[@]}" -eq 0 ]; then
+  echo -e "$(msg_str "RESET_PODMAN_ALREADY_CLEAN")"
+  echo -e "$(msg_str "RESET_PODMAN_ALREADY_CLEAN_HINT")"
+elif [ "$COMPONENT" = "all" ]; then
   get_active_db_instances 2>/dev/null | while IFS='|' read -r container prof env_key; do
     [ -z "$container" ] && continue
     (
@@ -175,6 +200,7 @@ LOG_DIR="$SCRIPT_DIR/../install_logs"
 mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 LOG_FILE="$LOG_DIR/env_reset_${TIMESTAMP}.log"
+ln -sf "$LOG_FILE" "$LOG_DIR/env_reset_latest.log" 2>/dev/null || true
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 START_RESET=$(date +%s)
@@ -211,7 +237,7 @@ get_reset_stats() {
     fi
   done
   local avg=$((sum / count))
-  msg_str "BENCHMARK_AVG" "${avg}s" "${min}s" "${max}s"
+  msg_str "BENCHMARK_AVG" "${avg}s"
 }
 
 echo -e "${CYAN}==================================================================${NC}"
@@ -219,7 +245,7 @@ echo -e "📝 $(msg_str "RESET_LOG_LABEL") ${CYAN}$LOG_FILE${NC}"
 echo -e "📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(get_reset_stats "15s")${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 
-# Funktsioon konteineri kustutamiseks
+# Helper function to remove a container
 cleanup_container() {
   local container=$1
   if podman container exists "$container" 2>/dev/null; then
@@ -231,14 +257,14 @@ cleanup_container() {
   fi
 }
 
-# Funktsioon volume kustutamiseks
+# Helper function to remove volume
 cleanup_volume() {
   local volume=$1
   if podman volume exists "$volume" 2>/dev/null; then
-    echo "   Removing volume: $volume"
+    echo -e "$(msg_str "RESET_VOLUME_REMOVING" "$volume")"
     podman volume rm "$volume" 2>/dev/null || true
   else
-    echo "   Volume $volume does not exist — OK"
+    echo -e "$(msg_str "RESET_VOLUME_NOT_EXIST" "$volume")"
   fi
 }
 
@@ -272,6 +298,13 @@ case $COMPONENT in
     cleanup_container "oracle-ords-standalone-test"
     cleanup_volume "${PROJECT_NAME}_web_ide_data"
 
+    # Ensure all project containers are stopped and pruned across all blueprint configurations
+    if command -v podman &>/dev/null; then
+      for any_c in $(podman ps -a --format '{{.Names}}' 2>/dev/null | grep -E '^(db-|app-|web-ide|oracle-)' || true); do
+        cleanup_container "$any_c"
+      done
+    fi
+
 
     # 2. Scan .env for all container definitions and verify existence in Podman
     raw_env_containers=()
@@ -292,19 +325,19 @@ case $COMPONENT in
       done < "$SCRIPT_DIR/../.env"
     fi
 
-    # 3. Otsime otse Podman daemonist KÕIK selle projektiga seotud jooksevad või peatunud konteinerid (nii etikettide kui eesliidete järgi)
+    # 3. Discover ALL running or stopped containers related to this project directly from Podman daemon
     live_containers=$(podman ps -a --filter "label=com.docker.compose.project=$PROJECT_NAME" --format "{{.Names}}" 2>/dev/null || true)
     profile_containers=$(get_all_profile_container_names 2>/dev/null || true)
     prefix_containers=$(podman ps -a --format "{{.Names}}" 2>/dev/null | grep -E "^(db-|oracle-|ords-|web-ide-|pub-db)" || true)
     
-    # Liidame kõik 4 allikat unikaalseks loeteluks
+    # Merge all 4 sources into a unique list
     all_target_containers=$(printf "%s\n" "${raw_env_containers[@]}" "${live_containers}" "${profile_containers}" "${prefix_containers}" | sort -u)
 
     for c in $all_target_containers; do
       [ -n "$c" ] && cleanup_container "$c"
     done
 
-    # 3. Otsime otse Podman daemonist KÕIK selle projektiga seotud mahud (volumed)
+    # 3. Discover ALL volumes related to this project directly from Podman daemon
     live_vols=$(podman volume ls --filter "label=com.docker.compose.project=$PROJECT_NAME" --format "{{.Name}}" 2>/dev/null || true)
     if [ -z "$live_vols" ]; then
       folder_basename=$(basename "$(cd "$SCRIPT_DIR/.." && pwd)")
@@ -331,11 +364,11 @@ case $COMPONENT in
       podman network rm "$NETWORK" >/dev/null 2>&1 || true
     fi
 
-    # Puhastame rippuvad konteinerid, vahekihid ja ehitusvahemälu (vabastab kettaruumi)
+    # Prune dangling containers, intermediate layers, and build cache (frees disk space)
     echo "$(msg_str "RESET_PRUNING_DANGLING")"
     podman system prune -f >> "$LOG_FILE" 2>&1 || true
     
-    # Puhastame lahtipakitud ajutised patchide kataloogid
+    # Clean extracted temporary patch directories
     for pdir in "$SCRIPT_DIR/../patches" "$SCRIPT_DIR/../binaries"/*/patches; do
       if [ -d "$pdir" ]; then
         find "$pdir" -type d -name "unzipped_*" -exec rm -rf {} + 2>/dev/null || true
@@ -353,9 +386,11 @@ case $COMPONENT in
     rm -rf "$SCRIPT_DIR/../config/tns_admin"
     rm -rf "$SCRIPT_DIR/../config/secrets"
     rm -f "$OVERRIDE_FILE"
+    rm -f "$SCRIPT_DIR/../.active_blueprint"
+    rm -f "$SCRIPT_DIR/../.env"
     rm -rf "$SCRIPT_DIR/../db-install"
 
-    # Puhastame kõigist töötavatest konteineritest ajutise APEX paigalduse kausta /tmp/apex_install
+    # Clean temporary APEX installation directory /tmp/apex_install from all running containers
     for c in $(podman ps --format '{{.Names}}' 2>/dev/null | grep -E '^db-|^oracle-db-' || echo ""); do
       if [ -n "$c" ]; then
         podman exec -u root "$c" rm -rf /tmp/apex_install /tmp/apex-latest.zip >/dev/null 2>&1 || true
@@ -373,7 +408,7 @@ EXIT
 EOF
     fi
 
-    # Puhastame ühenduste JSON failid ja orvud kaustad
+    # Clean connection JSON files and orphaned folders
     DBTOOLS_CONNS_DIR="$HOME/.dbtools/connections"
     FOLDERS_FILE="$HOME/.dbtools/connection_folders/folders.json"
     if [ -d "$DBTOOLS_CONNS_DIR" ]; then
@@ -420,8 +455,12 @@ EOF
 esac
 
 if [ "$CLEAN_LOGS" = "true" ] && [ -x "$SCRIPT_DIR/clean-logs.sh" ]; then
-  echo -e "\n${YELLOW}🧹 Puhastan paigalduslogid ja diagnostikafailid (clean-logs.sh)...${NC}"
+  echo -e "\n${YELLOW}$(msg_str "RESET_CLEANING_LOGS")${NC}"
   "$SCRIPT_DIR/clean-logs.sh" -y || true
+fi
+
+if [ "$CLEAN_CERTS" = "true" ] && [ -x "$SCRIPT_DIR/certs/clean-certs.sh" ]; then
+  "$SCRIPT_DIR/certs/clean-certs.sh" -y || true
 fi
 
 # Verify reset results
@@ -433,7 +472,7 @@ if [ "$COMPONENT" = "all" ]; then
   rem_containers=$(podman ps -a --filter "label=com.docker.compose.project=$PROJECT_NAME" --format "{{.Names}}" 2>/dev/null || true)
   if [ -n "$rem_containers" ]; then
     for c in $rem_containers; do
-      echo -e "${RED}❌ Hoiatus: Konteiner ${c} on ikka alles!${NC}"
+      echo -e "${RED}$(msg_str "RESET_WARN_CONTAINER_REMAINS" "$c")${NC}"
       CLEAN=false
     done
   fi
@@ -441,18 +480,18 @@ if [ "$COMPONENT" = "all" ]; then
   rem_vols=$(podman volume ls --filter "label=com.docker.compose.project=$PROJECT_NAME" --format "{{.Name}}" 2>/dev/null || true)
   if [ -n "$rem_vols" ]; then
     for v in $rem_vols; do
-      echo -e "${RED}❌ Hoiatus: Volume ${v} on ikka alles!${NC}"
+      echo -e "${RED}$(msg_str "RESET_WARN_VOLUME_REMAINS" "$v")${NC}"
       CLEAN=false
     done
   fi
 else
   c_vol="${COMPONENT//-/_}"
   if podman container exists "$COMPONENT" 2>/dev/null; then
-    echo -e "${RED}❌ Hoiatus: Konteiner ${COMPONENT} on ikka alles!${NC}"
+    echo -e "${RED}$(msg_str "RESET_WARN_CONTAINER_REMAINS" "$COMPONENT")${NC}"
     CLEAN=false
   fi
   if podman volume exists "${PROJECT_NAME}_${c_vol}_oradata" 2>/dev/null; then
-    echo -e "${RED}❌ Hoiatus: Volume ${PROJECT_NAME}_${c_vol}_oradata on ikka alles!${NC}"
+    echo -e "${RED}$(msg_str "RESET_WARN_VOLUME_REMAINS" "${PROJECT_NAME}_${c_vol}_oradata")${NC}"
     CLEAN=false
   fi
 fi
@@ -470,7 +509,7 @@ fi
 
 DURATION_RESET=$(( $(date +%s) - START_RESET ))
 
-# Kirjutame mõõdikud metrics/ kataloogi
+# Write metrics to metrics/ directory
 METRICS_DIR="$SCRIPT_DIR/../metrics"
 mkdir -p "$METRICS_DIR"
 

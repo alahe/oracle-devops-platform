@@ -1,0 +1,61 @@
+# ==============================================================================
+# Database Profile: Community Gérald Venzl Free DB 23ai Engine (db-gvenzl)
+# ==============================================================================
+# Purpose: Universal community database engine profile (gvenzl/oracle-free:latest).
+# Used for comparative testing, alternate multi-architecture builds, and fast starts.
+# ==============================================================================
+
+profile:
+  id: db-gvenzl
+  name: db-gvenzl
+  description: "Community Gérald Venzl Oracle Free DB 23ai universal container engine (gvenzl/oracle-free:latest)."
+  functionality: standard
+  db_type: standard                     # Options: standard | adb | gvenzl
+  image_vendor: gvenzl                  # Options: oracle | gvenzl | custom
+
+database:
+  container_image: docker.io/gvenzl/oracle-free:latest
+  container_name: db-gvenzl
+  workload_type: NONE                   # Workload type (OLTP, DW, NONE)
+  admin_user: sys                       # Built-in superuser (automatically managed by engine)
+  admin_role: SYSDBA
+  default_service: FREEPDB1             # Target Pluggable Database (PDB) service name
+  db_port: 1535                         # Default host TCP listener port (overridden by role)
+  wallet_required: false                # Cloud mTLS wallet requirement
+  configure_tde: true                   # Transparent Data Encryption enabled
+  encrypt_tablespaces: ALL              # Tablespace encryption policy
+  kafka_bootstrap_servers: "localhost:9092"
+  db_memory_limit: "3072M"
+
+# Database-side features and schema requirements
+database_features:
+  apex:
+    enabled: true                       # Install Oracle APEX Engine into PDB
+    version: latest                     # Automatically resolves to highest semver + latest patch
+  ords:
+    enabled: true                       # Enable ORDS connection pool for this database
+
+# Declarative users and roles for standard application instances
+users:
+  - username: DBA_ADMIN
+    role: DBA
+    alias_suffix: DBA_ADMIN             # Resulting wallet alias: DB_${PREFIX}_DBA_ADMIN
+    color: "#2980B9"
+
+  - username: APP_SCHEMA
+    role: NORMAL
+    roles: [DB_DEVELOPER_ROLE]
+    tablespace: DATA
+    quota: unlimited
+    ords_enabled: true
+    alias_suffix: APP                   # Resulting wallet alias: DB_${PREFIX}_APP
+    color: "#2980B9"
+
+  - username: USER_DEVELOPER
+    role: NORMAL
+    roles: [DB_DEVELOPER_ROLE]
+    tablespace: DATA
+    quota: unlimited
+    ords_enabled: true
+    alias_suffix: DEV                   # Resulting wallet alias: DB_${PREFIX}_DEV
+    color: "#27AE60"

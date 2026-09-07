@@ -1,0 +1,64 @@
+# ==============================================================================
+# Database Profile: Official Oracle Free DB 23ai Universal Engine (db-oracle)
+# ==============================================================================
+# Purpose: Universal database engine profile for all standard Oracle Free DB instances.
+# Roles (ALISE, Proxy, Publisher, Forms) inherit this profile and derive their
+# specific ports (1531-1537), ORDS pool names, and APEX workspaces from instance prefixes.
+# ==============================================================================
+
+profile:
+  id: db-oracle
+  name: db-oracle
+  description: "Official Oracle Free DB 23ai universal container engine with native Vector Search, TDE, and JSON-Relational Duality."
+  functionality: standard
+  db_type: standard                     # Options: standard | adb | gvenzl
+  image_vendor: oracle                  # Options: oracle | gvenzl | custom
+
+database:
+  container_image: container-registry.oracle.com/database/free:latest
+  workload_type: NONE                   # Workload type (OLTP, DW, NONE)
+  admin_user: sys                       # Built-in superuser (automatically managed by engine)
+  admin_role: SYSDBA
+  default_service: FREEPDB1             # Target Pluggable Database (PDB) service name
+  db_port: 1533                         # Default host TCP listener port (overridden by role)
+  wallet_required: false                # Cloud mTLS wallet requirement
+  configure_tde: true                   # Transparent Data Encryption enabled
+  encrypt_tablespaces: ALL              # Tablespace encryption policy
+  kafka_bootstrap_servers: "localhost:9092"
+  db_memory_limit: "3072M"
+
+# Database-side features and schema requirements
+database_features:
+  apex:
+    enabled: true                       # Install Oracle APEX Engine into PDB
+    version: latest                     # Automatically resolves to highest semver + latest patch
+  ords:
+    enabled: true                       # Enable ORDS connection pool for this database
+
+# Declarative Application & Developer Schemas
+users:
+  - username: DBA_ADMIN
+    default_tablespace: USERS
+    quota: unlimited
+    roles: [DBA]
+    alias_suffix: DBA_ADMIN
+  - username: APEX_PROXY_SCHEMA
+    default_tablespace: USERS
+    quota: unlimited
+    roles: [CONNECT, RESOURCE]
+    alias_suffix: SCHEMA
+  - username: USER_DEVELOPER
+    default_tablespace: USERS
+    quota: unlimited
+    roles: [CONNECT, RESOURCE, CREATE VIEW, CREATE PROCEDURE]
+    alias_suffix: DEV
+  - username: USER_APP
+    default_tablespace: USERS
+    quota: unlimited
+    roles: [CONNECT, RESOURCE]
+    alias_suffix: APP
+  - username: USER_VIEWER
+    default_tablespace: USERS
+    quota: 100M
+    roles: [CONNECT]
+    alias_suffix: VIEWER

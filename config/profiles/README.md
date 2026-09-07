@@ -1,55 +1,31 @@
+[ 🇬🇧 English ](README.md)
+
 # 🗄️ Service & Database Profiles Matrix (`config/profiles/`)
 
 This directory contains domain-isolated YAML profile configurations used by the **Dynamic Profile Engine** (`load-profile.sh`, `apply-profile-users.sh`, `create-wallet.sh`, `register-connections.sh`).
 
 ---
 
-## 📂 Subdirectories Architecture
+## 📂 Active Profile Subdirectories
 
-* **[`config/profiles/databases/`](databases/README.md)**: Oracle Database profiles (`proxy-adb-oracle.yaml`, `bizapp-standard-oracle.yaml` etc.).
-* **[`config/profiles/web-ide/`](web-ide/README.md)**: Web IDE service profiles (`web-ide-cicd-only.yaml`, `web-ide-cicd-antigravity.yaml`, `web-ide-standard.yaml`, `web-ide-minimal.yaml`, `web-ide-disabled.yaml`).
-
----
-
-## 🗄️ Pre-Configured Database Profiles (`config/profiles/databases/`)
-
-| Profile Filename | Description | DB Type | Use Case |
-| :--- | :--- | :--- | :--- |
-| **`proxy-standard-gvenzl.yaml`** | APEX Proxy DB on Gvenzl 23c Faststart | `standard` | APEX Proxy |
-| **`proxy-adb-oracle.yaml`** | APEX Proxy DB on Autonomous DB Free | `adb` | APEX Proxy |
-| **`proxy-standard-oracle.yaml`** | APEX Proxy DB on Official Oracle Free DB 23ai | `standard` | APEX Proxy |
-| **`bizapp-standard-oracle.yaml`** | General Business App DB on Official Oracle Free DB | `standard` | Business App |
-| **`bizapp-adb-oracle.yaml`** | General Business App DB on Autonomous DB Free | `adb` | Business App |
-| **`appinfra-standard-gvenzl.yaml`** | Infrastructure DB for Publisher & Forms (RCU) | `standard` | App Infra |
-| **`cicd-standard-oracle.yaml`** | Ephemeral DB for CI/CD Automated Testing | `standard` | CI/CD |
+* **`config/profiles/databases/`**: Dedicated Oracle Database engine profiles (`db-proxy-oracle.yaml`, `db-alise-oracle.yaml`, `db-proxy-standalone.yaml`, `db-gvenzl.yaml`, `db-adb.yaml`, `db-publisher-oracle.yaml`, `db-forms-oracle.yaml`).
+* **`config/profiles/ords/`**: Dedicated ORDS Gateway profiles (`ords-standard.yaml`, `ords-standalone.yaml`).
+* **`config/profiles/web-ide/`**: Web IDE service profiles (`web-ide-standard.yaml`).
+* **`config/profiles/publisher/`**: Analytics Publisher profiles (`publisher-standard.yaml`, `publisher-designer.yaml`).
+* **`config/profiles/forms/`**: Oracle Forms 14c profiles (`forms-standard.yaml`).
+* **`config/profiles/forms-publisher/`**: Consolidated Unified FMW profiles (`forms-publisher-unified.yaml`).
 
 ---
 
-## 👤 Customizing Schemas, Users, and Wallets
+## 🗄️ Active Database Profiles & Deterministic Port Map
 
-You can edit existing YAML profiles or create custom profiles to change schema names, database users, roles, and SEPS Wallet aliases:
+| Profile Filename | Image Vendor | DB Port | Associated Blueprints | Key Features |
+| :--- | :--- | :---: | :--- | :--- |
+| **`db-publisher-oracle.yaml`** | Official Oracle | **1531** | BP 5, BP 7 | BIPLATFORM & MDS RCU Repository database for Analytics Publisher. |
+| **`db-proxy-oracle.yaml`** | Official Oracle | **1532** | BP 0 (Default) | APEX Proxy, SSO Gateway, and public REST services. |
+| **`db-alise-oracle.yaml`** | Official Oracle | **1533** | BP 1 | Core Business DB, PL/SQL engine, and APEX 26.1. |
+| **`db-forms-oracle.yaml`** | Official Oracle | **1534** | BP 6 | Dedicated Oracle Forms 14c RCU & application backend. |
+| **`db-gvenzl.yaml`** | Gerald Venzl | **1535** | BP 3 | Alternate community image engine for benchmarking & fast starts. |
+| **`db-adb.yaml`** | Autonomous DB | **1536** | BP 4 | Oracle Autonomous Database Cloud simulation with mTLS cloud wallet. |
+| **`db-proxy-standalone.yaml`** | Official Oracle | **1537** | BP 2 | Dedicated Standalone APEX Proxy & SSO Gateway container. |
 
-```yaml
-users:
-  - username: sys
-    role: SYSDBA
-    wallet_alias: DB_APEX_PROXY_SYS
-    color: "#E74C3C"
-
-  # Custom Schema Name (e.g., MY_COMPANY_SCHEMA):
-  - username: MY_COMPANY_SCHEMA
-    role: NORMAL
-    wallet_alias: DB_MY_COMPANY_SCHEMA
-    color: "#2980B9"
-
-  # Standard Developer Account:
-  - username: USER_DEVELOPER
-    role: NORMAL
-    ords_enabled: true
-    ords_alias: user_developer
-    roles: [DB_DEVELOPER_ROLE]
-    wallet_alias: DB_PROXY_DEV
-    color: "#F39C12"
-```
-
-Refer to [docs/db-profiles-and-topology.md](../../docs/db-profiles-and-topology.md) for full architecture and topology details.

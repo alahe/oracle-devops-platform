@@ -1,4 +1,4 @@
-# [TASK-033]: Developer Hub Realiseerimine ja Automaatne Paigaldus APEX Rakendusena (ApexLang)
+# [TASK-033]: Developer Hub Realiseerimine ja Automaatne Paigaldus OracleAPEX Rakendusena (ApexLang)
 
 **Staatus:** `TODO` (Backlog)  
 **Prioriteet:** `MEDIUM`  
@@ -11,17 +11,18 @@
 Praegune Developer Hub luuakse universaalse staatilise veebirakendusena (ORDS Docroot / HTML+JS SPA). Tulevikus soovitakse sama funktsionaalsus (Live Services status, Arhitektuuriskeemid, Blueprintide sirvimine, Docs luger, DevOps käskude dispatching) realiseerida ka **iseseisva Oracle APEX rakendusena**.
 
 See võimaldab testida ja demonstreerida:
-1. Kuidas Oracle APEX rakendusi paigaldada automaatselt paigaldusvoos (`scripts/setup-all.sh` Samm 8 - `Deploy Packaged APEX Apps`).
-2. Kuidas kasutada **ApexLang** keelt / APEX rakenduse eksporditud SQL skripte versioonihalduseks ja tarnimiseks.
-3. Kuidas APEX saab suhelda andmebaasi pakettide (`DBMS_SCHEDULER`, `APEX_WEB_SERVICE`) kaudu konteinerite ja süsteemsete mõõdikutega.
+1. Kuidas Oracle APEX rakendusi paigaldada automaatselt paigaldusvoos (`scripts/setup-all.sh`  - `Deploy Packaged APEX Apps`).
+2. Kuidas APEX rakendusi paigaldada ja hallata automaatselt. (ORDS Developer Hub).
+3. Kuidas kasutada **ApexLang** keelt / APEX rakenduse eksporditud ApxLang faile .*.apx formaadis versioonihalduseks ja tarnimiseks. Kasutada selleks SQLcl project käske.  
+4. Kuidas APEX saab suhelda andmebaasi pakettide (`DBMS_SCHEDULER`, `APEX_WEB_SERVICE`) kaudu konteinerite ja süsteemsete mõõdikutega.
 
 ---
 
 ## 2. Eesmärk ja Oodatav Tulemus
 1. **APEX Rakendus:** Luua APEX rakendus (nt App ID 101 või 200) nimega "Oracle DevOps Platform Developer Hub".
-2. **ApexLang / SQL Export:** Pakendada rakendus kausta `binaries/apex_apps/f101_developer_hub.sql`.
+2. **ApexLang / SQL Export:** Pakendada rakendus kausta `binaries/apex_apps/`.
 3. **Automaatne Import:** `scripts/setup-all.sh` sammus 8 imporditakse rakendus automaatselt andmebaasi (`PROXY_WORKSPACE` või `DEV_WORKSPACE`).
-4. **Disain ja Funktsionaalsus:** APEX rakenduse lehed ja kaardid vastavad 1:1 ORDS Developer Hubile (Live status, Mermaid arhitektuurijoonised, Blueprintide nimekiri, dokumentatsiooni luger).
+4. **Disain ja Funktsionaalsus:** APEX rakenduse lehed ja kaardid vastavad 1:1 ORDS Developer Hubile.
 
 ---
 

@@ -84,9 +84,9 @@ elif [ -d "$EXT_DIR" ]; then
   for vsix in "$EXT_DIR/"*.vsix; do
     if [ -f "$vsix" ]; then
       vsix_name=$(basename "$vsix")
-      CODE_SERVER_BIN="/app/code-server/bin/code-server"
+      CODE_SERVER_BIN="/app/code-server/bin/code-server --extensions-dir /config/extensions"
       echo "📦 Installing VS Code extension: $vsix_name..."
-      podman exec -i "$WEB_IDE_CONTAINER" $CODE_SERVER_BIN --install-extension "/workspace/binaries/extensions/$vsix_name" 2>/dev/null || true
+      podman exec -i "$WEB_IDE_CONTAINER" bash -c "$CODE_SERVER_BIN --install-extension '/workspace/binaries/extensions/$vsix_name' 2>/dev/null || true"
     fi
   done
 fi

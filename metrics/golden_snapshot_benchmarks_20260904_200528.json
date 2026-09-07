@@ -1,0 +1,9 @@
+{
+  "last_updated": "2026-09-04T17:05:31Z",
+  "snapshot_duration_seconds": 3,
+  "snapshot_size_mb": 0,
+  "snapshot_file": "bp_9_20260904_200528.tar.gz",
+  "blueprint_id": "9",
+  "profile_name": "db-oracle",
+  "apex_version": "26.1"
+}

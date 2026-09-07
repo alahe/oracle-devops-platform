@@ -12,8 +12,11 @@
 # 1. Klooni repositoorium ja liigu kausta
 git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-free-db-in-prod
 
-# 2. Käivita vaikimisi 2-kihiline tootmisvirn (Blueprint 21)
-./scripts/setup-all.sh -b 21 --lang et
+# 2. Käivita kanooniline vaikesüsteem (Blueprint 0: Default Proxy DB & ORDS Gateway)
+./scripts/setup-all.sh --lang et
+
+# Või käivita spetsiaalne ärirakenduse andmebaas (Blueprint 1: Standalone ALISE DB)
+./scripts/setup-all.sh -b 1 --lang et
 
 # 3. Vaata paroole, URL-e ja lõikelaua spikrit (või ava Dev Hub aadressil http://localhost:8088/)
 ./scripts/get-password.sh
@@ -28,17 +31,21 @@ flowchart TD
     Start(["🚀 Arendaja Alustab"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
     Clone --> ChooseBP{"2. Vali Arhitektuurne Blueprint"}
     
-    ChooseBP -->|Vaikimisi 2-DB Virn| BP21["./scripts/setup-all.sh -b 21 --lang et"]
-    ChooseBP -->|Forms + Publisher + IDE| BP31["./scripts/setup-all.sh -b 31 --lang et"]
-    ChooseBP -->|Eelvaade / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 21 --dry-run"]
+    ChooseBP -->|Kanooniline Vaikebaas| BP0["./scripts/setup-all.sh (BP 0)"]
+    ChooseBP -->|ALISE Äriandmebaas| BP1["./scripts/setup-all.sh -b 1"]
+    ChooseBP -->|Forms + Publisher| BP7["./scripts/setup-all.sh -b 7"]
+    ChooseBP -->|Eraldiseisev Web IDE| BP8["./scripts/setup-all.sh -b 8"]
+    ChooseBP -->|Eelvaade / Dry-Run| BPDry["./scripts/setup-all.sh -b 1 --dry-run"]
     
-    BP21 --> DevHub["3. Ava DevOps Juhtimiskeskus<br/>🌐 http://localhost:8088/"]
-    BP31 --> DevHub
+    BP0 --> DevHub["3. Ava DevOps Juhtimiskeskus<br/>🌐 http://localhost:8088/"]
+    BP1 --> DevHub
+    BP7 --> DevHub
+    BP8 --> DevHub
     BPDry --> ChooseBP
     
-    DevHub --> PwdSpikker["4. Paroolispikker (SEPS Wallet)<br/>./scripts/get-password.sh DB_PROXY_DEV -c"]
+    DevHub --> PwdSpikker["4. Paroolispikker (SEPS Wallet)<br/>./scripts/get-password.sh DB_ALISE_DEV -c"]
     
-    PwdSpikker --> DevWork["5. Alusta Arendust!"]
+    DevHub --> DevWork["5. Alusta Arendust!"]
     DevWork --> WorkIDE["💻 Web IDE & SQL Developer (:8090)"]
     DevWork --> WorkAPEX["🌟 APEX Builder & SSO Lüüs (:8088)"]
     DevWork --> WorkForms["📐 Forms 14c noVNC Builder (:6082)"]
@@ -47,185 +54,176 @@ flowchart TD
 
 ---
 
-## ⚡ Setup-All 10-Faasiline Elutsükli Arhitektuur
+## 🏗️ Arhitektuuri Blueprintid (12 Kanoonilist Moodulit)
+
+Oracle Free DB in Prod organiseerib oma arhitektuuri **12 kanoonilisse modulaarsesse blueprinti (0 .. 11)**, mis jagunevad nelja ettevõtte taseme kihti:
 
 ```mermaid
-flowchart LR
-    P1["1. Kujutiste Tõmbamine"] --> P2["2. ORDS Allalaadimine"]
-    P2 --> P3["3. APEX Paketid"]
-    P3 --> P4["4. Konteinerite Käivitus"]
-    P4 --> P5["5. DB Tervise Ootamine"]
-    P5 --> P6["6. APEX Paigaldus"]
-    P6 --> P7["7. Skeemid & SEPS Init"]
-    P7 --> P8["8. APEX Rakenduste Deploy"]
-    P8 --> P9["9. Middleware & Teenused"]
-    P9 --> P10["10. Kuldne Hetktõmmis (~15s DR)"]
+flowchart TD
+    subgraph Default ["⭐ KANOONILINE VAIKESÜSTEEM"]
+        BP0["BP 0: Vaikimisi Proxy DB & ORDS<br/>db-proxy (:1532) + app-ords (:8088/8448)"]
+    end
+
+    subgraph DatabaseStacks ["🗄️ GRUPP 1: ANDMEBAASID (1–4)"]
+        BP1["BP 1: Eraldiseisev ALISE DB (:1533)"]
+        BP2["BP 2: Eraldiseisev Proxy DB (:1537)"]
+        BP3["BP 3: Eraldiseisev Gvenzl Kogukonna DB (:1535)"]
+        BP4["BP 4: Autonoomne Pilvebaas ADB (:1536)"]
+    end
+
+    subgraph Middleware ["🏢 GRUPP 2: KESKVARATASAND (5–7)"]
+        BP5["BP 5: Eraldiseisev Analytics Publisher (:1531, :9502)"]
+        BP6["BP 6: Eraldiseisev Oracle Forms 14c (:1534, :9001, :6082)"]
+        BP7["BP 7: Konsolideeritud Forms + Publisher (:1531, :9001, :9502)"]
+    end
+
+    subgraph DeveloperStudio ["💻 GRUPP 3: ARENDAJA STUUDIO (8–9)"]
+        BP8["BP 8: Iseseisev Web-IDE (:8090)<br/>⚠️ Testimisel ja täiustamisel"]
+        BP9["BP 9: Publisher Kujundaja (:6083)<br/>⚠️ Testimisel ja täiustamisel"]
+    end
+
+    subgraph RemoteGateways ["🌐 GRUPP 4: KAUG- JA SERVA-LÜÜSID (10–11)"]
+        BP10["BP 10: Kaug-ORDS Lüüs (:8088/8448)<br/>⚠️ Testimisel ja täiustamisel"]
+        BP11["BP 11: Kaug-Publisher (:9502/9503)<br/>⚠️ Testimisel ja täiustamisel"]
+    end
+
+    Default --> DatabaseStacks
+    Default --> Middleware
+    Default --> DeveloperStudio
+    Default --> RemoteGateways
 ```
 
 ---
 
-## 🌐 Dev Hub (`http://localhost:8088/`) — Ühtne Juhtimiskeskus (*Single Pane of Glass*)
+## 🧩 Puhas Blueprintide & YAML Profiilide Arhitektuur (Reegel 11)
 
-Arendaja ei pea meelde jätma kümneid erinevaid porte. **Dev Hub** toimib ühtse maandumislehena:
-- **1-Kliki Teenuste Lingid:** Otsene ligipääs APEX Builderile, Database Actionsile (SDW), Forms 14c teenustele, HTML5 noVNC Forms Builderile ja Analytics Publisherile.
-- **1-Kliki Paroolide Kopeerimine:** Üks klikk kopeerib dekrüpteeritud parooli otse lõikelauale (valmis kleepimiseks: `Cmd+V` / `Ctrl+V`).
-- **Reaalajas Tervisediagnostika:** Automaatne latentsuskontroll iga 6 sekundi järel.
-- **Integreeritud Markdown Dokumentatsiooniluger:** Loe ja otsi juhendeid otse veebibrauseris.
-- **Blueprintide Juurutamine ja Haldus:** Käivita, vaheta ja monitoori blueprinte mugavalt veebist või käsuga `./scripts/deploy-blueprint.sh`.
+Täieliku modulaarsuse ja kõvakodeeringute vältimiseks kehtib järgmine arhitektuur:
+
+1. **Ülipuhtad Blueprintid (`config/blueprints/.env.*`):**
+   - Blueprintid deklareerivad **ainult positiivseid viiteid vajaminevatele profiilidele**:
+     ```bash
+     DB_ALISE=db-alise-oracle
+     ORDS_PROFILE=ords-standard
+     WEB_IDE_PROFILE=web-ide-standard
+     ```
+   - Blueprint ei sisalda kunagi porte, paroole ega negatiivseid `SKIP_*` muutujaid.
+   - Blueprint määrab, *millised konteinerid luuakse*.
+
+2. **Kogu konfiguratsioon YAML Profiilides (`config/profiles/**/*.yaml`):**
+   - 100% domeenispetsiifikast asub YAML profiilides:
+     - Konteineri tõmmised, mälulimiidid, host-pordid (`db_port`, `http_port`).
+     - PDB vaiketeenused (`default_service: FREEPDB1`).
+     - Tabeliruumid, kvoodid, rollid ja kasutajad.
+     - **Andmebaaside seosed:** ORDS basseinide seosed ja mitme andmebaasi ristühendused deklareeritakse YAML profiilides.
+
+3. **Kasutaja laiendatavus: Uute blueprintide lisamine 1-haaval:**
+   - Kasutaja või AI saab lisada uue blueprinti igal ajal, luues faili:
+     ```bash
+     config/blueprints/.env.<ID>-<kohandatud-nimi>
+     ```
+   - Orkestreerija (`setup-all.sh`, `deploy-blueprint.sh` ja Dev-Hub) tuvastab uue blueprinti automaatselt ilma koodimuudatusteta!
 
 ---
 
-## 🔑 Kust Ma Leian Oma Parooli? (SEPS Wallet Spikker)
+## 🌐 Dev Hub (`http://localhost:8088/`) — Asünkroonne Juhtimiskeskus (Reegel 12)
 
-Kõik paroolid genereeritakse kõrge entroopiaga krüptograafiliselt ja talletatakse turvaliselt **Oracle SEPS (Secure External Password Store) Walletites** ning Podman Secret Store'is.
+Dev Hub toimib tervikliku juhtpaneelina teenuste ja blueprintide haldamiseks:
+
+- **Asünkroonne tööde haldus:** Paigalduse, aktiveerimise ja taaskäivituse operatsioonid käivitatakse taustal (`ACTIVE_TASKS`) läbi `dev-hub-bridge.py`.
+- **Null brauseri katkestust (Timeout):** 300-sekundiline brauseri AbortController viga on täielikult elimineeritud.
+- **Reaalajas terminali logi:** Logifaili viimased read (`/api/task/status?task=...`) voogedastatakse otse modaalaknasse.
+- **Mitmetasemelised olekud:**
+  - ⏳ **`status-installing` (Pulseeriv merevaikukollane):** Paigaldus või uuestiehitus aktiivselt töös.
+  - 🟡 **`status-init` (Kollane):** Konteiner töötab, andmebaas initsialiseerub.
+  - 🟢 **`status-online` (Roheline):** Andmebaas terve, SEPS Wallet ühendatud ja veebilingid vastavad.
+- **Edasilükatud `.active_blueprint` lukk:** Salvestatakse kettale rangelt alles pärast 100% verifitseerimise õnnestumist.
+- **1-Kliki Parooli Kopeerimine:** Paroolid dekrüpteeritakse vajaduspõhiselt otse mälus Oracle SEPS Walletist.
+
+---
+
+## 🔑 Kus On Minu Parool? (SEPS Wallet Spikker)
+
+Kõik credentials-andmed genereeritakse krüptograafiliselt ja talletatakse turvaliselt **Oracle SEPS Auto-Login Walletis** ja Podman Secret Store'is.
 
 ```bash
-# Vaata terviklikku paroolide ja teenuste koondtabelit:
+# Vaata täielikku kredentsiaalide tabelit:
 ./scripts/get-password.sh
 
 # Kopeeri arendaja parool otse lõikelauale:
-./scripts/get-password.sh DB_PROXY_DEV -c
+./scripts/get-password.sh DB_ALISE_DEV -c
 
-# Kopeeri APEX administraatori parool:
-./scripts/get-password.sh DB_PROXY_APEX_ADMIN -c
-
-# Ühendu andmebaasiga SQLcl kaudu ILMA ühegi paroolita:
-sql /@DB_PROXY_DEV
+# Ühendu andmebaasiga SQLcl kaudu ILMA parooli sisestamata:
+sql /@DB_ALISE_DEV
 ```
 
 ---
 
-## 🎯 3 Sidusgrupi Vaated ja Platvormi Äriline Kasu
+## ⚡ Kiirendatud ~15s Taastamine & Automaatne Versioonikontroll
 
-| Sidusgrupp | Peamised Eelised ja Igapäevane Kasutuskogemus | Tehniline Tagatis |
-| :--- | :--- | :--- |
-| **👤 Lõppkasutaja ja Äripool** | • **Null Klientrakendust:** Kaasaegne HTML5 veebikogemus ja APEX Universal Theme.<br/>• **Ühtne Sisselogimine (SSO):** Üks seanss üle APEXi ja pärand-Forms teenuste.<br/>• **Pixel-Perfect Aruanded:** Automatiseeritud PDF/Excel dokumentide genereerimine. | • ORDS Multi-Pool Lüüs<br/>• APEX Reverse Proxy SSO Formsile<br/>• Analytics Publisher REST API |
-| **💻 Arendaja** | • **~15s FastStart Taastumine:** Hetkeline algseisu taastamine Kuldsete Hetktõmmistega.<br/>• **Paroolivaba SQL:** Kohene ühendus `./scripts/sqlcl.sh` ja SEPS Walleti kaudu.<br/>• **Brauseripõhine Web IDE:** Paigaldusvaba VS Code koos Oracle SQL Developeri ja tehisintellektiga. | • Podman FastStart Hetktõmmised<br/>• SEPS Oracle Wallet Automaatsünk<br/>• `code-server` Web IDE Konteiner |
-| **🛡️ Auditeerija ja Arhitekt** | • **0 € Litsentsikulu:** Oracle 23ai Free DB toodangus.<br/>• **Null-Usalduse Võrguisolatsioon:** Andmebaas ei ava toor-SQL-i kunagi avalikku võrku.<br/>• **Reguleeritud Täitmine:** EBNF deklaratiivsed lepingud, AST turvaanalüüs ja VPD. | • JSON-Relational Duality<br/>• 2-Kihiline Võrgutopoloogia<br/>• Oracle Virtual Private Database (VPD) |
-
----
-
-## 🔄 Oracle APEXi ja Forms 14c Integratsiooni Fookus
-
-Käesolevas arhitektuuris on **Oracle APEX 26.1** positsioneeritud eelkõige kui:
-1. **Forms Moderniseerimise Sild:** Forms 14c rakenduste järk-järguline moderniseerimine kaasaegseteks veebirakendusteks [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) abil.
-2. **Ettevõtte Tasemel SSO Reverse Proxy Formsile:** APEX võtab vastu Azure Entra ID / SAML / OAuth2 autentimise ning vahendab autoriseeritud seansi turvaliselt Oracle Forms 14c-le ilma kalli WebLogic OAM/OIF taristuta.
-
----
-
-## 📋 11 Kureeritud Arhitektuurset Blueprinti
-
-```mermaid
-graph TD
-  subgraph Seeria 1-9: Core DB & APEX SSO Lüüs
-    BP3["🌟 BP 3 (VAIKIMISI): 2-Kihiline Tootmisvirn<br/>db-proxy + db-alise + app-ords (Pordid 1532, 1533, 8088)"]
-    BP7["BP 7: Mitme Tarnija Hübriid<br/>Ametlik Oracle 23ai DB + Gerald Venzl DB + ORDS"]
-  end
-
-  subgraph Seeria 10-19: Analytics Publisher
-    BP13["BP 13: Kõik-Ühes Publisher DB<br/>Üks 23ai DB (RCU + Andmed) + Publisher + ORDS"]
-    BP11["BP 11: Eraldatud Publisher Ettevõte<br/>3 eraldatud DB-d + Publisher + ORDS"]
-  end
-
-  subgraph Seeria 20-29: Oracle Forms 14c & Moderniseerimine
-    BP22["BP 22: Minimaalne Forms Hübriid<br/>Kombineeritud Forms/Proxy DB + ALISE DB + Forms 14c + ORDS"]
-    BP21["BP 21: Täielik Forms Ettevõte<br/>Forms RCU DB + Custom DB + Proxy DB + Forms 14c + ORDS"]
-  end
-
-  subgraph Seeria 30-39: Arendustöökohad & Web IDE
-    BP34["🌟 BP 34: Standard 2-Kihiline DB + Web IDE<br/>db-proxy + db-alise + app-ords + web-ide-dev (Port 8090)"]
-    BP31["BP 31: Pilve Autonomous DB + Web IDE<br/>ADB Emulaator + VS Code Web IDE"]
-  end
-
-  subgraph Seeria 40-49: Ultimate Enterprise Komplektid
-    BP41["🌟 BP 41: Ultimate Kõik-Ühes Ettevõte + Web IDE<br/>Forms + Publisher + APEX SSO + Web IDE 1 DB-l"]
-    BP42["BP 42: Täielikult Eraldatud Pilvelabor<br/>8 eraldatud konteinerit, 4 eraldi andmebaasi"]
-    BP43["BP 43: 2-DB Hübriid Ettevõte + Web IDE<br/>Proxy DB + Ühine Middleware RCU DB"]
-  end
-```
-
-### 🚀 Blueprintide Juurutamine ja Haldus (`./scripts/deploy-blueprint.sh`)
+Oracle Free DB in Prod sisaldab **kuldsnapshottide mootorit**, mis vähendab taaskäivituse aega **~6–8 minutilt ~15 sekundile**:
 
 ```bash
-# 1. Kontrolli aktiivset blueprinti ja teenuste tervist:
-./scripts/deploy-blueprint.sh --status --lang et
-
-# 2. Juuruta Blueprint 3 (VAIKIMISI 2-Kihiline Tootmisvirn):
-./scripts/deploy-blueprint.sh -b 3 --lang et
-
-# 3. Juuruta Blueprint 41 (Ultimate Kõik-Ühes Ettevõte):
-./scripts/deploy-blueprint.sh -b 41 --lang et
-
-# 4. Simuleeri paigaldust ilma muudatusteta (Dry-Run):
-./scripts/deploy-blueprint.sh -b 34 --dry-run
-
-# 5. Kuva 11 blueprinti tabel käsureal:
-./scripts/deploy-blueprint.sh --list --lang et
+# Taasta baastaseme kuldsnapshot ~15-30 sekundiga:
+./scripts/snapshots/restore-golden-snapshots.sh --force
 ```
 
 ---
 
-## ⚡ Kiirendatud ~15s Taastumine & Automaatne Versioonikontroll
-
-Oracle Free DB in Prod sisaldab **uut mitmetasemelist Kuldse Hetktõmmise ja Skip-Mootorit** (`scripts/internal/snapshot-resolver.sh`), mis vähendab teistkordset käivitusaega **~6–12 minutilt ~15 sekundini**:
-
-1. **Automaatne Versioonikontroll & Aegunud Hetktõmmiste Invalideerimine (`.meta.json`):**
-   - Iga Golden Snapshot sisaldab masinloetavat `.meta.json` lepingut, kuhu salvestatakse APEXi, andmebaasi, ORDSi ja middleware täpsed versioonid.
-   - Enne taastamist kontrollitakse rangelt versioonide vastavust. Kui leitakse aegunud hetktõmmis (nt profiil nõuab `APEX 26.1`, aga snapshot on `24.2`), väljastatakse hoiatus `VERSION MISMATCH`, tehakse puhas paigaldus ja genereeritakse automaatselt uus ajakohane hetktõmmis.
-2. **Profiilipõhine Ristkasutus & Skip-Maatriks:**
-   - Kuna samad andmebaasi profiilid korduvad mitmes blueprintis (nt `db-proxy-oracle` BP 3, BP 7, BP 21, BP 22, BP 34, BP 43), jätab blueprintide vahetamine (nt BP 3 $\rightarrow$ BP 34 Web IDE lisamiseks) andmebaasi puutumata ja käivitab vaid puuduva lisakonteineri **~3 sekundiga**.
-3. **Shared vs. Dedicated WebLogic Topoloogiad:**
-   - **SAMAS WebLogicus (BP 41 & BP 43):** Ühine Kõik-Ühes andmebaas (`db-dev-full`), ühised RCU skeemid (`DEV_` prefiks), 1 kombineeritud snapshot ja madal RAM-i kulu (~6–8 GB).
-   - **ERALDI WebLogicutes (BP 11, BP 21 & BP 42):** Eraldi andmebaasid (`db-forms`, `db-publisher`), modulaarsed snapshotid ja selektiivne käivitus, mis säästab kuni 4 GB RAMi.
-
----
-
-## 🚀 Kiirkäivituse Spikker (Quickstart CLI)
+## 🚀 Kiirkäskude Spikker
 
 ```bash
-# 1. Käivita soovitud blueprint:
-./scripts/setup-all.sh -b 3 --lang et
+# 1. Käivita kanooniline vaike-blueprint (BP 0) või konkreetne blueprint:
+./scripts/setup-all.sh --lang et
+./scripts/setup-all.sh -b 1 --lang et
+./scripts/setup-all.sh -b 7 --lang et
 
-# 2. Vaata paroolide ja teenuste koondtabelit (või kopeeri -c abil):
+# 2. Vaata kredentsiaale ja kopeeri parool (-c):
 ./scripts/get-password.sh
-./scripts/get-password.sh DB_PROXY_DEV -c
+./scripts/get-password.sh DB_ALISE_DEV -c
 
-# 3. Roteeri paroole turvaliselt (katkestusteta):
-./scripts/rotate-password.sh db-proxy dev
-./scripts/rotate-password.sh all
-
-# 4. Kontrolli aktiivseid veebiteenuseid ja Walleti ühendusi:
-./scripts/check-urls.sh --lang et
+# 3. Kontrolli veebiteenuste aadresse ja Walleti ühendusi:
+./scripts/check-urls.sh
 ./scripts/check-wallet.sh
 
-# 5. Käivita automaatne sisselogimise ja brauseritest:
+# 4. Käivita automaatne brauseri logimistest:
 ./scripts/test-browser-login.sh
 
-# 6. Käivita mitmekeelsuse (i18n) kontroll (Reegel 9: EN, ET, FI, SV, LV, LT):
+# 5. Käivita mitmekeelsuse kontrolltest (Reegel 9: EN, ET, FI, SV, LV, LT):
 ./tests/test-multilingual-support.sh
 
-# 7. Loo või taasta Kuldseid Hetktõmmiseid (~15s taastumine):
+# 6. Kuldsnapshottide elutsükkel (~15s taastus vs täisrebuild):
 ./scripts/snapshots/create-golden-snapshots.sh
-./scripts/snapshots/restore-golden-snapshots.sh
+./scripts/snapshots/restore-golden-snapshots.sh --force
+./scripts/reset-all.sh -y && ./scripts/setup-all.sh -y
 
-# 8. Puhasta logid, ajutised failid ja vanad hetktõmmised:
+# 7. Puhasta logid ja vanad snapshotid:
+./scripts/clean-logs.sh --older-than-hours=20 -y
 ./scripts/clean-logs.sh -y
 ./scripts/snapshots/clean-golden-snapshots.sh -y
-
-# 9. Lähtesta keskkond puhtale algseisule:
-./scripts/reset-all.sh -y
 ```
 
 ---
 
-## 📑 Spetsiifilised Juhendid Kasutajale
+## 🧭 Oracle APEX DevHub Rakendus & APEXlang (TO-BE Teekaart)
 
-- 🚀 **[docs/et/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Migratsiooni- ja Moderniseerimisjuhend** — Äriline põhjendus, TCO kuluvõrdlus, 5-etapiline automaatne töövoog, PL/SQL äriloogika eraldamine ja [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) Vibe-Coding.
-- 📐 **[docs/et/forms-setup.md](forms-setup.md):** Oracle Forms 14c kasutusjuhend — portide kaart (9001/7001/6082), testvormi avamine (`frmservlet?form=test.fmx`), vormide lisamine kausta `forms_apps/`, kompileerimine ja APEX-isse migratsioon.
-- 📑 **[docs/et/publisher-setup.md](publisher-setup.md):** Analytics Publisheri kasutusjuhend — port 9502 (`/xmlpserver`), RCU metaandmete baas, `PUBLISHER_READER` Wallet konto, JDBC andmeallikate sidumine ja aruannete tarne.
-- 💻 **[docs/et/web-ide-artifactory.md](web-ide-artifactory.md):** Web IDE kasutusjuhend — VS Code laiendused (Oracle SQL Developer, Antigravity AI, GitHub Actions), host-ühenduste reaalajas sünkroonimine ja offline GitHub Actions testimine (`act`).
-- 🌐 **[docs/dev-hub.html](../../docs/dev-hub.html):** **Arendaja ja DevOps Juhtimiskeskus (Command Center)** — Kättesaadav aadressil **`http://localhost:8088/`** ja **`https://localhost:8448/`** (ORDS) ning **`http://localhost:6082/vnc.html`** (Forms). Sisaldab reaalajas latentsuse mõõtmist, interaktiivseid Mermaid arhitektuurijooniseid, 11 Blueprinti kataloogi, brauserisisest Markdown dokumentatsiooni lugerit, peidetavat SEPS Wallet paroolide maatriksit ning DevOps kiirkäskude juhtpaneeli 6 keeles.
-- 📊 **[config/blueprints/README.et.md](../../config/blueprints/README.et.md):** Kõigi 11 arhitektuurse kavandi detailne tehniline maatriks.
-- 📖 **[Oracle APEX 26.1 APEXlang Reference Manual](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/):** Oracle'i ametlik spetsifikatsioon deklaratiivse `.apx` grammatika, translaatori AST sõlmede ja CLI käskude kohta.
-- 📜 **[Ametlik APEXlang EBNF Grammatika (`apexlang.ebnf`)](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf):** Masinloetav formaalne EBNF spetsifikatsioon tehisintellekti piirangutega dekodeerimiseks (GBNF) ja staatilisteks turvaskänneriteks.
+> [!NOTE]
+> **TO-BE Teekaart:** Lisaks iseseisvale HTML Dev Hubile (`docs/dev-hub.html`) on tulevikus plaanis täielikult deklaratiivne andmebaasisisene **Oracle APEX rakendus (App 101: DevHub)** [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) baasil kaustas [`applications/`](../../applications/README.md). Kogu baastaristu, APEXlang kompilaatorid ja tarneahelad on ette valmistatud:
 
+- **Zero-Footprint DB Dokumendid:** Dokumentatsiooni ei dubleerita andmebaasi tabelitesse CLOB-idena, vaid kerge lokaalne REST sild (`scripts/internal/dev-hub-bridge.py` pordil 8089) loeb tõlgitud Markdowni otse Gitist.
+- **Automatiseeritud CI/CD:** GitHub Actions töövoog [`.github/workflows/deploy-devhub-apexlang.yml`](../../.github/workflows/deploy-devhub-apexlang.yml) koos kohaliku offline emulatsiooniga `./scripts/test-local-ci.sh deploy-devhub-apexlang.yml --dry-run`.
+- **Testkomplekt:** Käivita `./tests/unit/test-apex-devhub.sh` testi ettevalmistuse kontrollimiseks.
+
+---
+
+## 📑 Spetsiaalsed Juhendid
+
+- 🛡️ **[docs/security.md](../../docs/security.md) | [docs/et/security.md](security.md):** **Turvalisuse & SSO Arhitektuuri Juhend** — Zero-Trust paroolide haldus, Azure Entra-ID SSO ja 5-astmeline TLS.
+- 🏗️ **[docs/db-profiles-and-topology.md](../../docs/db-profiles-and-topology.md):** **Andmebaasi Profiilide ja Topoloogia Juhend** — Puhtad blueprintid, YAML profiilid ja dünaamilised pordid.
+- 🚀 **[docs/forms-to-apex-migration-guide.md](../../docs/forms-to-apex-migration-guide.md):** Oracle Forms to APEX Moderniseerimine ja Migratsioon.
+- 📐 **[docs/forms-setup.md](../../docs/forms-setup.md):** Oracle Forms 14c Juhend.
+- 📑 **[docs/publisher-setup.md](../../docs/publisher-setup.md):** Analytics Publisher Juhend.
+- 💻 **[docs/web-ide-artifactory.md](../../docs/web-ide-artifactory.md):** Web IDE Juhend.
+- 🌐 **[docs/ords-profiles-lifecycle.md](../../docs/ords-profiles-lifecycle.md):** ORDS Profiilide ja Elutsükli Juhend.
+- ☁️ **[docs/remote-multicloud-setup-guide.md](../../docs/remote-multicloud-setup-guide.md):** Kaug-Hübriidpilve Paigalduse Juhend.
+- 🌐 **[docs/dev-hub.html](../../docs/dev-hub.html):** Arendaja ja DevOps Juhtimiskeskus 6 keeles.
+- 📊 **[config/blueprints/README.md](../../config/blueprints/README.md):** 12 kanoonilise blueprinti täismaatriks.

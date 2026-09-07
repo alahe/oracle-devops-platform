@@ -1,9 +1,0 @@
-{
-  "last_updated": "2026-09-02T05:04:54Z",
-  "snapshot_duration_seconds": 30,
-  "snapshot_size_mb": 484,
-  "snapshot_file": "bp_1_20260902_080424.tar.gz",
-  "blueprint_id": "1",
-  "profile_name": "db-alise-oracle",
-  "apex_version": "26.1"
-}

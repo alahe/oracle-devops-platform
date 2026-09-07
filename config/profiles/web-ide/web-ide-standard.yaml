@@ -1,6 +1,6 @@
 profile:
   id: web-ide-standard
-  name: "Web IDE Standard (code-server + Antigravity + Oracle Tools)"
+  name: "Web IDE Standard (code-server + Antigravity + Oracle + Python + CI/CD Tools)"
   description: "Browser-based VS Code environment configured with dynamic tools, extensions, and download URLs."
   type: service
 
@@ -9,6 +9,7 @@ web_ide:
   container_name: web-ide-dev
   container_image: lscr.io/linuxserver/code-server:latest
   build_local: true
+  marketplace_provider: "microsoft" # microsoft | openvsx | artifactory | custom
   ports:
     http_port: 8090
     https_port: 8449
@@ -31,26 +32,62 @@ web_ide:
     act_cli:
       enabled: true
       install_url: "https://raw.githubusercontent.com/nektos/act/master/install.sh"
+    actionlint:
+      enabled: true
+      install_url: "https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash"
+    yamllint:
+      enabled: true
     openjdk:
       enabled: true
       version: 21
 
   # 📦 Configurable VS Code Extensions (.vsix file paths, download URLs, or marketplace IDs)
   extensions:
-    - id: "oracle.sql-developer-for-vscode"
+    - id: "Oracle.sql-developer"
       enabled: true
       name: "Oracle SQL Developer for VS Code"
+      publisher: "Oracle"
       download_url: ""
-      vsix_path: "binaries/extensions/oracle.sql-developer-for-vscode.vsix"
+      vsix_path: "binaries/extensions/oracle.sql-developer.vsix"
 
-    - id: "google.antigravity"
+    - id: "google.google-antigravity"
       enabled: true
       name: "Google Antigravity AI Assistant"
+      publisher: "Google"
       download_url: "https://antigravity.google/download/antigravity.vsix"
       vsix_path: "binaries/extensions/antigravity.vsix"
+
+    - id: "ms-python.python"
+      enabled: true
+      name: "Python"
+      publisher: "Microsoft"
+      download_url: ""
+      vsix_path: "binaries/extensions/ms-python.python.vsix"
+
+    - id: "ms-python.vscode-pylance"
+      enabled: true
+      name: "Pylance Language Server"
+      publisher: "Microsoft"
+      download_url: ""
+      vsix_path: "binaries/extensions/ms-python.vscode-pylance.vsix"
+
+    - id: "ms-python.debugpy"
+      enabled: true
+      name: "Python Debugger"
+      publisher: "Microsoft"
+      download_url: ""
+      vsix_path: "binaries/extensions/ms-python.debugpy.vsix"
 
     - id: "github.vscode-github-actions"
       enabled: true
       name: "GitHub Actions Extension"
+      publisher: "GitHub"
       download_url: ""
-      vsix_path: ""
+      vsix_path: "binaries/extensions/github.vscode-github-actions.vsix"
+
+    - id: "redhat.vscode-yaml"
+      enabled: true
+      name: "YAML Language Support"
+      publisher: "Red Hat"
+      download_url: ""
+      vsix_path: "binaries/extensions/redhat.vscode-yaml.vsix"

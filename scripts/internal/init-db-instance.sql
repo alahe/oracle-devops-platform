@@ -17,9 +17,9 @@ EXCEPTION WHEN OTHERS THEN NULL;
 END;
 /
 
--- 2. Switch to Pluggable Database FREEPDB1
+-- 2. Switch to Pluggable Database
 BEGIN
-  EXECUTE IMMEDIATE 'ALTER SESSION SET CONTAINER = FREEPDB1';
+  EXECUTE IMMEDIATE 'ALTER SESSION SET CONTAINER = ' || NVL('&1', 'FREEPDB1');
   EXECUTE IMMEDIATE 'ALTER SYSTEM SET RESOURCE_MANAGER_PLAN = '''' SCOPE = BOTH';
   EXECUTE IMMEDIATE 'ALTER PROFILE DEFAULT LIMIT FAILED_LOGIN_ATTEMPTS UNLIMITED PASSWORD_LIFE_TIME UNLIMITED';
 EXCEPTION WHEN OTHERS THEN NULL;
@@ -32,16 +32,21 @@ DECLARE
 BEGIN
   SELECT COUNT(*) INTO v_acl_exists FROM dba_network_acls WHERE acl LIKE '%apex_proxy%';
   IF v_acl_exists = 0 THEN
-    DBMS_NETWORK_ACL_ADMIN.APPEND_HOST_ACE(
-      host       => '*',
-      lower_port => 1,
-      upper_port => 65535,
-      ace        => xs$ace_type(
-                      privilege_list => xs$name_list('connect', 'resolve'),
-                      principal_name => 'APEX_240100',
-                      principal_type => xs_acl.ptype_db
-                    )
-    );
+    FOR usr IN (SELECT username FROM all_users WHERE username LIKE 'APEX_%' AND REGEXP_LIKE(username, '^APEX_[0-9]+$')) LOOP
+      BEGIN
+        DBMS_NETWORK_ACL_ADMIN.APPEND_HOST_ACE(
+          host       => '*',
+          lower_port => 1,
+          upper_port => 65535,
+          ace        => xs$ace_type(
+                          privilege_list => xs$name_list('connect', 'resolve'),
+                          principal_name => usr.username,
+                          principal_type => xs_acl.ptype_db
+                        )
+        );
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END;
+    END LOOP;
   END IF;
 EXCEPTION WHEN OTHERS THEN NULL;
 END;

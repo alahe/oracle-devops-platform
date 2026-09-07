@@ -40,10 +40,46 @@
     {
       "timestamp": "2026-09-02T06:23:16.160678",
       "duration_seconds": 671
+    },
+    {
+      "timestamp": "2026-09-02T15:57:20.267957",
+      "duration_seconds": 867
+    },
+    {
+      "timestamp": "2026-09-02T17:06:32.779195",
+      "duration_seconds": 883
+    },
+    {
+      "timestamp": "2026-09-03T21:26:03.946412",
+      "duration_seconds": 528
+    },
+    {
+      "timestamp": "2026-09-03T21:40:19.673125",
+      "duration_seconds": 574
+    },
+    {
+      "timestamp": "2026-09-03T21:46:54.009629",
+      "duration_seconds": 155
+    },
+    {
+      "timestamp": "2026-09-03T21:58:40.550565",
+      "duration_seconds": 574
+    },
+    {
+      "timestamp": "2026-09-05T03:20:29.417881",
+      "duration_seconds": 825
+    },
+    {
+      "timestamp": "2026-09-06T12:02:52.729388",
+      "duration_seconds": 649
+    },
+    {
+      "timestamp": "2026-09-07T02:57:36.484374",
+      "duration_seconds": 904
     }
   ],
-  "runs_count": 10,
-  "average_duration_seconds": 522,
+  "runs_count": 19,
+  "average_duration_seconds": 588,
   "min_duration_seconds": 72,
-  "max_duration_seconds": 757
+  "max_duration_seconds": 904
 }

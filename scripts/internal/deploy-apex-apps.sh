@@ -7,10 +7,14 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR/../.."
+WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$WORKSPACE_DIR"
 
-
-if [ -f ".env" ]; then
+if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
+  source "$SCRIPT_DIR/load-profile.sh"
+  resolve_active_blueprint 2>/dev/null || true
+  load_db_profile >/dev/null 2>&1 || true
+elif [ -f ".env" ]; then
   set -a
   source ".env"
   set +a
@@ -19,7 +23,7 @@ fi
 SYS_PWD="${APEX_DB_SYS_PASSWORD:-}"
 if [ -z "$SYS_PWD" ]; then
   PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
-  PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-dev-full}"
+  PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-proxy}"
   if [ -n "$PRIMARY_CONTAINER" ] && podman container exists "$PRIMARY_CONTAINER" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$PRIMARY_CONTAINER" 2>/dev/null)" = "running" ]; then
     SYS_PWD=$(podman exec "$PRIMARY_CONTAINER" cat "/run/secrets/oracle_pwd" 2>/dev/null || podman exec "$PRIMARY_CONTAINER" cat "/run/secrets/apex_db_sys_password" 2>/dev/null || true)
   fi
@@ -38,17 +42,28 @@ if [ "$APEX_DB_TYPE" = "ADB" ] || [[ "$APEX_DB_IMAGE" == *"adb-free"* ]]; then
 fi
 
 APPS_DIR="binaries/apex_apps"
+mkdir -p "$APPS_DIR"
 
-if [ ! -d "$APPS_DIR" ]; then
-  echo "📂 APEX applications directory missing ($APPS_DIR). Nothing to deploy."
-  exit 0
+# 1. Otsime deklaratiivsed APEXlang rakendused (applications/*/application.apx)
+APEXLANG_APPS=()
+if [ -d "applications" ]; then
+  for d in applications/*; do
+    if [ -d "$d" ] && [ -f "$d/application.apx" ]; then
+      APEXLANG_APPS+=("$d")
+    fi
+  done
 fi
 
-# Find all .sql and .apex files in APPS_DIR
-FILES=$(find "$APPS_DIR" -type f \( -name "*.sql" -o -name "*.apex" \) | sort)
+# 2. Otsime klassikalised .sql ja .apex failid kaustast binaries/apex_apps
+LEGACY_FILES=()
+if [ -d "$APPS_DIR" ]; then
+  while IFS= read -r f; do
+    [ -n "$f" ] && LEGACY_FILES+=("$f")
+  done < <(find "$APPS_DIR" -type f \( -name "*.sql" -o -name "*.apex" \) 2>/dev/null | sort)
+fi
 
-if [ -z "$FILES" ]; then
-  echo "ℹ️  No .sql or .apex application files found in $APPS_DIR."
+if [ ${#APEXLANG_APPS[@]} -eq 0 ] && [ ${#LEGACY_FILES[@]} -eq 0 ]; then
+  echo "ℹ️  No APEX applications found to deploy (checked applications/ and $APPS_DIR/)."
   exit 0
 fi
 
@@ -62,8 +77,6 @@ run_sqlcl() {
       LOCAL_BIN="$SQLCL_BIN"
     elif command -v sql &> /dev/null; then
       LOCAL_BIN="sql"
-    elif command -v sqlplus &> /dev/null; then
-      LOCAL_BIN="sqlplus"
     fi
     
     if [ -n "$LOCAL_BIN" ]; then
@@ -107,20 +120,76 @@ EOF
 }
 
 echo "=================================================================="
-echo "🚀 Starting APEX applications deployment from $APPS_DIR/"
+echo "🚀 Starting APEX applications deployment"
+echo "   APEXlang rakendusi leitud: ${#APEXLANG_APPS[@]}"
+echo "   SQL pakette leitud:        ${#LEGACY_FILES[@]}"
 echo "=================================================================="
 
-for file in $FILES; do
-  FILENAME=$(basename "$file")
-  echo "📦 Deploying application: $FILENAME..."
+PRIMARY_UPPER=$(echo "$PRIMARY_CONTAINER" | sed 's/^db-//' | tr '-' '_' | tr '[:lower:]' '[:upper:]')
+CONN_ARG="/@DB_${PRIMARY_UPPER}_SYS as sysdba"
+if [ "$IS_ADB" = "true" ]; then
+  CONN_ARG="/@DB_${PRIMARY_UPPER}_SYS"
+fi
+
+TARGET_WS="${PROFILE_APEX_WORKSPACE:-PROXY_WORKSPACE}"
+
+# 1. Deklaratiivsete APEXlang rakenduste paigaldamine
+for app_dir in "${APEXLANG_APPS[@]}"; do
+  APP_NAME=$(basename "$app_dir")
+  APP_ID=$(grep -E '^[[:space:]]*id:[[:space:]]*[0-9]+' "$app_dir/application.apx" | head -n 1 | awk '{print $2}')
+  APP_ID="${APP_ID:-101}"
+  echo "📦 Deploying declarative APEXlang application: $APP_NAME (ID: $APP_ID) into $TARGET_WS..."
   
-  CONN_ARG="/@DB_APEX_PROXY_SYS as sysdba"
-  if [ "$IS_ADB" = "true" ]; then
-    CONN_ARG="/@DB_APEX_PROXY_SYS"
+  # Ensure target workspace exists
+  run_sqlcl -s $CONN_ARG <<EOF >/dev/null 2>&1
+ALTER SESSION SET CONTAINER = ${DB_SERVICE};
+BEGIN
+  APEX_INSTANCE_ADMIN.ADD_WORKSPACE(
+    p_workspace => '${TARGET_WS}',
+    p_primary_schema => 'DEVHUB'
+  );
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+EXIT;
+EOF
+
+  # 1.1 CI/CD Quality Gate: Validate APEXlang application structure
+  echo "🔍 [Quality Gate]: Validating $APP_NAME syntax and AST..."
+  VAL_OUTPUT=$(run_sqlcl -s $CONN_ARG <<EOF 2>&1
+ALTER SESSION SET CONTAINER = ${DB_SERVICE};
+apex validate -input ./$app_dir -workspace ${TARGET_WS}
+EXIT;
+EOF
+)
+
+  if echo "$VAL_OUTPUT" | grep -E "Compile Errors|INVALID_PROPERTY|COMPONENT_NOT_FOUND|MISSING_REQUIRED_PROPERTY|SYNTAX" >/dev/null; then
+    echo "❌ ERROR: APEXlang validation failed for application $APP_NAME!"
+    echo "$VAL_OUTPUT" | grep -A 3 -E "Compile Errors|Type:|Error:" | head -n 30
+    echo "   Aborting deployment of $APP_NAME to protect workspace $TARGET_WS."
+    exit 1
   fi
+  echo "   ✅ Validation successful for $APP_NAME."
+
+  # 1.2 CI/CD Deploy: Import validated application
+  echo "🚀 [Deploy]: Importing application $APP_NAME (ID: $APP_ID) into $TARGET_WS..."
+  run_sqlcl -s $CONN_ARG <<EOF
+ALTER SESSION SET CONTAINER = ${DB_SERVICE};
+apex import -input ./$app_dir -id ${APP_ID} -workspace ${TARGET_WS}
+EXIT;
+EOF
+
+  echo "✅ APEXlang application $APP_NAME (ID: $APP_ID) deployment completed."
+  echo "------------------------------------------------------------------"
+done
+
+# 2. Klassikaliste .sql / .apex pakettide paigaldamine
+for file in "${LEGACY_FILES[@]}"; do
+  FILENAME=$(basename "$file")
+  echo "📦 Deploying legacy application package: $FILENAME..."
 
   run_sqlcl -s $CONN_ARG <<EOF
-ALTER SESSION SET CONTAINER = FREEPDB1;
+ALTER SESSION SET CONTAINER = ${DB_SERVICE};
 
 SET DEFINE OFF;
 SET ECHO OFF;
@@ -129,10 +198,10 @@ SET SERVEROUTPUT ON SIZE UNLIMITED;
 -- Set APEX workspace and schema context for the import
 BEGIN
   wwv_flow_api.set_security_group_id(
-    p_security_group_id => apex_util.find_security_group_id(p_workspace => 'PROXY_WORKSPACE')
+    p_security_group_id => apex_util.find_security_group_id(p_workspace => '${TARGET_WS}')
   );
   apex_application_install.set_workspace_id(
-    p_security_group_id => apex_util.find_security_group_id(p_workspace => 'PROXY_WORKSPACE')
+    p_security_group_id => apex_util.find_security_group_id(p_workspace => '${TARGET_WS}')
   );
   apex_application_install.set_schema('APEX_PROXY_SCHEMA');
   apex_application_install.generate_offset;

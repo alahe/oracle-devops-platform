@@ -1,0 +1,9 @@
+{
+  "last_updated": "2026-09-04T17:58:11Z",
+  "snapshot_duration_seconds": 177,
+  "snapshot_size_mb": 991,
+  "snapshot_file": "bp_0_20260904_205514.tar.gz",
+  "blueprint_id": "0",
+  "profile_name": "db-proxy-oracle",
+  "apex_version": "26.1"
+}

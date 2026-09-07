@@ -13,16 +13,12 @@ else
   PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
 
-if [ -f "$PROJECT_ROOT/.env" ]; then
-  set -a
-  source "$PROJECT_ROOT/.env" 2>/dev/null || true
-  set +a
-fi
-
 if [ -f "$PROJECT_ROOT/scripts/internal/load-profile.sh" ]; then
   source "$PROJECT_ROOT/scripts/internal/load-profile.sh"
+  resolve_active_blueprint
   load_db_profile >/dev/null 2>&1 || true
   load_web_ide_profile >/dev/null 2>&1 || true
+  load_publisher_designer_profile >/dev/null 2>&1 || true
 fi
 
 if [ -f "$PROJECT_ROOT/scripts/internal/common.sh" ]; then
@@ -111,18 +107,14 @@ URLS=()
 ANY_ORDS_ENABLED=false
 for inst in $(get_active_db_instances 2>/dev/null); do
   pname=$(echo "$inst" | cut -d'|' -f2)
-  pfile="$PROJECT_ROOT/config/profiles/databases/${pname}.yaml"
-  [ ! -f "$pfile" ] && pfile="$PROJECT_ROOT/config/profiles/${pname}.yaml"
-  if [ -f "$pfile" ]; then
-    ords_en=$(awk '/ords:/{flag=1;next}/forms:|apex:|publisher:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
-    if [ "$ords_en" = "true" ]; then
-      ANY_ORDS_ENABLED=true
-      break
-    fi
+  load_db_profile "$pname" >/dev/null 2>&1 || true
+  if [ "${PROFILE_ORDS_ENABLED:-true}" = "true" ]; then
+    ANY_ORDS_ENABLED=true
+    break
   fi
 done
 
-if [ "$ANY_ORDS_ENABLED" = "true" ] && [ "${SKIP_ORDS:-false}" != "true" ]; then
+if is_ords_enabled || podman container exists app-ords 2>/dev/null; then
   if podman container exists app-ords 2>/dev/null || [ "${PROFILE_ORDS_CONTAINER_REQUIRED:-true}" != "false" ]; then
     ords_h_port="${ORDS_HTTP_PORT:-${PROFILE_ORDS_HTTP_PORT:-8088}}"
     ords_s_port="${ORDS_HTTPS_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8448}}"
@@ -135,46 +127,48 @@ if [ "$ANY_ORDS_ENABLED" = "true" ] && [ "${SKIP_ORDS:-false}" != "true" ]; then
     URLS+=("ORDS Root HTTPS|https://localhost:${ords_s_port}/ords/|")
     URLS+=("ORDS Database Actions (Default)|https://localhost:${ords_s_port}/ords/_/landing|!DatabaseCredentialError")
 
-    # Loop dynamically over all active database instances
-    for inst in $(get_active_db_instances 2>/dev/null); do
+    # Collect active and currently running database instances
+    all_instances=($(get_active_db_instances 2>/dev/null))
+    if command -v podman >/dev/null 2>&1; then
+      for c in $(podman ps --format '{{.Names}}' 2>/dev/null | grep -E '^(db-.*|oracle-db-.*)$'); do
+        already=false
+        for inst in "${all_instances[@]}"; do
+          if [ "$(echo "$inst" | cut -d'|' -f1)" = "$c" ]; then
+            already=true
+            break
+          fi
+        done
+        if [ "$already" = "false" ]; then
+          all_instances+=("${c}|app-free|${c#db-}")
+        fi
+      done
+    fi
+
+    for inst in "${all_instances[@]}"; do
       cname=$(echo "$inst" | cut -d'|' -f1)
       pname=$(echo "$inst" | cut -d'|' -f2)
-      pfile="$PROJECT_ROOT/config/profiles/databases/${pname}.yaml"
-      [ ! -f "$pfile" ] && pfile="$PROJECT_ROOT/config/profiles/${pname}.yaml"
+      load_db_profile "$pname" >/dev/null 2>&1 || true
 
       pool_name=$(echo "$cname" | sed 's/^db-//' | tr '-' '_')
-
-      apex_en="false"
-      if [ -f "$pfile" ]; then
-        apex_en=$(grep -A 8 "apex:" "$pfile" 2>/dev/null | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
-      fi
+      apex_en="${PROFILE_APEX_ENABLED:-true}"
 
       if [ "$apex_en" = "true" ]; then
         upper_pool=$(echo "$pool_name" | tr '[:lower:]' '[:upper:]')
+        URLS+=("APEX Static Images (/i/)|https://localhost:${ords_s_port}/i/apex_version.txt|Oracle APEX Version")
         URLS+=("APEX Builder (${upper_pool})|https://localhost:${ords_s_port}/ords/${pool_name}/r/apex/workspace-sign-in/oracle-apex-sign-in|")
         URLS+=("APEX Instance Admin (${upper_pool})|https://localhost:${ords_s_port}/ords/${pool_name}/apex_admin|")
-        URLS+=("ORDS Database Actions (${upper_pool})|https://localhost:${ords_s_port}/ords/${pool_name}/_/landing|!DatabaseCredentialError")
+        URLS+=("ORDS Database Actions (${upper_pool})|https://localhost:${ords_s_port}/ords/${pool_name}/sql-developer|!DatabaseCredentialError")
+        URLS+=("ORDS Landing (${upper_pool})|https://localhost:${ords_s_port}/ords/${pool_name}/_/landing|!DatabaseCredentialError")
       fi
     done
   fi
+else
+  echo -e "   ${YELLOW}ℹ️  $(msg_str "ORDS_NOT_CONFIGURED_STATUS")${NC}"
+  echo -e "   ${CYAN}💡 $(msg_str "ORDS_NOT_CONFIGURED_HINT")${NC}"
 fi
 
 # 2. Analytics Publisher URLs
-ANY_PUB_ENABLED=false
-for inst in $(get_active_db_instances 2>/dev/null); do
-  pname=$(echo "$inst" | cut -d'|' -f2)
-  pfile="$PROJECT_ROOT/config/profiles/databases/${pname}.yaml"
-  [ ! -f "$pfile" ] && pfile="$PROJECT_ROOT/config/profiles/${pname}.yaml"
-  if [ -f "$pfile" ]; then
-    pub_en=$(awk '/publisher:/{flag=1;next}/forms:|ords:|apex:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
-    if [ "$pub_en" = "true" ]; then
-      ANY_PUB_ENABLED=true
-      break
-    fi
-  fi
-done
-
-if [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ] || [ "${SKIP_PUBLISHER:-true}" = "false" ]; then
+if is_publisher_enabled || podman container exists app-publisher 2>/dev/null; then
   pub_h_port="${PUBLISHER_HTTP_PORT:-9502}"
   pub_s_port="${PUBLISHER_HTTPS_PORT:-9503}"
   pub_admin_port="${PUBLISHER_ADMIN_PORT:-9500}"
@@ -188,25 +182,7 @@ if [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ]
 fi
 
 # 3. Oracle Forms 14c URLs
-ANY_FORMS_ENABLED=false
-for inst in $(get_active_db_instances 2>/dev/null); do
-  pname=$(echo "$inst" | cut -d'|' -f2)
-  pfile="$PROJECT_ROOT/config/profiles/databases/${pname}.yaml"
-  [ ! -f "$pfile" ] && pfile="$PROJECT_ROOT/config/profiles/${pname}.yaml"
-  if [ -f "$pfile" ]; then
-    forms_en=$(awk '/forms:/{flag=1;next}/ords:|apex:|publisher:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
-    if [ "$forms_en" = "true" ]; then
-      ANY_FORMS_ENABLED=true
-      break
-    fi
-  fi
-done
-
-if [ "${SKIP_FORMS:-true}" = "false" ] || [ "${ENABLE_FORMS:-false}" = "true" ]; then
-  ANY_FORMS_ENABLED=true
-fi
-
-if [ "$ANY_FORMS_ENABLED" = "true" ] || [ "${ENABLE_FORMS:-false}" = "true" ]; then
+if is_forms_enabled || podman container exists app-forms 2>/dev/null; then
   forms_h_port="${FORMS_HTTP_PORT:-9001}"
   forms_admin_port="${FORMS_ADMIN_PORT:-7001}"
   forms_builder_port="${FORMS_BUILDER_PORT:-6082}"
@@ -219,14 +195,20 @@ elif curl -s -m 2 http://localhost:6082/vnc.html >/dev/null 2>&1; then
   URLS+=("Developer Hub Web GUI (HTTP)|http://localhost:6082/vnc.html|")
 fi
 
-# 3. Web IDE URLs
-if [ "${SKIP_WEB_IDE}" != "true" ] && { [ "${WEB_IDE_ENABLED}" = "true" ] || [ -n "$(podman ps -q --filter name=web-ide-dev 2>/dev/null)" ]; }; then
+# 4. Web IDE URLs
+if is_web_ide_enabled || [ -n "$(podman ps -q --filter name=web-ide-dev 2>/dev/null)" ]; then
   web_ide_h_port="${WEB_IDE_HTTP_PORT:-8090}"
   web_ide_s_port="${WEB_IDE_HTTPS_PORT:-8449}"
   URLS+=("Web IDE (HTTP)|http://localhost:${web_ide_h_port}|")
   if curl -s -k --connect-timeout 2 --max-time 3 -o /dev/null "https://localhost:${web_ide_s_port}" 2>/dev/null; then
     URLS+=("Web IDE (HTTPS)|https://localhost:${web_ide_s_port}|")
   fi
+fi
+
+# 5. Publisher Designer URLs
+if is_publisher_designer_enabled || [ -n "$(podman ps -q --filter name=app-publisher-designer 2>/dev/null)" ]; then
+  designer_h_port="${PUBLISHER_DESIGNER_HTTP_PORT:-6083}"
+  URLS+=("Publisher Designer GUI (noVNC)|http://localhost:${designer_h_port}/vnc.html|")
 fi
 
 if [ ${#URLS[@]} -eq 0 ]; then
@@ -265,8 +247,8 @@ for item in "${URLS[@]}"; do
     BODY_OUTPUT=$(curl -s -k -L --noproxy "*" --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" "$url" 2>/dev/null || true)
     HTTP_CODE=$(curl -s -k -L --noproxy "*" --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" -o /dev/null -w "%{http_code}" "$url" 2>/dev/null | grep -E '^[0-9]{3}$' || echo "000")
 
-    # Check for valid HTTP code (1xx-4xx, ORDS 574 unmapped root is also responsive)
-    if [[ "$HTTP_CODE" =~ ^[1-4][0-9]{2}$ ]] || [ "$HTTP_CODE" = "574" ]; then
+    # Check for valid HTTP code (1xx-4xx). HTTP 574 is a Database Credential Error and must NOT pass.
+    if [[ "$HTTP_CODE" =~ ^[1-4][0-9]{2}$ ]] && [ "$HTTP_CODE" != "574" ]; then
       # If pattern check is required
       if [ -n "$pattern" ]; then
         if [[ "$pattern" == "!"* ]]; then
@@ -289,12 +271,27 @@ for item in "${URLS[@]}"; do
     sleep "$RETRY_INTERVAL"
   done
 
+  if [ "$SUCCESS" != "true" ] && [[ "$label" == *"APEX Static Images"* ]]; then
+    if [ -x "$PROJECT_ROOT/scripts/internal/sync-apex-images.sh" ]; then
+      echo -e "${YELLOW}   ⚠️  APEX static assets (/i/) missing. Attempting auto-sync...${NC}"
+      "$PROJECT_ROOT/scripts/internal/sync-apex-images.sh" >/dev/null 2>&1 || true
+      sleep 2
+      HTTP_CODE=$(curl -s -k -L --noproxy "*" --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" -o /dev/null -w "%{http_code}" "$url" 2>/dev/null | grep -E '^[0-9]{3}$' || echo "000")
+      if [ "$HTTP_CODE" = "200" ]; then
+        SUCCESS=true
+      fi
+    fi
+  fi
+
   if [ "$SUCCESS" = "true" ]; then
     echo -e "${GREEN}$(msg_str "URL_SUCCESS" "HTTP ${HTTP_CODE}" "${TLS_STATUS}")${NC}"
     URL_MD_TABLE+="| ${label} | \`${url}\` | \`HTTP ${HTTP_CODE}\` | ${TLS_STATUS} | ✅ OK |\n"
   else
     echo -e "${RED}$(msg_str "URL_FAIL" "HTTP ${HTTP_CODE:-000}")${NC}"
-    URL_MD_TABLE+="| ${label} | \`${url}\` | \`HTTP ${HTTP_CODE:-000}\` | ${TLS_STATUS} | ❌ Kättesaamatu |\n"
+    if [ "$HTTP_CODE" = "574" ]; then
+      echo -e "${YELLOW}   ⚠️  $(msg_str "ORDS_574_DIAGNOSTIC")${NC}"
+    fi
+    URL_MD_TABLE+="| ${label} | \`${url}\` | \`HTTP ${HTTP_CODE:-000}\` | ${TLS_STATUS} | ❌ Unreachable |\n"
     FAILED_URLS=$((FAILED_URLS + 1))
   fi
 done

@@ -52,7 +52,7 @@ Näited:
   ./docker/forms/build-forms-prebuilt-image.sh --export binaries/forms/oracle-forms-14.1.2.tar
 
   # Laadi ettevõtte sise-Artifactorysse:
-  ./docker/forms/build-forms-prebuilt-image.sh -t artifactory.corp.bank/oracle-forms:14.1.2 --push
+  ./docker/forms/build-forms-prebuilt-image.sh -t artifactory.example.com/oracle-forms:14.1.2 --push
 EOH
 }
 

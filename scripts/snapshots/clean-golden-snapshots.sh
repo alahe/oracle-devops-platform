@@ -62,19 +62,19 @@ fi
 echo "------------------------------------------------------------------"
 
 if [ "$DAYS" -eq 0 ]; then
-  echo "🗑  Purging all older Golden Snapshots (preserving latest snapshot)..."
-  find "$BACKUP_DIR" -type f ! -name "*latest.tar.gz" ! -name ".gitignore" ! -name ".gitkeep" -delete
+  echo "🗑  Purging all older Golden Snapshots (preserving latest snapshots)..."
+  find "$BACKUP_DIR" -type f ! -name "*latest*" ! -name ".gitignore" ! -name ".gitkeep" -delete
   echo "✅ Obsolete snapshots purged successfully!"
 else
   # Delete snapshot files older than specified retention days
   MTIME_VAL=$((DAYS - 1))
   
-  TO_DELETE=$(find "$BACKUP_DIR" -type f ! -name "*latest.tar.gz" ! -name ".gitignore" ! -name ".gitkeep" -mtime +$MTIME_VAL 2>/dev/null | wc -l | tr -d ' ')
+  TO_DELETE=$(find "$BACKUP_DIR" -type f ! -name "*latest*" ! -name ".gitignore" ! -name ".gitkeep" -mtime +$MTIME_VAL 2>/dev/null | wc -l | tr -d ' ')
   
   if [ "$TO_DELETE" -eq 0 ]; then
     echo "ℹ️  No snapshot files found older than $DAYS day(s)."
   else
-    find "$BACKUP_DIR" -type f ! -name "*latest.tar.gz" ! -name ".gitignore" ! -name ".gitkeep" -mtime +$MTIME_VAL -delete
+    find "$BACKUP_DIR" -type f ! -name "*latest*" ! -name ".gitignore" ! -name ".gitkeep" -mtime +$MTIME_VAL -delete
     echo "✅ Successfully purged $TO_DELETE snapshot file(s)!"
   fi
 fi

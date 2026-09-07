@@ -24,15 +24,15 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     -h|--help)
-      echo "Kasutus: $0 [VALIKUD] [MOODUL.FMB]"
+      echo "Usage: $0 [OPTIONS] [MODULE.FMB]"
       echo ""
-      echo "Valikud:"
-      echo "  -p, --port PORT  Määra Developer Hubi veebiport (Vaikimisi: 6082)"
-      echo "  -h, --help       Kuva see abiinfo"
+      echo "Options:"
+      echo "  -p, --port PORT  Set Developer Hub web port (Default: 6082)"
+      echo "  -h, --help       Show this help message"
       echo ""
-      echo "Näited:"
-      echo "  $0                          # Avab Forms & APEX Modernization Hubi brauseris"
-      echo "  $0 forms_apps/minuvorm.fmb  # Kompileerib ja valmistab ette konkreetse vormi"
+      echo "Examples:"
+      echo "  $0                        # Opens Forms & APEX Modernization Hub in browser"
+      echo "  $0 forms_apps/myform.fmb  # Compiles and prepares specified form"
       exit 0
       ;;
     *)
@@ -45,8 +45,8 @@ done
 # Check if Forms container is running
 if ! podman ps --format "{{.Names}}" 2>/dev/null | grep -q "^${CONTAINER_NAME}$"; then
   if ! docker ps --format "{{.Names}}" 2>/dev/null | grep -q "^${CONTAINER_NAME}$"; then
-    echo "⚠️  Forms konteiner ($CONTAINER_NAME) ei tööta!"
-    echo "   Käivita see käsuga: ./scripts/setup-all.sh -b 18 või ./scripts/start-containers.sh"
+    echo "⚠️  Forms container ($CONTAINER_NAME) is not running!"
+    echo "   Start it with: ./scripts/setup-all.sh -b 18 or ./scripts/start-containers.sh"
     exit 1
   fi
 fi
@@ -56,17 +56,17 @@ echo "🚀 ORACLE FORMS 14c DEVOPS & MODERNIZATION HUB"
 echo "=================================================================="
 
 if [ -n "$TARGET_MODULE" ]; then
-  echo "📦 Kompileerin ja valideerin moodulit: $TARGET_MODULE..."
+  echo "📦 Compiling and validating module: $TARGET_MODULE..."
   "$SCRIPT_DIR/compile-form.sh" "$TARGET_MODULE" || true
 fi
 
 URL="http://localhost:${BUILDER_PORT}/vnc.html"
-echo "🌐 Forms & APEX Modernization Hub on avatud:"
+echo "🌐 Forms & APEX Modernization Hub is available at:"
 echo "   👉 $URL"
 echo "=================================================================="
-echo "💡 ARHITEKTUURNE SPINNER:"
-echo "   • Vormide visuaalne disain (GUI): Windows Forms Builder (frmbld.exe) -> salvesta kausta 'forms_apps/'"
-echo "   • Linux/Mac Konteiner:           Headless käitusserver (port 9001), partii-kompileerimine ja APEX eksport"
+echo "💡 ARCHITECTURE OVERVIEW:"
+echo "   • Visual Forms Design (GUI):   Windows Forms Builder (frmbld.exe) -> save to 'forms_apps/'"
+echo "   • Linux/Mac Container:         Headless runtime (port 9001), batch compilation and APEX export"
 echo "=================================================================="
 
 # Try to open default browser on macOS / Linux

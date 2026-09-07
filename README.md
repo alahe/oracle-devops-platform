@@ -12,8 +12,11 @@
 # 1. Clone the repository and enter the directory
 git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-free-db-in-prod
 
-# 2. Launch the Default 2-Layer Production Stack (Blueprint 21)
-./scripts/setup-all.sh -b 21
+# 2. Launch the Canonical System Default (Blueprint 0: Default Proxy DB & ORDS Gateway)
+./scripts/setup-all.sh
+
+# Or launch the dedicated business application database (Blueprint 1: Standalone ALISE DB)
+./scripts/setup-all.sh -b 1
 
 # 3. View passwords, URLs, and clipboard helper (or open Dev Hub at http://localhost:8088/)
 ./scripts/get-password.sh
@@ -28,17 +31,21 @@ flowchart TD
     Start(["🚀 Developer Starts"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
     Clone --> ChooseBP{"2. Select Architecture Blueprint"}
     
-    ChooseBP -->|Default 2-DB Stack| BP21["./scripts/setup-all.sh -b 21"]
-    ChooseBP -->|Forms + Publisher + IDE| BP31["./scripts/setup-all.sh -b 31"]
-    ChooseBP -->|Preview / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 21 --dry-run"]
+    ChooseBP -->|Canonical Default| BP0["./scripts/setup-all.sh (BP 0)"]
+    ChooseBP -->|Business ALISE DB| BP1["./scripts/setup-all.sh -b 1"]
+    ChooseBP -->|Forms + Publisher| BP7["./scripts/setup-all.sh -b 7"]
+    ChooseBP -->|Standalone Web IDE| BP8["./scripts/setup-all.sh -b 8"]
+    ChooseBP -->|Preview / Dry-Run| BPDry["./scripts/setup-all.sh -b 1 --dry-run"]
     
-    BP21 --> DevHub["3. Open DevOps Command Center<br/>🌐 http://localhost:8088/"]
-    BP31 --> DevHub
+    BP0 --> DevHub["3. Open DevOps Command Center<br/>🌐 http://localhost:8088/"]
+    BP1 --> DevHub
+    BP7 --> DevHub
+    BP8 --> DevHub
     BPDry --> ChooseBP
     
-    DevHub --> PwdSpikker["4. Password Spikker (SEPS Wallet)<br/>./scripts/get-password.sh DB_PROXY_DEV -c"]
+    DevHub --> PwdSpikker["4. Password Spikker (SEPS Wallet)<br/>./scripts/get-password.sh DB_ALISE_DEV -c"]
     
-    PwdSpikker --> DevWork["5. Start Building!"]
+    DevHub --> DevWork["5. Start Building!"]
     DevWork --> WorkIDE["💻 Web IDE & SQL Developer (:8090)"]
     DevWork --> WorkAPEX["🌟 APEX Builder & SSO Gateway (:8088)"]
     DevWork --> WorkForms["📐 Forms 14c noVNC Builder (:6082)"]
@@ -47,31 +54,90 @@ flowchart TD
 
 ---
 
-## ⚡ Setup-All 10-Phase Lifecycle Architecture
+## 🏗️ Architecture Blueprints (12 Canonical Modular Building Blocks)
+
+Oracle Free DB in Prod organizes its architecture into **12 canonical modular architecture blueprints (0 .. 11)** grouped into 4 distinct enterprise tiers:
 
 ```mermaid
-flowchart LR
-    P1["1. Pull Images"] --> P2["2. Fetch ORDS"]
-    P2 --> P3["3. APEX Packages"]
-    P3 --> P4["4. Start Containers"]
-    P4 --> P5["5. Wait DB Healthy"]
-    P5 --> P6["6. Install APEX"]
-    P6 --> P7["7. Schemas & SEPS Init"]
-    P7 --> P8["8. Deploy APEX Apps"]
-    P8 --> P9["9. Middleware & Services"]
-    P9 --> P10["10. Golden Snapshot (~15s DR)"]
+flowchart TD
+    subgraph Default ["⭐ CANONICAL SYSTEM DEFAULT"]
+        BP0["BP 0: Default Proxy DB & ORDS<br/>db-proxy (:1532) + app-ords (:8088/8448)"]
+    end
+
+    subgraph DatabaseStacks ["🗄️ GROUP 1: DATABASE STACKS (1–4)"]
+        BP1["BP 1: Standalone ALISE DB (:1533)"]
+        BP2["BP 2: Standalone Proxy DB (:1537)"]
+        BP3["BP 3: Standalone Gvenzl Community DB (:1535)"]
+        BP4["BP 4: Standalone Autonomous DB Cloud (:1536)"]
+    end
+
+    subgraph Middleware ["🏢 GROUP 2: ENTERPRISE MIDDLEWARE (5–7)"]
+        BP5["BP 5: Standalone Analytics Publisher (:1531, :9502)"]
+        BP6["BP 6: Standalone Oracle Forms 14c (:1534, :9001, :6082)"]
+        BP7["BP 7: Consolidated Forms + Publisher FMW (:1531, :9001, :9502)"]
+    end
+
+    subgraph DeveloperStudio ["💻 GROUP 3: DEVELOPER STUDIO (8–9)"]
+        BP8["BP 8: Standalone Web-IDE (:8090)<br/>⚠️ Testing & Refinement"]
+        BP9["BP 9: Publisher Designer (:6083)<br/>⚠️ Testing & Refinement"]
+    end
+
+    subgraph RemoteGateways ["🌐 GROUP 4: REMOTE & EDGE GATEWAYS (10–11)"]
+        BP10["BP 10: Remote ORDS Gateway (:8088/8448)<br/>⚠️ Testing & Refinement"]
+        BP11["BP 11: Remote Publisher (:9502/9503)<br/>⚠️ Testing & Refinement"]
+    end
+
+    Default --> DatabaseStacks
+    Default --> Middleware
+    Default --> DeveloperStudio
+    Default --> RemoteGateways
 ```
 
 ---
 
-## 🌐 Dev Hub (`http://localhost:8088/`) — Single Pane of Glass
+## 🧩 Clean Blueprint & YAML Profile Single Source of Truth (Rule 11)
 
-Developers do not need to memorize dozens of individual ports. The **Dev Hub** acts as the unified cockpit:
-- **1-Click Service Portals:** Direct access to APEX Builder, Database Actions (SDW), Forms 14c runtime, HTML5 noVNC Forms Builder, and Analytics Publisher.
-- **1-Click Password Copying:** Single click copies decrypted password to clipboard (ready to Paste with `Cmd+V` / `Ctrl+V`).
-- **Real-Time Health Diagnostics:** Automatic 6-second heartbeat checking HTTP status codes across all services.
-- **Embedded Markdown Documentation Browser:** In-browser navigation for all project guides and architecture diagrams.
-- **Blueprint Deployment & Switching:** Switch between curated blueprints seamlessly without data loss.
+To guarantee total architectural decoupling and eliminate hardcoded configurations:
+
+1. **Ultra-Clean Blueprints (`config/blueprints/.env.*`):**
+   - Blueprints only declare high-level positive profile references for services that are needed:
+     ```bash
+     DB_ALISE=db-alise-oracle
+     ORDS_PROFILE=ords-standard
+     WEB_IDE_PROFILE=web-ide-standard
+     ```
+   - **Zero Negative Declarations:** Blueprints never contain `SKIP_*` variables, ports, or passwords.
+   - Blueprints define *which containers are created*.
+
+2. **Domain Encapsulation in YAML Profiles (`config/profiles/**/*.yaml`):**
+   - 100% of domain specifics live in YAML profiles (`config/profiles/databases/*.yaml`, `config/profiles/web-ide/*.yaml`, `config/profiles/publisher/*.yaml`):
+     - Container images, memory limits, host ports (`db_port`, `http_port`).
+     - Default service names (`default_service: FREEPDB1`).
+     - Tablespaces, quotas, roles, and user definitions.
+     - **Inter-Database Relationships:** ORDS connection pools and cross-database connections are declared in YAML.
+
+3. **User Extensibility: Adding Custom Blueprints 1-by-1:**
+   - Any developer or AI can create a new blueprint anytime by adding a simple file:
+     ```bash
+     config/blueprints/.env.<ID>-<custom-name>
+     ```
+   - The orchestration engine (`setup-all.sh`, `deploy-blueprint.sh`, and Dev-Hub) automatically discovers the new blueprint dynamically without requiring any code changes!
+
+---
+
+## 🌐 Dev Hub (`http://localhost:8088/`) — Asynchronous Command Center (Rule 12)
+
+The **Dev Hub** acts as the unified cockpit for managing services and blueprints:
+
+- **Asynchronous Task Management:** Setup, activation, and restart operations execute in the background (`ACTIVE_TASKS`) via `dev-hub-bridge.py`.
+- **Zero Browser Timeouts:** The 300s browser fetch timeout is completely eliminated.
+- **Live Terminal Log Streaming:** Real-time log tails (`/api/task/status?task=...`) are streamed directly to the modal interface.
+- **Multi-Tiered Card Lifecycle:**
+  - ⏳ **`status-installing` (Pulsing Amber):** Setup or rebuild actively running.
+  - 🟡 **`status-init` (Yellow):** Container running, database healthcheck initializing.
+  - 🟢 **`status-online` (Green):** Database healthy, SEPS Wallet connected, and web endpoints responsive.
+- **Delayed Verified `.active_blueprint` Confirmation:** The active blueprint marker is persisted strictly after 100% of PDB initializations, SEPS Wallet tests, and URL checks succeed.
+- **1-Click Password Copying:** Decrypts passwords dynamically in-memory from Oracle Wallet straight to clipboard.
 
 ---
 
@@ -84,13 +150,13 @@ All credentials are cryptographically generated and stored securely in the **Ora
 ./scripts/get-password.sh
 
 # Copy developer password directly to clipboard:
-./scripts/get-password.sh DB_PROXY_DEV -c
+./scripts/get-password.sh DB_ALISE_DEV -c
 
 # Copy APEX Instance Admin password:
 ./scripts/get-password.sh DB_PROXY_APEX_ADMIN -c
 
 # Connect to database via SQLcl WITHOUT entering passwords:
-sql /@DB_PROXY_DEV
+sql /@DB_ALISE_DEV
 ```
 
 ---
@@ -99,128 +165,82 @@ sql /@DB_PROXY_DEV
 
 | Stakeholder | Key Benefits & Daily Experience | Technical Enabler |
 | :--- | :--- | :--- |
-| **👩‍💻 Developers** | Zero-configuration instant setup, passwordless SQLcl connections (`sql /@DB_PROXY_DEV`), 1-click login helper, and browser-based Web IDE (`:8090`). | Oracle SEPS Wallet auto-login (`cwallet.sso`), automated VS Code connection provisioning, and instant snapshot recovery. |
+| **👩‍💻 Developers** | Zero-configuration instant setup, passwordless SQLcl connections (`sql /@DB_ALISE_DEV`), 1-click login helper, and browser-based Web IDE (`:8090`). | Oracle SEPS Wallet auto-login (`cwallet.sso`), automated VS Code connection provisioning, and instant snapshot recovery. |
 | **🛡️ Security & Architects** | Zero-Trust compliance, zero plaintext passwords on disk, automated TLS certificates, and 2-layer reverse proxy network isolation. | AES-256 encrypted SEPS Wallet in memory, Podman secrets, and dual-DB architecture (`db-proxy` vs `db-alise`). |
-| **⚙️ DevOps & QA Admins** | 15 curated architecture blueprints, reproducible CI/CD pipelines, single-command lifecycle, and 15-second snapshot recovery. | `setup-all.sh`, `deploy-blueprint.sh`, and `scripts/snapshots/restore-golden-snapshots.sh`. |
+| **⚙️ DevOps & QA Admins** | 12 curated architecture blueprints, reproducible CI/CD pipelines, single-command lifecycle, and 15-second snapshot recovery. | `setup-all.sh`, `deploy-blueprint.sh`, and `scripts/snapshots/restore-golden-snapshots.sh`. |
 
 ---
 
-## 🏗️ 15 Curated Architecture Blueprints (4 Groups)
+## ⚡ Accelerated ~15s Recovery & Automated Version Verification
 
-Oracle Free DB in Prod organizes its topologies into **4 logical decade groups**:
-
-```mermaid
-graph TD
-  subgraph Group 1: Standalone Isolates (1–9)
-    BP1["BP 1: Standalone ALISE DB<br/>db-alise + app-ords (Port 1533)"]
-    BP2["BP 2: Standalone ORDS & Dev Hub<br/>app-ords (Ports 8088/8448)"]
-    BP3["BP 3: Standalone Proxy DB & APEX SSO<br/>db-proxy + app-ords (Port 1532)"]
-    BP4["BP 4: Standalone Web-IDE Workstation<br/>web-ide-dev (Port 8090)"]
-    BP5["BP 5: Standalone Analytics Publisher<br/>db-publisher + app-publisher (Ports 1531, 9502)"]
-    BP6["BP 6: Standalone Oracle Forms 14c<br/>db-forms + app-forms (Ports 1534, 9001, 6082)"]
-  end
-
-  subgraph Group 2: Combined Subsystems (10–19)
-    BP10["BP 10: Forms + Publisher Unified DB<br/>db-publisher + app-forms + app-publisher"]
-    BP11["BP 11: Consolidated ORDS & Web-IDE<br/>app-ords + web-ide-dev"]
-  end
-
-  subgraph Group 3: Layered Stacks (20–29)
-    BP20["BP 20: 1-DB Core Application Stack<br/>db-alise + app-ords + web-ide-dev"]
-    BP21["🌟 BP 21 (PLATFORM DEFAULT): Canonical 2-Layer Stack<br/>db-proxy + db-alise + app-ords + web-ide-dev"]
-    BP22["BP 22: 1-DB Compact Reporting Stack<br/>db-alise + app-publisher + app-ords + web-ide-dev"]
-    BP23["BP 23: Full Isolated Reporting Stack (3 DBs)<br/>db-publisher + db-proxy + db-alise + Publisher + ORDS + Web-IDE"]
-    BP24["BP 24: Full Isolated Forms Stack (3 DBs)<br/>db-forms + db-proxy + db-alise + Forms + ORDS + Web-IDE"]
-  end
-
-  subgraph Group 4: Hybrid Stacks (30–39)
-    BP30["BP 30: Compact Enterprise Hybrid Stack<br/>db-publisher + db-alise + Forms + Pub + ORDS + Web-IDE"]
-    BP31["🌟 BP 31: Ultimate Enterprise Hybrid Stack<br/>db-publisher + db-proxy + db-alise + Forms + Pub + ORDS + Web-IDE"]
-  end
-```
-
-### 🚀 Blueprint Deployment & Lifecycle Management (`./scripts/deploy-blueprint.sh`)
-
-```bash
-# 1. Check current active blueprint and container health:
-./scripts/deploy-blueprint.sh --status
-
-# 2. Deploy Blueprint 21 (DEFAULT 2-Layer Production Stack with Web IDE):
-./scripts/deploy-blueprint.sh -b 21
-
-# 3. Deploy Blueprint 31 (Ultimate Enterprise Hybrid Stack):
-./scripts/deploy-blueprint.sh -b 31
-
-# 4. Preview / Simulate configuration (Dry-Run):
-./scripts/deploy-blueprint.sh -b 21 --dry-run
-
-# 5. List all 15 curated blueprints in ASCII table:
-./scripts/setup-all.sh -lb
-```
-
----
-
-## ⚡ Accelerated ~15s 2nd-Run Recovery & Automated Version Verification
-
-Oracle Free DB in Prod incorporates an **intelligent multi-tier Golden Snapshot & Skip Engine** (`scripts/internal/snapshot-resolver.sh`) that drops subsequent startup times from **~6–12 minutes down to ~15 seconds**:
+Oracle Free DB in Prod incorporates an **intelligent multi-tier Golden Snapshot Engine** that drops subsequent startup times from **~6–8 minutes down to ~15 seconds**:
 
 1. **Automated Version Verification & Drift Detection (`.meta.json`):**
    - Every Golden Snapshot includes a machine-readable `.meta.json` contract recording APEX, Oracle DB, ORDS, and middleware versions.
-   - Before restoring, the engine strictly verifies version compatibility. If an outdated snapshot is detected, it logs a clear `VERSION MISMATCH` warning, performs a clean build from scratch, and automatically generates an updated snapshot upon completion.
-2. **Cross-Blueprint Profile Caching & Skip Matrix:**
-   - Because identical database profiles are shared across blueprints, switching blueprints keeps the database intact and only launches the missing stateless container in **~3 seconds**.
-3. **Dedicated vs. Consolidated Topologies:**
-   - **Consolidated Stacks (BP 10, BP 22, BP 30, BP 31):** Single or combined infrastructure DB (`db-publisher`), unified RCU schemas, and optimized memory footprint (~4–6 GB RAM).
-   - **Fully Isolated Stacks (BP 23, BP 24):** Independent databases (`db-forms`, `db-publisher`), modular snapshots, and high isolation *(requires $\ge 12\text{ GB}$ RAM)*.
+   - If a version mismatch is detected, the engine rebuilds cleanly and refreshes the snapshot automatically.
+2. **Instant Restoration:**
+   ```bash
+   # Restore baseline golden snapshot in ~15-30s:
+   ./scripts/snapshots/restore-golden-snapshots.sh --force
+   ```
 
 ---
 
 ## 🚀 Quickstart CLI Cheat-Sheet
 
 ```bash
-# 1. Start desired blueprint:
-./scripts/setup-all.sh -b 3
+# 1. Start canonical default blueprint (BP 0) or specific blueprint:
+./scripts/setup-all.sh
+./scripts/setup-all.sh -b 1
+./scripts/setup-all.sh -b 7
 
 # 2. View credentials & services matrix table (or copy password via -c):
 ./scripts/get-password.sh
-./scripts/get-password.sh DB_PROXY_DEV -c
+./scripts/get-password.sh DB_ALISE_DEV -c
 
-# 3. Rotate credentials securely (zero downtime):
-./scripts/rotate-password.sh db-proxy dev
-./scripts/rotate-password.sh all
-
-# 4. Test active web service endpoints & wallet connections:
+# 3. Test active web service endpoints & wallet connections:
 ./scripts/check-urls.sh
 ./scripts/check-wallet.sh
 
-# 5. Run automated end-to-end browser & UI login test:
+# 4. Run automated end-to-end browser & UI login test:
 ./scripts/test-browser-login.sh
 
-# 6. Run multi-language (i18n) verification suite (Rule 9: EN, ET, FI, SV, LV, LT):
+# 5. Run multi-language (i18n) verification suite (Rule 9: EN, ET, FI, SV, LV, LT):
 ./tests/test-multilingual-support.sh
 
-# 7. Create or restore Golden Snapshots (instant ~15s recovery):
-./scripts/snapshots/create-golden-snapshots.sh
-./scripts/snapshots/restore-golden-snapshots.sh
+# 6. Golden Snapshot lifecycle (Rapid restore ~15s vs full rebuild):
+./scripts/snapshots/create-golden-snapshots.sh                    # Standard baseline snapshot
+./scripts/snapshots/restore-golden-snapshots.sh --force           # Rapid restore (~15–45s)
+./scripts/reset-all.sh -y && ./scripts/setup-all.sh -y            # Deep clean & cold rebuild
 
-# 8. Clean logs, temporary files, and old snapshots:
-./scripts/clean-logs.sh -y
+# 7. Clean logs (filter by age) and old snapshots:
+./scripts/clean-logs.sh --older-than-hours=20 -y                  # Clean logs older than 20h
+./scripts/clean-logs.sh -y                                        # Clean all logs
 ./scripts/snapshots/clean-golden-snapshots.sh -y
-
-# 9. Reset environment to clean slate:
-./scripts/reset-all.sh -y
 ```
+
+---
+
+## 🧭 Oracle APEX DevHub Application & APEXlang (TO-BE Roadmap)
+
+> [!NOTE]
+> **TO-BE Roadmap:** In addition to the standalone HTML Dev Hub (`docs/dev-hub.html`), a declarative in-DB **Oracle APEX Application (App 101: DevHub)** built with [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) is planned for future release in [`applications/`](applications/README.md). All underlying infrastructure, APEXlang compilers, and deployment pipelines are established:
+
+- **Zero-Footprint In-DB Documentation:** Documentation is never duplicated or stored in database tables as CLOBs. A lightweight local REST Documentation Bridge (`scripts/internal/dev-hub-bridge.py` on port 8089) streams localized markdown directly from Git into Oracle APEX.
+- **Automated CI/CD Pipeline:** Dedicated GitHub Actions workflow [`.github/workflows/deploy-devhub-apexlang.yml`](.github/workflows/deploy-devhub-apexlang.yml) with offline local emulation via `./scripts/test-local-ci.sh deploy-devhub-apexlang.yml --dry-run`.
+- **Unit Test Suite:** Run `./tests/unit/test-apex-devhub.sh` to automatically verify schema health, PL/SQL compilation, REST markdown retrieval, and 6-language i18n coverage.
 
 ---
 
 ## 📑 Dedicated User Guides
 
-- 🚀 **[docs/forms-to-apex-migration-guide.md](docs/forms-to-apex-migration-guide.md):** **Oracle Forms to APEX Modernization & Migration Guide** — Business case, TCO comparison, 5-stage automated migration workflow, PL/SQL extraction, and AI vibe-coding with [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
-- 📐 **[docs/forms-setup.md](docs/forms-setup.md):** Oracle Forms 14c Guide — Port map (9001/7001/6082), test form access (`frmservlet?form=test.fmx`), adding forms to `forms_apps/`, compiling, and APEX migration.
-- 📑 **[docs/publisher-setup.md](docs/publisher-setup.md):** Analytics Publisher Guide — Port 9502 (`/xmlpserver`), RCU metadata DB, `PUBLISHER_READER` Wallet account, JDBC data source wiring, and report deployment.
-- 💻 **[docs/web-ide-artifactory.md](docs/web-ide-artifactory.md):** Web IDE Guide — VS Code extensions (Oracle SQL Developer, Antigravity AI, GitHub Actions), host connection sync, and offline GitHub Actions testing (`act`).
-- 🌐 **[docs/dev-hub.html](docs/dev-hub.html):** **Developer & DevOps Command Center** — Served on **`http://localhost:8088/`** and **`https://localhost:8448/`** (ORDS) as well as **`http://localhost:6082/vnc.html`** (Forms). Features live latency polling, interactive Mermaid architecture diagrams, 11 Blueprints Explorer, in-browser Markdown Documentation Reader, collapsible SEPS Wallet credentials matrix, and DevOps Command Dispatcher in 6 languages.
-- 📊 **[config/blueprints/README.md](config/blueprints/README.md):** Full technical matrix for all 11 curated architecture blueprints.
-- 📖 **[Oracle APEX 26.1 APEXlang Reference Manual](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/):** Official Oracle specification for declarative `.apx` grammar, compiler AST nodes, and CLI commands.
-- 📜 **[Official APEXlang EBNF Grammar (`apexlang.ebnf`)](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf):** Machine-readable formal EBNF specification for grammar-constrained decoding (GBNF) and AST security scanners.
-
+- 🛡️ **[docs/security.md](docs/security.md) | [docs/et/security.md](docs/et/security.md):** **Security & SSO Architecture Guide** — Zero-Trust credential storage, Azure Entra-ID SSO, 5-tier TLS architecture, and least-privilege roles.
+- 🏗️ **[docs/db-profiles-and-topology.md](docs/db-profiles-and-topology.md):** **Database Profiles & Topology Guide** — Clean blueprint references, YAML profile definitions, and dynamic port topology.
+- 🚀 **[docs/forms-to-apex-migration-guide.md](docs/forms-to-apex-migration-guide.md):** **Oracle Forms to APEX Modernization & Migration Guide** — Automated 5-stage migration workflow, PL/SQL extraction, and APEXlang DSL vibe-coding.
+- 📐 **[docs/forms-setup.md](docs/forms-setup.md):** Oracle Forms 14c Guide — Port map (9001/7001/6082), test form access (`frmservlet?form=test.fmx`), and compilation.
+- 📑 **[docs/publisher-setup.md](docs/publisher-setup.md):** Analytics Publisher Guide — Port 9502 (`/xmlpserver`), RCU metadata DB, and report deployment.
+- 💻 **[docs/web-ide-artifactory.md](docs/web-ide-artifactory.md):** Web IDE Guide — VS Code extensions, host connection sync, and offline GitHub Actions testing (`act`).
+- 🌐 **[docs/ords-profiles-lifecycle.md](docs/ords-profiles-lifecycle.md):** ORDS Profiles & Decoupled Lifecycle Guide — Web gateway decoupling and multi-database pool routing.
+- ☁️ **[docs/remote-multicloud-setup-guide.md](docs/remote-multicloud-setup-guide.md):** Remote Multi-Cloud Enterprise Setup Guide (Azure VM + OCI Autonomous Database).
+- 🌐 **[docs/dev-hub.html](docs/dev-hub.html):** Developer & DevOps Command Center in 6 languages.
+- 📊 **[config/blueprints/README.md](config/blueprints/README.md):** Full technical matrix for all 12 canonical architecture blueprints.

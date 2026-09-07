@@ -86,3 +86,28 @@ Before introducing a new step in `setup-all.sh`:
 - [ ] Is execution duration recorded in `metrics/setup_benchmarks.json`?
 - [ ] Is full stdout/stderr logged to `install_logs/<component>_<action>_<timestamp>.log`?
 - [ ] Is `README.md` and localized docs updated per Rule 2 and Rule 9?
+
+---
+
+## 6. Universal Database Profiles & Dynamic Resolution Contracts
+
+1. **3 Universal Database Engines:**
+   - `db-oracle.yaml` (Official Oracle Free DB 23ai)
+   - `db-gvenzl.yaml` (Community Gérald Venzl Free DB 23ai)
+   - `db-adb.yaml` (Oracle Autonomous Database Cloud ADB)
+2. **Role-based Parameter Derivation:**
+   - Blueprints declare high-level engine references (`DB_ALISE=db-oracle`, `DB_PROXY=db-oracle`, `DB_PUBLISHER=db-oracle`, `DB_FORMS=db-oracle`).
+   - The engine automatically resolves role-specific defaults:
+     - `alise` $\rightarrow$ Port 1533, pool `alise`, workspace `ALISE_WORKSPACE`, wallet `DB_ALISE_...`
+     - `proxy` $\rightarrow$ Port 1532, pool `proxy`, workspace `PROXY_WORKSPACE`, wallet `DB_PROXY_...`
+     - `publisher` $\rightarrow$ Port 1531, pool `publisher`, workspace `PUBLISHER_WORKSPACE`, wallet `DB_PUBLISHER_...`
+     - `forms` $\rightarrow$ Port 1534, pool `forms`, workspace `FORMS_WORKSPACE`, wallet `DB_FORMS_...`
+3. **APEX `latest` + Patch Resolution Contract:**
+   - If `version: latest` or omitted, dynamic resolver (`resolve_apex_latest`) queries `binaries/apex/` for the highest semver zip and automatically pairs the latest PSE bundle patch in `patches/apex/`.
+4. **Decoupled ORDS Schema & Pool Lifecycle Contract:**
+   - **DB Metadata Setup:** `ords.enabled: true` in DB YAML installs ORDS metadata in the database without starting `app-ords`.
+   - **Version Resolution:** `resolve_target_ords_version` determines the target ORDS version: (1) Running `app-ords` container $\rightarrow$ (2) `binaries/ords/ords-*.zip` $\rightarrow$ (3) Official OCR container image.
+   - **Central Gateway Hot-Reload:** If central ORDS (`app-ords` from `env0`) is running, setting up any database (e.g. `db-alise`) automatically registers `pool.xml` in `/etc/ords/config/databases/<pool_name>/` and reloads the central container.
+   - **Oracle Cloud ADB (`db-adb.yaml`):** Managed cloud ORDS schemas must not be overridden (`install_in_db: false`). When `verify_version_match: true`, version parity between central ORDS and cloud ADB is validated.
+   - **No ORDS Server Guidance:** When neither local nor central ORDS is active, scripts display clear yellow guidance (`ORDS_NOT_CONFIGURED_STATUS` / `ORDS_NOT_CONFIGURED_HINT`).
+

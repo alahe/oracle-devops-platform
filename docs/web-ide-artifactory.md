@@ -1,80 +1,63 @@
-[ 🇬🇧 English ](web-ide-artifactory.md) | [ 🇪🇪 Eesti ](et/web-ide-artifactory.md) | [ 🇸🇪 Svenska ](sv/README.md) | [ 🇱🇻 Latviešu ](lv/README.md) | [ 🇱🇹 Lietuvių ](lt/README.md)
+[ 🇬🇧 English ](web-ide-artifactory.md) | [ 🇪🇪 Eesti ](et/web-ide-artifactory.md) | [ 🇫🇮 Suomi ](fi/web-ide-artifactory.md) | [ 🇸🇪 Svenska ](sv/web-ide-artifactory.md) | [ 🇱🇻 Latviešu ](lv/web-ide-artifactory.md) | [ 🇱🇹 Lietuvių ](lt/web-ide-artifactory.md)
 
-# Konteineriseeritud Web IDE & Enterprise Artifactory Peegeldusregister
+# Containerized Web IDE & Enterprise Extension Marketplace
 
-See juhend kirjeldab **Konteineriseeritud Web IDE (`web-ide` / `code-server`)** seadistamist ja kasutamist brauseris, selle integreerimist ettevõtte sisese **Artifactory Mirror Registry** registritega ning **GitHub Actions töövoogude lokaalset ja täielikult võrguvaba (offline) testimist**.
-
----
-
-## 1. Web IDE Arhitektuur & Eelpaigaldatud Tööriistad
-
-Web IDE koondab täieliku Oracle, AI ja CI/CD arenduskeskkonna ühte brauseripõhisesse VS Code liidesesse (`localhost/oracle-web-ide:latest`):
-- **Brauseri URL:** `http://localhost:8090` (HTTP) või `https://localhost:8449` (HTTPS).
-- **Pre-installeeritud süsteemitööriistad:** OpenJDK 21, Oracle SQLcl 26.2, Liquibase, Git, Python3, GitHub CLI (`gh`), Nektos `act` CLI runner.
-- **Eelküpsetatud VS Code Laiendused:**
-  1. 🗄️ **Oracle SQL Developer for VS Code** (`Oracle.sql-developer-for-vscode`): Andmebaasipuu, SQL töölehed, PL/SQL redaktor, Explain Plan.
-  2. 🤖 **Google Antigravity for VS Code** (`google.antigravity`): AI assistent, koodi refaktoorimine, paarisprogrammeerimine ja agentic töövood.
-  3. ⚙️ **GitHub Actions** (`github.vscode-github-actions`): CI/CD töövoogude süntaks ja visuaalne haldus.
-  4. 📄 **Red Hat YAML** (`redhat.vscode-yaml`): YAML profiilide ja compose failide skeemikontroll.
-- **Kasutaja Arvuti Ühenduste Reaalajas Sünkroonimine:**
-  - Host-arvuti kataloog `$HOME/.dbtools/connections` mounteeritakse kausta `/config/.dbtools/connections:rw`.
-  - SEPS Wallet (`config/tns_admin_container`) mounteeritakse kausta `/config/.oracle/tns_admin:ro`.
-  - Kõik host-masinas loodud ühendused (`DB_PROXY_DEV`, `DB_ALISE_DEV` jne) on Web IDE-s koheselt nähtavad ja paroolivabalt kasutatavad.
+This guide covers configuring and using the **Containerized Web IDE (`web-ide` / `code-server`)** in your browser, integrating enterprise **Artifactory / VS Code Marketplaces**, configuring **Oracle SQL Developer, Google Antigravity, and Microsoft Python**, and running **100% offline, zero-trust GitHub Actions testing**.
 
 ---
 
-## 2. GitHub Actions Töövoogude Täielik Võrguvaba (Offline) Testimine (`act` ja `gh`)
+## 1. Web IDE Architecture & Pre-Installed Tooling
 
-Web IDE võimaldab testida ja siluda repositooriumi GitHub Actions töövooge (`.github/workflows/*.yml`) **100% lokaalselt ilma GitHubi ühenduseta ja ilma koodi üleslaadimiseta**:
+The Web IDE consolidates a complete Oracle DB, AI, and CI/CD development environment into a browser-based VS Code workspace (`localhost/oracle-web-ide:latest`):
+- **Browser URL:** `http://localhost:8090` (HTTP) or `https://localhost:8449` (HTTPS).
+- **Pre-installed System Tools:** OpenJDK 21, Oracle SQLcl 26.2, Liquibase, Git, Python3 (`venv`, `pytest`), GitHub CLI (`gh`), Nektos `act` CLI runner, `actionlint`, and `yamllint`.
+- **Pre-Baked VS Code Extensions:**
+  1. 🗄️ **Oracle SQL Developer for VS Code** (`Oracle.sql-developer-for-vscode`, Vendor: Oracle): Database Navigator, SQL Worksheet, PL/SQL Editor, Explain Plan.
+  2. 🤖 **Google Antigravity** (`google.antigravity`, Vendor: Google): AI coding assistant, code refactoring, and agentic workflows.
+  3. 🐍 **Python Suite** (`ms-python.python`, `ms-python.vscode-pylance`, `ms-python.debugpy`, Vendor: Microsoft): Python language server, debugger, virtual environment management (`venv`), and test discovery.
+  4. ⚙️ **GitHub Actions** (`github.vscode-github-actions`, Vendor: GitHub): Workflow syntax highlighting, CI/CD visualization.
+  5. 📄 **Red Hat YAML** (`redhat.vscode-yaml`, Vendor: Red Hat): YAML profile and docker-compose schema validation.
+- **Automatic `.sql` File Association:**
+  - Clicking any `.sql`, `.pls`, `.pks`, or `.pkb` file in the file explorer automatically opens it directly inside **Oracle SQL Developer Editor / Worksheet** with database connection binding.
+- **Zero-Trust Connection & Wallet Synchronization:**
+  - Host directory `$HOME/.dbtools/connections` mounts to `/config/.dbtools/connections:rw`.
+  - Encrypted SEPS Wallet (`config/tns_admin_container`) mounts to `/config/.oracle/tns_admin:ro`.
+  - All host connections (`DB_PROXY_DEV`, `DB_ALISE_DEV`, etc.) are immediately available passwordlessly.
 
-### 🔍 Kuidas see töötab?
-- **Ei vaja välist Git/GitHub ühendust:** Nektos `act` loeb töövooge otse Sinu lokaalselt kettalt (`/workspace/.github/workflows/`).
-- **Käivitab sammud kohapeal:** Käivitab samad konteinerid, skriptid, SQL-päringud ja Liquibase migratsioonid täpselt samamoodi nagu GitHubi pilveserveris.
-- **Turvaline saladuste testimine:** Töövoos nõutavad paroolid ja muutujad loetakse kohalikust failist ilma neid pilve laadimata.
+---
 
-### 💻 Kasulikud käsud Web IDE terminalis (`http://localhost:8090`):
+## 2. 4-Tier Extension Resolution & Air-Gapped Cache (`binaries/extensions/`)
 
-1. **Loetle kõik töövood ja sammud (Dry-Run / ülevaade):**
+When Web IDE starts, it resolves extensions following this hierarchy:
+```
+1. 📁 binaries/extensions/*.vsix         ➔ Air-Gapped Local Cache (Highest Priority, 0 Network)
+2. 📁 $HOME/.vscode/extensions/          ➔ Desktop VS Code Extension Sync
+3. 🌐 download_url in profile YAML       ➔ Downloads & caches to binaries/extensions/
+4. 🌐 code-server --install-extension    ➔ Configured Marketplace (Open VSX or Microsoft)
+```
+
+### Marketplace Provider Switcher (`.env`):
+You can toggle the marketplace source in your `.env` file:
+```bash
+# Options: openvsx (default) | microsoft | artifactory
+VSCODE_MARKETPLACE_PROVIDER=microsoft
+```
+
+---
+
+## 3. Offline GitHub Actions Simulation (`act` and `actionlint`)
+
+Web IDE allows running and debugging GitHub Actions workflows (`.github/workflows/*.yml`) **100% locally without uploading code or secrets**:
+
+### 💻 Useful Commands in Web IDE Terminal:
+1. **Static AST & Security Linting (actionlint):**
+   ```bash
+   actionlint
+   ```
+2. **List all workflows and jobs:**
    ```bash
    act -l
    ```
-
-2. **Käivita konkreetne töövoo fail:**
-   ```bash
-   act -W .github/workflows/local-ci.yml
-   ```
-
-3. **Simuleeri `push` sündmust:**
-   ```bash
-   act push
-   ```
-
-4. **Käivita kohalike saladuste / paroolidega:**
-   ```bash
-   # Kasuta .env faili saladustena:
-   act push --secret-file .env
-   ```
-
-5. **GitHub CLI (`gh`) staatuse kontroll:**
-   ```bash
-   gh workflow list
-   ```
-
----
-
-## 3. Ettevõtte Artifactory Registri Seadistamine (.env)
-
-Selleks, et kasutada ettevõtte sisest Artifactory registrit avalike Docker Hub või GitHub registrite asemel (Rule 4), seadista failis `.env`:
-
-```bash
-# Web IDE teenuse profiilid (config/profiles/web-ide/*.yaml):
-#   - web-ide-cicd-standard        (GitHub CLI + act runner GitHub Actions testimiseks)
-#   - web-ide-artifactory-vsix     (VSIX laiendused lokaalsest kaustast)
-#   - web-ide-standard             (Täielik VS Code + SQL Developer + Liquibase)
-WEB_IDE_PROFILE=web-ide-standard
-
-# Ettevõtte Artifactory peegeldusregistri aadress (valikuline):
-ARTIFACTORY_DOCKER_REGISTRY=artifactory.corp.internal
 ```
 
 ---

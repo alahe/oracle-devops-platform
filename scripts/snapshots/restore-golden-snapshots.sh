@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 COMPOSE_FILE="$WORKSPACE_DIR/podman-compose.yml"
 
-# Kaasame ühise abiteegi ja snapshot resolveri
+# Source common library and snapshot resolver
 if [ -f "$WORKSPACE_DIR/scripts/internal/common.sh" ]; then
   # shellcheck source=/dev/null
   source "$WORKSPACE_DIR/scripts/internal/common.sh"
@@ -42,9 +42,40 @@ AUTO_MODE=false
 TARGET_BP_ID="${BLUEPRINT_ID:-3}"
 TARGET_PROFILE="${PROFILE_NAME:-db-proxy-oracle}"
 BACKUP_FILE_NAME=""
+TARGET_TAG=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --file=*|-f=*)
+      BACKUP_FILE_NAME="${1#*=}"
+      shift
+      ;;
+    --file)
+      BACKUP_FILE_NAME="$2"
+      shift 2
+      ;;
+    -n=*|--name=*|--tag=*|-t=*)
+      TARGET_TAG="${1#*=}"
+      shift
+      ;;
+    -n|--name|--tag|-t)
+      TARGET_TAG="$2"
+      shift 2
+      ;;
+    -h|--help)
+      echo "Usage: ./scripts/snapshots/restore-golden-snapshots.sh [filename|name] [options]"
+      echo ""
+      echo "Options:"
+      echo "  -n, --name, --tag <name>  Restore specific custom snapshot by name/tag"
+      echo "  -f, --file <file>         Restore specific snapshot file"
+      echo "  -b, --blueprint <id>      Blueprint ID (default: active blueprint or 0)"
+      echo "  -p, --profile <name>      Target database profile"
+      echo "      --no-rotate           Skip credential rotation after restore"
+      echo "      --dry-run             Validate snapshot without actually restoring"
+      echo "  -y, --force               Non-interactive mode (use default/latest snapshot)"
+      echo "  -h, --help                Show this help message"
+      exit 0
+      ;;
     --force|-y|--yes)
       FORCE=true
       shift
@@ -101,11 +132,11 @@ done
 
 # If target blueprint is specified, synchronize .env and active profiles
 if [ -n "$TARGET_BP_ID" ]; then
+  echo "$TARGET_BP_ID" > "$WORKSPACE_DIR/.active_blueprint" 2>/dev/null || true
   bp_env_file=$(find "$WORKSPACE_DIR/config/blueprints" -name ".env.${TARGET_BP_ID}-*" 2>/dev/null | head -n 1)
   if [ -n "$bp_env_file" ] && [ -f "$bp_env_file" ]; then
-    cp "$bp_env_file" "$WORKSPACE_DIR/.env"
     set -a
-    source "$WORKSPACE_DIR/.env" 2>/dev/null || true
+    source "$bp_env_file" 2>/dev/null || true
     set +a
   fi
 fi
@@ -115,12 +146,47 @@ if [ -f "$WORKSPACE_DIR/scripts/internal/load-profile.sh" ]; then
   load_db_profile >/dev/null 2>&1 || true
 fi
 
-PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1)
-PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-db-proxy}"
+if [ -x "$WORKSPACE_DIR/scripts/internal/generate-compose-override.sh" ]; then
+  "$WORKSPACE_DIR/scripts/internal/generate-compose-override.sh" >/dev/null 2>&1 || true
+fi
+
+ACTIVE_DBS=$(get_active_db_instances 2>/dev/null || true)
+if [ -z "$ACTIVE_DBS" ] || [ "${DB_ENABLED:-true}" = "false" ] || [ "${TARGET_PROFILE:-}" = "NONE" ]; then
+  echo -e "${YELLOW}ℹ️  [Golden Snapshot]: Zero local database instances configured for Blueprint ${TARGET_BP_ID:-0} (${TARGET_PROFILE:-NONE}). No database volume to restore.${NC}"
+  exit 0
+fi
+
+PRIMARY_CONTAINER=$(echo "$ACTIVE_DBS" | head -n 1 | cut -d'|' -f1)
 PRIMARY_SHORT=$(echo "$PRIMARY_CONTAINER" | sed 's/^db-//' | tr '-' '_')
 VOLUME_NAME="${PROJECT_NAME}_${PRIMARY_SHORT}_oradata"
-if ! podman volume exists "$VOLUME_NAME" 2>/dev/null && podman volume exists "${PROJECT_NAME}_apex_proxy_oradata" 2>/dev/null; then
-  VOLUME_NAME="${PROJECT_NAME}_apex_proxy_oradata"
+
+# Resolve by tag if specified
+if [ -n "$TARGET_TAG" ] && [ -z "$BACKUP_FILE_NAME" ]; then
+  CLEAN_TAG=$(echo "$TARGET_TAG" | tr -cs 'a-zA-Z0-9_-' '_' | tr '[:upper:]' '[:lower:]' | sed 's/^_*//;s/_*$//')
+  FOUND_TAG_FILE=$(find "$BACKUP_DIR" -name "custom_bp*_${CLEAN_TAG}_*.tar.gz" 2>/dev/null | sort -r | head -n 1)
+  if [ -n "$FOUND_TAG_FILE" ] && [ -f "$FOUND_TAG_FILE" ]; then
+    BACKUP_FILE="$FOUND_TAG_FILE"
+    BACKUP_FILE_NAME="$(basename "$BACKUP_FILE")"
+  else
+    echo -e "${RED}❌ Error: No custom snapshot found matching tag '$TARGET_TAG' in $BACKUP_DIR${NC}"
+    exit 1
+  fi
+fi
+
+if [ -n "$BACKUP_FILE_NAME" ]; then
+  if [ -f "$BACKUP_DIR/$BACKUP_FILE_NAME" ]; then
+    BACKUP_FILE="$BACKUP_DIR/$BACKUP_FILE_NAME"
+  elif [ -f "$BACKUP_FILE_NAME" ]; then
+    BACKUP_FILE="$BACKUP_FILE_NAME"
+    BACKUP_FILE_NAME="$(basename "$BACKUP_FILE")"
+  else
+    CLEAN_POS_TAG=$(echo "$BACKUP_FILE_NAME" | tr -cs 'a-zA-Z0-9_-' '_' | tr '[:upper:]' '[:lower:]' | sed 's/^_*//;s/_*$//')
+    FOUND_POS_FILE=$(find "$BACKUP_DIR" -name "custom_bp*_${CLEAN_POS_TAG}_*.tar.gz" -o -name "*${CLEAN_POS_TAG}*.tar.gz" 2>/dev/null | sort -r | head -n 1)
+    if [ -n "$FOUND_POS_FILE" ] && [ -f "$FOUND_POS_FILE" ]; then
+      BACKUP_FILE="$FOUND_POS_FILE"
+      BACKUP_FILE_NAME="$(basename "$BACKUP_FILE")"
+    fi
+  fi
 fi
 
 # If in auto mode or no file specified, use snapshot-resolver
@@ -145,7 +211,7 @@ if [ -z "$BACKUP_FILE_NAME" ] && [ "$FORCE" = "false" ]; then
     if [ -n "$line" ]; then
       BACKUP_FILES+=("$line")
     fi
-  done < <(cd "$BACKUP_DIR" && ls -t apex_proxy_oradata_*.tar.gz bp_*_*.tar.gz profile_*_*.tar.gz 2>/dev/null | sort -u || true)
+  done < <(cd "$BACKUP_DIR" && ls -t apex_proxy_oradata_*.tar.gz bp_*_*.tar.gz profile_*_*.tar.gz custom_*.tar.gz 2>/dev/null | sort -u || true)
 
   NUM_FILES=${#BACKUP_FILES[@]}
 
@@ -180,7 +246,13 @@ if [ -z "$BACKUP_FILE_NAME" ] && [ "$FORCE" = "false" ]; then
     fi
   fi
 elif [ -z "$BACKUP_FILE_NAME" ]; then
-  BACKUP_FILE_NAME="apex_proxy_oradata_latest.tar.gz"
+  if [ -f "$BACKUP_DIR/bp_0_latest.tar.gz" ]; then
+    BACKUP_FILE_NAME="bp_0_latest.tar.gz"
+  elif [ -f "$BACKUP_DIR/profile_db-proxy-oracle_latest.tar.gz" ]; then
+    BACKUP_FILE_NAME="profile_db-proxy-oracle_latest.tar.gz"
+  else
+    BACKUP_FILE_NAME="apex_proxy_oradata_latest.tar.gz"
+  fi
 fi
 
 # If path is relative, resolve from BACKUP_DIR
@@ -234,7 +306,7 @@ get_restore_stats() {
     if [ $val -gt $max ]; then max=$val; fi
   done
   local avg=$((sum / count))
-  msg_str "BENCHMARK_AVG" "$(format_duration $avg)" "$(format_duration $min)" "$(format_duration $max)"
+  msg_str "BENCHMARK_AVG" "$(format_duration $avg)"
 }
 
 echo -e "${CYAN}==================================================================${NC}"
@@ -245,7 +317,8 @@ echo -e "${CYAN}================================================================
 
 LOG_DIR="$WORKSPACE_DIR/install_logs"
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/snapshot_restore_${TIMESTAMP}.log"
+LOG_FILE="$LOG_DIR/restore_bp_${TARGET_BP_ID:-0}_${TIMESTAMP}.log"
+ln -sf "$LOG_FILE" "$LOG_DIR/restore_bp_${TARGET_BP_ID:-0}_latest.log" 2>/dev/null || true
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 START_RESTORE=$(date +%s)
@@ -253,25 +326,50 @@ START_RESTORE=$(date +%s)
 COMPOSE_ARGS=(-f "$COMPOSE_FILE")
 [ -f "$WORKSPACE_DIR/podman-compose.override.yml" ] && COMPOSE_ARGS+=(-f "$WORKSPACE_DIR/podman-compose.override.yml")
 
-echo "Stopping and removing services..."
-podman-compose "${COMPOSE_ARGS[@]}" down >> "$LOG_FILE" 2>&1 || true
+echo "Stopping and removing container $PRIMARY_CONTAINER..."
+if podman container exists "$PRIMARY_CONTAINER" 2>/dev/null; then
+  podman stop "$PRIMARY_CONTAINER" >> "$LOG_FILE" 2>&1 || true
+  podman rm -f "$PRIMARY_CONTAINER" >> "$LOG_FILE" 2>&1 || true
+  if podman container exists "$PRIMARY_CONTAINER" 2>/dev/null; then
+    if podman inspect app-ords 2>/dev/null | grep -q -- "--requires=$PRIMARY_CONTAINER"; then
+      echo "Recreating app-ords to release container lock on $PRIMARY_CONTAINER..."
+      podman rm -f app-ords >> "$LOG_FILE" 2>&1 || true
+      podman rm -f "$PRIMARY_CONTAINER" >> "$LOG_FILE" 2>&1 || true
+    fi
+  fi
+fi
 
 echo "Purging old volume $VOLUME_NAME..."
 podman volume rm -f "$VOLUME_NAME" >> "$LOG_FILE" 2>&1 || true
 podman volume create "$VOLUME_NAME" >> "$LOG_FILE" 2>&1
+if [[ "$VOLUME_NAME" == *"publisher"* ]]; then
+  podman volume rm -f "oracle-free-db-in-prod_publisher_data" >> "$LOG_FILE" 2>&1 || true
+  podman volume create "oracle-free-db-in-prod_publisher_data" >> "$LOG_FILE" 2>&1 || true
+  podman run --rm -v "oracle-free-db-in-prod_publisher_data:/data" alpine sh -c "chown -R 1000:1000 /data && chmod 775 /data" >> "$LOG_FILE" 2>&1 || true
+fi
 
 echo "Restoring data from compressed golden snapshot into volume $VOLUME_NAME..."
 
 podman run --rm --privileged --security-opt=no-new-privileges \
   -v "$VOLUME_NAME:/volume" \
   -v "$(dirname "$BACKUP_FILE"):/backup" \
-  alpine sh -c "
-    if apk add --no-cache pigz >/dev/null 2>&1; then
-      pigz -dc /backup/$(basename "$BACKUP_FILE") | tar -xf - -C /volume
+  alpine sh -c '
+    snap_name="$1"
+    apk add --no-cache pigz >/dev/null 2>&1 || true
+    if command -v pigz >/dev/null 2>&1; then
+      pigz -dc "/backup/$snap_name" | tar -xf - -C /volume
     else
-      tar -xzf /backup/$(basename "$BACKUP_FILE") -C /volume
+      tar -xzf "/backup/$snap_name" -C /volume
     fi
-  " >> "$LOG_FILE" 2>&1 &
+    if [ -d /volume/dbconfig ]; then
+      for sid_dir in /volume/dbconfig/*; do
+        [ -d "$sid_dir/dbs" ] || continue
+        cp -p "$sid_dir"/dbs/spfile*.ora "$sid_dir"/ 2>/dev/null || true
+        cp -p "$sid_dir"/dbs/orapw* "$sid_dir"/ 2>/dev/null || true
+      done
+    fi
+    chown -R 54321:54321 /volume 2>/dev/null || true
+  ' sh "$(basename "$BACKUP_FILE")" >> "$LOG_FILE" 2>&1 &
 RESTORE_PID=$!
 
 ELAPSED=0
@@ -286,9 +384,16 @@ echo ""
 
 echo "Starting services with restored data..."
 if [ -x "$WORKSPACE_DIR/scripts/start-containers.sh" ]; then
-  "$WORKSPACE_DIR/scripts/start-containers.sh" >> "$LOG_FILE" 2>&1 || true
+  if ! "$WORKSPACE_DIR/scripts/start-containers.sh" >> "$LOG_FILE" 2>&1; then
+    echo -e "${RED}❌ Error: Services failed to start cleanly with restored data.${NC}"
+    exit 1
+  fi
 else
   podman-compose "${COMPOSE_ARGS[@]}" up -d >> "$LOG_FILE" 2>&1
+fi
+
+if [ -x "$WORKSPACE_DIR/scripts/internal/sync-apex-images.sh" ]; then
+  "$WORKSPACE_DIR/scripts/internal/sync-apex-images.sh" >> "$LOG_FILE" 2>&1 || true
 fi
 
 if [ "$NO_ROTATE" != "true" ] && [ -x "$WORKSPACE_DIR/scripts/rotate-password.sh" ]; then

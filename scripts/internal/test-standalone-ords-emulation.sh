@@ -103,10 +103,10 @@ done
 
 if [ "$STATUS" = "200" ] || [ "$STATUS" = "301" ] || [ "$STATUS" = "302" ]; then
   echo -e "${GREEN}✅ STANDALONE ORDS SERVER EMULATED SUCCESSFULLY (HTTP $STATUS)!${NC}"
-  echo -e "👉 Kontrolli brauseris: ${CYAN}http://localhost:8080/ords/${NC}"
-  echo -e "👉 APEX Tööruum:       ${CYAN}http://localhost:8080/ords/apex${NC}"
+  echo -e "👉 Check in browser: ${CYAN}http://localhost:8080/ords/${NC}"
+  echo -e "👉 APEX Workspace:    ${CYAN}http://localhost:8080/ords/apex${NC}"
 else
-  echo -e "${RED}⚠️  Hoiatus: Emuleeritud ORDS liides vastas koodiga HTTP $STATUS.${NC}"
+  echo -e "${RED}⚠️  Warning: Emulated ORDS responded with HTTP $STATUS.${NC}"
 fi
 
 echo -e "${CYAN}==================================================================${NC}"

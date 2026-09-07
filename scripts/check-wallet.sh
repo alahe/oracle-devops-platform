@@ -88,10 +88,17 @@ if [ ${#ALIASES[@]} -eq 0 ]; then
 fi
 
 REPORT_MD=""
-REPORT_MD+="| SEPS Walleti Alias | Ühenduse Staatus | Tuvastatud Kasutaja & Baas |\n"
+REPORT_MD+="| SEPS Wallet Alias | Connection Status | Detected User & Database |\n"
 REPORT_MD+="| :--- | :--- | :--- |\n"
 
-ACTIVE_PROFILES=$(get_active_db_instances 2>/dev/null | cut -d'|' -f2 || echo "")
+ACTIVE_INST_DATA=$(get_active_db_instances 2>/dev/null || echo "")
+ACTIVE_NAMES=$(echo "$ACTIVE_INST_DATA" | cut -d'|' -f1 | tr '\n' ' ')
+ACTIVE_PROFILES=$(echo "$ACTIVE_INST_DATA" | cut -d'|' -f2 | tr '\n' ' ')
+RUNNING_DBS=""
+if command -v podman >/dev/null 2>&1; then
+  RUNNING_DBS=$(podman ps --format '{{.Names}}' 2>/dev/null | grep -E '^(db-.*|oracle-db-.*)$' | tr '\n' ' ' || echo "")
+fi
+ACTIVE_ALL="${ACTIVE_NAMES} ${ACTIVE_PROFILES} ${RUNNING_DBS}"
 
 for alias in "${ALIASES[@]}"; do
   # Skip APEX Web End-Users & ORDS listeners (non-database SQL accounts)
@@ -108,22 +115,27 @@ for alias in "${ALIASES[@]}"; do
   echo -ne "   Testing SEPS Wallet [${alias}]... "
 
   # Check active profile domain relevance
-  if { [[ "$alias" == *"PROXY"* ]] || [[ "$alias" == "DB_DBA_ADMIN" ]] || [[ "$alias" == "DB_TEST_DEV" ]] || [[ "$alias" == "DB_TEST_VIEWER" ]]; } && [[ "$ACTIVE_PROFILES" != *"proxy"* ]]; then
+  if { [[ "$alias" == *"PROXY"* ]] || [[ "$alias" == "DB_DBA_ADMIN" ]] || [[ "$alias" == "DB_TEST_DEV" ]] || [[ "$alias" == "DB_TEST_VIEWER" ]]; } && [[ "$ACTIVE_ALL" != *"proxy"* ]]; then
     echo -e "${YELLOW}$(msg_str "WALLET_SKIPPED" 2>/dev/null || echo "ℹ️ Skipped (Proxy profile is not active)")${NC}"
     REPORT_MD+="| \`${alias}\` | ℹ️ Skipped | \`Proxy profile is not active\` |\n"
     continue
   fi
-  if [[ "$alias" == *"PUBLISHER"* ]] && [[ "$ACTIVE_PROFILES" != *"publisher"* ]]; then
+  if [[ "$alias" == *"PUBLISHER"* ]] && [[ "$ACTIVE_ALL" != *"publisher"* ]]; then
     echo -e "${YELLOW}$(msg_str "WALLET_SKIPPED" 2>/dev/null || echo "ℹ️ Skipped (Publisher profile is not active)")${NC}"
     REPORT_MD+="| \`${alias}\` | ℹ️ Skipped | \`Publisher profile is not active\` |\n"
     continue
   fi
-  if [[ "$alias" == *"INFRA"* ]] && [[ "$ACTIVE_PROFILES" != *"infra"* ]]; then
+  if [[ "$alias" == *"FORMS"* ]] && [[ "$ACTIVE_ALL" != *"forms"* ]]; then
+    echo -e "${YELLOW}$(msg_str "WALLET_SKIPPED" 2>/dev/null || echo "ℹ️ Skipped (Forms profile is not active)")${NC}"
+    REPORT_MD+="| \`${alias}\` | ℹ️ Skipped | \`Forms profile is not active\` |\n"
+    continue
+  fi
+  if [[ "$alias" == *"INFRA"* ]] && [[ "$ACTIVE_ALL" != *"infra"* ]]; then
     echo -e "${YELLOW}$(msg_str "WALLET_SKIPPED" 2>/dev/null || echo "ℹ️ Skipped (Infra profile is not active)")${NC}"
     REPORT_MD+="| \`${alias}\` | ℹ️ Skipped | \`Infra profile is not active\` |\n"
     continue
   fi
-  if { [[ "$alias" == *"ALISE"* ]] || [[ "$alias" == *"LIS"* ]]; } && [[ "$ACTIVE_PROFILES" != *"alise"* ]] && [[ "$ACTIVE_PROFILES" != *"lis"* ]] && [[ "$ACTIVE_PROFILES" != *"bizapp"* ]]; then
+  if { [[ "$alias" == *"ALISE"* ]] || [[ "$alias" == *"LIS"* ]]; } && [[ "$ACTIVE_ALL" != *"alise"* ]] && [[ "$ACTIVE_ALL" != *"lis"* ]] && [[ "$ACTIVE_ALL" != *"bizapp"* ]]; then
     echo -e "${YELLOW}$(msg_str "WALLET_SKIPPED" 2>/dev/null || echo "ℹ️ Skipped (ALISE profile is not active)")${NC}"
     REPORT_MD+="| \`${alias}\` | ℹ️ Skipped | \`ALISE profile is not active\` |\n"
     continue
@@ -164,12 +176,22 @@ for alias in "${ALIASES[@]}"; do
   if [ -z "$RES" ] || [[ "$RES" == *"FAIL"* ]] || [[ "$RES" != *"@"* ]]; then
     if [ -n "$TARGET_CONTAINER" ] && podman ps --format "{{.Names}}" 2>/dev/null | grep -q "^${TARGET_CONTAINER}$"; then
       RES=$(podman exec -i "$TARGET_CONTAINER" bash -c '
-        export PATH=$PATH:/opt/oracle/product/23c/dbhomeFree/bin:/opt/oracle/product/23ai/dbhomeFree/bin
-        sqlplus -L -S / as sysdba << EOF
+        in_sql=$(ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1)
+        if [ -n "$in_sql" ]; then
+          "$in_sql" -s / as sysdba << EOF
 SET HEADING OFF FEEDBACK OFF
 SELECT USER || CHR(64) || GLOBAL_NAME FROM GLOBAL_NAME;
 EXIT;
 EOF
+        elif command -v sqlplus >/dev/null 2>&1; then
+          sqlplus -s / as sysdba << EOF
+SET HEADING OFF FEEDBACK OFF
+SELECT USER || CHR(64) || GLOBAL_NAME FROM GLOBAL_NAME;
+EXIT;
+EOF
+        else
+          echo "FAIL"
+        fi
       ' 2>/dev/null | grep -v '^$' | tail -n 1 | tr -d '\r\n ' || echo "FAIL")
     fi
   fi

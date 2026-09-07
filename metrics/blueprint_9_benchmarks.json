@@ -1,0 +1,57 @@
+{
+  "blueprint_id": 9,
+  "history": [
+    {
+      "timestamp": "2026-09-04T00:51:23.390497",
+      "duration_seconds": 17
+    },
+    {
+      "timestamp": "2026-09-04T00:52:19.811932",
+      "duration_seconds": 14
+    },
+    {
+      "timestamp": "2026-09-04T20:06:37.685619",
+      "duration_seconds": 61
+    },
+    {
+      "timestamp": "2026-09-04T20:11:00.168067",
+      "duration_seconds": 55
+    },
+    {
+      "timestamp": "2026-09-04T23:37:54.844752",
+      "duration_seconds": 29
+    },
+    {
+      "timestamp": "2026-09-05T02:24:34.239755",
+      "duration_seconds": 27
+    },
+    {
+      "timestamp": "2026-09-05T14:52:08.058408",
+      "duration_seconds": 91
+    },
+    {
+      "timestamp": "2026-09-05T14:56:08.288436",
+      "duration_seconds": 65
+    },
+    {
+      "timestamp": "2026-09-06T08:10:30.902416",
+      "duration_seconds": 35
+    },
+    {
+      "timestamp": "2026-09-06T08:14:10.707643",
+      "duration_seconds": 32
+    },
+    {
+      "timestamp": "2026-09-06T12:35:06.027156",
+      "duration_seconds": 19
+    },
+    {
+      "timestamp": "2026-09-07T03:54:52.723949",
+      "duration_seconds": 243
+    }
+  ],
+  "runs_count": 12,
+  "average_duration_seconds": 57,
+  "min_duration_seconds": 14,
+  "max_duration_seconds": 243
+}

@@ -106,6 +106,10 @@ while [[ $# -gt 0 ]]; do
       UNIFIED_MIDDLEWARE=true
       shift
       ;;
+    --incremental)
+      INCREMENTAL=true
+      shift
+      ;;
     -l|--list)
       LIST_ONLY=true
       shift
@@ -248,11 +252,43 @@ echo ""
 START_TIME=$(date +%s)
 LOG_FILE="$WORKSPACE_DIR/install_logs/deploy_blueprint_${TARGET_BP_NUM}_$(date +"%Y%m%d_%H%M%S").log"
 mkdir -p "$(dirname "$LOG_FILE")"
+ln -sf "$LOG_FILE" "$WORKSPACE_DIR/install_logs/deploy_bp_${TARGET_BP_NUM}_latest.log" 2>/dev/null || true
 
 if [ "$CURRENT_BP" != "$TARGET_BP_NUM" ]; then
   msg_print "BP_DEPLOY_SWITCHING" "$CURRENT_BP" "$TARGET_BP_NUM"
 else
   msg_print "BP_DEPLOY_RESTARTING" "$TARGET_BP_NUM"
+fi
+
+# Duplicate Blueprint Execution Prevention (Rule 10):
+# If all planned containers are already up and running healthy, report STATUS_ALREADY_ACTIVE
+if [ "$ACTION" != "update" ] && [ "${FORCE:-false}" != "true" ] && command -v podman >/dev/null 2>&1; then
+  planned_c=$(extract_blueprint_containers "$TARGET_BP_NUM" 2>/dev/null || echo "")
+  if [ -n "$planned_c" ]; then
+    all_running=true
+    for c in $planned_c; do
+      if ! podman container exists "$c" 2>/dev/null; then
+        all_running=false
+        break
+      fi
+      c_status=$(podman inspect "$c" --format "{{.State.Status}}" 2>/dev/null || echo "")
+      if [ "$c_status" != "running" ]; then
+        all_running=false
+        break
+      fi
+    done
+    if [ "$all_running" = true ]; then
+      echo ""
+      echo -e "${GREEN}${BOLD}==================================================================${NC}"
+      msg_print "BP_ALREADY_ACTIVE" "$TARGET_BP_NUM"
+      echo -e "   Running containers: ${CYAN}${planned_c}${NC}"
+      echo -e "   💡 To restart or reapply, use: ${YELLOW}./scripts/deploy-blueprint.sh -b ${TARGET_BP_NUM} -u${NC}"
+      echo -e "   💡 To run another instance, create a new blueprint file (e.g. .env.<N>) with decoupled ports."
+      echo -e "${GREEN}${BOLD}==================================================================${NC}"
+      echo ""
+      exit 0
+    fi
+  fi
 fi
 
 # Execute setup-all with targeted blueprint and language
@@ -274,6 +310,12 @@ if [ -n "${SNAPSHOT_MODE:-}" ]; then
 fi
 if [ "${UNIFIED_MIDDLEWARE:-false}" = "true" ]; then
   SETUP_ARGS+=("--unified-middleware")
+fi
+if [ "$ACTION" = "replace" ]; then
+  SETUP_ARGS+=("--replace")
+fi
+if [ "${INCREMENTAL:-false}" = "true" ]; then
+  SETUP_ARGS+=("--incremental")
 fi
 
 "$WORKSPACE_DIR/scripts/setup-all.sh" "${SETUP_ARGS[@]}" 2>&1 | tee -a "$LOG_FILE"

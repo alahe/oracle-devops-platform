@@ -9,7 +9,7 @@
 # ============================================================================
 
 # Protect against double-sourcing
-if [ -n "${_ORACLE_SNAPSHOT_RESOLVER_SH_LOADED:-}" ]; then
+if [ -n "${_ORACLE_SNAPSHOT_RESOLVER_SH_LOADED:-}" ] && declare -f can_skip_in_db_apex >/dev/null 2>&1; then
   return 0 2>/dev/null || exit 0
 fi
 _ORACLE_SNAPSHOT_RESOLVER_SH_LOADED=true
@@ -69,6 +69,10 @@ write_snapshot_metadata() {
   local pub_ver="${8:-NONE}"
   local db_svc="${9:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}"
 
+  local snap_type="${10:-golden}"
+  local snap_tag="${11:-}"
+  local snap_desc="${12:-}"
+
   local meta_file="${snapshot_file%.tar.gz}.meta.json"
   local created_at
   created_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date +"%Y-%m-%dT%H:%M:%SZ")"
@@ -84,7 +88,10 @@ write_snapshot_metadata() {
   "ords_version": "$ords_ver",
   "forms_version": "$forms_ver",
   "publisher_version": "$pub_ver",
-  "db_service": "$db_svc"
+  "db_service": "$db_svc",
+  "type": "$snap_type",
+  "tag": "$snap_tag",
+  "description": "$snap_desc"
 }
 MEOF
 }
@@ -131,6 +138,11 @@ find_best_golden_snapshot() {
   local prof_name="${2:-${PROFILE_NAME:-}}"
   local snap_dir="${3:-$SNAPSHOTS_DIR}"
 
+  # Zero-database profiles (NONE, none, disabled) must never match any snapshot
+  if [ "$prof_name" = "NONE" ] || [ "$prof_name" = "none" ] || [ "$prof_name" = "disabled" ] || [ "${DB_ENABLED:-true}" = "false" ]; then
+    return 1
+  fi
+
   mkdir -p "$snap_dir"
 
   # 1. Exact Blueprint Snapshot (Local): bp_<ID>_latest.tar.gz or bp_<ID>_*.tar.gz
@@ -163,15 +175,43 @@ find_best_golden_snapshot() {
     fi
   fi
 
-  # 3. Canonical Global Default Snapshot (Local): apex_proxy_oradata_latest.tar.gz
-  if [ -f "$snap_dir/apex_proxy_oradata_latest.tar.gz" ]; then
+  # 2.5 Container Role-based Snapshot (Local): Fallback to profile or container matching snapshot
+  local target_role="${prof_name:-}"
+  [ -z "$target_role" ] && target_role=$(get_active_db_instances 2>/dev/null | head -n 1 | cut -d'|' -f1 || echo "")
+  if [ -n "$target_role" ]; then
+    if [[ "$target_role" == "db-proxy" || "$target_role" == "db-proxy-oracle" ]] && [ -f "$snap_dir/profile_db-proxy-oracle_latest.tar.gz" ]; then
+      echo "$snap_dir/profile_db-proxy-oracle_latest.tar.gz"
+      return 0
+    elif [[ "$target_role" == "db-proxy" || "$target_role" == "db-proxy-oracle" ]] && [ -f "$snap_dir/bp_0_latest.tar.gz" ]; then
+      echo "$snap_dir/bp_0_latest.tar.gz"
+      return 0
+    elif [[ "$target_role" == *"alise"* || "$target_role" == *"adb"* || "$target_role" == *"gvenzl"* ]] && [ -f "$snap_dir/profile_db-alise-oracle_latest.tar.gz" ]; then
+      echo "$snap_dir/profile_db-alise-oracle_latest.tar.gz"
+      return 0
+    elif [[ "$target_role" == *"publisher"* ]] && [ -f "$snap_dir/profile_db-publisher-oracle_latest.tar.gz" ]; then
+      echo "$snap_dir/profile_db-publisher-oracle_latest.tar.gz"
+      return 0
+    elif [[ "$target_role" == *"forms"* ]] && [ -f "$snap_dir/profile_db-forms-oracle_latest.tar.gz" ]; then
+      echo "$snap_dir/profile_db-forms-oracle_latest.tar.gz"
+      return 0
+    fi
+  fi
+
+  # 3. Canonical Global Default Snapshot (Local): bp_0_latest.tar.gz or profile_db-proxy-oracle_latest.tar.gz
+  if [ -f "$snap_dir/bp_0_latest.tar.gz" ]; then
+    echo "$snap_dir/bp_0_latest.tar.gz"
+    return 0
+  elif [ -f "$snap_dir/profile_db-proxy-oracle_latest.tar.gz" ]; then
+    echo "$snap_dir/profile_db-proxy-oracle_latest.tar.gz"
+    return 0
+  elif [ -f "$snap_dir/apex_proxy_oradata_latest.tar.gz" ]; then
     echo "$snap_dir/apex_proxy_oradata_latest.tar.gz"
     return 0
   fi
 
   # 4. Any latest timestamped apex_proxy snapshot (Local)
   local latest_global_file
-  latest_global_file=$(ls -t "$snap_dir"/apex_proxy_oradata_*.tar.gz 2>/dev/null | head -n 1 || true)
+  latest_global_file=$(ls -t "$snap_dir"/apex_proxy_oradata_*.tar.gz "$snap_dir"/bp_0_*.tar.gz 2>/dev/null | head -n 1 || true)
   if [ -f "$latest_global_file" ]; then
     echo "$latest_global_file"
     return 0
@@ -234,8 +274,8 @@ verify_snapshot_version_match() {
   if [ "$target_apex_ver" != "NONE" ] && [ "$snap_apex_ver" != "NONE" ] && [ "$clean_target_apex" != "$clean_snap_apex" ]; then
     echo -e "${YELLOW}==================================================================${NC}"
     msg_print "SNAPSHOT_VERSION_MISMATCH_WARN" "$target_apex_ver" "$snap_apex_ver" "$(basename "$snapshot_file")"
-    echo -e "   🎯 $(msg_str "LABEL_SELECTED_BP"): ${CYAN}${target_prof_name}${NC} (Nõutud APEX: ${GREEN}${target_apex_ver}${NC})"
-    echo -e "   📦 Hetktõmmise versioon:   ${RED}${snap_apex_ver}${NC} (${meta_file})"
+    echo -e "   🎯 $(msg_str "LABEL_SELECTED_BP"): ${CYAN}${target_prof_name}${NC} (Required APEX: ${GREEN}${target_apex_ver}${NC})"
+    echo -e "   📦 Snapshot version:      ${RED}${snap_apex_ver}${NC} (${meta_file})"
     msg_print "SNAPSHOT_REBUILD_SCRATCH"
     echo -e "${YELLOW}==================================================================${NC}"
     return 1
@@ -251,8 +291,9 @@ verify_snapshot_version_match() {
 # Queries active running database container to verify if APEX is already healthy.
 # Returns 0 if already installed and matching (SKIP SAFE), 1 if install needed.
 can_skip_in_db_apex() {
-  local container_name="${1:-db-apex-proxy}"
+  local container_name="${1:-db-proxy}"
   local target_apex_ver="${2:-${PROFILE_APEX_VERSION:-26.1}}"
+  local target_pdb="${3:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}"
 
   if ! podman container exists "$container_name" 2>/dev/null; then
     return 1
@@ -267,15 +308,20 @@ can_skip_in_db_apex() {
   # Check in-database APEX schema presence
   local schema_exists
   schema_exists="$(podman exec "$container_name" bash -c "
-    sqlplus -s / as sysdba << 'SQLEOF' 2>/dev/null
+    in_sql=\$(ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1)
+    if [ -n \"\$in_sql\" ]; then
+      \"\$in_sql\" -s / as sysdba << 'SQLEOF' 2>/dev/null
 SET HEADING OFF FEEDBACK OFF PAGESIZE 0 VERIFY OFF
-ALTER SESSION SET CONTAINER = FREEPDB1;
+ALTER SESSION SET CONTAINER = ${target_pdb};
 SELECT count(*) FROM all_users WHERE username LIKE 'APEX_%';
 EXIT;
 SQLEOF
+    else
+      echo '0'
+    fi
 " 2>/dev/null | tr -d ' \r\n\t' || echo "0")"
 
-  if [ "$schema_exists" -gt 0 ] 2>/dev/null; then
+  if [[ "$schema_exists" =~ ^[0-9]+$ ]] && [ "$schema_exists" -gt 0 ]; then
     msg_print "APEX_ALREADY_INSTALLED_SKIPPING" "$target_apex_ver"
     return 0
   fi
@@ -300,4 +346,124 @@ can_skip_stateless_service() {
   return 1
 }
 
-chmod +x /Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/snapshot-resolver.sh
+# ----------------------------------------------------------------------------
+# 8. Snapshot Age Calculation & Retention Policy (30-Day Expiration)
+# ----------------------------------------------------------------------------
+# Returns the age of the snapshot in whole days.
+get_snapshot_age_days() {
+  local snapshot_file="$1"
+  if [ -z "$snapshot_file" ] || [ ! -f "$snapshot_file" ]; then
+    echo "9999"
+    return 1
+  fi
+
+  local meta_file="${snapshot_file%.tar.gz}.meta.json"
+  local created_at=""
+  if [ -f "$meta_file" ]; then
+    created_at=$(read_snapshot_metadata_key "$snapshot_file" "created_at" 2>/dev/null || true)
+  fi
+
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "$snapshot_file" "$created_at" << 'PYEOF' 2>/dev/null || echo "0"
+import sys, os, time
+snap_file = sys.argv[1]
+created_str = sys.argv[2] if len(sys.argv) > 2 else ""
+age_days = None
+
+if created_str:
+    try:
+        from datetime import datetime, timezone
+        dt = datetime.fromisoformat(created_str.replace("Z", "+00:00"))
+        now = datetime.now(timezone.utc)
+        age_days = (now - dt).days
+    except Exception:
+        pass
+
+if age_days is None:
+    try:
+        mtime = os.path.getmtime(snap_file)
+        age_days = int((time.time() - mtime) / 86400)
+    except Exception:
+        age_days = 0
+
+print(max(0, age_days))
+PYEOF
+  else
+    local now mtime
+    now=$(date +%s)
+    if stat -f %m "$snapshot_file" >/dev/null 2>&1; then
+      mtime=$(stat -f %m "$snapshot_file")
+    else
+      mtime=$(stat -c %Y "$snapshot_file" 2>/dev/null || echo "$now")
+    fi
+    local age_sec=$(( now - mtime ))
+    [ "$age_sec" -lt 0 ] && age_sec=0
+    echo $(( age_sec / 86400 ))
+  fi
+}
+
+# Evaluates whether a Golden Snapshot should be created.
+# Rules:
+# 1. If FORCE_SNAPSHOT=true (via --force-snapshot / -fs), always creates (returns 0).
+# 2. If SKIP_SNAPSHOT_CREATION=true (via --skip-snapshot), skips (returns 1).
+# 3. If no matching snapshot exists, creates (returns 0).
+# 4. If matching snapshot exists and age > max_days (default: 30), creates (returns 0).
+# 5. If matching snapshot exists and age <= max_days, skips creation (returns 1).
+# Sets global variables:
+#   EVALUATED_SNAPSHOT_FILE: path to existing snapshot (if found)
+#   EVALUATED_SNAPSHOT_AGE_DAYS: age in days
+#   EVALUATED_SNAPSHOT_MAX_DAYS: policy threshold
+#   EVALUATED_SNAPSHOT_ACTION: "create" | "recreate_expired" | "skip_fresh" | "skip_disabled" | "force"
+should_create_golden_snapshot() {
+  local bp_id="${1:-${SELECTED_BLUEPRINT:-0}}"
+  local prof_name="${2:-${PROFILE_NAME:-db-proxy-oracle}}"
+  local max_days="${3:-${SNAPSHOT_MAX_AGE_DAYS:-30}}"
+  local snap_dir="${4:-$SNAPSHOTS_DIR}"
+
+  EVALUATED_SNAPSHOT_MAX_DAYS="$max_days"
+
+  # Zero-database profiles (NONE, none, disabled) do not use database snapshots
+  if [ "$prof_name" = "NONE" ] || [ "$prof_name" = "none" ] || [ "$prof_name" = "disabled" ] || [ "${DB_ENABLED:-true}" = "false" ]; then
+    EVALUATED_SNAPSHOT_ACTION="skip_no_db"
+    return 1
+  fi
+
+  # Explicit skip
+  if [ "${SKIP_SNAPSHOT_CREATION:-false}" = "true" ]; then
+    EVALUATED_SNAPSHOT_ACTION="skip_disabled"
+    return 1
+  fi
+
+  # Explicit force via CLI flag (--force-snapshot / -fs)
+  if [ "${FORCE_SNAPSHOT:-false}" = "true" ]; then
+    EVALUATED_SNAPSHOT_ACTION="force"
+    return 0
+  fi
+
+  # Search for best existing snapshot
+  local existing_snap=""
+  existing_snap=$(find_best_golden_snapshot "$bp_id" "$prof_name" "$snap_dir" 2>/dev/null || true)
+  EVALUATED_SNAPSHOT_FILE="$existing_snap"
+
+  # If none exists, we must create one
+  if [ -z "$existing_snap" ] || [ ! -f "$existing_snap" ]; then
+    EVALUATED_SNAPSHOT_AGE_DAYS="9999"
+    EVALUATED_SNAPSHOT_ACTION="create"
+    return 0
+  fi
+
+  # Calculate age
+  local age_days
+  age_days=$(get_snapshot_age_days "$existing_snap")
+  EVALUATED_SNAPSHOT_AGE_DAYS="$age_days"
+
+  # Check 30-day retention threshold
+  if [ "$age_days" -gt "$max_days" ]; then
+    EVALUATED_SNAPSHOT_ACTION="recreate_expired"
+    return 0
+  fi
+
+  # Fresh snapshot within threshold (<= 30 days) -> SKIP creation
+  EVALUATED_SNAPSHOT_ACTION="skip_fresh"
+  return 1
+}

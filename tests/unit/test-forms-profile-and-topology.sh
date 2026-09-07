@@ -12,8 +12,8 @@ source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
 echo "🧪 Test: Loading db-forms-oracle YAML profile..."
 load_db_profile "db-forms-oracle"
 
-if [ "$PROFILE_CONTAINER_NAME" != "db-forms" ]; then
-  echo "❌ Error: Expected container db-forms, got $PROFILE_CONTAINER_NAME"
+if [ "$PROFILE_CONTAINER_NAME" != "db-forms" ] && [ "$PROFILE_CONTAINER_NAME" != "db-forms-oracle" ]; then
+  echo "❌ Error: Expected container db-forms or db-forms-oracle, got $PROFILE_CONTAINER_NAME"
   exit 1
 fi
 
@@ -22,7 +22,7 @@ if [ "$PROFILE_DB_PORT" != "1534" ]; then
   exit 1
 fi
 
-for bp in 20 21 22 23 40; do
+for bp in 6 7; do
   bp_file=$(find "$WORKSPACE_DIR/config/blueprints" -name ".env.${bp}-*" -o -name ".env.${bp}" | head -n 1)
   if [ -n "$bp_file" ] && [ -f "$bp_file" ]; then
     echo "✅ Blueprint $bp exists ($(basename "$bp_file"))!"

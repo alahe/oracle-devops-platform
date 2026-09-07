@@ -31,6 +31,10 @@ if [ "${#CONTAINERS_TO_CHECK[@]}" -eq 0 ]; then
   done
 fi
 
+if [ "${#CONTAINERS_TO_CHECK[@]}" -eq 0 ]; then
+  exit 0
+fi
+
 MAX_WAIT=${CUSTOM_MAX_WAIT:-450}
 if [ "${IS_ADB:-false}" = "true" ] && [ -z "$CUSTOM_MAX_WAIT" ]; then
   MAX_WAIT=2400
@@ -50,15 +54,31 @@ for container in "${CONTAINERS_TO_CHECK[@]}"; do
     is_healthy=false
 
     if [ "$c_status" = "running" ]; then
-      if [ "$h_status" = "healthy" ] || [ "$h_status" = "none" ] || [ "$h_status" = "starting" ]; then
-        if podman exec "$container" sh -c "[ -f /u01/container_state/.installed_ords ]" 2>/dev/null; then
-          is_healthy=true
-        else
-          # Verify that pluggable database (PDB) is opened in READ WRITE mode
-          pdb_check=$(podman exec -i "$container" sh -c 'export ORACLE_HOME=$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n "$ORACLE_HOME" ] && export PATH="$ORACLE_HOME/bin:$PATH"; echo -e "SET HEADING OFF FEEDBACK OFF;\nSHOW PDBS;\nEXIT;" | sqlplus -s / as sysdba' 2>/dev/null || true)
-          if echo "$pdb_check" | grep -q "READ WRITE"; then
-            is_healthy=true
+      # Auto-heal gvenzl missing zoneinfo symlinks if needed (fixes ORA-01804)
+      podman exec -u 0 "$container" bash -c '
+        for zh in /opt/oracle/product/*/dbhomeFree/oracore/zoneinfo; do
+          [ -d "$zh" ] || continue
+          if [ ! -f "$zh/timezlrg.dat" ] && [ -f "$zh/timezlrg_45.dat" ]; then
+            ln -sf "$zh/timezlrg_45.dat" "$zh/timezlrg.dat"
+            ln -sf "$zh/timezlrg_45.dat" "$zh/timezone_45.dat"
+            ln -sf "$zh/timezlrg_45.dat" "$zh/timezone.dat"
           fi
+        done
+      ' 2>/dev/null || true
+
+      if podman exec "$container" sh -c "[ -f /u01/container_state/.installed_ords ]" 2>/dev/null; then
+        is_healthy=true
+      else
+        # Verify that pluggable database (PDB) is opened in READ WRITE mode
+        in_c_sql=$(podman exec "$container" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+        if [ -n "$in_c_sql" ]; then
+          pdb_check=$(printf "SET HEADING OFF FEEDBACK OFF;\nSHOW PDBS;\nEXIT;\n" | podman exec -i "$container" "$in_c_sql" -s / as sysdba 2>/dev/null || true)
+        else
+          # For containers without embedded SQLcl (e.g. gvenzl image), check PDB via sqlplus
+          pdb_check=$(printf "SET HEADING OFF FEEDBACK OFF;\nSHOW PDBS;\nEXIT;\n" | podman exec -i "$container" bash -c 'sqlplus -s / as sysdba' 2>/dev/null || true)
+        fi
+        if echo "$pdb_check" | grep -q "READ WRITE"; then
+          is_healthy=true
         fi
       fi
     fi
@@ -67,6 +87,21 @@ for container in "${CONTAINERS_TO_CHECK[@]}"; do
       clear_progress_line
       echo -e "$(msg_str "DB_CONTAINER_HEALTHY" "${GREEN}${container}${NC}")"
       break
+    fi
+
+    # Fail-Fast: If container is in 'created' or 'exited' state and couldn't start, abort immediately!
+    if [ "$c_status" = "created" ] || [ "$c_status" = "exited" ]; then
+      if [ $WAIT_COUNT -ge 6 ]; then
+        clear_progress_line
+        echo -e "\n${RED}❌ Fail-Fast: Container ${container} is in '${c_status}' state and failed to start!${NC}"
+        local_err=$(podman inspect --format='{{.State.Error}}' "$container" 2>/dev/null || true)
+        if [ -z "$local_err" ]; then
+          local_err=$(podman logs --tail 5 "$container" 2>&1 | tr '\n' ' ' | cut -c1-200 || true)
+        fi
+        [ -n "$local_err" ] && echo -e "   ${YELLOW}Cause:${NC} $local_err"
+        echo -e "   ${YELLOW}Hint:${NC} Check port conflicts: 'podman ps' or use Dev Hub ('docs/dev-hub.html')."
+        exit 1
+      fi
     fi
 
     # If container is not defined in active compose profile (not_found), wait up to 30s before skipping
@@ -85,14 +120,32 @@ for container in "${CONTAINERS_TO_CHECK[@]}"; do
 
     print_progress "$(msg_str "DB_WAITING_CONTAINER" "$container")" "$WAIT_COUNT" "$MAX_WAIT"
 
-    # Automaatne iseparanev taaskäivitus kui konteiner töötab, aga Oracle DB ei vasta 45s jooksul (zombie / ORA-01034 taastamine)
-    if [ "$AUTO_RESTARTED" = "false" ] && [ $WAIT_COUNT -ge 45 ] && [ "$c_status" = "running" ]; then
-      if ! echo -e "SHOW PDBS;\nexit;" | podman exec -i "$container" sqlplus -s -L / as sysdba 2>/dev/null | grep -q "READ WRITE"; then
-        AUTO_RESTARTED=true
-        clear_progress_line
-        echo -e "$(msg_str "DB_ZOMBIE_RESTART" "${container}")"
-        podman restart "$container" >/dev/null 2>&1 || true
-        sleep 5
+    # Automated self-healing restart if container is running but Oracle DB does not respond within 180s (zombie / ORA-01034 recovery)
+    # Do not restart if container is actively initializing for the first time
+    if [ "$AUTO_RESTARTED" = "false" ] && [ $WAIT_COUNT -ge 180 ] && [ "$c_status" = "running" ]; then
+      is_init=false
+      if podman exec "$container" bash -c '[ -f /opt/oracle/hc-container-init ] || [ -f /opt/oracle/hc-pdb-create ]' 2>/dev/null; then
+        is_init=true
+      fi
+      if [ "$is_init" = "false" ]; then
+        in_c_sql=$(podman exec "$container" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+        db_ok=false
+        if [ -n "$in_c_sql" ]; then
+          if printf "SHOW PDBS;\nEXIT;\n" | podman exec -i "$container" "$in_c_sql" -s / as sysdba 2>/dev/null | grep -q "READ WRITE"; then
+            db_ok=true
+          fi
+        else
+          if printf "SHOW PDBS;\nEXIT;\n" | podman exec -i "$container" bash -c 'sqlplus -s / as sysdba' 2>/dev/null | grep -q "READ WRITE"; then
+            db_ok=true
+          fi
+        fi
+        if [ "$db_ok" = "false" ]; then
+          AUTO_RESTARTED=true
+          clear_progress_line
+          echo -e "$(msg_str "DB_ZOMBIE_RESTART" "${container}")"
+          podman restart "$container" >/dev/null 2>&1 || true
+          sleep 5
+        fi
       fi
     fi
 

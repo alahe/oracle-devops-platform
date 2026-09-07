@@ -13,10 +13,10 @@ CERT_DIR="$WORKSPACE_DIR/config/certs"
 mkdir -p "$CERT_DIR"
 
 echo "=================================================================="
-echo "🔐 KOHALIKE SSL SERTIFIKAATIDE GENEREERIMINE (DEV_LOCAL)"
+echo "🔐 LOCAL SSL/TLS CERTIFICATES & WALLET ENGINE (DEV_LOCAL)"
 echo "=================================================================="
 
-# Kontrollfunktsioon: kontrollib kas sertifikaat eksisteerib ja kehtib veel vähemalt 24h
+# Validation helper: verifies if certificate exists and is valid for at least 24h
 is_cert_valid() {
   local cert_file="$1"
   [ -f "$cert_file" ] || return 1
@@ -24,14 +24,23 @@ is_cert_valid() {
   return 0
 }
 
-# 1. Generate local Root Certificate Authority (Root CA)
-echo "1. Kontrollin kohalikku juursertifikaati (Root CA)..."
+# 1. Generate or synchronize local Root Certificate Authority (Root CA)
+echo "1. Checking local Root Certificate Authority (Root CA)..."
 ROOT_REGENERATED=false
-if is_cert_valid "$CERT_DIR/localCA.pem" && [ -f "$CERT_DIR/localCA.key" ]; then
+
+if command -v mkcert >/dev/null 2>&1; then
+  echo "ℹ️  Found mkcert CLI: synchronizing with system-trusted mkcert CA..."
+  MK_CAROOT="$(mkcert -CAROOT 2>/dev/null || echo "")"
+  if [ -n "$MK_CAROOT" ] && [ -f "$MK_CAROOT/rootCA.pem" ]; then
+    cp "$MK_CAROOT/rootCA.pem" "$CERT_DIR/localCA.pem"
+    [ -f "$MK_CAROOT/rootCA-key.pem" ] && cp "$MK_CAROOT/rootCA-key.pem" "$CERT_DIR/localCA.key" 2>/dev/null || true
+    echo "✅ Synchronized Root CA from mkcert: config/certs/localCA.pem"
+  fi
+elif is_cert_valid "$CERT_DIR/localCA.pem" && [ -f "$CERT_DIR/localCA.key" ]; then
   EXP_DATE=$(openssl x509 -in "$CERT_DIR/localCA.pem" -noout -enddate 2>/dev/null | cut -d= -f2)
   echo "ℹ️  Valid Root CA already exists (expires: $EXP_DATE). Skipping creation."
 else
-  echo "👉 Generating new local Root CA certificate..."
+  echo "👉 Generating new local Root CA certificate (OpenSSL)..."
   openssl genrsa -out "$CERT_DIR/localCA.key" 4096 2>/dev/null
   openssl req -x509 -new -nodes -key "$CERT_DIR/localCA.key" -sha256 -days 1825 \
     -out "$CERT_DIR/localCA.pem" \
@@ -49,38 +58,59 @@ if [ "$ROOT_REGENERATED" = "false" ] && is_cert_valid "$CERT_DIR/localhost.crt" 
   echo "ℹ️  Valid localhost certificate already exists (expires: $EXP_DATE). Skipping creation."
 else
   echo "👉 Generating new certificate for 'localhost'..."
-  openssl genrsa -out "$CERT_DIR/localhost.key" 2048 2>/dev/null
+  if command -v mkcert >/dev/null 2>&1; then
+    echo "ℹ️  Generating browser-trusted certificate via mkcert..."
+    mkcert -cert-file "$CERT_DIR/localhost.crt" -key-file "$CERT_DIR/localhost.key" localhost "*.localhost" 127.0.0.1 ::1 >/dev/null 2>&1
+  else
+    openssl genrsa -out "$CERT_DIR/localhost.key" 2048 2>/dev/null
 
-  # Generate config file for SAN domains and IPs
-  cat > "$CERT_DIR/localhost.ext" <<EOF
+    # Generate config file for SAN domains, IPs and Extended Key Usage (RFC 5280 / Apple / Chromium standard)
+    cat > "$CERT_DIR/localhost.ext" <<EOF
 authorityKeyIdentifier=keyid,issuer
-basicConstraints=CA:FALSE
-keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
-subjectAltName = @alt_names
+basicConstraints=critical,CA:FALSE
+keyUsage=critical,digitalSignature,keyEncipherment
+extendedKeyUsage=serverAuth,clientAuth
+subjectAltName=@alt_names
 
 [alt_names]
 DNS.1 = localhost
 DNS.2 = *.localhost
 IP.1 = 127.0.0.1
+IP.2 = ::1
 EOF
 
-  # Certificate Signing Request (CSR)
-  openssl req -new -key "$CERT_DIR/localhost.key" \
-    -out "$CERT_DIR/localhost.csr" \
-    -subj "/C=EE/O=Local Dev Environment/CN=localhost" 2>/dev/null
+    # Certificate Signing Request (CSR)
+    openssl req -new -key "$CERT_DIR/localhost.key" \
+      -out "$CERT_DIR/localhost.csr" \
+      -subj "/C=EE/O=Local Dev Environment/CN=localhost" 2>/dev/null
 
-  # Sign certificate with Root CA
-  openssl x509 -req -in "$CERT_DIR/localhost.csr" \
-    -CA "$CERT_DIR/localCA.pem" -CAkey "$CERT_DIR/localCA.key" \
-    -CAcreateserial -out "$CERT_DIR/localhost.crt" \
-    -days 825 -sha256 -extfile "$CERT_DIR/localhost.ext" 2>/dev/null
+    # Sign certificate with Root CA (365 days max for Apple/Chrome compliance)
+    openssl x509 -req -in "$CERT_DIR/localhost.csr" \
+      -CA "$CERT_DIR/localCA.pem" -CAkey "$CERT_DIR/localCA.key" \
+      -CAcreateserial -out "$CERT_DIR/localhost.crt" \
+      -days 365 -sha256 -extfile "$CERT_DIR/localhost.ext" 2>/dev/null
 
-  rm -f "$CERT_DIR/localhost.csr" "$CERT_DIR/localhost.ext" "$CERT_DIR/localCA.srl"
+    rm -f "$CERT_DIR/localhost.csr" "$CERT_DIR/localhost.ext" "$CERT_DIR/localCA.srl"
+  fi
+
   LOCALHOST_REGENERATED=true
+
+  # Generate unencrypted PKCS#8 DER key for ORDS standalone HTTPS
+  openssl pkcs8 -topk8 -inform PEM -outform DER -in "$CERT_DIR/localhost.key" -out "$CERT_DIR/localhost.der" -nocrypt 2>/dev/null || true
+  cat "$CERT_DIR/localhost.crt" "$CERT_DIR/localCA.pem" > "$CERT_DIR/localhost-fullchain.crt" 2>/dev/null || true
 
   echo "✅ New certificate and key generated:"
   echo "   Cert: $CERT_DIR/localhost.crt"
   echo "   Key:  $CERT_DIR/localhost.key"
+  echo "   DER:  $CERT_DIR/localhost.der"
+fi
+
+# Ensure DER key and fullchain exist even if cert wasn't regenerated
+if [ -f "$CERT_DIR/localhost.key" ] && [ ! -f "$CERT_DIR/localhost.der" ]; then
+  openssl pkcs8 -topk8 -inform PEM -outform DER -in "$CERT_DIR/localhost.key" -out "$CERT_DIR/localhost.der" -nocrypt 2>/dev/null || true
+fi
+if [ -f "$CERT_DIR/localhost.crt" ] && [ -f "$CERT_DIR/localCA.pem" ] && [ ! -f "$CERT_DIR/localhost-fullchain.crt" ]; then
+  cat "$CERT_DIR/localhost.crt" "$CERT_DIR/localCA.pem" > "$CERT_DIR/localhost-fullchain.crt" 2>/dev/null || true
 fi
 
 # Populate user_ca directory (Variant 3)
@@ -88,6 +118,7 @@ mkdir -p "$CERT_DIR/user_ca"
 cp -f "$CERT_DIR/localCA.pem" "$CERT_DIR/user_ca/localCA.pem" 2>/dev/null || true
 cp -f "$CERT_DIR/localhost.crt" "$CERT_DIR/user_ca/localhost.crt" 2>/dev/null || true
 cp -f "$CERT_DIR/localhost.key" "$CERT_DIR/user_ca/localhost.key" 2>/dev/null || true
+cp -f "$CERT_DIR/localhost.der" "$CERT_DIR/user_ca/localhost.der" 2>/dev/null || true
 
 # Generate direct self-signed cert in self_signed directory (Variant 4)
 mkdir -p "$CERT_DIR/self_signed"
@@ -98,6 +129,9 @@ if ! is_cert_valid "$CERT_DIR/self_signed/self_signed.crt" || [ ! -f "$CERT_DIR/
     -subj "/C=EE/O=Local Dev Environment/CN=localhost" \
     -addext "subjectAltName=DNS:localhost,DNS:*.localhost,IP:127.0.0.1" 2>/dev/null || true
   echo "✅ Self-signed fallback certificate created: config/certs/self_signed/self_signed.crt"
+fi
+if [ -f "$CERT_DIR/self_signed/self_signed.key" ] && [ ! -f "$CERT_DIR/self_signed/self_signed.der" ]; then
+  openssl pkcs8 -topk8 -inform PEM -outform DER -in "$CERT_DIR/self_signed/self_signed.key" -out "$CERT_DIR/self_signed/self_signed.der" -nocrypt 2>/dev/null || true
 fi
 
 # 3. Export certificates to Oracle Wallet PKCS#12 format (ewallet.p12)
@@ -181,33 +215,33 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   security add-certificate -k "$USER_KEYCHAIN" "$CERT_DIR/localCA.pem" 2>/dev/null || true
 
   if security find-certificate -c "Local Dev Root CA" "$USER_KEYCHAIN" &>/dev/null; then
-    echo "✅ 'Local Dev Root CA' on edukalt lisatud macOS kasutaja võtmehoidjasse (User Space, 0-Root)."
+    echo "✅ 'Local Dev Root CA' successfully added to macOS User Keychain (User Space, 0-Root)."
   else
-    echo "ℹ️  Sertifikaat loodud: $CERT_DIR/localCA.pem (User Space)"
+    echo "ℹ️  Certificate created: $CERT_DIR/localCA.pem (User Space)"
   fi
 elif { [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]]; }; then
   if command -v certutil &>/dev/null; then
     WIN_CERT_PATH=$(cygpath -w "$CERT_DIR/localCA.pem" 2>/dev/null || echo "$CERT_DIR/localCA.pem")
     certutil -addstore -f -user Root "$WIN_CERT_PATH" >/dev/null 2>&1 || true
-    echo "✅ Sertifikaat lisati automaatselt Windowsi kasutaja usaldusväärsesse hoidlasse (certutil -user -addstore Root)."
+    echo "✅ Certificate automatically added to Windows User Trusted Store (certutil -user -addstore Root)."
   fi
 elif grep -qEi 'Microsoft|Subsystem' /proc/version 2>/dev/null; then
   if command -v certutil.exe &>/dev/null; then
     WIN_CERT_PATH=$(wslpath -w "$CERT_DIR/localCA.pem" 2>/dev/null || echo "$CERT_DIR/localCA.pem")
     certutil.exe -addstore -f -user Root "$WIN_CERT_PATH" >/dev/null 2>&1 || true
-    echo "✅ Sertifikaat lisati automaatselt Windowsi hoidlasse läbi WSL-i (certutil.exe -user -addstore Root)."
+    echo "✅ Certificate automatically added to Windows store via WSL (certutil.exe -user -addstore Root)."
   fi
 elif [[ "$OSTYPE" == "linux"* ]]; then
-  echo "ℹ️  Linux keskkonnas saab sertifikaadi määrata käsurea muutujaga: export SSL_CERT_FILE=\"$CERT_DIR/localCA.pem\""
+  echo "ℹ️  In Linux environment, trust certificate via environment variable: export SSL_CERT_FILE=\"$CERT_DIR/localCA.pem\""
 fi
 
-# 6. Kuidas kasutada
+# 6. Usage summary
 echo "=================================================================="
-echo "🎉 SSL SERTIFIKAADID JA WALLETID ON VALMIS!"
-echo "   1. ORDS/APEX HTTPS jaoks (brauser):"
-echo "      Sert:  config/certs/localhost.crt"
-echo "      Võti:  config/certs/localhost.key"
-echo "   2. Oracle Database kuulajate jaoks (TCPS port 2484):"
-echo "      Walletid asuvad: config/wallet-apex-proxy/ ja config/wallet-publisher/"
-echo "      (Sertifikaadid on pakitud ewallet.p12 ja cwallet.sso failidesse)"
+echo "🎉 SSL/TLS CERTIFICATES & ENCRYPTED WALLETS READY!"
+echo "   1. ORDS/APEX HTTPS (Browser):"
+echo "      Cert:  config/certs/localhost.crt"
+echo "      Key:   config/certs/localhost.key"
+echo "   2. Oracle Database TCPS Listeners (Port 2484):"
+echo "      Wallets located at: config/wallet-apex-proxy/ and config/wallet-publisher/"
+echo "      (Certificates packaged inside ewallet.p12 and cwallet.sso)"
 echo "=================================================================="

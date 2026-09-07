@@ -13,7 +13,13 @@ TARGET_SCRIPT="$WORKSPACE_DIR/scripts/snapshots/restore-golden-snapshots.sh"
 
 if [ -x "$TARGET_SCRIPT" ]; then
   bash -n "$TARGET_SCRIPT"
-  echo -e "${GREEN}✅ Test Edukas: restore-golden-snapshots.sh on olemas ja BASH süntaks on korras!${NC}"
+  help_out=$("$TARGET_SCRIPT" --help)
+  if echo "$help_out" | grep -q -- "--name"; then
+    echo -e "${GREEN}✅ Test Edukas: restore-golden-snapshots.sh toetab --name parameetrit ja BASH süntaks on korras!${NC}"
+  else
+    echo -e "${RED}❌ Test Ebaõnnestus: --name puudub restore-golden-snapshots.sh abitekstist!${NC}"
+    exit 1
+  fi
 else
   echo -e "${RED}❌ Test Ebaõnnestus: scripts/snapshots/restore-golden-snapshots.sh puudub!${NC}"
   exit 1

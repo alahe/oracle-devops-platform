@@ -15,7 +15,8 @@ if [ -f "$TARGET_SCRIPT" ]; then
   bash -n "$TARGET_SCRIPT"
   # Run dry-run execution test
   bash "$TARGET_SCRIPT" --dry-run > /dev/null
-  echo -e "${GREEN}✅ Test Edukas: deploy-remote.sh on olemas, süntaks on korras ja --dry-run teostati ilma vigadeta!${NC}"
+  bash "$TARGET_SCRIPT" -b 10 -w config/oracle_db_wallet.zip --dry-run > /dev/null
+  echo -e "${GREEN}✅ Test Edukas: deploy-remote.sh toetab -b/--blueprint ja -w/--wallet valikuid ning --dry-run toimib!${NC}"
 else
   echo -e "${RED}❌ Test Ebaõnnestus: scripts/deploy-remote.sh puudub!${NC}"
   exit 1

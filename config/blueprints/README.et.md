@@ -1,116 +1,109 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🏗️ Keskkondade Arhitektuursed Kavandid (15 Kureeritud Mudelit)
+# 🏗️ Arhitektuursete Kavandite (Blueprintide) Kataloog (0 .. 11)
 
-Käesolev kataloog on **keskkonna 15 kureeritud ja kanoonilise arhitektuurse kavandi (Blueprints)** keskne tõeallikas, mis on jaotatud **4 loogilisse dekaadipõhisesse gruppi**.
-
-Iga blueprint (`.env.<N>-*`) defineerib tervikliku taristumudeli alates eraldiseisvast baasist või lüüsist kuni täieliku ettevõtte hübriidvirnani koos Web IDE-ga.
-
----
-
-## 🚀 Blueprintide Haldamise & Juurutamise Käsud
-
-Kasuta spetsiaalset juhtskripti **`./scripts/deploy-blueprint.sh`** (või `./scripts/setup-all.sh -b <N>`):
-
-```bash
-# 1. Kontrolli aktiivset blueprinti ja teenuste tervist:
-./scripts/deploy-blueprint.sh --status
-
-# 2. Juuruta või lülitu Blueprint 21 peale (VAIKIMISI 2-kihiline tootmislahendus koos Web IDE-ga):
-./scripts/deploy-blueprint.sh -b 21
-
-# 3. Juuruta Blueprint 31 (Täielik Ettevõtte Hübriidvirn: Forms + Publisher + APEX + Web IDE):
-./scripts/deploy-blueprint.sh -b 31
-
-# 4. Dry-run simulatsioon (eelvaade ilma konteinereid muutmata):
-./scripts/deploy-blueprint.sh -b 21 --dry-run
-
-# 5. Kuva 15 blueprinti tabel vormindatud kujul:
-./scripts/setup-all.sh -lb
-
-# 6. Käivita automatiseeritud puhta algseisuga test:
-./scripts/setup-all.sh -tb 21
-```
-
----
-
-## 📊 Kanooniline 15 Blueprinti Arhitektuurimaatriks
+See kataloog sisaldab **12 kanoonilist modulaarset arhitektuurset kavandit (blueprints)**, mis katavad kogu ettevõtte taseme platvormi:
 
 ```mermaid
-graph TD
-  subgraph Grupp 1: Üksiktooted Eraldi (1–9)
-    BP1["BP 1: Eraldiseisev ALISE DB<br/>db-alise + app-ords (Port 1533)"]
-    BP2["BP 2: Iseseisev ORDS Lüüs & Dev Hub<br/>app-ords (Pordid 8088/8448)"]
-    BP3["BP 3: Eraldiseisev Proxy DB & APEX SSO<br/>db-proxy + app-ords (Port 1532)"]
-    BP4["BP 4: Iseseisev Web-IDE Arendustöökoht<br/>web-ide-dev (Port 8090)"]
-    BP5["BP 5: Eraldiseisev Analytics Publisher<br/>db-publisher + app-publisher (Pordid 1531, 9502)"]
-    BP6["BP 6: Eraldiseisev Oracle Forms 14c<br/>db-forms + app-forms (Pordid 1534, 9001, 6082)"]
-  end
+flowchart TD
+    subgraph Default ["⭐ KANOONILINE VAIKIMISI PROFIIL"]
+        BP0["BP 0: Vaikimisi Proxy DB & ORDS<br/>db-proxy (:1532) + app-ords (:8088/8448)"]
+    end
 
-  subgraph Grupp 2: Konsolideeritud Teenused (10–19)
-    BP10["BP 10: Forms + Publisher Ühine DB<br/>db-publisher + app-forms + app-publisher"]
-    BP11["BP 11: Konsolideeritud ORDS & Web-IDE<br/>app-ords + web-ide-dev"]
-  end
+    subgraph DatabaseStacks ["🗄️ GRUPP 1: ANDMEBAASI VIRNAD (1–4)"]
+        BP1["BP 1: Eraldiseisev ALISE DB (:1533)"]
+        BP2["BP 2: Eraldiseisev Proxy DB (:1537)"]
+        BP3["BP 3: Gvenzl Kogukonna DB (:1535)"]
+        BP4["BP 4: Autonomous DB Pilv (:1536)"]
+    end
 
-  subgraph Grupp 3: Kihiline Ettevõtte Virn (20–29)
-    BP20["BP 20: 1-DB Tuumikrakenduse Virn<br/>db-alise + app-ords + web-ide-dev"]
-    BP21["🌟 BP 21 (PLATVORM VAIKIMISI): Kanooniline 2-Kihiline Virn<br/>db-proxy + db-alise + app-ords + web-ide-dev"]
-    BP22["BP 22: 1-DB Kompaktne Aruandlusvirn<br/>db-alise + app-publisher + app-ords + web-ide-dev"]
-    BP23["BP 23: Täielik Isoleeritud Aruandlusvirn (3 DB-d)<br/>db-publisher + db-proxy + db-alise + Publisher + ORDS + Web-IDE"]
-    BP24["BP 24: Täielik Isoleeritud Forms Virn (3 DB-d)<br/>db-forms + db-proxy + db-alise + Forms + ORDS + Web-IDE"]
-  end
+    subgraph Middleware ["🏢 GRUPP 2: ÄRIRAKENDUSTE VAHEVARA (5–7)"]
+        BP5["BP 5: Eraldiseisev Analytics Publisher (:1531, :9502)"]
+        BP6["BP 6: Eraldiseisev Oracle Forms 14c (:1534, :9001, :6082)"]
+        BP7["BP 7: Konsolideeritud Forms + Publisher FMW (:1531, :9001, :9502)"]
+    end
 
-  subgraph Grupp 4: Hübriidsed Virnad (30–39)
-    BP30["BP 30: Kompaktne Ettevõtte Hübriidvirn<br/>db-publisher + db-alise + Forms + Pub + ORDS + Web-IDE"]
-    BP31["🌟 BP 31: Ultimate Ettevõtte Hübriidvirn<br/>db-publisher + db-proxy + db-alise + Forms + Pub + ORDS + Web-IDE"]
-  end
+    subgraph DeveloperStudio ["💻 GRUPP 3: ARENDUSKESKKOND (8–9)"]
+        BP8["BP 8: Eraldiseisev Web-IDE (:8090)<br/>⚠️ Testimisel ja täiustamisel"]
+        BP9["BP 9: Publisher Kujundaja (:6083)<br/>⚠️ Testimisel ja täiustamisel"]
+    end
+
+    subgraph RemoteGateways ["🌐 GRUPP 4: KAUGSERVERITE LÜÜSID (10–11)"]
+        BP10["BP 10: Kaug-ORDS Lüüs (:8088/8448)<br/>⚠️ Testimisel ja täiustamisel"]
+        BP11["BP 11: Kaug-Publisher (:9502/9503)<br/>⚠️ Testimisel ja täiustamisel"]
+    end
+
+    Default --> DatabaseStacks
+    Default --> Middleware
+    Default --> DeveloperStudio
+    Default --> RemoteGateways
 ```
 
 ---
 
-### 🔹 Grupp 1: Üksiktooted Eraldi (1–9)
-| Nr | Faili Nimi | Käivitatavad Konteinerid | Pordid (Host) | Otstarve ja Arhitektuurne Kirjeldus |
-| :--- | :--- | :--- | :--- | :--- |
-| **1** | `.env.1-standalone-alise-db` | `db-alise`, `app-ords` | `1533`, `8088`, `8448` | **Eraldiseisev ALISE Äriandmebaas:** Spetsiaalne kohandatud rakenduste andmebaas äriskeemidele, PL/SQL koodile, DDL/DML lausetele ja sisemisele APEX & ORDS toele. |
-| **2** | `.env.2-standalone-ords-devhub` | `app-ords` | `8088`, `8448` | **Iseseisev ORDS Lüüs & Dev Hub:** Eraldiseisev ORDS HTTP/HTTPS veebilüüs ja Developer Hub kaug- ning pilveandmebaasidele. |
-| **3** | `.env.3-standalone-proxy-db` | `db-proxy`, `app-ords` | `1532`, `8088`, `8448` | **Eraldiseisev Proxy DB & APEX SSO:** APEX Proxy andmebaas turvaväravana ja välisühenduste vahendajana (REST API, Azure Entra ID, Kafka). |
-| **4** | `.env.4-standalone-web-ide` | `web-ide-dev` | `8090` | **Iseseisev Web-IDE Arendustöökoht:** Brauseripõhine VS Code Web IDE koos Oracle SQL Developer laienduse, Antigravity ja lokaalse CI testimisega (`act`). |
-| **5** | `.env.5-standalone-analytics-publisher` | `db-publisher`, `app-publisher` | `1531`, `9502` | **Eraldiseisev Analytics Publisher:** Oracle Analytics Publisher (Pixel-Perfect) koos spetsiaalse RCU taristu andmebaasiga (`db-publisher`). |
-| **6** | `.env.6-standalone-oracle-forms` | `db-forms`, `app-forms` | `1534`, `9001`, `7001`, `6082` | **Eraldiseisev Oracle Forms 14c:** Oracle Forms 14c teenused ja HTML5 noVNC Forms Builder GUI koos eraldi Forms RCU andmebaasiga (`db-forms`). |
+## 🚀 Käsurea Käsud & Kasutamine
 
----
-
-### 🔹 Grupp 2: Konsolideeritud Teenused (10–19)
-| Nr | Faili Nimi | Käivitatavad Konteinerid | Pordid (Host) | Otstarve ja Arhitektuurne Kirjeldus |
-| :--- | :--- | :--- | :--- | :--- |
-| **10** | `.env.10-consolidated-forms-publisher-unified-db` | `db-publisher`, `app-forms`, `app-publisher` | `1531`, `9502`, `9001`, `6082` | **Forms + Publisher Ühine DB:** Forms 14c ja Analytics Publisher ühendatud ühe ühise 23ai andmebaasiga (`db-publisher`) mõlema RCU jaoks, säästes ~2.5 GB RAM-i. |
-| **11** | `.env.11-consolidated-ords-web-ide` | `app-ords`, `web-ide-dev` | `8088`, `8448`, `8090` | **Konsolideeritud ORDS Lüüs & Web-IDE:** Integreeritud veebi- ja arendustöökohtade kiht (ORDS lüüs + code-server Web IDE) ühtses võrgus. |
-
----
-
-### 🔹 Grupp 3: Kihiline Ettevõtte Virn (20–29)
-| Nr | Faili Nimi | Käivitatavad Konteinerid | Pordid (Host) | Otstarve ja Arhitektuurne Kirjeldus |
-| :--- | :--- | :--- | :--- | :--- |
-| **20** | `.env.20-stack-alise-ords-webide` | `db-alise`, `app-ords`, `web-ide-dev` | `1533`, `8088`, `8448`, `8090` | **1-DB Tuumikrakenduse Virn:** Ühe andmebaasiga APEX tuumikvirn: ALISE äriandmebaas, ORDS veebilüüs ja brauseri Web IDE. |
-| **21** | `.env.21-stack-alise-ords-proxy-webide` | `db-proxy`, `db-alise`, `app-ords`, `web-ide-dev` | `1532`, `1533`, `8088`, `8448`, `8090` | **🌟 PLATVORM VAIKIMISI:** Standardne 2-kihiline turvaline võrgutopoloogia (eraldatud Proxy DB ja ALISE DB) koos APEX SSO, ORDS-i ja Web IDE-ga. |
-| **22** | `.env.22-stack-alise-publisher-ords-webide` | `db-alise`, `app-publisher`, `app-ords`, `web-ide-dev` | `1533`, `8088`, `8448`, `9502`, `8090` | **1-DB Kompaktne Aruandlusvirn:** Ressursisäästlik aruandlusvirn, kus Analytics Publisher jagab RCU skeeme ALISE andmebaasis koos ORDS-i ja Web IDE-ga. |
-| **23** | `.env.23-stack-alise-ords-proxy-webide-publisher` | `db-publisher`, `db-proxy`, `db-alise`, `app-ords`, `web-ide-dev`, `app-publisher` | `1531-1533`, `8088`, `9502`, `8090` | **Täielik Isoleeritud 2-Kihiline Aruandlusvirn:** 3 eraldi andmebaasi (`db-publisher`, `db-proxy`, `db-alise`), WebLogic Publisher, ORDS ja Web IDE *(nõuab $\ge 12\text{ GB}$ RAM)*. |
-| **24** | `.env.24-stack-alise-ords-proxy-webide-forms` | `db-forms`, `db-proxy`, `db-alise`, `app-ords`, `web-ide-dev`, `app-forms` | `1532-1534`, `8088`, `9001`, `6082`, `8090` | **Täielik Isoleeritud 2-Kihiline Forms Virn:** 3 eraldi andmebaasi (`db-forms`, `db-proxy`, `db-alise`), Forms 14c teenused, noVNC, ORDS ja Web IDE *(nõuab $\ge 12\text{ GB}$ RAM)*. |
-
----
-
-### 🔹 Grupp 4: Hübriidsed Virnad (30–39)
-| Nr | Faili Nimi | Käivitatavad Konteinerid | Pordid (Host) | Otstarve ja Arhitektuurne Kirjeldus |
-| :--- | :--- | :--- | :--- | :--- |
-| **30** | `.env.30-hybrid-alise-forms-pub-ords-webide` | `db-publisher`, `db-alise`, `app-forms`, `app-publisher`, `app-ords`, `web-ide-dev` | `1531`, `1533`, `8088`, `9502`, `9001`, `6082`, `8090` | **Kompaktne Ettevõtte Hübriidvirn:** Ressursisäästlik hübriidvirn: ALISE äribaas, konsolideeritud Forms & Publisher RCU baas (`db-publisher`) ning integreeritud ORDS & Web-IDE. |
-| **31** | `.env.31-hybrid-alise-proxy-forms-pub-ords-webide` | `db-publisher`, `db-proxy`, `db-alise`, `app-forms`, `app-publisher`, `app-ords`, `web-ide-dev` | `1531-1533`, `8088`, `9502`, `9001`, `6082`, `8090` | **🌟 ULTIMATE ETTEVÕTTE HÜBRIIDVIRN:** Täielik 2-kihiline Proxy + ALISE arhitektuur konsolideeritud Forms & Publisher RCU andmebaasi ja integreeritud ORDS & Web-IDE-ga *(nõuab $\ge 12\text{ GB}$ RAM)*. |
-
----
-
-## 🔒 Turvalisus ja Käsitsi Kopeerimine
-
-Kui soovid blueprinti käsitsi aktiveerida ilma skriptita:
 ```bash
-cp config/blueprints/.env.3-db-alise-apex-ords-with-proxy .env
+# 1. Käivita vaikimisi Blueprint 0 (Proxy DB + ORDS ilma lisaparameetriteta):
+./scripts/setup-all.sh
+
+# 2. Paigalda konkreetne blueprint (nt Blueprint 1, 5, 8, 10):
+./scripts/setup-all.sh -b 1
+./scripts/setup-all.sh -b 5
+
+# 3. Interaktiivne menüü:
+./scripts/setup-all.sh -i
+
+# 4. Kuivkäivitus (kontrollib pordid ja profiilid ilma konteinereid muutmata):
+./scripts/setup-all.sh --dry-run
+./tests/test-all-blueprints-live.sh --all --dry-run
+
+# 5. Detailne vaatlus:
+./scripts/internal/blueprint-info.sh -s 0
+./scripts/internal/blueprint-info.sh --list
 ```
-Kõik kohalikud muudatused tehakse faili `.env`, mis on `.gitignore` failis ning jääb ainult lokaalseks.
+
+---
+
+## 📊 12 Blueprinti Maatriks
+
+| ID | Blueprinti Nimi & Fail | Andmebaasi Profiil & Port | Teenuste Profiilid & Pordid | Konteinerid | Otstarve ja Kirjeldus |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **0** | [`.env.0-default-proxy-ords`](.env.0-default-proxy-ords) *(VAIKIMISI)* | `db-proxy-oracle.yaml` (:1532) | `ords-image.yaml` (:8088/8448) | `db-proxy`, `app-ords` | **Kanooniline vaikekäivitus.** Püsiv keskne SSO lüüs & mitme andmebaasi ORDS ruuter. |
+| **1** | [`.env.1-standalone-alise-db`](.env.1-standalone-alise-db) | `db-alise-oracle.yaml` (:1533) | *(Registreerub keskses ORDS-is kui aktiivne)* | `db-alise` | Peamine ärirakenduste andmebaas, PL/SQL tuumik, APEX 26.1 metaandmed. 0 MB veebi RAM-i. |
+| **2** | [`.env.2-standalone-proxy-db`](.env.2-standalone-proxy-db) | `db-proxy-standalone.yaml` (:1537) | *(Registreerub keskses ORDS-is kui aktiivne)* | `db-proxy-standalone` | Eraldiseisev Proxy DB ja SSO lüüs unikaalsel pordil 1537. |
+| **3** | [`.env.3-standalone-gvenzl-db`](.env.3-standalone-gvenzl-db) | `db-gvenzl.yaml` (:1535) | *(Registreerub keskses ORDS-is kui aktiivne)* | `db-gvenzl` | Gerald Venzl kogukonnatõmmis jõudlustestideks ja võrdlusteks. |
+| **4** | [`.env.4-standalone-autonomous-db`](.env.4-standalone-autonomous-db) | `db-adb.yaml` (:1536) | `ords-image.yaml` (:8088/8448) | `db-adb`, `app-ords` | Oracle Autonomous Database pilvesimulatsioon mTLS rahakoti, versioonikontrolli ja Dev Hubiga. |
+| **5** | [`.env.5-standalone-publisher`](.env.5-standalone-publisher) | `db-publisher-oracle.yaml` (:1531) | `publisher-standard.yaml` (:9502) | `db-publisher`, `app-publisher` | Eraldiseisev Analytics Publisher 2025 ja spetsiaalne RCU repositooriumi DB. |
+| **6** | [`.env.6-standalone-forms`](.env.6-standalone-forms) | `db-forms-oracle.yaml` (:1534) | `forms-standard.yaml` (:9001, :6082) | `db-forms`, `app-forms` | Eraldiseisev Oracle Forms 14c ja noVNC graafiline Forms Builder. |
+| **7** | [`.env.7-consolidated-forms-publisher`](.env.7-consolidated-forms-publisher) | `db-publisher-oracle.yaml` (:1531) | `forms-publisher-unified.yaml` (:9001/9502/6082) | `db-publisher`, `app-forms-publisher` | Konsolideeritud Forms 14c ja Publisher ühises WebLogic domeenis. |
+| **8** | [`.env.8-standalone-web-ide`](.env.8-standalone-web-ide) | - *(Zero DB)* | `web-ide-standard.yaml` (:8090/8449/8091) | `web-ide-dev` | **⚠️ Testimisel ja täiustamisel:** VS Code server ja SQL Developer töötavad. Artifactory peegli seadistus on lahendamisel. |
+| **9** | [`.env.9-standalone-publisher-designer`](.env.9-standalone-publisher-designer) | - *(Zero DB)* | `publisher-designer-standard.yaml` (:6083 noVNC) | `app-publisher-designer` | **⚠️ Testimisel ja täiustamisel:** HTML5 noVNC töölaua konteiner käivitub. MS Word ja BIP Template Builder integratsioon on arenduses. |
+| **10** | [`.env.10-remote-ords`](.env.10-remote-ords) | `MAIN_DB_PROFILE=NONE` | `ords-standalone.yaml` (:8088/8448) | `app-ords` | **⚠️ Testimisel ja täiustamisel:** Eraldiseisev ORDS konteiner käivitub. Kauge pilve ADB ja ettevõtte lüüsi suunamine on arenduses. |
+| **11** | [`.env.11-remote-publisher`](.env.11-remote-publisher) | `MAIN_DB_PROFILE=NONE` | `publisher-standard.yaml` (:9502/9503) | `app-publisher` | **⚠️ Testimisel ja täiustamisel:** Analytics Publisher konteiner käivitub. Kaugete andmebaaside aruandlus on arenduses. |
+
+---
+
+## 🧩 Puhas Blueprintide & YAML Profiilide Arhitektuur (Reegel 11)
+
+### 1. Vastutusalade Lahususe Printsiip
+- **Blueprintid (`config/blueprints/.env.*`):** Deklareerivad ainult kõrgetasemelisi positiivseid viiteid YAML profiilidele. Need määravad, *millised konteinerid luuakse*. Nad ei sisalda kunagi porte, paroole ega negatiivseid `SKIP_*` muutujaid.
+- **YAML Profiilid (`config/profiles/**/*.yaml`):** Sisaldavad 100% domeenispetsiifikast: konteinerite tõmmised, mälulimiidid, pordid (`db_port`, `http_port`), PDB vaiketeenused, tabeliruumid, kvoodid, kasutajarollid ja andmebaasidevahelised seosed.
+
+### 2. Kuidas Lisada Kohandatud Blueprinti (1-haaval)
+Iga arendaja või AI saab luua uue blueprinti igal ajal ilma koodi või skripte muutmata:
+1. Loo uus fail: `config/blueprints/.env.<ID>-<nimi>` (nt `.env.12-custom-analytics-workstation`):
+   ```bash
+   # Kohandatud Blueprint 12: Analytics Workstation
+   DB_ALISE=db-alise-oracle
+   ORDS_PROFILE=ords-standard
+   PUBLISHER_PROFILE=publisher-standard
+   WEB_IDE_PROFILE=web-ide-standard
+   ```
+2. Käivita või testi uut blueprinti koheselt:
+   ```bash
+   ./scripts/setup-all.sh -b 12
+   ./scripts/setup-all.sh -b 12 --dry-run
+   ```
+   Orkestreerimismootor tuvastab faili dünaamiliselt, laeb viidatud YAML profiilid, arvutab pordid ja seadistab SEPS Walleti automaatselt.
+

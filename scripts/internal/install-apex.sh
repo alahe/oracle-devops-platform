@@ -30,7 +30,7 @@ if [ -f "$SCRIPT_DIR/snapshot-resolver.sh" ]; then
   source "$SCRIPT_DIR/snapshot-resolver.sh"
 fi
 
-# Värvide seadistamine (ainult siis kui terminal seda toetab)
+# Setup colors (only if supported by terminal)
 if [ -t 0 ] || { [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; }; then
   GREEN='\033[1;32m'
   YELLOW='\033[0;33m'
@@ -47,7 +47,7 @@ else
   NC=''
 fi
 
-# Parameetrite parsimine
+# Parameter parsing
 SKIP_ORDS=false
 RUNTIME_ONLY=false
 TARGET_DB=""
@@ -67,7 +67,7 @@ while [[ "$#" -gt 0 ]]; do
   shift
 done
 
-# Dünaamiline instantsi ja konteineri tuvastamine profiilide ja topoloogia põhjal
+# Dynamic instance and container resolution based on profiles and topology
 if [ -n "$TARGET_DB" ]; then
   raw_target=$(echo "$TARGET_DB" | sed 's/^db-//' | tr '_' '-')
   if podman container exists "db-$raw_target" 2>/dev/null; then
@@ -85,20 +85,21 @@ else
 fi
 
 DB_SUFFIX=$(echo "$CONTAINER_NAME" | sed 's/^db-//' | tr '-' '_')
+DB_SUFFIX_UPPER=$(echo "$DB_SUFFIX" | tr '[:lower:]' '[:upper:]')
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${TARGET_PORT:-}"
 if [ -z "$DB_PORT" ]; then
-  PORT_VAR="DB_${DB_SUFFIX}_PORT"
+  PORT_VAR="DB_${DB_SUFFIX_UPPER}_PORT"
   DB_PORT="${!PORT_VAR:-${PROFILE_DB_PORT:-1532}}"
 fi
 DB_SERVICE="${TARGET_SERVICE:-}"
 if [ -z "$DB_SERVICE" ]; then
-  SERVICE_VAR="DB_${DB_SUFFIX}_SERVICE"
+  SERVICE_VAR="DB_${DB_SUFFIX_UPPER}_SERVICE"
   DB_SERVICE="${!SERVICE_VAR:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}"
 fi
 APEX_VER="${TARGET_VER:-}"
 if [ -z "$APEX_VER" ]; then
-  APEX_VER_VAR="DB_${DB_SUFFIX}_APEX_VERSION"
+  APEX_VER_VAR="DB_${DB_SUFFIX_UPPER}_APEX_VERSION"
   APEX_VER="${!APEX_VER_VAR:-${PROFILE_APEX_VERSION:-26.1}}"
 fi
 SYS_PWD_SECRET="${DB_SUFFIX}_db_sys_password"
@@ -108,16 +109,11 @@ if declare -f ensure_db_instance_open >/dev/null 2>&1; then
 fi
 
 if [ "$APEX_VER" = "NONE" ]; then
-  echo "ℹ️  APEX_VERSION on määratud NONE andmebaasile $DB_SUFFIX — Jätan APEX paigaldamise vahele."
+  echo "ℹ️  APEX_VERSION is set to NONE for database $DB_SUFFIX — Skipping APEX installation."
   exit 0
 fi
 
-# In-DB APEX Idempotency & Skip Check:
-if declare -f can_skip_in_db_apex >/dev/null 2>&1; then
-  if can_skip_in_db_apex "$CONTAINER_NAME" "$APEX_VER"; then
-    exit 0
-  fi
-fi
+# Fast in-DB APEX Idempotency is handled at step 4 below (preserving ORDS pool sync)
 
 APEX_URL="${APEX_DOWNLOAD_URL:-${RESOLVED_APEX_URL:-${PROFILE_APEX_DOWNLOAD_URL:-https://download.oracle.com/otn_software/apex/apex_26.1_en.zip}}}"
 APEX_ZIP_NAME=$(basename "$APEX_URL")
@@ -137,18 +133,18 @@ if [ ! -f "$APEX_ZIP" ] && declare -f artifactory_is_configured >/dev/null 2>&1 
   fi
 fi
 
-# 1. Lokaalsed paigalduse logid (ei lähe Git-i)
+# 1. Local installation logs (excluded from Git)
 LOG_DIR="$SCRIPT_DIR/../../install_logs"
 mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 LOG_FILE="$LOG_DIR/apex_engine_install_${DB_SUFFIX}_${TIMESTAMP}.log"
 
-# Suuname kogu väljundi nii ekraanile kui lokaalsesse logifaili (ainult eraldiseisval käivitamisel)
+# Redirect entire output to both screen and local log file (standalone execution only)
 if [ "${MASTER_SETUP:-false}" != "true" ]; then
   exec > >(tee -a "$LOG_FILE") 2>&1
 fi
 
-# 2. Git-is jälgitav metrics kataloog
+# 2. Version-controlled metrics directory (tracked in Git)
 METRICS_DIR="$SCRIPT_DIR/../../metrics"
 mkdir -p "$METRICS_DIR"
 JSON_BENCHMARK="$METRICS_DIR/setup_benchmarks.json"
@@ -157,8 +153,8 @@ ENV_BENCHMARK="$METRICS_DIR/setup_benchmarks.env"
 if [ "$MASTER_SETUP" != "true" ]; then
   echo -e "${CYAN}==================================================================${NC}"
   echo "------------------------------------------------------------------"
-  echo -e "📝 Lokaalne paigalduse logi: ${CYAN}$LOG_FILE${NC}"
-  echo -e "📊 Git-is jälgitavad mõõdikud: ${CYAN}$JSON_BENCHMARK${NC}"
+  echo -e "📝 Local installation log: ${CYAN}$LOG_FILE${NC}"
+  echo -e "📊 Git benchmarks:         ${CYAN}$JSON_BENCHMARK${NC}"
   echo -e "${CYAN}==================================================================${NC}"
 fi
 
@@ -202,10 +198,9 @@ if [ -z "$USER_DEV_PASSWORD" ]; then
   [ -z "$wallet_dev_pwd" ] && wallet_dev_pwd=$("$SCRIPT_DIR/../get-password.sh" -p "DEV" 2>/dev/null | tr -d '\r\n')
   [ -n "$wallet_dev_pwd" ] && USER_DEV_PASSWORD="$wallet_dev_pwd"
 fi
-USER_DEV_PASSWORD="${USER_DEV_PASSWORD:-$APEX_ADMIN_PASSWORD}"
-DB_HOST="${APEX_DB_HOST:-${PROFILE_DB_HOST:-localhost}}"
-DB_PORT="${APEX_DB_PORT:-${PROFILE_DB_PORT:-1532}}"
-DB_SERVICE="${APEX_DB_SERVICE:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}"
+DB_HOST="${DB_HOST:-${APEX_DB_HOST:-${PROFILE_DB_HOST:-localhost}}}"
+DB_PORT="${DB_PORT:-${APEX_DB_PORT:-${PROFILE_DB_PORT:-1532}}}"
+DB_SERVICE="${DB_SERVICE:-${APEX_DB_SERVICE:-${PROFILE_DEFAULT_SERVICE:-FREEPDB1}}}"
 
 START_TOTAL=$(date +%s)
 
@@ -223,6 +218,11 @@ format_duration() {
 copy_static_images_to_volume() {
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
     msg_print "APEX_COPY_STATIC_IMAGES_VOLUME" "/opt/oracle/apex_images/"
+    # If static images are already populated in volume, skip re-unzipping
+    if podman exec "$CONTAINER_NAME" test -d /opt/oracle/apex_images/images 2>/dev/null && [ "$(podman exec "$CONTAINER_NAME" ls -1 /opt/oracle/apex_images/images 2>/dev/null | wc -l)" -gt 5 ]; then
+      echo "ℹ️  APEX static images already present in /opt/oracle/apex_images/images. Skipping copy."
+      return 0
+    fi
     podman exec -u root "$CONTAINER_NAME" mkdir -p /opt/oracle/apex_images /tmp/apex_install
     podman exec -u root "$CONTAINER_NAME" chown -R oracle:oinstall /opt/oracle/apex_images /tmp/apex_install || true
     
@@ -281,16 +281,16 @@ download_file() {
   mkdir -p "$(dirname "$dest")"
   
   if grep -qi microsoft /proc/version 2>/dev/null && command -v powershell.exe &>/dev/null; then
-    echo "WSL2 tuvastatud. Kasutan faili allalaadimiseks Windowsi PowerShelli (korporatiivse VPN/Proxy läbimiseks)..."
+    echo "WSL2 detected. Using Windows PowerShell to download file (to traverse corporate VPN/Proxy)..."
     local win_dest=$(wslpath -w "$dest" 2>/dev/null || echo "$dest")
     
     if powershell.exe -NoProfile -Command "Invoke-WebRequest -Uri '$url' -OutFile '$win_dest' -UseBasicParsing" &>/dev/null; then
-      echo "✅ Allalaadimine õnnestus PowerShelliga (otseühendus)."
+      echo "✅ Download succeeded via PowerShell (direct connection)."
       return 0
     fi
     
     if powershell.exe -NoProfile -Command "Invoke-WebRequest -Uri '$url' -OutFile '$win_dest' -UseBasicParsing -ProxyUseDefaultCredentials" &>/dev/null; then
-      echo "✅ Allalaadimine õnnestus PowerShelliga (süsteemi proxy auth)."
+      echo "✅ Download succeeded via PowerShell (system proxy auth)."
       return 0
     fi
     echo "PowerShell download failed, trying local curl..."
@@ -330,7 +330,7 @@ print_sub_header() {
 }
 
 # ----------------------------------------------------------------------------
-# 1. ORDS Teenuse ja seadistuse kontroll
+# 1. Check ORDS Service and Configuration
 # ----------------------------------------------------------------------------
 STEP1_START=$(date +%s)
 print_sub_header "1" "Checking ORDS Service & Database Readiness..." "step1_ords_setup_seconds" "step5_ords_service_seconds" "1s"
@@ -349,7 +349,7 @@ STEP1_TIME=$(format_duration $STEP1_SECS)
 echo -e "⏱  [$(msg_str "STEP_1_ORDS_SETUP_DONE" "$STEP1_TIME")]"
 
 # ----------------------------------------------------------------------------
-# 2. APEX Tarkvarapaketi kontroll ja lahtipakkimine
+# 2. Check APEX Software Package and Source
 # ----------------------------------------------------------------------------
 STEP2_START=$(date +%s)
 print_sub_header "2" "Checking Oracle APEX Software Source..." "step2_download_unzip_seconds" "step3_apex_download_unzip_seconds" "1s"
@@ -387,7 +387,7 @@ elif [ -f "$LEGACY_BIN_DIR/apex-latest.zip" ] && unzip -t "$LEGACY_BIN_DIR/apex-
   msg_print "APEX_LOCAL_ARCHIVE_FOUND" "binaries/apex-latest.zip"
 fi
 
-# 2. Kui lokaalselt sobivat zip faili ei ole, laadime alla profiili URL-ilt või apex-latest.zip URL-ilt
+# 2. If no matching zip exists locally, download from profile URL or apex-latest.zip URL
 if [ -z "$TARGET_APEX_ZIP" ] || [ ! -f "$TARGET_APEX_ZIP" ]; then
   TARGET_APEX_ZIP="$EXPECTED_ZIP"
   msg_print "APEX_DOWNLOADING_VER" "$APEX_VER" "$APEX_URL_ZIP_NAME"
@@ -396,7 +396,7 @@ if [ -z "$TARGET_APEX_ZIP" ] || [ ! -f "$TARGET_APEX_ZIP" ]; then
     LATEST_URL="https://download.oracle.com/otn_software/apex/apex-latest.zip"
     TARGET_APEX_ZIP="$BINARIES_DIR/apex-latest.zip"
     if ! download_file "$LATEST_URL" "$TARGET_APEX_ZIP"; then
-      # 3. Kui ka latest URL ei toimi, otsime kaustast binaries/apex/ või binaries/ kõrgeima versiooniga kehtivat zip-arhiivi
+      # 3. If latest URL fails as well, search binaries/apex/ or binaries/ for highest valid zip archive
       HIGHEST_ZIP=$(ls "$BINARIES_DIR"/apex*.zip "$LEGACY_BIN_DIR"/apex*.zip 2>/dev/null | sort -rV | while read -r f; do unzip -t "$f" &>/dev/null && echo "$f" && break; done || true)
       if [ -n "$HIGHEST_ZIP" ] && [ -f "$HIGHEST_ZIP" ]; then
         TARGET_APEX_ZIP="$HIGHEST_ZIP"
@@ -414,12 +414,12 @@ STEP2_TIME=$(format_duration $STEP2_SECS)
 echo -e "⏱  [$(msg_str "STEP_2_APEX_DL_DONE" "$STEP2_TIME")]"
 
 # ----------------------------------------------------------------------------
-# 3. CLI Tööriista tuvastamine ja režiimi valik
+# 3. CLI Tool Detection and Execution Mode Selection
 # ----------------------------------------------------------------------------
 STEP3_START=$(date +%s)
 print_sub_header "3" "Preparing Connection and Copying Files if required..." "step3_copy_container_seconds" "step6_apex_copy_container_seconds" "5s"
 
-# Automaatne lokaalse konteineri kontroll ja käivitamine
+# Automatic local container check and startup
 IS_CONTAINER_AVAIL=false
 if [ "$DB_HOST" = "localhost" ] || [ "$DB_HOST" = "127.0.0.1" ] || [ "$DB_HOST" = "$CONTAINER_NAME" ] || podman container exists "$CONTAINER_NAME" 2>/dev/null; then
   if podman container exists "$CONTAINER_NAME" 2>/dev/null; then
@@ -474,7 +474,7 @@ if [ "$IS_CONTAINER_AVAIL" = "true" ]; then
   
   APEX_SOURCE_DIR="/tmp/apex_install/apex"
   REST_PATH="/tmp/apex_install/apex"
-  DB_CLI="podman exec -i -w $APEX_SOURCE_DIR $CONTAINER_NAME sqlplus -s"
+  DB_CLI="podman exec -i -w $APEX_SOURCE_DIR $CONTAINER_NAME sql -s"
   CONN_STR="sys/${SYS_PASSWORD}@localhost:1521/$DB_SERVICE as sysdba"
 else
   # Client-side execution
@@ -492,7 +492,12 @@ else
     echo "$APEX_ZIP_NAME" > "$TARGET_DIR/.unzipped_source"
   fi
   
-  if command -v sql &> /dev/null; then
+  if [ -x "$WORKSPACE_DIR/scripts/sqlcl.sh" ]; then
+    DB_CLI="$WORKSPACE_DIR/scripts/sqlcl.sh -s"
+    CONN_STR="sys/${SYS_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_SERVICE} as sysdba"
+    APEX_SOURCE_DIR="$TARGET_DIR/apex"
+    REST_PATH="."
+  elif command -v sql &> /dev/null; then
     DB_CLI="sql -s"
     CONN_STR="sys/${SYS_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_SERVICE} as sysdba"
     APEX_SOURCE_DIR="$TARGET_DIR/apex"
@@ -503,7 +508,7 @@ else
     APEX_SOURCE_DIR="$TARGET_DIR/apex"
     REST_PATH="."
   else
-    echo "❌ Error: Neither SQLcl nor SQL*Plus CLI utilities were found on host system!"
+    echo "❌ Error: SQLcl CLI utility was not found on host system!"
     exit 1
   fi
 fi
@@ -522,13 +527,16 @@ SQL_LOG_FILE="$LOG_DIR/apex_engine_sql_${DB_SUFFIX}_${TIMESTAMP}.log"
 print_sub_header "4" "$(msg_str "SUB_STEP_4_RUNNING_APEX" "$DB_SERVICE" "$EXEC_MODE")" "step4_apex_engine_install_seconds" "step7_apex_engine_install_seconds" "6m"
 echo -e "${CYAN}│${NC}  📝 $(msg_str "DETAIL_SQL_LOG_LINK" "$SQL_LOG_FILE")"
 
-# Kui käivitatakse kliendi-režiimis, peame minema apex kataloogi sisse
+# When running in client mode, navigate into apex directory
 # Check whether the database already has the same or newer valid APEX version
 SKIP_APEX_ENGINE_INSTALL=false
 msg_print "CHECKING_DB_APEX_STATUS"
 DB_APEX_INFO=""
 if [ "$EXEC_MODE" = "CONTAINER" ]; then
-  DB_APEX_INFO=$(podman exec -i -u oracle "$CONTAINER_NAME" sh -c "export ORACLE_PDB_SID=${DB_SERVICE:-FREEPDB1}; export ORACLE_HOME=\$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n \"\$ORACLE_HOME\" ] && export PATH=\"\$ORACLE_HOME/bin:\$PATH\"; sqlplus -s / as sysdba" <<EOF 2>/dev/null | grep -v -E "Connected to|Oracle Database|version" || echo ""
+  in_c_sql=$(podman exec "$CONTAINER_NAME" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+  [ -z "$in_c_sql" ] && in_c_sql="sqlplus"
+  DB_APEX_INFO=$(podman exec -i -u oracle "$CONTAINER_NAME" $in_c_sql -s / as sysdba <<EOF 2>/dev/null | grep -v -E "Connected to|Oracle Database|version" || echo ""
+ALTER SESSION SET CONTAINER = ${DB_SERVICE:-FREEPDB1};
 SET FEEDBACK OFF
 SET HEADING OFF
 SET PAGESIZE 0
@@ -539,6 +547,7 @@ EOF
 )
 else
   DB_APEX_INFO=$($DB_CLI "$CONN_STR" <<EOF 2>/dev/null | grep -v -E "Connected to|Oracle Database|version" || echo ""
+ALTER SESSION SET CONTAINER = ${DB_SERVICE:-FREEPDB1};
 SET FEEDBACK OFF
 SET HEADING OFF
 SET PAGESIZE 0
@@ -549,8 +558,9 @@ EOF
 )
 fi
 
-DB_APEX_VER=$(echo "$DB_APEX_INFO" | grep -v -E "ORA-|Error" | cut -d':' -f1 | tr -d ' \r\n')
-DB_APEX_STATUS=$(echo "$DB_APEX_INFO" | grep -v -E "ORA-|Error" | cut -d':' -f2 | tr -d ' \r\n')
+local_ver_line=$(echo "$DB_APEX_INFO" | grep -E '^[[:space:]]*[0-9]+\.[0-9]+' | head -n 1)
+DB_APEX_VER=$(echo "$local_ver_line" | cut -d':' -f1 | tr -d ' \r\n')
+DB_APEX_STATUS=$(echo "$local_ver_line" | cut -d':' -f2 | tr -d ' \r\n')
 
 # Parse target APEX version from URL or zip name
 TARGET_APEX_VER=$(echo "$APEX_URL" | grep -o -E "apex_[0-9]+\.[0-9]+" | cut -d'_' -f2 || echo "26.1")
@@ -566,7 +576,7 @@ fi
 if [ "$SKIP_APEX_ENGINE_INSTALL" = "true" ]; then
   msg_print "APEX_ENGINE_ALREADY_INSTALLED" "$DB_APEX_VER" "$TARGET_APEX_VER"
   copy_static_images_to_volume
-  # Sünkroniseerime APEX_PUBLIC_USER ja REST liideste paroolid
+  # Synchronize APEX_PUBLIC_USER and REST interface passwords
   LOCAL_POST_SQL_SCRIPT="$SCRIPT_DIR/../../install_logs/run_apex_post_install_${DB_SUFFIX}.sql"
   cat << EOF > "$LOCAL_POST_SQL_SCRIPT"
 SET ECHO ON;
@@ -624,18 +634,20 @@ EXIT;
 EOF
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
     podman cp "$LOCAL_POST_SQL_SCRIPT" "$CONTAINER_NAME":/tmp/apex_post.sql 2>/dev/null || true
-    podman exec -i "$CONTAINER_NAME" sqlplus -s "sys/${SYS_PASSWORD}@localhost:1521/${DB_SERVICE} as sysdba" @/tmp/apex_post.sql >/dev/null 2>&1 || true
+    in_c_sql=$(podman exec "$CONTAINER_NAME" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+    podman exec -i -u oracle "$CONTAINER_NAME" ${in_c_sql:-sqlplus} -s / as sysdba @/tmp/apex_post.sql < /dev/null >/dev/null 2>&1 || true
+    podman exec "$CONTAINER_NAME" rm -f /tmp/apex_post.sql 2>/dev/null || true
   else
-    $DB_CLI "$CONN_STR" @"$LOCAL_POST_SQL_SCRIPT" >/dev/null 2>&1 || true
+    $DB_CLI "$CONN_STR" @"$LOCAL_POST_SQL_SCRIPT" < /dev/null >/dev/null 2>&1 || true
   fi
   STEP4_SECS=0
 else
-  # Kui käivitatakse kliendi-režiimis, peame minema apex kataloogi sisse
+  # When running in client mode, navigate into apex directory
   if [ "$EXEC_MODE" = "CLIENT" ]; then
     cd "$APEX_SOURCE_DIR"
   fi
 
-  # Valmistame ette täpse SQL skriptifaili
+  # Prepare exact SQL script file
   LOCAL_PRE_SQL_SCRIPT="$SCRIPT_DIR/../../install_logs/run_apex_pre_install_${DB_SUFFIX}.sql"
   cat << EOF > "$LOCAL_PRE_SQL_SCRIPT"
 ALTER SESSION SET CONTAINER = ${DB_SERVICE};
@@ -885,11 +897,7 @@ END;
 EXIT;
 EOF
 
-  OTHER_CONTAINERS=$(podman ps --format '{{.Names}}' 2>/dev/null | grep -E '^db-|^oracle-db-' | grep -v "^${CONTAINER_NAME}$" || echo "")
-  if [ -n "$OTHER_CONTAINERS" ]; then
-    msg_print "APEX_ENGINE_PAUSING_CONTAINERS" "$OTHER_CONTAINERS"
-    podman stop $OTHER_CONTAINERS >/dev/null 2>&1 || true
-  fi
+
 
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
     podman exec "$CONTAINER_NAME" mkdir -p /tmp/apex_install/apex 2>/dev/null || true
@@ -909,9 +917,10 @@ export ORACLE_PDB_SID="${DB_SERVICE:-FREEPDB1}"
 unset TWO_TASK
 unset TNS_ADMIN
 cd /tmp/apex_install/apex
-sqlplus -s / as sysdba @run_pre_install.sql
-sqlplus -s / as sysdba @${APEX_ENGINE_SQL} SYSAUX SYSAUX TEMP /i/
-sqlplus -s / as sysdba @run_post_install.sql
+# Rule 6 Exemption: Official Oracle APEX core engine (apxins.sql) requires native C-binary sqlplus for JVM memory bounds & raw execution speed
+"\$ORACLE_HOME/bin/sqlplus" -s / as sysdba @run_pre_install.sql
+"\$ORACLE_HOME/bin/sqlplus" -s / as sysdba @${APEX_ENGINE_SQL} SYSAUX SYSAUX TEMP /i/
+"\$ORACLE_HOME/bin/sqlplus" -s / as sysdba @run_post_install.sql
 RUN_EOF
     chmod +x /tmp/run_apex_in_container.sh
     podman cp /tmp/run_apex_in_container.sh "$CONTAINER_NAME":/tmp/apex_install/apex/run.sh
@@ -946,14 +955,18 @@ RUN_EOF
   # Verify APEX installation validity (VALID status in registry)
   local_ver_check=""
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
-    local_ver_check=$(podman exec -i "$CONTAINER_NAME" sh -c "export ORACLE_HOME=\$(ls -d /opt/oracle/product/*/dbhomeFree 2>/dev/null | head -n 1); [ -n \"\$ORACLE_HOME\" ] && export PATH=\"\$ORACLE_HOME/bin:\$PATH\"; export ORACLE_PDB_SID=\"${DB_SERVICE:-FREEPDB1}\"; sqlplus -s / as sysdba <<EOF
+    in_c_sql=$(podman exec "$CONTAINER_NAME" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+    local_ver_check=$(podman exec -i "$CONTAINER_NAME" ${in_c_sql:-sqlplus} -s / as sysdba <<EOF 2>/dev/null | grep -E 'VALID|INVALID' || echo ""
+ALTER SESSION SET CONTAINER = ${DB_SERVICE:-FREEPDB1};
 SET FEEDBACK OFF
 SET HEADING OFF
 SELECT status FROM dba_registry WHERE comp_id = 'APEX';
 EXIT;
-EOF" 2>/dev/null | grep -E 'VALID|INVALID' || echo "")
+EOF
+)
   else
     local_ver_check=$($DB_CLI "$CONN_STR" <<EOF 2>/dev/null | grep -E 'VALID|INVALID' || echo ""
+ALTER SESSION SET CONTAINER = ${DB_SERVICE:-FREEPDB1};
 SET FEEDBACK OFF
 SET HEADING OFF
 SELECT status FROM dba_registry WHERE comp_id = 'APEX';
@@ -973,7 +986,7 @@ EOF
 
   copy_static_images_to_volume
 
-  # Tuleme tagasi projekti juurkausta kui olime kliendi-režiimis
+  # Return to project root directory if in client mode
   if [ "$EXEC_MODE" = "CLIENT" ]; then
     cd ..
   fi
@@ -985,7 +998,7 @@ STEP4_TIME=$(format_duration $STEP4_SECS)
 echo -e "⏱  [$(msg_str "STEP_4_APEX_ENGINE_DONE" "$STEP4_TIME")]"
 
 # ----------------------------------------------------------------------------
-# 4.1. ORDS Konfiguratsiooni uuendamine (plsql.gateway.mode = proxied)
+# 4.1. ORDS Configuration update (plsql.gateway.mode = proxied)
 # ----------------------------------------------------------------------------
 ORDS_CONF_START=$(date +%s)
 
@@ -996,7 +1009,7 @@ ORDS_CONF_LOG="$LOG_DIR/ords_configure_${DB_SUFFIX}_${TIMESTAMP}.log"
 if [ "$SKIP_ORDS" = "false" ] && podman container exists "$ORDS_CONTAINER" 2>/dev/null; then
   echo "=================================================================="
   msg_print "ORDS_CHECKING_SYNCING_CONFIG" "$ORDS_CONTAINER"
-  echo "📝 Logifail: [Logi](file://$ORDS_CONF_LOG)"
+  echo "📝 Log file: [Log](file://$ORDS_CONF_LOG)"
   echo "=================================================================="
   {
     pool_suffix=$(echo "$CONTAINER_NAME" | sed 's/^db-//' | tr '-' '_')
@@ -1113,7 +1126,7 @@ if [ -x "$PATCH_SCRIPT" ] && [ -n "$LATEST_PATCH" ]; then
     echo -e "⏱  [$(msg_str "STEP_5_APEX_PATCH_DONE" "$STEP5_TIME")]"
 else
     STEP5_SECS=0
-    STEP5_TIME="vahele jäetud"
+    STEP5_TIME="$(msg_str "STATUS_SKIPPED")"
     msg_print "APEX_PATCH_NO_ZIP_SKIPPED"
 fi
 
@@ -1121,7 +1134,7 @@ TOTAL_SECS=$(( $(date +%s) - START_TOTAL ))
 TOTAL_TIME=$(format_duration $TOTAL_SECS)
 
 # ----------------------------------------------------------------------------
-# 6. Salvestame mõõdikud kataloogi ./metrics/ (Git-i jaoks)
+# 6. Save metrics into ./metrics/ (for Git tracking)
 # ----------------------------------------------------------------------------
 # Define timestamped JSON file name
 JSON_TS_BENCHMARK="$METRICS_DIR/setup_benchmarks_${TIMESTAMP}.json"
@@ -1179,9 +1192,9 @@ echo "  ------------------------------------------------------------"
 msg_print "SETUP_BENCHMARKS_TOTAL" "$TOTAL_TIME" "$TOTAL_SECS"
 echo -e "${CYAN}==================================================================${NC}"
 if [ "$MASTER_SETUP" != "true" ]; then
-  echo "📊 Mõõdikud salvestati Git-i kausta: $JSON_BENCHMARK"
+  echo "📊 Metrics saved to Git folder: $JSON_BENCHMARK"
   echo "------------------------------------------------------------------"
-  echo "📝 Lokaalne logi salvestati:        $LOG_FILE"
-  echo "✅ Oracle APEX & ORDS paigaldusprotsess lõpetatud!"
+  echo "📝 Local log saved to:          $LOG_FILE"
+  echo "✅ Oracle APEX & ORDS installation completed!"
   echo "=================================================================="
 fi

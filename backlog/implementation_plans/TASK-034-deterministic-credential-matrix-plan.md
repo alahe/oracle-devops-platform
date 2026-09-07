@@ -116,7 +116,7 @@ Iga andmebaasi ja teenuse kohta kehtib ühtne maatriks:
 ## 3. Kavandatavad Muudatused Failide Kaupa
 
 ### 1. Keskne Saladuste Pärimise Mootor
-#### [NEW] [scripts/internal/credential-helper.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/credential-helper.sh)
+#### [NEW] [scripts/internal/credential-helper.sh](../../scripts/internal/credential-helper.sh)
 - Luuakse ühtne teek kõigile skriptidele:
   - `get_db_sys_password "$container_or_db"`
   - `get_db_user_password "$container_or_db" "$role"` (kus role: `sys`, `dba_admin`, `dev`, `viewer`, `app`, `schema`)
@@ -124,30 +124,30 @@ Iga andmebaasi ja teenuse kohta kehtib ühtne maatriks:
 - Tagab range valideerimise ja selge veateate ilma suvaliste rist-pärimisteta.
 
 ### 2. Paroolide Genereerimise Mootor
-#### [MODIFY] [scripts/internal/generate-passwords.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/generate-passwords.sh)
+#### [MODIFY] [scripts/internal/generate-passwords.sh](../../scripts/internal/generate-passwords.sh)
 - Genereerib saladused **dünaamiliselt kõigile aktiivsetele andmebaasidele** (`get_active_db_instances`), mitte fikseeritud kõvakodeeritud nimede järgi.
 - Iga aktiivne DB saab oma täiskomplekti (`${c_short}_db_sys_password`, `${c_short}_dba_admin_password`, `${c_short}_dev_password`, `${c_short}_viewer_password`, `${c_short}_app_password`, `${c_short}_schema_password`).
 - Teenused saavad oma kindlad saladused (`apex_admin_password`, `ords_listener_password`, `publisher_admin_password`, `forms_admin_password`).
 
 ### 3. SEPS Walleti Loomise Mootor
-#### [MODIFY] [scripts/internal/create-wallet.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/create-wallet.sh)
+#### [MODIFY] [scripts/internal/create-wallet.sh](../../scripts/internal/create-wallet.sh)
 - Kasutab uut keskset `credential-helper.sh` loogikat ja registreerib SEPS Walletisse täpselt samad aliased vastavalt deterministlikule maatriksile.
 
 ### 4. Kasutaja Paroolide Vaatamise CLI
-#### [MODIFY] [scripts/get-password.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/get-password.sh) ja [view-wallet-credential.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/view-wallet-credential.sh)
+#### [MODIFY] [scripts/get-password.sh](../../scripts/get-password.sh) ja [view-wallet-credential.sh](../../scripts/internal/view-wallet-credential.sh)
 - Toetab uusi standardseid aliaseid ja kuvab arusaadava spikri aktiivsete andmebaaside lõikes.
 
 ### 5. Teenuste ja Andmebaasi Paigaldusskriptide Puhastamine Tagavaraahelatest
-#### [MODIFY] [scripts/internal/apply-profile-users.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/apply-profile-users.sh)
-#### [MODIFY] [scripts/internal/install-publisher.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-publisher.sh)
-#### [MODIFY] [scripts/internal/init-publisher-rcu.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/init-publisher-rcu.sh)
-#### [MODIFY] [scripts/internal/init-publisher-ords.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/init-publisher-ords.sh)
-#### [MODIFY] [scripts/internal/install-forms.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-forms.sh)
+#### [MODIFY] [scripts/internal/apply-profile-users.sh](../../scripts/internal/apply-profile-users.sh)
+#### [MODIFY] [scripts/internal/install-publisher.sh](../../scripts/internal/install-publisher.sh)
+#### [MODIFY] [scripts/internal/init-publisher-rcu.sh](../../scripts/internal/init-publisher-rcu.sh)
+#### [MODIFY] [scripts/internal/init-publisher-ords.sh](../../scripts/internal/init-publisher-ords.sh)
+#### [MODIFY] [scripts/internal/install-forms.sh](../../scripts/internal/install-forms.sh)
 - Eemaldatakse pikad `|| podman secret ... || cat /run/secrets ... || get-password.sh ...` ahelad ja asendatakse puhta üherealise väljakutsega:  
   `SYS_PWD=$(get_db_sys_password "$TARGET_DB")`
 
 ### 6. Uus Blueprint 43 (2-Database Hybrid Enterprise)
-#### [NEW] [config/blueprints/.env.43-proxy-ords-apex-with-shared-forms-publisher-db-web-ide](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.43-proxy-ords-apex-with-shared-forms-publisher-db-web-ide)
+#### [NEW] [config/blueprints/.env.43-proxy-ords-apex-with-shared-forms-publisher-db-web-ide](../../config/blueprints/.env.43-proxy-ords-apex-with-shared-forms-publisher-db-web-ide)
 - **Stsenaarium 43:** Eraldi Proxy/APEX/ORDS DB (`db-proxy`) + Ühine Middleware Infra DB (`db-publisher`) Forms 14c ja Analytics Publisheri jaoks koos Web IDE-ga.
 - Konfiguratsioon:
   ```env
@@ -161,7 +161,7 @@ Iga andmebaasi ja teenuse kohta kehtib ühtne maatriks:
   SKIP_WEB_IDE=false
   ```
 
-#### [MODIFY] [config/blueprints/README.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/README.md) ja [config/blueprints/README.et.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/README.et.md)
+#### [MODIFY] [config/blueprints/README.md](../../config/blueprints/README.md) ja [config/blueprints/README.et.md](../../config/blueprints/README.et.md)
 - Registreeritakse Blueprint 43 kataloogi tabelis ja lisatakse käivituskäsud kõigis keeleversioonides.
 
 ---

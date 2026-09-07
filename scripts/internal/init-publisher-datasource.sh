@@ -13,7 +13,7 @@ if [ -f "$SCRIPT_DIR/load-profile.sh" ]; then
   source "$SCRIPT_DIR/load-profile.sh"
 fi
 
-echo "📊 Konfigureerin Analytics Publisher JDBC Data Source ühendust (ALISE_APP_DB)..."
+echo "📊 Configuring Analytics Publisher JDBC Data Source connection (ALISE_APP_DB)..."
 
 # Resolve target database parameters (local db-alise / db-proxy or remote host)
 TARGET_DB_HOST="${ALISE_DB_HOST:-${LIS_DB_HOST:-${DB_HOST:-db-alise}}}"
@@ -21,7 +21,7 @@ TARGET_DB_PORT="${ALISE_DB_PORT:-${LIS_DB_PORT:-${DB_PORT:-1521}}}"
 TARGET_DB_SERVICE="${ALISE_DB_SERVICE:-${LIS_DB_SERVICE:-${DB_SERVICE:-FREEPDB1}}}"
 TARGET_USER="PUBLISHER_READER"
 
-# Pärime parooli Podman secretist või Walletist
+# Query password from Podman secret or Wallet
 SQLCL_IMG="${SQLCL_CONTAINER_IMAGE:-container-registry.oracle.com/database/sqlcl:latest}"
 TARGET_PASSWORD=$(podman run --rm --entrypoint cat --secret publisher_reader_password "$SQLCL_IMG" /run/secrets/publisher_reader_password 2>/dev/null || podman secret inspect --showsecret publisher_reader_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
 if [ -z "$TARGET_PASSWORD" ]; then
@@ -31,7 +31,7 @@ if [ -z "$TARGET_PASSWORD" ]; then
   TARGET_PASSWORD="OraclePass2026!"
 fi
 
-# Genererime Publisher XML DataSource faili
+# Generate Publisher XML DataSource file
 PUB_DS_DIR="$WORKSPACE_DIR/config/publisher/datasources"
 mkdir -p "$PUB_DS_DIR"
 
@@ -61,4 +61,4 @@ cat <<EOF > "$DS_FILE"
 </jdbc-data-source>
 EOF
 
-echo "✅ Analytics Publisher JDBC Data Source 'LIS_APP_DB' konfigureeritud! (Fail: $DS_FILE)"
+echo "✅ Analytics Publisher JDBC Data Source 'LIS_APP_DB' configured! (File: $DS_FILE)"

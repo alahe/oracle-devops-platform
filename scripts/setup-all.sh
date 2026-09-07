@@ -7,16 +7,18 @@
 
 set -e
 
-# Vaigistame podman compose hoiatusteate välise teenusepakkuja kohta
+# Silence podman compose external provider warnings
 export PODMAN_COMPOSE_WARNING_LOGS=false
+export COMPOSE_IGNORE_ORPHANS=True
 export MASTER_SETUP="true"
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Source common helper library and profile engine
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 COMPOSE_FILE="$WORKSPACE_DIR/podman-compose.yml"
 OVERRIDE_FILE="$WORKSPACE_DIR/podman-compose.override.yml"
 
-# Kaasame ühise abiteegi ja profiilimootori
+# Source common helper library and profile engine
 if [ -f "$SCRIPT_DIR/internal/common.sh" ]; then
   source "$SCRIPT_DIR/internal/common.sh"
 fi
@@ -27,14 +29,14 @@ if [ -f "$SCRIPT_DIR/internal/snapshot-resolver.sh" ]; then
   source "$SCRIPT_DIR/internal/snapshot-resolver.sh"
 fi
 
-trap restore_cursor EXIT INT TERM
+cleanup_setup_progress() {
+  restore_cursor
+  rm -f "$WORKSPACE_DIR/.setup_in_progress" 2>/dev/null || true
+}
+trap cleanup_setup_progress EXIT INT TERM
 
 # Parameetrite parsimine
 export FORCE=false
-export SKIP_PUBLISHER=false
-export SKIP_ORDS=false
-export SKIP_MONITOR_APP=false
-export SKIP_WEB_IDE=false
 export ORDS_SKIP_REASON=""
 export IS_TEST_MODE=false
 export SELECTED_BLUEPRINT=""
@@ -50,6 +52,30 @@ while [[ $# -gt 0 ]]; do
       ;;
     -l|--list|-lb|--list-blueprints|--list-scenarios)
       print_blueprints_table ""
+      exit 0
+      ;;
+    -h|--help)
+      echo "Oracle DevOps Platform — Setup Orchestrator (setup-all.sh)"
+      echo "Usage: ./scripts/setup-all.sh [options]"
+      echo ""
+      echo "Blueprint Selection:"
+      echo "  -b,  --blueprint <0..11>    Deploy specific blueprint"
+      echo "  -tb, --test-blueprints <BP> Clean and test specific blueprint"
+      echo "  -lb, --list-blueprints      List all available architectural blueprints"
+      echo "  -sb, --show-blueprint <BP>  Inspect blueprint details"
+      echo "  -search, --search <term>    Search blueprints by name or component"
+      echo ""
+      echo "Golden Snapshot Lifecycle (30-Day Freshness Policy):"
+      echo "  -fs, --force-snapshot       Force snapshot creation regardless of age"
+      echo "  --skip-snapshot             Skip snapshot creation step"
+      echo "  --snapshot-days <N>         Set max snapshot age threshold in days (Default: 30)"
+      echo "  -s,  --from-snapshot        Restore from Golden Snapshot (~15s fastpath)"
+      echo "  --fresh, --no-snapshot      Install clean from scratch (ignore existing snapshot)"
+      echo ""
+      echo "General Options:"
+      echo "  -y,  --yes                  Non-interactive mode (auto-confirm prompts)"
+      echo "  -l,  --lang <en|et|fi|...>  Interface language"
+      echo "  --dry-run                   Simulate deployment without starting containers"
       exit 0
       ;;
     -sb|--show-blueprint|-ib|--info-blueprint)
@@ -84,6 +110,10 @@ while [[ $# -gt 0 ]]; do
       export PUBLISH_SNAPSHOT=true
       shift
       ;;
+    --with-designer|--designer)
+      export SKIP_PUBLISHER_DESIGNER=false
+      shift
+      ;;
     -i|--select|--interactive)
       export INTERACTIVE_SELECT=true
       shift
@@ -107,20 +137,20 @@ while [[ $# -gt 0 ]]; do
       fi
       shift
       ;;
-    -b|--blueprint|--scenario|-s)
+    -b|--b|--blueprint|--scenario|-s)
       val="$2"
-      if [[ "$val" == *","* ]] || [ "$val" = "all" ] || [ "$val" = "ALL" ] || ! [[ "$val" =~ ^[0-9]+$ ]] || [ "$val" -lt 1 ] || [ "$val" -gt 49 ]; then
-        echo -e "\n${RED}❌ ERROR: In blueprint mode (--blueprint / -b), you can select ONLY ONE blueprint between 1–49!${NC}"
+      if [[ "$val" == *","* ]] || [ "$val" = "all" ] || [ "$val" = "ALL" ] || ! [[ "$val" =~ ^[0-9]+$ ]] || [ "$val" -lt 0 ] || [ "$val" -gt 49 ]; then
+        echo -e "\n${RED}❌ ERROR: In blueprint mode (--blueprint / -b), you can select ONLY ONE blueprint between 0–49!${NC}"
         echo -e "ℹ️  For automated sequential multi-blueprint testing, use test mode: ${YELLOW}--test-blueprints 1,3,7${NC} or ${YELLOW}--test-blueprints all${NC}\n"
         exit 1
       fi
       export SELECTED_BLUEPRINT="$val"
       shift 2
       ;;
-    -b=*|--blueprint=*|--scenario=*|-s=*)
+    -b=*|--b=*|--blueprint=*|--scenario=*|-s=*)
       val="${1#*=}"
-      if [[ "$val" == *","* ]] || [ "$val" = "all" ] || [ "$val" = "ALL" ] || ! [[ "$val" =~ ^[0-9]+$ ]] || [ "$val" -lt 1 ] || [ "$val" -gt 49 ]; then
-        echo -e "\n${RED}❌ ERROR: In blueprint mode (--blueprint / -b), you can select ONLY ONE blueprint between 1–49!${NC}"
+      if [[ "$val" == *","* ]] || [ "$val" = "all" ] || [ "$val" = "ALL" ] || ! [[ "$val" =~ ^[0-9]+$ ]] || [ "$val" -lt 0 ] || [ "$val" -gt 49 ]; then
+        echo -e "\n${RED}❌ ERROR: In blueprint mode (--blueprint / -b), you can select ONLY ONE blueprint between 0–49!${NC}"
         echo -e "ℹ️  For automated sequential multi-blueprint testing, use test mode: ${YELLOW}--test-blueprints 1,3,7${NC} or ${YELLOW}--test-blueprints all${NC}\n"
         exit 1
       fi
@@ -145,7 +175,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-ords)
       export SKIP_ORDS=true
-      export ORDS_SKIP_REASON="Kasutaja ei soovi lokaalset ORDS teenust (käsurea võti --no-ords)"
+      export ORDS_SKIP_REASON="User opted out of local ORDS service (--no-ords CLI flag)"
       shift
       ;;
     --no-monitor-app)
@@ -156,8 +186,16 @@ while [[ $# -gt 0 ]]; do
       export SKIP_WEB_IDE=true
       shift
       ;;
-    --from-snapshot)
+    --from-snapshot|--snapshot|-s)
       export RESTORE_FROM_SNAPSHOT=true
+      shift
+      ;;
+    --rotate-passwords)
+      export ROTATE_RESTORE_PASSWORDS=true
+      shift
+      ;;
+    --fresh|--no-snapshot)
+      export RESTORE_FROM_SNAPSHOT=false
       shift
       ;;
     --apex-runtime|--runtime-only)
@@ -181,6 +219,23 @@ while [[ $# -gt 0 ]]; do
       export SNAPSHOT_MODE="${1#*=}"
       shift
       ;;
+    --force-snapshot|--create-snapshot|-fs|-cs)
+      export FORCE_SNAPSHOT=true
+      shift
+      ;;
+    --skip-snapshot|--no-create-snapshot)
+      export SKIP_SNAPSHOT_CREATION=true
+      export FORCE_SNAPSHOT=false
+      shift
+      ;;
+    --snapshot-max-age=*|--snapshot-days=*)
+      export SNAPSHOT_MAX_AGE_DAYS="${1#*=}"
+      shift
+      ;;
+    --snapshot-max-age|--snapshot-days)
+      export SNAPSHOT_MAX_AGE_DAYS="$2"
+      shift 2
+      ;;
     --unified-middleware|--unified-fmw)
       export USE_UNIFIED_MIDDLEWARE=true
       shift
@@ -201,13 +256,21 @@ while [[ $# -gt 0 ]]; do
       export ENABLE_PARALLEL_INIT=false
       shift
       ;;
+    -r|--replace)
+      export REPLACE_MODE=true
+      shift
+      ;;
+    --incremental)
+      export INCREMENTAL_MODE=true
+      shift
+      ;;
     *)
       shift
       ;;
   esac
 done
 
-# Dry-run simulatsiooni käsitlemine
+# Handle dry-run simulation mode
 if [ "$DRY_RUN" = "true" ]; then
   if [ -n "$TEST_BLUEPRINTS" ]; then
     bp_list_to_test=""
@@ -226,28 +289,25 @@ if [ "$DRY_RUN" = "true" ]; then
     simulate_blueprint_dry_run "$SELECTED_BLUEPRINT" false
     exit 0
   else
-    simulate_blueprint_dry_run "3" false
+    simulate_blueprint_dry_run "0" false
     exit 0
   fi
 fi
 
-ENV_PATH="$WORKSPACE_DIR/.env"
-[ ! -f "$ENV_PATH" ] && ENV_PATH=".env"
-
-# Interactive Blueprint selector (when .env is missing or user specified -i/--select)
-if { [ ! -f "$ENV_PATH" ] || [ "$INTERACTIVE_SELECT" = "true" ]; } && [ -z "$SELECTED_BLUEPRINT" ] && [ -z "$TEST_BLUEPRINTS" ] && [ "$FORCE" != "true" ] && [ -t 0 ]; then
+# Interactive Blueprint selector (when run in terminal without explicit -b or -tb)
+if [ -z "$SELECTED_BLUEPRINT" ] && [ -z "$TEST_BLUEPRINTS" ] && [ "$FORCE" != "true" ] && [ -t 0 ]; then
   print_blueprints_table ""
-  read -t 30 -p "👉 Vali blueprint [1-40] (Vaikimisi: 3): " user_choice || true
-  user_choice="${user_choice:-3}"
+  read -t 30 -p "👉 Select blueprint [0-11] (Default: 0): " user_choice || true
+  user_choice="${user_choice:-0}"
   bp_file_check=$(get_blueprint_file "$user_choice" 2>/dev/null || echo "")
   if [ -z "$bp_file_check" ]; then
-    echo -e "${RED}⚠️  Tundmatu valik '${user_choice}'. Kasutan vaikeväärtust: 3${NC}"
-    user_choice=3
+    echo -e "${RED}⚠️  Unknown choice '${user_choice}'. Using default: 0${NC}"
+    user_choice=0
   fi
   export SELECTED_BLUEPRINT="$user_choice"
 fi
 
-# 1. AUTOMAATTESTIMISE REŽIIM (-tb / --test-blueprints): Teeb alati puhta algseisu (reset-all -y)
+# 1. AUTOMATED TEST MODE (-tb / --test-blueprints): Always clean slate (reset-all -y)
 if [ -n "$TEST_BLUEPRINTS" ]; then
   BP_LIST=""
   if [ "$TEST_BLUEPRINTS" = "all" ] || [ "$TEST_BLUEPRINTS" = "ALL" ]; then
@@ -274,6 +334,8 @@ if [ -n "$TEST_BLUEPRINTS" ]; then
   BP_FILE=$(get_blueprint_file "$TEST_BLUEPRINTS" 2>/dev/null || echo "")
   if [ -n "$BP_FILE" ] && [ -f "$BP_FILE" ]; then
     ACTIVE_BP_ID=$(get_blueprint_number "$BP_FILE")
+    export SELECTED_BLUEPRINT="$ACTIVE_BP_ID"
+    export SKIP_CERT_TRUST="true"
     planned_c=$(extract_blueprint_containers "$ACTIVE_BP_ID" 2>/dev/null || echo "")
     bp_hist_stats=$(get_blueprint_stats "$ACTIVE_BP_ID" 2>/dev/null || echo "")
     echo -e "${CYAN}$(msg_str "TEST_MODE_LOADING" "${ACTIVE_BP_ID}" "$(basename "$BP_FILE")")${NC}"
@@ -286,38 +348,78 @@ if [ -n "$TEST_BLUEPRINTS" ]; then
       export ALREADY_RESET="true"
     fi
 
-    cp "$BP_FILE" "$WORKSPACE_DIR/.env"
-    ENV_PATH="$WORKSPACE_DIR/.env"
+    ENV_PATH="$BP_FILE"
   else
     echo -e "${RED}❌ $(msg_str "ERROR_BP_NOT_FOUND" "$TEST_BLUEPRINTS")${NC}"
     exit 1
   fi
 fi
 
-# 2. TOODANGU / ARENDUSE REŽIIM (-b / --blueprint): EI TEE reset-all, vaid jätkab idempotentselt
-if [ -n "$SELECTED_BLUEPRINT" ] && [ -z "$TEST_BLUEPRINTS" ]; then
+# 2. PRODUCTION / DEVELOPMENT MODE (-b / --blueprint): Default loads Blueprint 0
+if [ -z "$TEST_BLUEPRINTS" ]; then
+  if [ -z "$SELECTED_BLUEPRINT" ]; then
+    SELECTED_BLUEPRINT="0"
+  fi
+
   BP_FILE=$(get_blueprint_file "$SELECTED_BLUEPRINT" 2>/dev/null || echo "")
   if [ -n "$BP_FILE" ] && [ -f "$BP_FILE" ]; then
     ACTIVE_BP_ID=$(get_blueprint_number "$BP_FILE")
+    # 🛡️ ARCHITECTURAL GUARDRAIL (Rule 12 & Invariant 3.7):
+    # Do NOT write .active_blueprint here! Premature writing triggers false "Active"
+    # indicators in Dev-Hub while database/APEX/ORDS configuration is in progress.
+    # We record an active setup marker (.setup_in_progress) instead.
+    cat << EOF > "$WORKSPACE_DIR/.setup_in_progress" 2>/dev/null || true
+{
+  "blueprint": $ACTIVE_BP_ID,
+  "blueprint_file": "$(basename "$BP_FILE")",
+  "start_time": $(date +%s),
+  "pid": $$
+}
+EOF
     planned_c=$(extract_blueprint_containers "$ACTIVE_BP_ID" 2>/dev/null || echo "")
     bp_hist_stats=$(get_blueprint_stats "$ACTIVE_BP_ID" 2>/dev/null || echo "")
     echo -e "${CYAN}$(msg_str "BP_ACTIVATING" "$ACTIVE_BP_ID" "$(basename "$BP_FILE")")${NC}"
     [ -n "$planned_c" ] && echo -e "   📦 $(msg_str "PLANNED_CONTAINERS"): ${GREEN}${planned_c}${NC}"
     [ -n "$bp_hist_stats" ] && echo -e "   ⏱️  $(msg_str "BENCHMARK_LABEL") ${YELLOW}${bp_hist_stats}${NC}"
     echo -e "${GREEN}$(msg_str "PROD_MODE_KEEPING_DATA")${NC}"
-    cp "$BP_FILE" "$WORKSPACE_DIR/.env"
-    ENV_PATH="$WORKSPACE_DIR/.env"
+    ENV_PATH="$BP_FILE"
   else
     echo -e "${RED}❌ $(msg_str "ERROR_BP_NOT_FOUND" "$SELECTED_BLUEPRINT")${NC}"
     exit 1
   fi
 fi
 
+sanitize_blueprint_environment() {
+  if [ "${INCREMENTAL_MODE:-false}" != "true" ]; then
+    unset DB_ALISE DB_PROXY DB_PUBLISHER DB_FORMS DB_CICD DB_LIS DB_INFRA DB_PROXY_STANDALONE DB_GVENZL DB_ADB
+    unset ORDS_PROFILE WEB_IDE_PROFILE PUBLISHER_PROFILE FORMS_PROFILE
+    unset PUBLISHER_DESIGNER_PROFILE FORMS_PUBLISHER_PROFILE
+  fi
+  unset MAIN_DB_PROFILE PROFILE_NAME PROFILE_DB_PORT PROFILE_DEFAULT_SERVICE
+  unset PROFILE_APEX_ENABLED PROFILE_APEX_VERSION PROFILE_APEX_WORKSPACE
+  unset PROFILE_CONTAINER_NAME PROFILE_CONTAINER_PORT PROFILE_CONTAINER_IMAGE
+  unset SKIP_PUBLISHER SKIP_FORMS SKIP_WEB_IDE SKIP_ORDS SKIP_PUBLISHER_DESIGNER
+  unset APEX_DB_HOST APEX_DB_PORT APEX_DB_SERVICE APEX_DB_SID APEX_DB_PDB
+}
+
 # Load environment variables and profile engine
+sanitize_blueprint_environment
 if [ -f "$ENV_PATH" ]; then
-  set -a
-  source "$ENV_PATH"
-  set +a
+  if [ "${INCREMENTAL_MODE:-false}" = "true" ] && [ -f "$WORKSPACE_DIR/.env" ]; then
+    set -a
+    source "$WORKSPACE_DIR/.env"
+    source "$ENV_PATH"
+    set +a
+    for k in $(compgen -v 2>/dev/null | grep -E '^(DB_[A-Z0-9_]+|ORDS_PROFILE|WEB_IDE_PROFILE|PUBLISHER_PROFILE|FORMS_PROFILE|PUBLISHER_DESIGNER_PROFILE|FORMS_PUBLISHER_PROFILE)$' | sort -u || true); do
+      val="${!k}"
+      [ -n "$val" ] && echo "${k}=${val}"
+    done > "$WORKSPACE_DIR/.env"
+  else
+    set -a
+    source "$ENV_PATH"
+    set +a
+    cp "$ENV_PATH" "$WORKSPACE_DIR/.env" 2>/dev/null || true
+  fi
 fi
 [ -n "${SAVED_TEST_SCENARIO:-}" ] && export TEST_SCENARIO="$SAVED_TEST_SCENARIO"
 [ -n "${SAVED_TEST_MODE:-}" ] && export IS_TEST_MODE="$SAVED_TEST_MODE"
@@ -328,6 +430,7 @@ if [ -f "$SCRIPT_DIR/internal/load-profile.sh" ]; then
   source "$SCRIPT_DIR/internal/load-profile.sh"
   load_db_profile
   load_web_ide_profile
+  load_publisher_designer_profile
 fi
 
 if [ "${IS_ADB:-false}" = "true" ]; then
@@ -336,20 +439,81 @@ if [ "${IS_ADB:-false}" = "true" ]; then
   export APEX_DB_CONTAINER_PORT="${APEX_DB_CONTAINER_PORT:-$PROFILE_CONTAINER_PORT}"
 fi
 
+# Automated Golden Snapshot Discovery & Prompt (Fast Mode)
+# Only applicable when active local database instances exist
+ACTIVE_DBS_DISCOVERY=$(get_active_db_instances 2>/dev/null || true)
+if [ -z "$ACTIVE_DBS_DISCOVERY" ] || [ "${DB_ENABLED:-true}" = "false" ] || [ "${PROFILE_NAME:-}" = "NONE" ]; then
+  export RESTORE_FROM_SNAPSHOT=false
+elif [ -z "${RESTORE_FROM_SNAPSHOT:-}" ] && [ -f "$SCRIPT_DIR/internal/snapshot-resolver.sh" ]; then
+  # shellcheck source=/dev/null
+  source "$SCRIPT_DIR/internal/snapshot-resolver.sh"
+  avail_snap=$(find_best_golden_snapshot "${ACTIVE_BP_ID:-0}" "${PROFILE_NAME:-}" 2>/dev/null || echo "")
+  if [ -n "$avail_snap" ] && [ -f "$avail_snap" ]; then
+    snap_base=$(basename "$avail_snap")
+    primary_inst=$(echo "$ACTIVE_DBS_DISCOVERY" | head -n 1 | cut -d'|' -f1)
+    primary_short=$(echo "$primary_inst" | sed 's/^db-//' | tr '-' '_')
+    target_vol_name="oracle-free-db-in-prod_${primary_short}_oradata"
+    vol_exists=false
+    if podman volume exists "$target_vol_name" 2>/dev/null; then
+      vol_exists=true
+    fi
+
+    if [ "$FORCE" = "true" ] && [ "${IS_TEST_MODE:-false}" != "true" ]; then
+      if [ "$vol_exists" = "true" ]; then
+        echo -e "${GREEN}⚡ [Golden Snapshot]: Existing database volume found (${target_vol_name}). Preserving active database (~10s fastpath).${NC}"
+        echo -e "   ℹ️  (To restore fresh from snapshot, pass ${YELLOW}--from-snapshot${NC} or ${YELLOW}-s${NC})"
+        export RESTORE_FROM_SNAPSHOT=false
+      else
+        echo -e "${CYAN}📸 [Golden Snapshot]: No local database volume found. Bootstrapping from ${BOLD}${snap_base}${NC}${CYAN} (~15s restore)...${NC}"
+        export RESTORE_FROM_SNAPSHOT=true
+      fi
+    elif [ -t 0 ] && [ "${IS_TEST_MODE:-false}" != "true" ]; then
+      echo -e "\n${CYAN}==================================================================${NC}"
+      echo -e "${CYAN}📸 Found existing Golden Snapshot for Blueprint ${ACTIVE_BP_ID:-0}:${NC} ${BOLD}${snap_base}${NC}"
+      read -t 15 -p "👉 Restore from snapshot (~15s)? [Y/n] (Default: Y): " snap_choice || true
+      snap_choice="${snap_choice:-Y}"
+      if [[ "$snap_choice" =~ ^[Yy]$ ]] || [ -z "$snap_choice" ]; then
+        echo -e "${GREEN}✅ Golden Snapshot restore selected!${NC}"
+        export RESTORE_FROM_SNAPSHOT=true
+        if [ -z "${ROTATE_RESTORE_PASSWORDS:-}" ]; then
+          echo -e "   ℹ️  Rotating database passwords secures credentials (DORA/PCI-DSS), but adds ~45–60s."
+          read -t 15 -p "👉 Rotate all database credentials now? [y/N] (Default: N - rapid ~15s): " rot_choice || true
+          rot_choice="${rot_choice:-N}"
+          if [[ "$rot_choice" =~ ^[Yy]$ ]]; then
+            echo -e "   ${YELLOW}🔄 Full password rotation enabled (+~45-60s).${NC}"
+            export ROTATE_RESTORE_PASSWORDS=true
+          else
+            echo -e "   ${GREEN}⚡ Rapid mode: using existing SEPS Wallet credentials (~15s total).${NC}"
+            export ROTATE_RESTORE_PASSWORDS=false
+          fi
+        fi
+      else
+        echo -e "${YELLOW}ℹ️  Full clean installation selected.${NC}"
+        export RESTORE_FROM_SNAPSHOT=false
+      fi
+      echo -e "${CYAN}==================================================================${NC}\n"
+    fi
+  fi
+fi
+
 # 1. Resolve Adaptive TLS/HTTPS Mode and validate Blueprint policy level
 if [ -f "$SCRIPT_DIR/internal/resolve-tls-mode.sh" ]; then
   source "$SCRIPT_DIR/internal/resolve-tls-mode.sh"
   if ! resolve_tls_mode; then
-    echo -e "${RED}❌ Seadistus katkestatud TLS nõuete ebakõla tõttu.${NC}"
+    echo -e "${RED}❌ Setup aborted due to TLS requirements mismatch.${NC}"
     exit 1
   fi
 fi
 
-# 2. Generate and trust local SSL/TLS certificates (if needed)
-if [ "$RESOLVED_TLS_MODE" = "USER_LOCAL" ] && [ -x "$SCRIPT_DIR/internal/generate-local-certs.sh" ]; then
+# 2. Generate and trust local SSL/TLS certificates
+if [ -x "$SCRIPT_DIR/internal/generate-local-certs.sh" ]; then
   "$SCRIPT_DIR/internal/generate-local-certs.sh" --no-prompt || true
-  if [[ "$OSTYPE" == "darwin"* ]] && [ -x "$SCRIPT_DIR/certs/trust-local-cert-mac.sh" ]; then
-    "$SCRIPT_DIR/certs/trust-local-cert-mac.sh" >/dev/null 2>&1 || true
+fi
+if [[ "$OSTYPE" == "darwin"* ]] && [ -x "$SCRIPT_DIR/certs/trust-local-cert-mac.sh" ]; then
+  "$SCRIPT_DIR/certs/trust-local-cert-mac.sh" || true
+elif [[ "$OSTYPE" == "msys"* ]] || [[ "$OSTYPE" == "cygwin"* ]] || [[ "${OS:-}" == "Windows_NT" ]]; then
+  if [ -f "$SCRIPT_DIR/certs/trust-local-cert.cmd" ]; then
+    cmd.exe /c "$SCRIPT_DIR/certs/trust-local-cert.cmd" || true
   fi
 fi
 
@@ -363,73 +527,27 @@ COMPOSE_ARGS=(-f "$COMPOSE_FILE")
 
 export TNS_ADMIN="$WORKSPACE_DIR/config/tns_admin"
 
-# Dynamically evaluate active DB profiles to check if components.publisher.enabled=true
-ANY_PUB_ENABLED=false
-for inst in $(get_active_db_instances 2>/dev/null); do
-  pname=$(echo "$inst" | cut -d'|' -f2)
-  pfile="$WORKSPACE_DIR/config/profiles/databases/${pname}.yaml"
-  [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/${pname}.yaml"
-  if [ -f "$pfile" ]; then
-    pub_en=$(grep -A 5 "publisher:" "$pfile" 2>/dev/null | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
-    if [ "$pub_en" = "true" ]; then
-      ANY_PUB_ENABLED=true
-      break
-    fi
-  fi
-done
-
-if [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ] || [ "${SKIP_PUBLISHER:-true}" = "false" ]; then
-  if [ "$SKIP_PUBLISHER" != "true" ]; then
-    SKIP_PUBLISHER=false
-    ANY_PUB_ENABLED=true
-    PUBLISHER_DB_HOST="${PUBLISHER_DB_HOST:-pub-db}"
-  fi
+# Pure Profile Resolution for Publisher, Forms, Web-IDE and Designer
+if is_publisher_enabled; then
+  ANY_PUB_ENABLED=true
+  PUBLISHER_DB_HOST="${PUBLISHER_DB_HOST:-pub-db}"
 else
-  SKIP_PUBLISHER=true
+  ANY_PUB_ENABLED=false
 fi
 
-# Dynamically evaluate active DB profiles to check if components.forms.enabled=true
-ANY_FORMS_ENABLED=false
-for inst in $(get_active_db_instances 2>/dev/null); do
-  pname=$(echo "$inst" | cut -d'|' -f2)
-  pfile="$WORKSPACE_DIR/config/profiles/databases/${pname}.yaml"
-  [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/${pname}.yaml"
-  if [ -f "$pfile" ]; then
-    forms_en=$(awk '/forms:/{flag=1;next}/ords:|apex:|publisher:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
-    if [ "$forms_en" = "true" ]; then
-      ANY_FORMS_ENABLED=true
-      break
-    fi
-  fi
-done
-
-if [ "${SKIP_FORMS:-true}" = "false" ] || [ "${ENABLE_FORMS:-false}" = "true" ]; then
+if is_forms_enabled; then
   ANY_FORMS_ENABLED=true
+else
+  ANY_FORMS_ENABLED=false
 fi
 
-ANY_LOCAL_ORDS_NEEDED=false
-is_adb_prof=false
-for inst in $(get_active_db_instances 2>/dev/null); do
-  pname=$(echo "$inst" | cut -d'|' -f2)
-  pfile="$WORKSPACE_DIR/config/profiles/databases/${pname}.yaml"
-  [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/${pname}.yaml"
-  if [ -f "$pfile" ]; then
-    if [ "$ords_cnt_req" = "false" ]; then
-      is_adb_prof=true
-    fi
-    if { [ "$ords_en" = "true" ] || [ -z "$ords_en" ]; } && [ "$ords_cnt_req" != "false" ]; then
-      ANY_LOCAL_ORDS_NEEDED=true
-      break
-    fi
-  fi
-done
-
-if [ "$ANY_LOCAL_ORDS_NEEDED" = "false" ] && [ "${SKIP_ORDS:-false}" = "true" ]; then
-  SKIP_ORDS=true
-  if [ "${IS_ADB:-false}" = "true" ] || [ "$is_adb_prof" = "true" ]; then
-    ORDS_SKIP_REASON="Kasutatakse sisseehitatud ADB ORDS-i ilma eraldiseisva app-ords konteinerita"
+if ! is_ords_enabled; then
+  if [ -z "$(get_active_db_instances 2>/dev/null)" ]; then
+    ORDS_SKIP_REASON="Standalone workstation without local database (0 local databases)"
+  elif [ "${IS_ADB:-false}" = "true" ]; then
+    ORDS_SKIP_REASON="Using built-in ADB ORDS without standalone app-ords container"
   else
-    [ -z "$ORDS_SKIP_REASON" ] && ORDS_SKIP_REASON="Profiili YAML failis on eraldi ORDS konteiner välja lülitatud"
+    [ -z "$ORDS_SKIP_REASON" ] && ORDS_SKIP_REASON="Standalone ORDS container is disabled in YAML profile"
   fi
 fi
 
@@ -443,9 +561,9 @@ if [ "$DB_HOST" != "localhost" ] && [ "$DB_HOST" != "127.0.0.1" ] && [ "$DB_HOST
 fi
 
 if [ "${IS_ADB:-false}" = "true" ]; then
-  [ -z "$ORDS_SKIP_REASON" ] && ORDS_SKIP_REASON="Kasutatakse Oracle ADB-d (Autonomous Database), mis sisaldab sisseehitatud ORDS-i"
+  [ -z "$ORDS_SKIP_REASON" ] && ORDS_SKIP_REASON="Using Oracle ADB (Autonomous Database) with built-in ORDS"
 elif [ "$IS_LOCAL" = "false" ]; then
-  [ -z "$ORDS_SKIP_REASON" ] && ORDS_SKIP_REASON="Tegemist on kaugserveriga (Remote Database)"
+  [ -z "$ORDS_SKIP_REASON" ] && ORDS_SKIP_REASON="Remote Database target"
 fi
 
 echo -e "${CYAN}==================================================================${NC}"
@@ -478,14 +596,15 @@ get_active_db_instances | while IFS='|' read -r container prof env_key; do
 done
 echo -e "${CYAN}==================================================================${NC}"
 
-# Logifaili seadistus
+# Log file setup
 LOG_DIR="$WORKSPACE_DIR/install_logs"
 mkdir -p "$LOG_DIR"
 METRICS_DIR="$WORKSPACE_DIR/metrics"
 mkdir -p "$METRICS_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_FILE="$LOG_DIR/env_setup_${TIMESTAMP}.log"
-# Säilitame algse TTY väljundi failideskriptoris 3 reaalajas loendurite jaoks
+LOG_FILE="$LOG_DIR/setup_bp_${SELECTED_BLUEPRINT}_${TIMESTAMP}.log"
+ln -sf "$LOG_FILE" "$LOG_DIR/setup_bp_${SELECTED_BLUEPRINT}_latest.log" 2>/dev/null || true
+# Preserve original TTY output on file descriptor 3 for live timers
 exec 3>&1
 exec > >(tee -a "$LOG_FILE") 2>&1
 
@@ -552,7 +671,7 @@ fi
 # SAMM 2: ORDS tarkvarapaketi allalaadimine (ORDS Download)
 # ----------------------------------------------------------------------------
 ORDS_DL_START=$(date +%s)
-if [ "$SKIP_ORDS" = "true" ]; then
+if ! is_ords_enabled; then
   print_header "2" "$(msg_str "STEP_2_TITLE")"
   msg_print "ORDS_CONTAINER_NOT_REQUIRED" "${ORDS_SKIP_REASON:-disabled}"
   ORDS_DL_SECS=0
@@ -658,7 +777,9 @@ if [ "${#UNIQUE_APEX_VERSIONS[@]}" -gt 0 ]; then
     fi
 
     TARGET_DIR="$WORKSPACE_DIR/db-install/apex_$ver"
-    if [ ! -d "$TARGET_DIR/apex" ]; then
+    if [ "${RESTORE_FROM_SNAPSHOT:-false}" = "true" ]; then
+      echo -e "   ℹ️  APEX unpack skipped (restoring pre-installed APEX from Golden Snapshot)"
+    elif [ ! -d "$TARGET_DIR/apex" ]; then
       msg_print "APEX_UNPACKING_VER" "$ver" "$TARGET_DIR"
       mkdir -p "$TARGET_DIR"
       unzip -o -q "$ZIP_PATH" -d "$TARGET_DIR" || true
@@ -673,56 +794,148 @@ fi
 echo -e "⏱  [$(msg_str "STEP_3_NAME"): ${YELLOW}$APEX_DL_TIME${NC}]"
 
 # ----------------------------------------------------------------------------
-# SAMM 4: Konteinerite käivitamine ja andmebaaside tervisekontroll (Healthcheck)
+# STEP 4: Container startup and database health checks
 # ----------------------------------------------------------------------------
 STEP4_START=$(date +%s)
 if [ "$IS_LOCAL" = "true" ]; then
   mkdir -p "$WORKSPACE_DIR/config/tns_admin"
   print_header "4" "$(msg_str "STEP_4_TITLE")" "step4_container_startup_seconds" "45s"
 
-  if [ "${RESTORE_FROM_SNAPSHOT:-false}" = "true" ] && [ -f "$SCRIPT_DIR/snapshots/restore-golden-snapshots.sh" ]; then
-    echo -e "${CYAN}📸 [TASK-018]: Taastan andmemahud eelnevalt salvestatud Golden Snapshotist...${NC}"
-    "$SCRIPT_DIR/snapshots/restore-golden-snapshots.sh" || true
-  fi
-
-  LOCAL_COMPOSE_ARGS=("${COMPOSE_ARGS[@]}")
-  load_web_ide_profile >/dev/null 2>&1 || true
-  if [ "${WEB_IDE_ENABLED:-false}" = "true" ] && [ "$SKIP_WEB_IDE" = "false" ]; then
-    LOCAL_COMPOSE_ARGS+=(--profile web-ide)
-  fi
-
-  if [ -x "$SCRIPT_DIR/internal/generate-dev-hub.sh" ]; then
-    "$SCRIPT_DIR/internal/generate-dev-hub.sh" "$WORKSPACE_DIR/docs/dev-hub.html" >/dev/null 2>&1 || true
-  fi
-
-  (
-    podman-compose "${LOCAL_COMPOSE_ARGS[@]}" up -d >> "$LOG_FILE" 2>&1
-  ) &
-  UP_PID=$!
-  register_child_pid "$UP_PID"
-
-  hide_cursor
-  ELAPSED=0
-  POLL_INTERVAL="${LIVE_TIMER_INTERVAL:-3}"
-  POLL_INTERVAL="${POLL_INTERVAL//[^0-9]/}"
-  [ -z "$POLL_INTERVAL" ] || [ "$POLL_INTERVAL" -le 0 ] && POLL_INTERVAL=3
-
-  while kill -0 "$UP_PID" 2>/dev/null; do
-    FMT_TIME=$(format_duration "$ELAPSED")
-    if [ -t 3 ] 2>/dev/null; then
-      printf "\r\033[K   ⏳ [%s: %s...]" "$(msg_str "STARTING_CONTAINERS_PROGRESS")" "$FMT_TIME" >&3
+  ACTIVE_DBS_STEP4=$(get_active_db_instances 2>/dev/null || true)
+  if [ -n "$ACTIVE_DBS_STEP4" ] && [ "${DB_ENABLED:-true}" != "false" ] && [ "${PROFILE_NAME:-}" != "NONE" ] && [ "${RESTORE_FROM_SNAPSHOT:-false}" = "true" ] && [ -f "$SCRIPT_DIR/snapshots/restore-golden-snapshots.sh" ]; then
+    echo -e "${CYAN}📸 [Golden Snapshot]: Rapid ~15s environment restore from snapshot...${NC}"
+    restore_flags=(--auto -b "${ACTIVE_BP_ID:-0}")
+    if [ "${ROTATE_RESTORE_PASSWORDS:-false}" != "true" ]; then
+      restore_flags+=(--no-rotate)
     fi
-    sleep "$POLL_INTERVAL"
-    ELAPSED=$((ELAPSED + POLL_INTERVAL))
-  done
-  wait "$UP_PID" 2>/dev/null || true
-  restore_cursor
-  if [ -t 3 ] 2>/dev/null; then
-    printf "\r\033[K" >&3
+    [ "$FORCE" = "true" ] && restore_flags+=(--force)
+    if ! "$SCRIPT_DIR/snapshots/restore-golden-snapshots.sh" "${restore_flags[@]}"; then
+      echo -e "${YELLOW}ℹ️  Snapshot restore not available or failed. Starting containers directly...${NC}"
+      "$SCRIPT_DIR/start-containers.sh" >> "$LOG_FILE" 2>&1 || true
+    fi
+  else
+    # Pre-flight container lifecycle & port conflict check
+    target_containers=()
+    for c in $(extract_blueprint_containers "${ACTIVE_BP_ID:-0}" 2>/dev/null); do
+      [ -n "$c" ] && target_containers+=("$c")
+    done
+
+    # Collect host ports that target containers will bind to
+    target_ports=()
+    for tc in "${target_containers[@]}"; do
+      case "$tc" in
+        db-*)
+          db_port=$(grep -A 10 "$tc:" "$WORKSPACE_DIR/podman-compose.override.yml" 2>/dev/null | grep -E '^[[:space:]]+-[[:space:]]+"[0-9]+:' | sed -E 's/.*"([0-9]+):.*/\1/' || echo "")
+          [ -n "$db_port" ] && target_ports+=("$db_port")
+          ;;
+        app-ords)
+          target_ports+=("${ORDS_PORT:-8088}" "${ORDS_SSL_PORT:-8448}")
+          ;;
+        web-ide-dev)
+          target_ports+=("${WEB_IDE_HTTP_PORT:-8090}" "${WEB_IDE_HTTPS_PORT:-8449}" "${CICD_WEB_UI_PORT:-8091}")
+          ;;
+        app-publisher-designer)
+          target_ports+=("${PUBLISHER_DESIGNER_HTTP_PORT:-6083}" "${PUBLISHER_DESIGNER_VNC_PORT:-5903}")
+          ;;
+        app-publisher)
+          target_ports+=("${PUBLISHER_HTTP_PORT:-9704}")
+          ;;
+        app-forms|forms-dev)
+          target_ports+=("${FORMS_HTTP_PORT:-9001}" "${FORMS_NOVNC_PORT:-6081}" "${FORMS_VNC_PORT:-5901}")
+          ;;
+        ords-standalone-*)
+          target_ports+=("${ORDS_STANDALONE_HTTP_PORT:-8085}" "${ORDS_STANDALONE_HTTPS_PORT:-8445}")
+          ;;
+      esac
+    done
+
+    running_other=()
+    for active_c in $(podman ps --format '{{.Names}}' 2>/dev/null); do
+      # Databases (db-*, oracle-db-*) must NEVER be stopped when switching blueprints or deploying components
+      if [[ "$active_c" =~ ^(db-.*|oracle-db-.*)$ ]]; then
+        continue
+      fi
+      # Protect Core Base and Web Gateway containers
+      if [[ "$active_c" == "app-ords" ]]; then
+        continue
+      fi
+      if [[ "$active_c" =~ ^(app-.*|web-ide-.*|ords-standalone-.*)$ ]]; then
+        is_target=false
+        for t in "${target_containers[@]}"; do
+          if [ "$active_c" = "$t" ]; then
+            is_target=true
+            break
+          fi
+        done
+        if [ "$is_target" = "false" ]; then
+          if [ "${REPLACE_MODE:-false}" = "true" ]; then
+            running_other+=("$active_c")
+          else
+            # Only stop if there is an actual host port conflict with the incoming blueprint
+            has_conflict=false
+            c_ports=$(podman inspect "$active_c" --format '{{range $p, $conf := .NetworkSettings.Ports}}{{range $conf}}{{.HostPort}} {{end}}{{end}}' 2>/dev/null || echo "")
+            for cp in $c_ports; do
+              for tp in "${target_ports[@]}"; do
+                if [ "$cp" = "$tp" ]; then
+                  has_conflict=true
+                  break 2
+                fi
+              done
+            done
+            if [ "$has_conflict" = "true" ]; then
+              running_other+=("$active_c")
+            fi
+          fi
+        fi
+      fi
+    done
+
+    if [ "${#running_other[@]}" -gt 0 ]; then
+      echo -e "${YELLOW}$(msg_str "WARN_FOREIGN_CONTAINER_DETECTED" "${running_other[*]}" "${ACTIVE_BP_ID:-0}")${NC}"
+      should_stop="yes"
+      if [ -t 0 ] && [ "${FORCE:-false}" != "true" ]; then
+        read -r -p "$(msg_str "PROMPT_STOP_FOREIGN_CONTAINER")" ans
+        if [[ "$ans" =~ ^[Nn] ]]; then
+          should_stop="no"
+        fi
+      fi
+      if [ "$should_stop" = "yes" ]; then
+        for c_to_stop in "${running_other[@]}"; do
+          echo -e "   ${CYAN}$(msg_str "STOPPING_PREVIOUS_BP_CONTAINER" "$c_to_stop")${NC}"
+          podman stop "$c_to_stop" >/dev/null 2>&1 || true
+        done
+      fi
+    fi
+
+    (
+      "$SCRIPT_DIR/start-containers.sh" >> "$LOG_FILE" 2>&1
+    ) &
+    UP_PID=$!
+    register_child_pid "$UP_PID"
+
+    hide_cursor
+    ELAPSED=0
+    POLL_INTERVAL="${LIVE_TIMER_INTERVAL:-3}"
+    POLL_INTERVAL="${POLL_INTERVAL//[^0-9]/}"
+    [ -z "$POLL_INTERVAL" ] || [ "$POLL_INTERVAL" -le 0 ] && POLL_INTERVAL=3
+
+    while kill -0 "$UP_PID" 2>/dev/null; do
+      FMT_TIME=$(format_duration "$ELAPSED")
+      if [ -t 3 ] 2>/dev/null; then
+        printf "\r\033[K   ⏳ [%s: %s...]" "$(msg_str "STARTING_CONTAINERS_PROGRESS")" "$FMT_TIME" >&3
+      fi
+      sleep "$POLL_INTERVAL"
+      ELAPSED=$((ELAPSED + POLL_INTERVAL))
+    done
+    wait "$UP_PID" 2>/dev/null || true
+    restore_cursor
+    if [ -t 3 ] 2>/dev/null; then
+      printf "\r\033[K" >&3
+    fi
   fi
 
-  # Kasutame adaptiivset ja iseparanevat tervisekontrolli moodulit
-  if [ -x "$SCRIPT_DIR/internal/wait-db-healthy.sh" ]; then
+  # Use adaptive self-healing health check module
+  if [ -n "$(get_active_db_instances 2>/dev/null)" ] && [ -x "$SCRIPT_DIR/internal/wait-db-healthy.sh" ]; then
     "$SCRIPT_DIR/internal/wait-db-healthy.sh"
   fi
 
@@ -735,15 +948,15 @@ else
 fi
 
 # ----------------------------------------------------------------------------
-# SAMM 4.5: Oracle Wallet ja TNS algseadistamine (SEPS)
+# STEP 4.5: Oracle Wallet and TNS initial configuration (SEPS)
 # ----------------------------------------------------------------------------
 STEP4_5_SECS=0
 if [ "$IS_LOCAL" = "true" ]; then
   print_header "4.5" "$(msg_str "STEP_4_5_TITLE")" "step4_5_wallet_tns_config_seconds" "10s"
   STEP4_5_START=$(date +%s)
   
-  # Sünkroniseerime andmebaaside kasutajad ja paroolid enne Walleti ja ORDSi tööd
-  if [ -x "$SCRIPT_DIR/internal/apply-profile-users.sh" ]; then
+  # Synchronize database users and passwords before Wallet and ORDS operations
+  if [ -n "$(get_active_db_instances 2>/dev/null)" ] && [ -x "$SCRIPT_DIR/internal/apply-profile-users.sh" ]; then
     get_active_db_instances 2>/dev/null | while IFS='|' read -r c_name prof env_key; do
       [ -n "$c_name" ] && "$SCRIPT_DIR/internal/apply-profile-users.sh" "$c_name" >/dev/null 2>&1 || true
     done
@@ -756,10 +969,10 @@ if [ "$IS_LOCAL" = "true" ]; then
 fi
 
 # ----------------------------------------------------------------------------
-# SAMM 5: ORDS teenuse käivitamise ja reageerimise kontroll
+# STEP 5: ORDS service startup and readiness check
 # ----------------------------------------------------------------------------
 STEP5_START=$(date +%s)
-if [ "$SKIP_ORDS" = "true" ] || [ "$IS_LOCAL" = "false" ]; then
+if ! is_ords_enabled || [ "$IS_LOCAL" = "false" ]; then
   STEP5_ORDS_SECS=0
   STEP5_TIME="$(msg_str "STATUS_SKIPPED")"
 else
@@ -774,31 +987,42 @@ else
 fi
 
 # ----------------------------------------------------------------------------
-# SAMM 6: APEX Mootori ja Patchi automaatne paigaldamine
+# STEP 6: Automated APEX Engine and Patch Installation
 # ----------------------------------------------------------------------------
+STEP6_APEX_START=$(date +%s)
 print_header "6" "$(msg_str "STEP_6_TITLE")" "step7_apex_engine_install_seconds" "6m"
 ACTIVE_INST_LIST=$(get_active_db_instances 2>/dev/null || echo "")
-for inst in $ACTIVE_INST_LIST; do
-  c_name=$(echo "$inst" | cut -d'|' -f1)
-  prof=$(echo "$inst" | cut -d'|' -f2)
-  [ -z "$c_name" ] && continue
-  (
-    load_db_profile "$prof" >/dev/null 2>&1 || true
-    if [ "${PROFILE_APEX_ENABLED:-true}" = "false" ] || [ "${PROFILE_APEX_VERSION:-NONE}" = "NONE" ]; then
-      echo -e "   $(msg_str "APEX_NOT_ACTIVE_INFO" "$c_name")"
-    else
-      echo -e "   🚀 [${c_name}]: $(msg_str "APEX_STARTING_INSTALL" "${PROFILE_APEX_VERSION:-26.1}")"
-      INSTALL_ARGS=()
-      [ "$FORCE" = "true" ] && INSTALL_ARGS+=("--force")
-      [ "${APEX_RUNTIME_ONLY:-false}" = "true" ] && INSTALL_ARGS+=("--runtime-only")
-      INSTALL_ARGS+=("--db" "$(echo "$c_name" | sed 's/^db-//' | tr '-' '_')" "--version" "${PROFILE_APEX_VERSION:-26.1}" "--port" "${PROFILE_DB_PORT}" "--service" "${PROFILE_DEFAULT_SERVICE}")
-      if [ "${PROFILE_ORDS_ENABLED:-true}" = "false" ] || [ "$SKIP_ORDS" = "true" ]; then
-        INSTALL_ARGS+=("--no-ords")
+if [ -z "$ACTIVE_INST_LIST" ]; then
+  echo -e "   ℹ️  $(msg_str "STATUS_SKIPPED") (No local database instances active for this blueprint)"
+else
+  for inst in $ACTIVE_INST_LIST; do
+    c_name=$(echo "$inst" | cut -d'|' -f1)
+    prof=$(echo "$inst" | cut -d'|' -f2)
+    [ -z "$c_name" ] && continue
+    (
+      load_db_profile "$prof" >/dev/null 2>&1 || true
+      if [ "${PROFILE_APEX_ENABLED:-true}" = "false" ] || [ "${PROFILE_APEX_VERSION:-NONE}" = "NONE" ]; then
+        echo -e "   $(msg_str "APEX_NOT_ACTIVE_INFO" "$c_name")"
+      elif declare -f can_skip_in_db_apex >/dev/null 2>&1 && can_skip_in_db_apex "$c_name" "${PROFILE_APEX_VERSION:-26.1}" "${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"; then
+        "$SCRIPT_DIR/internal/sync-apex-images.sh" "$c_name" "${PROFILE_APEX_VERSION:-26.1}" || true
+      else
+        echo -e "   🚀 [${c_name}]: $(msg_str "APEX_STARTING_INSTALL" "${PROFILE_APEX_VERSION:-26.1}")"
+        INSTALL_ARGS=()
+        [ "$FORCE" = "true" ] && INSTALL_ARGS+=("--force")
+        [ "${APEX_RUNTIME_ONLY:-false}" = "true" ] && INSTALL_ARGS+=("--runtime-only")
+        INSTALL_ARGS+=("--db" "$(echo "$c_name" | sed 's/^db-//' | tr '-' '_')" "--version" "${PROFILE_APEX_VERSION:-26.1}" "--port" "${PROFILE_DB_PORT}" "--service" "${PROFILE_DEFAULT_SERVICE}")
+        if [ "${PROFILE_ORDS_ENABLED:-true}" = "false" ] || ! is_ords_enabled; then
+          INSTALL_ARGS+=("--no-ords")
+        fi
+        "$SCRIPT_DIR/internal/install-apex.sh" "${INSTALL_ARGS[@]}"
+        "$SCRIPT_DIR/internal/sync-apex-images.sh" "$c_name" "${PROFILE_APEX_VERSION:-26.1}" || true
       fi
-      "$SCRIPT_DIR/internal/install-apex.sh" "${INSTALL_ARGS[@]}"
-    fi
-  )
-done
+    )
+  done
+fi
+STEP6_APEX_SECS=$(( $(date +%s) - STEP6_APEX_START ))
+STEP6_APEX_TIME=$(format_duration $STEP6_APEX_SECS)
+echo -e "⏱  [$(msg_str "STEP_6_NAME"): ${YELLOW}$STEP6_APEX_TIME${NC}]"
 
 # ----------------------------------------------------------------------------
 # STEP 7: Database schema migrations (Liquibase / Init DB)
@@ -807,36 +1031,43 @@ STEP5_5_START=$(date +%s)
 print_header "7" "$(msg_str "STEP_7_TITLE")" "step5_5_liquibase_migration_seconds" "15s"
 STEP5_5_LOG="$LOG_DIR/db_sqlcl_deploy_${TIMESTAMP}.log"
 
-get_active_db_instances 2>/dev/null | while IFS='|' read -r c_name prof env_key; do
-  [ -z "$c_name" ] && continue
-  ( "$SCRIPT_DIR/internal/init-db-instance.sh" "$prof" "$c_name" >> "$STEP5_5_LOG" 2>&1 ) &
-done
-wait
+if [ -z "$ACTIVE_INST_LIST" ]; then
+  STEP5_5_SECS=0
+  STEP5_5_TIME="$(msg_str "STATUS_SKIPPED")"
+  echo -e "   ℹ️  $(msg_str "STATUS_SKIPPED") (No local database instances active for this blueprint)"
+  echo -e "⏱  [$(msg_str "STEP_7_NAME"): ${YELLOW}$STEP5_5_TIME${NC}]"
+else
+  get_active_db_instances 2>/dev/null | while IFS='|' read -r c_name prof env_key; do
+    [ -z "$c_name" ] && continue
+    ( "$SCRIPT_DIR/internal/init-db-instance.sh" "$prof" "$c_name" >> "$STEP5_5_LOG" 2>&1 ) &
+  done
+  wait
 
-STEP5_5_SECS=$(( $(date +%s) - STEP5_5_START ))
-STEP5_5_TIME=$(format_duration $STEP5_5_SECS)
-echo -e "⏱  [$(msg_str "STEP_7_NAME"): ${GREEN}$STEP5_5_TIME${NC}]"
+  STEP5_5_SECS=$(( $(date +%s) - STEP5_5_START ))
+  STEP5_5_TIME=$(format_duration $STEP5_5_SECS)
+  echo -e "⏱  [$(msg_str "STEP_7_NAME"): ${GREEN}$STEP5_5_TIME${NC}]"
+fi
 
-# Sünkroniseerime profiili kasutajad, APEX-i töökohad ja ORDS-i metaandmed
-if [ -x "$SCRIPT_DIR/internal/apply-profile-users.sh" ]; then
+# Synchronize profile users, APEX workspaces and ORDS metadata
+if [ -n "$ACTIVE_INST_LIST" ] && [ -x "$SCRIPT_DIR/internal/apply-profile-users.sh" ]; then
   get_active_db_instances 2>/dev/null | while IFS='|' read -r c_name prof env_key; do
     [ -n "$c_name" ] && "$SCRIPT_DIR/internal/apply-profile-users.sh" "$c_name" >> "$LOG_DIR/apply_profile_users_${TIMESTAMP}.log" 2>&1 || true
   done
 fi
 
-if [ "$SKIP_ORDS" = "false" ] && podman container exists app-ords 2>/dev/null; then
+if is_ords_enabled && podman container exists app-ords 2>/dev/null; then
   echo -e "🔄 $(msg_str "ORDS_RESTARTING_POOLS")"
   podman restart app-ords >/dev/null 2>&1 || true
   sleep 8
 fi
 
 # ----------------------------------------------------------------------------
-# SAMM 8: APEX rakenduste paigaldamine (Deploy Packaged APEX Applications)
+# STEP 8: APEX Application Deployment (Deploy Packaged APEX Applications)
 # ----------------------------------------------------------------------------
 STEP8_START=$(date +%s)
 print_header "8" "$(msg_str "STEP_8_TITLE")" "step10_deploy_apex_apps_seconds" "10s"
 
-if [ "$SKIP_MONITOR_APP" = "true" ] || [ "${PROFILE_APEX_ENABLED:-true}" = "false" ]; then
+if [ "${PROFILE_APEX_ENABLED:-true}" = "false" ]; then
   STEP8_DEPLOY_SECS=0
   STEP8_DEPLOY_TIME="$(msg_str "STATUS_SKIPPED")"
 else
@@ -851,10 +1082,10 @@ else
 fi
 
 # ----------------------------------------------------------------------------
-# SAMM 9: Oracle Analytics Publisher paigaldamine ja initsialiseerimine
+# STEP 9: Oracle Analytics Publisher Installation and Initialization
 # ----------------------------------------------------------------------------
 PUB_INSTALL_SECS=0
-if [ "$SKIP_PUBLISHER" = "false" ] && { [ "$ANY_PUB_ENABLED" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ]; }; then
+if is_publisher_enabled; then
   PUB_START=$(date '+%s')
   echo -e "\n${YELLOW}🚀 $(msg_str "PUB_STARTING_SETUP")${NC}"
   if [ -x "$SCRIPT_DIR/internal/install-publisher.sh" ]; then
@@ -865,10 +1096,10 @@ if [ "$SKIP_PUBLISHER" = "false" ] && { [ "$ANY_PUB_ENABLED" = "true" ] || [ "${
 fi
 
 # ----------------------------------------------------------------------------
-# SAMM 9.5: Oracle Forms 14c paigaldamine ja initsialiseerimine
+# STEP 9.5: Oracle Forms 14c Installation and Initialization
 # ----------------------------------------------------------------------------
 FORMS_INSTALL_SECS=0
-if [ "${SKIP_FORMS:-false}" != "true" ] && { [ "$ANY_FORMS_ENABLED" = "true" ] || [ "${ENABLE_FORMS:-false}" = "true" ]; }; then
+if is_forms_enabled; then
   FORMS_START=$(date '+%s')
   echo -e "\n${YELLOW}🚀 $(msg_str "FORMS_STARTING_SETUP")${NC}"
   if [ -x "$SCRIPT_DIR/internal/install-forms.sh" ]; then
@@ -882,42 +1113,69 @@ if [ "${SKIP_FORMS:-false}" != "true" ] && { [ "$ANY_FORMS_ENABLED" = "true" ] |
 fi
 
 # ----------------------------------------------------------------------------
-# SAMM 10: Hetktõmmise (Golden Snapshot) loomine & Metaandmete Uuendamine
+# STEP 10: Golden Snapshot Creation & Metadata Update
 # ----------------------------------------------------------------------------
 STEP9_SECS=0
-if [ "${IS_TEST_MODE:-false}" != "true" ]; then
+if [ "${IS_TEST_MODE:-false}" != "true" ] || [ -n "$TEST_BLUEPRINTS" ] || [ "${FORCE_SNAPSHOT:-false}" = "true" ]; then
   print_header "10" "$(msg_str "STEP_10_TITLE")" "snapshot_duration_seconds" "25s"
   
-  SNAP_EXISTS=false
-  if declare -f find_best_golden_snapshot >/dev/null 2>&1; then
-    EXISTING_SNAP=$(find_best_golden_snapshot "${SELECTED_BLUEPRINT:-3}" "${PROFILE_NAME:-db-proxy-oracle}" 2>/dev/null || true)
-    [ -n "$EXISTING_SNAP" ] && [ -f "$EXISTING_SNAP" ] && SNAP_EXISTS=true
+  if [ -f "$SCRIPT_DIR/internal/snapshot-resolver.sh" ]; then
+    # shellcheck source=/dev/null
+    source "$SCRIPT_DIR/internal/snapshot-resolver.sh"
   fi
 
-  if [ "$SNAP_EXISTS" = "false" ] || [ "${FORCE_SNAPSHOT:-false}" = "true" ] || [ "$FORCE" = "true" ]; then
-    msg_print "SNAPSHOT_AUTO_CREATING" "${SELECTED_BLUEPRINT:-3}" "${PROFILE_NAME:-db-proxy-oracle}"
+  target_bp_snap="${SELECTED_BLUEPRINT:-0}"
+  target_prof_snap="${PROFILE_NAME:-db-proxy-oracle}"
+  max_snap_days="${SNAPSHOT_MAX_AGE_DAYS:-30}"
+
+  ACTIVE_DBS_SNAP=$(get_active_db_instances 2>/dev/null || true)
+  if [ -z "$ACTIVE_DBS_SNAP" ] || [ "${DB_ENABLED:-true}" = "false" ] || [ "$target_prof_snap" = "NONE" ]; then
+    echo -e "   ℹ️  $(msg_str "SNAPSHOT_FASTPATH_DETECTED" "${PROFILE_NAME:-NONE}") (0 local databases - snapshot skipped)"
+  elif should_create_golden_snapshot "$target_bp_snap" "$target_prof_snap" "$max_snap_days"; then
+    case "${EVALUATED_SNAPSHOT_ACTION:-create}" in
+      "force")
+        msg_print "SNAPSHOT_FORCE_CREATION"
+        ;;
+      "recreate_expired")
+        msg_print "SNAPSHOT_EXPIRED_RECREATE" "$target_prof_snap" "${EVALUATED_SNAPSHOT_AGE_DAYS:-31}" "$max_snap_days"
+        ;;
+      *)
+        msg_print "SNAPSHOT_AUTO_CREATING" "$target_bp_snap" "$target_prof_snap"
+        ;;
+    esac
+
     SNAP_START=$(date +%s)
-    "$SCRIPT_DIR/snapshots/create-golden-snapshots.sh" --blueprint "${SELECTED_BLUEPRINT:-3}" --profile "${PROFILE_NAME:-db-proxy-oracle}" --auto || true
+    "$SCRIPT_DIR/snapshots/create-golden-snapshots.sh" --blueprint "$target_bp_snap" --profile "$target_prof_snap" --auto || true
     STEP9_SECS=$(( $(date +%s) - SNAP_START ))
 
     if [ "${ARTIFACTORY_AUTO_PUBLISH:-false}" = "true" ] || [ "${PUBLISH_SNAPSHOT:-false}" = "true" ]; then
       if [ -x "$SCRIPT_DIR/publish-to-artifactory.sh" ]; then
-        "$SCRIPT_DIR/publish-to-artifactory.sh" --product blueprints --blueprint "${SELECTED_BLUEPRINT:-3}" --profile "${PROFILE_NAME:-db-proxy-oracle}" -y || true
+        "$SCRIPT_DIR/publish-to-artifactory.sh" --product blueprints --blueprint "$target_bp_snap" --profile "$target_prof_snap" -y || true
       fi
     fi
   else
-    echo -e "   ✅ $(msg_str "SNAPSHOT_FASTPATH_DETECTED" "${PROFILE_NAME:-db-proxy-oracle}")"
+    if [ "${EVALUATED_SNAPSHOT_ACTION:-}" = "skip_fresh" ]; then
+      msg_print "SNAPSHOT_FRESH_SKIP" "$target_prof_snap" "${EVALUATED_SNAPSHOT_AGE_DAYS:-0}" "$max_snap_days"
+    else
+      echo -e "   ✅ $(msg_str "SNAPSHOT_FASTPATH_DETECTED" "$target_prof_snap")"
+    fi
+  fi
+  STEP9_TIME=$(format_duration $STEP9_SECS)
+  if [ "$STEP9_SECS" -eq 0 ]; then
+    echo -e "⏱  [$(msg_str "STEP_10_NAME"): ${YELLOW}$(msg_str "STATUS_SKIPPED")${NC}]"
+  else
+    echo -e "⏱  [$(msg_str "STEP_10_NAME"): ${YELLOW}$STEP9_TIME${NC}]"
   fi
 fi
 
-# Arendajakonto ja VS Code ühenduse loomine
+# Provision developer account and VS Code connection
 if [ "$IS_LOCAL" = "true" ] && [ "${ENVIRONMENT_TYPE:-DEV}" = "DEV" ]; then
   if [ "${PROFILE_APEX_ENABLED:-true}" = "true" ]; then
     "$SCRIPT_DIR/create-developer.sh" --force >/dev/null 2>&1 || true
   fi
 fi
 
-if [ "$SKIP_WEB_IDE" = "false" ]; then
+if is_web_ide_enabled && podman container exists web-ide-dev 2>/dev/null; then
   if [ -x "$SCRIPT_DIR/internal/init-web-ide.sh" ]; then
     "$SCRIPT_DIR/internal/init-web-ide.sh" >/dev/null 2>&1 || true
   fi
@@ -926,7 +1184,7 @@ fi
 TOTAL_MASTER_SECS=$(( $(date +%s) - START_MASTER_TOTAL ))
 TOTAL_MASTER_TIME=$(format_duration $TOTAL_MASTER_SECS)
 
-# Eksport mõõdikute raporti generaatorile
+# Export metrics to setup report generator
 export SETUP_TOTAL_SECS="$TOTAL_MASTER_SECS"
 export SETUP_STEP1_PULL_SECS="$PULL_SECS"
 export SETUP_STEP2_ORDS_DOWNLOAD_SECS="$ORDS_DL_SECS"
@@ -942,7 +1200,7 @@ export SETUP_STEP9_PUBLISHER_SECS="$PUB_INSTALL_SECS"
 export SETUP_STEP10_DEPLOY_APPS_SECS="$STEP8_DEPLOY_SECS"
 export SETUP_STEP11_SNAPSHOT_SECS="$STEP9_SECS"
 
-# URL ja Walleti automaattestid (Käivitatakse enne raporti genereerimist, et tulemused jõuaksid raportisse)
+# URL and Wallet automated diagnostic tests
 if [ "${SKIP_TESTS:-false}" = "true" ]; then
   echo -e "\n${YELLOW}⚡ Fast Mode (--fast): Post-provisioning URL and wallet diagnostics skipped.${NC}"
 else
@@ -959,17 +1217,17 @@ else
   fi
 fi
 
-# Raportite ja JSON mõõdikute genereerimine
+# Generate reports and JSON metrics
 if [ -x "$SCRIPT_DIR/internal/generate-setup-report.sh" ]; then
   "$SCRIPT_DIR/internal/generate-setup-report.sh"
 fi
 
-# VS Code ühenduste registreerimine
+# Register VS Code connections
 if [ "$IS_LOCAL" = "true" ] && [ -f "$SCRIPT_DIR/register-connections.sh" ]; then
   "$SCRIPT_DIR/register-connections.sh" >/dev/null 2>&1 || true
 fi
 
-# Lõplik kokkuvõte ja Live Developer Dashboard
+# Final summary and Live Developer Dashboard
 ACTIVE_HTTP_PORT="${ORDS_HTTP_PORT:-${PROFILE_ORDS_HTTP_PORT:-8088}}"
 ACTIVE_SSL_PORT="${ORDS_SSL_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8448}}"
 [ "${IS_ADB:-false}" = "true" ] && ACTIVE_SSL_PORT="${ORDS_HTTPS_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8443}}"
@@ -986,7 +1244,7 @@ printf "┌───────────────────────
 printf "│ %-31s │ %-42s │ %-27s │\n" "$(msg_str "COL_APP")" "$(msg_str "COL_URL")" "$(msg_str "COL_AUTH")"
 printf "├─────────────────────────────────┼────────────────────────────────────────────┼─────────────────────────────┤\n"
 
-if [ "${PROFILE_ORDS_ENABLED:-true}" = "true" ] && [ "$SKIP_ORDS" != "true" ]; then
+if is_ords_enabled; then
   printf "│ %-31s │ %-42s │ %-27s │\n" "🚀 Dev & DevOps Hub (Main)" "https://localhost:${ACTIVE_SSL_PORT}/dev-hub.html" "Command Center & 5-Lang Docs"
   for inst in $(get_active_db_instances 2>/dev/null); do
     c_name=$(echo "$inst" | cut -d'|' -f1)
@@ -999,9 +1257,9 @@ if [ "${PROFILE_ORDS_ENABLED:-true}" = "true" ] && [ "$SKIP_ORDS" != "true" ]; t
     apex_en="false"
     p_ws=""
     if [ -f "$pfile" ]; then
-      ords_en=$(awk '/ords:/{flag=1;next}/apex:|publisher:|forms:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
-      apex_en=$(awk '/apex:/{flag=1;next}/ords:|publisher:|forms:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
-      p_ws=$(awk '/apex:/{flag=1;next}/ords:|publisher:|forms:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*workspace:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^"]+)"?/\1/' | tr -d '\r\n')
+      ords_en=$(awk '/ords:/{flag=1;next}/apex:|publisher:|forms:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^" #]+)"?.*/\1/' | tr -d '\r\n')
+      apex_en=$(awk '/apex:/{flag=1;next}/ords:|publisher:|forms:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*enabled:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^" #]+)"?.*/\1/' | tr -d '\r\n')
+      p_ws=$(awk '/apex:/{flag=1;next}/ords:|publisher:|forms:|sqlcl:|users:/{flag=0}flag' "$pfile" | grep -E '^[[:space:]]*workspace:' | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^" #]+)"?.*/\1/' | tr -d '\r\n')
     fi
     upper_pool=$(echo "$pool_name" | tr '[:lower:]' '[:upper:]')
     [ -z "$p_ws" ] && p_ws="${upper_pool}_WORKSPACE"
@@ -1014,22 +1272,34 @@ if [ "${PROFILE_ORDS_ENABLED:-true}" = "true" ] && [ "$SKIP_ORDS" != "true" ]; t
       printf "│ %-31s │ %-42s │ %-27s │\n" "📊 Database Actions (${upper_pool})" "https://localhost:${ACTIVE_SSL_PORT}/ords/${pool_name}/sql-developer" "USER_DEVELOPER / DEV"
     fi
   done
+elif [ -n "$(get_active_db_instances 2>/dev/null)" ]; then
+  printf "│ %-31s │ %-42s │ %-27s │\n" "ℹ️ ORDS Web Gateway" "NOT CONFIGURED (Standalone DB)" "Run: ./scripts/setup-all.sh -b 0"
 fi
 
-if [ "${SKIP_FORMS:-true}" != "true" ] && ([ "${PROFILE_FORMS_ENABLED:-false}" = "true" ] || [ "${ENABLE_FORMS:-false}" = "true" ] || podman container exists app-forms 2>/dev/null); then
+if is_forms_enabled; then
   ACTIVE_FORMS_PORT="${FORMS_HTTP_PORT:-9001}"
   printf "│ %-31s │ %-42s │ %-27s │\n" "📐 Forms 14c Services" "http://localhost:${ACTIVE_FORMS_PORT}/forms/frmservlet" "Runtime / test.fmx"
   printf "│ %-31s │ %-42s │ %-27s │\n" "🎨 Forms Builder GUI" "http://localhost:6082/vnc.html" "Visual Builder (noVNC)"
 fi
 
-if [ "${SKIP_PUBLISHER:-true}" != "true" ] && ([ "${PROFILE_PUBLISHER_ENABLED:-false}" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ] || podman container exists app-publisher 2>/dev/null); then
+if is_publisher_enabled; then
   printf "│ %-31s │ %-42s │ %-27s │\n" "📑 Analytics Publisher" "http://localhost:${ACTIVE_PUB_PORT}/xmlpserver" "User: weblogic / SYS"
 fi
 
-if [ "${SKIP_WEB_IDE:-true}" != "true" ] && podman container exists web-ide-dev 2>/dev/null; then
+if is_web_ide_enabled; then
   printf "│ %-31s │ %-42s │ %-27s │\n" "💻 Web IDE (VS Code)" "http://localhost:${ACTIVE_WEB_IDE_PORT}/" "Zero-Install Workspace"
 fi
+
+if is_publisher_designer_enabled; then
+  ACTIVE_DESIGNER_PORT="${PUBLISHER_DESIGNER_HTTP_PORT:-6083}"
+  printf "│ %-31s │ %-42s │ %-27s │\n" "🎨 Publisher Designer GUI" "http://localhost:${ACTIVE_DESIGNER_PORT}/vnc.html" "Template Studio (noVNC)"
+fi
 printf "└─────────────────────────────────┴────────────────────────────────────────────┴─────────────────────────────┘\n"
+
+if ! is_ords_enabled && [ -n "$(get_active_db_instances 2>/dev/null)" ]; then
+  echo -e "\n${YELLOW}ℹ️  $(msg_str "ORDS_NOT_CONFIGURED_STATUS")${NC}"
+  echo -e "${YELLOW}💡 $(msg_str "ORDS_NOT_CONFIGURED_HINT")${NC}"
+fi
 
 echo -e "\n${CYAN}$(msg_str "TREE_HEADER")${NC}"
 for inst in $(get_active_db_instances 2>/dev/null); do
@@ -1040,8 +1310,8 @@ for inst in $(get_active_db_instances 2>/dev/null); do
   c_port="1521"
   c_svc="FREEPDB1"
   if [ -f "$pfile" ]; then
-    c_port=$(grep -E '^[[:space:]]*db_port:' "$pfile" | head -n 1 | awk -F: '{print $2}' | tr -d ' "\r\n')
-    c_svc=$(grep -E '^[[:space:]]*default_service:' "$pfile" | head -n 1 | awk -F: '{print $2}' | tr -d ' "\r\n')
+    c_port=$(grep -E '^[[:space:]]*db_port:' "$pfile" | head -n 1 | sed 's/#.*//' | awk -F: '{print $2}' | tr -d ' "\r\n')
+    c_svc=$(grep -E '^[[:space:]]*default_service:' "$pfile" | head -n 1 | sed 's/#.*//' | awk -F: '{print $2}' | tr -d ' "\r\n')
   fi
   c_port="${c_port:-1521}"
   c_svc="${c_svc:-FREEPDB1}"
@@ -1089,6 +1359,19 @@ for inst in $(get_active_db_instances 2>/dev/null); do
   echo -e "   • sql /@DB_${c_short}_SYS as sysdba"
 done
 
+if [ -f "$WORKSPACE_DIR/metrics/extensions_status.json" ]; then
+  UPD_COUNT=$(jq -r '.updates_available // 0' "$WORKSPACE_DIR/metrics/extensions_status.json" 2>/dev/null || echo "0")
+  if [ "$UPD_COUNT" -gt 0 ]; then
+    echo -e "\n${YELLOW}💡 NOTICE: ${UPD_COUNT} Web IDE extensions have updates available.${NC}"
+    echo -e "   👉 Upgrade via: ${BOLD}./scripts/update-extensions.sh -u${NC}"
+  fi
+fi
+
+# Start Dev Hub Bridge background daemon for 1-click GUI container toggling
+if [ -f "$SCRIPT_DIR/internal/dev-hub-bridge.py" ] && ! curl -s http://localhost:8089/api/status >/dev/null 2>&1; then
+  python3 "$SCRIPT_DIR/internal/dev-hub-bridge.py" >/dev/null 2>&1 &
+fi
+
 echo ""
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "$(msg_str "LABEL_STARTED_AT" "$START_TIME_HUMAN")"
@@ -1097,6 +1380,12 @@ echo -e "$(msg_str "TOTAL_DURATION" "${GREEN}${TOTAL_MASTER_TIME}${NC} (${TOTAL_
 echo -e "$(msg_str "LOG_PATH_LABEL") [Log](file://$LOG_FILE)"
 echo -e "$(msg_str "METRICS_PATH_LABEL") [Metrics](file://$WORKSPACE_DIR/metrics/setup_benchmarks.json)"
 [ -n "${ACTIVE_BP_ID:-}" ] && save_blueprint_benchmark "$ACTIVE_BP_ID" "$TOTAL_MASTER_SECS"
+# 🛡️ ARCHITECTURAL GUARDRAIL (Rule 12 & Invariant 3.7):
+# Update .active_blueprint strictly after 100% successful verification!
+if [ -n "${ACTIVE_BP_ID:-}" ]; then
+  echo "$ACTIVE_BP_ID" > "$WORKSPACE_DIR/.active_blueprint" 2>/dev/null || true
+fi
+rm -f "$WORKSPACE_DIR/.setup_in_progress" 2>/dev/null || true
 echo -e "${CYAN}==================================================================${NC}\n"
 
 # ----------------------------------------------------------------------------
@@ -1114,7 +1403,7 @@ if [ "${BUILD_IMAGE:-false}" = "true" ] && [ "$IS_LOCAL" = "true" ]; then
   fi
 
   if $CONTAINER_CLI container exists "$TARGET_CONTAINER" 2>/dev/null || [ "$DRY_RUN" = "true" ]; then
-    echo -e "   1. Tuvastan andmebaasist (${TARGET_CONTAINER}) siseversioonid..."
+    echo -e "   1. Detecting database (${TARGET_CONTAINER}) internal versions..."
     DETECTED_INFO=$(detect_container_db_versions "$TARGET_CONTAINER" 2>/dev/null || echo "23ai:26.1:NONE")
     RAW_DB_VER=$(echo "$DETECTED_INFO" | cut -d':' -f1)
     RAW_APEX_VER=$(echo "$DETECTED_INFO" | cut -d':' -f2)
@@ -1124,26 +1413,26 @@ if [ "${BUILD_IMAGE:-false}" = "true" ] && [ "$IS_LOCAL" = "true" ]; then
     SEMANTIC_TAG=$(format_custom_image_tag "$RAW_DB_VER" "$RAW_APEX_VER" "$RAW_ORDS_VER")
     TARGET_IMAGE="localhost/oracle-free-apex:${SEMANTIC_TAG}"
 
-    echo -e "      ├── Tuvastatud DB:   ${GREEN}${RAW_DB_VER:-23ai}${NC}"
-    echo -e "      ├── Tuvastatud APEX: ${GREEN}${RAW_APEX_VER:-26.1}${NC}"
-    echo -e "      └── Sihtpildi Sildis: ${CYAN}${TARGET_IMAGE}${NC}"
+    echo -e "      ├── Detected DB:     ${GREEN}${RAW_DB_VER:-23ai}${NC}"
+    echo -e "      ├── Detected APEX:   ${GREEN}${RAW_APEX_VER:-26.1}${NC}"
+    echo -e "      └── Target Image:    ${CYAN}${TARGET_IMAGE}${NC}"
 
     if $CONTAINER_CLI image exists "$TARGET_IMAGE" 2>/dev/null && [ "$DRY_RUN" != "true" ]; then
-      echo -e "\n   ${YELLOW}ℹ️  Pilt ${TARGET_IMAGE} on juba süsteemis olemas! Jätan pildi loomise vahele.${NC}"
-      echo -e "   💡 ${BOLD}Soovitus:${NC} Kui soovid pilti uuesti ehitada, kustuta vana pilt käsuga:"
+      echo -e "\n   ${YELLOW}ℹ️  Image ${TARGET_IMAGE} already exists in local store! Skipping creation.${NC}"
+      echo -e "   💡 ${BOLD}Tip:${NC} If you want to rebuild the image, delete the old image first:"
       echo -e "      👉 ${YELLOW}$CONTAINER_CLI rmi ${TARGET_IMAGE}${NC}"
     else
-      echo -e "\n   2. Salvestan konteineri oleku immutatavaks pildiks..."
+      echo -e "\n   2. Committing container state into immutable image..."
       if [ "$DRY_RUN" = "true" ]; then
         echo -e "      ${YELLOW}[DRY-RUN]${NC} $CONTAINER_CLI commit \"$TARGET_CONTAINER\" \"$TARGET_IMAGE\""
         echo -e "      ${YELLOW}[DRY-RUN]${NC} $CONTAINER_CLI tag \"$TARGET_IMAGE\" \"localhost/oracle-free-apex:latest\""
       else
         $CONTAINER_CLI commit "$TARGET_CONTAINER" "$TARGET_IMAGE" >/dev/null
         $CONTAINER_CLI tag "$TARGET_IMAGE" "localhost/oracle-free-apex:latest" >/dev/null 2>&1 || true
-        echo -e "      ${GREEN}✅ Pilt loodud: ${TARGET_IMAGE}${NC}"
+        echo -e "      ${GREEN}✅ Image created: ${TARGET_IMAGE}${NC}"
       fi
 
-      echo -e "\n   🚀 ${BOLD}Artifactorysse laadimise käsk:${NC}"
+      echo -e "\n   🚀 ${BOLD}Publish to Artifactory command:${NC}"
       echo -e "      👉 ${YELLOW}./scripts/publish-image-to-artifactory.sh --registry \"artifactory.firma.ee/docker-local/oracle\" --image \"${TARGET_IMAGE}\" --update-env${NC}"
     fi
   fi

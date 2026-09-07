@@ -22,19 +22,23 @@ REMOTE_HOST="${REMOTE_HOST:-}"
 REMOTE_USER="${REMOTE_USER:-opc}"
 SSH_KEY_PATH="${REMOTE_SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
 PROFILE_NAME="${MAIN_DB_PROFILE:-publisher-only}"
+BLUEPRINT_ID=""
+WALLET_PATH=""
 DRY_RUN=false
 
 usage() {
   cat << EOF
-Kasutus: ./scripts/deploy-remote.sh [valikud]
+Usage: ./scripts/deploy-remote.sh [options]
 
-Valikud:
-  --host <IP/FQDN>     Kaug-Linux serveri IP-aadress või domeeninimi (kohustuslik)
-  --user <kasutaja>    SSH kasutaja (vaikimisi: opc OCI puhul, ubuntu/azureuser Azure puhul)
-  --key <tee_võtmeni>  SSH privaatvõtme asukoht (vaikimisi: ~/.ssh/id_ed25519)
-  --profile <profiil>  Andmebaasi/teenuse profiil (vaikimisi: publisher-only)
-  --dry-run            Kontrollib parameetreid ilma kaug-serverisse ühendamata
-  -h, --help           Kuva see abiteave
+Options:
+  --host <IP/FQDN>       Remote Linux server IP address or domain (required)
+  --user <user>          SSH user (default: opc for OCI, ubuntu/azureuser for Azure)
+  --key <key_path>       SSH private key location (default: ~/.ssh/id_ed25519)
+  -b, --blueprint <id>   Deploy specific architectural blueprint (e.g. 10 for ORDS, 11 for Publisher)
+  -w, --wallet <path>    Local OCI mTLS Cloud Wallet archive (e.g. config/tns_admin/Wallet_adbp.zip)
+  -p, --profile <name>   Database/service profile (default: publisher-only)
+  --dry-run              Validate parameters without connecting to remote server
+  -h, --help             Show this help message
 EOF
   exit 0
 }
@@ -53,9 +57,29 @@ while [[ $# -gt 0 ]]; do
       SSH_KEY_PATH="$2"
       shift 2
       ;;
-    --profile)
+    -b|--blueprint)
+      BLUEPRINT_ID="$2"
+      shift 2
+      ;;
+    -b=*|--blueprint=*)
+      BLUEPRINT_ID="${1#*=}"
+      shift
+      ;;
+    -w|--wallet)
+      WALLET_PATH="$2"
+      shift 2
+      ;;
+    -w=*|--wallet=*)
+      WALLET_PATH="${1#*=}"
+      shift
+      ;;
+    -p|--profile)
       PROFILE_NAME="$2"
       shift 2
+      ;;
+    -p=*|--profile=*)
+      PROFILE_NAME="${1#*=}"
+      shift
       ;;
     --dry-run)
       DRY_RUN=true
@@ -65,7 +89,7 @@ while [[ $# -gt 0 ]]; do
       usage
       ;;
     *)
-      echo -e "${RED}Tundmatu parameeter: $1${NC}"
+      echo -e "${RED}Unknown parameter: $1${NC}"
       usage
       ;;
   esac
@@ -76,18 +100,30 @@ echo "☁️ Remote Cloud Deployment (OCI Always Free & Azure Free)"
 echo "======================================================================"
 
 if [ -z "$REMOTE_HOST" ] && [ "$DRY_RUN" = "false" ]; then
-  echo -e "${YELLOW}ℹ️ Kaug-hosti IP-d ei täpsustatud käsureal. Kasutan simuleeritud režiimi (--dry-run).${NC}"
+  echo -e "${YELLOW}ℹ️ Remote host IP not specified. Falling back to dry-run mode (--dry-run).${NC}"
   DRY_RUN=true
 fi
 
 echo -e "   └─ Target Host: ${CYAN}${REMOTE_HOST:-localhost (dry-run)}${NC}"
 echo -e "   └─ Target User: ${CYAN}${REMOTE_USER}${NC}"
 echo -e "   └─ SSH Key:     ${CYAN}${SSH_KEY_PATH}${NC}"
-echo -e "   └─ Profile:     ${CYAN}${PROFILE_NAME}${NC}"
+if [ -n "$BLUEPRINT_ID" ]; then
+  echo -e "   └─ Blueprint:   ${CYAN}${BLUEPRINT_ID}${NC}"
+else
+  echo -e "   └─ Profile:     ${CYAN}${PROFILE_NAME}${NC}"
+fi
+if [ -n "$WALLET_PATH" ]; then
+  echo -e "   └─ Cloud Wallet: ${CYAN}${WALLET_PATH}${NC}"
+fi
+
+if [ -n "$WALLET_PATH" ] && [ ! -f "$WALLET_PATH" ]; then
+  echo -e "${RED}❌ Error: Specified wallet file not found: ${WALLET_PATH}${NC}"
+  exit 1
+fi
 
 if [ "$DRY_RUN" = "true" ]; then
   echo "======================================================================"
-  echo -e "${GREEN}✅ Dry-run kontroll edukalt läbitud! Skripti parameetrid on korras.${NC}"
+  echo -e "${GREEN}✅ Dry-run validation passed! Script parameters are valid.${NC}"
   echo "======================================================================"
   exit 0
 fi
@@ -114,10 +150,12 @@ fi
 
 # Open firewall ports if firewalld is active
 if command -v firewall-cmd >/dev/null 2>&1 && systemctl is-active --quiet firewalld; then
-  echo "Opening firewall ports 9502, 9500 and 8088..."
+  echo "Opening firewall ports 9502, 9503, 9500, 8088 and 8448..."
   sudo firewall-cmd --add-port=9502/tcp --permanent 2>/dev/null || true
+  sudo firewall-cmd --add-port=9503/tcp --permanent 2>/dev/null || true
   sudo firewall-cmd --add-port=9500/tcp --permanent 2>/dev/null || true
   sudo firewall-cmd --add-port=8088/tcp --permanent 2>/dev/null || true
+  sudo firewall-cmd --add-port=8448/tcp --permanent 2>/dev/null || true
   sudo firewall-cmd --reload 2>/dev/null || true
 fi
 REMOTE_INIT_EOF
@@ -126,11 +164,25 @@ echo -e "\n${CYAN}3. Synchronizing project code to remote host...${NC}"
 REMOTE_DIR="oracle-free-db-in-prod"
 rsync -avz --exclude='.git' --exclude='install_logs' --exclude='backups' -e "ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH}" "$WORKSPACE_DIR/" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/" >/dev/null
 
+if [ -n "$WALLET_PATH" ] && [ -f "$WALLET_PATH" ]; then
+  echo -e "\n${CYAN}3.1. Uploading OCI Cloud Wallet (${WALLET_PATH}) to remote host...${NC}"
+  $SSH_CMD "mkdir -p ${REMOTE_DIR}/config/tns_admin"
+  scp -o StrictHostKeyChecking=no -i "${SSH_KEY_PATH}" "${WALLET_PATH}" "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/config/tns_admin/"
+  $SSH_CMD "unzip -o -q ${REMOTE_DIR}/config/tns_admin/$(basename "${WALLET_PATH}") -d ${REMOTE_DIR}/config/tns_admin/ 2>/dev/null || true"
+  echo -e "${GREEN}✅ OCI Cloud Wallet uploaded and unpacked in remote config/tns_admin!${NC}"
+fi
+
 echo -e "\n${CYAN}4. Launching automated remote installation (setup-all.sh)...${NC}"
-$SSH_CMD "cd ${REMOTE_DIR} && MAIN_DB_PROFILE=${PROFILE_NAME} ./scripts/setup-all.sh -y"
+if [ -n "$BLUEPRINT_ID" ]; then
+  $SSH_CMD "cd ${REMOTE_DIR} && ./scripts/setup-all.sh -b ${BLUEPRINT_ID} -y"
+else
+  $SSH_CMD "cd ${REMOTE_DIR} && MAIN_DB_PROFILE=${PROFILE_NAME} ./scripts/setup-all.sh -y"
+fi
 
 echo "======================================================================"
 echo -e "${GREEN}🎉 Remote deployment to ${REMOTE_HOST} completed successfully!${NC}"
+echo -e "   🔗 Developer Hub:          ${CYAN}https://${REMOTE_HOST}:8448/dev-hub.html${NC}"
+echo -e "   🔗 ORDS Root Endpoint:      ${CYAN}https://${REMOTE_HOST}:8448/ords/${NC}"
 echo -e "   🔗 Analytics Publisher UI: ${CYAN}http://${REMOTE_HOST}:9502/xmlpserver${NC}"
 echo -e "   🔗 WebLogic Remote REST:   ${CYAN}http://${REMOTE_HOST}:9500/console/welcome${NC}"
 echo "======================================================================"
