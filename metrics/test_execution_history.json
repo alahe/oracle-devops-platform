@@ -1,0 +1,12 @@
+[
+  {
+    "id": "run_20260907_122206",
+    "timestamp": "2026-09-07 12:22:06",
+    "suite": "i18n",
+    "target": "i18n",
+    "duration_sec": 8.2,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_i18n_20260907_122157.log"
+  }
+]

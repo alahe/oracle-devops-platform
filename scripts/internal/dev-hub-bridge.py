@@ -896,7 +896,7 @@ def get_test_reports_list():
                     "title": title,
                     "status": status,
                     "size": stat.st_size,
-                    "mtime": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                    "mtime": datetime.datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
                 })
     reports.sort(key=lambda x: x["mtime"], reverse=True)
     return reports
@@ -985,8 +985,8 @@ def record_test_execution(task_info, exit_code):
     duration = round(time.time() - task_info.get("start_time", time.time()), 1)
     status_label = "PASS" if exit_code == 0 else "FAIL"
     entry = {
-        "id": f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "id": f"run_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "suite": task_info.get("suite", "unknown"),
         "target": task_info.get("target", "unknown"),
         "duration_sec": duration,
@@ -2315,14 +2315,14 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 self._send_json({"status": "error", "error": f"Unknown test suite: {suite}"}, cb, status=400)
                 return
 
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         log_name = f"test_{suite}_{ts}.log"
         log_full_path = os.path.join(WORKSPACE_DIR, "install_logs", log_name)
         os.makedirs(os.path.join(WORKSPACE_DIR, "install_logs"), exist_ok=True)
 
         try:
             log_fd = open(log_full_path, "w", encoding="utf-8")
-            log_fd.write(f"=== TEST RUNNER DISPATCHED: {target_label} at {datetime.now().isoformat()} ===\n")
+            log_fd.write(f"=== TEST RUNNER DISPATCHED: {target_label} at {datetime.datetime.now().isoformat()} ===\n")
             log_fd.write(f"Command: {' '.join(cmd)}\n\n")
             log_fd.flush()
 
