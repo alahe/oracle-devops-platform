@@ -41,6 +41,7 @@
         <button class="tab-btn" onclick="switchTab('tab-onboarding')">🚀 <span data-i18n="tab_onboarding">Alustamine</span></button>
         <button class="tab-btn" onclick="switchTab('tab-docs')">📚 <span data-i18n="tab_docs">Dokumendid</span></button>
         <button class="tab-btn" onclick="switchTab('tab-devops')">⚡ <span data-i18n="tab_devops">DevOps</span></button>
+        <button class="tab-btn" onclick="switchTab('tab-testing')">🧪 <span data-i18n="tab_testing">Testimine</span></button>
         <button class="tab-btn" onclick="switchTab('tab-benchmarks')">📊 <span data-i18n="tab_benchmarks">Logid</span></button>
     </nav>
 
@@ -1168,6 +1169,235 @@
         </div>
     </div>
 
+    <!-- TAB 5.5: TESTING (AUTOMATED TESTING & QUALITY ASSURANCE) -->
+    <div id="tab-testing" class="tab-content">
+        <div class="section-title">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                <span data-i18n="testing_title">🧪 Automaattestimise Keskus & Kvaliteet</span>
+                <span id="testing-active-indicator" class="badge badge-secondary" style="display:none; font-size:0.75rem;">⏳ Test Running...</span>
+            </div>
+            <span style="font-size: 0.8rem; color: #64748b;" data-i18n="testing_rule_hint">Zero-Trust Diagnostics, Fast Isolation & Live CI Quality Gate</span>
+        </div>
+
+        <!-- CI Readiness Scorecard Strip -->
+        <div class="ci-scorecard-strip" id="testing-ci-scorecard">
+            <div class="ci-scorecard-card">
+                <div class="ci-scorecard-icon">🧪</div>
+                <div class="ci-scorecard-details">
+                    <div class="ci-scorecard-title" data-i18n="scorecard_unit_tests">Unit Test Scripts</div>
+                    <div class="ci-scorecard-value" id="scorecard-unit-count">--</div>
+                    <div class="ci-scorecard-sub" data-i18n="scorecard_unit_desc">tests/unit/*.sh</div>
+                </div>
+            </div>
+            <div class="ci-scorecard-card">
+                <div class="ci-scorecard-icon">🌐</div>
+                <div class="ci-scorecard-details">
+                    <div class="ci-scorecard-title" data-i18n="scorecard_i18n">i18n Parity (Rule 9)</div>
+                    <div class="ci-scorecard-value" id="scorecard-i18n-status">6/6 Langs (100%)</div>
+                    <div class="ci-scorecard-sub" data-i18n="scorecard_i18n_desc">EN/ET/FI/SV/LV/LT</div>
+                </div>
+            </div>
+            <div class="ci-scorecard-card">
+                <div class="ci-scorecard-icon">🛡️</div>
+                <div class="ci-scorecard-details">
+                    <div class="ci-scorecard-title" data-i18n="scorecard_portability">Portability (Rule 13)</div>
+                    <div class="ci-scorecard-value" id="scorecard-portability-status">Clean (0 errors)</div>
+                    <div class="ci-scorecard-sub" data-i18n="scorecard_portability_desc">Win/macOS/Linux</div>
+                </div>
+            </div>
+            <div class="ci-scorecard-card">
+                <div class="ci-scorecard-icon">📊</div>
+                <div class="ci-scorecard-details">
+                    <div class="ci-scorecard-title" data-i18n="scorecard_coverage">Script Coverage</div>
+                    <div class="ci-scorecard-value" id="scorecard-coverage-value">--%</div>
+                    <div class="ci-scorecard-sub" id="scorecard-coverage-sub">-- / -- scripts</div>
+                </div>
+            </div>
+            <div class="ci-scorecard-card">
+                <div class="ci-scorecard-icon">🐙</div>
+                <div class="ci-scorecard-details">
+                    <div class="ci-scorecard-title" data-i18n="scorecard_ci_gate">GitHub CI Gate</div>
+                    <div class="ci-scorecard-value" style="color:var(--success);">Pass Ready</div>
+                    <div class="ci-scorecard-sub" data-i18n="scorecard_ci_gate_desc">All gates pass</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testing Sub-Navigation -->
+        <div class="testing-subnav">
+            <button class="testing-subnav-btn active" id="btn-subtab-runner" onclick="switchTestingSubTab('runner')">
+                <span>🚀</span> <span data-i18n="test_subtab_runner">Käivitus & Test Suites</span>
+            </button>
+            <button class="testing-subnav-btn" id="btn-subtab-reports" onclick="switchTestingSubTab('reports')">
+                <span>📑</span> <span data-i18n="test_subtab_reports">Aruanded & Raportid</span>
+            </button>
+            <button class="testing-subnav-btn" id="btn-subtab-coverage" onclick="switchTestingSubTab('coverage')">
+                <span>📊</span> <span data-i18n="test_subtab_coverage">Koodi Kaetus</span>
+            </button>
+            <button class="testing-subnav-btn" id="btn-subtab-history" onclick="switchTestingSubTab('history')">
+                <span>📜</span> <span data-i18n="test_subtab_history">Käivituste Ajalugu</span>
+            </button>
+        </div>
+
+        <!-- SUBTAB 1: RUNNER (TEST SUITES & EMBEDDED TERMINAL) -->
+        <div id="testing-subtab-runner" class="testing-subtab-content active">
+            <!-- Suites Grid -->
+            <div class="grid" id="testing-suites-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                <!-- Populated dynamically by JS -->
+            </div>
+
+            <!-- Embedded Live Terminal Console (No modals) -->
+            <div class="embedded-terminal-container" id="testing-terminal-section">
+                <div class="embedded-terminal-header">
+                    <div class="embedded-terminal-title">
+                        <span class="terminal-dot red"></span>
+                        <span class="terminal-dot yellow"></span>
+                        <span class="terminal-dot green"></span>
+                        <span style="font-weight:600; margin-left:8px;" data-i18n="terminal_live_title">📺 Test Execution Console (Live Streaming)</span>
+                        <span id="test-terminal-task-badge" class="badge badge-secondary" style="font-size:0.7rem; margin-left:8px;">IDLE</span>
+                    </div>
+                    <div class="embedded-terminal-actions">
+                        <label style="font-size:0.75rem; color:#94a3b8; display:flex; align-items:center; gap:4px; cursor:pointer; margin-right:8px;">
+                            <input type="checkbox" id="test-terminal-autoscroll" checked /> <span data-i18n="terminal_autoscroll">Auto-scroll</span>
+                        </label>
+                        <button type="button" class="btn-compact btn-compact-secondary" onclick="clearTestTerminal()">
+                            <span>🧹</span> <span data-i18n="btn_clear">Clear</span>
+                        </button>
+                        <button type="button" class="btn-compact btn-compact-secondary" id="btn-download-test-log" onclick="downloadCurrentTestLog()" style="display:none;">
+                            <span>📥</span> <span data-i18n="btn_download_log">Logi</span>
+                        </button>
+                        <button type="button" class="btn-compact btn-compact-danger" id="btn-stop-test" onclick="stopActiveTest()" style="display:none;">
+                            <span>⏹️</span> <span data-i18n="btn_stop">Katkesta</span>
+                        </button>
+                    </div>
+                </div>
+                <pre class="embedded-terminal-body" id="testing-terminal-output"><span style="color:#64748b;">Ready. Select a test suite or specific script above to execute.
+Live stdout/stderr stream with millisecond timings will appear here.</span></pre>
+                <div class="embedded-terminal-footer">
+                    <div id="test-terminal-footer-status"><span data-i18n="terminal_status_ready">Olek: Valmis käivitamiseks</span></div>
+                    <div id="test-terminal-footer-timer">00:00:00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUBTAB 2: REPORTS ARCHIVE (SPLIT PANE) -->
+        <div id="testing-subtab-reports" class="testing-subtab-content" style="display:none;">
+            <div class="reports-split-container">
+                <div class="reports-sidebar">
+                    <div class="reports-sidebar-header">
+                        <input type="text" id="reports-search-input" onkeyup="filterTestReports(this.value)" placeholder="🔍 Otsi raportit..." class="reports-search-box" />
+                        <div class="reports-sidebar-stats" id="reports-count-badge">-- raportit</div>
+                    </div>
+                    <div class="reports-list" id="reports-list-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                <div class="reports-viewer">
+                    <div class="reports-viewer-header" id="report-viewer-header" style="display:none;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span id="report-viewer-badge" class="badge">PASS</span>
+                            <span id="report-viewer-title" style="font-weight:600; font-size:1rem; color:#f8fafc;">Report Title</span>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <span id="report-viewer-mtime" style="font-size:0.75rem; color:#64748b;">Timestamp</span>
+                            <button class="btn-compact btn-compact-secondary" id="btn-toggle-raw-report" onclick="toggleRawReportView()">Raw / Rendered</button>
+                        </div>
+                    </div>
+                    <div class="reports-viewer-body" id="report-viewer-content">
+                        <div style="color:#64748b; text-align:center; padding:40px;">Vali vasakult nimekirjast raport selle lugemiseks.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUBTAB 3: COVERAGE EXPLORER -->
+        <div id="testing-subtab-coverage" class="testing-subtab-content" style="display:none;">
+            <div class="coverage-kpi-bar">
+                <div class="coverage-bar-container">
+                    <div class="coverage-bar-label">
+                        <span style="font-weight:600;" data-i18n="coverage_overall_rate">Kogu platvormi testide kaetus</span>
+                        <span id="coverage-percent-display" style="font-weight:700; color:var(--primary);">--%</span>
+                    </div>
+                    <div class="coverage-progress-track">
+                        <div class="coverage-progress-fill" id="coverage-progress-fill" style="width:0%;"></div>
+                    </div>
+                </div>
+                <div class="coverage-stats-group">
+                    <div class="coverage-stat-item">
+                        <span class="cov-val" id="cov-total-scripts">--</span>
+                        <span class="cov-lbl" data-i18n="cov_total_scripts">Skripte kokku</span>
+                    </div>
+                    <div class="coverage-stat-item">
+                        <span class="cov-val text-success" id="cov-covered-scripts">--</span>
+                        <span class="cov-lbl" data-i18n="cov_covered_scripts">Kaetud testidega</span>
+                    </div>
+                    <div class="coverage-stat-item">
+                        <span class="cov-val text-danger" id="cov-uncovered-scripts">--</span>
+                        <span class="cov-lbl" data-i18n="cov_uncovered_scripts">Katmata skripte</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter & Search Toolbar -->
+            <div class="coverage-toolbar">
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <button class="btn-compact active" id="btn-cov-filter-all" onclick="filterCoverageScripts('all')">Kõik (<span id="cov-count-all">0</span>)</button>
+                    <button class="btn-compact" id="btn-cov-filter-covered" onclick="filterCoverageScripts('covered')">Kaetud (<span id="cov-count-covered">0</span>)</button>
+                    <button class="btn-compact" id="btn-cov-filter-uncovered" onclick="filterCoverageScripts('uncovered')">Katmata (<span id="cov-count-uncovered">0</span>)</button>
+                    <input type="text" id="coverage-search-input" onkeyup="filterCoverageTable(this.value)" placeholder="🔍 Otsi skripti (nt setup-all.sh)..." class="coverage-search-box" />
+                </div>
+                <div>
+                    <button type="button" class="btn-compact btn-compact-primary" onclick="refreshCoverageAnalysis()">
+                        <span>🔄</span> <span data-i18n="btn_refresh_coverage">Uuenda analüüsi</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Coverage Table -->
+            <div class="coverage-table-container">
+                <table class="coverage-table" id="coverage-table">
+                    <thead>
+                        <tr>
+                            <th style="width:40%;" data-i18n="cov_th_script">Skript (failitee)</th>
+                            <th style="width:15%;" data-i18n="cov_th_status">Staatus</th>
+                            <th style="width:45%;" data-i18n="cov_th_tests">Seotud testid</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coverage-table-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SUBTAB 4: EXECUTION HISTORY -->
+        <div id="testing-subtab-history" class="testing-subtab-content" style="display:none;">
+            <div class="history-toolbar">
+                <div style="font-weight:600; font-size:0.95rem; color:#f8fafc;" data-i18n="test_history_title">📜 Hiljutised testide käivitused</div>
+                <button type="button" class="btn-compact btn-compact-secondary" onclick="loadTestHistory()">
+                    <span>🔄</span> <span data-i18n="btn_refresh">Uuenda</span>
+                </button>
+            </div>
+            <div class="history-table-container">
+                <table class="history-table" id="test-history-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="hist_th_time">Aeg</th>
+                            <th data-i18n="hist_th_suite">Test / Suite</th>
+                            <th data-i18n="hist_th_status">Tulemus</th>
+                            <th data-i18n="hist_th_duration">Kestus</th>
+                            <th data-i18n="hist_th_log">Logifail</th>
+                            <th data-i18n="hist_th_action">Tegevus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="test-history-tbody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- TAB 6: LOGS & BENCHMARKS -->
     <div id="tab-benchmarks" class="tab-content">
         <div class="section-title">
@@ -1552,6 +1782,10 @@ const ACTIVE_BP_MERMAID = %ACTIVE_BP_MERMAID_JSON%;
 const BENCHMARKS_DATA = %BENCHMARKS_DATA_JSON%;
 const RESET_BENCHMARKS_DATA = %RESET_BENCHMARKS_DATA_JSON%;
 const LOGS_DATA = %LOGS_DATA_JSON%;
+const TEST_SUITES_DATA = %TEST_SUITES_JSON%;
+const TEST_REPORTS_DATA = %TEST_REPORTS_JSON%;
+const TEST_COVERAGE_DATA = %TEST_COVERAGE_JSON%;
+const TEST_HISTORY_DATA = %TEST_HISTORY_JSON%;
 
 let currentSelectedDocIdx = 0;
 let currentSelectedLogIdx = 0;

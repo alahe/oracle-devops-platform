@@ -148,6 +148,7 @@ Dev Hub toimib tervikliku juhtpaneelina teenuste ja blueprintide haldamiseks:
 - **Edasilükatud `.active_blueprint` lukk:** Salvestatakse kettale rangelt alles pärast 100% verifitseerimise õnnestumist.
 - **1-Kliki Parooli Kopeerimine:** Paroolid dekrüpteeritakse vajaduspõhiselt otse mälus Oracle SEPS Walletist.
 - **ORDS Nutivärava Paneel:** Reaalajas ülevaade keskse ORDS konteineri tervisest, dünaamilistest ühenduste poolidest, reageerimisajast (ms) ja 1-kliki sünkroonimisest.
+- **Automaattestimise Keskus & Kvaliteedivärav (🧪 Testimine):** Interaktiivne testikomplektide käivitaja (Unit, Integration, Live Platform, i18n Pariteet, Failinimede Portatiivsus), sisseehitatud reaalajas terminalivoog (ilma blokeerivate hüpikakendeta), Markdown testiaruannete kahepaaniline lugeja, koodikaetuse sirvija ja püsiv käivituste ajalugu. Vaata [docs/et/testing-framework-and-devhub.md](testing-framework-and-devhub.md).
 
 ---
 

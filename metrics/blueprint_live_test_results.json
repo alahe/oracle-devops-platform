@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-07 10:29:02",
+  "timestamp": "2026-09-07 11:23:53",
   "total_blueprints": 3,
   "passed": 3,
   "failed": 0,
@@ -20,7 +20,7 @@
       "blueprint_num": "6",
       "name": "6-standalone-forms",
       "status": "PASS",
-      "duration_seconds": 1,
+      "duration_seconds": 0,
       "containers": "db-forms app-forms",
       "fail_reason": "",
       "log_file": ""
@@ -29,7 +29,7 @@
       "blueprint_num": "7",
       "name": "7-consolidated-forms-publisher",
       "status": "PASS",
-      "duration_seconds": 0,
+      "duration_seconds": 1,
       "containers": "db-publisher app-forms app-publisher",
       "fail_reason": "",
       "log_file": ""

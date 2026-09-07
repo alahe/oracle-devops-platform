@@ -22,6 +22,12 @@ from .diagnostics import (
     find_latest_log_for_blueprint,
 )
 from .cards import render_service_cards, render_wallet_table_rows
+from .testing import (
+    get_test_suites_catalog,
+    get_test_reports_list,
+    get_test_coverage_data,
+    get_test_execution_history,
+)
 
 WORKSPACE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
@@ -368,6 +374,12 @@ def build_dev_hub(output_file=None, workspace_dir=None):
                     "latency_ms": 0
                 }
 
+    # 9.6 Gather test suites, reports, coverage and history
+    test_suites_data = get_test_suites_catalog(ws)
+    test_reports_data = get_test_reports_list(ws)
+    test_coverage_data = get_test_coverage_data(ws)
+    test_history_data = get_test_execution_history(ws)
+
     # 10. Assemble Standalone HTML
     replacements = {
         "%STYLE_CSS%": style_css,
@@ -387,7 +399,11 @@ def build_dev_hub(output_file=None, workspace_dir=None):
         "%ORDS_POOLS_JSON%": json.dumps(ords_pools_init),
         "%LIVE_MODULES_JSON%": json.dumps(live_modules),
         "%SLIDES_CONTENT_JSON%": json.dumps(SLIDES_CONTENT),
-        "%PASSWORDS_MAP_JSON%": json.dumps(passwords_map)
+        "%PASSWORDS_MAP_JSON%": json.dumps(passwords_map),
+        "%TEST_SUITES_JSON%": json.dumps(test_suites_data, ensure_ascii=False),
+        "%TEST_REPORTS_JSON%": json.dumps(test_reports_data, ensure_ascii=False),
+        "%TEST_COVERAGE_JSON%": json.dumps(test_coverage_data, ensure_ascii=False),
+        "%TEST_HISTORY_JSON%": json.dumps(test_history_data, ensure_ascii=False)
     }
 
     final_html = layout_tpl

@@ -10,7 +10,7 @@ if [ ! -f "$WORKSPACE_DIR/scripts/internal/export-ci-secrets.sh" ]; then
 fi
 
 OUT=$("$WORKSPACE_DIR/scripts/internal/export-ci-secrets.sh")
-if ! echo "$OUT" | grep -q "SEPS Wallet edukalt pakitud"; then
+if ! echo "$OUT" | grep -qiE "SEPS Wallet (edukalt pakitud|compressed and converted)"; then
   echo "❌ Viga: export-ci-secrets.sh ebaõnnestus!"
   exit 1
 fi

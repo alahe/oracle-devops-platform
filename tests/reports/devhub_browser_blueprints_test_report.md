@@ -1,6 +1,6 @@
 # 🧪 Dev-Hub Browser Blueprints E2E Testiraport
 
-- **Aeg:** 2026-09-07 10:28:41 EEST
+- **Aeg:** 2026-09-07 11:23:35 EEST
 - **Testitud Blueprintide arv:** 12
 - **Õnnestus:** 12
 - **Ebaõnnestus:** 0
@@ -12,18 +12,18 @@
 
 | Blueprint | Nimi & Profiil | Kestus | Olek | Märkused |
 | :---: | :--- | :---: | :---: | :--- |
-| **#0** | 0-default-proxy-ords | 2s | ✅ **PASS** | URLs & Mälupõhine Login OK |
-| **#1** | 1-standalone-alise-db | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
-| **#2** | 2-standalone-proxy-db | 2s | ✅ **PASS** | URLs & Mälupõhine Login OK |
+| **#0** | 0-default-proxy-ords | 1s | ✅ **PASS** | URLs & Mälupõhine Login OK |
+| **#1** | 1-standalone-alise-db | 1s | ✅ **PASS** | URLs & Mälupõhine Login OK |
+| **#2** | 2-standalone-proxy-db | 1s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 | **#3** | 3-standalone-gvenzl-db | 1s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 | **#4** | 4-standalone-autonomous-db | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
-| **#5** | 5-standalone-publisher | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
+| **#5** | 5-standalone-publisher | 1s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 | **#6** | 6-standalone-forms | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
-| **#7** | 7-consolidated-forms-publisher | 1s | ✅ **PASS** | URLs & Mälupõhine Login OK |
+| **#7** | 7-consolidated-forms-publisher | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 | **#8** | 8-standalone-web-ide | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 | **#9** | 9-standalone-publisher-designer | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 | **#10** | 10-remote-ords | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
-| **#11** | 11-remote-publisher | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
+| **#11** | 11-remote-publisher | 1s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 
 ## 🧠 Ressursihaldus ja RAM Watchdog Sündmused
 

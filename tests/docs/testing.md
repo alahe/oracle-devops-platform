@@ -2,6 +2,8 @@
 
 See dokument kirjeldab testimismetoodikat, testjuhtumeid ja samme, mille abil verifitseerida mitme APEX/ORDS versiooni paralleelset tööd, Autonomous Database (ADB) režiimi ning lokaalset Transparent Data Encryption (TDE) andmete krüpteerimist.
 
+> **UUS:** Interaktiivseks testimiseks otse brauserist kasuta Developer Hubi **🧪 Testimine** vahelehte (`docs/dev-hub.html`) ja tutvu tehnilise arhitektuuriga: [docs/testing-framework-and-devhub.md](../../docs/testing-framework-and-devhub.md).
+
 ---
 
 ### Testjuhtum F0: Dünaamiliste profiilide ja topoloogia testimine (`test-db-profiles-and-topology.sh`)

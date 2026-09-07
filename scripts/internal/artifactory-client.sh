@@ -64,12 +64,17 @@ artifactory_is_configured() {
 artifactory_get_auth_header() {
   local token=""
 
-  # 1. Try Azure Key Vault JIT query if configured
-  if [ -n "$AZURE_KEYVAULT_NAME" ] && command -v az >/dev/null 2>&1; then
+  # 1. Direct environment variable if explicitly supplied (e.g. CI runner or test suite)
+  if [ -n "${ARTIFACTORY_TOKEN:-}" ]; then
+    token="$ARTIFACTORY_TOKEN"
+  fi
+
+  # 2. Try Azure Key Vault JIT query if configured
+  if [ -z "$token" ] && [ -n "$AZURE_KEYVAULT_NAME" ] && command -v az >/dev/null 2>&1; then
     token=$(az keyvault secret show --vault-name "$AZURE_KEYVAULT_NAME" --name "$ARTIFACTORY_SECRET_NAME" --query value -o tsv 2>/dev/null || echo "")
   fi
 
-  # 2. Try Oracle SEPS Wallet if Azure Key Vault didn't return a token
+  # 3. Try Oracle SEPS Wallet if Azure Key Vault / env didn't return a token
   if [ -z "$token" ] && [ -x "$WORKSPACE_DIR/scripts/get-password.sh" ]; then
     token=$("$WORKSPACE_DIR/scripts/get-password.sh" "ARTIFACTORY_TOKEN" 2>/dev/null | tr -d '\r\n ' || echo "")
     if [ -z "$token" ] || [[ "$token" == *"❌"* ]] || [[ "$token" == *"Viga"* ]] || [[ "$token" == *"Error"* ]]; then
@@ -81,11 +86,6 @@ artifactory_get_auth_header() {
       fi
       token=""
     fi
-  fi
-
-  # 3. Try environment variable fallback if allowed
-  if [ -z "$token" ] && [ -n "${ARTIFACTORY_TOKEN:-}" ]; then
-    token="$ARTIFACTORY_TOKEN"
   fi
 
   if [ -n "$token" ]; then

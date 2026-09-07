@@ -44,6 +44,26 @@ DOC_SPECS = [
         }
     },
     {
+        "id": "testing-framework",
+        "rel": "docs/testing-framework-and-devhub.md",
+        "titles": {
+            "en": "🧪 Automated Testing Framework & Dev Hub",
+            "et": "🧪 Automaattestimise Raamistik & Dev Hub",
+            "fi": "🧪 Automaattitestauskehys & Dev Hub",
+            "sv": "🧪 Automatiserat Testramverk & Dev Hub",
+            "lv": "🧪 Automatizētās Testēšanas Ietvars & Dev Hub",
+            "lt": "🧪 Automatizuoto Testavimo Sistema & Dev Hub"
+        },
+        "files": {
+            "en": "docs/testing-framework-and-devhub.md",
+            "et": "docs/et/testing-framework-and-devhub.md",
+            "fi": "docs/fi/testing-framework-and-devhub.md",
+            "sv": "docs/sv/testing-framework-and-devhub.md",
+            "lv": "docs/lv/testing-framework-and-devhub.md",
+            "lt": "docs/lt/testing-framework-and-devhub.md"
+        }
+    },
+    {
         "id": "db-topology",
         "rel": "docs/db-profiles-and-topology.md",
         "titles": {

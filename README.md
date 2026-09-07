@@ -148,6 +148,7 @@ The **Dev Hub** acts as the unified cockpit for managing services and blueprints
 - **Delayed Verified `.active_blueprint` Confirmation:** The active blueprint marker is persisted strictly after 100% of PDB initializations, SEPS Wallet tests, and URL checks succeed.
 - **1-Click Password Copying:** Decrypts passwords dynamically in-memory from Oracle Wallet straight to clipboard.
 - **ORDS Smart Gateway Strip:** Real-time visibility into central ORDS container health, dynamic connection pools, live probe latency (ms), and 1-click pool synchronization.
+- **Automated Testing Center & Quality Gate (🧪 Testimine):** Interactive test suite runner (Unit, Integration, Live Platform, i18n Parity, Filename Portability), embedded live streaming terminal console (no blocking modals), Markdown test reports split-pane viewer, script code coverage explorer, and persistent test execution history. See [docs/testing-framework-and-devhub.md](docs/testing-framework-and-devhub.md).
 
 ---
 

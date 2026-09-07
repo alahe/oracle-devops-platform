@@ -27,6 +27,8 @@ function switchTab(tabId) {
       loadSnapshotsTable();
     } else if (tabId === 'tab-podman') {
       loadPodmanResources();
+    } else if (tabId === 'tab-testing') {
+      initTestingTab();
     }
   }
 }
@@ -4958,6 +4960,595 @@ async function triggerDeepReset(bNum, btn) {
   }
 }
 
+/* ==============================================================================
+ * TAB-TESTING: AUTOMATED TESTING CENTER & CI QUALITY GATE CONTROLLER
+ * ============================================================================== */
+
+let currentTestingSubTab = 'runner';
+let activeTestTaskId = null;
+let testPollInterval = null;
+let testTimerInterval = null;
+let testTimerSeconds = 0;
+let currentTestLogPath = null;
+let loadedTestReports = [];
+let selectedReport = null;
+let isRawReportView = false;
+let selectedReportRawContent = '';
+let loadedCoverageData = null;
+let currentCoverageFilter = 'all';
+let currentCoverageSearch = '';
+let isTestingInitialized = false;
+
+function escapeTestHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function initTestingTab() {
+  if (!isTestingInitialized) {
+    isTestingInitialized = true;
+    updateCiReadinessScorecard();
+    renderTestingSuites(window.TEST_SUITES_DATA || {});
+    renderTestReportsList(window.TEST_REPORTS_DATA || []);
+    renderCoverageExplorer(window.TEST_COVERAGE_DATA || {});
+    renderTestHistoryTable(window.TEST_HISTORY_DATA || []);
+  }
+
+  // Live refresh from Bridge if available
+  fetch(`${BRIDGE_URL}/api/tests/suites`)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.suites) {
+        window.TEST_SUITES_DATA = data.suites;
+        renderTestingSuites(data.suites);
+        updateCiReadinessScorecard();
+      }
+    })
+    .catch(() => {});
+
+  fetch(`${BRIDGE_URL}/api/tests/reports`)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.reports) {
+        loadedTestReports = data.reports;
+        renderTestReportsList(data.reports);
+      }
+    })
+    .catch(() => {});
+
+  fetch(`${BRIDGE_URL}/api/tests/coverage`)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.coverage) {
+        loadedCoverageData = data.coverage;
+        renderCoverageExplorer(data.coverage);
+        updateCiReadinessScorecard();
+      }
+    })
+    .catch(() => {});
+
+  loadTestHistory();
+}
+
+function updateCiReadinessScorecard() {
+  const suites = window.TEST_SUITES_DATA || {};
+  const unitCount = (suites.unit && suites.unit.count) ? suites.unit.count : 29;
+  const unitEl = document.getElementById('scorecard-unit-count');
+  if (unitEl) unitEl.innerText = `${unitCount} tests`;
+
+  const cov = loadedCoverageData || window.TEST_COVERAGE_DATA || {};
+  const covPercent = cov.percent !== undefined ? cov.percent : 0;
+  const covValEl = document.getElementById('scorecard-coverage-value');
+  const covSubEl = document.getElementById('scorecard-coverage-sub');
+  if (covValEl) covValEl.innerText = `${covPercent}%`;
+  if (covSubEl) covSubEl.innerText = `${cov.covered || 0} / ${cov.total || 0} scripts`;
+}
+
+function switchTestingSubTab(subTabId) {
+  currentTestingSubTab = subTabId;
+  document.querySelectorAll('.testing-subnav-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.testing-subtab-content').forEach(c => {
+    c.classList.remove('active');
+    c.style.display = 'none';
+  });
+
+  const activeBtn = document.getElementById(`btn-subtab-${subTabId}`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const activeContent = document.getElementById(`testing-subtab-${subTabId}`);
+  if (activeContent) {
+    activeContent.classList.add('active');
+    activeContent.style.display = 'block';
+  }
+}
+
+function renderTestingSuites(suites) {
+  const grid = document.getElementById('testing-suites-grid');
+  if (!grid) return;
+  const lang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = (typeof I18N !== 'undefined' && (I18N[lang] || I18N['en'])) || {};
+
+  let html = '';
+  Object.values(suites || {}).forEach(suite => {
+    const hasSingleTests = suite.tests && suite.tests.length > 1;
+    let selectOptions = '';
+    if (hasSingleTests) {
+      selectOptions = `<select id="select-suite-${suite.key}" class="test-script-select">
+        <option value="">-- ${dict.test_select_individual || 'Üksik skript'} --</option>
+        ${suite.tests.map(t => `<option value="${t}">${t}</option>`).join('')}
+      </select>`;
+    }
+
+    html += `
+      <div class="test-suite-card">
+        <div>
+          <div class="test-suite-header">
+            <div class="test-suite-title">
+              <span>${suite.icon || '🧪'}</span>
+              <span>${suite.title}</span>
+            </div>
+            <span class="badge badge-info" style="font-size:0.7rem;">${suite.count} ${suite.count === 1 ? 'test' : 'tests'}</span>
+          </div>
+          <div class="test-suite-desc">${suite.desc}</div>
+        </div>
+        <div class="test-suite-actions">
+          <div style="display:flex; align-items:center; gap:6px;">
+            ${selectOptions}
+            ${hasSingleTests ? `
+              <button type="button" class="btn-compact btn-compact-secondary" style="font-size:0.75rem;" onclick="runSingleSuiteTest('${suite.key}')" title="Käivita valitud skript">
+                <span>▶️</span>
+              </button>
+            ` : ''}
+          </div>
+          <button type="button" class="btn-compact btn-compact-primary" onclick="runTestSuite('${suite.key}')">
+            <span>▶️</span> <span>${dict.btn_run_suite || 'Käivita kõik'}</span>
+          </button>
+        </div>
+      </div>
+    `;
+  });
+  grid.innerHTML = html;
+}
+
+function runSingleSuiteTest(suiteKey) {
+  const sel = document.getElementById(`select-suite-${suiteKey}`);
+  const scriptName = sel ? sel.value : '';
+  if (!scriptName) {
+    alert('Palun vali rippmenüüst konkreetne skript!');
+    return;
+  }
+  runTestSuite(suiteKey, scriptName);
+}
+
+function runTestSuite(suiteKey, scriptName) {
+  if (activeTestTaskId) {
+    if (!confirm('Üks test on juba käimas. Kas soovid selle katkestada ja alustada uut?')) {
+      return;
+    }
+    stopActiveTest();
+  }
+
+  if (currentTestingSubTab !== 'runner') {
+    switchTestingSubTab('runner');
+  }
+
+  const termEl = document.getElementById('testing-terminal-output');
+  const badgeEl = document.getElementById('test-terminal-task-badge');
+  const statusEl = document.getElementById('test-terminal-footer-status');
+  const timerEl = document.getElementById('test-terminal-footer-timer');
+  const activeIndEl = document.getElementById('testing-active-indicator');
+  const stopBtn = document.getElementById('btn-stop-test');
+  const dlBtn = document.getElementById('btn-download-test-log');
+
+  const testLabel = scriptName ? `${suiteKey} (${scriptName})` : suiteKey;
+  if (termEl) {
+    termEl.innerHTML = `🚀 Initializing test run: [${testLabel}]...\nDispatching background runner via bridge...\n`;
+  }
+  if (badgeEl) {
+    badgeEl.className = 'badge badge-warning';
+    badgeEl.innerText = 'RUNNING';
+  }
+  if (statusEl) statusEl.innerText = `Olek: Käimas [${testLabel}]`;
+  if (activeIndEl) {
+    activeIndEl.style.display = 'inline-block';
+    activeIndEl.innerText = `⏳ Test running: ${testLabel}`;
+  }
+  if (stopBtn) stopBtn.style.display = 'inline-flex';
+  if (dlBtn) dlBtn.style.display = 'none';
+
+  testTimerSeconds = 0;
+  if (timerEl) timerEl.innerText = '00:00:00';
+  if (testTimerInterval) clearInterval(testTimerInterval);
+  testTimerInterval = setInterval(() => {
+    testTimerSeconds++;
+    const h = String(Math.floor(testTimerSeconds / 3600)).padStart(2, '0');
+    const m = String(Math.floor((testTimerSeconds % 3600) / 60)).padStart(2, '0');
+    const s = String(testTimerSeconds % 60).padStart(2, '0');
+    if (timerEl) timerEl.innerText = `${h}:${m}:${s}`;
+  }, 1000);
+
+  fetch(`${BRIDGE_URL}/api/tests/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ suite: suiteKey, script: scriptName || '' })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'started' || data.status === 'running') {
+      activeTestTaskId = data.task_id || 'test_runner';
+      currentTestLogPath = data.log_file || null;
+      if (dlBtn && currentTestLogPath) dlBtn.style.display = 'inline-flex';
+      startPollingTestRunner();
+    } else {
+      throw new Error(data.message || 'Failed to start test');
+    }
+  })
+  .catch(err => {
+    if (termEl) termEl.innerHTML += `\n❌ Failed to launch test: ${err.message}\nEnsure dev-hub-bridge.py is running on port 8089.`;
+    finishActiveTest('FAILED', -1);
+  });
+}
+
+function startPollingTestRunner() {
+  if (testPollInterval) clearInterval(testPollInterval);
+  testPollInterval = setInterval(pollTestRunnerStatus, 1500);
+}
+
+function pollTestRunnerStatus() {
+  if (!activeTestTaskId) return;
+
+  fetch(`${BRIDGE_URL}/api/task/status?task=test_runner`)
+    .then(r => r.json())
+    .then(data => {
+      const termEl = document.getElementById('testing-terminal-output');
+      const autoScroll = document.getElementById('test-terminal-autoscroll')?.checked;
+
+      if (data.stdout && termEl) {
+        termEl.innerText = data.stdout;
+        if (autoScroll) {
+          termEl.scrollTop = termEl.scrollHeight;
+        }
+      }
+
+      if (data.status === 'completed') {
+        finishActiveTest('PASSED', 0);
+      } else if (data.status === 'failed') {
+        finishActiveTest('FAILED', data.exit_code || 1);
+      }
+    })
+    .catch(() => {});
+}
+
+function finishActiveTest(status, exitCode) {
+  if (testPollInterval) {
+    clearInterval(testPollInterval);
+    testPollInterval = null;
+  }
+  if (testTimerInterval) {
+    clearInterval(testTimerInterval);
+    testTimerInterval = null;
+  }
+  activeTestTaskId = null;
+
+  const badgeEl = document.getElementById('test-terminal-task-badge');
+  const statusEl = document.getElementById('test-terminal-footer-status');
+  const activeIndEl = document.getElementById('testing-active-indicator');
+  const stopBtn = document.getElementById('btn-stop-test');
+  const dlBtn = document.getElementById('btn-download-test-log');
+
+  if (badgeEl) {
+    badgeEl.className = status === 'PASSED' ? 'badge badge-success' : 'badge badge-danger';
+    badgeEl.innerText = status === 'PASSED' ? 'PASSED (0)' : `FAILED (${exitCode})`;
+  }
+  if (statusEl) {
+    statusEl.innerText = status === 'PASSED' ? 'Olek: Test edukalt läbitud ✅' : `Olek: Test ebaõnnestus (kood ${exitCode}) ❌`;
+  }
+  if (activeIndEl) activeIndEl.style.display = 'none';
+  if (stopBtn) stopBtn.style.display = 'none';
+  if (dlBtn && currentTestLogPath) dlBtn.style.display = 'inline-flex';
+
+  setTimeout(() => {
+    loadTestHistory();
+    fetch(`${BRIDGE_URL}/api/tests/reports`).then(r=>r.json()).then(d=>{ if(d.reports) renderTestReportsList(d.reports); }).catch(()=>{});
+    fetch(`${BRIDGE_URL}/api/tests/coverage`).then(r=>r.json()).then(d=>{ if(d.coverage) { loadedCoverageData = d.coverage; renderCoverageExplorer(d.coverage); updateCiReadinessScorecard(); } }).catch(()=>{});
+  }, 1000);
+}
+
+function stopActiveTest() {
+  fetch(`${BRIDGE_URL}/api/tests/stop`, { method: 'POST' })
+    .then(r => r.json())
+    .then(() => {
+      const termEl = document.getElementById('testing-terminal-output');
+      if (termEl) termEl.innerText += '\n⚠️ Process terminated by user signal.\n';
+      finishActiveTest('STOPPED', 130);
+    })
+    .catch(err => alert('Viga testimise peatamisel: ' + err.message));
+}
+
+function clearTestTerminal() {
+  const termEl = document.getElementById('testing-terminal-output');
+  if (termEl) termEl.innerText = '';
+}
+
+function downloadCurrentTestLog() {
+  if (!currentTestLogPath) {
+    alert('Logifaili tee puudub!');
+    return;
+  }
+  window.open(`${BRIDGE_URL}/api/tests/report-content?file=${encodeURIComponent(currentTestLogPath)}`, '_blank');
+}
+
+/* Reports Split-Pane */
+function renderTestReportsList(reports) {
+  loadedTestReports = reports || [];
+  const listEl = document.getElementById('reports-list-container');
+  const badgeEl = document.getElementById('reports-count-badge');
+  if (!listEl) return;
+  if (badgeEl) badgeEl.innerText = `${loadedTestReports.length} raportit`;
+
+  if (loadedTestReports.length === 0) {
+    listEl.innerHTML = '<div style="color:#64748b; padding:16px; text-align:center;">Raporteid ei leitud.</div>';
+    return;
+  }
+
+  let html = '';
+  loadedTestReports.forEach((rep, idx) => {
+    const badgeClass = rep.status === 'PASS' ? 'badge-success' : (rep.status === 'FAIL' ? 'badge-danger' : 'badge-info');
+    const isSelected = selectedReport && selectedReport.name === rep.name;
+    html += `
+      <div class="report-item ${isSelected ? 'active' : ''}" onclick="selectTestReport(${idx})">
+        <div class="report-item-title">${escapeTestHtml(rep.title || rep.name)}</div>
+        <div class="report-item-meta">
+          <span class="badge ${badgeClass}" style="font-size:0.65rem; padding:1px 5px;">${rep.status}</span>
+          <span>${rep.mtime || ''}</span>
+        </div>
+      </div>
+    `;
+  });
+  listEl.innerHTML = html;
+
+  if (!selectedReport && loadedTestReports.length > 0) {
+    selectTestReport(0);
+  }
+}
+
+function filterTestReports(query) {
+  const q = (query || '').toLowerCase().trim();
+  if (!q) {
+    renderTestReportsList(loadedTestReports);
+    return;
+  }
+  const filtered = loadedTestReports.filter(r => 
+    (r.title && r.title.toLowerCase().includes(q)) || 
+    (r.name && r.name.toLowerCase().includes(q))
+  );
+  const listEl = document.getElementById('reports-list-container');
+  if (listEl) {
+    let html = '';
+    filtered.forEach((rep) => {
+      const origIdx = loadedTestReports.findIndex(x => x.name === rep.name);
+      const badgeClass = rep.status === 'PASS' ? 'badge-success' : (rep.status === 'FAIL' ? 'badge-danger' : 'badge-info');
+      html += `
+        <div class="report-item" onclick="selectTestReport(${origIdx})">
+          <div class="report-item-title">${escapeTestHtml(rep.title || rep.name)}</div>
+          <div class="report-item-meta">
+            <span class="badge ${badgeClass}" style="font-size:0.65rem; padding:1px 5px;">${rep.status}</span>
+            <span>${rep.mtime || ''}</span>
+          </div>
+        </div>
+      `;
+    });
+    listEl.innerHTML = html;
+  }
+}
+
+function selectTestReport(idx) {
+  const rep = loadedTestReports[idx];
+  if (!rep) return;
+  selectedReport = rep;
+
+  document.querySelectorAll('.report-item').forEach((el, i) => {
+    el.classList.toggle('active', i === idx);
+  });
+
+  loadTestReportContent(rep.name, rep.rel_path, rep.title, rep.status, rep.mtime);
+}
+
+function loadTestReportContent(name, relPath, title, status, mtime) {
+  const headerEl = document.getElementById('report-viewer-header');
+  const titleEl = document.getElementById('report-viewer-title');
+  const badgeEl = document.getElementById('report-viewer-badge');
+  const mtimeEl = document.getElementById('report-viewer-mtime');
+  const bodyEl = document.getElementById('report-viewer-content');
+
+  if (headerEl) headerEl.style.display = 'flex';
+  if (titleEl) titleEl.innerText = title || name;
+  if (badgeEl) {
+    badgeEl.className = status === 'PASS' ? 'badge badge-success' : (status === 'FAIL' ? 'badge badge-danger' : 'badge badge-info');
+    badgeEl.innerText = status || 'INFO';
+  }
+  if (mtimeEl) mtimeEl.innerText = mtime || '';
+
+  if (bodyEl) {
+    bodyEl.innerHTML = '<div style="color:#94a3b8; text-align:center; padding:40px;">⏳ Laadin raporti sisu...</div>';
+  }
+
+  fetch(`${BRIDGE_URL}/api/tests/report-content?file=${encodeURIComponent(relPath || ('tests/reports/' + name))}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.content !== undefined) {
+        selectedReportRawContent = data.content;
+        renderCurrentReportContent();
+      } else {
+        throw new Error(data.error || 'Failed to read content');
+      }
+    })
+    .catch(err => {
+      if (bodyEl) {
+        bodyEl.innerHTML = `<div style="color:#ef4444; padding:20px;">Viga raporti laadimisel: ${err.message}</div>`;
+      }
+    });
+}
+
+function renderCurrentReportContent() {
+  const bodyEl = document.getElementById('report-viewer-content');
+  if (!bodyEl) return;
+
+  if (isRawReportView) {
+    bodyEl.innerHTML = `<pre style="font-size:0.8rem; line-height:1.4; color:#e2e8f0; white-space:pre-wrap;">${escapeTestHtml(selectedReportRawContent)}</pre>`;
+  } else {
+    try {
+      bodyEl.innerHTML = marked.parse(selectedReportRawContent);
+      try {
+        mermaid.run({ nodes: bodyEl.querySelectorAll('.mermaid') });
+      } catch (e) {}
+    } catch (err) {
+      bodyEl.innerHTML = `<pre style="white-space:pre-wrap;">${escapeTestHtml(selectedReportRawContent)}</pre>`;
+    }
+  }
+}
+
+function toggleRawReportView() {
+  isRawReportView = !isRawReportView;
+  renderCurrentReportContent();
+}
+
+/* Coverage Explorer */
+function renderCoverageExplorer(covData) {
+  loadedCoverageData = covData || loadedCoverageData || {};
+  const data = loadedCoverageData;
+  const pct = data.percent !== undefined ? data.percent : 0;
+
+  const pctEl = document.getElementById('coverage-percent-display');
+  const fillEl = document.getElementById('coverage-progress-fill');
+  const totalEl = document.getElementById('cov-total-scripts');
+  const coveredEl = document.getElementById('cov-covered-scripts');
+  const uncoveredEl = document.getElementById('cov-uncovered-scripts');
+
+  if (pctEl) pctEl.innerText = `${pct}%`;
+  if (fillEl) fillEl.style.width = `${pct}%`;
+  if (totalEl) totalEl.innerText = data.total || 0;
+  if (coveredEl) coveredEl.innerText = data.covered || 0;
+  if (uncoveredEl) uncoveredEl.innerText = (data.total || 0) - (data.covered || 0);
+
+  const countAll = document.getElementById('cov-count-all');
+  const countCov = document.getElementById('cov-count-covered');
+  const countUncov = document.getElementById('cov-count-uncovered');
+  if (countAll) countAll.innerText = data.total || 0;
+  if (countCov) countCov.innerText = data.covered || 0;
+  if (countUncov) countUncov.innerText = (data.total || 0) - (data.covered || 0);
+
+  filterCoverageTable('');
+}
+
+function filterCoverageScripts(filterType) {
+  currentCoverageFilter = filterType;
+  document.querySelectorAll('#testing-subtab-coverage .coverage-toolbar button').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`btn-cov-filter-${filterType}`);
+  if (btn) btn.classList.add('active');
+  filterCoverageTable(currentCoverageSearch);
+}
+
+function filterCoverageTable(query) {
+  currentCoverageSearch = query || '';
+  const q = currentCoverageSearch.toLowerCase().trim();
+  const data = loadedCoverageData || {};
+  const scripts = data.scripts || [];
+  const tbody = document.getElementById('coverage-table-body');
+  if (!tbody) return;
+
+  const filtered = scripts.filter(s => {
+    if (currentCoverageFilter === 'covered' && !s.covered) return false;
+    if (currentCoverageFilter === 'uncovered' && s.covered) return false;
+    if (q && !s.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b; padding:20px;">Vasteid ei leitud.</td></tr>';
+    return;
+  }
+
+  let html = '';
+  filtered.forEach(s => {
+    const badge = s.covered 
+      ? '<span class="badge badge-success" style="font-size:0.7rem; padding:2px 7px;">✅ Kaetud</span>'
+      : '<span class="badge badge-danger" style="font-size:0.7rem; padding:2px 7px;">❌ Katmata</span>';
+
+    const testBadges = (s.tests && s.tests.length > 0)
+      ? s.tests.map(t => `<span class="badge badge-secondary" style="font-size:0.68rem; margin:2px 4px 2px 0; font-family:monospace;">${escapeTestHtml(t)}</span>`).join('')
+      : '<span style="color:#64748b; font-size:0.75rem;">-</span>';
+
+    html += `
+      <tr>
+        <td><code>${escapeTestHtml(s.name)}</code></td>
+        <td>${badge}</td>
+        <td>${testBadges}</td>
+      </tr>
+    `;
+  });
+  tbody.innerHTML = html;
+}
+
+function refreshCoverageAnalysis() {
+  runTestSuite('coverage');
+}
+
+/* History Table */
+function renderTestHistoryTable(history) {
+  const tbody = document.getElementById('test-history-tbody');
+  if (!tbody) return;
+  const list = history || [];
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b; padding:20px;">Testide käivituste ajalugu on tühi.</td></tr>';
+    return;
+  }
+
+  let html = '';
+  list.forEach(h => {
+    const isPass = h.status === 'PASS' || h.exit_code === 0;
+    const badge = isPass
+      ? '<span class="badge badge-success" style="font-size:0.7rem; padding:2px 7px;">PASS</span>'
+      : `<span class="badge badge-danger" style="font-size:0.7rem; padding:2px 7px;">FAIL (${h.exit_code})</span>`;
+
+    const logLink = h.log_file 
+      ? `<a href="${BRIDGE_URL}/api/tests/report-content?file=${encodeURIComponent(h.log_file)}" target="_blank" style="color:#38bdf8; font-size:0.75rem; text-decoration:none;">📄 ${h.log_file.split('/').pop()}</a>`
+      : '-';
+
+    html += `
+      <tr>
+        <td style="font-size:0.75rem; color:#94a3b8;">${escapeTestHtml(h.timestamp || '')}</td>
+        <td><strong>${escapeTestHtml(h.suite || '')}</strong> ${h.script ? `<code style="font-size:0.72rem; color:#93c5fd;">${escapeTestHtml(h.script)}</code>` : ''}</td>
+        <td>${badge}</td>
+        <td style="font-size:0.75rem; color:#94a3b8;">${h.duration_seconds || 0}s</td>
+        <td>${logLink}</td>
+        <td>
+          <button type="button" class="btn-compact btn-compact-secondary" style="font-size:0.72rem; padding:3px 8px;" onclick="runTestSuite('${h.suite}', '${h.script || ''}')">
+            <span>🔄</span> Re-run
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+  tbody.innerHTML = html;
+}
+
+function loadTestHistory() {
+  fetch(`${BRIDGE_URL}/api/tests/history`)
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.history) {
+        renderTestHistoryTable(data.history);
+      }
+    })
+    .catch(() => {});
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('dev_hub_lang') || 'en';
   setLanguage(saved);
@@ -4984,5 +5575,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const snapTab = document.getElementById('tab-snapshots');
   if (snapTab && snapTab.classList.contains('active')) {
     loadSnapshotsTable();
+  }
+
+  // Auto-load testing if tab active
+  const testTab = document.getElementById('tab-testing');
+  if (testTab && testTab.classList.contains('active')) {
+    initTestingTab();
   }
 });

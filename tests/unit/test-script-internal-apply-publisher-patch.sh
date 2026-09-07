@@ -8,13 +8,13 @@ RED='\033[0;31m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-echo -e "${CYAN}🧪 TEST: scripts/patches/apply-publisher-patch.sh${NC}"
-TARGET_SCRIPT="$WORKSPACE_DIR/scripts/patches/apply-publisher-patch.sh"
+echo -e "${CYAN}🧪 TEST: scripts/internal/apply-publisher-patch.sh${NC}"
+TARGET_SCRIPT="$WORKSPACE_DIR/scripts/internal/apply-publisher-patch.sh"
 
 if [ -f "$TARGET_SCRIPT" ]; then
   bash -n "$TARGET_SCRIPT"
   echo -e "${GREEN}✅ Test Edukas: internal/apply-publisher-patch.sh on olemas ja BASH süntaks on korras!${NC}"
 else
-  echo -e "${RED}❌ Test Ebaõnnestus: scripts/patches/apply-publisher-patch.sh puudub!${NC}"
+  echo -e "${RED}❌ Test Ebaõnnestus: scripts/internal/apply-publisher-patch.sh puudub!${NC}"
   exit 1
 fi

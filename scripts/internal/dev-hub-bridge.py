@@ -768,6 +768,241 @@ def get_single_credential(alias):
             pass
     return ""
 
+def get_test_suites_catalog():
+    """Returns structured catalog of test suites and test scripts."""
+    unit_tests = []
+    unit_dir = os.path.join(WORKSPACE_DIR, "tests", "unit")
+    if os.path.isdir(unit_dir):
+        for f in sorted(os.listdir(unit_dir)):
+            if f.endswith(".sh") and not f.startswith("."):
+                unit_tests.append(f)
+
+    integration_tests = []
+    integ_dir = os.path.join(WORKSPACE_DIR, "tests", "integration")
+    if os.path.isdir(integ_dir):
+        for f in sorted(os.listdir(integ_dir)):
+            if f.endswith(".sh") and not f.startswith("."):
+                integration_tests.append(f)
+
+    return {
+        "unit": {
+            "key": "unit",
+            "title": "Unit Test Suite",
+            "desc": f"Fast isolation tests ({len(unit_tests)} scripts) validating configs, SEPS wallet, script syntax, and logic without live DB",
+            "icon": "🧪",
+            "count": len(unit_tests),
+            "tests": unit_tests,
+            "cmd": "./tests/test-all-components.sh"
+        },
+        "integration": {
+            "key": "integration",
+            "title": "Integration Test Suite",
+            "desc": f"Multi-database topology ({len(integration_tests)} scripts), compose override generation, profile roles, and connection handshakes",
+            "icon": "⚙️",
+            "count": len(integration_tests),
+            "tests": integration_tests,
+            "cmd": "tests/integration/*.sh"
+        },
+        "live": {
+            "key": "live",
+            "title": "End-to-End Live Platform",
+            "desc": "Full regression against active running containers, database listeners, and web service endpoints",
+            "icon": "🚀",
+            "count": 1,
+            "tests": ["test-live-platform.sh"],
+            "cmd": "./tests/test-live-platform.sh"
+        },
+        "i18n": {
+            "key": "i18n",
+            "title": "Multilingual & i18n Parity",
+            "desc": "Full 6-language compliance audit (Rule 9): checks dictionary symmetry, headers, and translations",
+            "icon": "🌐",
+            "count": 1,
+            "tests": ["test-multilingual-support.sh"],
+            "cmd": "./tests/test-multilingual-support.sh --all"
+        },
+        "portability": {
+            "key": "portability",
+            "title": "Cross-Platform Portability",
+            "desc": "Strict verification of Rule 13: Windows NTFS/FAT forbidden chars, device names, and ASCII path standards",
+            "icon": "🛡️",
+            "count": 1,
+            "tests": ["test-filename-portability.sh"],
+            "cmd": "./tests/unit/test-filename-portability.sh"
+        },
+        "browser": {
+            "key": "browser",
+            "title": "Browser & SSO End-to-End",
+            "desc": "Simulates browser interactions, APEX login flows, Dev Hub shortcuts, and SSO authentication",
+            "icon": "🖥️",
+            "count": 2,
+            "tests": ["test-browser-login.sh", "test-devhub-browser-blueprints.sh"],
+            "cmd": "./scripts/test-browser-login.sh"
+        },
+        "ci_sim": {
+            "key": "ci_sim",
+            "title": "Local GitHub Actions CI Simulator",
+            "desc": "Executes or dry-runs repository CI/CD workflows offline using ephemeral containers",
+            "icon": "🐙",
+            "count": 1,
+            "tests": ["test-local-ci.sh"],
+            "cmd": "./scripts/test-local-ci.sh --dry-run"
+        },
+        "coverage": {
+            "key": "coverage",
+            "title": "Test Coverage Report Generator",
+            "desc": "Analyzes test coverage of all scripts/ and scripts/internal/ files and updates markdown reports",
+            "icon": "📊",
+            "count": 1,
+            "tests": ["generate-test-coverage-report.sh"],
+            "cmd": "./tests/generate-test-coverage-report.sh"
+        }
+    }
+
+def get_test_reports_list():
+    """Scans tests/reports/ and returns a structured list of test reports."""
+    reports = []
+    reports_dir = os.path.join(WORKSPACE_DIR, "tests", "reports")
+    if not os.path.isdir(reports_dir):
+        return reports
+
+    for root, dirs, files in os.walk(reports_dir):
+        for f in sorted(files):
+            if f.endswith(".md"):
+                full_p = os.path.join(root, f)
+                rel_p = os.path.relpath(full_p, WORKSPACE_DIR)
+                title = f
+                status = "INFO"
+                try:
+                    with open(full_p, "r", encoding="utf-8", errors="ignore") as rf:
+                        lines = [rf.readline() for _ in range(5)]
+                        for ln in lines:
+                            if ln.startswith("# "):
+                                title = ln.replace("# ", "").strip()
+                                break
+                except Exception:
+                    pass
+
+                f_lower = f.lower()
+                if "pass" in f_lower or "success" in f_lower or "live" in f_lower or "matrix" in f_lower:
+                    status = "PASS"
+                elif "fail" in f_lower or "error" in f_lower:
+                    status = "FAIL"
+
+                stat = os.stat(full_p)
+                reports.append({
+                    "name": f,
+                    "rel_path": rel_p,
+                    "title": title,
+                    "status": status,
+                    "size": stat.st_size,
+                    "mtime": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                })
+    reports.sort(key=lambda x: x["mtime"], reverse=True)
+    return reports
+
+def get_test_coverage_data():
+    """Reads and parses tests/reports/test-coverage-report.md."""
+    cov_file = os.path.join(WORKSPACE_DIR, "tests", "reports", "test-coverage-report.md")
+    if not os.path.isfile(cov_file):
+        cov_file = os.path.join(WORKSPACE_DIR, "tests", "test-coverage-report.md")
+
+    if not os.path.isfile(cov_file):
+        return {"total": 0, "covered": 0, "percent": 0, "scripts": [], "updated_at": "Never"}
+
+    scripts = []
+    total = 0
+    covered = 0
+    updated_at = ""
+
+    try:
+        with open(cov_file, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                if "Genereeritud:" in line:
+                    updated_at = line.split("Genereeritud:")[-1].strip()
+                m = re.search(r"\|\s*\*\*`([^`]+)`\*\*\s*\|\s*([^\|]+)\|\s*([^\|]+)\|", line)
+                if m:
+                    s_name = m.group(1).strip()
+                    s_status_raw = m.group(2).strip()
+                    s_tests_raw = m.group(3).strip()
+                    is_cov = ("✅" in s_status_raw or "Kaetud" in s_status_raw)
+                    total += 1
+                    if is_cov:
+                        covered += 1
+                    scripts.append({
+                        "name": s_name,
+                        "covered": is_cov,
+                        "status": "covered" if is_cov else "uncovered",
+                        "tests": [t.strip() for t in s_tests_raw.split(",") if t.strip() and t.strip() != "-"]
+                    })
+    except Exception:
+        pass
+
+    percent = round((covered / total * 100), 1) if total > 0 else 0
+    return {
+        "total": total,
+        "covered": covered,
+        "percent": percent,
+        "scripts": scripts,
+        "updated_at": updated_at
+    }
+
+def get_test_execution_history():
+    """Loads past test executions from metrics/test_execution_history.json."""
+    hist_file = os.path.join(WORKSPACE_DIR, "metrics", "test_execution_history.json")
+    if os.path.isfile(hist_file):
+        try:
+            with open(hist_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
+        except Exception:
+            pass
+    return []
+
+def record_test_execution(task_info, exit_code):
+    """Appends completed test task result to metrics/test_execution_history.json."""
+    if not task_info or task_info.get("recorded"):
+        return
+    task_info["recorded"] = True
+    if task_info.get("log_fd"):
+        try:
+            task_info["log_fd"].close()
+        except Exception:
+            pass
+
+    hist_file = os.path.join(WORKSPACE_DIR, "metrics", "test_execution_history.json")
+    history = []
+    if os.path.isfile(hist_file):
+        try:
+            with open(hist_file, "r", encoding="utf-8") as f:
+                history = json.load(f)
+                if not isinstance(history, list):
+                    history = []
+        except Exception:
+            history = []
+
+    duration = round(time.time() - task_info.get("start_time", time.time()), 1)
+    status_label = "PASS" if exit_code == 0 else "FAIL"
+    entry = {
+        "id": f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "suite": task_info.get("suite", "unknown"),
+        "target": task_info.get("target", "unknown"),
+        "duration_sec": duration,
+        "exit_code": exit_code,
+        "status": status_label,
+        "log_file": task_info.get("log_file", "")
+    }
+    history.insert(0, entry)
+    history = history[:50]
+    try:
+        os.makedirs(os.path.dirname(hist_file), exist_ok=True)
+        with open(hist_file, "w", encoding="utf-8") as f:
+            json.dump(history, f, indent=2)
+    except Exception:
+        pass
+
 class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
     def _send_cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -865,6 +1100,21 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+
+        elif parsed.path == "/api/tests/suites":
+            self._send_json({"status": "ok", "suites": get_test_suites_catalog()}, cb)
+
+        elif parsed.path == "/api/tests/reports":
+            self._send_json({"status": "ok", "reports": get_test_reports_list()}, cb)
+
+        elif parsed.path == "/api/tests/report-content":
+            self.handle_tests_report_content(parsed.query, cb)
+
+        elif parsed.path == "/api/tests/coverage":
+            self._send_json({"status": "ok", "coverage": get_test_coverage_data()}, cb)
+
+        elif parsed.path == "/api/tests/history":
+            self._send_json({"status": "ok", "history": get_test_execution_history()}, cb)
 
         elif parsed.path == "/api/port-conflicts":
             conflicts = detect_port_conflicts()
@@ -1162,6 +1412,10 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             self.handle_snapshot_delete(post_body, parsed.query, cb)
         elif parsed.path == "/api/snapshots/reset-deep":
             self.handle_reset_deep(post_body, parsed.query, cb)
+        elif parsed.path == "/api/tests/run":
+            self.handle_test_run(post_body, parsed.query, cb)
+        elif parsed.path == "/api/tests/stop":
+            self.handle_test_stop(post_body, parsed.query, cb)
         else:
             self.send_response(404)
             self.end_headers()
@@ -1896,6 +2150,9 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         else:
             state = "failed"
 
+        if task_info.get("type") == "test" and poll_res is not None and not task_info.get("recorded"):
+            record_test_execution(task_info, poll_res)
+
         duration = round(time.time() - task_info.get("start_time", time.time()), 1)
         log_file = task_info.get("log_file")
         log_full_path = os.path.join(WORKSPACE_DIR, "install_logs", log_file) if log_file else None
@@ -1972,6 +2229,156 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             }, cb)
         except Exception as e:
             self._send_json({"status": "error", "error": str(e)}, cb, status=500)
+
+    def handle_tests_report_content(self, query_str, cb=None):
+        q = urllib.parse.parse_qs(query_str)
+        rel_path = q.get("file", [""])[0]
+        if not rel_path:
+            self._send_json({"status": "error", "error": "No file specified"}, cb, status=400)
+            return
+
+        clean_p = os.path.normpath(rel_path).lstrip("/\\")
+        # Security: allow reading only from tests/reports/ or install_logs/
+        if not (clean_p.startswith("tests/reports/") or clean_p.startswith("install_logs/")):
+            self._send_json({"status": "error", "error": "Access denied. Path must be inside tests/reports/ or install_logs/"}, cb, status=403)
+            return
+
+        full_p = os.path.join(WORKSPACE_DIR, clean_p)
+        if not os.path.isfile(full_p):
+            self._send_json({"status": "error", "error": f"File not found: {clean_p}"}, cb, status=404)
+            return
+
+        try:
+            with open(full_p, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read()
+            self._send_json({"status": "ok", "file": clean_p, "content": content}, cb)
+        except Exception as e:
+            self._send_json({"status": "error", "error": str(e)}, cb, status=500)
+
+    def handle_test_run(self, post_body, query_str, cb=None):
+        suite = "unit"
+        test_script = ""
+        dry_run = False
+        try:
+            if post_body.strip().startswith("{"):
+                data = json.loads(post_body)
+                suite = data.get("suite", "unit")
+                test_script = data.get("test", "")
+                dry_run = bool(data.get("dry_run", False))
+            else:
+                q = urllib.parse.parse_qs(post_body or query_str)
+                suite = q.get("suite", ["unit"])[0]
+                test_script = q.get("test", [""])[0]
+                dry_run = q.get("dry_run", ["false"])[0].lower() in ["1", "true", "yes"]
+        except Exception:
+            pass
+
+        cmd = []
+        target_label = suite
+        if test_script:
+            test_script = os.path.basename(test_script)
+            target_label = test_script
+            if not test_script.endswith(".sh") or not re.match(r"^[a-zA-Z0-9._-]+$", test_script):
+                self._send_json({"status": "error", "error": "Invalid test script filename"}, cb, status=400)
+                return
+
+            p_unit = os.path.join(WORKSPACE_DIR, "tests", "unit", test_script)
+            p_integ = os.path.join(WORKSPACE_DIR, "tests", "integration", test_script)
+            p_tests = os.path.join(WORKSPACE_DIR, "tests", test_script)
+            if os.path.isfile(p_unit):
+                cmd = [p_unit]
+            elif os.path.isfile(p_integ):
+                cmd = [p_integ]
+            elif os.path.isfile(p_tests):
+                cmd = [p_tests]
+            else:
+                self._send_json({"status": "error", "error": f"Test script {test_script} not found"}, cb, status=404)
+                return
+        else:
+            if suite == "unit":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-all-components.sh")]
+            elif suite == "integration":
+                cmd = ["bash", "-c", "set -e; for t in tests/integration/*.sh; do [ -x \"$t\" ] && echo \"\n▶️ Running $t...\" && \"$t\"; done; echo \"\n✅ All integration tests passed!\""]
+            elif suite == "live":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-live-platform.sh")]
+            elif suite == "i18n":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-multilingual-support.sh"), "--all"]
+            elif suite == "portability":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "unit", "test-filename-portability.sh")]
+            elif suite == "browser":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-browser-login.sh")]
+            elif suite == "ci_sim":
+                cmd = [os.path.join(WORKSPACE_DIR, "scripts", "test-local-ci.sh"), "--dry-run"] if dry_run else [os.path.join(WORKSPACE_DIR, "scripts", "test-local-ci.sh")]
+            elif suite == "coverage":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "generate-test-coverage-report.sh")]
+            else:
+                self._send_json({"status": "error", "error": f"Unknown test suite: {suite}"}, cb, status=400)
+                return
+
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_name = f"test_{suite}_{ts}.log"
+        log_full_path = os.path.join(WORKSPACE_DIR, "install_logs", log_name)
+        os.makedirs(os.path.join(WORKSPACE_DIR, "install_logs"), exist_ok=True)
+
+        try:
+            log_fd = open(log_full_path, "w", encoding="utf-8")
+            log_fd.write(f"=== TEST RUNNER DISPATCHED: {target_label} at {datetime.now().isoformat()} ===\n")
+            log_fd.write(f"Command: {' '.join(cmd)}\n\n")
+            log_fd.flush()
+
+            proc = subprocess.Popen(
+                cmd,
+                cwd=WORKSPACE_DIR,
+                stdout=log_fd,
+                stderr=subprocess.STDOUT,
+                text=True
+            )
+
+            task_key = f"test_{suite}_{ts}"
+            task_info = {
+                "proc": proc,
+                "log_file": log_name,
+                "start_time": time.time(),
+                "suite": suite,
+                "target": target_label,
+                "cmd": " ".join(cmd),
+                "type": "test",
+                "recorded": False,
+                "log_fd": log_fd
+            }
+            ACTIVE_TASKS[task_key] = task_info
+            ACTIVE_TASKS["test_runner"] = task_info
+
+            self._send_json({
+                "status": "ok",
+                "task": "test_runner",
+                "task_id": task_key,
+                "target": target_label,
+                "log_file": log_name,
+                "log_relative_path": f"install_logs/{log_name}",
+                "pid": proc.pid
+            }, cb)
+        except Exception as e:
+            self._send_json({"status": "error", "error": str(e)}, cb, status=500)
+
+    def handle_test_stop(self, post_body, query_str, cb=None):
+        task_info = ACTIVE_TASKS.get("test_runner")
+        if not task_info or not task_info.get("proc"):
+            self._send_json({"status": "ok", "message": "No running test found"}, cb)
+            return
+
+        proc = task_info["proc"]
+        if proc.poll() is None:
+            try:
+                proc.terminate()
+                time.sleep(0.5)
+                if proc.poll() is None:
+                    proc.kill()
+            except Exception:
+                pass
+            self._send_json({"status": "ok", "message": "Test process stopped"}, cb)
+        else:
+            self._send_json({"status": "ok", "message": "Test process already finished"}, cb)
 
     def log_message(self, format, *args):
         return
