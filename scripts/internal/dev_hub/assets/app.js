@@ -142,6 +142,7 @@ function setLanguage(lang) {
   updateSlideView();
   loadBenchmarksData();
   updateServiceCardsUI();
+  if (typeof renderTestingSuites === 'function') renderTestingSuites();
 }
 
 function applyPillState(pill, state, lang, matchedCount, totalCount) {
@@ -4989,13 +4990,18 @@ function escapeTestHtml(str) {
 }
 
 function initTestingTab() {
+  const suites = (typeof TEST_SUITES_DATA !== 'undefined' ? TEST_SUITES_DATA : window.TEST_SUITES_DATA) || {};
+  const reports = (typeof TEST_REPORTS_DATA !== 'undefined' ? TEST_REPORTS_DATA : window.TEST_REPORTS_DATA) || [];
+  const coverage = (typeof TEST_COVERAGE_DATA !== 'undefined' ? TEST_COVERAGE_DATA : window.TEST_COVERAGE_DATA) || {};
+  const history = (typeof TEST_HISTORY_DATA !== 'undefined' ? TEST_HISTORY_DATA : window.TEST_HISTORY_DATA) || [];
+
   if (!isTestingInitialized) {
     isTestingInitialized = true;
     updateCiReadinessScorecard();
-    renderTestingSuites(window.TEST_SUITES_DATA || {});
-    renderTestReportsList(window.TEST_REPORTS_DATA || []);
-    renderCoverageExplorer(window.TEST_COVERAGE_DATA || {});
-    renderTestHistoryTable(window.TEST_HISTORY_DATA || []);
+    renderTestingSuites(suites);
+    renderTestReportsList(reports);
+    renderCoverageExplorer(coverage);
+    renderTestHistoryTable(history);
   }
 
   // Live refresh from Bridge if available
@@ -5035,12 +5041,12 @@ function initTestingTab() {
 }
 
 function updateCiReadinessScorecard() {
-  const suites = window.TEST_SUITES_DATA || {};
+  const suites = (typeof TEST_SUITES_DATA !== 'undefined' ? TEST_SUITES_DATA : window.TEST_SUITES_DATA) || {};
   const unitCount = (suites.unit && suites.unit.count) ? suites.unit.count : 29;
   const unitEl = document.getElementById('scorecard-unit-count');
   if (unitEl) unitEl.innerText = `${unitCount} tests`;
 
-  const cov = loadedCoverageData || window.TEST_COVERAGE_DATA || {};
+  const cov = loadedCoverageData || (typeof TEST_COVERAGE_DATA !== 'undefined' ? TEST_COVERAGE_DATA : window.TEST_COVERAGE_DATA) || {};
   const covPercent = cov.percent !== undefined ? cov.percent : 0;
   const covValEl = document.getElementById('scorecard-coverage-value');
   const covSubEl = document.getElementById('scorecard-coverage-sub');
@@ -5067,10 +5073,13 @@ function switchTestingSubTab(subTabId) {
 }
 
 function renderTestingSuites(suites) {
+  if (!suites || Object.keys(suites).length === 0) {
+    suites = (typeof TEST_SUITES_DATA !== 'undefined' ? TEST_SUITES_DATA : window.TEST_SUITES_DATA) || {};
+  }
   const grid = document.getElementById('testing-suites-grid');
   if (!grid) return;
   const lang = localStorage.getItem('dev_hub_lang') || 'en';
-  const dict = (typeof I18N !== 'undefined' && (I18N[lang] || I18N['en'])) || {};
+  const dict = (typeof I18N_DICT !== 'undefined' && (I18N_DICT[lang] || I18N_DICT['en'])) || {};
 
   let html = '';
   Object.values(suites || {}).forEach(suite => {
@@ -5079,7 +5088,7 @@ function renderTestingSuites(suites) {
     if (hasSingleTests) {
       selectOptions = `<select id="select-suite-${suite.key}" class="test-script-select">
         <option value="">-- ${dict.test_select_individual || 'Üksik skript'} --</option>
-        ${suite.tests.map(t => `<option value="${t}">${t}</option>`).join('')}
+        ${suite.tests.map(t => `<option value="${escapeTestHtml(t)}">${escapeTestHtml(t)}</option>`).join('')}
       </select>`;
     }
 
@@ -5089,17 +5098,23 @@ function renderTestingSuites(suites) {
           <div class="test-suite-header">
             <div class="test-suite-title">
               <span>${suite.icon || '🧪'}</span>
-              <span>${suite.title}</span>
+              <span>${escapeTestHtml(suite.title)}</span>
             </div>
             <span class="badge badge-info" style="font-size:0.7rem;">${suite.count} ${suite.count === 1 ? 'test' : 'tests'}</span>
           </div>
-          <div class="test-suite-desc">${suite.desc}</div>
+          <div class="test-suite-desc">${escapeTestHtml(suite.desc)}</div>
         </div>
+        ${suite.cmd ? `
+          <div class="code-box" style="margin: 10px 0 12px 0; padding: 6px 55px 6px 10px; font-size: 0.75rem; white-space: nowrap; overflow-x: auto; background: rgba(0,0,0,0.3); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <code style="color: var(--accent-cyan, #38bdf8); font-family: monospace;">${escapeTestHtml(suite.cmd)}</code>
+            <button type="button" class="copy-btn" onclick="copySnippet(this)" style="top: 4px; right: 4px; padding: 2px 6px; font-size: 0.7rem;">Copy</button>
+          </div>
+        ` : ''}
         <div class="test-suite-actions">
           <div style="display:flex; align-items:center; gap:6px;">
             ${selectOptions}
             ${hasSingleTests ? `
-              <button type="button" class="btn-compact btn-compact-secondary" style="font-size:0.75rem;" onclick="runSingleSuiteTest('${suite.key}')" title="Käivita valitud skript">
+              <button type="button" class="btn-compact btn-compact-secondary" style="font-size:0.75rem;" onclick="runSingleSuiteTest('${suite.key}')" title="${dict.test_run_selected_tooltip || 'Käivita valitud skript'}">
                 <span>▶️</span>
               </button>
             ` : ''}
@@ -5188,7 +5203,11 @@ function runTestSuite(suiteKey, scriptName) {
     }
   })
   .catch(err => {
-    if (termEl) termEl.innerHTML += `\n❌ Failed to launch test: ${err.message}\nEnsure dev-hub-bridge.py is running on port 8089.`;
+    const isEt = (localStorage.getItem('dev_hub_lang') || 'en') === 'et';
+    const bridgeNotice = isEt
+      ? `\n❌ Testi käivitamine ebaõnnestus: ${err.message}\n💡 Märkus: Dev Hubi veebiliidesest taustal testimiseks peab töötama bridge:\n   ./scripts/internal/dev-hub-bridge.py &\nAlternatiivina saad testi käivitada otse oma terminalis, kopeerides käsu kaardilt!\n`
+      : `\n❌ Failed to launch test: ${err.message}\n💡 Note: To run tests directly via Dev Hub web UI, start the bridge daemon:\n   ./scripts/internal/dev-hub-bridge.py &\nAlternatively, you can run the test directly in your terminal using the command snippet above!\n`;
+    if (termEl) termEl.innerHTML += bridgeNotice;
     finishActiveTest('FAILED', -1);
   });
 }

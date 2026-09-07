@@ -491,7 +491,8 @@ const I18N_DICT = {
     hist_th_log: "Log File",
     hist_th_action: "Action",
     btn_run_suite: "Run All",
-    test_select_individual: "Single script"
+    test_select_individual: "Single script",
+    test_run_selected_tooltip: "Run selected test script"
   },
   et: {
     title_devops_register_conn: "💻 Registreeri VS Code Ühendused",
@@ -984,7 +985,8 @@ const I18N_DICT = {
     hist_th_log: "Logifail",
     hist_th_action: "Tegevus",
     btn_run_suite: "Käivita kõik",
-    test_select_individual: "Üksik skript"
+    test_select_individual: "Üksik skript",
+    test_run_selected_tooltip: "Käivita valitud testskript"
   },
   fi: {
     title_devops_register_conn: "💻 Rekisteröi VS Code -yhteydet",
@@ -1477,7 +1479,8 @@ const I18N_DICT = {
     hist_th_log: "Lokitiedosto",
     hist_th_action: "Toiminto",
     btn_run_suite: "Suorita kaikki",
-    test_select_individual: "Yksittäinen skripti"
+    test_select_individual: "Yksittäinen skripti",
+    test_run_selected_tooltip: "Suorita valittu testiskripti"
   },
   sv: {
     title_devops_register_conn: "💻 Registrera VS Code-anslutningar",
@@ -1970,7 +1973,8 @@ const I18N_DICT = {
     hist_th_log: "Loggfil",
     hist_th_action: "Åtgärd",
     btn_run_suite: "Kör alla",
-    test_select_individual: "Individuellt skript"
+    test_select_individual: "Individuellt skript",
+    test_run_selected_tooltip: "Kör valt testskript"
   },
   lv: {
     title_devops_register_conn: "💻 Reģistrēt VS Code Savienojumus",
@@ -2463,7 +2467,8 @@ const I18N_DICT = {
     hist_th_log: "Žurnāla fails",
     hist_th_action: "Darbība",
     btn_run_suite: "Palaist visu",
-    test_select_individual: "Atsevišķs skripts"
+    test_select_individual: "Atsevišķs skripts",
+    test_run_selected_tooltip: "Palaist izvēlēto testa skriptu"
   },
   lt: {
     title_devops_register_conn: "💻 Registruoti VS Code Ryšius",
@@ -2956,7 +2961,8 @@ const I18N_DICT = {
     hist_th_log: "Žurnalo failas",
     hist_th_action: "Veiksmas",
     btn_run_suite: "Vykdyti viską",
-    test_select_individual: "Atskiras skriptas"
+    test_select_individual: "Atskiras skriptas",
+    test_run_selected_tooltip: "Vykdyti pasirinktą testo scenarijų"
   }
 };
 
