@@ -275,9 +275,9 @@ for m in mismatches:
     fi
   fi
 
-  # 1.4 Script Key Usage & Unregistered Keys Audit
+  # 1.4 Script & Test Key Usage & Unregistered Keys Audit
   TESTS_TOTAL=$((TESTS_TOTAL + 1))
-  log_ui "  └─ 4. Skriptides kasutatavate teadete registreerituse audit..."
+  log_ui "  └─ 4. Skriptides & testides kasutatavate teadete registreerituse audit (scripts/ & tests/)..."
 
   SCRIPT_AUDIT=$(python3 -c '
 import glob, re, os, sys
@@ -291,38 +291,45 @@ with open(i18n_path, "r", encoding="utf-8") as f:
 
 en_keys = set(re.findall(r"_reg_msg\s+en\s+([A-Za-z0-9_]+)\s+", i18n_content))
 
-# Scan all production shell scripts
+# Scan all production and test shell scripts
 unregistered = []
 total_usages = 0
 used_keys = set()
+ignored_dummies = {"DUMMY_TIER_KEY", "UNKNOWN_NONEXISTENT_KEY_9999", "NON_EXISTENT_KEY_123"}
 
-for sh in glob.glob(os.path.join(workspace, "scripts/**/*.sh"), recursive=True):
+target_files = sorted(glob.glob(os.path.join(workspace, "scripts/**/*.sh"), recursive=True) +
+                      glob.glob(os.path.join(workspace, "tests/**/*.sh"), recursive=True))
+
+for sh in target_files:
     if "i18n.sh" in sh:
         continue
     with open(sh, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
     matches = re.findall(r"msg_(?:print|err|str)\s+[\"'\''\"]([A-Za-z0-9_]+)[\"'\''\"]", content)
     for m in matches:
+        if m in ignored_dummies:
+            continue
         total_usages += 1
         used_keys.add(m)
         if m not in en_keys:
             unregistered.append((os.path.relpath(sh, workspace), m))
 
-print(f"{total_usages}|{len(used_keys)}|{len(unregistered)}")
+print(f"{total_usages}|{len(used_keys)}|{len(unregistered)}|{len(target_files)}")
 for path, k in unregistered:
-    print(f"❌ Registreerimata võti skriptis {path}: {k}")
+    print(f"❌ Registreerimata võti failis {path}: {k}")
 ')
 
   TOTAL_USAGES=$(echo "$SCRIPT_AUDIT" | head -n 1 | cut -d'|' -f1)
   UNIQUE_USED_KEYS=$(echo "$SCRIPT_AUDIT" | head -n 1 | cut -d'|' -f2)
   UNREGISTERED_CNT=$(echo "$SCRIPT_AUDIT" | head -n 1 | cut -d'|' -f3)
+  TOTAL_FILES=$(echo "$SCRIPT_AUDIT" | head -n 1 | cut -d'|' -f4)
 
   if [ "$UNREGISTERED_CNT" -eq 0 ]; then
     TESTS_PASSED=$((TESTS_PASSED + 1))
-    log_ui "     ${GREEN}✅ Kõik ${TOTAL_USAGES} teadete väljakutset (${UNIQUE_USED_KEYS} unikaalset võtit) on i18n mootoris registreeritud!${NC}"
+    log_ui "     ${GREEN}✅ Kõik ${TOTAL_USAGES} teadete väljakutset (${UNIQUE_USED_KEYS} unikaalset võtit üle ${TOTAL_FILES} faili) on i18n mootoris registreeritud!${NC}"
   else
     TESTS_FAILED=$((TESTS_FAILED + 1))
-    log_ui "     ${RED}❌ Leiti ${UNREGISTERED_CNT} registreerimata võtit skriptides!${NC}"
+    log_ui "     ${RED}❌ Leiti ${UNREGISTERED_CNT} registreerimata võtit skriptides/testides!${NC}"
     if [ "$JSON_MODE" = "false" ]; then
       echo "$SCRIPT_AUDIT" | tail -n +2
     fi
@@ -413,15 +420,16 @@ for k in non_ascii_keys:
     fi
   fi
 
-  # 1.7 Shell Scripts Canonical English Comments Audit (Rule 9.1)
+  # 1.7 Shell Scripts & Tests Canonical English Comments Audit (Rule 9.1)
   TESTS_TOTAL=$((TESTS_TOTAL + 1))
-  log_ui "  └─ 7. Shell-skriptide kanooniliste ingliskeelsete kommentaaride audit..."
+  log_ui "  └─ 7. Shell-skriptide & testide kanooniliste ingliskeelsete kommentaaride audit (scripts/ & tests/)..."
 
   COMMENTS_RESULT=$(python3 -c '
 import glob, re, os
 
 workspace = "'"$WORKSPACE_DIR"'"
-scripts = sorted(glob.glob(os.path.join(workspace, "scripts/**/*.sh"), recursive=True))
+scripts = sorted(glob.glob(os.path.join(workspace, "scripts/**/*.sh"), recursive=True) +
+                 glob.glob(os.path.join(workspace, "tests/**/*.sh"), recursive=True))
 
 et_patterns = [
     r"\b(Paigaldan|paigaldame|Käivitan|käivitame|Kustutan|kustutame|Peatan|peatame)\b",
@@ -446,18 +454,19 @@ for s in scripts:
                     found.append(f"{rel}:{idx} -> {line.strip()}")
                     break
 
-print(f"{len(found)}")
+print(f"{len(found)}|{len(scripts)}")
 for item in found:
     print(f"❌ Mitte-ingliskeelne kommentaar: {item}")
 ')
 
-  COMMENTS_ERR_CNT=$(echo "$COMMENTS_RESULT" | head -n 1)
+  COMMENTS_ERR_CNT=$(echo "$COMMENTS_RESULT" | head -n 1 | cut -d'|' -f1)
+  TOTAL_AUDITED_SCRIPTS=$(echo "$COMMENTS_RESULT" | head -n 1 | cut -d'|' -f2)
   if [ "$COMMENTS_ERR_CNT" -eq 0 ]; then
     TESTS_PASSED=$((TESTS_PASSED + 1))
-    log_ui "     ${GREEN}✅ 100% Ingliskeelsed kommentaarid: Kõik shell-skriptid vastavad kanoonilisele standardile!${NC}"
+    log_ui "     ${GREEN}✅ 100% Ingliskeelsed kommentaarid: Kõik ${TOTAL_AUDITED_SCRIPTS} shell- ja testskripti vastavad kanoonilisele standardile!${NC}"
   else
     TESTS_FAILED=$((TESTS_FAILED + 1))
-    log_ui "     ${RED}❌ Tuvastati ${COMMENTS_ERR_CNT} tõlkimata kommentaari shell-skriptides!${NC}"
+    log_ui "     ${RED}❌ Tuvastati ${COMMENTS_ERR_CNT} tõlkimata kommentaari shell-/testskriptides!${NC}"
     if [ "$JSON_MODE" = "false" ]; then
       echo "$COMMENTS_RESULT" | tail -n +2
     fi

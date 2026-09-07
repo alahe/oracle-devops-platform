@@ -497,7 +497,12 @@ const I18N_DICT = {
     modal_tests_search_ph: "Search test script...",
     modal_tests_close: "Close",
     modal_tests_empty: "No matching test scripts found.",
-    btn_run_single: "Run"
+    btn_run_single: "Run",
+    btn_view_script_source: "View Code",
+    btn_back_to_tests_list: "Back to list",
+    btn_copy_script: "Copy code",
+    test_doc_link: "Documentation",
+    toast_script_copied: "Script code copied to clipboard!"
   },
   et: {
     title_devops_register_conn: "💻 Registreeri VS Code Ühendused",
@@ -996,7 +1001,12 @@ const I18N_DICT = {
     modal_tests_search_ph: "Otsi testskripti...",
     modal_tests_close: "Sulge",
     modal_tests_empty: "Ühtegi vastavat testskripti ei leitud.",
-    btn_run_single: "Käivita"
+    btn_run_single: "Käivita",
+    btn_view_script_source: "Vaata koodi",
+    btn_back_to_tests_list: "Tagasi nimekirja",
+    btn_copy_script: "Kopeeri kood",
+    test_doc_link: "Dokumentatsioon",
+    toast_script_copied: "Skripti kood kopeeritud lõikelauale!"
   },
   fi: {
     title_devops_register_conn: "💻 Rekisteröi VS Code -yhteydet",
@@ -1495,7 +1505,12 @@ const I18N_DICT = {
     modal_tests_search_ph: "Hae testiskriptiä...",
     modal_tests_close: "Sulje",
     modal_tests_empty: "Vastaavia testiskriptejä ei löytynyt.",
-    btn_run_single: "Suorita"
+    btn_run_single: "Suorita",
+    btn_view_script_source: "Näytä koodi",
+    btn_back_to_tests_list: "Takaisin listaan",
+    btn_copy_script: "Kopioi koodi",
+    test_doc_link: "Dokumentaatio",
+    toast_script_copied: "Skriptin koodi kopioitu leikepöydälle!"
   },
   sv: {
     title_devops_register_conn: "💻 Registrera VS Code-anslutningar",
@@ -1994,7 +2009,12 @@ const I18N_DICT = {
     modal_tests_search_ph: "Sök testskript...",
     modal_tests_close: "Stäng",
     modal_tests_empty: "Inga matchande testskript hittades.",
-    btn_run_single: "Kör"
+    btn_run_single: "Kör",
+    btn_view_script_source: "Visa kod",
+    btn_back_to_tests_list: "Tillbaka till listan",
+    btn_copy_script: "Kopiera kod",
+    test_doc_link: "Dokumentation",
+    toast_script_copied: "Skriptkoden kopierad till urklipp!"
   },
   lv: {
     title_devops_register_conn: "💻 Reģistrēt VS Code Savienojumus",
@@ -2493,7 +2513,12 @@ const I18N_DICT = {
     modal_tests_search_ph: "Meklēt testa skriptu...",
     modal_tests_close: "Aizvērt",
     modal_tests_empty: "Nav atrasts neviens atbilstošs testa skripts.",
-    btn_run_single: "Palaist"
+    btn_run_single: "Palaist",
+    btn_view_script_source: "Skatīt kodu",
+    btn_back_to_tests_list: "Atpakaļ uz sarakstu",
+    btn_copy_script: "Kopēt kodu",
+    test_doc_link: "Dokumentācija",
+    toast_script_copied: "Skripta kods nokopēts starpliktuvē!"
   },
   lt: {
     title_devops_register_conn: "💻 Registruoti VS Code Ryšius",
@@ -2992,7 +3017,12 @@ const I18N_DICT = {
     modal_tests_search_ph: "Ieškoti testo scenarijaus...",
     modal_tests_close: "Uždaryti",
     modal_tests_empty: "Atitinkamų testo scenarijų nerasta.",
-    btn_run_single: "Vykdyti"
+    btn_run_single: "Vykdyti",
+    btn_view_script_source: "Rodyti kodą",
+    btn_back_to_tests_list: "Atgal į sąrašą",
+    btn_copy_script: "Kopijuoti kodą",
+    test_doc_link: "Dokumentacija",
+    toast_script_copied: "Scenarijaus kodas nukopijuotas į iškarpinę!"
   }
 };
 

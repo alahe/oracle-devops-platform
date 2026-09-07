@@ -143,6 +143,7 @@ function setLanguage(lang) {
   loadBenchmarksData();
   updateServiceCardsUI();
   if (typeof renderTestingSuites === 'function') renderTestingSuites();
+  if (typeof updateTestTerminalLangBadge === 'function') updateTestTerminalLangBadge(lang);
 }
 
 function applyPillState(pill, state, lang, matchedCount, totalCount) {
@@ -5005,6 +5006,7 @@ function initTestingTab() {
     renderTestReportsList(reports);
     renderCoverageExplorer(coverage);
     renderTestHistoryTable(history);
+    updateTestTerminalLangBadge();
   }
 
   // Live refresh from Bridge if available
@@ -5139,6 +5141,25 @@ function renderTestingSuites(suites) {
 
 let currentModalSuiteKey = null;
 let currentModalSuiteTests = [];
+let currentViewedScript = null;
+let currentViewedDocRel = null;
+const SCRIPT_CONTENT_CACHE = {};
+
+function updateTestTerminalLangBadge(lang) {
+  const badge = document.getElementById('test-terminal-lang-badge');
+  if (!badge) return;
+  const currentLang = lang || localStorage.getItem('dev_hub_lang') || 'en';
+  const flags = {
+    en: '🇬🇧 EN',
+    et: '🇪🇪 ET',
+    fi: '🇫🇮 FI',
+    sv: '🇸🇪 SV',
+    lv: '🇱🇻 LV',
+    lt: '🇱🇹 LT'
+  };
+  badge.innerText = flags[currentLang] || currentLang.toUpperCase();
+  badge.title = `Aktiivne käivituskeel peamenüü päisest: ${currentLang.toUpperCase()}`;
+}
 
 function openSuiteTestsModal(suiteKey) {
   const suites = (typeof TEST_SUITES_DATA !== 'undefined' ? TEST_SUITES_DATA : window.TEST_SUITES_DATA) || {};
@@ -5153,6 +5174,8 @@ function openSuiteTestsModal(suiteKey) {
   const titleEl = document.getElementById('suite-tests-modal-title');
   const subEl = document.getElementById('suite-tests-modal-subtitle');
   const searchInput = document.getElementById('suite-tests-search-input');
+  const listView = document.getElementById('suite-tests-list-view');
+  const scriptView = document.getElementById('suite-script-viewer-view');
 
   const lang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = (typeof I18N_DICT !== 'undefined' && (I18N_DICT[lang] || I18N_DICT['en'])) || {};
@@ -5161,6 +5184,8 @@ function openSuiteTestsModal(suiteKey) {
   if (titleEl) titleEl.innerText = suite.title || suiteKey;
   if (subEl) subEl.innerText = `${suite.count || currentModalSuiteTests.length} tests in ${suite.title}`;
   if (searchInput) searchInput.value = '';
+  if (listView) listView.style.display = 'flex';
+  if (scriptView) scriptView.style.display = 'none';
 
   renderSuiteTestsModalList('');
 
@@ -5181,6 +5206,8 @@ function closeSuiteTestsModal(event) {
     modal.style.display = 'none';
   }
   currentModalSuiteKey = null;
+  currentViewedScript = null;
+  currentViewedDocRel = null;
 }
 
 function filterSuiteTestsModal(q) {
@@ -5212,17 +5239,141 @@ function renderSuiteTestsModalList(query) {
     const origIdx = currentModalSuiteTests.indexOf(testName) + 1;
     html += `
       <div class="suite-test-item">
-        <div class="suite-test-item-left">
+        <div class="suite-test-item-left" style="cursor: pointer;" onclick="viewSuiteTestScript('${escapeTestHtml(testName)}')">
           <span class="suite-test-item-idx">#${origIdx}</span>
           <span class="suite-test-item-name" title="${escapeTestHtml(testName)}">${escapeTestHtml(testName)}</span>
         </div>
-        <button type="button" class="btn-compact btn-compact-primary" onclick="runTestFromModal('${currentModalSuiteKey}', '${escapeTestHtml(testName)}')" style="font-size:0.75rem; padding: 4px 10px; flex-shrink: 0;" title="${dict.test_run_selected_tooltip || 'Käivita valitud testskript'}">
-          <span>▶️</span> <span>${dict.btn_run_single || 'Käivita'}</span>
-        </button>
+        <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+          <button type="button" class="btn-compact btn-compact-secondary" onclick="viewSuiteTestScript('${escapeTestHtml(testName)}')" style="font-size:0.75rem; padding: 4px 8px;" title="${dict.btn_view_script_source || 'Vaata koodi'}">
+            <span>📄</span> <span>${dict.btn_view_script_source || 'Sisu'}</span>
+          </button>
+          <button type="button" class="btn-compact btn-compact-primary" onclick="runTestFromModal('${currentModalSuiteKey}', '${escapeTestHtml(testName)}')" style="font-size:0.75rem; padding: 4px 10px;" title="${dict.test_run_selected_tooltip || 'Käivita valitud testskript'}">
+            <span>▶️</span> <span>${dict.btn_run_single || 'Käivita'}</span>
+          </button>
+        </div>
       </div>
     `;
   });
   container.innerHTML = html;
+}
+
+function viewSuiteTestScript(scriptName) {
+  currentViewedScript = scriptName;
+  const listView = document.getElementById('suite-tests-list-view');
+  const scriptView = document.getElementById('suite-script-viewer-view');
+  const subEl = document.getElementById('suite-tests-modal-subtitle');
+  const codeEl = document.getElementById('suite-script-code-content');
+  const docBadge = document.getElementById('suite-script-viewer-doc-badge');
+
+  if (listView) listView.style.display = 'none';
+  if (scriptView) scriptView.style.display = 'flex';
+  if (subEl) subEl.innerText = scriptName;
+  if (codeEl) codeEl.innerText = 'Laadin skripti sisu...';
+  if (docBadge) docBadge.style.display = 'none';
+
+  if (SCRIPT_CONTENT_CACHE[scriptName]) {
+    renderLoadedScriptContent(SCRIPT_CONTENT_CACHE[scriptName]);
+    return;
+  }
+
+  fetch(`${BRIDGE_URL}/api/tests/script-content?script=${encodeURIComponent(scriptName)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'ok') {
+        SCRIPT_CONTENT_CACHE[scriptName] = data;
+        renderLoadedScriptContent(data);
+      } else {
+        throw new Error(data.error || 'Skripti laadimine ebaõnnestus');
+      }
+    })
+    .catch(err => {
+      if (codeEl) {
+        codeEl.innerHTML = `# ⚠️ Skripti sisu ei õnnestunud bridge kaudu laadida: ${err.message}\n# Veendu, et dev-hub-bridge.py töötab taustal (./scripts/internal/dev-hub-bridge.py &)\n# Faili asukoht repositooriumis: tests/unit/${scriptName} või tests/integration/${scriptName}`;
+      }
+      const infoEl = document.getElementById('suite-script-viewer-info');
+      if (infoEl) infoEl.innerText = 'Offline / Unavailable';
+    });
+}
+
+function renderLoadedScriptContent(data) {
+  const codeEl = document.getElementById('suite-script-code-content');
+  const infoEl = document.getElementById('suite-script-viewer-info');
+  const docBadge = document.getElementById('suite-script-viewer-doc-badge');
+  const docTitle = document.getElementById('suite-script-viewer-doc-title');
+  const subEl = document.getElementById('suite-tests-modal-subtitle');
+
+  if (subEl) subEl.innerText = data.path || data.script;
+  if (codeEl) {
+    codeEl.textContent = data.content || '';
+  }
+  if (infoEl) {
+    const lines = data.lines || (data.content ? data.content.split('\n').length : 0);
+    const kb = data.size_bytes ? (data.size_bytes / 1024).toFixed(1) : ((data.content ? data.content.length : 0) / 1024).toFixed(1);
+    infoEl.innerText = `${lines} rida • ${kb} KB • ${data.path || data.script}`;
+  }
+  if (data.doc && data.doc.title) {
+    currentViewedDocRel = data.doc.doc_file || 'docs/testing-framework-and-devhub.md';
+    if (docTitle) docTitle.innerText = data.doc.title;
+    if (docBadge) docBadge.style.display = 'inline-flex';
+  } else {
+    currentViewedDocRel = null;
+    if (docBadge) docBadge.style.display = 'none';
+  }
+}
+
+function backToSuiteTestsList() {
+  const listView = document.getElementById('suite-tests-list-view');
+  const scriptView = document.getElementById('suite-script-viewer-view');
+  const subEl = document.getElementById('suite-tests-modal-subtitle');
+  if (listView) listView.style.display = 'flex';
+  if (scriptView) scriptView.style.display = 'none';
+
+  const suites = (typeof TEST_SUITES_DATA !== 'undefined' ? TEST_SUITES_DATA : window.TEST_SUITES_DATA) || {};
+  const suite = suites[currentModalSuiteKey];
+  if (subEl && suite) {
+    subEl.innerText = `${suite.count || currentModalSuiteTests.length} tests in ${suite.title}`;
+  }
+}
+
+function copySuiteScriptContent() {
+  const codeEl = document.getElementById('suite-script-code-content');
+  if (!codeEl) return;
+  const text = codeEl.textContent || '';
+  navigator.clipboard.writeText(text).then(() => {
+    const lang = localStorage.getItem('dev_hub_lang') || 'en';
+    const dict = (typeof I18N_DICT !== 'undefined' && (I18N_DICT[lang] || I18N_DICT['en'])) || {};
+    showToast(dict.toast_script_copied || 'Skript kopeeritud!', 'success');
+  }).catch(() => {
+    alert('Kopeerimine ebaõnnestus.');
+  });
+}
+
+function runViewedScript() {
+  if (!currentViewedScript) return;
+  const scriptName = currentViewedScript;
+  const suiteKey = currentModalSuiteKey || 'unit';
+  closeSuiteTestsModal();
+  runTestSuite(suiteKey, scriptName);
+  const term = document.getElementById('testing-terminal-output');
+  if (term) {
+    term.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function openDocFromTestModal() {
+  if (!currentViewedDocRel) return;
+  closeSuiteTestsModal();
+  switchTab('docs');
+  const targetRel = currentViewedDocRel.replace(/^\//, '');
+  const targetBasename = targetRel.split('/').pop();
+  if (Array.isArray(DOCS_DATA)) {
+    const idx = DOCS_DATA.findIndex(d => d.rel === targetRel || d.rel.endsWith(targetBasename));
+    if (idx !== -1) {
+      setTimeout(() => {
+        loadDocContent(idx, document.querySelectorAll('.docs-nav-item')[idx]);
+      }, 150);
+    }
+  }
 }
 
 function runTestFromModal(suiteKey, scriptName) {
@@ -5264,15 +5415,18 @@ function runTestSuite(suiteKey, scriptName) {
   const stopBtn = document.getElementById('btn-stop-test');
   const dlBtn = document.getElementById('btn-download-test-log');
 
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  updateTestTerminalLangBadge(currentLang);
+
   const testLabel = scriptName ? `${suiteKey} (${scriptName})` : suiteKey;
   if (termEl) {
-    termEl.innerHTML = `🚀 Initializing test run: [${testLabel}]...\nDispatching background runner via bridge...\n`;
+    termEl.innerHTML = `🚀 Initializing test run: [${testLabel}] in ${currentLang.toUpperCase()}...\nDispatching background runner via bridge...\n`;
   }
   if (badgeEl) {
     badgeEl.className = 'badge badge-warning';
     badgeEl.innerText = 'RUNNING';
   }
-  if (statusEl) statusEl.innerText = `Olek: Käimas [${testLabel}]`;
+  if (statusEl) statusEl.innerText = `Olek: Käimas [${testLabel}] (${currentLang.toUpperCase()})`;
   if (activeIndEl) {
     activeIndEl.style.display = 'inline-block';
     activeIndEl.innerText = `⏳ Test running: ${testLabel}`;
@@ -5294,7 +5448,12 @@ function runTestSuite(suiteKey, scriptName) {
   fetch(`${BRIDGE_URL}/api/tests/run`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ suite: suiteKey, script: scriptName || '' })
+    body: JSON.stringify({
+      suite: suiteKey,
+      script: scriptName || '',
+      test: scriptName || '',
+      lang: currentLang
+    })
   })
   .then(r => r.json())
   .then(data => {

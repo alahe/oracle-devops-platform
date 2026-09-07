@@ -19,7 +19,7 @@ CMD_SCRIPT="$WORKSPACE_DIR/scripts/certs/trust-local-cert.cmd"
 PS1_SCRIPT="$WORKSPACE_DIR/scripts/certs/trust-local-cert.ps1"
 UNTRUST_SCRIPT="$WORKSPACE_DIR/scripts/certs/untrust-local-cert.cmd"
 
-# 1. Kontrollime, et CMD skript on olemas ja kasutab -user lippu
+# 1. Verify that CMD script exists and uses -user flag
 if [ ! -f "$CMD_SCRIPT" ]; then
   echo -e "${RED}❌ Test Ebaõnnestus: scripts/certs/trust-local-cert.cmd puudub!${NC}"
   exit 1
@@ -30,7 +30,7 @@ if ! grep -q "\-user \-addstore Root" "$CMD_SCRIPT"; then
   exit 1
 fi
 
-# 2. Kontrollime, et PS1 skript on olemas ja kasutab -user lippu
+# 2. Verify that PS1 script exists and uses -user flag
 if [ ! -f "$PS1_SCRIPT" ]; then
   echo -e "${RED}❌ Test Ebaõnnestus: scripts/certs/trust-local-cert.ps1 puudub!${NC}"
   exit 1
@@ -41,7 +41,7 @@ if ! grep -q "\-user \-addstore Root" "$PS1_SCRIPT"; then
   exit 1
 fi
 
-# 3. Kontrollime untrust skripti
+# 3. Verify untrust script
 if [ ! -f "$UNTRUST_SCRIPT" ]; then
   echo -e "${RED}❌ Test Ebaõnnestus: scripts/untrust-local-cert.cmd puudub!${NC}"
   exit 1

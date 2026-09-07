@@ -27,10 +27,12 @@ if INTERNAL_DIR not in sys.path:
 try:
     from dev_hub.parser import parse_blueprint_env_and_metadata
     from dev_hub.diagnostics import find_latest_log_for_blueprint, load_all_passwords
+    from dev_hub.testing import get_script_doc_reference
 except Exception:
     parse_blueprint_env_and_metadata = None
     find_latest_log_for_blueprint = None
     load_all_passwords = None
+    get_script_doc_reference = lambda s: {"doc_file": "docs/testing-framework-and-devhub.md", "doc_key": "testing_framework", "title": "Testing Framework & Dev Hub Architecture"}
 
 # Ensure standard system and package manager binary directories are in PATH
 for p in ["/opt/homebrew/bin", "/usr/local/bin", os.path.expanduser("~/.local/bin")]:
@@ -1109,6 +1111,9 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
 
         elif parsed.path == "/api/tests/report-content":
             self.handle_tests_report_content(parsed.query, cb)
+
+        elif parsed.path == "/api/tests/script-content":
+            self.handle_test_script_content(parsed.query, cb)
 
         elif parsed.path == "/api/tests/coverage":
             self._send_json({"status": "ok", "coverage": get_test_coverage_data()}, cb)
@@ -2259,20 +2264,70 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         except Exception as e:
             self._send_json({"status": "error", "error": str(e)}, cb, status=500)
 
+    def handle_test_script_content(self, query_str, cb=None):
+        q = urllib.parse.parse_qs(query_str)
+        script_name = q.get("script", [""])[0].strip()
+        if not script_name:
+            self._send_json({"status": "error", "error": "No script specified"}, cb, status=400)
+            return
+
+        sname = os.path.basename(script_name)
+        if not sname.endswith(".sh") or not re.match(r"^[a-zA-Z0-9._-]+$", sname):
+            self._send_json({"status": "error", "error": "Invalid script filename"}, cb, status=400)
+            return
+
+        candidate_paths = [
+            os.path.join(WORKSPACE_DIR, "tests", "unit", sname),
+            os.path.join(WORKSPACE_DIR, "tests", "integration", sname),
+            os.path.join(WORKSPACE_DIR, "tests", sname),
+            os.path.join(WORKSPACE_DIR, "scripts", sname),
+            os.path.join(WORKSPACE_DIR, "scripts", "internal", sname)
+        ]
+
+        found_path = None
+        for p in candidate_paths:
+            if os.path.isfile(p):
+                found_path = p
+                break
+
+        if not found_path:
+            self._send_json({"status": "error", "error": f"Script not found: {sname}"}, cb, status=404)
+            return
+
+        try:
+            with open(found_path, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read()
+            rel_p = os.path.relpath(found_path, WORKSPACE_DIR)
+            doc_info = get_script_doc_reference(sname) if get_script_doc_reference else None
+            self._send_json({
+                "status": "ok",
+                "script": sname,
+                "path": rel_p,
+                "content": content,
+                "doc": doc_info,
+                "lines": len(content.splitlines()),
+                "size_bytes": os.path.getsize(found_path)
+            }, cb)
+        except Exception as e:
+            self._send_json({"status": "error", "error": str(e)}, cb, status=500)
+
     def handle_test_run(self, post_body, query_str, cb=None):
         suite = "unit"
         test_script = ""
         dry_run = False
+        lang = "en"
         try:
             if post_body.strip().startswith("{"):
                 data = json.loads(post_body)
                 suite = data.get("suite", "unit")
-                test_script = data.get("test", "")
+                test_script = (data.get("script") or data.get("test") or "").strip()
+                lang = (data.get("lang") or "en").strip().lower()
                 dry_run = bool(data.get("dry_run", False))
             else:
                 q = urllib.parse.parse_qs(post_body or query_str)
                 suite = q.get("suite", ["unit"])[0]
-                test_script = q.get("test", [""])[0]
+                test_script = (q.get("script", [""])[0] or q.get("test", [""])[0]).strip()
+                lang = q.get("lang", ["en"])[0].strip().lower()
                 dry_run = q.get("dry_run", ["false"])[0].lower() in ["1", "true", "yes"]
         except Exception:
             pass
@@ -2281,7 +2336,7 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         target_label = suite
         if test_script:
             test_script = os.path.basename(test_script)
-            target_label = test_script
+            target_label = f"{suite} / {test_script}"
             if not test_script.endswith(".sh") or not re.match(r"^[a-zA-Z0-9._-]+$", test_script):
                 self._send_json({"status": "error", "error": "Invalid test script filename"}, cb, status=400)
                 return
@@ -2289,12 +2344,15 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             p_unit = os.path.join(WORKSPACE_DIR, "tests", "unit", test_script)
             p_integ = os.path.join(WORKSPACE_DIR, "tests", "integration", test_script)
             p_tests = os.path.join(WORKSPACE_DIR, "tests", test_script)
+            p_scripts = os.path.join(WORKSPACE_DIR, "scripts", test_script)
             if os.path.isfile(p_unit):
                 cmd = [p_unit]
             elif os.path.isfile(p_integ):
                 cmd = [p_integ]
             elif os.path.isfile(p_tests):
                 cmd = [p_tests]
+            elif os.path.isfile(p_scripts):
+                cmd = [p_scripts]
             else:
                 self._send_json({"status": "error", "error": f"Test script {test_script} not found"}, cb, status=404)
                 return
@@ -2306,7 +2364,7 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             elif suite == "live":
                 cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-live-platform.sh")]
             elif suite == "i18n":
-                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-multilingual-support.sh"), "--all"]
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-multilingual-support.sh"), f"--lang={lang}"] if lang != "all" else [os.path.join(WORKSPACE_DIR, "tests", "test-multilingual-support.sh"), "--all"]
             elif suite == "portability":
                 cmd = [os.path.join(WORKSPACE_DIR, "tests", "unit", "test-filename-portability.sh")]
             elif suite == "browser":
@@ -2326,16 +2384,38 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
 
         try:
             log_fd = open(log_full_path, "w", encoding="utf-8")
-            log_fd.write(f"=== TEST RUNNER DISPATCHED: {target_label} at {datetime.datetime.now().isoformat()} ===\n")
+            log_fd.write(f"=== TEST RUNNER DISPATCHED: {target_label} (Lang: {lang.upper()}) at {datetime.datetime.now().isoformat()} ===\n")
             log_fd.write(f"Command: {' '.join(cmd)}\n\n")
             log_fd.flush()
+
+            run_env = os.environ.copy()
+            run_env["CLI_LANG"] = lang
+            if lang == "en":
+                run_env["LANG"] = "en_US.UTF-8"
+                run_env["LC_ALL"] = "en_US.UTF-8"
+            elif lang == "et":
+                run_env["LANG"] = "et_EE.UTF-8"
+                run_env["LC_ALL"] = "et_EE.UTF-8"
+            elif lang == "fi":
+                run_env["LANG"] = "fi_FI.UTF-8"
+                run_env["LC_ALL"] = "fi_FI.UTF-8"
+            elif lang == "sv":
+                run_env["LANG"] = "sv_SE.UTF-8"
+                run_env["LC_ALL"] = "sv_SE.UTF-8"
+            elif lang == "lv":
+                run_env["LANG"] = "lv_LV.UTF-8"
+                run_env["LC_ALL"] = "lv_LV.UTF-8"
+            elif lang == "lt":
+                run_env["LANG"] = "lt_LT.UTF-8"
+                run_env["LC_ALL"] = "lt_LT.UTF-8"
 
             proc = subprocess.Popen(
                 cmd,
                 cwd=WORKSPACE_DIR,
                 stdout=log_fd,
                 stderr=subprocess.STDOUT,
-                text=True
+                text=True,
+                env=run_env
             )
 
             task_key = f"test_{suite}_{ts}"

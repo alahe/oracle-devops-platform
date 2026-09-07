@@ -2323,4 +2323,38 @@
             white-space: nowrap;
         }
 
+        .suite-test-doc-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            font-size: 0.75rem;
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.35);
+            color: #d8b4fe;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 280px;
+        }
+        .suite-test-doc-badge:hover {
+            background: rgba(168, 85, 247, 0.25);
+            border-color: #c084fc;
+            transform: translateY(-1px);
+        }
+
+        .script-code-box {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.8rem;
+            line-height: 1.45;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin: 0;
+            user-select: text;
+        }
+
 

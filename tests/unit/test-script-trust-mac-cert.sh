@@ -18,7 +18,7 @@ echo -e "${CYAN}🧪 TEST: scripts/certs/trust-local-cert-mac.sh & untrust-local
 MAC_SCRIPT="$WORKSPACE_DIR/scripts/certs/trust-local-cert-mac.sh"
 UNTRUST_SCRIPT="$WORKSPACE_DIR/scripts/certs/untrust-local-cert-mac.sh"
 
-# 1. Kontrollime, et MAC skript on olemas ja BASH süntaks on korras
+# 1. Verify that macOS trust script exists and bash syntax is valid
 if [ ! -f "$MAC_SCRIPT" ]; then
   echo -e "${RED}❌ Test Ebaõnnestus: scripts/certs/trust-local-cert-mac.sh puudub!${NC}"
   exit 1
@@ -30,7 +30,7 @@ if grep -q "sudo " "$MAC_SCRIPT"; then
   exit 1
 fi
 
-# 2. Kontrollime untrust skripti
+# 2. Verify macOS untrust script
 if [ ! -f "$UNTRUST_SCRIPT" ]; then
   echo -e "${RED}❌ Test Ebaõnnestus: scripts/untrust-local-cert-mac.sh puudub!${NC}"
   exit 1

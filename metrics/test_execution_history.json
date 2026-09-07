@@ -1,5 +1,15 @@
 [
   {
+    "id": "run_20260907_125209",
+    "timestamp": "2026-09-07 12:52:09",
+    "suite": "unit",
+    "target": "unit",
+    "duration_sec": 246.0,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_unit_20260907_124803.log"
+  },
+  {
     "id": "run_20260907_124218",
     "timestamp": "2026-09-07 12:42:18",
     "suite": "unit",

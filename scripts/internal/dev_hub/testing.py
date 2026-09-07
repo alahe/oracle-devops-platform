@@ -6,6 +6,71 @@ import re
 import json
 from datetime import datetime
 
+SCRIPT_DOC_PATTERNS = [
+    (r"^test-(devhub-testing-tab|dev-hub-generation|i18n-translations|filename-portability|multilingual-support|live-platform)\.sh$", {
+        "doc_file": "docs/testing-framework-and-devhub.md",
+        "doc_key": "testing_framework",
+        "title": "Testing Framework & Dev Hub Architecture"
+    }),
+    (r"^test-(browser-login|devhub-browser-blueprints)\.sh$", {
+        "doc_file": "docs/devhub-browser-testing-plan.md",
+        "doc_key": "devhub_browser_testing",
+        "title": "DevHub Browser Blueprints E2E Testing Plan"
+    }),
+    (r"^test-(all-blueprints.*|blueprints.*|cli-blueprint-params|script-deploy-blueprint|script-test-all-blueprints.*)\.sh$", {
+        "doc_file": "docs/incremental-blueprints-test-plan.md",
+        "doc_key": "incremental_blueprints_testing",
+        "title": "Incremental Blueprints Testing Plan"
+    }),
+    (r"^test-.*forms.*\.sh$", {
+        "doc_file": "docs/forms-setup.md",
+        "doc_key": "forms_setup",
+        "title": "Oracle Forms 14c Setup Guide"
+    }),
+    (r"^test-.*publisher.*\.sh$", {
+        "doc_file": "docs/publisher-setup.md",
+        "doc_key": "publisher_setup",
+        "title": "Analytics Publisher Setup Guide"
+    }),
+    (r"^test-.*ords.*\.sh$", {
+        "doc_file": "docs/ords-profiles-lifecycle.md",
+        "doc_key": "ords_lifecycle",
+        "title": "ORDS Profiles & Topology Lifecycle"
+    }),
+    (r"^test-.*(wallet|db-profiles|password|load-profile|resolve-topology|apply-profile).*\.sh$", {
+        "doc_file": "docs/db-profiles-and-topology.md",
+        "doc_key": "db_topology",
+        "title": "Database Profiles & Dynamic Topology"
+    }),
+    (r"^test-.*(artifactory|web-ide).*\.sh$", {
+        "doc_file": "docs/artifactory-setup.md",
+        "doc_key": "artifactory_setup",
+        "title": "Enterprise Artifactory Setup & Offline Delivery"
+    }),
+    (r"^test-.*remote.*\.sh$", {
+        "doc_file": "docs/remote-multicloud-setup-guide.md",
+        "doc_key": "remote_multicloud",
+        "title": "Multi-Cloud Enterprise Remote DB Architecture"
+    }),
+    (r"^test-(all-components|subcomponent-services|instance-initializer|e2e-system|devhub-async-guardrails|credentials-matrix)\.sh$", {
+        "doc_file": "docs/devhub-platform-test-plan.md",
+        "doc_key": "devhub_platform_testing",
+        "title": "DevHub Platform Full Lifecycle Test Plan"
+    }),
+]
+
+def get_script_doc_reference(script_name):
+    """Returns matching doc metadata for a test script or default testing doc."""
+    sname = os.path.basename(script_name)
+    for pattern, info in SCRIPT_DOC_PATTERNS:
+        if re.search(pattern, sname):
+            return info
+    return {
+        "doc_file": "docs/testing-framework-and-devhub.md",
+        "doc_key": "testing_framework",
+        "title": "Testing Framework & Dev Hub Architecture"
+    }
+
 def get_test_suites_catalog(ws):
     """Returns structured catalog of test suites and test scripts."""
     unit_tests = []

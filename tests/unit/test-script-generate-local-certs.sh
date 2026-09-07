@@ -14,7 +14,7 @@ TARGET_SCRIPT="$WORKSPACE_DIR/scripts/internal/generate-local-certs.sh"
 if [ -f "$TARGET_SCRIPT" ]; then
   bash -n "$TARGET_SCRIPT"
   
-  # Kontrollime, et skript sisaldab kehtivuskontrolli (checkend) ja ei genereeri kehtivat sertifikaati üle
+  # Verify that the script contains certificate validity checks (checkend) without unnecessary regenerations
   if grep -q "is_cert_valid" "$TARGET_SCRIPT" && grep -q "openssl x509 -checkend" "$TARGET_SCRIPT"; then
     echo -e "${GREEN}✅ Test Edukas: generate-local-certs.sh sisaldab intelligentset kehtivuskontrolli (is_cert_valid)!${NC}"
   else
