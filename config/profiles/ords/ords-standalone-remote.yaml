@@ -1,0 +1,19 @@
+# ==============================================================================
+# ORDS Profile: Standalone Enterprise ORDS Server (Host 1)
+# ==============================================================================
+name: ords-standalone-remote
+description: "Standalone Enterprise ORDS Server with Multi-Pool Support"
+container_name: app-ords
+container_image: container-registry.oracle.com/database/ords:latest
+https_port: 8448
+http_port: 8088
+memory_limit: 2048m
+apex_images_path: /opt/oracle/apex/images
+multipool_enabled: true
+pools:
+  - name: proxy
+    tns_alias: DB_PROXY_REMOTE
+    is_default: true
+  - name: business
+    tns_alias: BIZ_DB_REMOTE
+    is_default: false

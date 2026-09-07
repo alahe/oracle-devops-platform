@@ -270,6 +270,8 @@ Be atskiro HTML Dev Hub (`docs/dev-hub.html`), platformoje yra verslo klasės **
 
 ## 📑 Vartotojo Vadovai
 
+- 🏛️ **[docs/enterprise-distributed-architecture.md](../../docs/enterprise-distributed-architecture.md) | [docs/lt/enterprise-distributed-architecture.md](enterprise-distributed-architecture.md):** **Paskirstyta Įmonės Architektūra** — 4 lygmenų finansų architektūra (ORDS, Publisher, Proxy DB, Publisher DB), integracija su esama pagrindine verslo duomenų baze ir PROD Active/Standby avarinis atkūrimas (RTO < 60s, RPO < 15m).
+- 📋 **[docs/backlog/README.md](../../docs/backlog/README.md):** **Finansų Jira Backlog** — 11 gamybai paruoštų Jira istorijų (62 SP) paskirstytam diegimui, multi-pool maršrutizavimui ir automatiniam perjungimui.
 - 🚀 **[docs/lt/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Modernizavimo bei Perkėlimo Vadovas** — Verslo paskatos, TCO kaštų palyginimas, 5 žingsnių automatizuotas procesas ir [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
 - 📐 **[docs/forms-setup.md](../../docs/forms-setup.md):** Oracle Forms 14c Vadovas.
 - 📑 **[docs/publisher-setup.md](../../docs/publisher-setup.md):** Analytics Publisher Vadovas.

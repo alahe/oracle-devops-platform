@@ -24,14 +24,17 @@ SSH_KEY_PATH="${REMOTE_SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
 PROFILE_NAME="${MAIN_DB_PROFILE:-publisher-only}"
 BLUEPRINT_ID=""
 WALLET_PATH=""
-DRY_RUN=false
+ENV_FILE=""
+TARGET_TIER="all"
 
 usage() {
   cat << EOF
 Usage: ./scripts/deploy-remote.sh [options]
 
 Options:
-  --host <IP/FQDN>       Remote Linux server IP address or domain (required)
+  --env-file <path>      Path to multi-host environment inventory file (e.g. config/environments/dev.env)
+  --tier <name>          Target tier to deploy: ords | publisher | proxy-db | publisher-db | all (default: all)
+  --host <IP/FQDN>       Remote Linux server IP address or domain (single host mode)
   --user <user>          SSH user (default: opc for OCI, ubuntu/azureuser for Azure)
   --key <key_path>       SSH private key location (default: ~/.ssh/id_ed25519)
   -b, --blueprint <id>   Deploy specific architectural blueprint (e.g. 10 for ORDS, 11 for Publisher)
@@ -45,6 +48,22 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --env-file)
+      ENV_FILE="$2"
+      shift 2
+      ;;
+    --env-file=*)
+      ENV_FILE="${1#*=}"
+      shift
+      ;;
+    --tier)
+      TARGET_TIER="$2"
+      shift 2
+      ;;
+    --tier=*)
+      TARGET_TIER="${1#*=}"
+      shift
+      ;;
     --host)
       REMOTE_HOST="$2"
       shift 2
@@ -99,21 +118,45 @@ echo "======================================================================"
 echo "☁️ Remote Cloud Deployment (OCI Always Free & Azure Free)"
 echo "======================================================================"
 
-if [ -z "$REMOTE_HOST" ] && [ "$DRY_RUN" = "false" ]; then
-  echo -e "${YELLOW}ℹ️ Remote host IP not specified. Falling back to dry-run mode (--dry-run).${NC}"
-  DRY_RUN=true
-fi
-
-echo -e "   └─ Target Host: ${CYAN}${REMOTE_HOST:-localhost (dry-run)}${NC}"
-echo -e "   └─ Target User: ${CYAN}${REMOTE_USER}${NC}"
-echo -e "   └─ SSH Key:     ${CYAN}${SSH_KEY_PATH}${NC}"
-if [ -n "$BLUEPRINT_ID" ]; then
-  echo -e "   └─ Blueprint:   ${CYAN}${BLUEPRINT_ID}${NC}"
+if [ -n "$ENV_FILE" ]; then
+  if [ ! -f "$ENV_FILE" ]; then
+    echo -e "${RED}❌ Error: Environment file not found: ${ENV_FILE}${NC}"
+    exit 1
+  fi
+  # shellcheck source=/dev/null
+  source "$ENV_FILE"
+  echo -e "   └─ Mode:         ${GREEN}Multi-Host Distributed Deployment${NC}"
+  echo -e "   └─ Environment:  ${CYAN}${ENVIRONMENT_NAME:-CUSTOM}${NC}"
+  echo -e "   └─ Target Tier:  ${CYAN}${TARGET_TIER}${NC}"
+  echo -e "   └─ Tier 1 (ORDS):         ${CYAN}${ORDS_HOST:-N/A}:${ORDS_HTTPS_PORT:-8448}${NC}"
+  echo -e "   └─ Tier 2 (Publisher):    ${CYAN}${PUBLISHER_HOST:-N/A}:${PUBLISHER_HTTPS_PORT:-9502}${NC}"
+  echo -e "   └─ Tier 3 (Proxy DB):     ${CYAN}${PROXY_DB_HOST:-N/A}:${PROXY_DB_PORT:-1533}${NC}"
+  echo -e "   └─ Tier 4 (Publisher DB): ${CYAN}${PUBLISHER_DB_HOST:-N/A}:${PUBLISHER_DB_PORT:-1532}${NC}"
+  if [ -n "${STANDBY_PROXY_DB_HOST:-}" ]; then
+    echo -e "   └─ Standby Site (DC2):    ${CYAN}${STANDBY_PROXY_DB_HOST}${NC} (Dual-DC HA Active)"
+  fi
+  if [ -n "${BIZ_DB_HOST:-}" ]; then
+    echo -e "   └─ Core Business DB:      ${CYAN}${BIZ_DB_HOST}:${BIZ_DB_PORT:-1521} (${BIZ_DB_SERVICE:-})${NC}"
+  fi
+  REMOTE_USER="${SSH_USER:-$REMOTE_USER}"
+  SSH_KEY_PATH="${SSH_KEY_PATH:-$SSH_KEY_PATH}"
 else
-  echo -e "   └─ Profile:     ${CYAN}${PROFILE_NAME}${NC}"
-fi
-if [ -n "$WALLET_PATH" ]; then
-  echo -e "   └─ Cloud Wallet: ${CYAN}${WALLET_PATH}${NC}"
+  if [ -z "$REMOTE_HOST" ] && [ "$DRY_RUN" = "false" ]; then
+    echo -e "${YELLOW}ℹ️ Remote host IP not specified. Falling back to dry-run mode (--dry-run).${NC}"
+    DRY_RUN=true
+  fi
+
+  echo -e "   └─ Target Host: ${CYAN}${REMOTE_HOST:-localhost (dry-run)}${NC}"
+  echo -e "   └─ Target User: ${CYAN}${REMOTE_USER}${NC}"
+  echo -e "   └─ SSH Key:     ${CYAN}${SSH_KEY_PATH}${NC}"
+  if [ -n "$BLUEPRINT_ID" ]; then
+    echo -e "   └─ Blueprint:   ${CYAN}${BLUEPRINT_ID}${NC}"
+  else
+    echo -e "   └─ Profile:     ${CYAN}${PROFILE_NAME}${NC}"
+  fi
+  if [ -n "$WALLET_PATH" ]; then
+    echo -e "   └─ Cloud Wallet: ${CYAN}${WALLET_PATH}${NC}"
+  fi
 fi
 
 if [ -n "$WALLET_PATH" ] && [ ! -f "$WALLET_PATH" ]; then
@@ -123,7 +166,7 @@ fi
 
 if [ "$DRY_RUN" = "true" ]; then
   echo "======================================================================"
-  echo -e "${GREEN}✅ Dry-run validation passed! Script parameters are valid.${NC}"
+  echo -e "${GREEN}✅ Dry-run validation passed! Script parameters and inventory are valid.${NC}"
   echo "======================================================================"
   exit 0
 fi

@@ -1,5 +1,25 @@
 [
   {
+    "id": "run_20260907_135537",
+    "timestamp": "2026-09-07 13:55:37",
+    "suite": "coverage",
+    "target": "coverage",
+    "duration_sec": 40.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_coverage_20260907_135456.log"
+  },
+  {
+    "id": "run_20260907_132003",
+    "timestamp": "2026-09-07 13:20:03",
+    "suite": "unit",
+    "target": "unit / test-hardcoded-values.sh",
+    "duration_sec": 1.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_unit_20260907_132001.log"
+  },
+  {
     "id": "run_20260907_125209",
     "timestamp": "2026-09-07 12:52:09",
     "suite": "unit",

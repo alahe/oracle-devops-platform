@@ -270,6 +270,8 @@ Förutom den fristående HTML Dev Hub (`docs/dev-hub.html`) innehåller plattfor
 
 ## 📑 Användarguider
 
+- 🏛️ **[docs/enterprise-distributed-architecture.md](../../docs/enterprise-distributed-architecture.md) | [docs/sv/enterprise-distributed-architecture.md](enterprise-distributed-architecture.md):** **Företagsklassad Distribuerad Arkitektur** — 4-nivåers finansiell arkitektur (ORDS, Publisher, Proxy DB, Publisher DB), integration med befintlig affärsdatabas och PROD Active/Standby haveriberedskap (RTO < 60s, RPO < 15m).
+- 📋 **[docs/backlog/README.md](../../docs/backlog/README.md):** **Finansiell Jira Backlog** — 11 produktionsfärdiga Jira-användarberättelser (62 SP) för distribuerad driftsättning, multi-pool och automatisk redundans.
 - 🚀 **[docs/sv/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Moderniserings- och Migreringsguide** — Affärsnytta, TCO-jämförelse, 5-stegs automatiserat arbetsflöde och [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
 - 📐 **[docs/forms-setup.md](../../docs/forms-setup.md):** Oracle Forms 14c Guide.
 - 📑 **[docs/publisher-setup.md](../../docs/publisher-setup.md):** Analytics Publisher Guide.

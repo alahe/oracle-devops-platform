@@ -301,6 +301,189 @@ DOC_SPECS = [
             "sv": "docs/sv/database-image-switching-guide.md",
             "lv": "docs/lv/database-image-switching-guide.md",
         }
+    },
+    {
+        "id": "enterprise-architecture",
+        "rel": "docs/enterprise-distributed-architecture.md",
+        "titles": {
+            "en": "🏛️ Enterprise Distributed 4-Host Architecture & HA",
+            "et": "🏛️ Ettevõtteklassi Hajutatud 4-Serveriline Arhitektuur",
+            "fi": "🏛️ Yritystason Hajautettu 4-Palvelimen Arkkitehtuuri",
+            "sv": "🏛️ Företagsklassad Distribuerad 4-Server Arkitektur",
+            "lv": "🏛️ Sadalītā 4 Resursdatoru Arhitektūra & HA",
+            "lt": "🏛️ Įmonių Paskirstyta 4 Mazgų Architektūra & HA"
+        },
+        "files": {
+            "en": "docs/enterprise-distributed-architecture.md",
+            "et": "docs/et/enterprise-distributed-architecture.md",
+            "fi": "docs/fi/enterprise-distributed-architecture.md",
+            "sv": "docs/sv/enterprise-distributed-architecture.md",
+            "lv": "docs/lv/enterprise-distributed-architecture.md",
+            "lt": "docs/lt/enterprise-distributed-architecture.md"
+        }
+    },
+    {
+        "id": "enterprise-backlog",
+        "rel": "docs/backlog/README.md",
+        "titles": {
+            "en": "📋 Financial Enterprise Jira Backlog (11 Stories, 62 SP)",
+            "et": "📋 Finantsettevõtte Jira Backlog (11 lugu, 62 SP)",
+            "fi": "📋 Rahoitusalan Jira Backlog (11 tarinaa, 62 SP)",
+            "sv": "📋 Finansiell Jira Backlog (11 berättelser, 62 SP)",
+            "lv": "📋 Finanšu Jira Backlog (11 stāsti, 62 SP)",
+            "lt": "📋 Finansų Jira Backlog (11 istorijų, 62 SP)"
+        },
+        "files": {
+            "en": "docs/backlog/README.md",
+            "et": "docs/backlog/README.md",
+            "fi": "docs/backlog/README.md",
+            "sv": "docs/backlog/README.md",
+            "lv": "docs/backlog/README.md",
+            "lt": "docs/backlog/README.md"
+        }
+    },
+    {
+        "id": "fin-001",
+        "rel": "docs/backlog/FIN-001-multi-host-inventory-and-profile-engine.md",
+        "titles": {
+            "en": "🚀 FIN-001: Multi-Host Inventory & Profiles (5 SP)",
+            "et": "🚀 FIN-001: Multi-Host Inventar & Profiilid (5 SP)",
+            "fi": "🚀 FIN-001: Multi-Host Inventaari & Profiilit (5 SP)",
+            "sv": "🚀 FIN-001: Multi-Host Inventarie & Profiler (5 SP)",
+            "lv": "🚀 FIN-001: Multi-Host Inventārs & Profili (5 SP)",
+            "lt": "🚀 FIN-001: Multi-Host Inventorius & Profiliai (5 SP)"
+        },
+        "files": { "en": "docs/backlog/FIN-001-multi-host-inventory-and-profile-engine.md" }
+    },
+    {
+        "id": "fin-002",
+        "rel": "docs/backlog/FIN-002-proxy-db-remote-container-deployment.md",
+        "titles": {
+            "en": "📦 FIN-002: Dedicated PROXY DB Server (5 SP)",
+            "et": "📦 FIN-002: Dedicated PROXY DB Server 3 (5 SP)",
+            "fi": "📦 FIN-002: Dedikoitu PROXY DB Palvelin 3 (5 SP)",
+            "sv": "📦 FIN-002: Dedikerad PROXY DB Server 3 (5 SP)",
+            "lv": "📦 FIN-002: Dedicēta PROXY DB Serveris 3 (5 SP)",
+            "lt": "📦 FIN-002: Dedikuota PROXY DB Mazgas 3 (5 SP)"
+        },
+        "files": { "en": "docs/backlog/FIN-002-proxy-db-remote-container-deployment.md" }
+    },
+    {
+        "id": "fin-003",
+        "rel": "docs/backlog/FIN-003-publisher-db-remote-container-deployment.md",
+        "titles": {
+            "en": "📦 FIN-003: Dedicated Publisher DB Server (5 SP)",
+            "et": "📦 FIN-003: Dedicated Publisher DB Server 4 (5 SP)",
+            "fi": "📦 FIN-003: Dedikoitu Publisher DB Palvelin 4 (5 SP)",
+            "sv": "📦 FIN-003: Dedikerad Publisher DB Server 4 (5 SP)",
+            "lv": "📦 FIN-003: Dedicēta Publisher DB Serveris 4 (5 SP)",
+            "lt": "📦 FIN-003: Dedikuota Publisher DB Mazgas 4 (5 SP)"
+        },
+        "files": { "en": "docs/backlog/FIN-003-publisher-db-remote-container-deployment.md" }
+    },
+    {
+        "id": "fin-004",
+        "rel": "docs/backlog/FIN-004-standalone-ords-apex-server-deployment.md",
+        "titles": {
+            "en": "🌐 FIN-004: Standalone ORDS + APEX Server (8 SP)",
+            "et": "🌐 FIN-004: Eraldiseisev ORDS + APEX Server 1 (8 SP)",
+            "fi": "🌐 FIN-004: Erillinen ORDS + APEX Palvelin 1 (8 SP)",
+            "sv": "🌐 FIN-004: Fristående ORDS + APEX Server 1 (8 SP)",
+            "lv": "🌐 FIN-004: Savrups ORDS + APEX Serveris 1 (8 SP)",
+            "lt": "🌐 FIN-004: Atskiras ORDS + APEX Mazgas 1 (8 SP)"
+        },
+        "files": { "en": "docs/backlog/FIN-004-standalone-ords-apex-server-deployment.md" }
+    },
+    {
+        "id": "fin-005",
+        "rel": "docs/backlog/FIN-005-standalone-analytics-publisher-server-deployment.md",
+        "titles": {
+            "en": "📑 FIN-005: Standalone Analytics Publisher Server (8 SP)",
+            "et": "📑 FIN-005: Eraldiseisev Analytics Publisher Server 2 (8 SP)",
+            "fi": "📑 FIN-005: Erillinen Analytics Publisher Palvelin 2 (8 SP)",
+            "sv": "📑 FIN-005: Fristående Analytics Publisher Server 2 (8 SP)",
+            "lv": "📑 FIN-005: Savrups Analytics Publisher Serveris 2 (8 SP)",
+            "lt": "📑 FIN-005: Atskiras Analytics Publisher Mazgas 2 (8 SP)"
+        },
+        "files": { "en": "docs/backlog/FIN-005-standalone-analytics-publisher-server-deployment.md" }
+    },
+    {
+        "id": "fin-006",
+        "rel": "docs/backlog/FIN-006-ords-multi-pool-business-db-wiring.md",
+        "titles": {
+            "en": "🔗 FIN-006: ORDS Multi-Pool to Core Business DB (5 SP)",
+            "et": "🔗 FIN-006: ORDS Multi-Pool Äriandmebaasile (5 SP)",
+            "fi": "🔗 FIN-006: ORDS Multi-Pool Liiketoiminta-DB:lle (5 SP)",
+            "sv": "🔗 FIN-006: ORDS Multi-Pool till Verksamhets-DB (5 SP)",
+            "lv": "🔗 FIN-006: ORDS Multi-Pool Biznesa DB (5 SP)",
+            "lt": "🔗 FIN-006: ORDS Multi-Pool Verslo DB (5 SP)"
+        },
+        "files": { "en": "docs/backlog/FIN-006-ords-multi-pool-business-db-wiring.md" }
+    },
+    {
+        "id": "fin-007",
+        "rel": "docs/backlog/FIN-007-publisher-jdbc-business-db-connection.md",
+        "titles": {
+            "en": "📊 FIN-007: Publisher JDBC Link to Business DB (3 SP)",
+            "et": "📊 FIN-007: Publisher JDBC Ühendus Äriandmebaasiga (3 SP)",
+            "fi": "📊 FIN-007: Publisher JDBC Yhteys Liiketoiminta-DB:hen (3 SP)",
+            "sv": "📊 FIN-007: Publisher JDBC Länk till Verksamhets-DB (3 SP)",
+            "lv": "📊 FIN-007: Publisher JDBC Savienojums ar Biznesa DB (3 SP)",
+            "lt": "📊 FIN-007: Publisher JDBC Ryšys su Verslo DB (3 SP)"
+        },
+        "files": { "en": "docs/backlog/FIN-007-publisher-jdbc-business-db-connection.md" }
+    },
+    {
+        "id": "fin-008",
+        "rel": "docs/backlog/FIN-008-prod-active-standby-sync-and-failover.md",
+        "titles": {
+            "en": "🛡️ FIN-008: PROD Active/Standby Sync & Failover (8 SP)",
+            "et": "🛡️ FIN-008: PROD Active/Standby Sünkro & Failover (8 SP)",
+            "fi": "🛡️ FIN-008: PROD Active/Standby Synkronointi & Failover (8 SP)",
+            "sv": "🛡️ FIN-008: PROD Active/Standby Synk & Failover (8 SP)",
+            "lv": "🛡️ FIN-008: PROD Active/Standby Sinhro & Failover (8 SP)",
+            "lt": "🛡️ FIN-008: PROD Active/Standby Sinchronizacija & Failover (8 SP)"
+        },
+        "files": { "en": "docs/backlog/FIN-008-prod-active-standby-sync-and-failover.md" }
+    },
+    {
+        "id": "fin-009",
+        "rel": "docs/backlog/FIN-009-zero-trust-wallet-and-tls-distribution.md",
+        "titles": {
+            "en": "🔐 FIN-009: Zero-Trust SEPS Wallet & TLS Distribution (5 SP)",
+            "et": "🔐 FIN-009: Zero-Trust SEPS Wallet & TLS Jaotamine (5 SP)",
+            "fi": "🔐 FIN-009: Zero-Trust SEPS Wallet & TLS Jakelu (5 SP)",
+            "sv": "🔐 FIN-009: Zero-Trust SEPS Wallet & TLS Distribution (5 SP)",
+            "lv": "🔐 FIN-009: Zero-Trust SEPS Wallet & TLS Izplatīšana (5 SP)",
+            "lt": "🔐 FIN-009: Zero-Trust SEPS Wallet & TLS Paskirstymas (5 SP)"
+        },
+        "files": { "en": "docs/backlog/FIN-009-zero-trust-wallet-and-tls-distribution.md" }
+    },
+    {
+        "id": "fin-010",
+        "rel": "docs/backlog/FIN-010-dev-test-prod-ci-cd-promotion-pipeline.md",
+        "titles": {
+            "en": "🔄 FIN-010: Multi-Env Promotion CI/CD Pipeline (5 SP)",
+            "et": "🔄 FIN-010: Mitme Keskkonna Tarnetoru CI/CD (5 SP)",
+            "fi": "🔄 FIN-010: Moniympäristöinen CI/CD-Jakeluputki (5 SP)",
+            "sv": "🔄 FIN-010: Multi-Miljö CI/CD Distributionspipeline (5 SP)",
+            "lv": "🔄 FIN-010: Vairāku Vižu Pārcelšanas CI/CD Cauruļvads (5 SP)",
+            "lt": "🔄 FIN-010: Daugelio Aplinkų CI/CD Pristatymo Konvejeris (5 SP)"
+        },
+        "files": { "en": "docs/backlog/FIN-010-dev-test-prod-ci-cd-promotion-pipeline.md" }
+    },
+    {
+        "id": "fin-011",
+        "rel": "docs/backlog/FIN-011-e2e-health-check-and-disaster-recovery-testing.md",
+        "titles": {
+            "en": "🧪 FIN-011: E2E Health Check & DR Test Suite (5 SP)",
+            "et": "🧪 FIN-011: E2E Tervisekontrollid & DR Testid (5 SP)",
+            "fi": "🧪 FIN-011: E2E Terveystarkastukset ja DR-Testit (5 SP)",
+            "sv": "🧪 FIN-011: E2E Hälsokontroller & DR-Tester (5 SP)",
+            "lv": "🧪 FIN-011: E2E Veselības Pārbaudes & DR Testi (5 SP)",
+            "lt": "🧪 FIN-011: E2E Būsenos Patikrinimai & DR Testai (5 SP)"
+        },
+        "files": { "en": "docs/backlog/FIN-011-e2e-health-check-and-disaster-recovery-testing.md" }
     }
 ]
 

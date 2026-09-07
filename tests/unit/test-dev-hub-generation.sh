@@ -51,5 +51,26 @@ if ! grep -q "BLUEPRINTS_DATA = \[" "$TMP_OUT"; then
   exit 1
 fi
 
+# Verify embedded JavaScript syntax integrity (catches syntax errors, missing commas, unescaped strings)
+if command -v node >/dev/null 2>&1; then
+  node -e "
+    const fs = require('fs');
+    const html = fs.readFileSync('$TMP_OUT', 'utf8');
+    const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>[\s\r\n]*<\/body>/);
+    if (!scriptMatch) {
+      console.error('❌ Error: Could not find embedded script block in $TMP_OUT');
+      process.exit(1);
+    }
+    const tmpJs = '$TMP_OUT.check.js';
+    fs.writeFileSync(tmpJs, scriptMatch[1]);
+    try {
+      require('child_process').execSync('node --check ' + tmpJs, { stdio: 'pipe' });
+    } finally {
+      if (fs.existsSync(tmpJs)) fs.unlinkSync(tmpJs);
+    }
+  "
+  echo "✅ Embedded JavaScript syntax validation passed (no SyntaxError)!"
+fi
+
 rm -f "$TMP_OUT"
 echo "✅ Developer Hub generation unit tests passed successfully across all 6 languages & 9 tabs!"

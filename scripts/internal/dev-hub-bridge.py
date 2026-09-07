@@ -314,8 +314,11 @@ def get_live_container_status():
 
     return status_map, running_names, active_bp, container_health, setup_prog
 
+CACHED_ORDS_POOLS = {}
+
 def get_live_ords_pools():
     """Query status and latency of configured ORDS database pools (Variant 3)."""
+    global CACHED_ORDS_POOLS
     ords_pools = {}
     pools_dir = os.path.join(WORKSPACE_DIR, "config/ords/proxy/databases")
     if not os.path.isdir(pools_dir):
@@ -371,6 +374,7 @@ def get_live_ords_pools():
             "latency_ms": lat,
             "http_code": http_code
         }
+    CACHED_ORDS_POOLS = ords_pools
     return ords_pools
 
 def get_system_resources():
@@ -1048,7 +1052,11 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             statuses, running_names, active_bp, container_health, setup_prog = get_live_container_status()
             conflicts = detect_port_conflicts()
             resources = get_system_resources()
-            ords_pools = get_live_ords_pools()
+            include_pools = params.get("include_ords_pools", ["1"])[0]
+            if include_pools == "0" and CACHED_ORDS_POOLS:
+                ords_pools = CACHED_ORDS_POOLS
+            else:
+                ords_pools = get_live_ords_pools()
             data = {
                 "status": "ok",
                 "modules": statuses,
@@ -1237,7 +1245,20 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 "apex-deploy": "docs/apex-apps-deployment.md",
                 "setup-workflow": "docs/setup-all-workflow.md",
                 "future-plans": "docs/future-plans.md",
-                "forms-to-apex": "docs/forms-to-apex-migration-guide.md"
+                "forms-to-apex": "docs/forms-to-apex-migration-guide.md",
+                "enterprise-architecture": "docs/enterprise-distributed-architecture.md",
+                "enterprise-backlog": "docs/backlog/README.md",
+                "fin-001": "docs/backlog/FIN-001-multi-host-inventory-and-profile-engine.md",
+                "fin-002": "docs/backlog/FIN-002-proxy-db-remote-container-deployment.md",
+                "fin-003": "docs/backlog/FIN-003-publisher-db-remote-container-deployment.md",
+                "fin-004": "docs/backlog/FIN-004-standalone-ords-apex-server-deployment.md",
+                "fin-005": "docs/backlog/FIN-005-standalone-analytics-publisher-server-deployment.md",
+                "fin-006": "docs/backlog/FIN-006-ords-multi-pool-business-db-wiring.md",
+                "fin-007": "docs/backlog/FIN-007-publisher-jdbc-business-db-connection.md",
+                "fin-008": "docs/backlog/FIN-008-prod-active-standby-sync-and-failover.md",
+                "fin-009": "docs/backlog/FIN-009-zero-trust-wallet-and-tls-distribution.md",
+                "fin-010": "docs/backlog/FIN-010-dev-test-prod-ci-cd-promotion-pipeline.md",
+                "fin-011": "docs/backlog/FIN-011-e2e-health-check-and-disaster-recovery-testing.md"
             }
 
             rel_path = doc_map.get(doc_id, f"docs/{doc_id}.md")
@@ -1340,6 +1361,76 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps({"status": "error", "ok": False, "error": str(e)}).encode("utf-8"))
 
+        elif parsed.path == "/api/logs/list":
+            log_dir = os.path.join(WORKSPACE_DIR, "install_logs")
+            logs_list = []
+            if os.path.isdir(log_dir):
+                for fname in os.listdir(log_dir):
+                    if not fname.endswith(".log"):
+                        continue
+                    full_p = os.path.join(log_dir, fname)
+                    if not os.path.isfile(full_p):
+                        continue
+                    try:
+                        stat = os.stat(full_p)
+                        size = stat.st_size
+                        mtime_ts = stat.st_mtime
+                        mtime_str = datetime.datetime.fromtimestamp(mtime_ts).strftime("%Y-%m-%d %H:%M:%S")
+
+                        # Determine category and blueprint ID
+                        category = "devops"
+                        bp_id = ""
+                        m_bp = re.search(r"bp_?([0-9]+)", fname)
+                        if m_bp:
+                            bp_id = m_bp.group(1)
+
+                        lower_name = fname.lower()
+                        if lower_name.startswith("setup") or "setup" in lower_name:
+                            category = "setup"
+                        elif lower_name.startswith("deploy") or "deploy" in lower_name:
+                            category = "deploy"
+                        elif lower_name.startswith("test") or "test" in lower_name:
+                            category = "test"
+                        elif lower_name.startswith("snapshot") or "snapshot" in lower_name or "restore" in lower_name:
+                            category = "snapshot"
+                        elif lower_name.startswith("reset") or "reset" in lower_name:
+                            category = "reset"
+                        elif lower_name.startswith("ci_") or "github" in lower_name:
+                            category = "ci"
+
+                        # Friendly label
+                        label = fname
+                        if bp_id:
+                            label = f"Blueprint #{bp_id} ({category.capitalize()})"
+                        elif "test_browser" in lower_name:
+                            label = "Browser Login Test"
+                        elif "ci_local" in lower_name:
+                            label = "Local CI Simulator"
+                        elif "test_all" in lower_name:
+                            label = "All Components Test"
+                        elif "restore_golden" in lower_name:
+                            label = "Golden Snapshot Restore"
+                        elif "clean_logs" in lower_name:
+                            label = "Clean Logs"
+
+                        logs_list.append({
+                            "filename": fname,
+                            "relative_path": f"install_logs/{fname}",
+                            "size_bytes": size,
+                            "size_formatted": f"{size / 1024:.1f} KB" if size > 1024 else f"{size} B",
+                            "mtime": mtime_str,
+                            "timestamp": mtime_ts,
+                            "category": category,
+                            "blueprint_id": bp_id,
+                            "label": label
+                        })
+                    except Exception:
+                        pass
+
+            # Sort latest modified first
+            logs_list.sort(key=lambda x: x["timestamp"], reverse=True)
+            self._send_json({"status": "ok", "logs": logs_list, "total": len(logs_list)}, cb)
+
         elif parsed.path == "/api/log/latest":
             bp = params.get("bp", ["0"])[0]
             info = find_latest_log_for_blueprint(WORKSPACE_DIR, bp) if find_latest_log_for_blueprint else None
@@ -1421,9 +1512,92 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             self.handle_test_run(post_body, parsed.query, cb)
         elif parsed.path == "/api/tests/stop":
             self.handle_test_stop(post_body, parsed.query, cb)
+        elif parsed.path == "/api/podman/action":
+            self.handle_podman_action(post_body, parsed.query, cb)
         else:
             self.send_response(404)
             self.end_headers()
+
+    def handle_podman_action(self, post_body, query_str, cb=None):
+        """Controls Podman resources: containers (start, stop, restart, remove), volumes (remove), images (remove)."""
+        res_type = "container"
+        action = "stop"
+        name = ""
+        try:
+            if post_body.strip().startswith("{"):
+                data = json.loads(post_body)
+                res_type = data.get("type", "container").lower()
+                action = data.get("action", "stop").lower()
+                name = data.get("name", "").strip()
+            else:
+                q = urllib.parse.parse_qs(post_body or query_str)
+                res_type = q.get("type", ["container"])[0].lower()
+                action = q.get("action", ["stop"])[0].lower()
+                name = q.get("name", [""])[0].strip()
+        except Exception as e:
+            self._send_json({"status": "error", "error": f"Invalid request body: {str(e)}"}, cb, status=400)
+            return
+
+        if not name:
+            self._send_json({"status": "error", "error": "Missing resource name/id"}, cb, status=400)
+            return
+
+        # Security check: strict regex for container, volume or image name/hash
+        if not re.match(r"^[a-zA-Z0-9_.:/-]+$", name):
+            self._send_json({"status": "error", "error": f"Invalid resource identifier: {name}"}, cb, status=400)
+            return
+
+        cmd = []
+        if res_type == "container":
+            if action == "start":
+                cmd = [PODMAN_BIN, "start", name]
+            elif action == "stop":
+                cmd = [PODMAN_BIN, "stop", name]
+            elif action == "restart":
+                cmd = [PODMAN_BIN, "restart", name]
+            elif action in ["remove", "rm", "delete"]:
+                cmd = [PODMAN_BIN, "rm", "-f", name]
+            else:
+                self._send_json({"status": "error", "error": f"Unsupported container action: {action}"}, cb, status=400)
+                return
+        elif res_type == "volume":
+            if action in ["remove", "rm", "delete"]:
+                cmd = [PODMAN_BIN, "volume", "rm", "-f", name]
+            else:
+                self._send_json({"status": "error", "error": f"Unsupported volume action: {action}"}, cb, status=400)
+                return
+        elif res_type == "image":
+            if action in ["remove", "rm", "delete", "rmi"]:
+                cmd = [PODMAN_BIN, "rmi", "-f", name]
+            else:
+                self._send_json({"status": "error", "error": f"Unsupported image action: {action}"}, cb, status=400)
+                return
+        else:
+            self._send_json({"status": "error", "error": f"Unsupported resource type: {res_type}"}, cb, status=400)
+            return
+
+        try:
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            if res.returncode == 0:
+                self._send_json({
+                    "status": "ok",
+                    "type": res_type,
+                    "action": action,
+                    "name": name,
+                    "output": res.stdout.strip(),
+                    "message": f"Successfully executed '{action}' on {res_type} '{name}'."
+                }, cb)
+            else:
+                err_msg = res.stderr.strip() or res.stdout.strip() or f"Command failed with exit code {res.returncode}"
+                self._send_json({
+                    "status": "error",
+                    "type": res_type,
+                    "action": action,
+                    "name": name,
+                    "error": err_msg
+                }, cb, status=500)
+        except Exception as e:
+            self._send_json({"status": "error", "error": str(e)}, cb, status=500)
 
     def handle_profile_save(self, post_body, query_str, cb=None):
         rel_p = ""

@@ -270,6 +270,8 @@ Erillisen HTML Dev Hubin (`docs/dev-hub.html`) lisäksi alusta sisältää yrity
 
 ## 📑 Moduulikohtaiset Käyttöoppaat
 
+- 🏛️ **[docs/enterprise-distributed-architecture.md](../../docs/enterprise-distributed-architecture.md) | [docs/fi/enterprise-distributed-architecture.md](enterprise-distributed-architecture.md):** **Yritystason Hajautettu Arkkitehtuuri** — 4-tasoinen rahoitusarkkitehtuuri (ORDS, Publisher, Proxy DB, Publisher DB), ydinliiketoimintatietokannan liittäminen ja PROD Active/Standby -katastrofipalautus (RTO < 60s, RPO < 15m).
+- 📋 **[docs/backlog/README.md](../../docs/backlog/README.md):** **Rahoitusalan Jira Backlog** — 11 tuotantovalmista Jira-tarinaa (62 SP) hajautettuun käyttöönottoon, multi-pool-reititykseen ja automaattiseen vikasietoisuuteen.
 - 🚀 **[docs/fi/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Modernisointi- ja Migraatio-opas** — Liiketoimintaperusteet, TCO-kustannusvertailu, 5-vaiheinen automaattinen työnkulku, PL/SQL-logiikan eristäminen ja [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) Vibe-Coding.
 - 📐 **[docs/fi/forms-setup.md](forms-setup.md):** Oracle Forms 14c käyttöohje — porttikartta (9001/7001/6082), testilomakkeen avaaminen (`frmservlet?form=test.fmx`), lomakkeiden lisääminen kansioon `forms_apps/`, kääntäminen ja APEX-migraatio.
 - 📑 **[docs/fi/publisher-setup.md](publisher-setup.md):** Analytics Publisherin käyttöohje — portti 9502 (`/xmlpserver`), RCU-metatietokanta, `PUBLISHER_READER` Wallet -tili, JDBC-tietolähteiden liittäminen ja raporttien jakelu.

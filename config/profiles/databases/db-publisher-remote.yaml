@@ -1,0 +1,28 @@
+# ==============================================================================
+# Database Profile: Dedicated Remote Publisher RCU DB (Host 4)
+# ==============================================================================
+name: db-publisher-remote
+description: "Dedicated Remote Publisher RCU DB Container"
+db_name: FREE
+pdb_name: FREEPDB1
+port: 1532
+memory_limit: 3500m
+container_name: db-publisher
+container_image: container-registry.oracle.com/database/free:23.6.0.0-lite
+install_apex: false
+
+users:
+  - username: DEV_MDS
+    default_tablespace: USERS
+    quota: unlimited
+    wallet_alias: DB_PUBLISHER_MDS
+  - username: DEV_BIPLATFORM
+    default_tablespace: USERS
+    quota: unlimited
+    wallet_alias: DB_PUBLISHER_BIPLATFORM
+  - username: PUBLISHER_READER
+    default_tablespace: USERS
+    quota: 100M
+    wallet_alias: DB_PUBLISHER_READER
+    roles:
+      - CONNECT

@@ -144,6 +144,7 @@ function setLanguage(lang) {
   updateServiceCardsUI();
   if (typeof renderTestingSuites === 'function') renderTestingSuites();
   if (typeof updateTestTerminalLangBadge === 'function') updateTestTerminalLangBadge(lang);
+  if (typeof setOrdsAutoSync === 'function') setOrdsAutoSync(gOrdsAutoSync, false);
 }
 
 function applyPillState(pill, state, lang, matchedCount, totalCount) {
@@ -187,12 +188,135 @@ function showToast(msg) {
   toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
 }
 
+let gOrdsAutoSync = false;
+let gAutoSyncTriggeredByBp = false;
+const PENDING_LAUNCHED_BPS = new Set();
+
+function toggleOrdsAutoSync() {
+  setOrdsAutoSync(!gOrdsAutoSync, true);
+  gAutoSyncTriggeredByBp = false;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  if (gOrdsAutoSync) {
+    showToast(dict.ords_autosync_started || '🟢 ORDS Smart Gateway Auto-Sync aktiveeritud.');
+    syncOrdsPools();
+  } else {
+    showToast(dict.ords_autosync_stopped || '⚪ ORDS Smart Gateway Auto-Sync välja lülitatud.');
+  }
+}
+
+function setOrdsAutoSync(enabled, saveStorage = true) {
+  gOrdsAutoSync = !!enabled;
+  if (saveStorage) {
+    localStorage.setItem('dev_hub_ords_autosync', gOrdsAutoSync ? 'true' : 'false');
+  }
+  const btn = document.getElementById('ords-autosync-toggle-btn');
+  const ind = document.getElementById('ords-autosync-indicator');
+  const lbl = document.getElementById('ords-autosync-label');
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  if (btn && ind && lbl) {
+    if (gOrdsAutoSync) {
+      btn.style.background = 'rgba(34, 197, 94, 0.2)';
+      btn.style.borderColor = 'rgba(34, 197, 94, 0.6)';
+      btn.style.color = '#4ade80';
+      ind.textContent = '🟢';
+      lbl.textContent = dict.ords_autosync_on || 'Auto-Sync: ON';
+    } else {
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      ind.textContent = '⚪';
+      lbl.textContent = dict.ords_autosync_off || 'Auto-Sync: OFF';
+    }
+  }
+}
+
+function addPendingBlueprintLaunch(bpNum) {
+  PENDING_LAUNCHED_BPS.add(Number(bpNum));
+  if (!gOrdsAutoSync) {
+    gAutoSyncTriggeredByBp = true;
+    setOrdsAutoSync(true);
+    const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+    showToast(dict.ords_autosync_started || '🔄 Blueprint käivitatud: ORDS Auto-Sync automaatselt sisse lülitatud.');
+  }
+  renderActiveContainersPills();
+}
+
+function removePendingBlueprintLaunch(bpNum) {
+  PENDING_LAUNCHED_BPS.delete(Number(bpNum));
+  if (PENDING_LAUNCHED_BPS.size === 0 && gAutoSyncTriggeredByBp) {
+    setOrdsAutoSync(false);
+    gAutoSyncTriggeredByBp = false;
+    const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+    showToast(dict.ords_autosync_stopped || '✅ Kõik käivitatud blueprindid on aktiivsed. ORDS Auto-Sync lülitus välja.');
+  }
+  renderActiveContainersPills();
+}
+
+function renderActiveContainersPills() {
+  const container = document.getElementById('active-containers-pills-row');
+  if (!container) return;
+  
+  const running = Array.isArray(LIVE_RUNNING_CONTAINERS) ? [...LIVE_RUNNING_CONTAINERS] : [];
+  const healthMap = (typeof LIVE_CONTAINER_HEALTH === 'object' && LIVE_CONTAINER_HEALTH) ? LIVE_CONTAINER_HEALTH : {};
+  
+  const startingContainers = [];
+  if (PENDING_LAUNCHED_BPS.size > 0) {
+    PENDING_LAUNCHED_BPS.forEach(bpNum => {
+      const bpCard = document.querySelector(`.card[data-bp="${bpNum}"]`);
+      if (bpCard) {
+        const cnames = bpCard.getAttribute('data-containers');
+        if (cnames) {
+          cnames.split(',').map(s => s.trim()).forEach(c => {
+            if (c && !running.includes(c) && !startingContainers.includes(c)) {
+              startingContainers.push(c);
+            }
+          });
+        }
+      }
+    });
+  }
+
+  if (running.length === 0 && startingContainers.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  let html = '';
+  running.forEach(c => {
+    const health = (healthMap[c] || '').toLowerCase();
+    let dot = '🟢';
+    let badgeClass = 'badge-success';
+    let titleText = `${c}: running (healthy)`;
+    if (health === 'starting') {
+      dot = '🟡';
+      badgeClass = 'badge-warning';
+      titleText = `${c}: initializing / starting`;
+    } else if (health === 'unhealthy') {
+      dot = '🔴';
+      badgeClass = 'badge-danger';
+      titleText = `${c}: unhealthy`;
+    }
+    html += `<span class="badge ${badgeClass}" style="font-size:0.72rem; padding: 2px 7px; display:inline-flex; align-items:center; gap:4px; font-family: ui-monospace, monospace;" title="${titleText}"><span>${dot}</span><span>${c}</span></span>`;
+  });
+
+  startingContainers.forEach(c => {
+    html += `<span class="badge" style="font-size:0.72rem; padding: 2px 7px; display:inline-flex; align-items:center; gap:4px; font-family: ui-monospace, monospace; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3);" title="${c}: starting / launching"><span>🟡</span><span>${c}</span></span>`;
+  });
+
+  container.innerHTML = html;
+}
+
 async function pollBridgeStatus(manual = false) {
   const connBadge = document.getElementById('bridge-conn-status');
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2000);
-    const resp = await fetch(`${BRIDGE_URL}/api/status`, { signal: controller.signal, mode: 'cors' });
+    const poolsParam = (gOrdsAutoSync || manual || !LIVE_ORDS_POOLS || Object.keys(LIVE_ORDS_POOLS).length === 0) ? '?include_ords_pools=1' : '?include_ords_pools=0';
+    const resp = await fetch(`${BRIDGE_URL}/api/status${poolsParam}`, { signal: controller.signal, mode: 'cors' });
     clearTimeout(timeoutId);
     if (resp.ok) {
       const data = await resp.json();
@@ -212,7 +336,7 @@ async function pollBridgeStatus(manual = false) {
       if (data.system_resources) {
         LIVE_SYSTEM_RESOURCES = data.system_resources;
       }
-      if (data.ords_pools) {
+      if (data.ords_pools && (gOrdsAutoSync || manual || !LIVE_ORDS_POOLS || Object.keys(LIVE_ORDS_POOLS).length === 0)) {
         LIVE_ORDS_POOLS = data.ords_pools;
       }
       if (connBadge) {
@@ -224,6 +348,7 @@ async function pollBridgeStatus(manual = false) {
       renderBlueprints(currentActiveFilter);
       updateServiceCardsUI();
       renderOrdsGatewayStrip();
+      renderActiveContainersPills();
       if (manual) showToast('✅ Bridge staatus uuendatud!');
     }
   } catch (e) {
@@ -236,6 +361,7 @@ async function pollBridgeStatus(manual = false) {
     renderBlueprints(currentActiveFilter);
     updateServiceCardsUI();
     renderOrdsGatewayStrip();
+    renderActiveContainersPills();
   }
 }
 
@@ -585,6 +711,17 @@ async function checkServiceHealth() {
       filterActiveBtn.innerHTML = baseText;
     }
   }
+
+  // Remove pending blueprints that reached active state
+  if (PENDING_LAUNCHED_BPS.size > 0) {
+    PENDING_LAUNCHED_BPS.forEach(bpNum => {
+      const card = document.querySelector(`.card[data-bp="${bpNum}"]`);
+      if (card && !card.classList.contains('card-offline') && !card.classList.contains('card-init')) {
+        removePendingBlueprintLaunch(bpNum);
+      }
+    });
+  }
+  renderActiveContainersPills();
 }
 
 function updateServiceCardsUI() {
@@ -647,10 +784,10 @@ function renderOrdsGatewayStrip() {
   listContainer.innerHTML = html;
 }
 
-async function syncOrdsPools() {
+async function syncOrdsPools(manual = false) {
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
-  showToast('🔄 Sünkroonin ORDS poole...');
+  if (manual) showToast(dict.ords_sync_running || '🔄 Sünkroonin ORDS poole...');
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 4000);
@@ -667,12 +804,12 @@ async function syncOrdsPools() {
       }
       renderOrdsGatewayStrip();
       checkServiceHealth();
-      showToast(dict.ords_sync_success || '✅ ORDS connection pools successfully synchronized!');
+      if (manual) showToast(dict.ords_sync_success || '✅ ORDS connection pools successfully synchronized!');
     } else {
-      showToast('⚠️ ORDS poolide sünkroniseerimine ebaõnnestus.');
+      if (manual) showToast('⚠️ ORDS poolide sünkroniseerimine ebaõnnestus.');
     }
   } catch (e) {
-    showToast('⚠️ Bridge offline – kasuta käsku: <code>./scripts/internal/manage-ords-pools.sh sync</code>');
+    if (manual) showToast('⚠️ Bridge offline – kasuta käsku: <code>./scripts/internal/manage-ords-pools.sh sync</code>');
   }
 }
 
@@ -1503,8 +1640,14 @@ async function triggerBlueprintActionModal(bNum, action) {
   // finishes successfully.
   // RULE: Long operations (setup, activate, switch, deploy, restart) MUST ALWAYS
   // be dispatched as asynchronous tasks and polled via /api/task/status until state === 'completed'.
+  const isLongOp = ['setup', 'activate', 'switch', 'deploy', 'restart'].includes(action);
+  if (action === 'stop') {
+    removePendingBlueprintLaunch(bNum);
+  } else if (isLongOp) {
+    addPendingBlueprintLaunch(bNum);
+  }
+
   try {
-    const isLongOp = ['setup', 'activate', 'switch', 'deploy', 'restart'].includes(action);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
     const resp = await fetch(`${BRIDGE_URL}/api/toggle?module=${bNum}&action=${action}&lang=${currentLang}`, {
@@ -1549,6 +1692,7 @@ async function triggerBlueprintActionModal(bNum, action) {
               }
               if (statusData.state === 'completed') {
                 clearInterval(pollTaskInterval);
+                removePendingBlueprintLaunch(bNum);
                 const succMsg = dict.ops_success_verified || `✅ Blueprint #${bNum} paigaldus edukalt lõpetatud ja verifitseeritud! Kõik andmebaasid ja URL-id on aktiivsed.`;
                 if (progress) progress.finish(true, statusData);
                 showToast(succMsg);
@@ -1561,6 +1705,7 @@ async function triggerBlueprintActionModal(bNum, action) {
                 }, 2000);
               } else if (statusData.state === 'failed') {
                 clearInterval(pollTaskInterval);
+                removePendingBlueprintLaunch(bNum);
                 if (progress) progress.finish(false, statusData);
                 const errMsg = statusData.error || 'Paigaldus ebaõnnestus.';
                 showToast(`⚠️ Viga: ${errMsg}`);
@@ -2517,48 +2662,220 @@ function filterBlueprints(cat) {
   searchCockpitCards(searchInput ? searchInput.value : '');
 }
 
+function escapeHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+let gDocsSelectedCategory = 'all';
+let gDocsSearchQuery = '';
+
+function getDocCategory(rel) {
+  const r = (rel || '').toLowerCase();
+  if (r.includes('architecture') || r.includes('topology') || r.includes('blueprint') || r.includes('seps') || r.includes('wallet') || r.includes('profile') || r.includes('backlog') || r.includes('fin-') || r.includes('enterprise')) return 'arch';
+  if (r.includes('script') || r.includes('setup') || r.includes('reset') || r.includes('cicd') || r.includes('ci') || r.includes('deploy') || r.includes('snapshot') || r.includes('devops')) return 'devops';
+  if (r.includes('apex') || r.includes('ords') || r.includes('publisher') || r.includes('forms') || r.includes('web-ide') || r.includes('ide') || r.includes('service')) return 'web';
+  return 'trouble';
+}
+
+function filterDocsCategory(cat) {
+  gDocsSelectedCategory = cat || 'all';
+  ['all', 'arch', 'devops', 'web', 'trouble'].forEach(c => {
+    const btn = document.getElementById(`btn-docs-cat-${c}`);
+    if (btn) btn.classList.toggle('active', c === gDocsSelectedCategory);
+  });
+  renderDocsNav();
+}
+
 function renderDocsNav(selectedIdx) {
   const sidebar = document.getElementById('docs-sidebar-nav');
   if (!sidebar) return;
   sidebar.innerHTML = '';
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   currentSelectedDocIdx = selectedIdx || 0;
-  
+
+  let visibleCount = 0;
   DOCS_DATA.forEach((doc, idx) => {
+    const docCat = getDocCategory(doc.rel);
+    if (gDocsSelectedCategory !== 'all' && docCat !== gDocsSelectedCategory) {
+      return;
+    }
+
     const btn = document.createElement('button');
     btn.className = 'docs-nav-item' + (idx === currentSelectedDocIdx ? ' active' : '');
     btn.setAttribute('data-doc-idx', idx);
     const title = (doc.titles && doc.titles[currentLang]) || (doc.titles && doc.titles['en']) || doc.rel;
     const shortName = doc.rel.replace('docs/', '').replace('.md', '');
     btn.innerHTML = `
-      <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">${title}</span>
-      <span style="font-size: 0.72rem; opacity: 0.6; font-family: ui-monospace, monospace; margin-left: 6px;">${shortName}</span>
+      <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">${escapeHtml(title)}</span>
+      <span style="font-size: 0.72rem; opacity: 0.6; font-family: ui-monospace, monospace; margin-left: 6px;">${escapeHtml(shortName)}</span>
     `;
     btn.onclick = () => loadDocContent(idx, btn);
     sidebar.appendChild(btn);
+    visibleCount++;
   });
-  
+
   const searchInput = document.getElementById('docs-search-input');
   if (searchInput && searchInput.value) {
-    filterDocsList(searchInput.value);
-  }
-  
-  if (DOCS_DATA.length > 0 && sidebar.children[currentSelectedDocIdx]) {
-    loadDocContent(currentSelectedDocIdx, sidebar.children[currentSelectedDocIdx]);
+    handleDocsSearchInput(searchInput.value);
+  } else if (DOCS_DATA.length > 0 && sidebar.children[0]) {
+    const firstBtn = sidebar.querySelector(`.docs-nav-item[data-doc-idx="${currentSelectedDocIdx}"]`) || sidebar.children[0];
+    const targetIdx = Number(firstBtn.getAttribute('data-doc-idx') || 0);
+    loadDocContent(targetIdx, firstBtn);
   }
 }
 
-function filterDocsList(query) {
-  query = (query || '').toLowerCase().trim();
-  const navItems = document.querySelectorAll('.docs-nav-item');
-  navItems.forEach(item => {
-    const text = item.textContent.toLowerCase();
-    if (!query || text.includes(query)) {
-      item.style.display = 'flex';
-    } else {
-      item.style.display = 'none';
+function renderDocsNavFiltered(allowedIndices) {
+  const sidebar = document.getElementById('docs-sidebar-nav');
+  if (!sidebar) return;
+  const items = sidebar.querySelectorAll('.docs-nav-item');
+  items.forEach(item => {
+    const idx = Number(item.getAttribute('data-doc-idx'));
+    item.style.display = (!allowedIndices || allowedIndices.includes(idx)) ? 'flex' : 'none';
+  });
+}
+
+function handleDocsSearchInput(query) {
+  gDocsSearchQuery = (query || '').trim();
+  const searchResultsBox = document.getElementById('docs-search-results-box');
+  const renderedBody = document.getElementById('docs-rendered-body');
+  const tocBox = document.getElementById('docs-toc-box');
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  if (!gDocsSearchQuery) {
+    if (searchResultsBox) {
+      searchResultsBox.style.display = 'none';
+      searchResultsBox.innerHTML = '';
+    }
+    if (renderedBody) renderedBody.style.display = '';
+    if (tocBox && tocBox.querySelector('li')) tocBox.style.display = '';
+    renderDocsNav(currentSelectedDocIdx);
+    return;
+  }
+
+  const qLower = gDocsSearchQuery.toLowerCase();
+  const matchedDocs = [];
+
+  DOCS_DATA.forEach((doc, idx) => {
+    const title = (doc.titles && (doc.titles[currentLang] || doc.titles['en'])) || doc.rel;
+    const content = (doc.contents && (doc.contents[currentLang] || doc.contents['en'])) || '';
+    const titleMatch = title.toLowerCase().includes(qLower);
+    const contentIdx = content.toLowerCase().indexOf(qLower);
+
+    if (titleMatch || contentIdx !== -1) {
+      let snippet = '';
+      if (contentIdx !== -1) {
+        const start = Math.max(0, contentIdx - 60);
+        const end = Math.min(content.length, contentIdx + qLower.length + 90);
+        let rawSnippet = content.substring(start, end).replace(/\n+/g, ' ');
+        if (start > 0) rawSnippet = '...' + rawSnippet;
+        if (end < content.length) rawSnippet = rawSnippet + '...';
+        
+        const escSnippet = escapeHtml(rawSnippet);
+        const regex = new RegExp(`(${escapeRegExp(gDocsSearchQuery)})`, 'gi');
+        snippet = escSnippet.replace(regex, '<mark style="background:#f59e0b; color:#0f172a; padding:1px 4px; border-radius:3px; font-weight:600;">$1</mark>');
+      } else {
+        snippet = `<span style="color:#94a3b8; font-style:italic;">Pealkiri klapib otsinguga: <strong>${escapeHtml(title)}</strong></span>`;
+      }
+      matchedDocs.push({ idx, doc, title, snippet });
     }
   });
+
+  renderDocsNavFiltered(matchedDocs.map(m => m.idx));
+
+  if (searchResultsBox) {
+    if (renderedBody) renderedBody.style.display = 'none';
+    if (tocBox) tocBox.style.display = 'none';
+    searchResultsBox.style.display = 'block';
+
+    if (matchedDocs.length === 0) {
+      searchResultsBox.innerHTML = `
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 24px; text-align: center; color: var(--text-dim);">
+          <div style="font-size: 1.8rem; margin-bottom: 8px;">🔍</div>
+          <div style="font-size: 0.95rem; font-weight: 600; color: #f8fafc;" data-i18n="docs_no_results">${dict.docs_no_results || 'Ühtegi sobivat dokumenti ei leitud.'}</div>
+          <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Päring: "${escapeHtml(gDocsSearchQuery)}"</div>
+        </div>
+      `;
+    } else {
+      let resultsHtml = `
+        <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 0.85rem; font-weight: 600; color: #38bdf8;">
+            🔍 ${matchedDocs.length} ${dict.docs_search_results || 'dokumenti leitud'} ("${escapeHtml(gDocsSearchQuery)}")
+          </span>
+          <button class="btn btn-sm btn-secondary" style="font-size: 0.75rem; padding: 2px 8px;" onclick="document.getElementById('docs-search-input').value=''; handleDocsSearchInput('');">✕ Tühjenda</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+      `;
+      matchedDocs.forEach(m => {
+        resultsHtml += `
+          <div class="card" style="margin-bottom: 0; padding: 14px 18px; cursor: pointer; border-left: 3px solid #38bdf8; transition: transform 0.15s ease;" onclick="openDocFromSearch(${m.idx})">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">${escapeHtml(m.title)}</span>
+              <span class="badge badge-primary" style="font-size: 0.72rem; font-family: ui-monospace, monospace;">${escapeHtml(m.doc.rel)}</span>
+            </div>
+            <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 4px; font-family: ui-monospace, monospace;">
+              ${m.snippet}
+            </div>
+          </div>
+        `;
+      });
+      resultsHtml += `</div>`;
+      searchResultsBox.innerHTML = resultsHtml;
+    }
+  }
+}
+
+function openDocFromSearch(idx) {
+  const searchResultsBox = document.getElementById('docs-search-results-box');
+  const renderedBody = document.getElementById('docs-rendered-body');
+  if (searchResultsBox) searchResultsBox.style.display = 'none';
+  if (renderedBody) renderedBody.style.display = '';
+  loadDocContent(idx);
+}
+
+function toggleDocsToc() {
+  const list = document.getElementById('docs-toc-list');
+  const icon = document.getElementById('docs-toc-toggle-icon');
+  if (list) {
+    const isHidden = list.style.display === 'none';
+    list.style.display = isHidden ? 'block' : 'none';
+    if (icon) icon.textContent = isHidden ? '▼' : '▶';
+  }
+}
+
+function generateDocToc(bodyEl) {
+  const tocBox = document.getElementById('docs-toc-box');
+  const tocList = document.getElementById('docs-toc-list');
+  if (!tocBox || !tocList || !bodyEl) return;
+  
+  const headings = bodyEl.querySelectorAll('h2, h3');
+  if (!headings || headings.length < 2) {
+    tocBox.style.display = 'none';
+    tocList.innerHTML = '';
+    return;
+  }
+
+  let tocHtml = '';
+  headings.forEach((h, i) => {
+    const anchorId = `doc-sec-${i}`;
+    h.id = anchorId;
+    const isH3 = h.tagName.toLowerCase() === 'h3';
+    const indent = isH3 ? 'margin-left: 16px; font-size: 0.78rem; opacity: 0.85;' : 'font-weight: 600; font-size: 0.82rem;';
+    tocHtml += `
+      <li style="margin-bottom: 4px; ${indent}">
+        <a href="#${anchorId}" style="color: #38bdf8; text-decoration: none;" onclick="document.getElementById('${anchorId}').scrollIntoView({behavior:'smooth'}); return false;">
+          ${escapeHtml(h.textContent)}
+        </a>
+      </li>
+    `;
+  });
+
+  tocList.innerHTML = tocHtml;
+  tocBox.style.display = 'block';
 }
 
 function loadDocContent(idx, activeBtn) {
@@ -2569,6 +2886,12 @@ function loadDocContent(idx, activeBtn) {
   if (activeBtn) {
     document.querySelectorAll('.docs-nav-item').forEach(b => b.classList.remove('active'));
     activeBtn.classList.add('active');
+  } else {
+    const targetBtn = document.querySelector(`.docs-nav-item[data-doc-idx="${idx}"]`);
+    if (targetBtn) {
+      document.querySelectorAll('.docs-nav-item').forEach(b => b.classList.remove('active'));
+      targetBtn.classList.add('active');
+    }
   }
   
   const headerEl = document.getElementById('docs-content-header');
@@ -2587,8 +2910,8 @@ function loadDocContent(idx, activeBtn) {
     headerEl.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 4px;">
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <h2 style="margin: 0; color: #f8fafc; font-size: 1.3rem;">${title}</h2>
-          <span class="badge badge-primary" style="font-family: ui-monospace, monospace; font-size: 0.75rem;">${doc.rel}</span>
+          <h2 style="margin: 0; color: #f8fafc; font-size: 1.3rem;">${escapeHtml(title)}</h2>
+          <span class="badge badge-primary" style="font-family: ui-monospace, monospace; font-size: 0.75rem;">${escapeHtml(doc.rel)}</span>
         </div>
         <div style="font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 12px; margin-top: 4px;">
           <span>⏱️ ~${readMin} min read (${wordCount} words)</span>
@@ -2606,16 +2929,16 @@ function loadDocContent(idx, activeBtn) {
 
   if (text) {
     bodyEl.innerHTML = marked.parse(text);
-    // Re-render any mermaid diagrams inside the rendered markdown
+    generateDocToc(bodyEl);
     try {
       mermaid.run({ nodes: bodyEl.querySelectorAll('.mermaid') });
     } catch (err) {}
   } else {
     bodyEl.innerHTML = `
       <div style="background: #1e293b; padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
-        <h3 style="color: var(--primary); margin-bottom: 8px;">📄 Repository Documentation: <code>${doc.rel}</code></h3>
-        <p style="color: var(--text-muted); margin-bottom: 16px;">This markdown guide is located directly in the project repository workspace at: <code>${doc.rel}</code></p>
-        <pre><code>cat ${doc.rel}</code></pre>
+        <h3 style="color: var(--primary); margin-bottom: 8px;">📄 Repository Documentation: <code>${escapeHtml(doc.rel)}</code></h3>
+        <p style="color: var(--text-muted); margin-bottom: 16px;">This markdown guide is located directly in the project repository workspace at: <code>${escapeHtml(doc.rel)}</code></p>
+        <pre><code>cat ${escapeHtml(doc.rel)}</code></pre>
       </div>
     `;
   }
@@ -2776,59 +3099,219 @@ function loadBenchmarksData() {
 
   tableContainer.innerHTML = tableHtml;
 
-  // 3. Execution Logs Console
-  if (logsContainer) {
-    const logs = (LOGS_DATA && LOGS_DATA.length > 0) ? LOGS_DATA : [
-      {
-        filename: "setup-all.log",
-        mtime: lastUpdatedStr,
-        size_bytes: 1024,
-        content: `==================================================================\nOracle DevOps Platform - Setup Complete\nBlueprint #${ACTIVE_BP_NUM} active & operational\nTotal setup duration: ${setup.total_duration_formatted || '15m 20s'}\n==================================================================`
+  // 3. Execution Logs Explorer
+  loadLogsExplorer();
+}
+
+let gLogsList = [];
+let gLogsCategory = 'all';
+let gLogsBlueprint = 'all';
+let gLogsSearchQuery = '';
+let gCurrentSelectedLogFile = null;
+
+async function loadLogsExplorer(refresh = false) {
+  if (gLogsList.length === 0 || refresh) {
+    try {
+      const resp = await fetch(`${BRIDGE_URL}/api/logs/list`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data.logs) && data.logs.length > 0) {
+          gLogsList = data.logs;
+        }
       }
-    ];
+    } catch (e) {}
 
-    let logTabsHtml = `<div style="display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px;">`;
-    logs.forEach((log, idx) => {
-      const activeClass = (idx === currentSelectedLogIdx) ? 'active' : '';
-      logTabsHtml += `
-        <button class="persona-btn ${activeClass}" style="padding: 6px 12px; font-size: 0.8rem;" onclick="switchLogFile(${idx})">
-          📄 ${log.filename}
-        </button>
+    if (gLogsList.length === 0 && typeof LOGS_DATA !== 'undefined' && Array.isArray(LOGS_DATA)) {
+      gLogsList = LOGS_DATA.map(l => ({
+        filename: l.filename,
+        mtime: l.mtime,
+        timestamp: l.mtime,
+        size_bytes: l.size_bytes,
+        category: 'setup',
+        blueprint: null,
+        label: l.filename,
+        content: l.content
+      }));
+    }
+  }
+
+  renderLogsExplorerView();
+}
+
+function filterLogsCategory(cat) {
+  gLogsCategory = cat || 'all';
+  ['all', 'setup', 'test', 'snapshot', 'devops'].forEach(c => {
+    const btn = document.getElementById(`btn-log-cat-${c}`);
+    if (btn) btn.classList.toggle('active', c === gLogsCategory);
+  });
+  renderLogsExplorerView();
+}
+
+function filterLogsBlueprint(bp) {
+  gLogsBlueprint = bp || 'all';
+  renderLogsExplorerView();
+}
+
+function filterLogsSearch(q) {
+  gLogsSearchQuery = (q || '').trim();
+  renderLogsExplorerView();
+}
+
+function renderLogsExplorerView() {
+  const logsContainer = document.getElementById('benchmarks-logs-container');
+  if (!logsContainer) return;
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  let filtered = [...gLogsList];
+  if (gLogsCategory !== 'all') {
+    filtered = filtered.filter(l => l.category === gLogsCategory);
+  }
+  if (gLogsBlueprint !== 'all') {
+    filtered = filtered.filter(l => String(l.blueprint) === String(gLogsBlueprint));
+  }
+  if (gLogsSearchQuery) {
+    const q = gLogsSearchQuery.toLowerCase();
+    filtered = filtered.filter(l => (l.filename || '').toLowerCase().includes(q) || (l.label || '').toLowerCase().includes(q));
+  }
+
+  if (!gCurrentSelectedLogFile && filtered.length > 0) {
+    gCurrentSelectedLogFile = filtered[0].filename;
+  } else if (filtered.length > 0 && !filtered.some(l => l.filename === gCurrentSelectedLogFile)) {
+    gCurrentSelectedLogFile = filtered[0].filename;
+  }
+
+  let tableRows = '';
+  if (filtered.length === 0) {
+    tableRows = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-dim);" data-i18n="logs_no_logs_found">${dict.logs_no_logs_found || 'Ühtegi logifaili ei leitud valitud filtritega.'}</td></tr>`;
+  } else {
+    tableRows = filtered.map(l => {
+      const isSelected = l.filename === gCurrentSelectedLogFile;
+      const rowStyle = isSelected ? 'background: rgba(56, 189, 248, 0.12); font-weight: 600;' : 'cursor: pointer;';
+      const sizeKb = (l.size_bytes ? (l.size_bytes / 1024).toFixed(1) : '0') + ' KB';
+      const bpLabel = (l.blueprint !== null && l.blueprint !== undefined) ? `<span class="badge badge-primary" style="font-size:0.72rem;">BP #${l.blueprint}</span>` : '<span style="color:#64748b;">—</span>';
+
+      let catBadge = '';
+      if (l.category === 'setup') catBadge = `<span class="badge badge-success" style="font-size:0.7rem;">${dict.logs_cat_setup || 'Paigaldus'}</span>`;
+      else if (l.category === 'test') catBadge = `<span class="badge" style="font-size:0.7rem; background:rgba(168,85,247,0.2); color:#c084fc; border:1px solid rgba(168,85,247,0.4);">${dict.logs_cat_test || 'Testimine'}</span>`;
+      else if (l.category === 'snapshot') catBadge = `<span class="badge" style="font-size:0.7rem; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.4);">${dict.logs_cat_snapshot || 'Snapshot'}</span>`;
+      else if (l.category === 'devops') catBadge = `<span class="badge badge-primary" style="font-size:0.7rem;">${dict.logs_cat_devops || 'DevOps'}</span>`;
+      else catBadge = `<span class="badge" style="font-size:0.7rem; color:#94a3b8;">Üldine</span>`;
+
+      return `
+        <tr style="${rowStyle}" onclick="selectLogFile('${escapeHtml(l.filename)}')">
+          <td style="font-family: ui-monospace, monospace; font-size:0.78rem; color:#cbd5e1; white-space:nowrap;">${escapeHtml(l.timestamp || l.mtime || '-')}</td>
+          <td>${catBadge}</td>
+          <td>${bpLabel}</td>
+          <td style="font-family: ui-monospace, monospace; font-size:0.8rem; color:#38bdf8;">${escapeHtml(l.filename)}</td>
+          <td style="font-size:0.78rem; color:#94a3b8; text-align:right;">${sizeKb}</td>
+          <td style="text-align:right;">
+            <button class="btn btn-sm ${isSelected ? 'btn-primary' : 'btn-secondary'}" style="padding:2px 8px; font-size:0.72rem;">
+              ${isSelected ? '👁️ Vaatan' : 'Ava'}
+            </button>
+          </td>
+        </tr>
       `;
-    });
-    logTabsHtml += `</div>`;
+    }).join('');
+  }
 
-    const curLog = logs[currentSelectedLogIdx] || logs[0];
-    const logViewerHtml = `
-      <div style="background: #030712; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; position: relative;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
-          <div style="font-size: 0.8rem; color: #94a3b8; font-family: ui-monospace, monospace;">
-            📄 <strong>${curLog.filename}</strong> | Size: ${(curLog.size_bytes / 1024).toFixed(1)} KB | Modified: ${curLog.mtime}
-          </div>
-          <button class="btn-pwd-copy" style="padding: 4px 10px; font-size: 0.75rem;" onclick="copyCurrentLogText()">
-            📋 ${dict.bench_btn_copy_log || 'Copy Log'}
-          </button>
-        </div>
-        <pre id="current-log-pre" style="color: #38bdf8; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; line-height: 1.5; max-height: 380px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">${curLog.content}</pre>
+  const selectedLogObj = filtered.find(l => l.filename === gCurrentSelectedLogFile) || (filtered.length > 0 ? filtered[0] : null);
+
+  logsContainer.innerHTML = `
+    <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
+      <div class="table-responsive" style="max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="logs_th_timestamp" style="width: 22%;">${dict.logs_th_timestamp || 'Ajatempel'}</th>
+              <th data-i18n="logs_th_category" style="width: 14%;">${dict.logs_th_category || 'Kategooria'}</th>
+              <th data-i18n="logs_th_blueprint" style="width: 12%;">${dict.logs_th_blueprint || 'Blueprint'}</th>
+              <th data-i18n="logs_th_file" style="width: 32%;">${dict.logs_th_file || 'Logifail'}</th>
+              <th data-i18n="logs_th_size" style="width: 10%; text-align:right;">${dict.logs_th_size || 'Suurus'}</th>
+              <th data-i18n="logs_th_action" style="width: 10%; text-align:right;">${dict.logs_th_action || 'Tegevus'}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
       </div>
-    `;
 
-    logsContainer.innerHTML = logTabsHtml + logViewerHtml;
+      <div id="logs-viewer-panel" style="background: #030712; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+          <div style="font-size: 0.82rem; color: #94a3b8; font-family: ui-monospace, monospace;">
+            📄 <strong id="log-view-title" style="color: #f8fafc;">${selectedLogObj ? escapeHtml(selectedLogObj.filename) : 'Vali logifail'}</strong>
+            <span id="log-view-meta" style="margin-left: 8px; font-size: 0.76rem; color: #64748b;">
+              ${selectedLogObj ? `(${((selectedLogObj.size_bytes || 0) / 1024).toFixed(1)} KB | ${selectedLogObj.timestamp || selectedLogObj.mtime || ''})` : ''}
+            </span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-secondary" onclick="copyCurrentLogText()" style="padding: 4px 10px; font-size: 0.75rem;" data-i18n="bench_btn_copy_log">
+              📋 ${dict.bench_btn_copy_log || 'Kopeeri logi'}
+            </button>
+            <button class="btn btn-sm btn-secondary" onclick="downloadCurrentLogText()" style="padding: 4px 10px; font-size: 0.75rem;" data-i18n="btn_download_log">
+              💾 ${dict.btn_download_log || 'Laadi alla'}
+            </button>
+          </div>
+        </div>
+        <pre id="current-log-pre" style="color: #38bdf8; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; line-height: 1.5; max-height: 420px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; margin: 0;">${selectedLogObj && selectedLogObj.content ? escapeHtml(selectedLogObj.content) : 'Laadin logi sisu...'}</pre>
+      </div>
+    </div>
+  `;
+
+  if (selectedLogObj && !selectedLogObj.content) {
+    loadLogContentFromBridge(selectedLogObj.filename);
   }
 }
 
-function switchLogFile(idx) {
-  currentSelectedLogIdx = idx;
-  loadBenchmarksData();
+async function selectLogFile(filename) {
+  gCurrentSelectedLogFile = filename;
+  renderLogsExplorerView();
+}
+
+async function loadLogContentFromBridge(filename) {
+  const pre = document.getElementById('current-log-pre');
+  if (!pre) return;
+  try {
+    const resp = await fetch(`${BRIDGE_URL}/api/log/read?file=${encodeURIComponent(filename)}`);
+    if (resp.ok) {
+      const data = await resp.json();
+      const content = data.content || `[Tühi logi või fail puudub: ${filename}]`;
+      pre.textContent = content;
+      const item = gLogsList.find(l => l.filename === filename);
+      if (item) item.content = content;
+    } else {
+      pre.textContent = `[Logi sisu ei õnnestunud lugeda: HTTP ${resp.status}]`;
+    }
+  } catch (e) {
+    pre.textContent = `[Viga logi lugemisel: ${e.message}]`;
+  }
 }
 
 function copyCurrentLogText() {
   const pre = document.getElementById('current-log-pre');
-  if (pre) {
+  if (pre && pre.textContent) {
     navigator.clipboard.writeText(pre.textContent).then(() => {
       showToast('📋 Log content copied to clipboard!');
     });
   }
+}
+
+function downloadCurrentLogText() {
+  const pre = document.getElementById('current-log-pre');
+  const filename = gCurrentSelectedLogFile || 'install_log.txt';
+  if (!pre || !pre.textContent) return;
+  const blob = new Blob([pre.textContent], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`💾 Allalaadimine alustatud: ${filename}`);
 }
 
 // PRESENTATION SLIDE DECK ENGINE
@@ -3464,12 +3947,14 @@ async function openServiceWithCredentials(targetUrl, alias, user, evt) {
   if (pwd) {
     // 1. Copy real password directly to clipboard (Zero-Trust: NEVER pass password as URL query parameter)
     copyTextToClipboard(pwd);
+    const sdwTip = dict.tip_db_actions_wait || dict.tip_sdw_warmup || '⏳ Käivitus võib võtta aega sõltuvalt arvutist kuni 1 min. Ole kannatlik.';
     const toastMsg = (currentLang === 'et')
-      ? `🚀 Avati portaal! Kasutajanimi: <b>${user || alias}</b>.<br/>🔑 Parool on kopeeritud lõikelauale – kleebi see (Ctrl+V / Cmd+V) paroolilahtrisse!` + (isSdw ? `<br/><small style="color:#fbbf24;">${dict.tip_sdw_warmup || '⏳ Database Actions esmane laadimine võib võtta ~10-15s (Java/ORDS soojendus)...'}</small>` : '')
-      : `🚀 Portal opened! Username: <b>${user || alias}</b>.<br/>🔑 Password copied to clipboard – paste (Ctrl+V / Cmd+V) on password field!` + (isSdw ? `<br/><small style="color:#fbbf24;">${dict.tip_sdw_warmup || '⏳ First Database Actions load takes ~10-15s (Java/ORDS warmup)...'}</small>` : '');
+      ? `🚀 Avati portaal! Kasutajanimi: <b>${user || alias}</b>.<br/>🔑 Parool on kopeeritud lõikelauale – kleebi see (Ctrl+V / Cmd+V) paroolilahtrisse!` + (isSdw ? `<br/><small style="color:#fbbf24;">${sdwTip}</small>` : '')
+      : `🚀 Portal opened! Username: <b>${user || alias}</b>.<br/>🔑 Password copied to clipboard – paste (Ctrl+V / Cmd+V) on password field!` + (isSdw ? `<br/><small style="color:#fbbf24;">${sdwTip}</small>` : '');
     showToast(toastMsg);
   } else {
-    showToast(`ℹ️ Opening portal for <b>${user || alias}</b>...` + (isSdw ? `<br/><small style="color:#fbbf24;">${dict.tip_sdw_warmup || '⏳ First Database Actions load takes ~10-15s (Java/ORDS warmup)...'}</small>` : ''));
+    const sdwTip = dict.tip_db_actions_wait || dict.tip_sdw_warmup || '⏳ Starting DB Actions may take up to 1 min depending on machine speed. Please be patient.';
+    showToast(`ℹ️ Opening portal for <b>${user || alias}</b>...` + (isSdw ? `<br/><small style="color:#fbbf24;">${sdwTip}</small>` : ''));
   }
 
   window.open(finalUrl, '_blank');
@@ -3843,6 +4328,28 @@ function renderPodmanCurrentView() {
         ? '<span class="badge badge-success" style="font-size:0.75rem;">🟢 running</span>'
         : `<span class="badge" style="font-size:0.75rem; background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid #475569;">⚪ ${escapePodmanHtml(c.state || 'stopped')}</span>`;
 
+      const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+      let actBtns = '';
+      if (isRunning) {
+        actBtns = `
+          <button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem;" onclick="executePodmanAction('container', 'restart', '${escapePodmanHtml(c.name || '')}')" title="${dict.btn_restart_container || 'Taaskäivita'}">
+            <span>🔄</span>
+          </button>
+          <button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color:#f87171; border-color:rgba(239,68,68,0.3);" onclick="executePodmanAction('container', 'stop', '${escapePodmanHtml(c.name || '')}')" title="${dict.btn_stop_container || 'Peata'}">
+            <span>⏹️</span>
+          </button>
+        `;
+      } else {
+        actBtns = `
+          <button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color:#4ade80; border-color:rgba(74,222,128,0.3);" onclick="executePodmanAction('container', 'start', '${escapePodmanHtml(c.name || '')}')" title="${dict.btn_start_container || 'Käivita'}">
+            <span>▶️</span>
+          </button>
+          <button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color:#ef4444; border-color:rgba(239,68,68,0.3);" onclick="executePodmanAction('container', 'rm', '${escapePodmanHtml(c.name || '')}')" title="${dict.btn_remove || 'Eemalda'}">
+            <span>🗑️</span>
+          </button>
+        `;
+      }
+
       return `<tr>
         <td style="font-weight: 600; color: #f8fafc;">${escapePodmanHtml(c.name || '')}</td>
         <td><span class="code-clip-token" onclick="copyPodmanToken('${escapePodmanHtml(c.id)}', this)" title="Click to copy ID">${escapePodmanHtml(c.id)} 📋</span></td>
@@ -3851,6 +4358,7 @@ function renderPodmanCurrentView() {
         <td style="color: var(--text-dim); font-size: 0.8rem;">${escapePodmanHtml(c.status || '')}</td>
         <td style="font-family: ui-monospace, monospace; font-size: 0.78rem; color: #38bdf8;">${escapePodmanHtml(c.ports || '-')}</td>
         <td style="color: var(--text-dim); font-size: 0.8rem; white-space: nowrap;">${escapePodmanHtml(c.created || '-')}</td>
+        <td style="text-align: right;"><div style="display:inline-flex; gap:4px; justify-content:flex-end;">${actBtns}</div></td>
       </tr>`;
     }).join('');
 
@@ -3870,14 +4378,19 @@ function renderPodmanCurrentView() {
     }
 
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--text-dim);">${emptyMsg}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--text-dim);">${emptyMsg}</td></tr>`;
       return;
     }
 
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
     tbody.innerHTML = list.map(v => {
       const usedByHtml = (v.used_by && v.used_by.length > 0)
         ? v.used_by.map(u => `<span class="badge badge-primary" style="font-size: 0.72rem; margin-right: 4px;">📦 ${escapePodmanHtml(u)}</span>`).join('')
         : '<span style="color: var(--text-dim); font-size: 0.78rem;">— (unused)</span>';
+      const isUnused = !v.used_by || v.used_by.length === 0;
+      const volAct = isUnused
+        ? `<button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color:#ef4444; border-color:rgba(239,68,68,0.3);" onclick="executePodmanAction('volume', 'rm', '${escapePodmanHtml(v.name || '')}')" title="${dict.btn_remove_unused || 'Eemalda kasutuseta andmemaht'}"><span>🗑️</span></button>`
+        : '<span style="font-size:0.72rem; color:#64748b;">(in use)</span>';
 
       return `<tr>
         <td><span class="code-clip-token" onclick="copyPodmanToken('${escapePodmanHtml(v.name)}', this)" title="Click to copy volume name">${escapePodmanHtml(v.name)} 📋</span></td>
@@ -3886,6 +4399,7 @@ function renderPodmanCurrentView() {
         <td style="color: var(--text-dim); font-size: 0.8rem;">${escapePodmanHtml(v.scope || 'local')}</td>
         <td style="font-size: 0.76rem; color: #94a3b8; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapePodmanHtml(v.mountpoint || '')}"><span class="code-clip-token" onclick="copyPodmanToken('${escapePodmanHtml(v.mountpoint || '')}', this)">${escapePodmanHtml(v.mountpoint || '-')} 📋</span></td>
         <td style="color: var(--text-dim); font-size: 0.8rem; white-space: nowrap;">${escapePodmanHtml(v.created || '-')}</td>
+        <td style="text-align: right;">${volAct}</td>
       </tr>`;
     }).join('');
 
@@ -3932,19 +4446,56 @@ function renderPodmanCurrentView() {
     }
 
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--text-dim);">${emptyMsg}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--text-dim);">${emptyMsg}</td></tr>`;
       return;
     }
 
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
     tbody.innerHTML = list.map(img => {
+      const imgAct = `<button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color:#ef4444; border-color:rgba(239,68,68,0.3);" onclick="executePodmanAction('image', 'rmi', '${escapePodmanHtml(img.id || '')}')" title="${dict.btn_remove || 'Eemalda tõmmis'}"><span>🗑️</span></button>`;
       return `<tr>
         <td style="font-weight: 600; color: #f8fafc;">${escapePodmanHtml(img.repository || '')}</td>
         <td><span class="badge badge-primary" style="font-size: 0.75rem;">${escapePodmanHtml(img.tag || 'latest')}</span></td>
         <td><span class="code-clip-token" onclick="copyPodmanToken('${escapePodmanHtml(img.id)}', this)" title="Click to copy image ID">${escapePodmanHtml(img.id)} 📋</span></td>
         <td style="font-weight: 600; color: #38bdf8; font-size: 0.82rem;">${escapePodmanHtml(img.size_human || '-')}</td>
         <td style="color: var(--text-dim); font-size: 0.8rem; white-space: nowrap;">${escapePodmanHtml(img.created || '-')}</td>
+        <td style="text-align: right;">${imgAct}</td>
       </tr>`;
     }).join('');
+  }
+}
+
+async function executePodmanAction(resType, action, name) {
+  if (!name) return;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  
+  let confirmTpl = dict.confirm_podman_action || "Kas oled kindel, et soovid sooritada tegevust '{action}' ressursil '{name}'? Seda tegevust ei saa tagasi võtta.";
+  let msg = confirmTpl.replace('{action}', action).replace('{name}', name);
+  if (!window.confirm(msg)) return;
+
+  showToast(`⏳ Podman: ${action} ${name}...`);
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const resp = await fetch(`${BRIDGE_URL}/api/podman/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resource_type: resType, action: action, name: name }),
+      mode: 'cors',
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    const data = await resp.json();
+    if (resp.ok && data.status === 'ok') {
+      showToast(`✅ ${data.message || 'Podman operation succeeded'}`);
+      loadPodmanResources(true);
+      checkServiceHealth();
+    } else {
+      showToast(`⚠️ Viga: ${data.error || 'Podman operation failed'}`);
+    }
+  } catch (e) {
+    showToast(`⚠️ Bridge viga: ${e.message}`);
   }
 }
 
@@ -5376,6 +5927,67 @@ function openDocFromTestModal() {
   }
 }
 
+function toggleEnterpriseDropdown(event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  const btn = document.getElementById('enterprise-dropdown-btn');
+  const menu = document.getElementById('enterprise-dropdown-menu');
+  if (menu) {
+    const isShowing = menu.classList.contains('show');
+    menu.classList.toggle('show', !isShowing);
+    if (btn) {
+      btn.classList.toggle('active', !isShowing);
+      btn.setAttribute('aria-expanded', !isShowing ? 'true' : 'false');
+    }
+  }
+}
+
+function openDocFromMenu(docId) {
+  const btn = document.getElementById('enterprise-dropdown-btn');
+  const menu = document.getElementById('enterprise-dropdown-menu');
+  if (menu) {
+    menu.classList.remove('show');
+  }
+  if (btn) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+
+  filterDocsCategory('all');
+  switchTab('tab-docs');
+
+  if (Array.isArray(DOCS_DATA)) {
+    let idx = DOCS_DATA.findIndex(d => d.id === docId);
+    if (idx === -1) {
+      idx = DOCS_DATA.findIndex(d => d.rel && (d.rel === docId || d.rel.includes(docId) || d.rel.endsWith(docId + '.md')));
+    }
+    if (idx !== -1) {
+      setTimeout(() => {
+        const docBtn = document.querySelector(`.docs-nav-item[data-doc-idx="${idx}"]`);
+        loadDocContent(idx, docBtn);
+        if (docBtn) {
+          docBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 50);
+    }
+  }
+}
+
+document.addEventListener('click', function(event) {
+  const menu = document.getElementById('enterprise-dropdown-menu');
+  const btn = document.getElementById('enterprise-dropdown-btn');
+  if (menu && menu.classList.contains('show')) {
+    if (!menu.contains(event.target) && (!btn || !btn.contains(event.target))) {
+      menu.classList.remove('show');
+      if (btn) {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    }
+  }
+});
+
 function runTestFromModal(suiteKey, scriptName) {
   closeSuiteTestsModal();
   runTestSuite(suiteKey, scriptName);
@@ -5849,6 +6461,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (isPodmanOpen) {
     togglePodmanDrawer(true);
   }
+
+  // Initialize ORDS auto-sync state (default to OFF)
+  const savedOrdsSync = localStorage.getItem('dev_hub_ords_autosync');
+  setOrdsAutoSync(savedOrdsSync === 'true', false);
 
   checkServiceHealth();
   renderOrdsGatewayStrip();

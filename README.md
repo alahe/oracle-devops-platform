@@ -269,6 +269,8 @@ Oracle Free DB in Prod incorporates an **intelligent multi-tier Golden Snapshot 
 
 ## 📑 Dedicated User Guides
 
+- 🏛️ **[docs/enterprise-distributed-architecture.md](docs/enterprise-distributed-architecture.md):** **Enterprise Distributed Multi-Host Architecture** — 4-tier financial architecture (ORDS, Publisher, Proxy DB, Publisher DB), existing core Business DB integration, and PROD Active/Standby disaster recovery (RTO < 60s, RPO < 15m).
+- 📋 **[docs/backlog/README.md](docs/backlog/README.md):** **Financial Enterprise Jira Backlog** — 11 production-ready Jira stories (62 SP) covering multi-host automation, multi-pool routing, failover, and zero-trust security.
 - 🛡️ **[docs/security.md](docs/security.md) | [docs/et/security.md](docs/et/security.md):** **Security & SSO Architecture Guide** — Zero-Trust credential storage, Azure Entra-ID SSO, 5-tier TLS architecture, and least-privilege roles.
 - 🏗️ **[docs/db-profiles-and-topology.md](docs/db-profiles-and-topology.md):** **Database Profiles & Topology Guide** — Clean blueprint references, YAML profile definitions, and dynamic port topology.
 - 🚀 **[docs/forms-to-apex-migration-guide.md](docs/forms-to-apex-migration-guide.md):** **Oracle Forms to APEX Modernization & Migration Guide** — Automated 5-stage migration workflow, PL/SQL extraction, and APEXlang DSL vibe-coding.

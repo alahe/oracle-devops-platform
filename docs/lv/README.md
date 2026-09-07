@@ -270,6 +270,8 @@ Papildus atsevišķajam HTML Dev Hub (`docs/dev-hub.html`) platformā ir iekļau
 
 ## 📑 Lietotāja Rokasgrāmatas
 
+- 🏛️ **[docs/enterprise-distributed-architecture.md](../../docs/enterprise-distributed-architecture.md) | [docs/lv/enterprise-distributed-architecture.md](enterprise-distributed-architecture.md):** **Sadalītā Uzņēmuma Arhitektūra** — 4 līmeņu finanšu arhitektūra (ORDS, Publisher, Proxy DB, Publisher DB), integrācija ar esošo pamatdarbības datubāzi un PROD Active/Standby avārijas atjaunošana (RTO < 60s, RPO < 15m).
+- 📋 **[docs/backlog/README.md](../../docs/backlog/README.md):** **Finanšu Jira Backlog** — 11 ražošanai gatavi Jira stāsti (62 SP) sadalītai izvietošanai, multi-pool maršrutēšanai un automātiskai kļūmjpārlēcei.
 - 🚀 **[docs/lv/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Modernizācijas un Pārejas Rokasgrāmata** — Biznesa pamatojums, TCO salīdzinājums, 5 posmu automatizēta darba plūsma un [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
 - 📐 **[docs/forms-setup.md](../../docs/forms-setup.md):** Oracle Forms 14c Rokasgrāmata.
 - 📑 **[docs/publisher-setup.md](../../docs/publisher-setup.md):** Analytics Publisher Rokasgrāmata.

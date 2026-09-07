@@ -23,13 +23,104 @@
             </div>
             <p data-i18n="header_subtitle">Unified Command Center, Real-Time Service Health & Multilingual Architecture Portal</p>
         </div>
-        <div class="lang-switcher">
-            <button class="lang-btn active" id="btn-en" onclick="setLanguage('en')">🇬🇧 EN</button>
-            <button class="lang-btn" id="btn-et" onclick="setLanguage('et')">🇪🇪 ET</button>
-            <button class="lang-btn" id="btn-fi" onclick="setLanguage('fi')">🇫🇮 FI</button>
-            <button class="lang-btn" id="btn-sv" onclick="setLanguage('sv')">🇸🇪 SV</button>
-            <button class="lang-btn" id="btn-lv" onclick="setLanguage('lv')">🇱🇻 LV</button>
-            <button class="lang-btn" id="btn-lt" onclick="setLanguage('lt')">🇱🇹 LT</button>
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <!-- Enterprise Architecture & Jira Backlog Dropdown -->
+            <div class="enterprise-nav-dropdown" id="enterprise-nav-dropdown">
+                <button class="enterprise-dropdown-btn" id="enterprise-dropdown-btn" onclick="toggleEnterpriseDropdown(event)" aria-haspopup="true" aria-expanded="false">
+                    <span class="enterprise-btn-icon">🏛️</span>
+                    <span data-i18n="menu_enterprise">Enterprise Architecture & Backlog</span>
+                    <span class="enterprise-caret">▼</span>
+                </button>
+                <div class="enterprise-dropdown-menu" id="enterprise-dropdown-menu">
+                    <div class="dropdown-section-title" data-i18n="section_architecture">Architecture & Blueprints</div>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('enterprise-architecture')">
+                        <span class="item-icon">🏛️</span>
+                        <div class="item-text">
+                            <span class="item-title" data-i18n="doc_enterprise_arch_title">Enterprise Distributed Architecture</span>
+                            <span class="item-desc" data-i18n="doc_enterprise_arch_desc">4-Tier Multi-Host DEV/TEST/PROD Active-Standby</span>
+                        </div>
+                    </a>
+
+                    <div class="dropdown-section-title" data-i18n="section_backlog">Jira Implementation Backlog</div>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('enterprise-backlog')">
+                        <span class="item-icon">📋</span>
+                        <div class="item-text">
+                            <span class="item-title" data-i18n="doc_backlog_summary_title">Backlog Roadmap & Matrix (62 SP)</span>
+                            <span class="item-desc" data-i18n="doc_backlog_summary_desc">Gantt roadmap and 11 stories allocation</span>
+                        </div>
+                    </a>
+
+                    <div class="dropdown-section-title" data-i18n="section_sprint1">Sprint 1: Core Tiers & Infrastructure (28 SP)</div>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-001')">
+                        <span class="item-code">FIN-001</span>
+                        <span class="item-title">Multi-Host Inventory & Config</span>
+                        <span class="badge-sp">5 SP</span>
+                    </a>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-002')">
+                        <span class="item-code">FIN-002</span>
+                        <span class="item-title">Proxy DB Remote Container</span>
+                        <span class="badge-sp">5 SP</span>
+                    </a>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-003')">
+                        <span class="item-code">FIN-003</span>
+                        <span class="item-title">Publisher DB Remote Container</span>
+                        <span class="badge-sp">5 SP</span>
+                    </a>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-004')">
+                        <span class="item-code">FIN-004</span>
+                        <span class="item-title">Standalone ORDS + APEX Server</span>
+                        <span class="badge-sp">8 SP</span>
+                    </a>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-005')">
+                        <span class="item-code">FIN-005</span>
+                        <span class="item-title">Standalone Analytics Publisher</span>
+                        <span class="badge-sp">5 SP</span>
+                    </a>
+
+                    <div class="dropdown-section-title" data-i18n="section_sprint2">Sprint 2: Integration & Security (13 SP)</div>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-006')">
+                        <span class="item-code">FIN-006</span>
+                        <span class="item-title">ORDS Multi-Pool Business DB</span>
+                        <span class="badge-sp">5 SP</span>
+                    </a>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-007')">
+                        <span class="item-code">FIN-007</span>
+                        <span class="item-title">Publisher JDBC Core Business DB</span>
+                        <span class="badge-sp">3 SP</span>
+                    </a>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-009')">
+                        <span class="item-code">FIN-009</span>
+                        <span class="item-title">Zero-Trust Wallet & TLS Distribution</span>
+                        <span class="badge-sp">5 SP</span>
+                    </a>
+
+                    <div class="dropdown-section-title" data-i18n="section_sprint3">Sprint 3: HA, CI/CD & DR (21 SP)</div>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-008')">
+                        <span class="item-code">FIN-008</span>
+                        <span class="item-title">PROD Active/Standby Sync & Failover</span>
+                        <span class="badge-sp">8 SP</span>
+                    </a>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-010')">
+                        <span class="item-code">FIN-010</span>
+                        <span class="item-title">Promotion Pipeline (DEV/TEST/PROD)</span>
+                        <span class="badge-sp">5 SP</span>
+                    </a>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-011')">
+                        <span class="item-code">FIN-011</span>
+                        <span class="item-title">E2E Health Checks & DR GameDay</span>
+                        <span class="badge-sp">5 SP</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="lang-switcher">
+                <button class="lang-btn active" id="btn-en" onclick="setLanguage('en')">🇬🇧 EN</button>
+                <button class="lang-btn" id="btn-et" onclick="setLanguage('et')">🇪🇪 ET</button>
+                <button class="lang-btn" id="btn-fi" onclick="setLanguage('fi')">🇫🇮 FI</button>
+                <button class="lang-btn" id="btn-sv" onclick="setLanguage('sv')">🇸🇪 SV</button>
+                <button class="lang-btn" id="btn-lv" onclick="setLanguage('lv')">🇱🇻 LV</button>
+                <button class="lang-btn" id="btn-lt" onclick="setLanguage('lt')">🇱🇹 LT</button>
+            </div>
         </div>
     </header>
 
@@ -53,6 +144,7 @@
                 <span id="cockpit-ram-indicator" class="ram-indicator-badge ram-ok" title="Estimated RAM consumption vs Host RAM">
                     <span>💾</span> <span id="cockpit-ram-text">RAM: ~3.0 GB / 16.0 GB</span>
                 </span>
+                <div id="active-containers-pills-row" style="display:inline-flex; gap:6px; flex-wrap:wrap; align-items:center; margin-left:6px;"></div>
             </div>
             <span style="font-size: 0.8rem; color: #64748b;" data-i18n="auto_refresh_hint">Auto-refreshes every 6 seconds</span>
         </div>
@@ -90,7 +182,10 @@
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
-                <button type="button" class="btn-compact btn-compact-secondary" onclick="syncOrdsPools()" title="Sync ORDS pools with running databases" style="font-size:0.75rem; padding:4px 10px;">
+                <button type="button" id="ords-autosync-toggle-btn" class="btn-compact btn-compact-secondary" onclick="toggleOrdsAutoSync()" title="Toggle ORDS Pools Auto-Sync" style="font-size:0.75rem; padding:4px 10px; display:inline-flex; align-items:center; gap:5px;">
+                    <span id="ords-autosync-indicator">⚪</span> <span id="ords-autosync-label" data-i18n="ords_autosync_off">Auto-Sync: OFF</span>
+                </button>
+                <button type="button" class="btn-compact btn-compact-secondary" onclick="syncOrdsPools(true)" title="Sync ORDS pools with running databases" style="font-size:0.75rem; padding:4px 10px;">
                     <span>🔄</span> <span data-i18n="ords_btn_sync">Sync Pools</span>
                 </button>
             </div>
@@ -203,10 +298,11 @@
                                 <th data-i18n="th_container_status">Staatus</th>
                                 <th data-i18n="th_container_ports">Pordid</th>
                                 <th data-i18n="th_container_created">Loodud</th>
+                                <th data-i18n="th_actions" style="text-align: right;">Tegevused</th>
                             </tr>
                         </thead>
                         <tbody id="podman-tbody-containers">
-                            <tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--text-dim);" data-i18n="loading_resources">Laadin ressursse...</td></tr>
+                            <tr><td colspan="8" style="text-align:center; padding: 24px; color: var(--text-dim);" data-i18n="loading_resources">Laadin ressursse...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -224,10 +320,11 @@
                                 <th data-i18n="th_volume_scope">Ulatus (Scope)</th>
                                 <th data-i18n="th_volume_mountpoint">Paigaldustee (Mountpoint)</th>
                                 <th data-i18n="th_volume_created">Loodud</th>
+                                <th data-i18n="th_actions" style="text-align: right;">Tegevused</th>
                             </tr>
                         </thead>
                         <tbody id="podman-tbody-volumes">
-                            <tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--text-dim);" data-i18n="loading_resources">Laadin ressursse...</td></tr>
+                            <tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--text-dim);" data-i18n="loading_resources">Laadin ressursse...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -263,10 +360,11 @@
                                 <th data-i18n="th_image_id">Tõmmise ID</th>
                                 <th data-i18n="th_image_size">Maht</th>
                                 <th data-i18n="th_image_created">Loodud</th>
+                                <th data-i18n="th_actions" style="text-align: right;">Tegevused</th>
                             </tr>
                         </thead>
                         <tbody id="podman-tbody-images">
-                            <tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--text-dim);" data-i18n="loading_resources">Laadin ressursse...</td></tr>
+                            <tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--text-dim);" data-i18n="loading_resources">Laadin ressursse...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -298,6 +396,25 @@
                     <button class="btn btn-secondary" onclick="toggleFullscreenPresentation()" style="padding: 6px 12px; font-size: 0.8rem;">
                         <span>⛶</span> <span data-i18n="btn_fullscreen">Täisekraan</span>
                     </button>
+                </div>
+            </div>
+
+            <!-- Nordic-Baltic 6-Language Platform Banner -->
+            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 10px 16px; margin: 12px 0 16px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.4rem;">🌍</span>
+                    <div>
+                        <div style="font-weight: 700; color: #38bdf8; font-size: 0.92rem;" data-i18n="card_i18n_title">Nordic-Baltic 6-Language Platform</div>
+                        <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 2px;" data-i18n="card_i18n_desc">Canonical English with localized layers for Estonia, Finland, Sweden, Latvia, and Lithuania.</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 6px; font-size: 0.8rem; color: #cbd5e1; flex-wrap: wrap;">
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8;">🇬🇧 EN</span>
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8;">🇪🇪 ET</span>
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8;">🇫🇮 FI</span>
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8;">🇸🇪 SV</span>
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8;">🇱🇻 LV</span>
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8;">🇱🇹 LT</span>
                 </div>
             </div>
 
@@ -1027,12 +1144,30 @@
         <div class="docs-container">
             <aside class="docs-sidebar">
                 <div class="docs-search-box">
-                    <input type="text" id="docs-search-input" placeholder="🔍 Search documentation..." data-i18n-placeholder="docs_search_placeholder" oninput="filterDocsList(this.value)">
+                    <input type="text" id="docs-search-input" placeholder="🔍 Otsi dokumentidest (pealkiri ja sisu)..." data-i18n-placeholder="docs_search_placeholder" oninput="handleDocsSearchInput(this.value)">
+                </div>
+                <!-- Category Filter Buttons -->
+                <div style="display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap; padding: 0 2px;">
+                    <button class="btn btn-sm active" id="btn-docs-cat-all" onclick="filterDocsCategory('all')" style="padding:3px 8px; font-size:0.72rem;" data-i18n="docs_cat_all">Kõik</button>
+                    <button class="btn btn-sm" id="btn-docs-cat-arch" onclick="filterDocsCategory('arch')" style="padding:3px 8px; font-size:0.72rem;" data-i18n="docs_cat_arch">Arhitektuur</button>
+                    <button class="btn btn-sm" id="btn-docs-cat-devops" onclick="filterDocsCategory('devops')" style="padding:3px 8px; font-size:0.72rem;" data-i18n="docs_cat_devops">Skriptid</button>
+                    <button class="btn btn-sm" id="btn-docs-cat-web" onclick="filterDocsCategory('web')" style="padding:3px 8px; font-size:0.72rem;" data-i18n="docs_cat_web">Teenused</button>
+                    <button class="btn btn-sm" id="btn-docs-cat-trouble" onclick="filterDocsCategory('trouble')" style="padding:3px 8px; font-size:0.72rem;" data-i18n="docs_cat_trouble">Tõrkeotsing</button>
                 </div>
                 <nav class="docs-nav-list" id="docs-sidebar-nav"></nav>
             </aside>
             <main class="docs-content" id="docs-markdown-view">
                 <div id="docs-content-header" class="docs-content-header"></div>
+                <!-- Dynamic Table of Contents (TOC) Accordion -->
+                <div id="docs-toc-box" style="display:none; background:rgba(15,23,42,0.6); border:1px solid var(--border); border-radius:6px; padding:10px 14px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleDocsToc()">
+                        <span style="font-weight:600; font-size:0.85rem; color:#38bdf8;" data-i18n="docs_toc_title">📑 Sisukord (Table of Contents)</span>
+                        <span id="docs-toc-toggle-icon">▼</span>
+                    </div>
+                    <ul id="docs-toc-list" style="margin:8px 0 0 0; padding-left:20px; font-size:0.82rem; line-height:1.6; color:#cbd5e1; max-height:180px; overflow-y:auto;"></ul>
+                </div>
+                <!-- Full-Text Search Results Snippet Preview Box -->
+                <div id="docs-search-results-box" style="display:none; margin-bottom:16px;"></div>
                 <div id="docs-rendered-body" class="docs-rendered-body">
                     <p style="color: var(--text-dim);" data-i18n="docs_empty_hint">Select a document from the left navigation menu to view its full formatted guide.</p>
                 </div>
@@ -1416,8 +1551,39 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
         <div style="margin-top: 32px;">
             <div class="section-title">
                 <span data-i18n="bench_logs_title">📄 Recent Execution Logs (install_logs/)</span>
-                <span style="font-size: 0.8rem; color: #64748b;">Click a log file to inspect execution transcript</span>
+                <span style="font-size: 0.8rem; color: #64748b;" data-i18n="logs_filter_hint">Filtreeri ja vali logi detailse ülevaate kuvamiseks</span>
             </div>
+
+            <!-- Log Filter Toolbar: Categories, BP Selector, Search -->
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 16px; background: rgba(15, 23, 42, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);">
+                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                    <button class="btn btn-sm active" id="btn-log-cat-all" onclick="filterLogsCategory('all')" data-i18n="logs_cat_all">Kõik</button>
+                    <button class="btn btn-sm" id="btn-log-cat-setup" onclick="filterLogsCategory('setup')" data-i18n="logs_cat_setup">Paigaldus</button>
+                    <button class="btn btn-sm" id="btn-log-cat-test" onclick="filterLogsCategory('test')" data-i18n="logs_cat_test">Testimine</button>
+                    <button class="btn btn-sm" id="btn-log-cat-snapshot" onclick="filterLogsCategory('snapshot')" data-i18n="logs_cat_snapshot">Snapshotid</button>
+                    <button class="btn btn-sm" id="btn-log-cat-devops" onclick="filterLogsCategory('devops')" data-i18n="logs_cat_devops">DevOps</button>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <select id="log-filter-bp" onchange="filterLogsBlueprint(this.value)" style="background: #030712; border: 1px solid var(--border); color: #f8fafc; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem;">
+                        <option value="all" data-i18n="logs_bp_all">Kõik Blueprintid</option>
+                        <option value="0">BP #0: Core Base</option>
+                        <option value="1">BP #1: Multi-DB Split</option>
+                        <option value="2">BP #2: Standalone Proxy</option>
+                        <option value="3">BP #3: Gvenzl DB</option>
+                        <option value="4">BP #4: Cloud ADB</option>
+                        <option value="5">BP #5: Analytics Publisher</option>
+                        <option value="6">BP #6: Oracle Forms</option>
+                        <option value="7">BP #7: Enterprise Suite</option>
+                        <option value="8">BP #8: VS Code Web IDE</option>
+                        <option value="9">BP #9: BIP Designer</option>
+                        <option value="10">BP #10: Multi-Host Remote</option>
+                        <option value="11">BP #11: Hybrid Mesh</option>
+                    </select>
+                    <input type="text" id="log-search-input" oninput="filterLogsSearch(this.value)" placeholder="🔍 Otsi logi faili..." data-i18n-placeholder="logs_search_placeholder" style="background: #030712; border: 1px solid var(--border); color: #f8fafc; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; width: 180px;">
+                    <button class="btn btn-sm btn-secondary" onclick="loadLogsExplorer(true)" title="Refresh Logs">🔄</button>
+                </div>
+            </div>
+
             <div id="benchmarks-logs-container"></div>
         </div>
     </div>
@@ -1725,7 +1891,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
             <span style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2)); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 5px;">
                 <span>✨</span> <span>AI-Assisted Architecture</span>
             </span>
-            <span data-i18n="footer_ai_attribution">Crafted with Antigravity & Google Gemini 3.7 Flash</span>
+            <span data-i18n="footer_ai_attribution">Crafted in collaboration with Antigravity & Google Gemini 3.6, 3.7 & 3.8 Flash</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
             <span>© 2026 Oracle DevOps Platform</span>

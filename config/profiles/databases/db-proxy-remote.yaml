@@ -1,0 +1,28 @@
+# ==============================================================================
+# Database Profile: Dedicated Remote PROXY DB (Host 3)
+# ==============================================================================
+name: db-proxy-remote
+description: "Dedicated Remote PROXY DB Container for APEX & DevHub"
+db_name: FREE
+pdb_name: FREEPDB1
+port: 1533
+memory_limit: 3500m
+container_name: db-proxy
+container_image: container-registry.oracle.com/database/free:23.6.0.0-lite
+install_apex: true
+apex_version: "24.2"
+apex_install_mode: "full"
+
+users:
+  - username: DEVHUB
+    default_tablespace: USERS
+    quota: unlimited
+    wallet_alias: DB_PROXY_DEVHUB
+    roles:
+      - CONNECT
+      - RESOURCE
+    system_privileges:
+      - CREATE VIEW
+      - CREATE PROCEDURE
+      - CREATE TABLE
+      - CREATE SEQUENCE

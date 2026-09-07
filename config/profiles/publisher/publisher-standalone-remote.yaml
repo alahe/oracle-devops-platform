@@ -1,0 +1,13 @@
+# ==============================================================================
+# Publisher Profile: Standalone Analytics Publisher Server (Host 2)
+# ==============================================================================
+name: publisher-standalone-remote
+description: "Standalone Analytics Publisher 12c/14c Server"
+container_name: app-publisher
+container_image: container-registry.oracle.com/middleware/bi-publisher:latest
+https_port: 9502
+http_port: 9500
+memory_limit: 4096m
+rcu_db_tns: DB_PUBLISHER_REMOTE
+business_db_tns: BIZ_DB_REMOTE
+admin_user: bipadmin

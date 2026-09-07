@@ -252,6 +252,8 @@ Oracle Free DB in Prod sisaldab **kuldsnapshottide mootorit**, mis vähendab taa
 
 ## 📑 Spetsiaalsed Juhendid
 
+- 🏛️ **[docs/enterprise-distributed-architecture.md](../../docs/enterprise-distributed-architecture.md) | [docs/et/enterprise-distributed-architecture.md](enterprise-distributed-architecture.md):** **Ettevõtteklassi Hajutatud Multi-Host Arhitektuur** — 4-kihiline finantsarhitektuur (ORDS, Publisher, Proxy DB, Publisher DB), olemasoleva äri-DB ühendamine ja PROD Active/Standby avariitaaste (RTO < 60s, RPO < 15m).
+- 📋 **[docs/backlog/README.md](../../docs/backlog/README.md):** **Finantsettevõtte Jira Backlog** — 11 tootmisvalmis Jira storyt (62 SP) hajutatud paigalduse, multi-pooli ja avariitaaste jaoks.
 - 🛡️ **[docs/security.md](../../docs/security.md) | [docs/et/security.md](security.md):** **Turvalisuse & SSO Arhitektuuri Juhend** — Zero-Trust paroolide haldus, Azure Entra-ID SSO ja 5-astmeline TLS.
 - 🏗️ **[docs/db-profiles-and-topology.md](../../docs/db-profiles-and-topology.md):** **Andmebaasi Profiilide ja Topoloogia Juhend** — Puhtad blueprintid, YAML profiilid ja dünaamilised pordid.
 - 🚀 **[docs/forms-to-apex-migration-guide.md](../../docs/forms-to-apex-migration-guide.md):** Oracle Forms to APEX Moderniseerimine ja Migratsioon.
