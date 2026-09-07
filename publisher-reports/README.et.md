@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📑 Analytics Publisher Aruannete Kaust (`publisher-reports/`)
+# 📑 Analytics Publisher aruannete kaust (`publisher-reports/`)
 
 See kataloog sisaldab Oracle Analytics Publisheri aruandemalle (`.rtf`, `.xpt`) ja andmemudeleid (`.xdm`).
 

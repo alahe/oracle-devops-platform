@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🗄️ Andmebaasi Profiilid (`config/profiles/databases/`)
+# 🗄️ Andmebaasi profiilid (`config/profiles/databases/`)
 
 See kataloog sisaldab domeenipõhiselt isoleeritud YAML profiile **Oracle andmebaasi konteineritele** (Standard 23ai Free, Autonomous ADB Free, Gvenzl 23c).
 
-## 📂 Andmebaasi Profiilide Maatriks
+## 📂 Andmebaasi profiilide maatriks
 
 | Profiili Fail | Kirjeldus | DB Tüüp | Wallet Nõutud | Kasutusvaldkond |
 | :--- | :--- | :--- | :--- | :--- |
@@ -16,7 +16,7 @@ See kataloog sisaldab domeenipõhiselt isoleeritud YAML profiile **Oracle andmeb
 | **`db-publisher-oracle.yaml`** | Spetsiaalne Analytics Publisher repositooriumi DB | `standard` | Jah | Publisher RCU metaandmed |
 | **`db-forms-oracle.yaml`** | Spetsiaalne Oracle Forms 14c repositooriumi DB | `standard` | Jah | Forms RCU metaandmed |
 
-## ⚙️ Konfiguratsioon Blueprintides
+## ⚙️ Konfiguratsioon blueprintides
 Blueprindid viitavad profiilidele positiivse seosena ilma koodi risustamata:
 ```bash
 DB_ALISE=db-alise-oracle

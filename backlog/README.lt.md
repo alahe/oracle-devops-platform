@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📋 Oracle DevOps Platform — Vystymo ir Užduočių Sąrašas (Backlog)
+# 📋 Oracle DevOps platform — vystymo ir Užduočių Sąrašas (backlog)
 
 Šiame kataloge yra platformos modulinė **užduočių sąrašo (Backlog) sistema**, kurioje architektūriniai patobulinimai, funkcijos ir saugumo komponentai dokumentuojami Markdown failuose.
 
 ---
 
-## 🧭 Struktūra ir Gyvavimo Ciklo Taisyklės
+## 🧭 Struktūra Ir gyvavimo ciklo Taisyklės
 
 ```text
 backlog/

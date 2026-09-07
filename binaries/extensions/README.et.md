@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🧩 VS Code Laienduste Puhver (`binaries/extensions/`)
+# 🧩 VS code laienduste puhver (`binaries/extensions/`)
 
 See kataloog toimib **1. taseme võrguvaba lokaalse puhvrina** VS Code `.vsix` laienduste pakettidele.
 
 ---
 
-## 4-Astmeline Laienduste Lahendamise Hierarhia
+## 4-astmeline laienduste lahendamise hierarhia
 
 ```
 1. 📁 binaries/extensions/*.vsix         ➔ Lokaalne võrguvaba puhver (Kõrgeim prioriteet)

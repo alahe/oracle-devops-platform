@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../security.md) | [ 🇪🇪 Eesti ](../et/security.md) | [ 🇫🇮 Suomi ](../fi/security.md) | [ 🇸🇪 Svenska ](security.md) | [ 🇱🇻 Latviešu ](../lv/security.md) | [ 🇱🇹 Lietuvių ](../lt/security.md)
 
-# 🛡️ Oracle Free DB & APEX Säkerhet och SSO-Arkitektur
+# 🛡️ Oracle Free DB & APEX säkerhet och SSO-arkitektur
 
 Detta dokument sammanställer säkerhetsprinciper, lösenordshantering, utvecklarroller och arkitektur för enkel inloggning (SSO / Azure Entra-ID).
 
 ---
 
-## 1. Lokal Hantering av Hemligheter (Zero-Trust - Regel 5)
+## 1. Lokal hantering av hemligheter (zero-trust - regel 5)
 
 Alla lösenord och hemligheter lagras strikt i den AES-256-krypterade **Oracle SEPS (Secure External Password Store) Auto-Login Wallet** (`cwallet.sso`).
 
@@ -23,7 +23,7 @@ Alla lösenord och hemligheter lagras strikt i den AES-256-krypterade **Oracle S
 
 ---
 
-## 2. Autentiseringsmatris för Miljöer
+## 2. Autentiseringsmatris för miljöer
 
 | Miljö (`ENVIRONMENT_TYPE`) | Plats | Autentiseringstyp (APEX & DB) | Användarhantering | TLS-Kryptering (TCPS) |
 | :--- | :--- | :--- | :--- | :--- |
@@ -45,7 +45,7 @@ graph TD
 
 ---
 
-## 3. Adaptiv 5-Nivåers TLS/HTTPS-Motor
+## 3. Adaptiv 5-nivåers TLS/HTTPS-motor
 
 Webbtjänster (ORDS, APEX, Analytics Publisher) använder en adaptiv certifikathierarki utan administratörsbehörighet (`scripts/internal/resolve-tls-mode.sh`):
 
@@ -60,7 +60,7 @@ config/certs/
 
 ---
 
-## 4. Enkel Inloggning (SSO)
+## 4. Enkel inloggning (SSO)
 
 - **Databasnivå SSO:** Oracle 23ai stöder inbyggt Azure AD OAuth2-tokens och globala roller.
 - **ORDS & REST API:** ORDS validerar inkommande Bearer JWT-tokens mot Azure AD:s publika nycklar.

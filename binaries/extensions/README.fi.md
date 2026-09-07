@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🧩 VS Code -Laajennusten Välimuisti (`binaries/extensions/`)
+# 🧩 VS code -laajennusten Välimuisti (`binaries/extensions/`)
 
 Tämä hakemisto toimii **tason 1 offline-välimuistina** VS Coden `.vsix`-laajennuspaketeille.
 
 ---
 
-## 4-Tasoinen Laajennusten Ratkaisuhierarkia
+## 4-tasoinen laajennusten ratkaisuhierarkia
 
 ```
 1. 📁 binaries/extensions/*.vsix         ➔ Paikallinen offline-välimuisti (Korkein prioriteetti)

@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📊 Suorituskykymittausten Hakemisto (`metrics/`)
+# 📊 Suorituskykymittausten hakemisto (`metrics/`)
 
 Tässä hakemistossa säilytetään ja seurataan Gitissä asennusvaiheiden ja keston mittaustuloksia (Sääntö 1).
 
 ---
 
-## 📁 Keskeiset Tiedostot
+## 📁 Keskeiset tiedostot
 
 - **`setup_benchmarks.json`**: Asennusvaiheiden tarkka kesto sekunneissa (JSON-muoto).
 - **`setup_benchmarks.env`**: Vaiheiden kestot ympäristömuuttujina.

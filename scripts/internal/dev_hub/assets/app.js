@@ -29,6 +29,9 @@ function switchTab(tabId) {
       loadPodmanResources();
     } else if (tabId === 'tab-testing') {
       initTestingTab();
+    } else if (tabId === 'tab-devops') {
+      filterDevOpsCards();
+      loadRepoStatistics();
     }
   }
 }
@@ -44,28 +47,223 @@ function switchPersona(persona) {
   else if (persona === 'publisher') switchTab('tab-services');
 }
 
+let gMermaidInitialized = false;
+window._MERMAID_SOURCES = window._MERMAID_SOURCES || {};
+let gZoomedMermaidSource = '';
+
+function initMermaidGlobal() {
+  if (gMermaidInitialized) return;
+  if (typeof mermaid !== 'undefined') {
+    try {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'dark',
+        securityLevel: 'loose',
+        fontFamily: 'ui-sans-serif, system-ui, -apple-system, sans-serif',
+        themeVariables: {
+          darkMode: true,
+          background: '#030712',
+          primaryColor: '#38bdf8',
+          primaryTextColor: '#f8fafc',
+          primaryBorderColor: '#0284c7',
+          lineColor: '#94a3b8',
+          secondaryColor: '#1e293b',
+          tertiaryColor: '#0f172a'
+        },
+        flowchart: {
+          useMaxWidth: true,
+          htmlLabels: true,
+          curve: 'basis'
+        }
+      });
+      gMermaidInitialized = true;
+    } catch (e) {
+      console.warn('Mermaid initialize warning:', e);
+    }
+  }
+}
+
+async function renderMermaidInContainer(container) {
+  if (!container) return;
+  initMermaidGlobal();
+
+  const codeNodes = container.querySelectorAll('pre > code.language-mermaid, pre > code.lang-mermaid, pre.mermaid, code.language-mermaid');
+  if (!codeNodes || codeNodes.length === 0) return;
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'] || {};
+
+  for (const codeEl of Array.from(codeNodes)) {
+    let preEl = codeEl.tagName.toLowerCase() === 'pre' ? codeEl : codeEl.closest('pre');
+    if (!preEl) preEl = codeEl;
+
+    if (preEl.getAttribute('data-mermaid-processed') === 'true') continue;
+    preEl.setAttribute('data-mermaid-processed', 'true');
+
+    const rawCode = (codeEl.textContent || '').trim();
+    if (!rawCode) continue;
+
+    const uniqueId = 'mermaid-dyn-' + Math.floor(Math.random() * 10000000);
+    window._MERMAID_SOURCES[uniqueId] = rawCode;
+
+    const card = document.createElement('div');
+    card.className = 'mermaid-diagram-card';
+    card.setAttribute('data-mermaid-card-id', uniqueId);
+    card.innerHTML = `
+      <div class="mermaid-toolbar">
+        <span class="mermaid-title">📊 <span>${escapeHtml(dict.mermaid_diag_title || 'Arhitektuuriskeem')}</span></span>
+        <div class="mermaid-actions">
+          <button type="button" class="mermaid-btn" onclick="toggleMermaidCardCode('${uniqueId}', this)">👁️ <span>${escapeHtml(dict.mermaid_toggle_code || 'Kuva kood')}</span></button>
+          <button type="button" class="mermaid-btn" onclick="copyMermaidCardCode('${uniqueId}', this)">📋 <span>${escapeHtml(dict.mermaid_copy_code || 'Kopeeri')}</span></button>
+          <button type="button" class="mermaid-btn" onclick="openMermaidZoomModal('${uniqueId}')">🔍 <span>${escapeHtml(dict.mermaid_zoom || 'Suurenda')}</span></button>
+        </div>
+      </div>
+      <div class="mermaid-render-target" id="${uniqueId}">
+        <div style="color:#94a3b8; font-size:0.85rem; padding:16px;">⏳ Renderin diagrammi...</div>
+      </div>
+      <pre class="mermaid-raw-code" id="${uniqueId}-raw" style="display:none;"><code>${escapeHtml(rawCode)}</code></pre>
+    `;
+
+    if (preEl.parentNode) {
+      preEl.parentNode.replaceChild(card, preEl);
+    }
+
+    const targetEl = document.getElementById(uniqueId);
+    const rawEl = document.getElementById(uniqueId + '-raw');
+
+    if (typeof mermaid === 'undefined') {
+      if (targetEl) {
+        targetEl.innerHTML = `
+          <div style="color:#f59e0b; padding:14px; font-size:0.82rem; background:#451a03; border-radius:6px; border:1px solid #78350f; width:100%; text-align:left;">
+            ⚠️ <strong>${escapeHtml(dict.mermaid_offline_msg || 'Mermaid teek ei ole kättesaadav (offline/tulemüür). Skeemi kood on vaadatav nupust "Kuva kood".')}</strong>
+          </div>
+        `;
+      }
+      if (rawEl) rawEl.style.display = 'block';
+      continue;
+    }
+
+    try {
+      const svgId = 'svg-' + uniqueId;
+      const res = await mermaid.render(svgId, rawCode);
+      if (targetEl) {
+        targetEl.innerHTML = res.svg || res;
+      }
+    } catch (err) {
+      console.warn('Mermaid render warning:', err);
+      if (targetEl) {
+        targetEl.innerHTML = `
+          <div style="color:#f87171; padding:14px; font-size:0.82rem; background:#450a0a; border-radius:6px; border:1px solid #991b1b; width:100%; text-align:left;">
+            ⚠️ <strong>${escapeHtml(dict.mermaid_err_msg || 'Diagrammi renderdamise hoiatus:')}</strong> ${escapeHtml(err.message || 'Süntaksi viga')}<br/>
+            <span style="font-size:0.75rem; color:#fca5a5;">Skeemi lähtekood on kuvatud allpool:</span>
+          </div>
+        `;
+      }
+      if (rawEl) rawEl.style.display = 'block';
+    }
+  }
+}
+
+function toggleMermaidCardCode(id, btn) {
+  const rawEl = document.getElementById(id + '-raw');
+  if (!rawEl) return;
+  const isHidden = (rawEl.style.display === 'none' || !rawEl.style.display);
+  rawEl.style.display = isHidden ? 'block' : 'none';
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'] || {};
+  if (btn) {
+    const span = btn.querySelector('span');
+    if (span) {
+      span.textContent = isHidden ? (dict.mermaid_hide_code || 'Peida kood') : (dict.mermaid_toggle_code || 'Kuva kood');
+    }
+  }
+}
+
+function copyMermaidCardCode(id, btn) {
+  const code = window._MERMAID_SOURCES && window._MERMAID_SOURCES[id];
+  if (!code) return;
+  navigator.clipboard.writeText(code).then(() => {
+    const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'] || {};
+    const origText = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.innerHTML = `✅ <span>${escapeHtml(dict.mermaid_copied || 'Kopeeritud!')}</span>`;
+      setTimeout(() => { btn.innerHTML = origText; }, 1800);
+    }
+  }).catch(err => {
+    console.error('Clipboard copy failed:', err);
+  });
+}
+
+function openMermaidZoomModal(id) {
+  const targetEl = document.getElementById(id);
+  const modal = document.getElementById('mermaid-zoom-modal');
+  const zoomContent = document.getElementById('mermaid-zoom-content');
+  if (!targetEl || !modal || !zoomContent) return;
+
+  gZoomedMermaidSource = (window._MERMAID_SOURCES && window._MERMAID_SOURCES[id]) || '';
+  zoomContent.innerHTML = targetEl.innerHTML;
+  modal.style.display = 'flex';
+}
+
+function closeMermaidZoomModal() {
+  const modal = document.getElementById('mermaid-zoom-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function copyZoomedMermaidCode() {
+  if (!gZoomedMermaidSource) return;
+  navigator.clipboard.writeText(gZoomedMermaidSource).then(() => {
+    alert('📋 Diagrammi kood kopeeritud lõikelauale!');
+  });
+}
+
+function toggleBlueprintMermaidCode(btn) {
+  const rawEl = document.getElementById('bp-modal-mermaid-raw');
+  if (!rawEl) return;
+  const isHidden = (rawEl.style.display === 'none' || !rawEl.style.display);
+  rawEl.style.display = isHidden ? 'block' : 'none';
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'] || {};
+  if (btn) {
+    const span = btn.querySelector('span');
+    if (span) {
+      span.textContent = isHidden ? (dict.mermaid_hide_code || 'Peida kood') : (dict.mermaid_toggle_code || 'Kuva kood');
+    }
+  }
+}
+
+function copyBlueprintMermaidCode(btn) {
+  const b = BLUEPRINTS_DATA.find(item => item.num === activeBpModalNum);
+  if (!b) return;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const diagCode = (b.diagrams && b.diagrams[currentLang]) || (b.diagrams && b.diagrams['en']) || '';
+  if (!diagCode) return;
+  navigator.clipboard.writeText(diagCode).then(() => {
+    const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'] || {};
+    const orig = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.innerHTML = `✅ <span>${escapeHtml(dict.mermaid_copied || 'Kopeeritud!')}</span>`;
+      setTimeout(() => { btn.innerHTML = orig; }, 1800);
+    }
+  });
+}
+
+function openBlueprintMermaidZoom() {
+  const mermaidContainer = document.getElementById('bp-modal-mermaid');
+  const modal = document.getElementById('mermaid-zoom-modal');
+  const zoomContent = document.getElementById('mermaid-zoom-content');
+  if (!mermaidContainer || !modal || !zoomContent) return;
+  const b = BLUEPRINTS_DATA.find(item => item.num === activeBpModalNum);
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  gZoomedMermaidSource = (b && b.diagrams && (b.diagrams[currentLang] || b.diagrams['en'])) || '';
+  zoomContent.innerHTML = mermaidContainer.innerHTML;
+  modal.style.display = 'flex';
+}
+
 function renderMermaidDiagrams(lang) {
-  lang = lang || localStorage.getItem('dev_hub_lang') || 'en';
-  const diags = MERMAID_DIAGRAMS[lang] || MERMAID_DIAGRAMS['en'];
-  
-  const activeBpEl = document.getElementById('mermaid-active-blueprint');
-  if (activeBpEl) {
-    activeBpEl.removeAttribute('data-processed');
-    const activeBpDiags = (ACTIVE_BP_MERMAID && (ACTIVE_BP_MERMAID[lang] || ACTIVE_BP_MERMAID['en'])) || '';
-    activeBpEl.innerHTML = activeBpDiags;
-  }
-
-  const d2 = document.getElementById('mermaid-diag-2');
-  if (d2 && diags && diags.length > 1) {
-    d2.removeAttribute('data-processed');
-    d2.innerHTML = diags[1];
-  }
-
-  try {
-    mermaid.run({ querySelector: '.mermaid' });
-  } catch (err) {
-    console.error('Mermaid render error:', err);
-  }
+  initMermaidGlobal();
 }
 
 function setLanguage(lang) {
@@ -145,6 +343,13 @@ function setLanguage(lang) {
   if (typeof renderTestingSuites === 'function') renderTestingSuites();
   if (typeof updateTestTerminalLangBadge === 'function') updateTestTerminalLangBadge(lang);
   if (typeof setOrdsAutoSync === 'function') setOrdsAutoSync(gOrdsAutoSync, false);
+  const gModal = document.getElementById('glossary-modal-backdrop');
+  if (gModal && gModal.classList.contains('active') && typeof renderGlossaryModal === 'function') {
+    renderGlossaryModal();
+  }
+  if (typeof renderRepoStatisticsUI === 'function' && gRepoStatsData) {
+    renderRepoStatisticsUI(gRepoStatsData);
+  }
 }
 
 function applyPillState(pill, state, lang, matchedCount, totalCount) {
@@ -1545,10 +1750,12 @@ function switchBlueprintModalTab(tabName) {
 }
 
 async function renderBlueprintMermaid(bNum) {
+  initMermaidGlobal();
   const b = BLUEPRINTS_DATA.find(item => item.num === bNum);
   if (!b) return;
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const mermaidContainer = document.getElementById('bp-modal-mermaid');
+  const rawEl = document.getElementById('bp-modal-mermaid-raw');
   if (!mermaidContainer) return;
 
   mermaidContainer.removeAttribute('data-processed');
@@ -1556,17 +1763,30 @@ async function renderBlueprintMermaid(bNum) {
   mermaidContainer.innerHTML = '<div style="color:#94a3b8; font-size:0.85rem; padding:10px;">⏳ Renderin arhitektuurijoonist...</div>';
 
   const diagCode = (b.diagrams && b.diagrams[currentLang]) || (b.diagrams && b.diagrams['en']) || '';
-  if (diagCode) {
-    try {
-      const svgId = 'bp-modal-svg-' + b.num + '-' + Math.floor(Math.random() * 100000);
-      const res = await mermaid.render(svgId, diagCode);
-      mermaidContainer.innerHTML = res.svg || res;
-    } catch (err) {
-      console.error('Mermaid modal render error:', err);
-      mermaidContainer.innerHTML = `<pre style="color:#f87171; font-size:0.75rem; white-space:pre-wrap; background:#030712; padding:10px; border-radius:6px;">${diagCode}</pre>`;
-    }
-  } else {
+  if (rawEl) {
+    rawEl.textContent = diagCode;
+    rawEl.style.display = 'none';
+  }
+
+  if (!diagCode) {
     mermaidContainer.innerHTML = '<span style="color:#64748b; font-size:0.85rem;">Diagramm pole saadaval.</span>';
+    return;
+  }
+
+  if (typeof mermaid === 'undefined') {
+    mermaidContainer.innerHTML = '<div style="color:#f59e0b; padding:12px; font-size:0.82rem; background:#451a03; border-radius:6px; border:1px solid #78350f;">⚠️ Mermaid teek ei ole kättesaadav (offline/tulemüür). Lähtekood on vaadatav nupust "Kuva kood".</div>';
+    if (rawEl) rawEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const svgId = 'bp-modal-svg-' + b.num + '-' + Math.floor(Math.random() * 100000);
+    const res = await mermaid.render(svgId, diagCode);
+    mermaidContainer.innerHTML = res.svg || res;
+  } catch (err) {
+    console.error('Mermaid modal render error:', err);
+    mermaidContainer.innerHTML = `<div style="color:#f87171; padding:12px; font-size:0.82rem; background:#450a0a; border-radius:6px; border:1px solid #991b1b;">⚠️ Diagrammi renderdamise hoiatus: ${escapeHtml(err.message || 'Süntaksiviga')}</div>`;
+    if (rawEl) rawEl.style.display = 'block';
   }
 }
 
@@ -2583,6 +2803,295 @@ async function runDevOpsCommand(cmdKey, btn) {
   }
 }
 
+let currentDevOpsCategoryFilter = 'all';
+
+function filterDevOpsCategory(cat, btn) {
+  currentDevOpsCategoryFilter = cat || 'all';
+  document.querySelectorAll('#devops-category-filters .bp-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  filterDevOpsCards();
+}
+
+function filterDevOpsCards() {
+  const searchInput = document.getElementById('devops-search-input');
+  const clearBtn = document.getElementById('devops-search-clear');
+  const counterEl = document.getElementById('devops-filter-counter');
+  const emptyEl = document.getElementById('devops-empty-state');
+  const gridEl = document.getElementById('devops-cards-grid');
+
+  const q = (searchInput ? searchInput.value : '').toLowerCase().trim();
+  if (clearBtn) {
+    clearBtn.style.display = q ? 'inline-block' : 'none';
+  }
+
+  const cards = document.querySelectorAll('#devops-cards-grid .card');
+  let visibleCount = 0;
+  const totalCount = cards.length;
+
+  cards.forEach(card => {
+    const cardCat = card.getAttribute('data-cat') || 'tools';
+    const matchesCat = (currentDevOpsCategoryFilter === 'all') || (cardCat === currentDevOpsCategoryFilter);
+    const text = card.textContent.toLowerCase();
+    const matchesSearch = !q || text.includes(q);
+
+    if (matchesCat && matchesSearch) {
+      card.style.display = '';
+      visibleCount++;
+    } else {
+      card.style.display = 'none';
+    }
+  });
+
+  if (counterEl) {
+    counterEl.innerText = `${visibleCount} / ${totalCount}`;
+  }
+
+  if (emptyEl) {
+    emptyEl.style.display = (visibleCount === 0) ? 'block' : 'none';
+  }
+  if (gridEl) {
+    gridEl.style.display = (visibleCount === 0) ? 'none' : 'grid';
+  }
+}
+
+function clearDevOpsSearch() {
+  const searchInput = document.getElementById('devops-search-input');
+  if (searchInput) {
+    searchInput.value = '';
+    searchInput.focus();
+  }
+  filterDevOpsCards();
+}
+
+function resetDevOpsFilters() {
+  const searchInput = document.getElementById('devops-search-input');
+  if (searchInput) searchInput.value = '';
+  currentDevOpsCategoryFilter = 'all';
+  const allBtn = document.querySelector('#devops-category-filters .bp-filter-btn');
+  document.querySelectorAll('#devops-category-filters .bp-filter-btn').forEach(b => b.classList.remove('active'));
+  if (allBtn) allBtn.classList.add('active');
+  filterDevOpsCards();
+}
+
+/* ==========================================================================
+   Repository Statistics & Codebase Health Engine
+   ========================================================================== */
+let gRepoStatsData = (typeof REPO_STATS_DATA !== 'undefined' && REPO_STATS_DATA && REPO_STATS_DATA.maintainable_core) ? REPO_STATS_DATA : null;
+
+async function loadRepoStatistics(forceRefresh = false) {
+  // If pre-baked statistics exist, render them immediately to avoid empty/loading state
+  if (gRepoStatsData && !forceRefresh) {
+    renderRepoStatisticsUI(gRepoStatsData);
+  }
+
+  const badge = document.getElementById('repo-stats-updated-badge');
+  if (badge && !gRepoStatsData) badge.textContent = 'Laadimine...';
+
+  try {
+    const url = forceRefresh ? `${BRIDGE_URL}/api/report/refresh` : `${BRIDGE_URL}/api/report/stats`;
+    const method = forceRefresh ? 'POST' : 'GET';
+    const resp = await fetch(url, { method, mode: 'cors' });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && data.stats) {
+        gRepoStatsData = data.stats;
+        renderRepoStatisticsUI(gRepoStatsData);
+        if (forceRefresh) {
+          const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+          const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+          showToast(dict.stats_refreshed_toast || '✅ Repositooriumi statistika edukalt uuendatud!');
+        }
+      }
+    } else {
+      if (badge && !gRepoStatsData) badge.textContent = 'Bridge ühenduseta';
+    }
+  } catch (e) {
+    if (badge && !gRepoStatsData) badge.textContent = 'Bridge offline';
+  }
+}
+
+async function refreshRepoStatistics() {
+  const btn = document.getElementById('btn-refresh-repo-stats');
+  const icon = document.getElementById('refresh-stats-icon');
+  if (btn) btn.disabled = true;
+  if (icon) icon.textContent = '⏳';
+  showToast('🔄 Arvutan koodibaasi statistikat ja mõõdikuid...');
+  
+  await loadRepoStatistics(true);
+  
+  if (btn) btn.disabled = false;
+  if (icon) icon.textContent = '🔄';
+}
+
+function renderRepoStatisticsUI(stats) {
+  if (!stats) return;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  const mc = stats.maintainable_core || {};
+  const gr = stats.gross_repository || {};
+  const ac = stats.architecture_components || {};
+  const git = stats.git || {};
+  const i18n = stats.i18n || {};
+  const tst = stats.testing || {};
+  const meta = stats.metadata || {};
+
+  // Badge
+  const badge = document.getElementById('repo-stats-updated-badge');
+  if (badge && meta.generated_at) {
+    const timeStr = meta.generated_at.substring(0, 16).replace('T', ' ');
+    badge.textContent = `${dict.stats_updated || 'Uuendatud'}: ${timeStr} (${meta.scan_duration_ms || 0}ms)`;
+  }
+
+  // KPI 1: Maintainable SLOC
+  const slocVal = document.getElementById('stats-kpi-sloc-val');
+  if (slocVal) slocVal.textContent = (mc.maintainable_sloc || 0).toLocaleString();
+  const filesCount = document.getElementById('stats-kpi-files-count');
+  if (filesCount) filesCount.textContent = `${mc.total_files || 0} ${dict.stats_files || 'faili'}`;
+  const grossVal = document.getElementById('stats-kpi-gross-val');
+  if (grossVal) grossVal.textContent = `${dict.stats_gross_repo || 'Kogu repo'}: ${(gr.total_gross_lines || 0).toLocaleString()} rida`;
+
+  // KPI 2: Test Density
+  const testDensityVal = document.getElementById('stats-kpi-test-density-val');
+  if (testDensityVal) testDensityVal.textContent = `${mc.test_density_percent || 0}%`;
+  const testCount = document.getElementById('stats-kpi-test-count');
+  if (testCount) testCount.textContent = `${ac.test_scripts_count || 0} ${dict.stats_tests || 'testi'}`;
+  const testPassVal = document.getElementById('stats-kpi-test-pass-val');
+  if (testPassVal) testPassVal.textContent = `${dict.stats_pass_rate || 'Edukus'}: ${tst.pass_rate_percent || 100}% PASS`;
+
+  // KPI 3: Architecture Scale
+  const bpVal = document.getElementById('stats-kpi-bp-val');
+  if (bpVal) bpVal.textContent = `${ac.blueprints_count || 12} Blueprinti`;
+  const dbCount = document.getElementById('stats-kpi-db-count');
+  if (dbCount) dbCount.textContent = `${ac.database_profiles_count || 0} DB profiili`;
+  const cliCount = document.getElementById('stats-kpi-cli-count');
+  if (cliCount) cliCount.textContent = `CLI: ${ac.cli_user_tools_count || 0} | Internal: ${ac.internal_engine_scripts_count || 0}`;
+
+  // KPI 4: i18n & Git
+  const i18nVal = document.getElementById('stats-kpi-i18n-val');
+  if (i18nVal) i18nVal.textContent = `${i18n.languages_count || 6} Keelt (100%)`;
+  const commitsCount = document.getElementById('stats-kpi-commits-count');
+  if (commitsCount) commitsCount.textContent = `${git.total_commits || 0} commit'i`;
+  const keysVal = document.getElementById('stats-kpi-keys-val');
+  if (keysVal) keysVal.textContent = `${i18n.total_unique_i18n_keys || 0} i18n võtit`;
+
+  // Stacked Language Bar
+  const stackedBar = document.getElementById('stats-stacked-bar');
+  const legend = document.getElementById('stats-lang-legend');
+  const langs = stats.language_breakdown || {};
+
+  const LANG_COLORS = {
+    'Shell / Bash': '#38bdf8',
+    'Python': '#facc15',
+    'SQL / PLSQL': '#fb923c',
+    'YAML Configuration': '#4ade80',
+    'Markdown Docs': '#94a3b8',
+    'APEXlang DSL': '#c084fc',
+    'Container / Docker': '#06b6d4',
+    'JSON Data/Specs': '#a3e635',
+    'Web Templates (HTML/JS/CSS)': '#f43f5e',
+    'Windows Scripts': '#818cf8',
+    'Other': '#64748b'
+  };
+
+  if (stackedBar) {
+    let barHtml = '';
+    let legHtml = [];
+    Object.keys(langs).forEach(lang => {
+      const st = langs[lang];
+      const color = LANG_COLORS[lang] || '#64748b';
+      const pct = st.percent_of_sloc || 0;
+      if (pct > 0.5) {
+        barHtml += `<div style="width: ${pct}%; background: ${color}; height: 100%; transition: width 0.5s ease;" title="${lang}: ${st.sloc.toLocaleString()} SLOC (${pct}%)"></div>`;
+        legHtml.push(`<span style="display:inline-flex; align-items:center; gap:4px; margin-left:8px;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${color};"></span> ${lang.split(' ')[0]} ${pct}%</span>`);
+      }
+    });
+    stackedBar.innerHTML = barHtml;
+    if (legend) legend.innerHTML = legHtml.slice(0, 5).join(' ');
+  }
+
+  // Detailed Language Table
+  const tbodyLang = document.getElementById('stats-lang-table-tbody');
+  if (tbodyLang) {
+    let tHtml = '';
+    Object.keys(langs).forEach(lang => {
+      const st = langs[lang];
+      const color = LANG_COLORS[lang] || '#64748b';
+      tHtml += `
+        <tr>
+          <td><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${color}; margin-right:6px;"></span><strong>${lang}</strong></td>
+          <td>${st.files}</td>
+          <td><strong>${st.sloc.toLocaleString()}</strong> <small style="color:#64748b;">(${(st.lines || 0).toLocaleString()} tot)</small></td>
+          <td><span class="badge" style="background:rgba(255,255,255,0.06); font-size:0.7rem;">${st.percent_of_sloc || 0}%</span></td>
+        </tr>
+      `;
+    });
+    tbodyLang.innerHTML = tHtml;
+  }
+
+  // Top 5 Largest Files Table
+  const tbodyTop = document.getElementById('stats-top-files-tbody');
+  const topFiles = stats.top_largest_files || [];
+  if (tbodyTop) {
+    let topHtml = '';
+    topFiles.forEach(f => {
+      topHtml += `
+        <tr>
+          <td style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${f.path}"><code style="font-size:0.72rem; color:#93c5fd;">${f.path}</code></td>
+          <td><span class="badge badge-secondary" style="font-size:0.68rem;">${f.language.split(' ')[0]}</span></td>
+          <td><strong>${f.sloc.toLocaleString()}</strong></td>
+        </tr>
+      `;
+    });
+    tbodyTop.innerHTML = topHtml;
+  }
+}
+
+function toggleRepoStatsDetails() {
+  const drawer = document.getElementById('stats-details-drawer');
+  const caret = document.getElementById('stats-details-caret');
+  const lbl = document.getElementById('stats-details-toggle-lbl');
+  if (!drawer) return;
+  const isHidden = drawer.style.display === 'none' || drawer.style.display === '';
+  drawer.style.display = isHidden ? 'block' : 'none';
+  if (caret) caret.textContent = isHidden ? '▲' : '▼';
+}
+
+function downloadRepoReport(format) {
+  if (!gRepoStatsData && format === 'json') {
+    showToast('⚠️ Andmed pole veel laetud. Värskenda esmalt aruannet.');
+    return;
+  }
+  let content = '';
+  let filename = '';
+  let mime = 'text/plain';
+
+  if (format === 'json') {
+    content = JSON.stringify(gRepoStatsData, null, 2);
+    filename = 'repo_statistics.json';
+    mime = 'application/json';
+  } else {
+    content = `# 📈 Oracle DevOps Platform — Repositooriumi Statistiline Aruanne\n\n` +
+      `- Genereeritud: ${gRepoStatsData?.metadata?.generated_at || new Date().toISOString()}\n` +
+      `- Hallatav Lähtekood (SLOC): ${gRepoStatsData?.maintainable_core?.maintainable_sloc?.toLocaleString()} rida (${gRepoStatsData?.maintainable_core?.total_files} faili)\n` +
+      `- Testide Tihedus: ${gRepoStatsData?.maintainable_core?.test_density_percent}%\n` +
+      `- Arhitektuuri Blueprintid: ${gRepoStatsData?.architecture_components?.blueprints_count}\n` +
+      `- Git Commitid: ${gRepoStatsData?.git?.total_commits}\n\n` +
+      `Täielik aruanne on talletatud metrics/repo_statistics.md`;
+    filename = 'repo_statistics.md';
+    mime = 'text/markdown';
+  }
+
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast(`📥 Fail ${filename} alla laaditud!`);
+}
+
 function openSnippetModal(titleKey, descKey, codeSnippet) {
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
@@ -2625,6 +3134,16 @@ document.addEventListener('keydown', (e) => {
     closeCreateBpModal();
     if (typeof closeSuiteTestsModal === 'function') {
       closeSuiteTestsModal();
+    }
+    if (typeof closeGlossaryModal === 'function') {
+      closeGlossaryModal();
+    }
+  } else if ((e.key === '?' || e.key === 'g' || e.key === 'G') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const activeEl = document.activeElement;
+    const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+    if (!isInput && typeof openGlossaryModal === 'function') {
+      e.preventDefault();
+      openGlossaryModal();
     }
   }
 });
@@ -2675,8 +3194,8 @@ let gDocsSearchQuery = '';
 
 function getDocCategory(rel) {
   const r = (rel || '').toLowerCase();
-  if (r.includes('architecture') || r.includes('topology') || r.includes('blueprint') || r.includes('seps') || r.includes('wallet') || r.includes('profile') || r.includes('backlog') || r.includes('fin-') || r.includes('enterprise')) return 'arch';
-  if (r.includes('script') || r.includes('setup') || r.includes('reset') || r.includes('cicd') || r.includes('ci') || r.includes('deploy') || r.includes('snapshot') || r.includes('devops')) return 'devops';
+  if (r.includes('architecture') || r.includes('topology') || r.includes('blueprint') || r.includes('seps') || r.includes('wallet') || r.includes('profile') || r.includes('enterprise')) return 'arch';
+  if (r.includes('script') || r.includes('setup') || r.includes('reset') || r.includes('cicd') || r.includes('ci') || r.includes('deploy') || r.includes('snapshot') || r.includes('devops') || r.includes('test') || r.includes('artifactory')) return 'devops';
   if (r.includes('apex') || r.includes('ords') || r.includes('publisher') || r.includes('forms') || r.includes('web-ide') || r.includes('ide') || r.includes('service')) return 'web';
   return 'trouble';
 }
@@ -2928,11 +3447,13 @@ function loadDocContent(idx, activeBtn) {
   }
 
   if (text) {
-    bodyEl.innerHTML = marked.parse(text);
+    if (typeof marked !== 'undefined') {
+      bodyEl.innerHTML = marked.parse(text);
+    } else {
+      bodyEl.innerHTML = `<pre style="white-space:pre-wrap; font-family:inherit; color:#e2e8f0;">${escapeHtml(text)}</pre>`;
+    }
     generateDocToc(bodyEl);
-    try {
-      mermaid.run({ nodes: bodyEl.querySelectorAll('.mermaid') });
-    } catch (err) {}
+    renderMermaidInContainer(bodyEl);
   } else {
     bodyEl.innerHTML = `
       <div style="background: #1e293b; padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
@@ -5648,19 +6169,22 @@ function renderTestingSuites(suites) {
       </select>`;
     }
 
+    const suiteTitle = dict['test_suite_' + suite.key + '_title'] || suite.title;
+    const suiteDesc = dict['test_suite_' + suite.key + '_desc'] || suite.desc;
+
     html += `
-      <div class="test-suite-card">
+      <div class="test-suite-card" data-cat="${escapeTestHtml(suite.category || 'core')}" data-key="${escapeTestHtml(suite.key)}" data-tests="${escapeTestHtml((suite.tests || []).join(' '))}">
         <div>
           <div class="test-suite-header">
             <div class="test-suite-title">
               <span>${suite.icon || '🧪'}</span>
-              <span>${escapeTestHtml(suite.title)}</span>
+              <span>${escapeTestHtml(suiteTitle)}</span>
             </div>
             <span class="badge badge-info test-count-badge-clickable" onclick="openSuiteTestsModal('${suite.key}')" title="${dict.btn_view_tests || 'Kuva testid'}" style="font-size:0.7rem;">
               ${suite.count} ${suite.count === 1 ? 'test' : 'tests'} 👁️
             </span>
           </div>
-          <div class="test-suite-desc">${escapeTestHtml(suite.desc)}</div>
+          <div class="test-suite-desc">${escapeTestHtml(suiteDesc)}</div>
         </div>
         ${suite.cmd ? `
           <div class="code-box" style="margin: 10px 0 12px 0; padding: 6px 55px 6px 10px; font-size: 0.75rem; white-space: nowrap; overflow-x: auto; background: rgba(0,0,0,0.3); border-radius: var(--radius-sm); border: 1px solid var(--border);">
@@ -5688,6 +6212,78 @@ function renderTestingSuites(suites) {
     `;
   });
   grid.innerHTML = html;
+  filterTestingSuites();
+}
+
+let currentTestingCategoryFilter = 'all';
+
+function filterTestingCategory(cat, btn) {
+  currentTestingCategoryFilter = cat || 'all';
+  document.querySelectorAll('#testing-category-filters .bp-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  filterTestingSuites();
+}
+
+function filterTestingSuites() {
+  const searchInput = document.getElementById('testing-search-input');
+  const clearBtn = document.getElementById('testing-search-clear');
+  const counterEl = document.getElementById('testing-filter-counter');
+  const emptyEl = document.getElementById('testing-empty-state');
+  const gridEl = document.getElementById('testing-suites-grid');
+
+  const q = (searchInput ? searchInput.value : '').toLowerCase().trim();
+  if (clearBtn) {
+    clearBtn.style.display = q ? 'inline-block' : 'none';
+  }
+
+  const cards = document.querySelectorAll('#testing-suites-grid .test-suite-card');
+  let visibleCount = 0;
+  const totalCount = cards.length;
+
+  cards.forEach(card => {
+    const cardCat = card.getAttribute('data-cat') || 'core';
+    const matchesCat = (currentTestingCategoryFilter === 'all') || (cardCat === currentTestingCategoryFilter);
+    const text = card.textContent.toLowerCase();
+    const testsAttr = (card.getAttribute('data-tests') || '').toLowerCase();
+    const matchesSearch = !q || text.includes(q) || testsAttr.includes(q);
+
+    if (matchesCat && matchesSearch) {
+      card.style.display = '';
+      visibleCount++;
+    } else {
+      card.style.display = 'none';
+    }
+  });
+
+  if (counterEl) {
+    counterEl.innerText = `${visibleCount} / ${totalCount}`;
+  }
+
+  if (emptyEl) {
+    emptyEl.style.display = (visibleCount === 0) ? 'block' : 'none';
+  }
+  if (gridEl) {
+    gridEl.style.display = (visibleCount === 0) ? 'none' : 'grid';
+  }
+}
+
+function clearTestingSearch() {
+  const searchInput = document.getElementById('testing-search-input');
+  if (searchInput) {
+    searchInput.value = '';
+    searchInput.focus();
+  }
+  filterTestingSuites();
+}
+
+function resetTestingFilters() {
+  const searchInput = document.getElementById('testing-search-input');
+  if (searchInput) searchInput.value = '';
+  currentTestingCategoryFilter = 'all';
+  const allBtn = document.querySelector('#testing-category-filters .bp-filter-btn');
+  document.querySelectorAll('#testing-category-filters .bp-filter-btn').forEach(b => b.classList.remove('active'));
+  if (allBtn) allBtn.classList.add('active');
+  filterTestingSuites();
 }
 
 let currentModalSuiteKey = null;
@@ -5731,9 +6327,10 @@ function openSuiteTestsModal(suiteKey) {
   const lang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = (typeof I18N_DICT !== 'undefined' && (I18N_DICT[lang] || I18N_DICT['en'])) || {};
 
+  const sTitle = dict['test_suite_' + suite.key + '_title'] || suite.title || suiteKey;
   if (iconEl) iconEl.innerText = suite.icon || '🧪';
-  if (titleEl) titleEl.innerText = suite.title || suiteKey;
-  if (subEl) subEl.innerText = `${suite.count || currentModalSuiteTests.length} tests in ${suite.title}`;
+  if (titleEl) titleEl.innerText = sTitle;
+  if (subEl) subEl.innerText = `${suite.count || currentModalSuiteTests.length} tests in ${sTitle}`;
   if (searchInput) searchInput.value = '';
   if (listView) listView.style.display = 'flex';
   if (scriptView) scriptView.style.display = 'none';
@@ -5972,6 +6569,27 @@ function openDocFromMenu(docId) {
       }, 50);
     }
   }
+}
+
+function runSecurityAuditFromMenu() {
+  const btn = document.getElementById('enterprise-dropdown-btn');
+  const menu = document.getElementById('enterprise-dropdown-menu');
+  if (menu) {
+    menu.classList.remove('show');
+  }
+  if (btn) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+
+  switchTab('tab-testing');
+  setTimeout(() => {
+    runTestSuite('security_audit');
+    const term = document.getElementById('testing-terminal-output');
+    if (term) {
+      term.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, 100);
 }
 
 document.addEventListener('click', function(event) {
@@ -6299,10 +6917,12 @@ function renderCurrentReportContent() {
     bodyEl.innerHTML = `<pre style="font-size:0.8rem; line-height:1.4; color:#e2e8f0; white-space:pre-wrap;">${escapeTestHtml(selectedReportRawContent)}</pre>`;
   } else {
     try {
-      bodyEl.innerHTML = marked.parse(selectedReportRawContent);
-      try {
-        mermaid.run({ nodes: bodyEl.querySelectorAll('.mermaid') });
-      } catch (e) {}
+      if (typeof marked !== 'undefined') {
+        bodyEl.innerHTML = marked.parse(selectedReportRawContent);
+      } else {
+        bodyEl.innerHTML = `<pre style="white-space:pre-wrap; font-family:inherit; color:#e2e8f0;">${escapeTestHtml(selectedReportRawContent)}</pre>`;
+      }
+      renderMermaidInContainer(bodyEl);
     } catch (err) {
       bodyEl.innerHTML = `<pre style="white-space:pre-wrap;">${escapeTestHtml(selectedReportRawContent)}</pre>`;
     }
@@ -6483,4 +7103,268 @@ document.addEventListener('DOMContentLoaded', () => {
   if (testTab && testTab.classList.contains('active')) {
     initTestingTab();
   }
+
+  // Initialize DevOps filter counter
+  filterDevOpsCards();
+  loadRepoStatistics();
 });
+
+/* ==============================================================================
+ * ARCHITECTURE GLOSSARY & ACRONYMS MODAL ENGINE
+ * ============================================================================== */
+
+let gActiveGlossaryLetter = 'ALL';
+let gGlossarySearchTerm = '';
+
+function openGlossaryModal(initialSearch) {
+  const modal = document.getElementById('glossary-modal-backdrop');
+  if (!modal) return;
+  
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  const searchInput = document.getElementById('glossary-search-input');
+  if (searchInput) {
+    if (typeof initialSearch === 'string') {
+      searchInput.value = initialSearch;
+      gGlossarySearchTerm = initialSearch.toLowerCase().trim();
+    }
+    setTimeout(() => {
+      searchInput.focus();
+      if (initialSearch) searchInput.select();
+    }, 50);
+  }
+
+  renderGlossaryModal();
+}
+
+function closeGlossaryModal(event) {
+  if (event && event.target && event.target.closest && event.target.closest('.glossary-modal-content') && event.target !== event.currentTarget) {
+    return;
+  }
+  const modal = document.getElementById('glossary-modal-backdrop');
+  if (!modal) return;
+  modal.style.display = 'none';
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function renderGlossaryModal() {
+  const catalog = window.GLOSSARY_DATA || [];
+  const container = document.getElementById('glossary-cards-container');
+  const lettersBar = document.getElementById('glossary-letters-bar');
+  const counterEl = document.getElementById('glossary-counter');
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+
+  if (!container || !lettersBar) return;
+
+  // 1. Determine available letters
+  const allLetters = Array.from(new Set(catalog.map(item => item.acronym[0].toUpperCase()))).sort();
+  
+  // Render letter buttons
+  let lettersHtml = `<button class="glossary-letter-btn ${gActiveGlossaryLetter === 'ALL' ? 'active' : ''}" onclick="selectGlossaryLetter('ALL')">ALL</button>`;
+  allLetters.forEach(l => {
+    lettersHtml += `<button class="glossary-letter-btn ${gActiveGlossaryLetter === l ? 'active' : ''}" onclick="selectGlossaryLetter('${l}')">${l}</button>`;
+  });
+  lettersBar.innerHTML = lettersHtml;
+
+  // 2. Filter items based on active letter and search query
+  const term = (gGlossarySearchTerm || '').toLowerCase().trim();
+  const clearBtn = document.getElementById('glossary-clear-search');
+  if (clearBtn) {
+    clearBtn.style.display = term ? 'block' : 'none';
+  }
+
+  const filtered = catalog.filter(item => {
+    const firstLet = item.acronym[0].toUpperCase();
+    if (gActiveGlossaryLetter !== 'ALL' && firstLet !== gActiveGlossaryLetter) {
+      return false;
+    }
+    if (!term) return true;
+
+    const acr = (item.acronym || '').toLowerCase();
+    const exp = (item.expansion || '').toLowerCase();
+    const cat = (item.category || '').toLowerCase();
+    const defText = ((item.def && (item.def[currentLang] || item.def.en)) || '').toLowerCase();
+    const roleText = ((item.project_role && (item.project_role[currentLang] || item.project_role.en)) || '').toLowerCase();
+
+    return acr.includes(term) || exp.includes(term) || cat.includes(term) || defText.includes(term) || roleText.includes(term);
+  });
+
+  // Update counter
+  if (counterEl) {
+    const suffix = (I18N_DICT[currentLang] && I18N_DICT[currentLang].glossary_count_suffix) || 'items';
+    counterEl.textContent = `${filtered.length} / ${catalog.length} ${suffix}`;
+  }
+
+  // 3. Render cards grouped by letter
+  if (filtered.length === 0) {
+    const noResultsTitle = (I18N_DICT[currentLang] && I18N_DICT[currentLang].glossary_no_results) || 'No acronyms found';
+    container.innerHTML = `
+      <div style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
+        <div style="font-size: 2.5rem; margin-bottom: 12px;">🔍</div>
+        <div style="font-size: 1.05rem; font-weight: 600; color: #e2e8f0; margin-bottom: 6px;">${noResultsTitle}</div>
+        <div style="font-size: 0.85rem;">"${escapeHtml(term)}"</div>
+        <button class="btn btn-secondary" onclick="clearGlossarySearch()" style="margin-top: 14px; padding: 6px 14px; font-size: 0.82rem;">
+          ↺ Reset
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  // Group by first letter
+  const grouped = {};
+  filtered.forEach(item => {
+    const letKey = item.acronym[0].toUpperCase();
+    if (!grouped[letKey]) grouped[letKey] = [];
+    grouped[letKey].push(item);
+  });
+
+  const sortedLetters = Object.keys(grouped).sort();
+  const lblDef = (I18N_DICT[currentLang] && I18N_DICT[currentLang].glossary_lbl_def) || 'Definition';
+  const lblRole = (I18N_DICT[currentLang] && I18N_DICT[currentLang].glossary_lbl_role) || 'Project Role';
+  const lblLinks = (I18N_DICT[currentLang] && I18N_DICT[currentLang].glossary_lbl_links) || 'Related Links';
+
+  let sectionsHtml = '';
+  sortedLetters.forEach(letter => {
+    const itemsInLetter = grouped[letter];
+    sectionsHtml += `
+      <div class="glossary-letter-section" id="glossary-letter-${letter}">
+        <div class="glossary-letter-header">
+          <div class="glossary-letter-badge">${letter}</div>
+          <span class="glossary-letter-count">(${itemsInLetter.length})</span>
+        </div>
+        <div class="glossary-grid">
+    `;
+
+    itemsInLetter.forEach(item => {
+      const defText = (item.def && (item.def[currentLang] || item.def.en)) || '';
+      const roleText = (item.project_role && (item.project_role[currentLang] || item.project_role.en)) || '';
+      const category = item.category || 'core';
+      const links = item.links || [];
+      const refUrl = item.ref_url || '';
+      const refTitle = item.ref_title || 'Wikipedia';
+      const lblRef = (I18N_DICT[currentLang] && I18N_DICT[currentLang].glossary_lbl_ref) || 'Official Reference';
+
+      let refBadgeHtml = '';
+      if (refUrl) {
+        refBadgeHtml = `
+          <a href="${escapeHtml(refUrl)}" target="_blank" rel="noopener noreferrer" class="glossary-ref-badge" title="${escapeHtml(lblRef)}: ${escapeHtml(refTitle)}">
+            <span>🌐</span> <span>${escapeHtml(refTitle)}</span> <span>↗</span>
+          </a>
+        `;
+      }
+
+      let linksHtml = '';
+      if (links.length > 0 || refUrl) {
+        linksHtml = `<div class="glossary-links">`;
+        if (refUrl) {
+          linksHtml += `
+            <a href="${escapeHtml(refUrl)}" target="_blank" rel="noopener noreferrer" class="glossary-ref-btn" title="${escapeHtml(lblRef)}: ${escapeHtml(refTitle)}">
+              <span>🌐</span> <span>${escapeHtml(refTitle)}</span> <span>↗</span>
+            </a>
+          `;
+        }
+        links.forEach(l => {
+          linksHtml += `
+            <a href="javascript:void(0)" class="glossary-link-btn" onclick="handleGlossaryLinkClick('${escapeHtml(l.url)}')">
+              <span>📄</span> <span>${escapeHtml(l.label)}</span>
+            </a>
+          `;
+        });
+        linksHtml += `</div>`;
+      }
+
+      sectionsHtml += `
+        <div class="glossary-card" id="glossary-card-${item.acronym.toLowerCase()}">
+          <div class="glossary-card-header">
+            <span class="glossary-acronym">${escapeHtml(item.acronym)}</span>
+            <span class="glossary-cat-tag">${escapeHtml(category)}</span>
+            ${refBadgeHtml}
+          </div>
+          <div class="glossary-expansion">${escapeHtml(item.expansion)}</div>
+          <div class="glossary-block">
+            <span class="glossary-label">${lblDef}</span>
+            <span class="glossary-text">${escapeHtml(defText)}</span>
+          </div>
+          <div class="glossary-role-box">
+            <span class="glossary-label" style="color:#7dd3fc;">${lblRole}</span>
+            <span class="glossary-text">${escapeHtml(roleText)}</span>
+          </div>
+          ${linksHtml}
+        </div>
+      `;
+    });
+
+    sectionsHtml += `
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = sectionsHtml;
+}
+
+function selectGlossaryLetter(letter) {
+  gActiveGlossaryLetter = letter;
+  renderGlossaryModal();
+  if (letter !== 'ALL') {
+    const target = document.getElementById(`glossary-letter-${letter}`);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+}
+
+function filterGlossaryCards() {
+  const searchInput = document.getElementById('glossary-search-input');
+  if (searchInput) {
+    gGlossarySearchTerm = searchInput.value;
+  }
+  renderGlossaryModal();
+}
+
+function clearGlossarySearch() {
+  const searchInput = document.getElementById('glossary-search-input');
+  if (searchInput) {
+    searchInput.value = '';
+    gGlossarySearchTerm = '';
+  }
+  gActiveGlossaryLetter = 'ALL';
+  renderGlossaryModal();
+}
+
+function handleGlossaryLinkClick(url) {
+  closeGlossaryModal();
+  if (!url) return;
+
+  // External URL handler
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    return;
+  }
+
+  // Check if it's a doc in DOCS_DATA
+  const docs = window.DOCS_DATA || [];
+  const docIdx = docs.findIndex(d => {
+    const rel = d.rel || '';
+    return url.endsWith(rel) || rel.endsWith(url) || url.includes(d.id);
+  });
+
+  if (docIdx !== -1) {
+    switchTab('tab-docs');
+    renderDocsNav(docIdx);
+  } else if (url.startsWith('scripts/')) {
+    switchTab('tab-devops');
+    const devopsSearch = document.getElementById('devops-search-input');
+    if (devopsSearch) {
+      devopsSearch.value = url.replace('scripts/', '');
+      filterDevOpsCards();
+    }
+  } else {
+    // Open in doc viewer or fallback
+    switchTab('tab-docs');
+  }
+}

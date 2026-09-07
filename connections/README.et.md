@@ -2,17 +2,17 @@
 
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md) -->
 
-# 🔌 Andmebaasiühenduste ja VS Code Seadistamise Juhend
+# 🔌 Andmebaasiühenduste ja VS Code seadistamise juhend
 
 See juhend kirjeldab andmebaasiühenduste automaatset ja käsitsi registreerimist **Oracle SQL Developer for VS Code** laienduses (nii lokaalsel hostil kui Web IDE konteineris) ning paroolivaba ühendumist Oracle Walleti (SEPS) kaudu.
 
 ---
 
-## 🔄 Automaatne Kahetasandiline Registreerimine (Host PC & Web IDE)
+## 🔄 Automaatne kahetasandiline registreerimine (host PC & web IDE)
 
 Kogu platvorm kasutab automatiseeritud ühenduste registreerimise mootorit (`scripts/register-connections.sh`), mis loob ja sünkroonib andmebaasiühendused korraga nii Teie **lokaalses VS Code-is (Host PC)** kui ka **Konteineriseeritud Web IDE-s (`web-ide-dev`)**:
 
-### 📊 Ühenduste Registreerimise Protsessiskeem
+### 📊 Ühenduste registreerimise protsessiskeem
 
 ```mermaid
 flowchart TD
@@ -71,7 +71,7 @@ Et ühendused tekitataks automaatselt iga kord, kui projekti kaust VS Code-is av
 
 ---
 
-## 📥 Kuidas Importida Ühendused VS Code SQL Developer UI-sse
+## 📥 Kuidas importida ühendused VS Code SQL developer UI-sse
 
 Oracle SQL Developer Extension for VS Code laienduses saab ühendused korraga sisse importida failist **`sqldev-connections.json`**:
 
@@ -85,7 +85,7 @@ Oracle SQL Developer Extension for VS Code laienduses saab ühendused korraga si
 
 ---
 
-## 🔑 Kuidas Lisada Käsitsi (Käsitsi sisestamisel)
+## 🔑 Kuidas lisada käsitsi (käsitsi sisestamisel)
 
 Kui soovid lisada ühenduse käsitsi `+` nupuga (nt DBeaver, IntelliJ, Basic-ühendus), saad jooksvad paroolid turvaliselt teada abiskriptiga:
 *   **APEX Admin (ADMIN) parool:**
@@ -115,7 +115,7 @@ Kui soovid lisada ühenduse käsitsi `+` nupuga (nt DBeaver, IntelliJ, Basic-üh
 
 ---
 
-## 🔐 Paroolivaba Ühendus Oracle Wallet (SEPS) Abil
+## 🔐 Paroolivaba ühendus Oracle Wallet (SEPS) abil
 
 Kohalikus arenduskeskkonnas on andmebaasi ja kliendi vaheline autentimine täielikult turvatud **Oracle Walleti** ja **SEPS (Secure External Password Store)** abil. See võimaldab teha andmebaasi ühendusi ilma plaintext paroolide sisestamiseta või koodi/skripti sisse kirjutamiseta.
 
@@ -125,7 +125,7 @@ Kohalikus arenduskeskkonnas on andmebaasi ja kliendi vaheline autentimine täiel
    export TNS_ADMIN=$(pwd)/config/tns_admin
    ```
 
-### 🔌 Ühendamine SQLcl abil (Host-masinast)
+### 🔌 Ühendamine SQLcl abil (host-masinast)
 Kui `TNS_ADMIN` on seadistatud, saad andmebaasi sisse logida paroolivabalt kasutades järgmisi aliaseid:
 
 *   **APEX Proxy DB:**
@@ -145,11 +145,11 @@ Kui `TNS_ADMIN` on seadistatud, saad andmebaasi sisse logida paroolivabalt kasut
 
 ---
 
-## 🔒 Windows Host ja Korporatiivvõrgu SSL/TLS sertifikaatide usaldamine
+## 🔒 Windows host ja korporatiivvõrgu SSL/TLS sertifikaatide usaldamine
 
 Kui arendad Windows masinas (WSL2 kaudu) ja soovid, et lokaalne HTTPS (ORDS-i isesekreeritud sertifikaat) oleks sinu veebibrauseris (Edge/Chrome/Chrome-headless) usaldatud ilma SSL-i hoiatusteta:
 
-### 1. ORDS-i lokaalse sertifikaadi usaldamine Windowsis:
+### 1. ORDS-i lokaalse sertifikaadi usaldamine windowsis:
 ```cmd
 certutil -user -addstore TrustedPeople ssl/cert.crt
 ```

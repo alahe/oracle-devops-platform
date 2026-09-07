@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔒 SSL/TLS Sertifikatų ir Pasitikėjimo Valdymo Modulis (Zero-Admin / Non-Root)
+# 🔒 SSL/TLS sertifikatų ir Pasitikėjimo valdymo modulis (zero-admin / non-root)
 
 Šis modulis valdo saugius HTTPS ir TCPS ryšius, sertifikatų parinkimą ir automatinį pasitikėjimo diegimą macOS ir Windows aplinkose be administratoriaus (`root` / `sudo`) teisių.
 
 ---
 
-## 🧭 5 Lygių Hierarchinė TLS Prioritetų Grandinė (Priority Chain)
+## 🧭 5 Lygių hierarchinė TLS prioritetų grandinė (priority chain)
 
 Paleidimo ir konfigūravimo metu [`scripts/internal/resolve-tls-mode.sh`](../internal/resolve-tls-mode.sh) automatiškai nustato tinkamiausią sertifikatą:
 
@@ -23,7 +23,7 @@ Paleidimo ir konfigūravimo metu [`scripts/internal/resolve-tls-mode.sh`](../int
 
 ---
 
-## 💻 Vartotojo Lygio Scenarijai Be Administratoriaus Teisių
+## 💻 Vartotojo lygio scenarijai be administratoriaus teisių
 
 * **macOS:**
   * [`trust-local-cert-mac.sh`](trust-local-cert-mac.sh): Prideda CA į raktinę `~/Library/Keychains/login.keychain-db` be `sudo`.
@@ -40,7 +40,7 @@ Paleidimo ir konfigūravimo metu [`scripts/internal/resolve-tls-mode.sh`](../int
 
 ---
 
-## 🧪 TLS Testavimas
+## 🧪 TLS testavimas
 ```bash
 ./tests/test-tls-scenarios.sh
 ```

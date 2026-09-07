@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🧪 Automaattitestaus ja Blueprint-Testaussarja (`tests/`)
+# 🧪 Automaattitestaus ja blueprint-testaussarja (`tests/`)
 
 Tämä hakemisto sisältää Oracle DevOps Platformin automaattitestausinfrastruktuurin, suorituskykyraportit ja arkkitehtuuritarkistukset.
 
@@ -13,7 +13,8 @@ Kaikki 12 kanonista arkkitehtuurimallia on määritelty keskitetysti hakemistoss
 - **`config/blueprints/`** ➔ 12 kanonista arkkitehtuurimallia (`.env.0-*` - `.env.11-*`).
 - **`tests/reports/`** ➔ Testiraportit ja suorituskykymatriisi ([`blueprint_benchmark_matrix.md`](reports/blueprint_benchmark_matrix.md)).
 - **`tests/reports/blueprints/`** ➔ Automaattisesti luodut raportit (`blueprint_0_report.md` - `blueprint_11_report.md`).
-- **`tests/unit/`** ➔ Yksikkötestit CLI-vakaudelle ja tietoturvalle.
+- **`tests/unit/`
+  - **`tests/unit/test-glossary-links.sh` / `.cmd`** ➔ 57 sanaston ja Wikipedian ulkoisen linkin nollalataustarkistus (muistipohjainen HTTP HEAD, tyhjälaite NUL / /dev/null).** ➔ Yksikkötestit CLI-vakaudelle ja tietoturvalle.
 
 ---
 

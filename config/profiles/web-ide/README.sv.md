@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 💻 Profiler för Web IDE (`config/profiles/web-ide/`)
+# 💻 Profiler för web IDE (`config/profiles/web-ide/`)
 
 Denna katalog innehåller YAML-profiler för **Web IDE (`code-server`)**.
 
-## 📂 Matris för Web IDE-Profiler
+## 📂 Matris för web ide-profiler
 
 | Profilfil | Profil-ID | Beskrivning | Verktyg och Tillägg | Standard i Blueprints |
 | :--- | :--- | :--- | :--- | :--- |

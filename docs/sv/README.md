@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../../README.md) | [ 🇪🇪 Eesti ](../et/README.md) | [ 🇫🇮 Suomi ](../fi/README.md) | [ 🇸🇪 Svenska ](README.md) | [ 🇱🇻 Latviešu ](../lv/README.md) | [ 🇱🇹 Lietuvių ](../lt/README.md)
 
-# Oracle DevOps Plattform (Svensk Guide)
+# Oracle DevOps plattform (svensk guide)
 
 > **Produktionsklar, licensavgiftsfri (0 €) och 100% lösenordsfri (SEPS Wallet) utvecklings- och DevOps-plattform för Oracle 23ai, APEX SSO Gateway, Forms 14c, Publisher och Web IDE.**
 
 ---
 
-## ⚡ 60-Sekunders Snabbstart
+## ⚡ 60-sekunders snabbstart
 
 ```bash
 # 1. Klona arkivet och gå till mappen
@@ -30,7 +30,7 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 
 ---
 
-## 🗺️ Introduktionsresa för Nya Utvecklare (Onboarding Journey)
+## 🗺️ Introduktionsresa för nya utvecklare (onboarding journey)
 
 ```mermaid
 flowchart TD
@@ -56,7 +56,7 @@ flowchart TD
 
 ---
 
-## ⚡ Setup-All 10-Fas Livscykelarkitektur
+## ⚡ Setup-all 10-fas livscykelarkitektur
 
 ```mermaid
 flowchart LR
@@ -73,7 +73,7 @@ flowchart LR
 
 ---
 
-## 🌐 Dev Hub (`http://localhost:8088/`) — Enhetligt Kontrollcenter (*Single Pane of Glass*)
+## 🌐 Dev Hub (`http://localhost:8088/`) — Enhetligt kontrollcenter (*single pane of glass*)
 
 Utvecklare behöver inte memorera dussintals olika portar. **Dev Hub** fungerar som en central portal:
 - **1-Klick Tjänstelänkar:** Direktåtkomst till APEX Builder, Database Actions (SDW), Forms 14c körtid, HTML5 noVNC Forms Builder och Analytics Publisher.
@@ -85,7 +85,7 @@ Utvecklare behöver inte memorera dussintals olika portar. **Dev Hub** fungerar 
 
 ---
 
-## 🌐 ORDS Smart Gateway och Autonom Mikroregistrering (Variant 3)
+## 🌐 ORDS smart gateway och autonom mikroregistrering (variant 3)
 
 Plattformen eliminerar portkonflikter och duplicerade ORDS-containrar genom mönstret **Smart Gateway + Autonom Mikroregistrerare**:
 
@@ -101,7 +101,7 @@ Plattformen eliminerar portkonflikter och duplicerade ORDS-containrar genom mön
 
 ---
 
-## 🔑 Var Hittar Jag Mitt Lösenord? (SEPS Wallet Lathund)
+## 🔑 Var hittar jag mitt lösenord? (SEPS Wallet lathund)
 
 Alla lösenord genereras med högkryptografisk säkerhet och lagras säkert i **Oracle SEPS (Secure External Password Store) Wallets** och Podman Secrets.
 
@@ -121,7 +121,7 @@ sql /@DB_PROXY_DEV
 
 ---
 
-## 🎯 3 Intressentperspektiv och Affärsvärde
+## 🎯 3 Intressentperspektiv och affärsvärde
 
 | Perspektiv | Huvudfördelar och Daglig Upplevelse | Teknisk Möjliggörare |
 | :--- | :--- | :--- |
@@ -139,7 +139,7 @@ I denna arkitektur är **Oracle APEX 26.1** primärt positionerad som:
 
 ---
 
-## 📋 11 Kuraterade Arkitektur Blueprints
+## 📋 11 Kuraterade arkitektur Blueprints
 
 ```mermaid
 graph TD
@@ -170,7 +170,7 @@ graph TD
   end
 ```
 
-### 🚀 Blueprint Driftsättning och Hantering (`./scripts/deploy-blueprint.sh`)
+### 🚀 Blueprint driftsättning och hantering (`./scripts/deploy-blueprint.sh`)
 
 ```bash
 # 1. Kontrollera aktiv blueprint och tjänstehälsa:
@@ -191,7 +191,7 @@ graph TD
 
 ---
 
-## ⚡ Accelererad ~15s Återställning & Automatisk Versionskontroll
+## ⚡ Accelererad ~15s återställning & automatisk versionskontroll
 
 Oracle Free DB in Prod innehåller en **intelligent flernivåbaserad Golden Snapshot- och Skip-motor** (`scripts/internal/snapshot-resolver.sh`) som förkortar starttiden vid andra körningen från **~6–12 minuter till ~15 sekunder**:
 
@@ -206,7 +206,7 @@ Oracle Free DB in Prod innehåller en **intelligent flernivåbaserad Golden Snap
 
 ---
 
-## 🚀 Snabbstart (Quickstart CLI)
+## 🚀 Snabbstart (quickstart CLI)
 
 ```bash
 # 1. Starta önskad blueprint:
@@ -246,7 +246,7 @@ Oracle Free DB in Prod innehåller en **intelligent flernivåbaserad Golden Snap
 
 ---
 
-## 🧭 Oracle APEX DevHub-Applikation och APEXlang CI/CD
+## 🧭 Oracle APEX DevHub-applikation och APEXlang CI/CD
 
 Förutom den fristående HTML Dev Hub (`docs/dev-hub.html`) innehåller plattformen en **Oracle APEX-applikation (App 101: DevHub)** skapad deklarativt med [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) i katalogen [`applications/devhub/`](../../applications/devhub/):
 
@@ -271,6 +271,7 @@ Förutom den fristående HTML Dev Hub (`docs/dev-hub.html`) innehåller plattfor
 ## 📑 Användarguider
 
 - 🏛️ **[docs/enterprise-distributed-architecture.md](../../docs/enterprise-distributed-architecture.md) | [docs/sv/enterprise-distributed-architecture.md](enterprise-distributed-architecture.md):** **Företagsklassad Distribuerad Arkitektur** — 4-nivåers finansiell arkitektur (ORDS, Publisher, Proxy DB, Publisher DB), integration med befintlig affärsdatabas och PROD Active/Standby haveriberedskap (RTO < 60s, RPO < 15m).
+- 🛡️ **[docs/security-audit-report.md](../../docs/security-audit-report.md) | [docs/sv/security-audit-report.md](security-audit-report.md):** **Företagsklassad Säkerhetsrevisionsrapport & Hardening** — Automatiserad 7-nivåers säkerhetsskanner (`test-security-audit.sh`), OWASP Top 10, CIS Benchmark och DORA.
 - 📋 **[docs/backlog/README.md](../../docs/backlog/README.md):** **Finansiell Jira Backlog** — 11 produktionsfärdiga Jira-användarberättelser (62 SP) för distribuerad driftsättning, multi-pool och automatisk redundans.
 - 🚀 **[docs/sv/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Moderniserings- och Migreringsguide** — Affärsnytta, TCO-jämförelse, 5-stegs automatiserat arbetsflöde och [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
 - 📐 **[docs/forms-setup.md](../../docs/forms-setup.md):** Oracle Forms 14c Guide.

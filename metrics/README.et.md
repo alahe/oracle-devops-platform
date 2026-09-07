@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📊 Paigalduse ja Jõudluse Mõõdikute Kaust (`metrics/`)
+# 📊 Paigalduse ja Jõudluse Mõõdikute kaust (`metrics/`)
 
 Selles kataloogis säilitatakse ja jälgitakse Git-is paigalduse etappide ja ajakulu mõõtmistulemusi (Reegel 1).
 
 ---
 
-## 📁 Peamised Failid
+## 📁 Peamised failid
 
 - **`setup_benchmarks.json`**: Viimase paigalduse etappide ajakulu sekundites (JSON formaat).
 - **`setup_benchmarks.env`**: Ajakulu parameetrid keskkonnamuutujatena.

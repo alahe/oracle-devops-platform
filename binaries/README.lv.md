@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Lokālo Programmatūras Pakešu un Bināro Failu Kešatmiņa (`binaries/`)
+# 📦 Lokālo Programmatūras Pakešu Un Bināro failu Kešatmiņa (`binaries/`)
 
 Šis direktorijs kalpo kā lokālā kešatmiņa bezsaistes instalācijām un uzņēmuma Artifactory spoguļiem (ZIP, RPM, JAR, VSIX, SQL).
 
 ---
 
-## 📁 Apakšdirektoriji un Mērķis
+## 📁 Apakšdirektoriji Un Mērķis
 
 | Apakšdirektorijs | Apraksts un Faili | Ielāpu Direktorijs | Skripti / Izmanto |
 | :--- | :--- | :--- | :--- |
@@ -21,7 +21,7 @@
 
 ---
 
-## 🔒 Git Versiju Kontroles Noteikumi
+## 🔒 Git versiju kontroles noteikumi
 
 - Visi binārie faili (`*.zip`, `*.rpm`, `*.jar`, `*.vsix`) ir iekļauti `.gitignore` un paliek **tikai lokāli**.
 - Direktorija struktūra un `README*.md` rokasgrāmatas tiek uzturētas versiju kontrolē.

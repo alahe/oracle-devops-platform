@@ -1,16 +1,16 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔌 Duomenų Bazių Ryšiai ir VS Code Sąrankos Vadovas
+# 🔌 Duomenų bazių ryšiai ir VS Code sąrankos vadovas
 
 Šiame vadove aprašoma automatinė ir rankinė Oracle duomenų bazių ryšių registracija, skirta **Oracle SQL Developer for VS Code** (tiek vietiniame pagrindiniame kompiuteryje, tiek konteinerizuotoje Web IDE), taip pat ryšiai be slaptažodžio per Oracle SEPS Wallet.
 
 ---
 
-## 🔄 Dviejų Lygių Automatizuota Registracija (Host PC & Web IDE)
+## 🔄 Dviejų lygių automatizuota registracija (host PC & web IDE)
 
 Visa platforma naudoja centralizuotą ryšių registravimo variklį (`scripts/register-connections.sh`), kuris vienu metu sukuria ir sinchronizuoja ryšius jūsų **vietiniame VS Code (Host PC)** ir **Konteinerizuotoje Web IDE (`web-ide-dev`)**:
 
-### 📊 Ryšių Registracijos Proceso Eigos Diagrama
+### 📊 Ryšių registracijos proceso eigos diagrama
 
 ```mermaid
 flowchart TD
@@ -33,7 +33,7 @@ flowchart TD
   SANITIZE --> READY(["🎉 Paruošta:<br/>1 paspaudimo DB ryšiai<br/>Pagrindiniame & Web IDE!"])
 ```
 
-### CLI Iškvietimas:
+### CLI iškvietimas:
 
 ```bash
 ./scripts/register-connections.sh
@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-## 📥 Rankinis Ryšių Importavimas VS Code SQL Developer UI
+## 📥 Rankinis ryšių importavimas VS Code SQL developer UI
 
 Ryšius galima importuoti tiesiogiai iš failo **`connections/sqldev-connections.json`**:
 
@@ -57,7 +57,7 @@ Ryšius galima importuoti tiesiogiai iš failo **`connections/sqldev-connections
 
 ---
 
-## 🔑 Slaptažodžių Gavimas Kūrėjams ir Administratoriams
+## 🔑 Slaptažodžių gavimas kūrėjams ir administratoriams
 
 Jei norite rankiniu būdu konfigūruoti ryšius tokiuose įrankiuose kaip DBeaver ar IntelliJ:
 * **APEX Admin (INTERNAL):** `./scripts/get-password.sh APEX_ADMIN`
@@ -69,16 +69,16 @@ Jei norite rankiniu būdu konfigūruoti ryšius tokiuose įrankiuose kaip DBeave
 
 ---
 
-## 🔐 Ryšiai Be Slaptažodžio per Oracle Wallet (SEPS)
+## 🔐 Ryšiai be slaptažodžio per Oracle Wallet (SEPS)
 
 Vietiniame kūrime autentifikavimas yra apsaugotas **Oracle Wallet (SEPS)** be atviro teksto slaptažodžių diske.
 
-### Pagrindinės Aplinkos Konfigūracija:
+### Pagrindinės aplinkos konfigūracija:
 ```bash
 export TNS_ADMIN=$(pwd)/config/tns_admin
 ```
 
-### Greitas Prisijungimas per SQLcl:
+### Greitas prisijungimas per SQLcl:
 ```bash
 # Prisijungti kaip kūrėjas:
 sql /@DB_PROXY_DEV
@@ -89,7 +89,7 @@ sql /@DB_PROXY_SYS as sysdba
 
 ---
 
-## 🔒 Windows & SSL/TLS Sertifikatų Pasitikėjimas
+## 🔒 Windows & SSL/TLS sertifikatų pasitikėjimas
 
 Kuriant Windows (WSL2) aplinkoje, norint pašalinti naršyklės saugumo įspėjimus:
 

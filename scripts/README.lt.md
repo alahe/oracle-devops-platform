@@ -8,7 +8,7 @@ Visi scenarijai atitinka griežtą **3 lygių modulinę katalogų struktūrą** 
 
 ---
 
-## 📁 3 Lygių Scenarijų Katalogų Struktūra
+## 📁 3 Lygių scenarijų katalogų Struktūra
 
 ```text
 scripts/
@@ -56,7 +56,7 @@ scripts/
 
 ---
 
-## 1. Automatizuotas Aplinkos Diegimas (`setup-all.sh`)
+## 1. Automatizuotas aplinkos diegimas (`setup-all.sh`)
 
 Scenarijus `./scripts/setup-all.sh` atlieka pilną aplinkos diegimą: atsisiunčia programinės įrangos paketus, orkestruoja konteinerius, laukia duomenų bazių ir ORDS parengties, vykdo schemos migracijas (Liquibase), įdiegia APEX su pataisomis ir matuoja trukmę (Rule 1).
 
@@ -119,7 +119,7 @@ Scenarijus `./scripts/setup-all.sh` atlieka pilną aplinkos diegimą: atsisiunč
 
 ---
 
-## 2. Konteinerių Paleidimas (`start-containers.sh`)
+## 2. Konteinerių paleidimas (`start-containers.sh`)
 
 Paleidžia esamus vietinius duomenų bazės ir ORDS konteinerius ir laukia, kol duomenų bazės pasieks būseną `healthy`.
 
@@ -129,7 +129,7 @@ Paleidžia esamus vietinius duomenų bazės ir ORDS konteinerius ir laukia, kol 
 
 ---
 
-## 3. Aplinkos ir Komponentų Atstatymas (`reset-all.sh`)
+## 3. Aplinkos ir komponentų atstatymas (`reset-all.sh`)
 
 Modulinis profiliu valdomas valymo variklis, kuris sustabdo ir pašalina konteinerius, profilius (`config/profiles/*.yaml`), tomus ir tinklus.
 
@@ -140,7 +140,7 @@ Modulinis profiliu valdomas valymo variklis, kuris sustabdo ir pašalina kontein
 
 ---
 
-## 4. Momentinių Kopijų Valdymas (`scripts/snapshots/`)
+## 4. Momentinių kopijų valdymas (`scripts/snapshots/`)
 
 ```bash
 ./scripts/snapshots/create-golden-snapshots.sh
@@ -150,7 +150,7 @@ Modulinis profiliu valdomas valymo variklis, kuris sustabdo ir pašalina kontein
 
 ---
 
-## 4.5. Žurnalų Valymas ir Sauga (`clean-logs.sh` & `sanitize-logs.sh`)
+## 4.5. ŽUrnalų valymas ir sauga (`clean-logs.sh` & `sanitize-logs.sh`)
 
 ```bash
 ./scripts/clean-logs.sh [-y | --force]
@@ -162,7 +162,7 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 
 ---
 
-## 5. Kūrėjo ir Administratoriaus CLI Įrankiai
+## 5. Kūrėjo Ir administratoriaus CLI Įrankiai
 
 ### 5.1. Slaptažodžių Skaitymas iš Wallet (`get-password.sh`)
 ```bash
@@ -171,17 +171,17 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 ./scripts/get-password.sh DB_PROXY_APEX_ADMIN
 ```
 
-### 5.2. Žiniatinklio Paslaugų HTTP Patikra (`check-urls.sh`)
+### 5.2. ŽIniatinklio paslaugų HTTP patikra (`check-urls.sh`)
 ```bash
 ./scripts/check-urls.sh
 ```
 
-### 5.3. SEPS Ryšių Diagnostika (`check-wallet.sh`)
+### 5.3. SEPS Ryšių diagnostika (`check-wallet.sh`)
 ```bash
 ./scripts/check-wallet.sh
 ```
 
-### 5.4. Išmanusis SQLcl CLI Apvalkalas (`sqlcl.sh`)
+### 5.4. Išmanusis SQLcl CLI apvalkalas (`sqlcl.sh`)
 ```bash
 ./scripts/sqlcl.sh /@DB_PROXY_DEV
 ./scripts/sqlcl.sh /@DB_PROXY_SYS as sysdba
@@ -192,21 +192,21 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 ./scripts/create-developer.sh
 ```
 
-### 5.6. VS Code Ryšių Sinchronizavimas (`register-connections.sh`)
+### 5.6. VS code Ryšių sinchronizavimas (`register-connections.sh`)
 ```bash
 ./scripts/register-connections.sh
 ```
 
 ---
 
-## 6. Vietinių Sertifikatų Pasitikėjimas (`scripts/certs/`)
+## 6. Vietinių sertifikatų Pasitikėjimas (`scripts/certs/`)
 
 * 🍎 **macOS:** `./scripts/certs/trust-local-cert-mac.sh`
 * 🪟 **Windows & WSL:** `scripts\certs\trust-local-cert.cmd` / `trust-local-cert.ps1`
 
 ---
 
-## 7. Analytics Publisher Operacijos (`scripts/publisher/`)
+## 7. Analytics Publisher operacijos (`scripts/publisher/`)
 
 * `./scripts/publisher/status-publisher.sh`
 * `./scripts/publisher/restart-publisher.sh`
@@ -215,7 +215,7 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 
 ---
 
-## 8. Nuotolinis Diegimas & Kelių Debesų Testavimas (`deploy-remote.sh`)
+## 8. Nuotolinis diegimas & kelių debesų testavimas (`deploy-remote.sh`)
 
 ```bash
 ./scripts/deploy-remote.sh --host 20.123.45.67 --user azureuser --key ~/.ssh/id_rsa --blueprint 10
@@ -225,21 +225,21 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 
 ---
 
-## 9. Rankinis Pataisų Diegimas (`scripts/internal/`)
+## 9. Rankinis pataisų diegimas (`scripts/internal/`)
 
 * `./scripts/internal/apply-apex-patch.sh`
 * `./scripts/internal/apply-publisher-patch.sh`
 
 ---
 
-## 10. Vidiniai Automatizavimo Varikliai (`scripts/internal/`)
+## 10. Vidiniai automatizavimo varikliai (`scripts/internal/`)
 
 Išsamesnę informaciją rasite kataloge:
 * 📁 **[`scripts/internal/README.lt.md`](internal/README.lt.md)**
 
 ---
 
-## 11. Trikčių Šalinimas: Podman Machine Atkūrimo Vadovas
+## 11. Trikčių ŠAlinimas: Podman machine Atkūrimo vadovas
 
 Kilus lizdų klaidoms arba pasibaigus konteinerių laikui:
 

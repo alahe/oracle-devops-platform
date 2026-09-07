@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 💻 Web-IDE-Palvelun Profiilit (`config/profiles/web-ide/`)
+# 💻 Web-ide-palvelun profiilit (`config/profiles/web-ide/`)
 
 Tämä hakemisto sisältää YAML-profiilit **Web-IDE (`code-server`)** -palvelun määrittämiseen.
 
-## 📂 Web-IDE-Profiilien Matriisi
+## 📂 Web-ide-profiilien matriisi
 
 | Profiilitiedosto | Profiilin ID | Kuvaus | Sisältyvät Työkalut | Oletus Blueprintissä |
 | :--- | :--- | :--- | :--- | :--- |

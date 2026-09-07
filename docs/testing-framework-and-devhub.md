@@ -69,6 +69,7 @@ The platform divides quality verification into dedicated test suites:
 | `portability` | **Filename Portability** | Strict Rule 13 audit verifying Windows NTFS/FAT forbidden chars, device names, and ASCII path standards. | `./tests/unit/test-filename-portability.sh` |
 | `browser` | **Browser & SSO E2E** | Simulates browser interactions, APEX login flows, Dev Hub shortcuts, and SSO authentication. | `./scripts/test-browser-login.sh` |
 | `ci_sim` | **Local GitHub CI** | Executes or dry-runs repository GitHub Actions CI/CD workflows offline using ephemeral containers. | `./scripts/test-local-ci.sh --dry-run` |
+| `precommit` | **Pre-Commit Guard** | Lightning-fast 6-phase pre-commit and pre-push audit: Zero-Trust secrets, GDPR/PII leaks, Zero-Knowledge company info, Rule 13 portability, script syntax, and CRLF line endings. | `./scripts/check-pre-commit.sh --full` |
 | `coverage` | **Coverage Generator** | Scans all scripts under `scripts/` and `scripts/internal/` and updates the markdown coverage report. | `./tests/generate-test-coverage-report.sh` |
 
 ---
@@ -103,3 +104,54 @@ The Testing tab in Developer Hub provides 4 specialized sub-tabs:
 2. **Rule 9 (i18n Parity)**: The entire testing tab UI is localized across 6 Nordic-Baltic languages (EN, ET, FI, SV, LV, LT).
 3. **Rule 12 (Asynchronous Task Contract)**: Tests are dispatched asynchronously via `subprocess.Popen` without blocking browser connections or HTTP timeouts.
 4. **Rule 13 (Filename Portability)**: All report and log filenames use strict ASCII kebab-case characters without forbidden Windows NTFS symbols.
+
+---
+
+## 🌐 5. Glossary Web Links Zero-Download Audit (`test-glossary-links.sh` / `.cmd`)
+
+To ensure documentation and Dev Hub glossary links never return `404 Not Found` while guaranteeing zero risk of downloading malicious payloads or binaries from external servers:
+
+1. **In-Memory HTTP HEAD Probing**: The test engine (`scripts/internal/check-glossary-links.py`) issues strictly HTTP `HEAD` requests, reading solely the HTTP status code (200, 301, 404). The response body is never requested, buffered, or written to disk.
+2. **Cross-Platform Virtual Null Device (Windows & POSIX)**:
+   - **POSIX (macOS / Linux / WSL2)**: Output discarded to `/dev/null`.
+   - **Windows (NTFS / CMD / PowerShell)**: Output discarded to `NUL` via `tests/unit/test-glossary-links.cmd`.
+   - **Python Standard Library**: Portable resolution via `os.devnull` ensures zero disk writes on all operating systems.
+3. **Protocol Lockdown**: Strictly restricts probes to `https://`, preventing protocol downgrades or loopback exploits.
+4. **Dev Hub Live Execution**: The audit script is registered under the **Unit Test Suite** in Dev Hub (`tab-testing`) and can be executed with 1-click, streaming real-time verification logs to the embedded terminal console.
+
+---
+
+## 🛡️ 6. Git Pre-Commit & Pre-Push Security Guard (`scripts/check-pre-commit.sh`)
+
+To guarantee that broken code, unencrypted credentials, GDPR violations, and confidential enterprise terms never enter Git history:
+
+### 6.1 6-Phase Verification Architecture
+1. **Rule 13 & 14 Portability**: Checks Windows NTFS forbidden characters (`< > : " / \ | ? *`), DOS device names (`CON`, `PRN`, `AUX`, `NUL`), trailing dots/spaces, and verifies LF Unix line endings.
+2. **Rule 5 Zero-Trust Secret Scanning**: Prohibits `.env.secrets`, private keys (`*.pem`, `*.key`, `id_rsa`), AWS keys, and hardcoded passwords with zero plaintext disclosure (masked `***` output).
+3. **GDPR & PII Audit**: Blocks raw database backups/dumps (`*.dmp`, `*.dump`, `*.bak`, `*.sql.gz`), personal ID codes (Estonian isikukood), and bank account numbers (IBAN).
+4. **Zero-Knowledge Confidential Company Info**: Compares words against cryptographic SHA-256 hashes (`config/security/forbidden_hashes.json`) and scans for generic internal network domains (`*.corp`, `*.intra`, `*.internal`). **Zero company names are stored in plaintext in the codebase.**
+5. **Static Syntax Validation**: Runs `bash -n` on shell scripts, `python3 -m py_compile` on Python scripts, and validates JSON/YAML structure before commit.
+6. **Dev-Hub & i18n Consistency**: Ensures single-source Dev Hub templates compile without error and 6-language translations remain aligned.
+
+### 6.2 Developer CLI & Git Hook Usage
+```bash
+# Check only staged files before commit (~1s):
+./scripts/check-pre-commit.sh --staged
+
+# Full repository audit before push (~5s):
+./scripts/check-pre-commit.sh --full
+
+# Install automatic Git hooks (.githooks/pre-commit and .githooks/pre-push):
+./scripts/check-pre-commit.sh --install-hook
+
+# Add a confidential term using Zero-Knowledge SHA-256 hashing:
+./scripts/check-pre-commit.sh --add-forbidden-hash "internal-keyword"
+
+# Automatically fix CRLF line endings to LF:
+./scripts/check-pre-commit.sh --fix
+```
+
+### 6.3 Developer Hub UI Execution
+- **DevOps Console**: 1-click card **"Git Pre-Commit & Pre-Push Security Guard"** triggers instant verification with real-time log output.
+- **Testing Center (`tab-testing`)**: Registered under the **Compliance** category with direct execution, log download, and documentation links.
+

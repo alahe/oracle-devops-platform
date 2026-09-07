@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../devops-lifecycle-guide.md) | [ 🇪🇪 Eesti ](../et/devops-lifecycle-guide.md) | [ 🇫🇮 Suomi ](devops-lifecycle-guide.md) | [ 🇸🇪 Svenska ](../sv/devops-lifecycle-guide.md) | [ 🇱🇻 Latviešu ](../lv/devops-lifecycle-guide.md) | [ 🇱🇹 Lietuvių ](../lt/devops-lifecycle-guide.md)
 
-# 🔄 Konttivedosten, Tilannevedosten ja Varmuuskopioiden Elinkaariopas
+# 🔄 Konttivedosten, tilannevedosten ja varmuuskopioiden elinkaariopas
 
 Tämä opas kuvaa alustan **3-tasoisen katastrofipalautus- ja pikakäynnistysmallin (FastPath)**:
 1. **Konttivedokset (Images):** Muuttumaton käyttöjärjestelmä, kirjastot ja ohjelmistoytimet.

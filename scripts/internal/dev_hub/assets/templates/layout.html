@@ -24,11 +24,11 @@
             <p data-i18n="header_subtitle">Unified Command Center, Real-Time Service Health & Multilingual Architecture Portal</p>
         </div>
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <!-- Enterprise Architecture & Jira Backlog Dropdown -->
+            <!-- Enterprise Architecture Dropdown -->
             <div class="enterprise-nav-dropdown" id="enterprise-nav-dropdown">
                 <button class="enterprise-dropdown-btn" id="enterprise-dropdown-btn" onclick="toggleEnterpriseDropdown(event)" aria-haspopup="true" aria-expanded="false">
                     <span class="enterprise-btn-icon">🏛️</span>
-                    <span data-i18n="menu_enterprise">Enterprise Architecture & Backlog</span>
+                    <span data-i18n="menu_enterprise">Enterprise Architecture</span>
                     <span class="enterprise-caret">▼</span>
                 </button>
                 <div class="enterprise-dropdown-menu" id="enterprise-dropdown-menu">
@@ -40,78 +40,58 @@
                             <span class="item-desc" data-i18n="doc_enterprise_arch_desc">4-Tier Multi-Host DEV/TEST/PROD Active-Standby</span>
                         </div>
                     </a>
-
-                    <div class="dropdown-section-title" data-i18n="section_backlog">Jira Implementation Backlog</div>
-                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('enterprise-backlog')">
-                        <span class="item-icon">📋</span>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('security-audit')">
+                        <span class="item-icon">🛡️</span>
                         <div class="item-text">
-                            <span class="item-title" data-i18n="doc_backlog_summary_title">Backlog Roadmap & Matrix (62 SP)</span>
-                            <span class="item-desc" data-i18n="doc_backlog_summary_desc">Gantt roadmap and 11 stories allocation</span>
+                            <span class="item-title" data-i18n="doc_security_audit_title">Enterprise Security Audit & Hardening</span>
+                            <span class="item-desc" data-i18n="doc_security_audit_desc">OWASP, CIS Benchmark & Zero-Trust Verification</span>
                         </div>
                     </a>
-
-                    <div class="dropdown-section-title" data-i18n="section_sprint1">Sprint 1: Core Tiers & Infrastructure (28 SP)</div>
-                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-001')">
-                        <span class="item-code">FIN-001</span>
-                        <span class="item-title">Multi-Host Inventory & Config</span>
-                        <span class="badge-sp">5 SP</span>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('enterprise-onboarding')">
+                        <span class="item-icon">🏢</span>
+                        <div class="item-text">
+                            <span class="item-title" data-i18n="doc_ent_onboard_title">Enterprise Onboarding Guide</span>
+                            <span class="item-desc" data-i18n="doc_ent_onboard_desc">Artifactory, Corporate Registry & CA Bundle Setup</span>
+                        </div>
                     </a>
-                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-002')">
-                        <span class="item-code">FIN-002</span>
-                        <span class="item-title">Proxy DB Remote Container</span>
-                        <span class="badge-sp">5 SP</span>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('windows-enterprise-guide')">
+                        <span class="item-icon">💻</span>
+                        <div class="item-text">
+                            <span class="item-title" data-i18n="doc_ent_windows_title">Enterprise Windows & WSL2 Setup Guide</span>
+                            <span class="item-desc" data-i18n="doc_ent_windows_desc">Zero-Admin, Hyper-V Port Protection & WSL2 ext4</span>
+                        </div>
                     </a>
-                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-003')">
-                        <span class="item-code">FIN-003</span>
-                        <span class="item-title">Publisher DB Remote Container</span>
-                        <span class="badge-sp">5 SP</span>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('remote-multicloud-guide')">
+                        <span class="item-icon">🌐</span>
+                        <div class="item-text">
+                            <span class="item-title" data-i18n="doc_ent_multicloud_title">Remote Multi-Cloud Setup Guide</span>
+                            <span class="item-desc" data-i18n="doc_ent_multicloud_desc">Azure VM + OCI Autonomous Database Integration</span>
+                        </div>
                     </a>
-                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-004')">
-                        <span class="item-code">FIN-004</span>
-                        <span class="item-title">Standalone ORDS + APEX Server</span>
-                        <span class="badge-sp">8 SP</span>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('blueprint-testing-report')">
+                        <span class="item-icon">📊</span>
+                        <div class="item-text">
+                            <span class="item-title" data-i18n="doc_ent_matrix_title">Blueprint Testing Matrix & Report</span>
+                            <span class="item-desc" data-i18n="doc_ent_matrix_desc">Full 12 Canonical Architecture Blueprints Verification</span>
+                        </div>
                     </a>
-                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-005')">
-                        <span class="item-code">FIN-005</span>
-                        <span class="item-title">Standalone Analytics Publisher</span>
-                        <span class="badge-sp">5 SP</span>
-                    </a>
-
-                    <div class="dropdown-section-title" data-i18n="section_sprint2">Sprint 2: Integration & Security (13 SP)</div>
-                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-006')">
-                        <span class="item-code">FIN-006</span>
-                        <span class="item-title">ORDS Multi-Pool Business DB</span>
-                        <span class="badge-sp">5 SP</span>
-                    </a>
-                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-007')">
-                        <span class="item-code">FIN-007</span>
-                        <span class="item-title">Publisher JDBC Core Business DB</span>
-                        <span class="badge-sp">3 SP</span>
-                    </a>
-                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-009')">
-                        <span class="item-code">FIN-009</span>
-                        <span class="item-title">Zero-Trust Wallet & TLS Distribution</span>
-                        <span class="badge-sp">5 SP</span>
-                    </a>
-
-                    <div class="dropdown-section-title" data-i18n="section_sprint3">Sprint 3: HA, CI/CD & DR (21 SP)</div>
-                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-008')">
-                        <span class="item-code">FIN-008</span>
-                        <span class="item-title">PROD Active/Standby Sync & Failover</span>
-                        <span class="badge-sp">8 SP</span>
-                    </a>
-                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-010')">
-                        <span class="item-code">FIN-010</span>
-                        <span class="item-title">Promotion Pipeline (DEV/TEST/PROD)</span>
-                        <span class="badge-sp">5 SP</span>
-                    </a>
-                    <a href="javascript:void(0)" class="dropdown-item" onclick="openDocFromMenu('fin-011')">
-                        <span class="item-code">FIN-011</span>
-                        <span class="item-title">E2E Health Checks & DR GameDay</span>
-                        <span class="badge-sp">5 SP</span>
+                    <div class="dropdown-section-title" data-i18n="section_live_actions">Actions & Audits</div>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="runSecurityAuditFromMenu()">
+                        <span class="item-icon">⚡</span>
+                        <div class="item-text">
+                            <span class="item-title" data-i18n="action_run_security_audit">Run Enterprise Security Audit</span>
+                            <span class="item-desc" data-i18n="action_run_security_audit_desc">Execute 16-point automated security verification</span>
+                        </div>
                     </a>
                 </div>
             </div>
+
+            <!-- Architecture Glossary Trigger Button -->
+            <button class="glossary-nav-btn" id="glossary-nav-btn" onclick="openGlossaryModal()" title="Architecture Glossary & Acronyms (Press '?' or 'g')">
+                <span class="glossary-btn-icon">📖</span>
+                <span data-i18n="nav_glossary">Sõnastik</span>
+                <kbd class="shortcut-badge">?</kbd>
+            </button>
 
             <div class="lang-switcher">
                 <button class="lang-btn active" id="btn-en" onclick="setLanguage('en')">🇬🇧 EN</button>
@@ -464,6 +444,7 @@
                 <div class="slide" id="slide-10"></div>
                 <div class="slide" id="slide-11"></div>
                 <div class="slide" id="slide-12"></div>
+                <div class="slide" id="slide-13"></div>
             </div>
 
             <!-- DECK FOOTER & CONTROLS -->
@@ -1026,6 +1007,31 @@
                     </div>
                 </div>
             </div>
+
+            <!-- CARD 6: Windows Enterprise & WSL2 Dry-Run -->
+            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35); background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(3, 7, 18, 0.95) 100%);">
+                <div class="card-top">
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <span>🪟</span> <span data-i18n="ob_step5_title">6. Ettevõtte Windows & WSL2 Diagnostika</span>
+                    </div>
+                    <p style="font-size: 0.875rem; color: #94a3b8; line-height: 1.5;" data-i18n="ob_step5_desc">
+                        Enne pikka paigaldust kontrolli 10 kriitilist Windowsi nõuet ja väldi tõrkeid:
+                    </p>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; margin: 12px 0 16px 20px; line-height: 1.6;">
+                        <li><strong style="color:#f8fafc;">WSL2 ext4:</strong> väldi 9P aeglustust ja klooni kood natiivsesse <code>~/</code> kausta.</li>
+                        <li><strong style="color:#f8fafc;">Hyper-V pordid:</strong> kontrolli dünaamilisi pordivälistusi enne starti.</li>
+                        <li><strong style="color:#f8fafc;">Automaatne parandus:</strong> <code>--fix</code> parandab CRLF reavahetused ja failiõigused.</li>
+                    </ul>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
+                        <button class="btn btn-primary" onclick="openDocTab('windows-enterprise-guide')" style="flex: 1; justify-content: center; padding: 8px 12px; font-weight: 600;">
+                            <span>📖</span> <span data-i18n="doc_windows_guide_title">Windowsi Juhend →</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="openSnippetModal('cmd_modal_windry_title', 'cmd_modal_windry_desc', '# 1. Run 10-step Windows dry-run diagnostics:\ntest-windows-dryrun.cmd\n\n# 2. Or inside WSL2 with auto-fix:\n./scripts/test-windows-dryrun.sh --fix\n\n# 3. Setup platform via 1-click Windows launcher:\nsetup.cmd -b 0')" style="padding: 8px 12px; font-size: 0.8rem;">
+                            <span data-i18n="btn_view_commands">💻 Vaata Käske</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- SECTION: TROUBLESHOOTING & FAQ FOR BEGINNERS -->
@@ -1180,8 +1186,153 @@
         <div class="section-title">
             <span data-i18n="title_cheatsheet">⚡ Developer & DevOps Quick Commands</span>
         </div>
-        <div class="grid">
-            <div class="card">
+
+        <!-- Repository Codebase Health & Statistics Widget -->
+        <div id="repo-stats-widget" class="repo-stats-widget" style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.3rem;">📈</span>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.05rem; color: #f8fafc;" data-i18n="stats_title">Koodibaasi Tervis & Statistiline Ülevaade</h3>
+                        <p style="margin: 2px 0 0 0; font-size: 0.78rem; color: var(--text-dim);" data-i18n="stats_subtitle">Reaalajas mõõdikud: hallatav lähtekood (SLOC), testide tihedus, arhitektuuri skaala ja i18n katvus</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span id="repo-stats-updated-badge" style="font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border);">Laadimine...</span>
+                    <button type="button" id="btn-refresh-repo-stats" class="btn btn-sm btn-secondary" onclick="refreshRepoStatistics()" style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; font-size: 0.8rem;">
+                        <span id="refresh-stats-icon">🔄</span> <span data-i18n="stats_btn_refresh">Värskenda aruannet</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="downloadRepoReport('markdown')" title="Laadi alla Markdown raport" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; font-size: 0.8rem;">
+                        <span>📄</span> <span>Markdown</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="downloadRepoReport('json')" title="Laadi alla JSON mõõdikud" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; font-size: 0.8rem;">
+                        <span>📊</span> <span>JSON</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4 Hero KPI Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 18px;">
+                <div class="stat-card" style="background: rgba(3, 7, 18, 0.6); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;" data-i18n="stats_kpi_sloc_title">🏷️ Hallatav Kood (SLOC)</span>
+                        <span style="font-size: 0.7rem; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 2px 6px; border-radius: 4px;" id="stats-kpi-files-count">0 faili</span>
+                    </div>
+                    <div style="font-size: 1.4rem; font-weight: 700; color: #f8fafc; margin: 4px 0;" id="stats-kpi-sloc-val">--</div>
+                    <div style="font-size: 0.72rem; color: #64748b;" id="stats-kpi-gross-val">Kogu repo: -- rida</div>
+                </div>
+
+                <div class="stat-card" style="background: rgba(3, 7, 18, 0.6); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 8px; padding: 12px 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;" data-i18n="stats_kpi_test_density_title">🧪 Testide Tihedus</span>
+                        <span style="font-size: 0.7rem; color: #4ade80; background: rgba(34, 197, 94, 0.1); padding: 2px 6px; border-radius: 4px;" id="stats-kpi-test-count">0 testi</span>
+                    </div>
+                    <div style="font-size: 1.4rem; font-weight: 700; color: #4ade80; margin: 4px 0;" id="stats-kpi-test-density-val">--%</div>
+                    <div style="font-size: 0.72rem; color: #64748b;" id="stats-kpi-test-pass-val">Edukus: 100% PASS</div>
+                </div>
+
+                <div class="stat-card" style="background: rgba(3, 7, 18, 0.6); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 8px; padding: 12px 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;" data-i18n="stats_kpi_arch_scale_title">🏛️ Arhitektuuri Skaala</span>
+                        <span style="font-size: 0.7rem; color: #c084fc; background: rgba(168, 85, 247, 0.1); padding: 2px 6px; border-radius: 4px;" id="stats-kpi-db-count">0 DB profiili</span>
+                    </div>
+                    <div style="font-size: 1.4rem; font-weight: 700; color: #f8fafc; margin: 4px 0;" id="stats-kpi-bp-val">12 Blueprinti</div>
+                    <div style="font-size: 0.72rem; color: #64748b;" id="stats-kpi-cli-count">CLI: 0 | Internal: 0</div>
+                </div>
+
+                <div class="stat-card" style="background: rgba(3, 7, 18, 0.6); border: 1px solid rgba(251, 191, 36, 0.25); border-radius: 8px; padding: 12px 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;" data-i18n="stats_kpi_i18n_title">🌐 Mitmekeelsus & Git</span>
+                        <span style="font-size: 0.7rem; color: #fbbf24; background: rgba(251, 191, 36, 0.1); padding: 2px 6px; border-radius: 4px;" id="stats-kpi-commits-count">0 commit'i</span>
+                    </div>
+                    <div style="font-size: 1.4rem; font-weight: 700; color: #fbbf24; margin: 4px 0;" id="stats-kpi-i18n-val">6 Keelt (100%)</div>
+                    <div style="font-size: 0.72rem; color: #64748b;" id="stats-kpi-keys-val">0 i18n võtit</div>
+                </div>
+            </div>
+
+            <!-- Visual Multi-Color Stacked Language Proportion Bar -->
+            <div style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 0.78rem; font-weight: 600; color: #cbd5e1;" data-i18n="stats_lang_bar_label">Koodi jaotus programmeerimiskeelte kaupa:</span>
+                    <span style="font-size: 0.72rem; color: #94a3b8;" id="stats-lang-legend"></span>
+                </div>
+                <div id="stats-stacked-bar" style="height: 12px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; display: flex; width: 100%;">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+
+            <!-- Collapsible Drawer for Detailed Language Table & Top Files -->
+            <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 4px 0;" onclick="toggleRepoStatsDetails()">
+                    <span style="font-size: 0.8rem; font-weight: 600; color: #38bdf8;" id="stats-details-toggle-lbl" data-i18n="stats_show_details">▶ Kuva detailne keelte jaotus ja suurimad failid (Top 5 Outliers)</span>
+                    <span id="stats-details-caret" style="color: #38bdf8; font-size: 0.8rem;">▼</span>
+                </div>
+                <div id="stats-details-drawer" style="display: none; margin-top: 12px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+                        <div>
+                            <h5 style="margin: 0 0 8px 0; font-size: 0.82rem; color: #94a3b8;" data-i18n="stats_table_lang_title">📊 Keelte jaotus (Maintainable SLOC)</h5>
+                            <div class="table-responsive" style="margin: 0;">
+                                <table style="font-size: 0.78rem;">
+                                    <thead>
+                                        <tr>
+                                            <th data-i18n="th_language">Keel / Tüüp</th>
+                                            <th data-i18n="th_files">Failid</th>
+                                            <th data-i18n="th_sloc">SLOC</th>
+                                            <th data-i18n="th_percent">Osa (%)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="stats-lang-table-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 style="margin: 0 0 8px 0; font-size: 0.82rem; color: #94a3b8;" data-i18n="stats_table_top_files_title">⚠️ Suurimad lähtekoodifailid (Top 5 Outliers)</h5>
+                            <div class="table-responsive" style="margin: 0;">
+                                <table style="font-size: 0.78rem;">
+                                    <thead>
+                                        <tr>
+                                            <th data-i18n="th_file">Fail</th>
+                                            <th data-i18n="th_language">Keel</th>
+                                            <th data-i18n="th_sloc">SLOC</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="stats-top-files-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DevOps Search and Filter Toolbar -->
+        <div class="devops-filter-bar" style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 10px 16px;">
+            <div style="display: flex; gap: 10px; align-items: center; flex: 1; min-width: 260px;">
+                <div style="position: relative; flex: 1; max-width: 380px;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; font-size: 0.85rem;">🔍</span>
+                    <input type="text" id="devops-search-input" oninput="filterDevOpsCards()" placeholder="Otsi käske, skripte või märksõnu..." data-i18n-placeholder="devops_search_placeholder" style="width: 100%; background: #030712; border: 1px solid var(--border); color: #f8fafc; padding: 7px 32px 7px 34px; border-radius: 20px; font-size: 0.82rem; outline: none; transition: border-color 0.2s;">
+                    <button type="button" id="devops-search-clear" onclick="clearDevOpsSearch()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.85rem; display: none;">✕</button>
+                </div>
+                <span id="devops-filter-counter" style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; padding: 3px 10px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid var(--border);">13 / 13</span>
+            </div>
+            <div class="bp-filters" id="devops-category-filters" style="margin-bottom: 0; gap: 6px;">
+                <button type="button" class="bp-filter-btn active" onclick="filterDevOpsCategory('all', this)" data-i18n="filter_all_cards">🌟 Kõik</button>
+                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('diag', this)" data-i18n="devops_filter_diag">🩺 Diagnostika & Tervis</button>
+                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('wallet', this)" data-i18n="devops_filter_wallet">🔐 Wallet & Turvalisus</button>
+                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('lifecycle', this)" data-i18n="devops_filter_lifecycle">🔄 Elutsükkel & Taaste</button>
+                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('enterprise', this)" data-i18n="devops_filter_enterprise">🏢 Ettevõte & Windows</button>
+            </div>
+        </div>
+
+        <div id="devops-empty-state" style="display:none; text-align:center; padding: 40px 20px; background: rgba(15, 23, 42, 0.4); border: 1px dashed var(--border); border-radius: var(--radius-lg); margin-bottom: 20px;">
+            <div style="font-size: 2rem; margin-bottom: 8px;">🔍</div>
+            <div style="font-size: 0.95rem; font-weight: 600; color: #f8fafc; margin-bottom: 6px;" data-i18n="devops_no_results">Ühtegi DevOps käsku ei leitud</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;" data-i18n="devops_no_results_desc">Proovi teistsugust otsisõna või tühjenda aktiivne filter.</div>
+            <button type="button" class="btn btn-secondary" onclick="resetDevOpsFilters()" style="font-size: 0.8rem; padding: 6px 14px;" data-i18n="btn_reset_filters">↺ Tühjenda filtrid</button>
+        </div>
+
+        <div class="grid" id="devops-cards-grid">
+            <div class="card" data-cat="diag">
                 <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_health">🌐 Service Health Diagnostics</h4>
                 <p data-i18n="desc_devops_health">Test active web service HTTP/HTTPS endpoints (APEX, ORDS, Forms, Publisher).</p>
                 <div class="code-box">
@@ -1193,7 +1344,7 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card">
+            <div class="card" data-cat="wallet">
                 <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_wallet">🔑 Check SEPS Wallet Connections</h4>
                 <p data-i18n="desc_devops_wallet">Test SEPS Wallet database auto-login connections and TNS alias reachability.</p>
                 <div class="code-box">
@@ -1205,7 +1356,7 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card">
+            <div class="card" data-cat="wallet">
                 <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_list_pwd">📋 Read Wallet Credentials</h4>
                 <p data-i18n="desc_devops_list_pwd">Query or inspect decrypted credentials from SEPS Wallet safely in-memory.</p>
                 <div class="code-box">
@@ -1217,7 +1368,7 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card">
+            <div class="card" data-cat="diag">
                 <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_register_conn">💻 Register VS Code Connections</h4>
                 <p data-i18n="desc_devops_register_conn">Register database connections in VS Code Oracle SQL Developer extension & OS Keychain.</p>
                 <div class="code-box">
@@ -1229,7 +1380,56 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card">
+            <div class="card" data-cat="lifecycle">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_lifecycle_full">🔄 Dev-Hub Blueprints 0-9 Lifecycle Test</h4>
+                <p data-i18n="desc_devops_lifecycle_full">Tests the complete 3-step lifecycle: Start, Stop, and Fast-Start across Blueprints 0 through 9 via Bridge API.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./tests/test-devhub-lifecycle-full.sh --all --dry-run
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('test-devhub-lifecycle-dryrun', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card" data-cat="enterprise">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_windows_dryrun">🪟 Windows & WSL2 Dry-Run Diagnostics</h4>
+                <p data-i18n="desc_devops_windows_dryrun">Non-destructive 10-step compatibility check: WSL2 ext4, RAM, Hyper-V ports, CRLF, proxy, and SEPS Wallet.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/test-windows-dryrun.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('windows-dryrun', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card" data-cat="enterprise">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_onboard_ent">🏢 Enterprise Artifactory & Proxy Status</h4>
+                <p data-i18n="desc_devops_onboard_ent">Inspect corporate registry mappings, corporate CA bundle, and profile patching status.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/onboard-enterprise.sh --status
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('onboard-enterprise', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card" data-cat="enterprise">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_security_audit">🛡️ Enterprise Security Audit</h4>
+                <p data-i18n="desc_devops_security_audit">16-point security audit across 7 tiers (OWASP Top 10, CIS Oracle DB, CIS Podman, Zero-Trust, DORA & PCI-DSS).</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/test-security-audit.sh
+                </div>
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('security-audit', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary" onclick="openDocFromMenu('security-audit')" style="font-size: 0.8rem; padding: 6px 12px;"><span>📖</span> <span data-i18n="btn_view_report">Vaata raportit</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card" data-cat="lifecycle">
                 <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_test_ci">🧪 Local CI/CD Platform Pipeline</h4>
                 <p data-i18n="desc_devops_test_ci">Simulates offline CI/CD pipeline: validates scripts, environment variables, and platform integrity.</p>
                 <div class="code-box">
@@ -1241,7 +1441,7 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card">
+            <div class="card" data-cat="diag">
                 <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_test_containers">🐳 Container Health & Sockets</h4>
                 <p data-i18n="desc_devops_test_containers">Inspects active Podman containers, open socket ports, and resource health in real-time.</p>
                 <div class="code-box">
@@ -1253,7 +1453,31 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card">
+            <div class="card" data-cat="diag">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_test_mermaid">📊 Validate Architecture Diagrams (Mermaid)</h4>
+                <p data-i18n="desc_devops_test_mermaid">Validates Mermaid architecture diagrams, Markdown transformation, SVG rendering engine, and 6-language toolbars.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./tests/unit/test-devhub-mermaid-rendering.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('test-mermaid', this)"><span>▶️</span> <span data-i18n="btn_devops_test_mermaid">Kontrolli diagramme</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card" data-cat="diag">
+                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_test_precommit">🛡️ Git Pre-Commit & Pre-Push Security Guard</h4>
+                <p data-i18n="desc_devops_test_precommit">Fast 6-phase audit before commit/push: Zero-Trust secrets, GDPR/PII leaks, hashed company info, Rule 13 portability, script syntax, and CRLF line endings.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/check-pre-commit.sh --full
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('check-precommit', this)"><span>▶️</span> <span data-i18n="btn_devops_test_precommit">Kontrolli koodi</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+            <div class="card" data-cat="wallet">
                 <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_trust_cert">🔒 Trust SSL/TLS Certificate in OS</h4>
                 <p data-i18n="desc_devops_trust_cert">Installs local Dev Root CA certificate into user trust store for zero-warning HTTPS.</p>
                 <div class="code-box">
@@ -1265,7 +1489,7 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card">
+            <div class="card" data-cat="diag">
                 <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_clean_logs">🧹 Clean Execution Logs</h4>
                 <p data-i18n="desc_devops_clean_logs">Cleans up temporary files and rotates execution logs under install_logs/.</p>
                 <div class="code-box">
@@ -1277,7 +1501,7 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card">
+            <div class="card" data-cat="lifecycle">
                 <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_createsnap">📸 Create New Golden Snapshots</h4>
                 <p data-i18n="desc_devops_createsnap">Generate new byte-for-byte compressed Golden Snapshot from running containers.</p>
                 <div class="code-box">
@@ -1289,7 +1513,7 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card">
+            <div class="card" data-cat="lifecycle">
                 <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_deploy">🚀 Blueprint Deployment & Status</h4>
                 <p data-i18n="desc_devops_deploy">Inspect active architecture blueprint status, topology configuration, and health.</p>
                 <div class="code-box">
@@ -1376,6 +1600,32 @@
 
         <!-- SUBTAB 1: RUNNER (TEST SUITES & EMBEDDED TERMINAL) -->
         <div id="testing-subtab-runner" class="testing-subtab-content active">
+            <!-- Testing Search and Filter Toolbar -->
+            <div class="testing-filter-bar" style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 10px 16px;">
+                <div style="display: flex; gap: 10px; align-items: center; flex: 1; min-width: 260px;">
+                    <div style="position: relative; flex: 1; max-width: 400px;">
+                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; font-size: 0.85rem;">🔍</span>
+                        <input type="text" id="testing-search-input" oninput="filterTestingSuites()" placeholder="Otsi testikomplekte või skripte (nt unit, windows, i18n)..." data-i18n-placeholder="test_search_placeholder" style="width: 100%; background: #030712; border: 1px solid var(--border); color: #f8fafc; padding: 7px 32px 7px 34px; border-radius: 20px; font-size: 0.82rem; outline: none; transition: border-color 0.2s;">
+                        <button type="button" id="testing-search-clear" onclick="clearTestingSearch()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.85rem; display: none;">✕</button>
+                    </div>
+                    <span id="testing-filter-counter" style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; padding: 3px 10px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid var(--border);">-- / --</span>
+                </div>
+                <div class="bp-filters" id="testing-category-filters" style="margin-bottom: 0; gap: 6px;">
+                    <button type="button" class="bp-filter-btn active" onclick="filterTestingCategory('all', this)" data-i18n="filter_all_cards">🌟 Kõik</button>
+                    <button type="button" class="bp-filter-btn" onclick="filterTestingCategory('core', this)" data-i18n="test_filter_core">🧪 Ühik & Integratsioon</button>
+                    <button type="button" class="bp-filter-btn" onclick="filterTestingCategory('compliance', this)" data-i18n="test_filter_compliance">🛡️ Vastavus (i18n, Port, Win)</button>
+                    <button type="button" class="bp-filter-btn" onclick="filterTestingCategory('e2e', this)" data-i18n="test_filter_e2e">🔄 E2E & Elutsükkel</button>
+                    <button type="button" class="bp-filter-btn" onclick="filterTestingCategory('ci', this)" data-i18n="test_filter_ci">🐙 CI & Kaetus</button>
+                </div>
+            </div>
+
+            <div id="testing-empty-state" style="display:none; text-align:center; padding: 40px 20px; background: rgba(15, 23, 42, 0.4); border: 1px dashed var(--border); border-radius: var(--radius-lg); margin-bottom: 20px;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">🔍</div>
+                <div style="font-size: 0.95rem; font-weight: 600; color: #f8fafc; margin-bottom: 6px;" data-i18n="test_no_results">Ühtegi testikomplekti ei leitud</div>
+                <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;" data-i18n="test_no_results_desc">Proovi otsida testi nime järgi (nt "dryrun", "wallet", "lifecycle") või lähtesta filtrid.</div>
+                <button type="button" class="btn btn-secondary" onclick="resetTestingFilters()" style="font-size: 0.8rem; padding: 6px 14px;" data-i18n="btn_reset_filters">↺ Tühjenda filtrid</button>
+            </div>
+
             <!-- Suites Grid -->
             <div class="grid" id="testing-suites-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px;">
                 <!-- Populated dynamically by JS -->
@@ -1623,8 +1873,16 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                 <div id="bp-modal-tab-arch" class="bp-tab-content active">
                     <!-- 1. Mermaid Topology Diagram -->
                     <div class="modal-section">
-                        <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 1.05rem;" data-i18n="modal_sec_topology">🏗️ Network Topology & Architecture Diagram</h4>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                            <h4 style="color: var(--primary); margin: 0; font-size: 1.05rem;" data-i18n="modal_sec_topology">🏗️ Network Topology & Architecture Diagram</h4>
+                            <div class="mermaid-actions">
+                                <button type="button" class="mermaid-btn" onclick="toggleBlueprintMermaidCode(this)">👁️ <span data-i18n="mermaid_toggle_code">Kuva kood</span></button>
+                                <button type="button" class="mermaid-btn" onclick="copyBlueprintMermaidCode(this)">📋 <span data-i18n="mermaid_copy_code">Kopeeri</span></button>
+                                <button type="button" class="mermaid-btn" onclick="openBlueprintMermaidZoom()">🔍 <span data-i18n="mermaid_zoom">Suurenda</span></button>
+                            </div>
+                        </div>
                         <div id="bp-modal-mermaid" class="mermaid" style="background: #030712; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; min-height: 180px; overflow-x: auto;"></div>
+                        <pre id="bp-modal-mermaid-raw" class="mermaid-raw-code" style="display: none; border-radius: var(--radius-md); margin-top: 10px;"></pre>
                     </div>
 
                     <!-- 2. Hardware & Resource Usage -->
@@ -1969,6 +2227,24 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
     </div>
 </div>
 
+<!-- MERMAID DIAGRAM FULLSCREEN ZOOM MODAL -->
+<div id="mermaid-zoom-modal" class="modal-backdrop" style="display: none;" onclick="if(event.target===this) closeMermaidZoomModal();">
+    <div class="modal-content" style="max-width: 95vw; width: 1200px; max-height: 90vh; display: flex; flex-direction: column; background: #030712; border: 1px solid var(--border);">
+        <div class="modal-header" style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #0b1120;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.4rem;">📊</span>
+                <h3 style="margin: 0; font-size: 1.1rem; color: #f8fafc;" data-i18n="mermaid_zoom_title">Arhitektuuriskeemi suurendatud vaade</h3>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="copyZoomedMermaidCode()">📋 <span data-i18n="mermaid_copy_code">Kopeeri kood</span></button>
+                <button type="button" class="modal-close-btn" onclick="closeMermaidZoomModal()">✕</button>
+            </div>
+        </div>
+        <div id="mermaid-zoom-content" style="padding: 24px; overflow: auto; flex: 1; display: flex; justify-content: center; align-items: center; background: #030712; min-height: 300px;">
+        </div>
+    </div>
+</div>
+
 <!-- FULLSCREEN CINEMA MODAL SLIDE SHOW -->
 <div class="slide-modal-backdrop" id="slide-modal-backdrop" style="display: none;" onmousemove="handleModalMouseMove()">
     <!-- Auto-hide floating top bar -->
@@ -2008,6 +2284,47 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
     </div>
 </div>
 
+<!-- ARCHITECTURE GLOSSARY & ACRONYMS MODAL -->
+<div id="glossary-modal-backdrop" class="modal-backdrop" onclick="closeGlossaryModal(event)" style="display: none;">
+    <div class="modal-content glossary-modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.6rem;">📖</span>
+                <div>
+                    <h3 style="color: var(--primary); font-size: 1.25rem; margin: 0;" data-i18n="glossary_title">Architecture Glossary & Acronyms</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 2px 0 0 0;" data-i18n="glossary_subtitle">Comprehensive index of architectural terms, standards, and practical roles</p>
+                </div>
+            </div>
+            <button class="modal-close-btn" onclick="closeGlossaryModal()" title="Sulge (Esc)">✕</button>
+        </div>
+
+        <div class="glossary-modal-toolbar">
+            <div class="glossary-search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="glossary-search-input" placeholder="Search acronyms, definitions, or roles (e.g. APEX, SEPS, ADB)..." oninput="filterGlossaryCards()" autocomplete="off" />
+                <button id="glossary-clear-search" class="clear-btn" onclick="clearGlossarySearch()" style="display: none;">✕</button>
+            </div>
+            <div class="glossary-letters-bar" id="glossary-letters-bar">
+                <!-- A-Z letters injected dynamically -->
+            </div>
+        </div>
+
+        <div class="glossary-modal-body" id="glossary-cards-container">
+            <!-- 50+ Acronym cards injected dynamically -->
+        </div>
+
+        <div class="glossary-modal-footer">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted);">
+                <span>💡</span>
+                <span data-i18n="glossary_footer_hint">Keyboard shortcuts: Press '?' or 'g' anywhere to open, 'Esc' to close</span>
+            </div>
+            <div style="font-size: 0.82rem; color: #94a3b8; font-weight: 600;">
+                <span id="glossary-counter">50+ items</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 const ACTIVE_BP_NUM = %ACTIVE_BP_NUM%;
 const DOCS_DATA = %DOCS_DATA_JSON%;
@@ -2020,10 +2337,14 @@ const TEST_SUITES_DATA = %TEST_SUITES_JSON%;
 const TEST_REPORTS_DATA = %TEST_REPORTS_JSON%;
 const TEST_COVERAGE_DATA = %TEST_COVERAGE_JSON%;
 const TEST_HISTORY_DATA = %TEST_HISTORY_JSON%;
+const GLOSSARY_DATA = %GLOSSARY_DATA_JSON%;
+const REPO_STATS_DATA = %REPO_STATS_JSON%;
 window.TEST_SUITES_DATA = TEST_SUITES_DATA;
 window.TEST_REPORTS_DATA = TEST_REPORTS_DATA;
 window.TEST_COVERAGE_DATA = TEST_COVERAGE_DATA;
 window.TEST_HISTORY_DATA = TEST_HISTORY_DATA;
+window.GLOSSARY_DATA = GLOSSARY_DATA;
+window.REPO_STATS_DATA = REPO_STATS_DATA;
 
 let currentSelectedDocIdx = 0;
 let currentSelectedLogIdx = 0;
@@ -2041,8 +2362,8 @@ let CACHED_PROFILES = [];
 %I18N_JS%
 
 let currentSlideIdx = 0;
-const totalSlides = 12;
 const SLIDES_CONTENT = %SLIDES_CONTENT_JSON%;
+const totalSlides = Object.keys(SLIDES_CONTENT).length || 13;
 const LOCAL_PASSWORDS = %PASSWORDS_MAP_JSON%;
 
 %APP_JS%

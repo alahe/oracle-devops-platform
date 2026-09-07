@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🏗️ Arhitektuursete Kavandite (Blueprintide) Kataloog (0 .. 11)
+# 🏗️ Arhitektuursete kavandite (blueprintide) kataloog (0 .. 11)
 
 See kataloog sisaldab **12 kanoonilist modulaarset arhitektuurset kavandit (blueprints)**, mis katavad kogu ettevõtte taseme platvormi:
 
@@ -41,7 +41,7 @@ flowchart TD
 
 ---
 
-## 🚀 Käsurea Käsud & Kasutamine
+## 🚀 Käsurea käsud & kasutamine
 
 ```bash
 # 1. Käivita vaikimisi Blueprint 0 (Proxy DB + ORDS ilma lisaparameetriteta):
@@ -65,7 +65,7 @@ flowchart TD
 
 ---
 
-## 📊 12 Blueprinti Maatriks
+## 📊 12 Blueprinti maatriks
 
 | ID | Blueprinti Nimi & Fail | Andmebaasi Profiil & Port | Teenuste Profiilid & Pordid | Konteinerid | Otstarve ja Kirjeldus |
 | :---: | :--- | :--- | :--- | :--- | :--- |
@@ -84,13 +84,13 @@ flowchart TD
 
 ---
 
-## 🧩 Puhas Blueprintide & YAML Profiilide Arhitektuur (Reegel 11)
+## 🧩 Puhas blueprintide & YAML profiilide arhitektuur (reegel 11)
 
-### 1. Vastutusalade Lahususe Printsiip
+### 1. Vastutusalade lahususe printsiip
 - **Blueprintid (`config/blueprints/.env.*`):** Deklareerivad ainult kõrgetasemelisi positiivseid viiteid YAML profiilidele. Need määravad, *millised konteinerid luuakse*. Nad ei sisalda kunagi porte, paroole ega negatiivseid `SKIP_*` muutujaid.
 - **YAML Profiilid (`config/profiles/**/*.yaml`):** Sisaldavad 100% domeenispetsiifikast: konteinerite tõmmised, mälulimiidid, pordid (`db_port`, `http_port`), PDB vaiketeenused, tabeliruumid, kvoodid, kasutajarollid ja andmebaasidevahelised seosed.
 
-### 2. Kuidas Lisada Kohandatud Blueprinti (1-haaval)
+### 2. Kuidas lisada kohandatud blueprinti (1-haaval)
 Iga arendaja või AI saab luua uue blueprinti igal ajal ilma koodi või skripte muutmata:
 1. Loo uus fail: `config/blueprints/.env.<ID>-<nimi>` (nt `.env.12-custom-analytics-workstation`):
    ```bash

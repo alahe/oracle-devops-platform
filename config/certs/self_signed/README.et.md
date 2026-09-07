@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# ⚠️ Jooksvalt Genereeritud Iseallkirjastatud Sertifikaat (Variant 4)
+# ⚠️ Jooksvalt genereeritud iseallkirjastatud sertifikaat (variant 4)
 
 See kataloog sisaldab jooksvalt genereeritud lihtsat iseallkirjastatud sertifikaati (`self_signed.crt` ja `self_signed.key`).
 
-## Omadused ja Olek:
+## Omadused ja olek:
 * **Tase:** **Variant 4 (Kõige madalam varuvariant)**
 * **Staatus:** ⚠️ **Mitte-usaldatud (Untrusted)**
 * **Tulemus Brauseris:** Brauser kuvab *"Not Secure / Your connection is not private"* hoiatuse.

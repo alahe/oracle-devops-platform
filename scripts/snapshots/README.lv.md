@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📸 Datu Bāzes Momentuzņēmumu (Golden Snapshots) Pārvaldības Skripti (`scripts/snapshots/`)
+# 📸 Datu Bāzes Momentuzņēmumu (golden snapshots) Pārvaldības skripti (`scripts/snapshots/`)
 
 Šis direktorijs nodrošina skriptus saspiestu rezerves kopiju (Golden Snapshots) izveidei, atjaunošanai un pārvaldībai no datubāzes sējumiem ātrai ~15s atkopšanai.
 
 ---
 
-## 🛠️ Pieejamie Skripti
+## 🛠️ Pieejamie skripti
 
 - **`create-golden-snapshots.sh`:** Izveido saspiestu `.tar.gz` arhīvu no datubāzes sējumiem mapē `golden-snapshots/`.
   ```bash

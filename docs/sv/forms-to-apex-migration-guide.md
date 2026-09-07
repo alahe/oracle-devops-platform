@@ -1,10 +1,10 @@
-# Modernisering och Migreringsguide: Från Oracle Forms & Reports till Oracle APEX
+# Modernisering och migreringsguide: Från Oracle Forms & reports till Oracle APEX
 
 [ 🇬🇧 English ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/forms-to-apex-migration-guide.md) | [ 🇪🇪 Eesti ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/et/forms-to-apex-migration-guide.md) | [ 🇫🇮 Suomi ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/fi/forms-to-apex-migration-guide.md) | [ 🇸🇪 Svenska ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/sv/forms-to-apex-migration-guide.md) | [ 🇱🇻 Latviešu ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/lv/forms-to-apex-migration-guide.md) | [ 🇱🇹 Lietuvių ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/lt/forms-to-apex-migration-guide.md)
 
 ---
 
-## 1. Sammanfattning & Affärsnytta 2026
+## 1. Sammanfattning & affärsnytta 2026
 
 Kör du fortfarande Oracle Forms & Reports under 2026? Den främsta anledningen till att företag moderniserar till Oracle APEX är **KOSTNAD, flexibilitet och minskat infrastrukturunderhåll.**
 
@@ -21,7 +21,7 @@ Kör du fortfarande Oracle Forms & Reports under 2026? Den främsta anledningen 
 
 ---
 
-## 2. Varför APEX är Överlägset i Dagens AI-Värld
+## 2. Varför APEX är överlägset i dagens AI-värld
 
 *(Baserat på Justin Millers arkitekturanalys, Oracle)*
 
@@ -31,9 +31,13 @@ I dagens generativa AI-värld finns två sätt att bygga applikationer med LLM:
 
 > **Resultat:** 100x högre arkitektonisk korrekthet och 1000x bättre läsbarhet för människor.
 
+> [!IMPORTANT]
+> **Deklarativa blueprints som specifikation vs Förvaltningsbördan för kod:**
+> Snabbare och säkrare leverans uppnås genom **enklare och säkrare arkitektur** snarare än massgenerering av kod. När en AI genererar 10 000+ rader råkod ärver teamet hela förvaltningsbördan (*code ownership burden*): sårbarheter och underhåll. APEX blueprints och APEXlang (`.apx`) fungerar som deklarativa specifikationer utan genererad limkod.
+
 ---
 
-## 3. Fördelarna med en Modulär Monolit: Undvik Mikrotjänstfällan
+## 3. Fördelarna med en modulär monolit: Undvik mikrotjänstfällan
 
 *(Baserat på Anton Martyniuks arkitekturanalys)*
 
@@ -46,7 +50,7 @@ Vid modernisering av äldre system delar många team upp applikationen i dussint
 
 ---
 
-## 4. Strategiskt Beslutsramverk: APEX vs. Next.js vs. Hybridmigrering
+## 4. Strategiskt beslutsramverk: APEX VS. next.js VS. hybridmigrering
 
 *(Baserat på Marcio Ramos och Wojciech Bielawskis arkitekturanalys)*
 
@@ -57,7 +61,7 @@ Vid modernisering av stora Forms-miljöer:
 
 ---
 
-## 5. 5-Stegs Migreringsprocess
+## 5. 5-stegs migreringsprocess
 
 ```bash
 # 1. Konvertera FMB-binärer till XML:

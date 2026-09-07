@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🚀 Esikonfiguroidun APEX-Säilökuvan Rakennus (`docker/apex/`)
+# 🚀 Esikonfiguroidun APEX-Säilökuvan rakennus (`docker/apex/`)
 
 - **Komentosarja:** `build-apex-prebuilt-image.sh`
 - **Tulos:** `localhost/oracle-free-apex:latest`

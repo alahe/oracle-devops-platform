@@ -125,8 +125,13 @@ graph TD
 > **Governed Input vs. Governed Runtime:**
 > You can spend immense engineering effort catching mistakes after an LLM generates them, or you can generate onto a trusted platform that makes most security vulnerabilities impossible by design. Check the official machine-readable [APEXlang EBNF Grammar](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf).
 
-### Generate What You Want to Own, Own What You Generate
+### The Code Ownership Burden: Generate What You Want to Own, Own What You Generate
 With modern AI agents (Antigravity, Claude Code, Codex), you can generate *any* application; you are limited only by the quality of your prompt. But for enterprise workloads, passing day-1 AI unit tests is not enough:
+
+> [!IMPORTANT]
+> **Declarative Blueprints as Specifications vs. The Code Ownership Burden:**
+> Faster delivery in modern enterprise architecture is achieved not through brute-force code generation, but through **radically simpler and safer architecture**. When an LLM generates 10,000+ lines of raw React, Node, or full-stack glue code, your team inherits the full burden of code ownership: vulnerability patching, framework churn, library deprecations, state synchronization bugs, and ongoing maintenance.
+> In contrast, APEX blueprints and APEXlang (`.apx`) function as **declarative high-level specifications**. Security (CSRF, XSS, RLS, bind variables) is built directly into the database engine, network latency is zero, and there is zero unowned generated boilerplate code to maintain.
 
 1. **The Short-Term Trap (Direct AI Generation):** If you generate 10,000 lines of custom full-stack glue, you own every single line. Six months later, npm packages deprecate, security CVEs emerge, and browser APIs evolve, forcing developers into perpetual refactoring cycles.
 2. **The Long-Term Enterprise Standard (Model-Driven APEX Engine):** When you generate declarative **APEXlang**, your application code remains pristine and bug-free for years. As Oracle upgrades the APEX and Database engines, your application automatically inherits security hardening, accessibility updates, and performance optimizations **without requiring you to rewrite or re-generate a single line of code**.

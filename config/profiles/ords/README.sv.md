@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🌐 Profiler för ORDS Gateway (`config/profiles/ords/`)
+# 🌐 Profiler för ORDS gateway (`config/profiles/ords/`)
 
 Denna katalog innehåller explicita profiler för **ORDS (Oracle REST Data Services)** enligt Regel 11.
 

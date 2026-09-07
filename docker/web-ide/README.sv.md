@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 💻 Bygge av Webb-IDE Containeravbildning (`docker/web-ide/`)
+# 💻 Bygge av webb-ide containeravbildning (`docker/web-ide/`)
 
 - **Skript:** `build-web-ide-image.sh`
 - **Dockerfile:** `Dockerfile`

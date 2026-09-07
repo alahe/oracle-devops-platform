@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Konsoliderad Oracle Forms 14c + Analytics Publisher Container (`docker/forms-publisher/`)
+# 📐 Konsoliderad Oracle Forms 14c + Analytics Publisher container (`docker/forms-publisher/`)
 
 Denna katalog bygger **Enhetlig FMW 14c Runtime-Container** (`localhost/oracle-forms-publisher:14c-2025`) som kör Forms 14.1.2 och Publisher 2025 inom en enda WebLogic-domän.
 

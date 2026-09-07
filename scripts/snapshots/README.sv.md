@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📸 Skript för Hantering av Ögonblicksbilder (Golden Snapshots) (`scripts/snapshots/`)
+# 📸 Skript för hantering av Ögonblicksbilder (golden snapshots) (`scripts/snapshots/`)
 
 Denna katalog tillhandahåller skript för att skapa, återställa och hantera komprimerade kalla säkerhetskopior (Golden Snapshots) av databasvolymer för snabb återställning (~15s).
 

@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../../README.md) | [ 🇪🇪 Eesti ](../et/README.md) | [ 🇫🇮 Suomi ](README.md) | [ 🇸🇪 Svenska ](../sv/README.md) | [ 🇱🇻 Latviešu ](../lv/README.md) | [ 🇱🇹 Lietuvių ](../lt/README.md)
 
-# Oracle DevOps -Alusta (Suomenkielinen Käyttöopas)
+# Oracle DevOps -alusta (suomenkielinen käyttöopas)
 
 > **Tuotantovalmis, lisenssimaksuton (0 €) ja 100% salasanaton (SEPS Wallet) Oracle 23ai, APEX SSO -yhdyskäytävä, Forms 14c, Publisher ja Web IDE kehitys- sekä DevOps-alusta.**
 
 ---
 
-## ⚡ 60-Sekunnin Pikakäynnistys
+## ⚡ 60-sekunnin pikakäynnistys
 
 ```bash
 # 1. Kloonaa repositorio ja siirry hakemistoon
@@ -30,7 +30,7 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 
 ---
 
-## 🗺️ Uuden Kehittäjän Perehdytyspolku (Onboarding Journey)
+## 🗺️ Uuden kehittäjän perehdytyspolku (onboarding journey)
 
 ```mermaid
 flowchart TD
@@ -56,7 +56,7 @@ flowchart TD
 
 ---
 
-## ⚡ Setup-All 10-Vaiheinen Elinkaariarkkitehtuuri
+## ⚡ Setup-all 10-vaiheinen elinkaariarkkitehtuuri
 
 ```mermaid
 flowchart LR
@@ -73,7 +73,7 @@ flowchart LR
 
 ---
 
-## 🌐 Dev Hub (`http://localhost:8088/`) — Yhdistetty Ohjauskeskus (*Single Pane of Glass*)
+## 🌐 Dev Hub (`http://localhost:8088/`) — Yhdistetty ohjauskeskus (*single pane of glass*)
 
 Kehittäjän ei tarvitse opetella ulkoa kymmeniä eri portteja. **Dev Hub** toimii keskitettynä portaalina:
 - **1-Klikkauksen Palvelulinkit:** Välitön pääsy APEX Builderiin, Database Actionsiin (SDW), Forms 14c -palveluihin, HTML5 noVNC Forms Builderiin ja Analytics Publisheriin.
@@ -85,7 +85,7 @@ Kehittäjän ei tarvitse opetella ulkoa kymmeniä eri portteja. **Dev Hub** toim
 
 ---
 
-## 🌐 ORDS Älykäs Yhdyskäytävä ja Autonominen Mikrorekisteröinti (Variant 3)
+## 🌐 ORDS älykäs yhdyskäytävä ja autonominen mikrorekisteröinti (variant 3)
 
 Alusta eliminoi useiden rinnakkaisten ORDS-konttien aiheuttamat porttiristiriidat **älykkään yhdyskäytävän ja mikrokirjaajan mallilla**:
 
@@ -101,7 +101,7 @@ Alusta eliminoi useiden rinnakkaisten ORDS-konttien aiheuttamat porttiristiriida
 
 ---
 
-## 🔑 Mistä Löydän Salasanani? (SEPS Wallet -Pikaopas)
+## 🔑 Mistä löydän salasanani? (SEPS Wallet -pikaopas)
 
 Kaikki salasanat generoidaan vahvalla kryptografisella satunnaisuudella ja tallennetaan turvallisesti **Oracle SEPS (Secure External Password Store) Walleteihin** ja Podman-salaisuuksiin.
 
@@ -121,7 +121,7 @@ sql /@DB_PROXY_DEV
 
 ---
 
-## 🎯 3 Sidosryhmänäkymää ja Alustan Arvo
+## 🎯 3 Sidosryhmänäkymää ja alustan arvo
 
 | Sidosryhmä | Tärkeimmät Hyödyt ja Päivittäinen Kokemus | Tekninen Mahdollistaja |
 | :--- | :--- | :--- |
@@ -131,7 +131,7 @@ sql /@DB_PROXY_DEV
 
 ---
 
-## 🔄 Oracle APEXin ja Forms 14c:n Integraation Rooli
+## 🔄 Oracle apexin ja Forms 14c:N integraation rooli
 
 Tässä arkkitehtuurissa **Oracle APEX 26.1** on sijoitettu ensisijaisesti seuraaviin rooleihin:
 1. **Forms Modernisoinnin Silta:** Forms 14c -lomakkeiden vaiheittainen modernisointi responsiivisiksi verkkosovelluksiksi [Oracle APEXlang DSL:n](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) avulla.
@@ -139,7 +139,7 @@ Tässä arkkitehtuurissa **Oracle APEX 26.1** on sijoitettu ensisijaisesti seura
 
 ---
 
-## 📋 11 Kuratoitua Arkkitehtuurisuunnitelmaa (Blueprints)
+## 📋 11 Kuratoitua arkkitehtuurisuunnitelmaa (Blueprints)
 
 ```mermaid
 graph TD
@@ -170,7 +170,7 @@ graph TD
   end
 ```
 
-### 🚀 Blueprintien Käyttöönotto ja Hallinta (`./scripts/deploy-blueprint.sh`)
+### 🚀 Blueprintien käyttöönotto ja hallinta (`./scripts/deploy-blueprint.sh`)
 
 ```bash
 # 1. Tarkista aktiivinen blueprint ja palveluiden tila:
@@ -191,7 +191,7 @@ graph TD
 
 ---
 
-## ⚡ Nopeutettu ~15s Palautus & Automaattinen Versiotarkistus
+## ⚡ Nopeutettu ~15s palautus & automaattinen versiotarkistus
 
 Oracle Free DB in Prod sisältää **älykkään monikerroksisen Golden Snapshot- ja Skip-moottorin** (`scripts/internal/snapshot-resolver.sh`), joka lyhentää toisen käynnistyskerran keston **~6–12 minuutista vain ~15 sekuntiin**:
 
@@ -206,7 +206,7 @@ Oracle Free DB in Prod sisältää **älykkään monikerroksisen Golden Snapshot
 
 ---
 
-## 🚀 Pikakäynnistyksen CLI-Komennot (Quickstart CLI)
+## 🚀 Pikakäynnistyksen CLI-komennot (quickstart CLI)
 
 ```bash
 # 1. Käynnistä haluttu blueprint:
@@ -246,7 +246,7 @@ Oracle Free DB in Prod sisältää **älykkään monikerroksisen Golden Snapshot
 
 ---
 
-## 🧭 Oracle APEX DevHub -Sovellus ja APEXlang CI/CD
+## 🧭 Oracle APEX DevHub -sovellus ja APEXlang CI/CD
 
 Erillisen HTML Dev Hubin (`docs/dev-hub.html`) lisäksi alusta sisältää yritystason **Oracle APEX -sovelluksen (Sovellus 101: DevHub)**, joka on luotu deklaratiivisesti [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) -kielellä kansioon [`applications/devhub/`](../../applications/devhub/):
 
@@ -268,9 +268,10 @@ Erillisen HTML Dev Hubin (`docs/dev-hub.html`) lisäksi alusta sisältää yrity
 
 ---
 
-## 📑 Moduulikohtaiset Käyttöoppaat
+## 📑 Moduulikohtaiset käyttöoppaat
 
 - 🏛️ **[docs/enterprise-distributed-architecture.md](../../docs/enterprise-distributed-architecture.md) | [docs/fi/enterprise-distributed-architecture.md](enterprise-distributed-architecture.md):** **Yritystason Hajautettu Arkkitehtuuri** — 4-tasoinen rahoitusarkkitehtuuri (ORDS, Publisher, Proxy DB, Publisher DB), ydinliiketoimintatietokannan liittäminen ja PROD Active/Standby -katastrofipalautus (RTO < 60s, RPO < 15m).
+- 🛡️ **[docs/security-audit-report.md](../../docs/security-audit-report.md) | [docs/fi/security-audit-report.md](security-audit-report.md):** **Yritystason Tietoturva-auditin Raportti & Hardening** — Automaattinen 7-tasoinen tietoturvaskanneri (`test-security-audit.sh`), OWASP Top 10, CIS Benchmark ja DORA.
 - 📋 **[docs/backlog/README.md](../../docs/backlog/README.md):** **Rahoitusalan Jira Backlog** — 11 tuotantovalmista Jira-tarinaa (62 SP) hajautettuun käyttöönottoon, multi-pool-reititykseen ja automaattiseen vikasietoisuuteen.
 - 🚀 **[docs/fi/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Modernisointi- ja Migraatio-opas** — Liiketoimintaperusteet, TCO-kustannusvertailu, 5-vaiheinen automaattinen työnkulku, PL/SQL-logiikan eristäminen ja [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) Vibe-Coding.
 - 📐 **[docs/fi/forms-setup.md](forms-setup.md):** Oracle Forms 14c käyttöohje — porttikartta (9001/7001/6082), testilomakkeen avaaminen (`frmservlet?form=test.fmx`), lomakkeiden lisääminen kansioon `forms_apps/`, kääntäminen ja APEX-migraatio.

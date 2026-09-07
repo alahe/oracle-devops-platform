@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔒 SSL/TLS-Sertifikaattien ja Luottamuksen Hallintamoduuli (Zero-Admin / Non-Root)
+# 🔒 SSL/tls-sertifikaattien ja luottamuksen hallintamoduuli (zero-admin / non-root)
 
 Tämä moduuli vastaa suojattujen HTTPS- ja TCPS-yhteyksien luomisesta, sertifikaattien valinnasta ja automaattisesta luottamuksesta macOS- ja Windows-ympäristöissä ilman järjestelmänvalvojan (`root` / `sudo`) oikeuksia.
 
 ---
 
-## 🧭 5-Tasoinen Hierarkkinen TLS-Ratkaisuketju (Priority Chain)
+## 🧭 5-tasoinen hierarkkinen tls-ratkaisuketju (priority chain)
 
 Käynnistyksen ja määrityksen aikana [`scripts/internal/resolve-tls-mode.sh`](../internal/resolve-tls-mode.sh) tunnistaa automaattisesti sopivimman sertifikaatin:
 
@@ -23,7 +23,7 @@ Käynnistyksen ja määrityksen aikana [`scripts/internal/resolve-tls-mode.sh`](
 
 ---
 
-## 💻 Käyttäjätason Komentosarjat Ilman Admin-Oikeuksia
+## 💻 Käyttäjätason Komentosarjat ilman admin-oikeuksia
 
 * **macOS:**
   * [`trust-local-cert-mac.sh`](trust-local-cert-mac.sh): Lisää CA:n avainnippuun `~/Library/Keychains/login.keychain-db` ilman `sudo`-oikeuksia.
@@ -40,7 +40,7 @@ Käynnistyksen ja määrityksen aikana [`scripts/internal/resolve-tls-mode.sh`](
 
 ---
 
-## 🧪 TLS-Testaus
+## 🧪 Tls-testaus
 ```bash
 ./tests/test-tls-scenarios.sh
 ```

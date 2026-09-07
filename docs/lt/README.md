@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../../README.md) | [ 🇪🇪 Eesti ](../et/README.md) | [ 🇫🇮 Suomi ](../fi/README.md) | [ 🇸🇪 Svenska ](../sv/README.md) | [ 🇱🇻 Latviešu ](../lv/README.md) | [ 🇱🇹 Lietuvių ](README.md)
 
-# Oracle DevOps Platforma (Lietuvių Vadovas)
+# Oracle DevOps platforma (lietuvių vadovas)
 
 > **Gamybai paruošta, be licencijos mokesčių (0 €) ir 100% beslaptažodė (SEPS Wallet) Oracle 23ai, APEX SSO Šliuzo, Forms 14c, Publisher ir Web IDE kūrimo bei DevOps platforma.**
 
 ---
 
-## ⚡ 60 Sekundžių Greitas Paleidimas
+## ⚡ 60 Sekundžių greitas paleidimas
 
 ```bash
 # 1. Klonuoti saugyklą ir pereiti į katalogą
@@ -30,7 +30,7 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 
 ---
 
-## 🗺️ Naujo Kūrėjo Įtraukimo Kelias (Onboarding Journey)
+## 🗺️ Naujo kūrėjo įtraukimo kelias (onboarding journey)
 
 ```mermaid
 flowchart TD
@@ -56,7 +56,7 @@ flowchart TD
 
 ---
 
-## ⚡ Setup-All 10-Ties Faziu Gyvavimo Ciklo Architektūra
+## ⚡ Setup-all 10-ties faziu gyvavimo ciklo architektūra
 
 ```mermaid
 flowchart LR
@@ -73,7 +73,7 @@ flowchart LR
 
 ---
 
-## 🌐 Dev Hub (`http://localhost:8088/`) — Vieningas Valdymo Centras (*Single Pane of Glass*)
+## 🌐 Dev Hub (`http://localhost:8088/`) — Vieningas valdymo centras (*single pane of glass*)
 
 Kūrėjams nereikia įsiminti dešimčių atskirų prievadų. **Dev Hub** veikia kaip vieningas portalas:
 - **1-Paspaudimo Paslaugų Nuorodos:** Tiesioginė prieiga prie APEX Builder, Database Actions (SDW), Forms 14c, HTML5 noVNC Forms Builder ir Analytics Publisher.
@@ -85,7 +85,7 @@ Kūrėjams nereikia įsiminti dešimčių atskirų prievadų. **Dev Hub** veikia
 
 ---
 
-## 🌐 ORDS Išmanieji Vartai ir Autonominė Mikroregistracija (Variant 3)
+## 🌐 ORDS išmanieji vartai ir autonominė mikroregistracija (variant 3)
 
 Platforma pašalina prievadų konfliktus ir ORDS dubliavimą taikydama **Išmaniųjų Vartų ir Autonominės Mikroregistracijos modelį**:
 
@@ -101,7 +101,7 @@ Platforma pašalina prievadų konfliktus ir ORDS dubliavimą taikydama **Išmani
 
 ---
 
-## 🔑 Kur Yra Mano Slaptažodis? (SEPS Wallet Špargalka)
+## 🔑 Kur yra mano slaptažodis? (SEPS Wallet špargalka)
 
 Visi slaptažodžiai generuojami didelio entropijos saugumu ir saugomi **Oracle SEPS (Secure External Password Store) Wallet** bei Podman Secrets.
 
@@ -121,7 +121,7 @@ sql /@DB_PROXY_DEV
 
 ---
 
-## 🎯 3 Suinteresuotųjų Šalių Perspektyvos ir Verslo Vertė
+## 🎯 3 Suinteresuotųjų šalių perspektyvos ir verslo vertė
 
 | Perspektyva | Pagrindiniai Privalumai ir Kasdienė Patirtis | Techninis Įgalintojas |
 | :--- | :--- | :--- |
@@ -131,7 +131,7 @@ sql /@DB_PROXY_DEV
 
 ---
 
-## 🔄 Oracle APEX ir Forms 14c Integracijos Vaidmuo
+## 🔄 Oracle APEX ir Forms 14c integracijos vaidmuo
 
 Šioje architektūroje **Oracle APEX 26.1** pirmiausia pozicionuojamas kaip:
 1. **Forms Modernizavimo Tiltas:** Laipsniškas Forms 14c formų perkėlimas į šiuolaikines žiniatinklio programas naudojant [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
@@ -139,7 +139,7 @@ sql /@DB_PROXY_DEV
 
 ---
 
-## 📋 11 Kuratų Architektūros Planų (Blueprints)
+## 📋 11 Kuratų architektūros planų (Blueprints)
 
 ```mermaid
 graph TD
@@ -170,7 +170,7 @@ graph TD
   end
 ```
 
-### 🚀 Planų Diegimas ir Valdymas (`./scripts/deploy-blueprint.sh`)
+### 🚀 Planų diegimas ir valdymas (`./scripts/deploy-blueprint.sh`)
 
 ```bash
 # 1. Patikrinti aktyvų planą ir paslaugų būklę:
@@ -191,7 +191,7 @@ graph TD
 
 ---
 
-## ⚡ Pagreitintas ~15s Atkūrimas & Automatizuota Versijų Patikra
+## ⚡ Pagreitintas ~15s atkūrimas & automatizuota versijų patikra
 
 Oracle Free DB in Prod apima **išmanų kelių lygių Golden Snapshot ir Skip variklį** (`scripts/internal/snapshot-resolver.sh`), kuris sutrumpina antrą paleidimo laiką nuo **~6–12 minučių iki ~15 sekundžių**:
 
@@ -206,7 +206,7 @@ Oracle Free DB in Prod apima **išmanų kelių lygių Golden Snapshot ir Skip va
 
 ---
 
-## 🚀 Greitas Paleidimas (Quickstart CLI)
+## 🚀 Greitas paleidimas (quickstart CLI)
 
 ```bash
 # 1. Paleisti pasirinktą blueprint:
@@ -246,7 +246,7 @@ Oracle Free DB in Prod apima **išmanų kelių lygių Golden Snapshot ir Skip va
 
 ---
 
-## 🧭 Oracle APEX DevHub Programa ir APEXlang CI/CD
+## 🧭 Oracle APEX DevHub programa ir APEXlang CI/CD
 
 Be atskiro HTML Dev Hub (`docs/dev-hub.html`), platformoje yra verslo klasės **Oracle APEX programa (Programa 101: DevHub)**, sukurta deklaratyviai naudojant [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) kataloge [`applications/devhub/`](../../applications/devhub/):
 
@@ -268,9 +268,10 @@ Be atskiro HTML Dev Hub (`docs/dev-hub.html`), platformoje yra verslo klasės **
 
 ---
 
-## 📑 Vartotojo Vadovai
+## 📑 Vartotojo vadovai
 
 - 🏛️ **[docs/enterprise-distributed-architecture.md](../../docs/enterprise-distributed-architecture.md) | [docs/lt/enterprise-distributed-architecture.md](enterprise-distributed-architecture.md):** **Paskirstyta Įmonės Architektūra** — 4 lygmenų finansų architektūra (ORDS, Publisher, Proxy DB, Publisher DB), integracija su esama pagrindine verslo duomenų baze ir PROD Active/Standby avarinis atkūrimas (RTO < 60s, RPO < 15m).
+- 🛡️ **[docs/security-audit-report.md](../../docs/security-audit-report.md) | [docs/lt/security-audit-report.md](security-audit-report.md):** **Įmonių Saugumo Audito Ataskaita & Hardening** — Automatizuotas 7 lygių saugumo skeneris (`test-security-audit.sh`), OWASP Top 10, CIS Benchmark ir DORA.
 - 📋 **[docs/backlog/README.md](../../docs/backlog/README.md):** **Finansų Jira Backlog** — 11 gamybai paruoštų Jira istorijų (62 SP) paskirstytam diegimui, multi-pool maršrutizavimui ir automatiniam perjungimui.
 - 🚀 **[docs/lt/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Modernizavimo bei Perkėlimo Vadovas** — Verslo paskatos, TCO kaštų palyginimas, 5 žingsnių automatizuotas procesas ir [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
 - 📐 **[docs/forms-setup.md](../../docs/forms-setup.md):** Oracle Forms 14c Vadovas.

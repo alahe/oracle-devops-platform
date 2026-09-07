@@ -4,11 +4,11 @@
 
 ---
 
-## 1. Yhteenveto ja Tavoitteet
+## 1. Yhteenveto ja tavoitteet
 
 Tämän testaussuunnitelman tavoitteena on määritellä monitasoinen varmennusstrategia **Oracle APEX DevHub -sovellukselle (Sovellus 101)**, sen taustalla toimivalle PL/SQL-moottorille (`DEVHUB.DEV_HUB_PKG`), paikalliselle REST-dokumentaatiosillalle ja automatisoidulle SQLcl APEXlang CI/CD -putkelle.
 
-### Keskeiset Tavoitteet:
+### Keskeiset tavoitteet:
 1. **Toiminnallinen Yhdenmukaisuus:** Varmistaa 100 % ominaisuuksien vastaavuus staattisen Dev Hubin (`docs/dev-hub.html`) ja APEX-sovelluksen välillä kaikilla 6 sivulla.
 2. **Deterministinen Tilan Eristäminen:** Taata testien riippumattomuus hyödyntämällä ~15–30 sekunnin Golden Snapshot -palautusta (`bp_3_latest.tar.gz`) ennen kattavia regressiotestejä.
 3. **Monitasoinen Kattavuus:** Yhdistää tietokantatason utPLSQL-testit, REST-integraatiotarkistukset, hybridit selain-E2E-työnkulut (Playwright + curl-istuntosimulaattori) sekä APEX Advisor -laadunvarmistus.
@@ -17,7 +17,7 @@ Tämän testaussuunnitelman tavoitteena on määritellä monitasoinen varmennuss
 
 ---
 
-## 2. Testauspyramidi ja Kattavuusmatriisi
+## 2. Testauspyramidi ja kattavuusmatriisi
 
 | Taso | Testattava Komponentti | Työkalut | Suoritustiheys | Odotettu Kesto |
 | :--- | :--- | :--- | :--- | :--- |
@@ -28,9 +28,9 @@ Tämän testaussuunnitelman tavoitteena on määritellä monitasoinen varmennuss
 
 ---
 
-## 3. Testaustasot ja Testitapaukset
+## 3. Testaustasot ja testitapaukset
 
-### 3.1. Taso 1: Tietokannan Yksikkötestaus (utPLSQL)
+### 3.1. Taso 1: Tietokannan yksikkötestaus (utplsql)
 Kohde: `DEVHUB`-skeeman objektit `FREEPDB1`-tietokannassa.
 - **TC-DB-01:** Skeeman ja rajoitteiden validointi (`DEVHUB_SERVICES`, `DEVHUB_TOPOLOGY`, jne.).
 - **TC-DB-02:** `DEV_HUB_PKG.check_single_service` ja tilapäivitykset (ONLINE/OFFLINE, vasteajat).
@@ -46,7 +46,7 @@ Kohde: Isäntäkoneen ja kontin välinen REST-silta (`scripts/internal/dev-hub-b
 - **TC-INT-03:** Kontinsisäinen reititys osoitteeseen `http://host.containers.internal:8089`.
 - **TC-INT-04:** HTML-muunnos tietokannassa `APEX_MARKDOWN.TO_HTML` -funktiolla.
 
-### 3.3. Taso 3: Selaimen E2E-Testaus (Hybridi: Playwright + Curl)
+### 3.3. Taso 3: Selaimen E2E-testaus (hybridi: Playwright + curl)
 Kohde: Oracle APEX Sovellus 101 (`https://localhost:8448/ords/r/proxy_workspace/devhub/`).
 - **TC-E2E-01:** Kirjautumattoman pyynnön uudelleenohjaus kirjautumissivulle.
 - **TC-E2E-02:** 1-klikkauksen kehittäjäkirjautuminen ja evästeen luonti.
@@ -58,14 +58,14 @@ Kohde: Oracle APEX Sovellus 101 (`https://localhost:8448/ords/r/proxy_workspace/
 - **TC-E2E-08:** Sivu 5 (DevOps-komentokeskus).
 - **TC-E2E-09:** Sivu 6 (Suorituskykymittaristot).
 
-### 3.4. Taso 4: Laatu, APEX Advisor ja Turvallisuus
+### 3.4. Taso 4: Laatu, APEX advisor ja turvallisuus
 - **TC-SEC-01:** APEX Advisor -tarkastus CLI-työkalulla (0 kriittistä virhettä).
 - **TC-SEC-02:** Session State Protection (SSP) ja tarkistussummien validointi.
 - **TC-SEC-03:** Zero-Trust -tarkastus salasanojen ja avainten vuotojen estämiseksi.
 
 ---
 
-## 4. Testausympäristö ja Golden Snapshot -eristys
+## 4. Testausympäristö ja golden snapshot -eristys
 
 Jokainen laaja testiajo käynnistää puhtaan tilan:
 ```bash
@@ -75,7 +75,7 @@ Palautus vie vain ~15–30 sekuntia ja takaa aina identtisen tietokantatilan.
 
 ---
 
-## 5. Suoritus ja Raportointi
+## 5. Suoritus ja raportointi
 
 ```bash
 # Aja koko testauskokonaisuus:

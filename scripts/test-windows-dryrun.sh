@@ -1,0 +1,1 @@
+../tests/test-windows-dryrun.sh

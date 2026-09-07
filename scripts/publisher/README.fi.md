@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📑 Analytics Publisherin Toiminnalliset Komentosarjat (`scripts/publisher/`)
+# 📑 Analytics publisherin toiminnalliset komentosarjat (`scripts/publisher/`)
 
 Tämä hakemisto tarjoaa työkalut Oracle Analytics Publisherin (Pixel Perfect -raportointimoottorin), sen WebLogic-toimialueen, luetteloiden varmuuskopioinnin ja raporttien käyttöönoton hallintaan.
 
 ---
 
-## 🛠️ Käytettävissä Olevat Komentosarjat
+## 🛠️ Käytettävissä Olevat komentosarjat
 
 - **`status-publisher.sh`:** Tarkistaa Analytics Publisherin ja sen tietolähteiden tilan ja terveyden.
   ```bash

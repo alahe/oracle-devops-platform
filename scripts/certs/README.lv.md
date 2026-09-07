@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔒 SSL/TLS Sertifikātu un Uzticamības Pārvaldības Modulis (Zero-Admin / Non-Root)
+# 🔒 SSL/TLS Sertifikātu un Uzticamības Pārvaldības modulis (zero-admin / non-root)
 
 Šis modulis pārvalda drošus HTTPS un TCPS savienojumus, sertifikātu atlasi un automātisku uzticamības instalēšanu macOS un Windows vidēs bez administratora (`root` / `sudo`) tiesībām.
 
 ---
 
-## 🧭 5 Līmeņu Hierarhiskā TLS Prioritāšu Ķēde (Priority Chain)
+## 🧭 5 Līmeņu Hierarhiskā TLS Prioritāšu Ķēde (priority chain)
 
 Palaišanas un konfigurēšanas laikā [`scripts/internal/resolve-tls-mode.sh`](../internal/resolve-tls-mode.sh) automātiski nosaka piemērotāko sertifikātu:
 
@@ -23,7 +23,7 @@ Palaišanas un konfigurēšanas laikā [`scripts/internal/resolve-tls-mode.sh`](
 
 ---
 
-## 💻 Lietotāja Līmeņa Skripti Bez Administratora Tiesībām
+## 💻 Lietotāja Līmeņa Skripti bez administratora Tiesībām
 
 * **macOS:**
   * [`trust-local-cert-mac.sh`](trust-local-cert-mac.sh): Pievieno CA atslēgu glabātuvei `~/Library/Keychains/login.keychain-db` bez `sudo`.

@@ -1,14 +1,14 @@
-# 🧪 Testēšanas Plāns: Oracle APEX DevHub Lietotne un CI/CD Konveijers
+# 🧪 Testēšanas plāns: Oracle APEX DevHub lietotne un CI/CD konveijers
 
 [ 🇬🇧 English ](../apex-devhub-test-plan.md) | [ 🇪🇪 Eesti ](../et/apex-devhub-test-plan.md) | [ 🇫🇮 Suomi ](../fi/apex-devhub-test-plan.md) | [ 🇸🇪 Svenska ](../sv/apex-devhub-test-plan.md) | [ 🇱🇻 Latviešu ](apex-devhub-test-plan.md) | [ 🇱🇹 Lietuvių ](../lt/apex-devhub-test-plan.md)
 
 ---
 
-## 1. Kopsavilkums un Mērķi
+## 1. Kopsavilkums un mērķi
 
 Šī testēšanas plāna mērķis ir noteikt daudzlīmeņu verifikācijas stratēģiju **Oracle APEX DevHub lietotnei (Lietotne 101)**, tās pamatā esošajam PL/SQL dzinējam (`DEVHUB.DEV_HUB_PKG`), vietējam REST dokumentācijas tiltam un automatizētajam SQLcl APEXlang CI/CD konveijeram.
 
-### Galvenie Mērķi:
+### Galvenie mērķi:
 1. **Funkcionālā Atbilstība:** Nodrošināt 100% funkcionalitātes paritāti starp statisko Dev Hub (`docs/dev-hub.html`) un APEX lietotni visās 6 lapās.
 2. **Deterministiska Stāvokļa Izolācija:** Garantēt izolāciju, izmantojot ~15–30s Golden Snapshot atjaunošanu (`bp_3_latest.tar.gz`) pirms regresijas testiem.
 3. **Daudzlīmeņu Pārklājums:** Apvienot datubāzes līmeņa utPLSQL testus, REST integrācijas pārbaudes, hibrīdās pārlūka E2E darba plūsmas (Playwright + curl sesiju simulators) un APEX Advisor koda kvalitātes auditu.
@@ -17,7 +17,7 @@
 
 ---
 
-## 2. Testēšanas Piramīda un Matrica
+## 2. Testēšanas piramīda un matrica
 
 | Līmenis | Testējamais Komponents | Rīki | Izpildes Biežums | Paredzamais Ilgums |
 | :--- | :--- | :--- | :--- | :--- |
@@ -28,9 +28,9 @@
 
 ---
 
-## 3. Testēšanas Līmeņi un Gadījumi
+## 3. Testēšanas līmeņi un gadījumi
 
-### 3.1. 1. līmenis: Datubāzes Vienību Testēšana (utPLSQL)
+### 3.1. 1. Līmenis: Datubāzes vienību testēšana (utplsql)
 Mērķis: `DEVHUB` shēmas objekti `FREEPDB1` konteinerā.
 - **TC-DB-01:** Shēmas un ierobežojumu validācija.
 - **TC-DB-02:** `DEV_HUB_PKG.check_single_service` un statusa atjaunināšana (ONLINE/OFFLINE).
@@ -39,14 +39,14 @@ Mērķis: `DEVHUB` shēmas objekti `FREEPDB1` konteinerā.
 - **TC-DB-05:** `DEV_HUB_PKG.sync_benchmarks_from_json` JSON apstrāde un apvienošana.
 - **TC-DB-06:** `DEV_HUB_PKG.authenticate_local_dev` drošības robeža (atļauts tikai localhost).
 
-### 3.2. 2. līmenis: Integrācijas un REST Dokumentācijas Tilts
+### 3.2. 2. Līmenis: Integrācijas un REST dokumentācijas tilts
 Mērķis: Hosta un konteinera REST tilts (`scripts/internal/dev-hub-bridge.py`) portā `8089`.
 - **TC-INT-01:** Tilta veselības pārbaude (`/api/health`) un kataloga vaicājums (`/api/catalog`).
 - **TC-INT-02:** Markdown ielāde visās 6 atbalstītajās valodās.
 - **TC-INT-03:** Konteinera iekšējā maršrutēšana uz `http://host.containers.internal:8089`.
 - **TC-INT-04:** HTML konvertēšana datubāzē ar `APEX_MARKDOWN.TO_HTML`.
 
-### 3.3. 3. līmenis: Pārlūka E2E Testēšana (Hibrīds: Playwright + Curl)
+### 3.3. 3. Līmenis: Pārlūka E2E testēšana (hibrīds: Playwright + curl)
 Mērķis: Oracle APEX Lietotne 101 (`https://localhost:8448/ords/r/proxy_workspace/devhub/`).
 - **TC-E2E-01:** Neautentificēta pieprasījuma novirzīšana uz pieteikšanās lapu.
 - **TC-E2E-02:** 1-klikšķa izstrādātāja autentifikācija un sesijas sīkfaila izveide.
@@ -58,14 +58,14 @@ Mērķis: Oracle APEX Lietotne 101 (`https://localhost:8448/ords/r/proxy_workspa
 - **TC-E2E-08:** 5. lapa (DevOps komandu centrs).
 - **TC-E2E-09:** 6. lapa (Veiktspējas mērījumu panelis).
 
-### 3.4. 4. līmenis: Kvalitāte, APEX Advisor un Drošība
+### 3.4. 4. Līmenis: Kvalitāte, APEX advisor un drošība
 - **TC-SEC-01:** APEX Advisor palaišana caur CLI (0 kritisku kļūdu).
 - **TC-SEC-02:** Session State Protection (SSP) un kontrolsummu audits.
 - **TC-SEC-03:** Zero-Trust pārbaude pret paroļu noplūdēm.
 
 ---
 
-## 4. Testēšanas Vide un Golden Snapshot Izolācija
+## 4. Testēšanas vide un golden snapshot izolācija
 
 Pirms plašiem testiem tiek atjaunots tīrs stāvoklis:
 ```bash
@@ -75,7 +75,7 @@ Atjaunošana aizņem tikai ~15–30 sekundes un nodrošina identisku sākuma st�
 
 ---
 
-## 5. Automatizācija un Ziņošana
+## 5. Automatizācija un ziņošana
 
 ```bash
 # Palaist pilnu testu komplektu:

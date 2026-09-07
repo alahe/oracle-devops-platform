@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Oracle Forms Rakenduste Kaust (`forms_apps/`)
+# 📐 Oracle Forms rakenduste kaust (`forms_apps/`)
 
 See kaust on automaatselt seotud Oracle Forms 14c konteineri teekonnaga `/u01/oracle/forms_apps` lugemis- ja kirjutusrežiimis (`rw`).
 

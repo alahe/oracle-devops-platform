@@ -1,14 +1,14 @@
-# 🧪 Blueprintide Järkjärgulise Lisamise ja Multi-Stacki Testimisplaan
+# 🧪 Blueprintide järkjärgulise lisamise ja multi-stacki testimisplaan
 
 [ 🇬🇧 English ](../incremental-blueprints-test-plan.md) | [ 🇪🇪 Eesti ](incremental-blueprints-test-plan.md) | [ 🇫🇮 Suomi ](../fi/incremental-blueprints-test-plan.md) | [ 🇸🇪 Svenska ](../sv/incremental-blueprints-test-plan.md) | [ 🇱🇻 Latviešu ](../lv/incremental-blueprints-test-plan.md) | [ 🇱🇹 Lietuvių ](../lt/incremental-blueprints-test-plan.md)
 
 ---
 
-## 1. Ülevaade ja Eesmärgid
+## 1. Ülevaade ja eesmärgid
 
 **Oracle DevOps Platvorm** toetab dünaamilist, modulaarset blueprintide aktiveerimist nii käsurealt (`scripts/deploy-blueprint.sh`) kui ka interaktiivselt Developer Hubist (`docs/dev-hub.html`). Käesolev testimisplaan verifitseerib **blueprintide ükshaaval lisamist (incremental addition)**, tagades et mitu arhitektuuripinu töötavad korraga ilma konfliktide, ootamatute sulgemiste või ressursi ammendumiseta.
 
-### Peamised Testimise Eesmärgid:
+### Peamised testimise eesmärgid:
 1. **Env 0 Baastaseme Nõue (Baseline Invariant):** Iga testimine peab alati algama **Blueprint 0-st (`.env.0-default-proxy-ords`)** kui püsivast Core Base lüüsist (`db-proxy` pordil 1532 ja `app-ords` portidel 8088/8448).
 2. **Mittedestruktiivne Lisamine (Non-Destructive Addition):** Uue blueprindi lisamine (nt BP 1 `db-alise` või BP 8 `web-ide-dev`) **ei tohi kunagi** sulgeda, peatada ega taaslähtestada eelnevalt töötavaid konteinereid ega andmebaasiskeeme.
 3. **Null Fantoomkonteinerit (Zero Ghost Containers):** Töötavate konteinerite hulk peab täpselt vastama kõigi aktiveeritud blueprintide ühendile. Volitamata, kaardistamata või zombi-konteinerite loomine on keelatud.
@@ -25,7 +25,7 @@
 
 ---
 
-## 2. Testimise Arhitektuur ja Töövood
+## 2. Testimise arhitektuur ja töövood
 
 ```mermaid
 flowchart TD
@@ -59,7 +59,7 @@ flowchart TD
 
 ---
 
-## 3. Järkjärgulise Lisamise Testimaatriks (BP 0 kuni BP 9)
+## 3. Järkjärgulise lisamise testimaatriks (BP 0 kuni BP 9)
 
 | Samm | Blueprint Fail | Kirjeldus | Sihtkonteinerid | Pordid | DB SEPS Alias | Veebiteenus |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -78,9 +78,9 @@ flowchart TD
 
 ---
 
-## 4. Verifitseerimise Metoodika
+## 4. Verifitseerimise metoodika
 
-### 1. Tase: Automaatne Skriptide ja Käsurea Diagnostika
+### 1. Tase: Automaatne skriptide ja käsurea diagnostika
 1. **Konteinerite Isolatsioon ja Fantoomprotsesside Kontroll:**
    - Käivita `podman ps --format "{{.Names}}"` pärast igat sammu.
    - Kontrolli, et kõik eelnevalt töötavad konteinerid on endiselt aktiivsed.
@@ -98,7 +98,7 @@ flowchart TD
    - Käivita `./scripts/check-urls.sh` kõigi deklareeritud otspunktide HTTP staatuste kontrolliks.
    - Kontrolli, et ORDS andmebaasibasseinid (`/ords/<pool>/`) vastavad koodiga HTTP 200 või 302.
 
-### 2. Tase: Interaktiivne Brauseri ja Dev Hubi Kontroll
+### 2. Tase: Interaktiivne brauseri ja Dev hubi kontroll
 1. **Dev Hubi Elav Sünkroniseerimine:**
    - Ava `docs/dev-hub.html` brauseris.
    - Veendu, et aktiivsed blueprintid kuvatakse rohelisena märkega `Aktiivne`.
@@ -110,9 +110,9 @@ flowchart TD
 
 ---
 
-## 5. Ressursikaitse ja Topeltkäivituse Testijuhtumid
+## 5. Ressursikaitse ja topeltkäivituse testijuhtumid
 
-### TC-RES-01: Platvormiülene Elav RAM-i Mõõtmine
+### TC-RES-01: Platvormiülene elav RAM-i mõõtmine
 - **Eesmärk:** Tuvastada vaba host-mälu enne iga blueprindi käivitamist kõigil toetatud platvormidel.
 - **Kontrollkäsud:**
   - **Windows (PowerShell):** `powershell.exe -NoProfile -Command "(Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory"`
@@ -121,21 +121,21 @@ flowchart TD
   - **Konteinerid:** `podman stats --no-stream --format "{{.Name}}: {{.MemUsage}}"`
 - **Oodatud Tulemus:** Vaba mälu ja konteinerite tarbimine arvutatakse sekundilise täpsusega.
 
-### TC-RES-02: Ebapiisava RAM-i Tõkestus (< 2048 MB Puhver)
+### TC-RES-02: Ebapiisava RAM-i tõkestus (< 2048 MB puhver)
 - **Eesmärk:** Tagada, et süsteem ei luba uusi konteinereid käivitada, kui vaba mälu jääb alla 2.0 GB.
 - **Testisammud:**
   1. Simuleeri mälukoormust või tõsta kontrolli läve üle vaba RAM-i mahu.
   2. Proovi lisada järgmist blueprinti: `./scripts/deploy-blueprint.sh 5`.
 - **Oodatud Tulemus:** Paigaldus katkestatakse koheselt veateatega `RES_INSUFFICIENT_RAM` (`❌ Viga: Ebapiisavalt vaba mälu`). Töötavad konteinerid jäävad puutumata.
 
-### TC-DUP-01: Topeltkäivituse Tuvastamine (`STATUS_ALREADY_ACTIVE`)
+### TC-DUP-01: Topeltkäivituse tuvastamine (`STATUS_ALREADY_ACTIVE`)
 - **Eesmärk:** Tagada, et juba töötava blueprindi korduv käivitamine ei taaskäivita konteinereid ega korda paigaldust.
 - **Testisammud:**
   1. Veendu, et Blueprint 1 töötab: `./scripts/deploy-blueprint.sh 1`.
   2. Käivita `./scripts/deploy-blueprint.sh 1` uuesti.
 - **Oodatud Tulemus:** Käsurida väljastab `BP_ALREADY_ACTIVE` (`ℹ️ Blueprint 1 juba töötab tervena`). Väljumiskood 0, ühtegi konteinerit ei nullita.
 
-### TC-DUP-02: Paralleelne Skaleerimine Uue Blueprindiga
+### TC-DUP-02: Paralleelne skaleerimine uue blueprindiga
 - **Eesmärk:** Kinnitada, et sama teenuse paralleelseks jooksutamiseks saab luua uue nummerdatud blueprindi.
 - **Testisammud:**
   1. Loo fail `config/blueprints/.env.12-second-alise` konfiguratsiooniga `DB_ALISE_2=db-alise-oracle` ja pordiga 1536.
@@ -144,9 +144,9 @@ flowchart TD
 
 ---
 
-## 6. Käivituse SLA ja Valvekoera Testijuhtumid
+## 6. Käivituse SLA ja valvekoera testijuhtumid
 
-### TC-TIME-01: Globaalne 12-Tunni SLA Valvekoer
+### TC-TIME-01: Globaalne 12-tunni SLA valvekoer
 - **Eesmärk:** Garanteerida testitsükli ohutu lõpetamine, kui kogukestus läheneb 12 tunnile (43 200s).
 - **Käivitusstrateegia:**
   - Fikseeri `$SUITE_START_TIME` tsükli alguses.
@@ -156,7 +156,7 @@ flowchart TD
 
 ---
 
-## 7. Käivituskäskude Kiirspikker
+## 7. Käivituskäskude kiirspikker
 
 ```bash
 # 1. Käivita baaskeskkond (Blueprint 0)

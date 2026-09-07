@@ -1,14 +1,14 @@
-# 🧪 Pakāpeniskas Struktūrplānu Pievienošanas un Vairāku Steku Testēšanas Plāns
+# 🧪 Pakāpeniskas struktūrplānu pievienošanas un vairāku steku testēšanas plāns
 
 [ 🇬🇧 English ](../incremental-blueprints-test-plan.md) | [ 🇪🇪 Eesti ](../et/incremental-blueprints-test-plan.md) | [ 🇫🇮 Suomi ](../fi/incremental-blueprints-test-plan.md) | [ 🇸🇪 Svenska ](../sv/incremental-blueprints-test-plan.md) | [ 🇱🇻 Latviešu ](incremental-blueprints-test-plan.md) | [ 🇱🇹 Lietuvių ](../lt/incremental-blueprints-test-plan.md)
 
 ---
 
-## 1. Kopsavilkums un Mērķi
+## 1. Kopsavilkums un mērķi
 
 **Oracle DevOps platforma** nodrošina dinamisku un modulāru struktūrplānu (blueprints) aktivizāciju gan no komandrindas (`scripts/deploy-blueprint.sh`), gan interaktīvajā Developer Hub (`docs/dev-hub.html`). Šis testēšanas plāns pārbauda **pakāpenisku struktūrplānu pievienošanu (incremental addition)**, garantējot, ka vairāki arhitektūras steki darbojas vienlaicīgi bez konfliktiem, neparedzētas apturēšanas vai resursu izsīkuma.
 
-### Galvenie Testēšanas Mērķi:
+### Galvenie testēšanas mērķi:
 1. **Env 0 Bāzes Līmeņa Prasība (Baseline Invariant):** Katram testam vienmēr jāsākas ar **Blueprint 0 (`.env.0-default-proxy-ords`)** kā pastāvīgu Core Base vārteju (`db-proxy` portā 1532 un `app-ords` portos 8088/8448).
 2. **Nedestruktīva Pievienošana (Non-Destructive Addition):** Jauna struktūrplāna pievienošana (piem., BP 1 `db-alise` vai BP 8 `web-ide-dev`) **nekad nedrīkst** apturēt, dzēst vai atkārtoti inicializēt iepriekš palaistos konteinerus vai datubāzes shēmas.
 3. **Nulle Spoku Konteineru (Zero Ghost Containers):** Darbojošos konteineru kopai precīzi jāatbilst visu aktivizēto struktūrplānu apvienojumam. Neatļautu vai nezināmu konteineru izveide ir aizliegta.
@@ -25,7 +25,7 @@
 
 ---
 
-## 2. Testēšanas Arhitektūra un Plūsma
+## 2. Testēšanas arhitektūra un plūsma
 
 ```mermaid
 flowchart TD
@@ -59,7 +59,7 @@ flowchart TD
 
 ---
 
-## 3. Pakāpeniskas Testēšanas Matrica (BP 0 .. BP 9)
+## 3. Pakāpeniskas testēšanas matrica (BP 0 .. BP 9)
 
 | Solis | Plāna Fails | Apraksts | Mērķa Konteineri | Porti | DB SEPS Alias | Tīkla Pakalpojums |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -78,9 +78,9 @@ flowchart TD
 
 ---
 
-## 4. Pārbaudes Metodika
+## 4. Pārbaudes metodika
 
-### 1. Līmenis: Automatizēta Skriptu Diagnostika
+### 1. Līmenis: Automatizēta skriptu diagnostika
 1. **Konteineru Izolācija un Spoku Procesu Pārbaude:**
    - Pēc katra soļa izpildīt `podman ps --format "{{.Names}}"`.
 2. **Oracle SEPS Automātiskās Pieteikšanās Pārbaude:**
@@ -88,7 +88,7 @@ flowchart TD
 3. **HTTP un REST Pārbaudes:**
    - Izpildīt `./scripts/check-urls.sh`.
 
-### 2. Līmenis: Pārlūka un Dev Hub Pārbaude
+### 2. Līmenis: Pārlūka un Dev Hub pārbaude
 1. **Dev Hub Reāllaika Sinhronizācija:**
    - Pārbaudīt aktīvo plānu zaļo statusu un precīzu RAM skaitītāju vietnē `docs/dev-hub.html`.
 2. **1-Klikšķa Pieteikšanās:**
@@ -96,27 +96,27 @@ flowchart TD
 
 ---
 
-## 5. Resursu Aizsardzība un Dublikātu Kontrole
+## 5. Resursu aizsardzība un dublikātu kontrole
 
-### TC-RES-01: Starpplatformu RAM Pārbaude
+### TC-RES-01: Starpplatformu RAM pārbaude
 - **Mērķis:** Pārbaudīt brīvo atmiņu Windows (PowerShell CIM), Linux (`/proc/meminfo`) un macOS (`vm_stat`).
 
-### TC-RES-02: Bloķēšana Nepietiekamas Atmiņas Gadījumā (< 2048 MB Buferis)
+### TC-RES-02: Bloķēšana nepietiekamas atmiņas gadījumā (< 2048 MB buferis)
 - **Mērķis:** Bloķēt uzstādīšanu ar kļūdu `RES_INSUFFICIENT_RAM`.
 
-### TC-DUP-01: Dubultas Palaišanas Tuvināšana (`STATUS_ALREADY_ACTIVE`)
+### TC-DUP-01: Dubultas palaišanas tuvināšana (`STATUS_ALREADY_ACTIVE`)
 - **Mērķis:** Ziņot `BP_ALREADY_ACTIVE`, nepārstartējot konteinerus.
 
 ---
 
-## 6. Izpildes 12 Stundu SLA Uzraudzība
+## 6. Izpildes 12 stundu SLA uzraudzība
 
-### TC-TIME-01: Globālais SLA Taimeris
+### TC-TIME-01: Globālais SLA taimeris
 - **Mērķis:** Droši pārtraukt testu un saglabāt datus failā `metrics/setup_benchmarks.json` pirms 12 stundu limita sasniegšanas.
 
 ---
 
-## 7. Izpildes Komandu Īsā Pamācība
+## 7. Izpildes komandu īsā pamācība
 
 ```bash
 # 1. Inicializēt bāzes vidi (Blueprint 0)
@@ -140,7 +140,7 @@ open ./docs/dev-hub.html
 
 ---
 
-## 8. Automatizēto Inkrementālo Testu Rezultāti
+## 8. Automatizēto inkrementālo testu rezultāti
 
 Automatizētā izpilde, izmantojot `./tests/test-all-blueprints-incremental.sh --stop-on-fail`, veiksmīgi verificēja visus 10 arhitektūras plānus (BP 0 līdz BP 9):
 

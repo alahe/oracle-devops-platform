@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🚀 Iepriekš Konfigurēta APEX Konteinera Attēla Būvēšana (`docker/apex/`)
+# 🚀 Iepriekš Konfigurēta APEX konteinera Attēla Būvēšana (`docker/apex/`)
 
 - **Skripts:** `build-apex-prebuilt-image.sh`
 - **Rezultāts:** `localhost/oracle-free-apex:latest`

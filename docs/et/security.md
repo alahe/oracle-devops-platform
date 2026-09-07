@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../security.md) | [ 🇪🇪 Eesti ](security.md) | [ 🇫🇮 Suomi ](../fi/security.md) | [ 🇸🇪 Svenska ](../sv/security.md) | [ 🇱🇻 Latviešu ](../lv/security.md) | [ 🇱🇹 Lietuvių ](../lt/security.md)
 
-# Oracle Free DB & APEX Turvalisus ja SSO Arhitektuur
+# Oracle Free DB & APEX turvalisus ja SSO arhitektuur
 
 See dokument koondab kokku projekti turvakaalutlused, paroolide halduse, kasutajarollid lokaalses arenduses ning pilvepõhise ühekordse sisselogimise (SSO / Azure Entra-ID) arhitektuuri.
 
 ---
 
-## 1. Paroolide ja Saladuste Haldus lokaalselt (Zero-Trust)
+## 1. Paroolide ja saladuste haldus lokaalselt (zero-trust)
 
 Arenduskeskkonna saladused ja andmebaasi paroolid asuvad krüpteeritult Oracle SEPS Walletis (`cwallet.sso`) ning neid **ei lisata kunagi versioonihaldusesse ega salvestata kettale lihttekstina** (Reegel 5).
 
@@ -37,7 +37,7 @@ graph TD
     SSOAuth --> TCPS[TLS / TCPS Krüpteeritud kanal]
 ```
 
-### A. Lokaalne arendus (`DEV_LOCAL` arvutis)
+### A. lokaalne arendus (`DEV_LOCAL` arvutis)
 *   **Mugavus ja offline-tugi:** Arendaja saab töötada täielikult ilma võrguühenduseta ja VPN-ita.
 *   **Autonoomia ja vähimate õiguste printsiip:** Iga andmebaasi instantsi puhul luuakse automaatselt ettevalmistatud kasutajakontod koos paroolivaba Oracle Wallet (SEPS) ühendusega:
     *   **1. DBA Administraator (`DBA_ADMIN`):** Administratiivsete tegevuste ja DDL/DML halduse konto (`DBA` roll), mis ennetab `SYS` kasutaja igapäevast kasutamist ja tekitab turvalisi käitumisharjumusi. Ühendus: `sql /@DB_ALISE_DBA_ADMIN` või `sql /@DB_DB_ALISE_DBA_ADMIN`.
@@ -50,7 +50,7 @@ graph TD
 
 ---
 
-## 3. Adaptiivne 5-Astmeline TLS/HTTPS Arhitektuur
+## 3. Adaptiivne 5-astmeline TLS/HTTPS arhitektuur
 
 Veebiteenuste (ORDS, APEX, Analytics Publisher) HTTPS krüpteerimiseks ja brauseri hoiatusteta (*Not Secure*) toimimiseks ilma lokaalsete administraatori/root õigusteta on välja töötatud **5-astmeline hierarhiline sertifikaatide mootor** (`scripts/internal/resolve-tls-mode.sh`):
 
@@ -65,7 +65,7 @@ config/certs/
 
 ---
 
-## 4. Andmebaasi ja Rakenduste SSO
+## 4. Andmebaasi ja rakenduste SSO
 
 *   **SQLcl ja JDBC:** Oracle Database toetab nativselt Azure AD OAuth2 tokeneid ja globaalseid rolle.
 *   **ORDS ja API-d:** ORDS toetab Bearer JWT tokeneid ja proxy-kasutajaid.

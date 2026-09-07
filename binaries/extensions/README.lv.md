@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🧩 VS Code Paplašinājumu Kešatmiņa (`binaries/extensions/`)
+# 🧩 VS code Paplašinājumu Kešatmiņa (`binaries/extensions/`)
 
 Šis direktorijs kalpo kā **1. līmeņa bezsaistes kešatmiņa** VS Code `.vsix` paplašinājumu pakotnēm.
 

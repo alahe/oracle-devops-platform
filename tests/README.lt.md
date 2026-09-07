@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🧪 Automatizuotas Testavimas ir Projektų Patikra (`tests/`)
+# 🧪 Automatizuotas testavimas ir projektų patikra (`tests/`)
 
 Šiame kataloge yra Oracle DevOps platformos testavimo infrastruktūra, etalonų ataskaitos ir projektų tikrinimo rinkiniai.
 
@@ -13,7 +13,8 @@ Visi 12 kanoninių architektūros projektų centralizuotai aprašyti kataloge **
 - **`config/blueprints/`** ➔ 12 kanoninių architektūros projektų (`.env.0-*` iki `.env.11-*`).
 - **`tests/reports/`** ➔ Architektūros ataskaitos ir etalonų matrica ([`blueprint_benchmark_matrix.md`](reports/blueprint_benchmark_matrix.md)).
 - **`tests/reports/blueprints/`** ➔ Automatiškai sugeneruotos ataskaitos (`blueprint_0_report.md` iki `blueprint_11_report.md`).
-- **`tests/unit/`** ➔ Moduliniai vienetų testai CLI stabilumui ir saugumui.
+- **`tests/unit/`
+  - **`tests/unit/test-glossary-links.sh` / `.cmd`** ➔ 57 žodyno ir Vikipedijos išorinių nuorodų auditas be atsisiuntimų (atmintyje vykdomas HTTP HEAD, nulinis įrenginys NUL / /dev/null).** ➔ Moduliniai vienetų testai CLI stabilumui ir saugumui.
 
 ---
 
@@ -40,7 +41,7 @@ Norint paleisti testus iš švarios pradinės būsenos (su automatiniu `reset-al
 
 ---
 
-## 🔍 Patvirtinimo Invariantai
+## 🔍 Patvirtinimo invariantai
 
 Kiekvienas testas patikrina:
 1. **🌐 Žiniatinklio Paslaugų HTTP Sveikata (`scripts/check-urls.sh`):** HTTP/HTTPS atsakai (200/302).

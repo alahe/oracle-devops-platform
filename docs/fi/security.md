@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../security.md) | [ 🇪🇪 Eesti ](../et/security.md) | [ 🇫🇮 Suomi ](security.md) | [ 🇸🇪 Svenska ](../sv/security.md) | [ 🇱🇻 Latviešu ](../lv/security.md) | [ 🇱🇹 Lietuvių ](../lt/security.md)
 
-# 🛡️ Oracle Free DB & APEX Tietoturva ja SSO-Arkkitehtuuri
+# 🛡️ Oracle Free DB & APEX tietoturva ja SSO-arkkitehtuuri
 
 Tämä asiakirja kokoaa yhteen alustan tietoturvaperiaatteet, salasanojen hallinnan, kehittäjäroolit sekä pilvipohjaisen kertakirjautumisen (SSO / Azure Entra-ID) arkkitehtuurin.
 
 ---
 
-## 1. Paikallinen Salaisuuksien Hallinta (Zero-Trust - Sääntö 5)
+## 1. Paikallinen salaisuuksien hallinta (zero-trust - sääntö 5)
 
 Kaikki salasanat ja salaisuudet säilytetään AES-256-salatussa **Oracle SEPS (Secure External Password Store) Auto-Login Walletissa** (`cwallet.sso`).
 
@@ -23,7 +23,7 @@ Kaikki salasanat ja salaisuudet säilytetään AES-256-salatussa **Oracle SEPS (
 
 ---
 
-## 2. Ympäristöjen Autentikointimatriisi
+## 2. Ympäristöjen autentikointimatriisi
 
 | Ympäristö (`ENVIRONMENT_TYPE`) | Sijainti | Autentikointityyppi (APEX & DB) | Käyttäjien Hallinta | TLS-Salaus (TCPS) |
 | :--- | :--- | :--- | :--- | :--- |
@@ -45,7 +45,7 @@ graph TD
 
 ---
 
-## 3. Mukautuva 5-Tasoinen TLS/HTTPS-Moottori
+## 3. Mukautuva 5-tasoinen TLS/HTTPS-moottori
 
 Verkkopalvelut (ORDS, APEX, Analytics Publisher) käyttävät mukautuvaa 5-tasoista sertifikaattihierarkiaa ilman pääkäyttäjäoikeuksia (`scripts/internal/resolve-tls-mode.sh`):
 

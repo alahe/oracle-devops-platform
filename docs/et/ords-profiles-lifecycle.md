@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../ords-profiles-lifecycle.md) | [ 🇪🇪 Eesti ](ords-profiles-lifecycle.md) | [ 🇫🇮 Suomi ](../fi/ords-profiles-lifecycle.md) | [ 🇸🇪 Svenska ](../sv/ords-profiles-lifecycle.md) | [ 🇱🇻 Latviešu ](../lv/ords-profiles-lifecycle.md) | [ 🇱🇹 Lietuvių ](../lt/ords-profiles-lifecycle.md)
 
-# 🌐 Oracle REST Data Services (ORDS) Profiilide ja Sidumata Elutsükli Juhend
+# 🌐 Oracle REST data services (ORDS) profiilide ja sidumata elutsükli juhend
 
 See juhend selgitab **Oracle REST Data Services (ORDS)** arhitektuuri, elutsükli haldust ning seadistamist lokaalsetes konteinerites, kaugeserverites ja Oracle Autonomous Database (ADB) pilvekeskkondades.
 
 ---
 
-## 🏛️ 1. Sidumata Arhitektuuri Põhimõtted
+## 🏛️ 1. Sidumata arhitektuuri põhimõtted
 
 Nüüdisaegses modulaarses arhitektuuris on veebirakenduste lüüs andmebaasimootorist lahti seotud:
 
@@ -33,7 +33,7 @@ flowchart TD
     DBEngine -.->|Registreerib basseini| POOLS
 ```
 
-### Peamised Arhitektuurinõuded:
+### Peamised arhitektuurinõuded:
 1. **`ords.enabled: true` Andmebaasi Profiilis:**
    - Valmistab ette andmebaasipoolsed ORDS-i skeemid, metaandmed (`ORDS_METADATA`) ja proxy-kasutajad.
    - **EI KÄIVITA** `app-ords` veebikonteinerit.
@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-## 📦 2. Kolm Kanoonilist ORDS Profiili
+## 📦 2. Kolm kanoonilist ORDS profiili
 
 Kõik ORDS-i profiilid asuvad kaustas `config/profiles/ords/`:
 
@@ -55,7 +55,7 @@ Kõik ORDS-i profiilid asuvad kaustas `config/profiles/ords/`:
 | **`ords-local-custom`** | `config/profiles/ords/ords-local-custom.yaml` | `local_custom` | **Kohalik Kohandatud Skriptipaigaldus.** Kasutab ametlikke arhiive kaustast `binaries/ords/` ja paigaldusskripte, pakkides need lahti ajutises konteineris. |
 | **`ords-remote-custom`** | `config/profiles/ords/ords-remote-custom.yaml` | `remote_custom` | **Kaugserveri Lüüs.** Ühendub olemasoleva eraldiseisva ORDS serveriga määratud võrguaadressil üle SSH või HTTPS. |
 
-### Näide Blueprintis:
+### Näide blueprintis:
 ```bash
 # Kasuta ametlikku OCR konteineripilti
 ORDS_PROFILE=ords-image
@@ -69,7 +69,7 @@ ORDS_PROFILE=ords-remote-custom
 
 ---
 
-## ☁️ 3. Oracle Autonomous Database (ADB) Integreerimine
+## ☁️ 3. Oracle autonomous database (ADB) integreerimine
 
 Oracle Autonomous Database (Cloud ADB Serverless) sisaldab Oracle'i pilves juba eelinstalleeritud ja hallatud ORDS-i:
 
@@ -81,7 +81,7 @@ ords:
   verify_version_match: true # Kontrolli versioonide ühilvust keskse lüüsiga
 ```
 
-### ADB Elutsükli Reeglid:
+### ADB elutsükli reeglid:
 1. **Pilve Metaandmete Säilitamine (`install_in_db: false`):**
    - Paigaldusmootor jätab vahele `ords install` käsu andmebaasis, vältides pilveskeemide kahjustamist või õiguste vigu.
 2. **Versioonide Ühilvuse Kontroll (`verify_version_match: true`):**
@@ -91,7 +91,7 @@ ords:
 
 ---
 
-## 💡 4. Juhised Kui ORDS Server Puudub
+## 💡 4. Juhised kui ORDS server puudub
 
 Kui käivitatakse andmebaasi blueprint ilma `ORDS_PROFILE` määranguta ja keskne ORDS ei tööta:
 

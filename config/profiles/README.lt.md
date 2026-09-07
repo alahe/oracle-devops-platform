@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🗄️ Paslaugų ir Duomenų Bazių Profilių Matrica (`config/profiles/`)
+# 🗄️ Paslaugų ir duomenų bazių profilių matrica (`config/profiles/`)
 
 Šiame kataloge yra izoliuoti YAML profiliai, kuriuos naudoja **Dinaminis Profilių Variklis** (`load-profile.sh`, `apply-profile-users.sh`, `create-wallet.sh`, `register-connections.sh`).
 
@@ -12,7 +12,7 @@
 * **`config/profiles/forms/`**: Oracle Forms 14c profiliai (`forms-standard.yaml`).
 * **`config/profiles/forms-publisher/`**: Suvienyti WebLogic profiliai (`forms-publisher-unified.yaml`).
 
-## 🗄️ Duomenų Bazių Profiliai ir Prievadų Žemėlapis
+## 🗄️ Duomenų bazių profiliai ir prievadų Žemėlapis
 
 | Profilio Failas | Gamintojas | DB Prievadas | Blueprints | Pagrindinės Savybės |
 | :--- | :--- | :---: | :--- | :--- |

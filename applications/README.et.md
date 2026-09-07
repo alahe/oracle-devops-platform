@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Pakendatud APEX Rakendused (`applications/`)
+# 📦 Pakendatud APEX rakendused (`applications/`)
 
 See kataloog on ette nähtud deklaratiivsete Oracle APEX rakenduste hoidmiseks, mis on defineeritud [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) abil või standardsete SQLcl split-eksportidena.
 

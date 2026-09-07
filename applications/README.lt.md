@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Supakuotos APEX Programos (`applications/`)
+# 📦 Supakuotos APEX programos (`applications/`)
 
 Šis katalogas skirtas deklaratyvioms Oracle APEX programoms, apibrėžtoms naudojant [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) arba standartinius SQLcl eksportus.
 

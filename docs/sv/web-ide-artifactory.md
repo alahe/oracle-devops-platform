@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../web-ide-artifactory.md) | [ 🇪🇪 Eesti ](../et/web-ide-artifactory.md) | [ 🇫🇮 Suomi ](../fi/web-ide-artifactory.md) | [ 🇸🇪 Svenska ](web-ide-artifactory.md) | [ 🇱🇻 Latviešu ](../lv/web-ide-artifactory.md) | [ 🇱🇹 Lietuvių ](../lt/web-ide-artifactory.md)
 
-# Containerbaserad Web IDE & Enterprise Tilläggsmarknad
+# Containerbaserad web IDE & enterprise tilläggsmarknad
 
 Denna guide beskriver konfiguration och användning av **Containerbaserad Web IDE ( / )** i webbläsaren, integrering med **Artifactory / VS Code Marketplace**, tillägg för **Oracle SQL Developer, Google Antigravity och Microsoft Python**, samt **100% lokal och säker GitHub Actions-testning (offline)**.
 
 ---
 
-## 1. Web IDE Arkitektur & Förinstallerade Verktyg
+## 1. Web IDE arkitektur & förinstallerade verktyg
 
 Web IDE samlar en komplett Oracle-, AI- och CI/CD-utvecklingsmiljö i ett webbläsarbaserat VS Code-gränssnitt ():
 - **Webbadress:**  (HTTP) eller  (HTTPS).

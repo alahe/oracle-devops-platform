@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🗄️ Matris för Tjänste- och Databasprofiler (`config/profiles/`)
+# 🗄️ Matris för Tjänste- och databasprofiler (`config/profiles/`)
 
 Denna katalog innehåller domänisolerade YAML-profiler som används av plattformens **Dynamiska Profilhanterare** (`load-profile.sh`, `apply-profile-users.sh`, `create-wallet.sh`, `register-connections.sh`).
 
-## 📂 Aktiva Underkataloger
+## 📂 Aktiva underkataloger
 * **`config/profiles/databases/`**: Oracle Database-profiler (`db-proxy-oracle.yaml`, `db-alise-oracle.yaml`, `db-proxy-standalone.yaml`, `db-gvenzl.yaml`, `db-adb.yaml`, `db-publisher-oracle.yaml`, `db-forms-oracle.yaml`).
 * **`config/profiles/ords/`**: ORDS Gateway-profiler (`ords-standard.yaml`, `ords-standalone.yaml`).
 * **`config/profiles/web-ide/`**: Web IDE-profiler (`web-ide-standard.yaml`).
@@ -12,7 +12,7 @@ Denna katalog innehåller domänisolerade YAML-profiler som används av plattfor
 * **`config/profiles/forms/`**: Oracle Forms 14c-profiler (`forms-standard.yaml`).
 * **`config/profiles/forms-publisher/`**: Konsoliderade FMW-profiler (`forms-publisher-unified.yaml`).
 
-## 🗄️ Databasprofiler och Portkarta
+## 🗄️ Databasprofiler och portkarta
 
 | Profilfil | Tillverkare | DB-port | Blueprints | Nyckelfunktioner |
 | :--- | :--- | :---: | :--- | :--- |

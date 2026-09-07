@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Oracle Analytics Publisheri Patchid (`binaries/publisher/patches/`)
+# 📦 Oracle Analytics publisheri patchid (`binaries/publisher/patches/`)
 
 Analytics Publisheri OPatch veaparandused.
 

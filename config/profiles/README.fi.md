@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🗄️ Palvelu- ja Tietokantaprofiilien Matriisi (`config/profiles/`)
+# 🗄️ Palvelu- ja tietokantaprofiilien matriisi (`config/profiles/`)
 
 Tämä hakemisto sisältää YAML-profiilit, joita **Dynaaminen Profiilimoottori** käyttää (`load-profile.sh`, `apply-profile-users.sh`, `create-wallet.sh`, `register-connections.sh`).
 
-## 📂 Aktiiviset Alihakemistot
+## 📂 Aktiiviset alihakemistot
 * **`config/profiles/databases/`**: Oracle Database -profiilit (`db-proxy-oracle.yaml`, `db-alise-oracle.yaml`, `db-proxy-standalone.yaml`, `db-gvenzl.yaml`, `db-adb.yaml`, `db-publisher-oracle.yaml`, `db-forms-oracle.yaml`).
 * **`config/profiles/ords/`**: ORDS-yhdyskäytävän profiilit (`ords-standard.yaml`, `ords-standalone.yaml`).
 * **`config/profiles/web-ide/`**: Web-IDE-profiilit (`web-ide-standard.yaml`).
@@ -12,7 +12,7 @@ Tämä hakemisto sisältää YAML-profiilit, joita **Dynaaminen Profiilimoottori
 * **`config/profiles/forms/`**: Oracle Forms 14c -profiilit (`forms-standard.yaml`).
 * **`config/profiles/forms-publisher/`**: Yhdistetyt WebLogic-profiilit (`forms-publisher-unified.yaml`).
 
-## 🗄️ Tietokantaprofiilit ja Porttikartta
+## 🗄️ Tietokantaprofiilit ja porttikartta
 
 | Profiilitiedosto | Valmistaja | DB-portti | Blueprintit | Ominaisuudet |
 | :--- | :--- | :---: | :--- | :--- |

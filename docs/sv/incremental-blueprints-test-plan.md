@@ -1,14 +1,14 @@
-# 🧪 Testplan för Stegvis Tillägg av Ritningar (Blueprints) & Multi-Stack
+# 🧪 Testplan för stegvis tillägg av ritningar (Blueprints) & multi-stack
 
 [ 🇬🇧 English ](../incremental-blueprints-test-plan.md) | [ 🇪🇪 Eesti ](../et/incremental-blueprints-test-plan.md) | [ 🇫🇮 Suomi ](../fi/incremental-blueprints-test-plan.md) | [ 🇸🇪 Svenska ](incremental-blueprints-test-plan.md) | [ 🇱🇻 Latviešu ](../lv/incremental-blueprints-test-plan.md) | [ 🇱🇹 Lietuvių ](../lt/incremental-blueprints-test-plan.md)
 
 ---
 
-## 1. Sammanfattning & Mål
+## 1. Sammanfattning & mål
 
 **Oracle DevOps-plattformen** stöder dynamisk, modulär aktivering av ritningar (blueprints) via både CLI (`scripts/deploy-blueprint.sh`) och interaktiva Developer Hub (`docs/dev-hub.html`). Denna testplan verifierar **stegvis tillägg av ritningar (incremental addition)** och säkerställer att flera arkitekturstackar körs samtidigt utan konflikter, oavsiktliga nedstängningar eller resursbrist.
 
-### Huvudsakliga Testmål:
+### Huvudsakliga testmål:
 1. **Env 0 Baslinjekrav (Baseline Invariant):** Varje testomgång måste alltid börja med **Blueprint 0 (`.env.0-default-proxy-ords`)** som permanent Core Base-gateway (`db-proxy` på port 1532 och `app-ords` på portar 8088/8448).
 2. **Icke-Destruktivt Tillägg (Non-Destructive Addition):** Tillägg av en ny ritning (t.ex. BP 1 `db-alise` eller BP 8 `web-ide-dev`) får **aldrig** stänga av, avbryta eller återställa tidigare körande containrar eller databasscheman.
 3. **Noll Spökcontainrar (Zero Ghost Containers):** Mängden körande containrar måste exakt motsvara unionen av alla aktiverade ritningar. Obehöriga, odefinierade eller zombieliknande containrar är strikt förbjudna.
@@ -25,7 +25,7 @@
 
 ---
 
-## 2. Testarkitektur & Flöde
+## 2. Testarkitektur & flöde
 
 ```mermaid
 flowchart TD
@@ -59,7 +59,7 @@ flowchart TD
 
 ---
 
-## 3. Stegvis Testmatris (BP 0 .. BP 9)
+## 3. Stegvis testmatris (BP 0 .. BP 9)
 
 | Steg | Ritningsfil | Beskrivning | Målcontainrar | Portar | DB SEPS Alias | Webbtjänst |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -80,7 +80,7 @@ flowchart TD
 
 ## 4. Verifieringsmetodik
 
-### Nivå 1: Automatisk Skript- och CLI-diagnostik
+### Nivå 1: Automatisk skript- och CLI-diagnostik
 1. **Containerisolering & Verifiering av Spökprocesser:**
    - Kör `podman ps --format "{{.Names}}"` efter varje steg.
    - Kontrollera att tidigare aktiva containrar förblir igång och att nya matchar specifikationen.
@@ -96,7 +96,7 @@ flowchart TD
 3. **HTTP- och REST-kontroll:**
    - Kör `./scripts/check-urls.sh` för alla slutpunkter.
 
-### Nivå 2: Interaktiv Webbläsar- och Dev Hub-kontroll
+### Nivå 2: Interaktiv webbläsar- och Dev Hub-kontroll
 1. **Dev Hub Synkronisering:**
    - Öppna `docs/dev-hub.html` och kontrollera status och RAM-mätare.
 2. **1-Klicks Autentisering:**
@@ -104,9 +104,9 @@ flowchart TD
 
 ---
 
-## 5. Resursskydd & Dubblettkontroll
+## 5. Resursskydd & dubblettkontroll
 
-### TC-RES-01: Plattformsoberoende Dynamisk RAM-kontroll
+### TC-RES-01: Plattformsoberoende dynamisk RAM-kontroll
 - **Mål:** Kontrollera ledigt värdminne på Windows (PowerShell CIM), Linux (`/proc/meminfo`) och macOS (`vm_stat`).
 - **Kommandon:**
   - **Windows:** `powershell.exe -NoProfile -Command "(Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory"`
@@ -114,17 +114,17 @@ flowchart TD
   - **macOS:** `vm_stat` beräkning
   - **Containrar:** `podman stats --no-stream --format "{{.Name}}: {{.MemUsage}}"`
 
-### TC-RES-02: Blockering vid Otillräckligt Minne (< 2048 MB Buffert)
+### TC-RES-02: Blockering vid otillräckligt minne (< 2048 MB buffert)
 - **Mål:** Förhindra ny containerstart vid brist på RAM med felmeddelandet `RES_INSUFFICIENT_RAM`.
 
-### TC-DUP-01: Upptäckt av Dubbelkörning (`STATUS_ALREADY_ACTIVE`)
+### TC-DUP-01: Upptäckt av dubbelkörning (`STATUS_ALREADY_ACTIVE`)
 - **Mål:** Säkerställa att körning av en redan aktiv ritning returnerar `BP_ALREADY_ACTIVE` utan att starta om containrar.
 
 ---
 
-## 6. Global 12-Timmars SLA-Vakthund
+## 6. Global 12-timmars SLA-vakthund
 
-### TC-TIME-01: SLA-Avbrott
+### TC-TIME-01: SLA-avbrott
 - **Mål:** Avbryta testet säkert och spara mätdata i `metrics/setup_benchmarks.json` innan 12-timmarsgränsen överskrids.
 
 ---

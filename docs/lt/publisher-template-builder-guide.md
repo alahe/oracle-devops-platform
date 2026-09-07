@@ -1,14 +1,14 @@
-# Oracle Analytics Publisher Desktop & MS Word Pixel-Perfect Darbo Vietos Vadovas
+# Oracle analytics Publisher desktop & MS Word pixel-perfect darbo vietos vadovas
 
 [ 🇬🇧 English ](../publisher-template-builder-guide.md) | [ 🇪🇪 Eesti ](../et/publisher-template-builder-guide.md) | [ 🇫🇮 Suomi ](../fi/publisher-template-builder-guide.md) | [ 🇸🇪 Svenska ](../sv/publisher-template-builder-guide.md) | [ 🇱🇻 Latviešu ](../lv/publisher-template-builder-guide.md) | [ 🇱🇹 Lietuvių ](publisher-template-builder-guide.md)
 
 ---
 
-## 1. Apžvalga ir Sprendimas
+## 1. Apžvalga ir sprendimas
 
 Oracle Analytics Publisher **Pixel-Perfect dokumentų (sąskaitų faktūrų, važtaraščių, ataskaitų)** kūrimas remiasi **RTF šablonais**, kuriais manipuliuojama **Microsoft Word ir oficialiu Oracle Analytics Publisher Desktop papildiniu**.
 
-### 💡 Podman Konteinerio Sprendimas (`app-publisher-designer`):
+### 💡 Podman konteinerio sprendimas (`app-publisher-designer`):
 - Paleidžia **Word ir oficialų Oracle Publisher papildinį** tiesiogiai naršyklėje per **HTML5 noVNC prievadą 6083** (`http://localhost:6083/vnc.html`).
 - **0 MB Idle RAM:** Paleidžiama pagal poreikį.
 - **Veikia macOS ir Linux be vietinių diegimų ar IT administratoriaus teisių.**

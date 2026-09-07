@@ -32,6 +32,32 @@ if ! command -v podman >/dev/null 2>&1 && ! command -v docker >/dev/null 2>&1; t
   exit 1
 fi
 
+# 1.1. Check if running inside WSL2 on a Windows NTFS mount (/mnt/c/...)
+if grep -qEi 'Microsoft|Subsystem' /proc/version 2>/dev/null; then
+  if [[ "$WORKSPACE_DIR" =~ ^/mnt/[a-zA-Z]/ ]]; then
+    echo -e "${YELLOW}⚠️  WARNING: Project running on Windows NTFS mount: ${WORKSPACE_DIR}${NC}"
+    echo -e "${YELLOW}   Plan9 (9P) filesystem overhead causes a 10x–50x I/O slowdown on Windows!${NC}"
+    echo -e "${CYAN}   💡 Recommendation: For maximum speed, clone and run inside native WSL2 ext4:${NC}"
+    echo -e "${CYAN}      cd ~ && git clone <repo-url> && cd oracle-free-db-in-prod${NC}"
+  else
+    echo -e "   ├─ WSL2 Filesystem: ${GREEN}Native Linux ext4 (~/)${NC}"
+  fi
+fi
+
+# 1.2. Check Hyper-V dynamic excluded ports on Windows/WSL2
+if command -v netsh.exe >/dev/null 2>&1; then
+  EXCL_PORTS=$(netsh.exe interface ipv4 show excludedportrange protocol=tcp 2>/dev/null || true)
+  if [ -n "$EXCL_PORTS" ]; then
+    for chk_port in 1532 1533 8088 8448 9502 6083; do
+      is_excluded=$(echo "$EXCL_PORTS" | awk -v p="$chk_port" '$1 ~ /^[0-9]+$/ && $2 ~ /^[0-9]+$/ { if (p >= $1 && p <= $2) print "yes" }')
+      if [ "$is_excluded" = "yes" ]; then
+        echo -e "${RED}⚠️  PORT CONFLICT WARNING: Port $chk_port is reserved by Windows Hyper-V dynamic port range!${NC}"
+        echo -e "${YELLOW}   💡 Recommendation: Restart Windows NAT or reserve ports via: netsh int ipv4 add excludedportrange protocol=tcp startport=$chk_port numberofports=1${NC}"
+      fi
+    done
+  fi
+fi
+
 # 2. Check Podman machine disk space inside VM
 if command -v podman >/dev/null 2>&1; then
   FREE_DISK_MB=$(podman machine ssh podman-machine-default "df -m /sysroot | tail -n 1" 2>/dev/null | awk '{print $4}' || echo "20000")
@@ -98,6 +124,10 @@ if command -v podman >/dev/null 2>&1 && podman machine list 2>/dev/null | grep -
     if [ "$VM_AVAIL" -lt "$AVAIL_RAM_MB" ]; then
       AVAIL_RAM_MB="$VM_AVAIL"
     fi
+  fi
+  VM_TOT=$(podman machine ssh "grep MemTotal /proc/meminfo" 2>/dev/null | awk '{print int($2/1024)}' || true)
+  if [ -n "$VM_TOT" ] && [ "$VM_TOT" -lt 4096 ] 2>/dev/null; then
+    echo -e "${YELLOW}⚠️  WARNING: Podman VM memory is low: ${VM_TOT} MB (Minimum 4096 MB required)${NC}"
   fi
 fi
 

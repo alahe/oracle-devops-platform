@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📸 Tietokannan Tilannevedosten (Golden Snapshots) Hallintakomentosarjat (`scripts/snapshots/`)
+# 📸 Tietokannan tilannevedosten (golden snapshots) hallintakomentosarjat (`scripts/snapshots/`)
 
 Tämä hakemisto sisältää komentosarjat tietokantavolyymien pakattujen kylmävarmuuskopioiden (Golden Snapshots) luomiseen, palauttamiseen ja hallintaan nopeaa ~15s toipumista varten.
 
 ---
 
-## 🛠️ Käytettävissä Olevat Komentosarjat
+## 🛠️ Käytettävissä Olevat komentosarjat
 
 - **`create-golden-snapshots.sh`:** Luo pakatun `.tar.gz`-arkiston tietokantavolyymeistä hakemistoon `golden-snapshots/`.
   ```bash

@@ -4,7 +4,7 @@
 
 Tämä hakemisto sisältää eristetyt YAML-profiilit **Oracle Database -konteille** (Standard 23ai Free, Autonomous ADB Free, Gvenzl 23c).
 
-## 📂 Tietokantaprofiilien Matriisi
+## 📂 Tietokantaprofiilien matriisi
 
 | Profiilitiedosto | Kuvaus | DB-tyyppi | Wallet vaaditaan | Käyttötapaus |
 | :--- | :--- | :--- | :--- | :--- |

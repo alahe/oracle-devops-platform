@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Auto-generated pre-commit hook
+ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+"$ROOT_DIR/scripts/check-pre-commit.sh" --staged

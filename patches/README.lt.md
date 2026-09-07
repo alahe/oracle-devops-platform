@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🩹 Oracle Pataisų Katalogas (`patches/`)
+# 🩹 Oracle pataisų katalogas (`patches/`)
 
 Šis katalogas išlaikomas atgaliniam suderinamumui ir universalioms pataisoms. Produktams būdingos pataisos yra atitinkamuose pakatalogiuose:
 
@@ -12,7 +12,7 @@
 
 ---
 
-## 🚀 Pataisų Diegimo Komandos
+## 🚀 Pataisų diegimo komandos
 
 ```bash
 # Įdiegti APEX Bundle Patch:

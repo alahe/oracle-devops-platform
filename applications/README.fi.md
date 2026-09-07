@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Paketoidut APEX-Sovellukset (`applications/`)
+# 📦 Paketoidut apex-sovellukset (`applications/`)
 
 Tämä hakemisto on tarkoitettu deklaratiivisille Oracle APEX -sovelluksille, jotka on määritelty käyttäen [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) -kieltä tai SQLcl:n split-vientejä.
 

@@ -28,6 +28,7 @@ from .testing import (
     get_test_coverage_data,
     get_test_execution_history,
 )
+from .glossary import get_glossary_catalog
 
 WORKSPACE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
@@ -38,9 +39,11 @@ def build_dev_hub(output_file=None, workspace_dir=None):
 
     # 1. Load documentation files
     docs_data = []
+    supported_langs = ["en", "et", "fi", "sv", "lv", "lt"]
     for spec in DOC_SPECS:
         contents = {}
-        for lang, rel_f in spec["files"].items():
+        for lang in supported_langs:
+            rel_f = spec.get("files", {}).get(lang) or spec.get("files", {}).get("en") or spec["rel"]
             fp = os.path.join(ws, rel_f)
             if not os.path.exists(fp):
                 fp = os.path.join(ws, spec["rel"])
@@ -53,10 +56,15 @@ def build_dev_hub(output_file=None, workspace_dir=None):
                     pass
             contents[lang] = c
         
+        # Ensure titles exist for all 6 languages
+        titles = {}
+        for lang in supported_langs:
+            titles[lang] = spec.get("titles", {}).get(lang) or spec.get("titles", {}).get("en") or spec["id"]
+        
         docs_data.append({
             "id": spec["id"],
             "rel": spec["rel"],
-            "titles": spec["titles"],
+            "titles": titles,
             "contents": contents
         })
 
@@ -380,6 +388,16 @@ def build_dev_hub(output_file=None, workspace_dir=None):
     test_coverage_data = get_test_coverage_data(ws)
     test_history_data = get_test_execution_history(ws)
 
+    # 9.7 Gather repository statistics
+    repo_stats_file = os.path.join(ws, "metrics", "repo_statistics.json")
+    repo_stats_data = {}
+    if os.path.isfile(repo_stats_file):
+        try:
+            with open(repo_stats_file, "r", encoding="utf-8") as rf:
+                repo_stats_data = json.load(rf)
+        except Exception:
+            pass
+
     # 10. Assemble Standalone HTML
     replacements = {
         "%STYLE_CSS%": style_css,
@@ -403,7 +421,9 @@ def build_dev_hub(output_file=None, workspace_dir=None):
         "%TEST_SUITES_JSON%": json.dumps(test_suites_data, ensure_ascii=False),
         "%TEST_REPORTS_JSON%": json.dumps(test_reports_data, ensure_ascii=False),
         "%TEST_COVERAGE_JSON%": json.dumps(test_coverage_data, ensure_ascii=False),
-        "%TEST_HISTORY_JSON%": json.dumps(test_history_data, ensure_ascii=False)
+        "%TEST_HISTORY_JSON%": json.dumps(test_history_data, ensure_ascii=False),
+        "%GLOSSARY_DATA_JSON%": json.dumps(get_glossary_catalog(), ensure_ascii=False),
+        "%REPO_STATS_JSON%": json.dumps(repo_stats_data, ensure_ascii=False)
     }
 
     final_html = layout_tpl

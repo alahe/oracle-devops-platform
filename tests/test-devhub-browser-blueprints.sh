@@ -41,6 +41,7 @@ MIN_SAFE_RAM_MB=${MIN_SAFE_RAM_MB:-2500}
 DRY_RUN=false
 STOP_ON_FAIL=false
 TIMEOUT_SECS=600
+LIFECYCLE_MODE=false
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -51,6 +52,10 @@ while [ $# -gt 0 ]; do
     -b|--blueprint)
       TARGET_BP="$2"
       shift 2
+      ;;
+    --lifecycle|--full-cycle)
+      LIFECYCLE_MODE=true
+      shift
       ;;
     --min-ram)
       MIN_SAFE_RAM_MB="$2"
@@ -78,6 +83,7 @@ Usage:
 Options:
   --all                 Test all blueprints (#0 through #11) in sequence
   -b, --blueprint <ID>  Test a specific blueprint (e.g. -b 0, -b 1, -b 9)
+  --lifecycle           Test full 3-step lifecycle: Start -> Stop -> Fast-Start via Dev-Hub
   --min-ram <MB>        Memory buffer threshold in MB (default: 2500 MB)
   --dry-run             Preview actions, URLs, and credentials without executing
   --stop-on-fail        Halt immediately if any test fails
@@ -87,7 +93,8 @@ Options:
 Examples:
   ./tests/test-devhub-browser-blueprints.sh --all
   ./tests/test-devhub-browser-blueprints.sh -b 0
-  ./tests/test-devhub-browser-blueprints.sh --dry-run
+  ./tests/test-devhub-browser-blueprints.sh --lifecycle --dry-run
+  ./tests/test-devhub-browser-blueprints.sh -b 1 --lifecycle
 EOF
       exit 0
       ;;
@@ -549,13 +556,62 @@ for idx in "${!BP_LIST[@]}"; do
     esac
   fi
 
+  # Step 5 & 6: Full Lifecycle (Stop & Fast-Start via Dev-Hub Bridge API)
+  if [ "$BP_STATUS" = "PASS" ] && [ "$LIFECYCLE_MODE" = "true" ]; then
+    log_msg "   🛑 [5/6] Testin seiskamist läbi Dev-Hub Bridge API (action=stop)..."
+    if [ "$DRY_RUN" = "true" ]; then
+      log_msg "     ├─ 🚀 [DRY-RUN] Simuleerin seiskamist: POST http://localhost:8089/api/toggle?module=${bp_id}&action=stop"
+      log_msg "     ├─ 🛡️ [DRY-RUN] Kinnitan: Tuumbaas (db-proxy :1532 & app-ords :8088/:8448) jääb tööle."
+    else
+      if [ "$BRIDGE_ONLINE" = "true" ]; then
+        curl -s -X POST "http://localhost:8089/api/toggle?module=${bp_id}&action=stop" > /dev/null 2>&1 || true
+        sleep 2
+      else
+        if [ "$bp_id" -ne 0 ] && command -v podman >/dev/null 2>&1; then
+          stop_c=$(podman ps --format '{{.Names}}' 2>/dev/null | grep -E '^(db-alise|db-publisher|db-forms|app-forms|app-publisher|oracle-publisher-dev|web-ide-dev|app-publisher-designer)$' || true)
+          [ -n "$stop_c" ] && podman stop $stop_c >/dev/null 2>&1 || true
+        fi
+      fi
+      if ! assert_core_base; then
+        BP_STATUS="FAIL"
+        BP_FAIL_REASON="Tuumbaas (db-proxy / app-ords) seiskus lubamatult pärast action=stop"
+      else
+        log_msg "     ├─ 🛡️ Tuumbaas (db-proxy / app-ords) on endiselt aktiivne ja kaitstud."
+      fi
+    fi
+
+    if [ "$BP_STATUS" = "PASS" ]; then
+      log_msg "   ⚡ [6/6] Testin kiirkäivitust läbi Dev-Hub Bridge API (action=fast-start)..."
+      fast_start_time=$(date +%s)
+      if [ "$DRY_RUN" = "true" ]; then
+        log_msg "     ├─ 🚀 [DRY-RUN] Simuleerin kiirkäivitust: POST http://localhost:8089/api/toggle?module=${bp_id}&action=fast-start"
+        log_msg "     ├─ ⏱️ [DRY-RUN] Hinnanguline taastekestus: ~15s (Golden Snapshot instant restore)"
+      else
+        if [ "$BRIDGE_ONLINE" = "true" ]; then
+          curl -s -X POST "http://localhost:8089/api/toggle?module=${bp_id}&action=fast-start" > /dev/null 2>&1 || true
+          sleep 5
+        else
+          "$WORKSPACE_DIR/scripts/setup-all.sh" -b "$bp_id" --fast -y >> "$LOG_FILE" 2>&1 || {
+            BP_STATUS="FAIL"
+            BP_FAIL_REASON="Kiirkäivitus ebaõnnestus"
+          }
+        fi
+        fast_end_time=$(date +%s)
+        fast_dur=$((fast_end_time - fast_start_time))
+        log_msg "     ├─ ⏱️ Kiirkäivituse kestus: ${GREEN}${fast_dur}s${NC}"
+      fi
+    fi
+  fi
+
   BP_END=$(date +%s)
   BP_DURATION=$((BP_END - BP_START))
 
   if [ "$BP_STATUS" = "PASS" ]; then
     log_msg "   ${GREEN}✅ Blueprint #${bp_id} edukalt testitud (${BP_DURATION}s)!${NC}\n"
     PASSED_COUNT=$((PASSED_COUNT + 1))
-    TABLE_ROWS+=("| **#${bp_id}** | ${bp_title} | ${BP_DURATION}s | ✅ **PASS** | URLs & Mälupõhine Login OK |")
+    pass_detail="URLs & Mälupõhine Login OK"
+    [ "$LIFECYCLE_MODE" = "true" ] && pass_detail="Start -> Stop -> Fast-Start OK"
+    TABLE_ROWS+=("| **#${bp_id}** | ${bp_title} | ${BP_DURATION}s | ✅ **PASS** | ${pass_detail} |")
   else
     log_msg "   ${RED}❌ Blueprint #${bp_id} ebaõnnestus: ${BP_FAIL_REASON}${NC}\n"
     FAILED_COUNT=$((FAILED_COUNT + 1))

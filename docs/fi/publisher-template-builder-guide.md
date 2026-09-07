@@ -1,14 +1,14 @@
-# Oracle Analytics Publisher Desktop & MS Word Pixel-Perfect -Työaseman Opas
+# Oracle analytics Publisher desktop & MS Word pixel-perfect -työaseman opas
 
 [ 🇬🇧 English ](../publisher-template-builder-guide.md) | [ 🇪🇪 Eesti ](../et/publisher-template-builder-guide.md) | [ 🇫🇮 Suomi ](publisher-template-builder-guide.md) | [ 🇸🇪 Svenska ](../sv/publisher-template-builder-guide.md) | [ 🇱🇻 Latviešu ](../lv/publisher-template-builder-guide.md) | [ 🇱🇹 Lietuvių ](../lt/publisher-template-builder-guide.md)
 
 ---
 
-## 1. Yleiskatsaus ja Ongelmanratkaisu
+## 1. Yleiskatsaus ja ongelmanratkaisu
 
 Oracle Analytics Publisherin **Pixel-Perfect -liiketoimintatulosteiden (laskut, lähetteet, raportit)** suunnittelu perustuu **RTF-malleihin**, joita luodaan **Microsoft Wordilla ja virallisella Oracle Analytics Publisher Desktop (Template Builder for Word) -lisäosalla**.
 
-### 💡 Podman-Konttiratkaisu (`app-publisher-designer`):
+### 💡 Podman-konttiratkaisu (`app-publisher-designer`):
 - Ajaa **Word-ympäristöä ja virallista Oracle Publisher -lisäosaa** suoraan selaimessa **HTML5 noVNC -portissa 6083** (`http://localhost:6083/vnc.html`).
 - **0 MB Idle RAM:** Käynnistetään tarvittaessa ja sammutetaan työn päätyttyä.
 - **Toimii suoraan macOS:ssä ja Linuxissa ilman paikallisia asennuksia.**

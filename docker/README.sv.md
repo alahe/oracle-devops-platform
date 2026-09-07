@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🐳 Mallar för Containerbyggen (`docker/`)
+# 🐳 Mallar för containerbyggen (`docker/`)
 
 Denna katalog innehåller byggskript, Dockerfiler och körtidskonfigurationer för anpassade containeravbildningar.
 

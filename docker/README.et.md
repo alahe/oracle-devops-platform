@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🐳 Konteinerite Ehitusmallid (`docker/`)
+# 🐳 Konteinerite ehitusmallid (`docker/`)
 
 See kataloog sisaldab kohandatud konteineripiltide ehitusskripte, Dockerfile faile ja käitusaja seadistusi.
 

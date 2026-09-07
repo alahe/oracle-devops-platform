@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🧪 Keskkonna Automaattestimise ja Blueprintide Juhend (`tests/`)
+# 🧪 Keskkonna automaattestimise ja blueprintide juhend (`tests/`)
 
 Antud kaust koondab projekti kogu automaattestimise taristu: testiraportid, automaatsed mõõdikud ja arhitektuuri kontrollid.
 
@@ -8,12 +8,13 @@ Kõik 12 ametlikku kanoonilist arhitektuurset blueprinti asuvad keskse tõeallik
 
 ---
 
-## 📁 Kataloogi Struktuur
+## 📁 Kataloogi struktuur
 
 - **`config/blueprints/`** ➔ 12 ametlikku arhitektuurset blueprinti (`.env.0-*` kuni `.env.11-*`).
 - **`tests/reports/`** ➔ Arhitektuuriraportid ja koondmaatriks ([`blueprint_benchmark_matrix.md`](reports/blueprint_benchmark_matrix.md)).
 - **`tests/reports/blueprints/`** ➔ Automaatselt genereeritud testiaruanded (`blueprint_0_report.md` kuni `blueprint_11_report.md`).
-- **`tests/unit/`** ➔ Ühiktestid CLI stabiilsuse, DevHubi generaatorite ja turvalisuse verifitseerimiseks.
+- **`tests/unit/`
+  - **`tests/unit/test-glossary-links.sh` / `.cmd`** ➔ 57 glossaari ja Vikipeedia välislingi null-allalaadimisega audit (mälupõhine HTTP HEAD, tühiseade NUL / /dev/null).** ➔ Ühiktestid CLI stabiilsuse, DevHubi generaatorite ja turvalisuse verifitseerimiseks.
 
 ---
 
@@ -40,7 +41,7 @@ Testide käivitamiseks puhtalt lehelt (automaatse `reset-all.sh -y` ja verifitse
 
 ---
 
-## 🔍 Verifitseerimise Invariandid
+## 🔍 Verifitseerimise invariandid
 
 Iga automaatne test valideerib:
 1. **🌐 Veebiteenuste HTTP Health Audit (`scripts/check-urls.sh`):** Kontrollib tegelike HTTP/HTTPS päringutega staatust (200/302).

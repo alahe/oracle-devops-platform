@@ -1,14 +1,14 @@
-# 🧪 Testimisplaan: Oracle APEX DevHub Rakendus ja CI/CD Konveier
+# 🧪 Testimisplaan: Oracle APEX DevHub rakendus ja CI/CD konveier
 
 [ 🇬🇧 English ](../apex-devhub-test-plan.md) | [ 🇪🇪 Eesti ](apex-devhub-test-plan.md) | [ 🇫🇮 Suomi ](../fi/apex-devhub-test-plan.md) | [ 🇸🇪 Svenska ](../sv/apex-devhub-test-plan.md) | [ 🇱🇻 Latviešu ](../lv/apex-devhub-test-plan.md) | [ 🇱🇹 Lietuvių ](../lt/apex-devhub-test-plan.md)
 
 ---
 
-## 1. Ülevaade ja Eesmärgid
+## 1. Ülevaade ja eesmärgid
 
 Käesoleva testimisplaani eesmärk on kehtestada range, mitmetasandiline verifitseerimisstrateegia **Oracle APEX DevHub rakendusele (Rakendus 101)**, selle PL/SQL mootorile (`DEVHUB.DEV_HUB_PKG`), lokaalsele REST dokumentatsioonisillale ning automatiseeritud SQLcl APEXlang CI/CD konveierile.
 
-### Peamised Testimiseesmärgid:
+### Peamised testimiseesmärgid:
 1. **Funktsionaalne Vastavus:** Tagada 100% funktsionaalsuse samaväärsus senise staatilise Dev Hubiga (`docs/dev-hub.html`) kõigi 6 lehe lõikes.
 2. **Deterministlik Andmete Isolatsioon:** Välistada testide omavaheline saastumine, kasutades ~15–30s Golden Snapshot taastamist (`bp_3_latest.tar.gz`) enne mahukate regressioonitestide käivitamist.
 3. **Mitmetasandiline Kaetus:** Kombineerida andmebaasitaseme utPLSQL testid, REST integratsioonikontrollid, hübriidsed brauseri E2E töövood (Playwright + curl sessioonide simulaator) ja APEX Advisor koodikvaliteedi audit.
@@ -17,7 +17,7 @@ Käesoleva testimisplaani eesmärk on kehtestada range, mitmetasandiline verifit
 
 ---
 
-## 2. Testipüramiid ja Skoobimaatriks
+## 2. Testipüramiid ja skoobimaatriks
 
 ```
                       ┌─────────────────────────┐
@@ -44,9 +44,9 @@ Käesoleva testimisplaani eesmärk on kehtestada range, mitmetasandiline verifit
 
 ---
 
-## 3. Testitasemed ja Testijuhtumid
+## 3. Testitasemed ja testijuhtumid
 
-### 3.1. Tase 1: Andmebaasi Ühiktestimine (utPLSQL)
+### 3.1. Tase 1: Andmebaasi ühiktestimine (utplsql)
 Sihtmärk: `DEVHUB` skeemi objektid `FREEPDB1` konteineris.
 
 - **TC-DB-01: Skeemi ja Kitsenduste Kontroll**
@@ -66,7 +66,7 @@ Sihtmärk: `DEVHUB` skeemi objektid `FREEPDB1` konteineris.
 
 ---
 
-### 3.2. Tase 2: Integratsiooni ja REST Silla Testimine
+### 3.2. Tase 2: Integratsiooni ja REST silla testimine
 Sihtmärk: Hosti ja konteineri vaheline REST dokumentatsioonisild (`scripts/internal/dev-hub-bridge.py`) pordil `8089` ja ORDS.
 
 - **TC-INT-01: Silla Tervis ja Kataloogipäring**
@@ -81,10 +81,10 @@ Sihtmärk: Hosti ja konteineri vaheline REST dokumentatsioonisild (`scripts/inte
 
 ---
 
-### 3.3. Tase 3: Brauseri ja UI End-to-End Testimine (Hübriid: Playwright + Curl)
+### 3.3. Tase 3: Brauseri ja UI end-to-end testimine (hübriid: Playwright + curl)
 Sihtmärk: Oracle APEX Rakendus 101 aadressil `https://localhost:8448/ords/r/proxy_workspace/devhub/`.
 
-#### Kiire Headless Mootor (Bash/Curl Sessioonide Simulaator):
+#### Kiire headless mootor (Bash/curl sessioonide simulaator):
 - **TC-E2E-01: Autentimata Päringu Suunamine**
   - Päring `/devhub/home` suunab koodiga HTTP 302 lehele `/devhub/login?session=...`.
 - **TC-E2E-02: 1-Kliki Arendaja Sisselogimine**
@@ -92,7 +92,7 @@ Sihtmärk: Oracle APEX Rakendus 101 aadressil `https://localhost:8448/ords/r/pro
 - **TC-E2E-03: Kõigi Lehtede Kättesaadavus**
   - Autenditud sessiooniga päritakse lehti 1, 2, 3, 4, 5, 6; kinnitatakse vastuskood HTTP 200.
 
-#### DOM ja Visuaalne Mootor (Node.js Playwright):
+#### DOM ja visuaalne mootor (node.js playwright):
 - **TC-E2E-04: Leht 1 (Teenuste ja Tervise Tabel)**
   - Tuvastada 8 teenuse staatusemärgid (`ONLINE` roheline, `OFFLINE` punane). Värskenduse nupu vajutamisel uueneb aruanne dünaamiliselt.
 - **TC-E2E-05: Leht 2 (Arhitektuuri Hübriidvaade)**
@@ -109,7 +109,7 @@ Sihtmärk: Oracle APEX Rakendus 101 aadressil `https://localhost:8448/ords/r/pro
 
 ---
 
-### 3.4. Tase 4: Kvaliteedi, APEX Advisori ja Turvalisuse Audit
+### 3.4. Tase 4: Kvaliteedi, APEX advisori ja turvalisuse audit
 Sihtmärk: APEX rakenduse koodibaas ja metaandmete sõnastik.
 
 - **TC-SEC-01: APEX Advisor CLI Käivitamine**
@@ -126,7 +126,7 @@ Sihtmärk: APEX rakenduse koodibaas ja metaandmete sõnastik.
 
 ---
 
-## 4. Testikeskkond ja Andmete Isolatsioon (Golden Snapshotid)
+## 4. Testikeskkond ja andmete isolatsioon (golden snapshotid)
 
 Testide absoluutse determinismi tagamiseks ja "ebastabiilsete testide" (flaky tests) vältimiseks:
 
@@ -147,9 +147,9 @@ flowchart TD
 
 ---
 
-## 5. Automatiseerimine, CI/CD ja Raporteerimine
+## 5. Automatiseerimine, CI/CD ja raporteerimine
 
-### 5.1. Ühendatud Testikäivitaja CLI (`scripts/test-apex-suite.sh`)
+### 5.1. Ühendatud testikäivitaja CLI (`scripts/test-apex-suite.sh`)
 ```bash
 # Käivita täielik testikomplekt (Tasemed 1 kuni 4):
 ./scripts/test-apex-suite.sh
@@ -171,7 +171,7 @@ flowchart TD
 
 ---
 
-## 6. Läbimiskriteeriumid ja Heakskiidu Väravad
+## 6. Läbimiskriteeriumid ja heakskiidu väravad
 
 Tarkvaraversioon loetakse toodangukõlblikuks ainult siis, kui:
 - ✅ **100% utPLSQL testidest õnnestuvad** (0 viga, 0 kukkumist).

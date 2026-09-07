@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 💻 Web IDE Paslaugos Profiliai (`config/profiles/web-ide/`)
+# 💻 Web IDE paslaugos profiliai (`config/profiles/web-ide/`)
 
 Šiame kataloge yra YAML profiliai **Web IDE (`code-server`)** paslaugai.
 
-## 📂 Web IDE Profilių Matrica
+## 📂 Web IDE profilių matrica
 
 | Profilio Failas | Profilio ID | Aprašymas | Įrankiai ir Plėtiniai | Numatytasis Blueprints |
 | :--- | :--- | :--- | :--- | :--- |

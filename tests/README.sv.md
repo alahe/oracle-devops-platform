@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🧪 Automatiserad Testning och Arkitekturverifiering (`tests/`)
+# 🧪 Automatiserad testning och arkitekturverifiering (`tests/`)
 
 Denna katalog rymmer testinfrastrukturen, automatiserade prestandarapporter och verifieringssviter för Oracle DevOps Platform.
 
@@ -13,7 +13,8 @@ Alla 12 kanoniska arkitekturritningar definieras centralt i **[`config/blueprint
 - **`config/blueprints/`** ➔ 12 kanoniska arkitekturritningar (`.env.0-*` till `.env.11-*`).
 - **`tests/reports/`** ➔ Testrapporter och prestandamatris ([`blueprint_benchmark_matrix.md`](reports/blueprint_benchmark_matrix.md)).
 - **`tests/reports/blueprints/`** ➔ Automatiskt genererade testrapporter (`blueprint_0_report.md` till `blueprint_11_report.md`).
-- **`tests/unit/`** ➔ Enhetstester för CLI-stabilitet och säkerhet.
+- **`tests/unit/`
+  - **`tests/unit/test-glossary-links.sh` / `.cmd`** ➔ Nollnedladdningsgranskning av 57 externa ordliste- och Wikipedialänkar (minnesbaserat HTTP HEAD, nollenhet NUL / /dev/null).** ➔ Enhetstester för CLI-stabilitet och säkerhet.
 
 ---
 

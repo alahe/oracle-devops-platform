@@ -1,0 +1,1 @@
+../scripts/test-security-audit.sh

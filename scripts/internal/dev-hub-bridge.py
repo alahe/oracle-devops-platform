@@ -42,8 +42,31 @@ for p in ["/opt/homebrew/bin", "/usr/local/bin", os.path.expanduser("~/.local/bi
 PODMAN_BIN = shutil.which("podman") or ("/opt/homebrew/bin/podman" if os.path.isfile("/opt/homebrew/bin/podman") else ("/usr/local/bin/podman" if os.path.isfile("/usr/local/bin/podman") else "podman"))
 
 PORT = int(os.environ.get("DEV_HUB_BRIDGE_PORT", 8089))
+BIND_HOST = os.environ.get("DEV_HUB_BRIDGE_BIND_HOST", "127.0.0.1")
 WORKSPACE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 DEV_HUB_HTML = os.path.join(WORKSPACE_DIR, "docs/dev-hub.html")
+
+def is_safe_origin(origin):
+    """Validates HTTP Origin header against local/trusted origins to prevent CSRF and unauthorized cross-origin calls."""
+    if not origin:
+        return True  # Direct API client or same-origin call
+    clean = origin.strip().rstrip("/")
+    if clean == "null":
+        return True  # Local file:// scheme in browser
+    try:
+        parsed = urllib.parse.urlparse(clean)
+        host = parsed.hostname or ""
+        if host in ("localhost", "127.0.0.1") or host.endswith(".local"):
+            return True
+        allowed_env = os.environ.get("DEV_HUB_ALLOWED_ORIGINS", "")
+        if allowed_env:
+            for a in allowed_env.split(","):
+                a_clean = a.strip().rstrip("/")
+                if clean == a_clean or host == a_clean:
+                    return True
+    except Exception:
+        pass
+    return False
 
 MODULE_PORT_MAP = {
     "alise": 1533,
@@ -97,7 +120,15 @@ DEVOPS_WHITELIST = {
     "trust-cert": ["./scripts/certs/trust-local-cert-mac.sh"] if sys.platform == "darwin" else ["./scripts/certs/trust-local-cert.cmd"],
     "update-extensions": ["./scripts/update-extensions.sh"],
     "blueprint-info": ["./scripts/blueprint-info.sh"],
-    "test-devhub-blueprints": ["./tests/test-devhub-browser-blueprints.sh"]
+    "test-devhub-blueprints": ["./tests/test-devhub-browser-blueprints.sh"],
+    "test-devhub-lifecycle": ["./tests/test-devhub-lifecycle-full.sh"],
+    "test-devhub-lifecycle-dryrun": ["./tests/test-devhub-lifecycle-full.sh", "--dry-run"],
+    "windows-dryrun": ["./scripts/test-windows-dryrun.sh"],
+    "onboard-enterprise": ["./scripts/onboard-enterprise.sh", "--status"],
+    "security-audit": ["./scripts/test-security-audit.sh"],
+    "test-mermaid": ["./tests/unit/test-devhub-mermaid-rendering.sh"],
+    "check-precommit": ["./scripts/check-pre-commit.sh", "--full"],
+    "test-precommit": ["./scripts/check-pre-commit.sh", "--full"]
 }
 
 def get_profile_port(module):
@@ -776,136 +807,23 @@ def get_single_credential(alias):
 
 def get_test_suites_catalog():
     """Returns structured catalog of test suites and test scripts."""
-    unit_tests = []
-    unit_dir = os.path.join(WORKSPACE_DIR, "tests", "unit")
-    if os.path.isdir(unit_dir):
-        for f in sorted(os.listdir(unit_dir)):
-            if f.endswith(".sh") and not f.startswith("."):
-                unit_tests.append(f)
-
-    integration_tests = []
-    integ_dir = os.path.join(WORKSPACE_DIR, "tests", "integration")
-    if os.path.isdir(integ_dir):
-        for f in sorted(os.listdir(integ_dir)):
-            if f.endswith(".sh") and not f.startswith("."):
-                integration_tests.append(f)
-
-    return {
-        "unit": {
-            "key": "unit",
-            "title": "Unit Test Suite",
-            "desc": f"Fast isolation tests ({len(unit_tests)} scripts) validating configs, SEPS wallet, script syntax, and logic without live DB",
-            "icon": "🧪",
-            "count": len(unit_tests),
-            "tests": unit_tests,
-            "cmd": "./tests/test-all-components.sh"
-        },
-        "integration": {
-            "key": "integration",
-            "title": "Integration Test Suite",
-            "desc": f"Multi-database topology ({len(integration_tests)} scripts), compose override generation, profile roles, and connection handshakes",
-            "icon": "⚙️",
-            "count": len(integration_tests),
-            "tests": integration_tests,
-            "cmd": "tests/integration/*.sh"
-        },
-        "live": {
-            "key": "live",
-            "title": "End-to-End Live Platform",
-            "desc": "Full regression against active running containers, database listeners, and web service endpoints",
-            "icon": "🚀",
-            "count": 1,
-            "tests": ["test-live-platform.sh"],
-            "cmd": "./tests/test-live-platform.sh"
-        },
-        "i18n": {
-            "key": "i18n",
-            "title": "Multilingual & i18n Parity",
-            "desc": "Full 6-language compliance audit (Rule 9): checks dictionary symmetry, headers, and translations",
-            "icon": "🌐",
-            "count": 1,
-            "tests": ["test-multilingual-support.sh"],
-            "cmd": "./tests/test-multilingual-support.sh --all"
-        },
-        "portability": {
-            "key": "portability",
-            "title": "Cross-Platform Portability",
-            "desc": "Strict verification of Rule 13: Windows NTFS/FAT forbidden chars, device names, and ASCII path standards",
-            "icon": "🛡️",
-            "count": 1,
-            "tests": ["test-filename-portability.sh"],
-            "cmd": "./tests/unit/test-filename-portability.sh"
-        },
-        "browser": {
-            "key": "browser",
-            "title": "Browser & SSO End-to-End",
-            "desc": "Simulates browser interactions, APEX login flows, Dev Hub shortcuts, and SSO authentication",
-            "icon": "🖥️",
-            "count": 2,
-            "tests": ["test-browser-login.sh", "test-devhub-browser-blueprints.sh"],
-            "cmd": "./scripts/test-browser-login.sh"
-        },
-        "ci_sim": {
-            "key": "ci_sim",
-            "title": "Local GitHub Actions CI Simulator",
-            "desc": "Executes or dry-runs repository CI/CD workflows offline using ephemeral containers",
-            "icon": "🐙",
-            "count": 1,
-            "tests": ["test-local-ci.sh"],
-            "cmd": "./scripts/test-local-ci.sh --dry-run"
-        },
-        "coverage": {
-            "key": "coverage",
-            "title": "Test Coverage Report Generator",
-            "desc": "Analyzes test coverage of all scripts/ and scripts/internal/ files and updates markdown reports",
-            "icon": "📊",
-            "count": 1,
-            "tests": ["generate-test-coverage-report.sh"],
-            "cmd": "./tests/generate-test-coverage-report.sh"
-        }
-    }
+    try:
+        import importlib
+        import dev_hub.testing
+        importlib.reload(dev_hub.testing)
+        return dev_hub.testing.get_test_suites_catalog(WORKSPACE_DIR)
+    except Exception:
+        pass
+    return {}
 
 def get_test_reports_list():
     """Scans tests/reports/ and returns a structured list of test reports."""
-    reports = []
-    reports_dir = os.path.join(WORKSPACE_DIR, "tests", "reports")
-    if not os.path.isdir(reports_dir):
-        return reports
-
-    for root, dirs, files in os.walk(reports_dir):
-        for f in sorted(files):
-            if f.endswith(".md"):
-                full_p = os.path.join(root, f)
-                rel_p = os.path.relpath(full_p, WORKSPACE_DIR)
-                title = f
-                status = "INFO"
-                try:
-                    with open(full_p, "r", encoding="utf-8", errors="ignore") as rf:
-                        lines = [rf.readline() for _ in range(5)]
-                        for ln in lines:
-                            if ln.startswith("# "):
-                                title = ln.replace("# ", "").strip()
-                                break
-                except Exception:
-                    pass
-
-                f_lower = f.lower()
-                if "pass" in f_lower or "success" in f_lower or "live" in f_lower or "matrix" in f_lower:
-                    status = "PASS"
-                elif "fail" in f_lower or "error" in f_lower:
-                    status = "FAIL"
-
-                stat = os.stat(full_p)
-                reports.append({
-                    "name": f,
-                    "rel_path": rel_p,
-                    "title": title,
-                    "status": status,
-                    "size": stat.st_size,
-                    "mtime": datetime.datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
-                })
-    reports.sort(key=lambda x: x["mtime"], reverse=True)
-    return reports
+    try:
+        from dev_hub.testing import get_test_reports_list as _get_reports
+        return _get_reports(WORKSPACE_DIR)
+    except Exception:
+        pass
+    return []
 
 def get_test_coverage_data():
     """Reads and parses tests/reports/test-coverage-report.md."""
@@ -1011,11 +929,17 @@ def record_test_execution(task_info, exit_code):
 
 class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
     def _send_cors_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
+        req_origin = self.headers.get("Origin", "") if hasattr(self, "headers") and self.headers else ""
+        if is_safe_origin(req_origin):
+            self.send_header("Access-Control-Allow-Origin", req_origin if req_origin else "*")
+        else:
+            self.send_header("Access-Control-Allow-Origin", "null")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, HEAD")
-        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
         self.send_header("Access-Control-Allow-Private-Network", "true")
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "SAMEORIGIN")
 
     def _send_json(self, data, cb=None, status=200):
         json_str = json.dumps(data)
@@ -1128,6 +1052,20 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
 
         elif parsed.path == "/api/tests/history":
             self._send_json({"status": "ok", "history": get_test_execution_history()}, cb)
+
+        elif parsed.path == "/api/report/stats":
+            stats_path = os.path.join(WORKSPACE_DIR, "metrics/repo_statistics.json")
+            if not os.path.isfile(stats_path):
+                subprocess.run([sys.executable, os.path.join(WORKSPACE_DIR, "scripts/internal/generate-repo-report.py")], timeout=8)
+            if os.path.isfile(stats_path):
+                try:
+                    with open(stats_path, "r", encoding="utf-8") as f:
+                        sdata = json.load(f)
+                    self._send_json({"status": "ok", "stats": sdata}, cb)
+                except Exception as e:
+                    self._send_json({"status": "error", "error": str(e)}, cb, status=500)
+            else:
+                self._send_json({"status": "error", "error": "Failed to generate report statistics"}, cb, status=500)
 
         elif parsed.path == "/api/port-conflicts":
             conflicts = detect_port_conflicts()
@@ -1246,6 +1184,7 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 "setup-workflow": "docs/setup-all-workflow.md",
                 "future-plans": "docs/future-plans.md",
                 "forms-to-apex": "docs/forms-to-apex-migration-guide.md",
+                "security-audit": "docs/security-audit-report.md",
                 "enterprise-architecture": "docs/enterprise-distributed-architecture.md",
                 "enterprise-backlog": "docs/backlog/README.md",
                 "fin-001": "docs/backlog/FIN-001-multi-host-inventory-and-profile-engine.md",
@@ -1481,6 +1420,14 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(b'{"status":"ok","message":"Dev Hub Bridge Active"}')
 
     def do_POST(self):
+        req_origin = self.headers.get("Origin", "")
+        if req_origin and not is_safe_origin(req_origin):
+            self.send_response(403)
+            self._send_cors_headers()
+            self.end_headers()
+            self.wfile.write(b'{"status":"error","error":"Forbidden: Untrusted Cross-Origin Request"}')
+            return
+
         parsed = urllib.parse.urlparse(self.path)
         params = urllib.parse.parse_qs(parsed.query)
         cb = params.get("callback", [None])[0]
@@ -1514,6 +1461,15 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             self.handle_test_stop(post_body, parsed.query, cb)
         elif parsed.path == "/api/podman/action":
             self.handle_podman_action(post_body, parsed.query, cb)
+        elif parsed.path == "/api/report/refresh":
+            try:
+                subprocess.run([sys.executable, os.path.join(WORKSPACE_DIR, "scripts/internal/generate-repo-report.py")], timeout=10, check=True)
+                stats_path = os.path.join(WORKSPACE_DIR, "metrics/repo_statistics.json")
+                with open(stats_path, "r", encoding="utf-8") as f:
+                    sdata = json.load(f)
+                self._send_json({"status": "ok", "stats": sdata, "refreshed": True}, cb)
+            except Exception as e:
+                self._send_json({"status": "error", "error": str(e)}, cb, status=500)
         else:
             self.send_response(404)
             self.end_headers()
@@ -1943,6 +1899,10 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             cmd = [os.path.join(WORKSPACE_DIR, "scripts/deploy-blueprint.sh"), "-b", str(module), "-u"]
             if lang:
                 cmd.extend(["--lang", lang])
+        elif action in ["fast-start", "fast", "faststart"] and str(module).isdigit():
+            cmd = [os.path.join(WORKSPACE_DIR, "scripts/setup-all.sh"), "-b", str(module), "--fast", "-y"]
+            if lang:
+                cmd.extend(["--lang", lang])
         elif action == "stop" and str(module).isdigit():
             bp_files = glob.glob(os.path.join(WORKSPACE_DIR, f"config/blueprints/.env.{module}-*"))
             to_stop = []
@@ -1999,11 +1959,11 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             cmd = [os.path.join(WORKSPACE_DIR, "scripts/module-toggle.sh"), action, module]
 
         # 🛡️ ARCHITECTURAL GUARDRAIL (Rule 12 & Invariant 3.6):
-        # Long-running operations (setup, activate, deploy, switch, restart) MUST NEVER be run synchronously!
+        # Long-running operations (setup, activate, deploy, switch, restart, fast-start) MUST NEVER be run synchronously!
         # Synchronous blocking HTTP requests abort with "signal is aborted without reason" at 300s.
         # Dispatch asynchronously via subprocess.Popen, stream to install_logs, and return immediately.
-        if action in ["setup", "activate", "switch", "deploy", "restart"] and str(module).isdigit():
-            log_name = f"setup_bp_{module}_latest.log" if action != "restart" else f"deploy_bp_{module}_latest.log"
+        if action in ["setup", "activate", "switch", "deploy", "restart", "fast-start", "fast", "faststart"] and str(module).isdigit():
+            log_name = f"setup_bp_{module}_latest.log" if action not in ["restart", "fast-start", "fast", "faststart"] else f"{action}_bp_{module}_latest.log"
             log_dir = os.path.join(WORKSPACE_DIR, "install_logs")
             os.makedirs(log_dir, exist_ok=True)
             log_path = os.path.join(log_dir, log_name)
@@ -2445,7 +2405,8 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             self._send_json({"status": "error", "error": "No script specified"}, cb, status=400)
             return
 
-        sname = os.path.basename(script_name)
+        parts = script_name.strip().split()
+        sname = os.path.basename(parts[0]) if parts else ""
         if not sname.endswith(".sh") or not re.match(r"^[a-zA-Z0-9._-]+$", sname):
             self._send_json({"status": "error", "error": "Invalid script filename"}, cb, status=400)
             return
@@ -2509,42 +2470,75 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         cmd = []
         target_label = suite
         if test_script:
-            test_script = os.path.basename(test_script)
+            parts = test_script.strip().split()
+            script_file = os.path.basename(parts[0]) if parts else ""
+            extra_args = parts[1:] if len(parts) > 1 else []
             target_label = f"{suite} / {test_script}"
-            if not test_script.endswith(".sh") or not re.match(r"^[a-zA-Z0-9._-]+$", test_script):
+            if not script_file.endswith(".sh") or not re.match(r"^[a-zA-Z0-9._-]+$", script_file):
                 self._send_json({"status": "error", "error": "Invalid test script filename"}, cb, status=400)
                 return
 
-            p_unit = os.path.join(WORKSPACE_DIR, "tests", "unit", test_script)
-            p_integ = os.path.join(WORKSPACE_DIR, "tests", "integration", test_script)
-            p_tests = os.path.join(WORKSPACE_DIR, "tests", test_script)
-            p_scripts = os.path.join(WORKSPACE_DIR, "scripts", test_script)
-            if os.path.isfile(p_unit):
-                cmd = [p_unit]
+            p_unit = os.path.join(WORKSPACE_DIR, "tests", "unit", script_file)
+            p_integ = os.path.join(WORKSPACE_DIR, "tests", "integration", script_file)
+            p_tests = os.path.join(WORKSPACE_DIR, "tests", script_file)
+            p_scripts = os.path.join(WORKSPACE_DIR, "scripts", script_file)
+            if suite == "security_audit" and os.path.isfile(p_scripts):
+                cmd = [p_scripts] + extra_args
+            elif os.path.isfile(p_unit):
+                cmd = [p_unit] + extra_args
             elif os.path.isfile(p_integ):
-                cmd = [p_integ]
+                cmd = [p_integ] + extra_args
             elif os.path.isfile(p_tests):
-                cmd = [p_tests]
+                cmd = [p_tests] + extra_args
             elif os.path.isfile(p_scripts):
-                cmd = [p_scripts]
+                cmd = [p_scripts] + extra_args
             else:
-                self._send_json({"status": "error", "error": f"Test script {test_script} not found"}, cb, status=404)
+                self._send_json({"status": "error", "error": f"Test script {script_file} not found"}, cb, status=404)
                 return
         else:
             if suite == "unit":
                 cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-all-components.sh")]
             elif suite == "integration":
                 cmd = ["bash", "-c", "set -e; for t in tests/integration/*.sh; do [ -x \"$t\" ] && echo \"\n▶️ Running $t...\" && \"$t\"; done; echo \"\n✅ All integration tests passed!\""]
+            elif suite == "apex":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-apex-suite.sh")]
+            elif suite == "browser":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-browser-login.sh")]
             elif suite == "live":
                 cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-live-platform.sh")]
+            elif suite == "blueprints_matrix":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-all-blueprints-live.sh")]
+            elif suite == "devhub_lifecycle":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-devhub-lifecycle-full.sh"), "--all", "--dry-run"]
+            elif suite == "containers_infra":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-containers-live.sh")]
+            elif suite == "windows_enterprise":
+                win_path = os.path.join(WORKSPACE_DIR, "tests", "test-windows-dryrun.sh")
+                if not os.path.isfile(win_path):
+                    win_path = os.path.join(WORKSPACE_DIR, "scripts", "test-windows-dryrun.sh")
+                cmd = [win_path]
             elif suite == "i18n":
                 cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-multilingual-support.sh"), f"--lang={lang}"] if lang != "all" else [os.path.join(WORKSPACE_DIR, "tests", "test-multilingual-support.sh"), "--all"]
             elif suite == "portability":
                 cmd = [os.path.join(WORKSPACE_DIR, "tests", "unit", "test-filename-portability.sh")]
-            elif suite == "browser":
-                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-browser-login.sh")]
+            elif suite == "mermaid":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "unit", "test-devhub-mermaid-rendering.sh")]
+            elif suite == "precommit":
+                cmd = [os.path.join(WORKSPACE_DIR, "scripts", "check-pre-commit.sh"), "--full"]
+            elif suite == "glossary":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "unit", "test-glossary-parity.sh")]
+            elif suite == "tls_security":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-tls-scenarios.sh")]
+            elif suite == "security_audit":
+                audit_path = os.path.join(WORKSPACE_DIR, "scripts", "test-security-audit.sh")
+                if not os.path.isfile(audit_path):
+                    audit_path = os.path.join(WORKSPACE_DIR, "tests", "test-security-audit.sh")
+                cmd = [audit_path]
             elif suite == "ci_sim":
-                cmd = [os.path.join(WORKSPACE_DIR, "scripts", "test-local-ci.sh"), "--dry-run"] if dry_run else [os.path.join(WORKSPACE_DIR, "scripts", "test-local-ci.sh")]
+                ci_path = os.path.join(WORKSPACE_DIR, "tests", "test-local-ci.sh")
+                if not os.path.isfile(ci_path):
+                    ci_path = os.path.join(WORKSPACE_DIR, "scripts", "test-local-ci.sh")
+                cmd = [ci_path, "--dry-run"] if dry_run else [ci_path]
             elif suite == "coverage":
                 cmd = [os.path.join(WORKSPACE_DIR, "tests", "generate-test-coverage-report.sh")]
             else:
@@ -2644,8 +2638,9 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
 
 def main():
     socketserver.ThreadingTCPServer.allow_reuse_address = True
-    with socketserver.ThreadingTCPServer(("0.0.0.0", PORT), DevHubBridgeHandler) as httpd:
-        print(f"🚀 Dev Hub Bridge & Dashboard server active on http://localhost:{PORT}")
+    bind_host = BIND_HOST
+    with socketserver.ThreadingTCPServer((bind_host, PORT), DevHubBridgeHandler) as httpd:
+        print(f"🚀 Dev Hub Bridge & Dashboard server active on http://{bind_host}:{PORT}")
         httpd.serve_forever()
 
 if __name__ == "__main__":

@@ -1,12 +1,12 @@
 <!-- [ 🇬🇧 English ](../quick-login-guide.md) | [ 🇪🇪 Eesti ](../et/quick-login-guide.md) | [ 🇫🇮 Suomi ](quick-login-guide.md) | [ 🇸🇪 Svenska ](../quick-login-guide.md) | [ 🇱🇻 Latviešu ](../quick-login-guide.md) | [ 🇱🇹 Lietuvių ](../quick-login-guide.md) -->
 
-# 🚀 Pikaopas Kirjautumiseen ja Saumattomaan Pääsyyn
+# 🚀 Pikaopas kirjautumiseen ja saumattomaan pääsyyn
 
 Tämä opas kuvaa nopeimman ja turvallisimman tavan käyttää kaikkia aktiivisia verkkopalveluita, tietokantatyökaluja ja hallintapaneeleja Oracle DevOps -alustalla.
 
 ---
 
-## ⚡ Nopein 2-Vaiheinen Kirjautuminen (Leikepöytäapuri `-c`)
+## ⚡ Nopein 2-vaiheinen kirjautuminen (leikepöytäapuri `-c`)
 
 Salasanojen etsimisen tai ruudulta kirjoittamisen sijaan voit kopioida salasanat suoraan käyttöjärjestelmän leikepöydälle (`pbcopy` / `xclip` / `wl-copy` / `clip.exe`) ilman selväkielisten salasanojen näyttämistä:
 
@@ -20,7 +20,7 @@ Salasanojen etsimisen tai ruudulta kirjoittamisen sijaan voit kopioida salasanat
 
 ---
 
-## 🌐 Pääsyportaalit ja Tunnistematriisi
+## 🌐 Pääsyportaalit ja tunnistematriisi
 
 | Palvelu / Portaali | Suora Verkkolinkki | Oletuskäyttäjä / Työtila | Salasanakomento (Välitön Kopiointi) |
 | :--- | :--- | :--- | :--- |
@@ -38,7 +38,7 @@ Salasanojen etsimisen tai ruudulta kirjoittamisen sijaan voit kopioida salasanat
 
 ---
 
-## 💾 CLI-Pikapääsy (Oracle SQLcl SEPS Walletin kautta)
+## 💾 CLI-pikapääsy (Oracle SQLcl SEPS walletin kautta)
 
 Yhdistäminen suoraan tietokantaan ilman salasanojen näkymistä `ps aux` -listauksessa:
 
@@ -53,7 +53,7 @@ sql /@DB_PROXY_DBA_ADMIN
 sql /@DB_PROXY_SYS as sysdba
 ```
 
-## 🧪 Automaattinen Kirjautumisen Testaus (E2E Login Test)
+## 🧪 Automaattinen kirjautumisen testaus (E2E login test)
 
 Automaattinen testi, joka simuloi todellista lomakkeen POST-todennusta ja tarkistaa istunnon toiminnan:
 
@@ -68,7 +68,7 @@ Tämä testi validoi:
 
 ---
 
-## 🔄 Salasanojen Rotaatio
+## 🔄 Salasanojen rotaatio
 
 Kierrätä salasanat tietokannassa, Podman-salaisuuksissa ja SEPS Walletissa samanaikaisesti:
 

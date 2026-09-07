@@ -21,6 +21,8 @@ scripts/
 │
 ├── 🔑 DEVELOPER & ADMIN CLI TOOLS:
 │   ├── get-password.sh              # SEPS Wallet credential and password retrieval
+│   ├── test-windows-dryrun.sh       # 10-step enterprise Windows & WSL2 dry-run diagnostic engine
+│   ├── onboard-enterprise.sh        # Enterprise Artifactory mirror and proxy onboarding CLI
 │   ├── check-urls.sh                # HTTP health check for web endpoints, pools, and URLs
 │   ├── check-wallet.sh              # SEPS Wallet passwordless TNS connection diagnostics
 │   ├── sqlcl.sh                     # Smart SQLcl CLI wrapper (SEPS Wallet /@ALIAS support)

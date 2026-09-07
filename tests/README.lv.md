@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🧪 Automatizētā Testēšana un Projektējumu Verifikācija (`tests/`)
+# 🧪 Automatizētā Testēšana Un Projektējumu Verifikācija (`tests/`)
 
 Šis direktorijs satur automatizētās testēšanas infrastruktūru, etalonu pārskatus un verifikācijas komplektus Oracle DevOps platformai.
 
@@ -13,11 +13,12 @@ Visi 12 kanoniskie arhitektūras projektējumi ir centralizēti definēti mapē 
 - **`config/blueprints/`** ➔ 12 kanoniskie arhitektūras projektējumi (`.env.0-*` līdz `.env.11-*`).
 - **`tests/reports/`** ➔ Arhitektūras pārskati un etalonu matrica ([`blueprint_benchmark_matrix.md`](reports/blueprint_benchmark_matrix.md)).
 - **`tests/reports/blueprints/`** ➔ Automātiski ģenerēti pārskati (`blueprint_0_report.md` līdz `blueprint_11_report.md`).
-- **`tests/unit/`** ➔ Vienības testi CLI stabilitātei un drošībai.
+- **`tests/unit/`
+  - **`tests/unit/test-glossary-links.sh` / `.cmd`** ➔ 57 glosārija un Vikipēdijas ārējo saišu pārbaude bez lejupielādes (atmiņā balstīts HTTP HEAD, nulles ierīce NUL / /dev/null).** ➔ Vienības testi CLI stabilitātei un drošībai.
 
 ---
 
-## 🚀 Izpilde no Komandrindas
+## 🚀 Izpilde no komandrindas
 
 Lai palaistu testus no tīra stāvokļa (ar automātisku `reset-all.sh -y`):
 

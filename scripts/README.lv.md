@@ -8,7 +8,7 @@ Visi skripti ievēro stingru **3 līmeņu modulāru direktoriju struktūru** (Ru
 
 ---
 
-## 📁 3 Līmeņu Skriptu Direktoriju Struktūra
+## 📁 3 Līmeņu Skriptu direktoriju Struktūra
 
 ```text
 scripts/
@@ -129,7 +129,7 @@ Palaiž esošos lokālos datubāzes un ORDS konteinerus un gaida, līdz datubāz
 
 ---
 
-## 3. Vides un Komponentu Atiestatīšana (`reset-all.sh`)
+## 3. Vides un komponentu Atiestatīšana (`reset-all.sh`)
 
 Modulārs profila vadīts tīrīšanas dzinējs, kas aptur un noņem konteinerus, profilus (`config/profiles/*.yaml`), sējumus un tīklus.
 
@@ -150,7 +150,7 @@ Modulārs profila vadīts tīrīšanas dzinējs, kas aptur un noņem konteinerus
 
 ---
 
-## 4.5. Žurnālu Tīrīšana un Drošība (`clean-logs.sh` & `sanitize-logs.sh`)
+## 4.5. Žurnālu Tīrīšana Un Drošība (`clean-logs.sh` & `sanitize-logs.sh`)
 
 ```bash
 ./scripts/clean-logs.sh [-y | --force]
@@ -162,9 +162,9 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 
 ---
 
-## 5. Izstrādātāja un Administratora CLI Rīki
+## 5. Izstrādātāja Un administratora CLI Rīki
 
-### 5.1. Paroļu Nolasīšana no Wallet (`get-password.sh`)
+### 5.1. Paroļu Nolasīšana No Wallet (`get-password.sh`)
 ```bash
 ./scripts/get-password.sh <ALIAS>
 ./scripts/get-password.sh DB_PROXY_DEV
@@ -176,23 +176,23 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 ./scripts/check-urls.sh
 ```
 
-### 5.3. SEPS Savienojumu Diagnostika (`check-wallet.sh`)
+### 5.3. SEPS savienojumu diagnostika (`check-wallet.sh`)
 ```bash
 ./scripts/check-wallet.sh
 ```
 
-### 5.4. Viedais SQLcl CLI Ietvars (`sqlcl.sh`)
+### 5.4. Viedais SQLcl CLI ietvars (`sqlcl.sh`)
 ```bash
 ./scripts/sqlcl.sh /@DB_PROXY_DEV
 ./scripts/sqlcl.sh /@DB_PROXY_SYS as sysdba
 ```
 
-### 5.5. Izstrādātāja Konta Izveide (`create-developer.sh`)
+### 5.5. Izstrādātāja Konta izveide (`create-developer.sh`)
 ```bash
 ./scripts/create-developer.sh
 ```
 
-### 5.6. VS Code Savienojumu Sinhronizācija (`register-connections.sh`)
+### 5.6. VS code savienojumu Sinhronizācija (`register-connections.sh`)
 ```bash
 ./scripts/register-connections.sh
 ```
@@ -239,7 +239,7 @@ Sīkāku informāciju skatiet mapē:
 
 ---
 
-## 11. Problēmu Novēršana: Podman Machine Atkopšanas Plāns
+## 11. Problēmu Novēršana: Podman machine Atkopšanas Plāns
 
 Ja rodas ligzdas kļūdas vai konteineru taimauti:
 

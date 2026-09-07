@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# ⚙️ Iekšējo Skriptu Direktorijs (`scripts/internal/`)
+# ⚙️ Iekšējo Skriptu direktorijs (`scripts/internal/`)
 
 Saskaņā ar **Rule 3 (Directory Layout Rule for Scripts)** šajā direktorijā atrodas automatizācijas dzinēji, profilu parsētāji, datubāzes inicializatori, automātiskie iestatīšanas soļi un SQL faili, ko iekšēji izmanto vides orķestrētājs (`setup-all.sh`).
 
@@ -8,7 +8,7 @@ Saskaņā ar **Rule 3 (Directory Layout Rule for Scripts)** šajā direktorijā 
 
 ---
 
-## 📂 Iekšējo Skriptu Saraksts
+## 📂 Iekšējo Skriptu saraksts
 
 ### 📦 1. Profilu Dzinējs un Topoloģijas Pārvaldība
 | Skripts | Apraksts |
@@ -25,13 +25,13 @@ Saskaņā ar **Rule 3 (Directory Layout Rule for Scripts)** šajā direktorijā 
 | **[deploy-apex-apps.sh](deploy-apex-apps.sh)** | Secīgs APEX lietotņu importētājs failiem no `binaries/apex_apps/`. |
 | **[deploy-apex.sql](deploy-apex.sql)** | SQLcl PL/SQL ietvars APEX lietotņu SQL eksporta importēšanai. |
 
-### 🔌 3. Uz Profiliem Balstīta Instances Inicializācija
+### 🔌 3. Uz profiliem Balstīta instances Inicializācija
 | Skripts / SQL | Apraksts |
 | :--- | :--- |
 | **[init-db-instance.sh](init-db-instance.sh)** | Universāls profila vadīts datubāzes inicializācijas skripts jebkuram profilam (`proxy`, `appinfra`, `bizapp`, `cicd`). |
 | **[init-db-instance.sql](init-db-instance.sql)** | Profila vadīts PL/SQL skripts, kas konfigurē atmiņas parametrus, tabultelpas un REST tīkla ACL. |
 
-### 🔑 4. Drošība, Noslēpumi un Sertifikāti
+### 🔑 4. Drošība, Noslēpumi Un Sertifikāti
 | Skripts | Apraksts |
 | :--- | :--- |
 | **[create-wallet.sh](create-wallet.sh)** | Izveido Oracle SEPS (Secure External Password Store) automātiskās pieteikšanās makus (`cwallet.sso`). |
@@ -46,7 +46,7 @@ Saskaņā ar **Rule 3 (Directory Layout Rule for Scripts)** šajā direktorijā 
 | **[init-web-ide.sh](init-web-ide.sh)** | Iepriekš konfigurē code-server iestatījumus, SEPS Wallet sinhronizāciju un SQL Developer savienojumus Web IDE iekšienē (`web-ide`). |
 | **[install-web-ide-extensions.sh](install-web-ide-extensions.sh)** | Instalē nepieciešamos un pielāgotos VS Code paplašinājumus (VSIX) Web IDE konteinerā. |
 
-### ⚡ 6. Orķestrēšana un Kodola Optimizācijas Rīki
+### ⚡ 6. Orķestrēšana Un kodola Optimizācijas Rīki
 | Skripts | Apraksts |
 | :--- | :--- |
 | **[common.sh](common.sh)** | Galvenā koplietotā čaulas bibliotēka (krāsas, laika formatēšana, progresa attēlošana, signālu apstrāde un pigz saspiešana). |

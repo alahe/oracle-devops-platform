@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔒 SSL/TLS Sertifikaatide ja Usaldamise Moodul (Zero-Admin / Non-Root)
+# 🔒 SSL/TLS sertifikaatide ja usaldamise moodul (zero-admin / non-root)
 
 See moodul vastutab HTTPS ja TCPS turvaliste ühenduste loomise, sertifikaatide valiku ja automaatse usaldamise eest macOS ja Windows keskkondades ilma administraatori (`root` / `sudo`) õigusteta.
 
 ---
 
-## 🧭 5-Astmeline Hierarhiline TLS Lahendusahel (Priority Chain)
+## 🧭 5-astmeline hierarhiline TLS lahendusahel (priority chain)
 
 Iga käivituse ja seadistuse ajal tuvastab [`scripts/internal/resolve-tls-mode.sh`](../internal/resolve-tls-mode.sh) automaatselt sobivaima sertifikaadi:
 
@@ -23,7 +23,7 @@ Iga käivituse ja seadistuse ajal tuvastab [`scripts/internal/resolve-tls-mode.s
 
 ---
 
-## 💻 Kasutajataseme Mitte-Admin Skriptid (User-Space Trust)
+## 💻 Kasutajataseme mitte-admin skriptid (user-space trust)
 
 * **macOS:**
   * [`trust-local-cert-mac.sh`](trust-local-cert-mac.sh): Lisab CA kasutaja võtmehoidlasse `~/Library/Keychains/login.keychain-db` ilma `sudo` õigusteta.
@@ -40,7 +40,7 @@ Iga käivituse ja seadistuse ajal tuvastab [`scripts/internal/resolve-tls-mode.s
 
 ---
 
-## 🧪 TLS Režiimide ja Poliitikate Testimine
+## 🧪 TLS Režiimide ja poliitikate testimine
 ```bash
 ./tests/test-tls-scenarios.sh
 ```

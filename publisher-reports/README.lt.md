@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📑 Analytics Publisher Ataskaitų Katalogas (`publisher-reports/`)
+# 📑 Analytics Publisher ataskaitų katalogas (`publisher-reports/`)
 
 Šiame kataloge yra Oracle Analytics Publisher ataskaitų šablonai (`.rtf`, `.xpt`) ir duomenų modeliai (`.xdm`).
 

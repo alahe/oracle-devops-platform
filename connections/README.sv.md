@@ -1,16 +1,16 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔌 Databasanslutningar och Konfigurationsguide för VS Code
+# 🔌 Databasanslutningar och konfigurationsguide för VS Code
 
 Denna guide beskriver automatisk och manuell registrering av Oracle-databasanslutningar för **Oracle SQL Developer for VS Code** (både på lokal värddator och i containerbaserad Webb-IDE) samt lösenordsfri hantering via Oracle Wallet (SEPS).
 
 ---
 
-## 🔄 Tvånivås Automatiserad Registrering (Host PC & Webb-IDE)
+## 🔄 Tvånivås automatiserad registrering (host PC & webb-IDE)
 
 Hela plattformen använder den centraliserade anslutningsregistreringsmotorn (`scripts/register-connections.sh`), som skapar och synkroniserar databasanslutningar samtidigt i din **lokala VS Code (Host PC)** och i din **Containerbaserade Webb-IDE (`web-ide-dev`)**:
 
-### 📊 Flödesschema för Registreringsprocessen
+### 📊 Flödesschema för registreringsprocessen
 
 ```mermaid
 flowchart TD
@@ -33,7 +33,7 @@ flowchart TD
   SANITIZE --> READY(["🎉 Klart:<br/>1-klicks DB-anslutningar<br/>i Värd & Webb-IDE!"])
 ```
 
-### CLI-Körning:
+### CLI-körning:
 
 ```bash
 ./scripts/register-connections.sh
@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-## 📥 Importera Anslutningar Manuellt i VS Code SQL Developer UI
+## 📥 Importera anslutningar manuellt i VS Code SQL developer UI
 
 Anslutningar kan importeras direkt via **`connections/sqldev-connections.json`**:
 
@@ -57,7 +57,7 @@ Anslutningar kan importeras direkt via **`connections/sqldev-connections.json`**
 
 ---
 
-## 🔑 Hämta Inloggningsuppgifter för Utvecklare och Administratörer
+## 🔑 Hämta inloggningsuppgifter för utvecklare och administratörer
 
 Om du vill konfigurera anslutningar manuellt i verktyg som DBeaver eller IntelliJ:
 * **APEX Admin (INTERNAL):** `./scripts/get-password.sh APEX_ADMIN`
@@ -69,11 +69,11 @@ Om du vill konfigurera anslutningar manuellt i verktyg som DBeaver eller Intelli
 
 ---
 
-## 🔐 Lösenordsfria Anslutningar via Oracle Wallet (SEPS)
+## 🔐 Lösenordsfria anslutningar via Oracle Wallet (SEPS)
 
 I lokal utveckling skyddas autentisering med **Oracle Wallet (SEPS)** utan klartextlösenord på disk.
 
-### Konfiguration av Värdmiljö:
+### Konfiguration av värdmiljö:
 ```bash
 export TNS_ADMIN=$(pwd)/config/tns_admin
 ```
@@ -89,7 +89,7 @@ sql /@DB_PROXY_SYS as sysdba
 
 ---
 
-## 🔒 Windows & Förtroende för SSL/TLS-Certifikat
+## 🔒 Windows & förtroende för SSL/TLS-certifikat
 
 Om du utvecklar i Windows (WSL2) och vill undvika säkerhetsvarningar:
 

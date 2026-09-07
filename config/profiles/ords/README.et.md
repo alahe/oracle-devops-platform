@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🌐 ORDS Lüüsi Profiilid (`config/profiles/ords/`)
+# 🌐 ORDS Lüüsi profiilid (`config/profiles/ords/`)
 
 Selles kaustas asuvad **ORDS-i deklareeritud profiilid (Explicit ORDS Profiles)**, mis kirjeldavad ORDS-i käitusmudeleid ja võrguseadistusi vastavalt Rule 11 nõuetele.
 
-## 📂 Saadaval Profiilid
+## 📂 Saadaval profiilid
 1. **`ords-image.yaml`** (id: `app-ords-image`)
    - Ametlikul Oracle OCR konteineripildil (`container-registry.oracle.com/database/ords:latest`) põhinev tsentraalne multi-pool ORDS server.
    - Pordid: HTTP `8088`, HTTPS `8448`.

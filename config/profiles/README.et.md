@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🗄️ Teenuste ja Andmebaaside Profiilide Maatriks (`config/profiles/`)
+# 🗄️ Teenuste ja andmebaaside profiilide maatriks (`config/profiles/`)
 
 See kataloog sisaldab domeenipõhiselt isoleeritud YAML profiile, mida kasutab **Dünaamiline Profiilide Mootor** (`load-profile.sh`, `apply-profile-users.sh`, `create-wallet.sh`, `register-connections.sh`).
 
-## 📂 Aktiivsed Profiilide Alamkataloogid
+## 📂 Aktiivsed profiilide alamkataloogid
 * **`config/profiles/databases/`**: Oracle andmebaaside profiilid (`db-proxy-oracle.yaml`, `db-alise-oracle.yaml`, `db-proxy-standalone.yaml`, `db-gvenzl.yaml`, `db-adb.yaml`, `db-publisher-oracle.yaml`, `db-forms-oracle.yaml`).
 * **`config/profiles/ords/`**: ORDS lüüsi profiilid (`ords-standard.yaml`, `ords-standalone.yaml`).
 * **`config/profiles/web-ide/`**: Web IDE arendustöökoha profiilid (`web-ide-standard.yaml`).
@@ -12,7 +12,7 @@ See kataloog sisaldab domeenipõhiselt isoleeritud YAML profiile, mida kasutab *
 * **`config/profiles/forms/`**: Oracle Forms 14c profiilid (`forms-standard.yaml`).
 * **`config/profiles/forms-publisher/`**: Konsolideeritud ühendatud WebLogic profiilid (`forms-publisher-unified.yaml`).
 
-## 🗄️ Andmebaasi Profiilid ja Deterministlik Portide Kaart
+## 🗄️ Andmebaasi profiilid ja deterministlik portide kaart
 
 | Profiili Fail | Tõmmise Tootja | DB Port | Seotud Blueprintid | Põhiomadused |
 | :--- | :--- | :---: | :--- | :--- |

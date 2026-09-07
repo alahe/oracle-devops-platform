@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Tekniset Toteutussuunnitelmat (`backlog/implementation_plans/`)
+# 📐 Tekniset toteutussuunnitelmat (`backlog/implementation_plans/`)
 
 Tähän hakemistoon tallennetaan yksityiskohtaiset tekniset toteutussuunnitelmat ja arkkitehtuuripäätökset.
 

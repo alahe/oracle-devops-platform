@@ -1,11 +1,11 @@
-# Multi-Cloud Ettevõtte Kaugtestimise Juhend
-## Oracle Cloud Infrastructure (OCI Always Free) ja Microsoft Azure (Free Tier)
+# Multi-cloud ettevõtte kaugtestimise juhend
+## Oracle cloud infrastructure (OCI always Free) ja microsoft Azure (Free tier)
 
 [ 🇬🇧 English ](../remote-multicloud-setup-guide.md) | [ 🇪🇪 Eesti ](remote-multicloud-setup-guide.md) | [ 🇫🇮 Suomi ](../fi/remote-multicloud-setup-guide.md) | [ 🇸🇪 Svenska ](../sv/remote-multicloud-setup-guide.md) | [ 🇱🇻 Latviešu ](../lv/remote-multicloud-setup-guide.md) | [ 🇱🇹 Lietuvių ](../lt/remote-multicloud-setup-guide.md)
 
 ---
 
-## 1. Ülevaade ja Arhitektuur
+## 1. Ülevaade ja arhitektuur
 
 Käesolev juhend kirjeldab ettevõtte nõuetele vastava multi-cloud arhitektuuri seadistamist ja testimist:
 - **Andmebaasikiht (OCI Always Free):** Oracle Autonomous Database Serverless (ATP/ADW, Blueprint 4). Ligipääs on rangelt piiratud tulemüüriga (ACL) ainult Azure VM avalikule IP-aadressile, suheldes üle krüpteeritud mTLS (`cwallet.sso`, AES-256) pordil `1522`.
@@ -51,7 +51,7 @@ flowchart TD
 
 ---
 
-## 2. Eeldused ja Tasuta Pilveressursside Jaotus
+## 2. Eeldused ja tasuta pilveressursside jaotus
 
 | Pilv | Teenus | Spetsifikatsioon | Maksumus |
 | :--- | :--- | :--- | :--- |
@@ -61,7 +61,7 @@ flowchart TD
 
 ---
 
-## 3. Etapp 1: OCI Autonomous Database Seadistus (ATP)
+## 3. Etapp 1: OCI autonomous database seadistus (ATP)
 
 1. Logi sisse [Oracle Cloud Infrastructure konsooli](https://cloud.oracle.com/).
 2. Liigu menüüsse **Oracle Database** $\rightarrow$ **Autonomous Database**.
@@ -85,7 +85,7 @@ flowchart TD
 
 ---
 
-## 4. Etapp 2: Microsoft Azure Linux VM Seadistus
+## 4. Etapp 2: Microsoft Azure Linux VM seadistus
 
 1. Logi sisse [Azure Portaali](https://portal.azure.com/).
 2. Liigu **Virtual Machines** $\rightarrow$ **Create** $\rightarrow$ **Azure virtual machine**.
@@ -108,7 +108,7 @@ flowchart TD
 
 ---
 
-## 5. Etapp 3: Automatiseeritud Paigaldus Kaugserveris (`deploy-remote.sh`)
+## 5. Etapp 3: Automatiseeritud paigaldus kaugserveris (`deploy-remote.sh`)
 
 Kasuta ühtset kaugpaigalduse skripti, mis kopeerib koodi, seadistab Podmani, laeb üles OCI mTLS Walleti ja käivitab kaug-blueprintid:
 
@@ -132,7 +132,7 @@ Kasuta ühtset kaugpaigalduse skripti, mis kopeerib koodi, seadistab Podmani, la
 
 ---
 
-## 6. Etapp 4: Multi-Cloud Testipaketi Käivitamine
+## 6. Etapp 4: Multi-cloud testipaketi käivitamine
 
 Käivita automaatne testprogramm, mis kontrollib kogu ahelat otsast lõpuni:
 

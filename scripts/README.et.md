@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🛠️ CLI Skriptide ja Tööriistade Kasutusjuhend (Command Line Reference)
+# 🛠️ CLI Skriptide ja Tööriistade kasutusjuhend (command line reference)
 
 Käesolev fail sisaldab üksikasjalikku juhendit kõigi projekti haldus-, diagnostika- ja arendusskriptide kohta.
 
@@ -8,7 +8,7 @@ Kõik skriptid järgivad ranget **3-kihilist modulaarset arhitektuuri**, kus iga
 
 ---
 
-## 📁 3-Kihiline Skriptide Kataloogi Struktuur
+## 📁 3-kihiline skriptide kataloogi struktuur
 
 ```text
 scripts/
@@ -21,6 +21,8 @@ scripts/
 │
 ├── 🔑 ARENDAJA JA ADMINISTRAATORI CLI TÖÖRIISTAD:
 │   ├── get-password.sh              # Paroolide ja kasutajatunnuste lugemine Walletist
+│   ├── test-windows-dryrun.sh       # 10-astmeline ettevõtte Windows & WSL2 dry-run diagnostikamootor
+│   ├── onboard-enterprise.sh        # Ettevõtte Artifactory peegli ja proxy seadistustööriist
 │   ├── check-urls.sh                # Veebiteenuste, basseinide ja URL-ide HTTP tervisekontroll
 │   ├── check-wallet.sh              # SEPS Walleti paroolivabade TNS ühenduste diagnostika
 │   ├── sqlcl.sh                     # Nutikas SQLcl CLI wrapper (SEPS Wallet /@ALIAS toega)
@@ -223,11 +225,11 @@ Skript `./scripts/reset-all.sh` on **modulaarne profiilipõhine puhastaja**, mis
 
 ---
 
-## 4. Hetktõmmise (Golden Snapshot) loomine ja taastamine (`create-golden-snapshots.sh` & `restore-golden-snapshots.sh`)
+## 4. Hetktõmmise (Golden snapshot) loomine ja taastamine (`create-golden-snapshots.sh` & `restore-golden-snapshots.sh`)
 
 Kui keskkond on edukalt üles seatud ja soovime teha andmebaasi andmetest kiire koopia (näiteks enne testimist või ohtlikke muudatusi), saame kasutada volumite külma varundust (hetktõmmist), mis võtab aega alla minuti.
 
-### Hetktõmmise loomine (`create-golden-snapshots.sh`)
+### Hetktõmmise Loomine (`create-golden-snapshots.sh`)
 Peatab ajutiselt konteinerid, loob andmebaasi volumist tihendatud arhiivi `golden-snapshots/apex_proxy_oradata_${TIMESTAMP}.tar.gz` ja taaskäivitab konteinerid.
 
 ```bash
@@ -260,7 +262,7 @@ Peatab konteinerid, kustutab praeguse vigase volume, loob uue tühja volume, pak
 
 ---
 
-## 4.5. Logifailide ja Diagnostika Puhastamine (`clean-logs.sh`)
+## 4.5. Logifailide ja diagnostika puhastamine (`clean-logs.sh`)
 
 Selleks, et lokaalne kettaruum ei täituks paigalduste ja taastamiste ajal tekkivate mahukate logifailide ega WebLogic/Publisheri diagnostika-arhiividega, saab kasutada logide puhastamise skripti.
 
@@ -277,7 +279,7 @@ Selleks, et lokaalne kettaruum ei täituks paigalduste ja taastamiste ajal tekki
 
 ---
 
-## 4.5.1. Logide Saniteerimine & Turvalisus (`sanitize-logs.sh`)
+## 4.5.1. Logide saniteerimine & turvalisus (`sanitize-logs.sh`)
 
 Selleks, et vältida tundlike paroolide, `ACCESS_TOKEN`, `token=...`, `Authorization: Bearer ...`, `ARTIFACTORY_TOKEN` ja `GITHUB_TOKEN` sattumist versioonihaldusesse või lokaalsetesse logidesse (`install_logs/*.log`), filteeritakse kõigi skriptide stdout/stderr logivoog automaatselt läbi abiskripti `scripts/internal/sanitize-logs.sh`.
 
@@ -287,9 +289,9 @@ Selleks, et vältida tundlike paroolide, `ACCESS_TOKEN`, `token=...`, `Authoriza
 > DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 > ```
 > *Märkus: Seda võimalust tohib kasutada AINULT erandkorras ja turvalises kohalikus keskkonnas.*
-## 4. Arendaja ja Administraatori Igapäevased CLI Tööriistad
+## 4. Arendaja ja administraatori Igapäevased CLI Tööriistad
 
-### 4.1. Paroolide ja Kasutajatunnuste Lugemine Walletist (`get-password.sh`)
+### 4.1. Paroolide ja kasutajatunnuste lugemine walletist (`get-password.sh`)
 Selleks, et mitte hoida paroole avatud tekstina konsoolis, failides või protsessitabelis (`ps aux`), kasutatakse paroolivaba **Oracle Walletit (SEPS)**. Arendaja saab mis tahes süsteemi või skeemi parooli turvaliselt kätte käsuga:
 
 ```bash
@@ -306,7 +308,7 @@ Selleks, et mitte hoida paroole avatud tekstina konsoolis, failides või protses
 
 ---
 
-### 4.2. Veebiteenuste ja URL-ide HTTP Tervisekontroll (`check-urls.sh`)
+### 4.2. Veebiteenuste ja url-ide HTTP tervisekontroll (`check-urls.sh`)
 Teostab reaalajas HTTP/HTTPS GET päringuid kõigile aktiivsetele ORDS basseinidele, APEX liidestele, Database Actions portaalile ja Web IDE-le, kontrollides vastuskoodide (HTTP 200/302) ja TLS sertifikaatide kehtivust:
 
 ```bash
@@ -319,7 +321,7 @@ Teostab reaalajas HTTP/HTTPS GET päringuid kõigile aktiivsetele ORDS basseinid
 
 ---
 
-### 4.3. SEPS Walleti Paroolivabade Ühenduste Diagnostika (`check-wallet.sh`)
+### 4.3. SEPS walleti paroolivabade Ühenduste diagnostika (`check-wallet.sh`)
 Kontrollib kõiki registreeritud TNS aliaseid (`/@ALIAS`), teostades SQLcl kaudu paroolivaba päringu `SELECT status FROM v$instance` ja tagades, et SEPS autologin toimib 100%:
 
 ```bash
@@ -328,7 +330,7 @@ Kontrollib kõiki registreeritud TNS aliaseid (`/@ALIAS`), teostades SQLcl kaudu
 
 ---
 
-### 4.4. Nutikas SQLcl Käsurea Wrapper (`sqlcl.sh`)
+### 4.4. Nutikas SQLcl Käsurea wrapper (`sqlcl.sh`)
 Võimaldab luua koheseid SQLcl konsooliühendusi otse terminalist ilma parooli sisestamata:
 
 ```bash
@@ -348,7 +350,7 @@ Võimaldab luua koheseid SQLcl konsooliühendusi otse terminalist ilma parooli s
 
 ---
 
-### 4.5. Arendaja Kasutajakonto Loomine (`create-developer.sh`)
+### 4.5. Arendaja kasutajakonto loomine (`create-developer.sh`)
 Loob personaalse arendajakonto (nii andmebaasi kui APEX-i poolel) ning genereerib automaatselt tugeva parooli SEPS Walletisse:
 
 ```bash
@@ -357,7 +359,7 @@ Loob personaalse arendajakonto (nii andmebaasi kui APEX-i poolel) ning genereeri
 
 ---
 
-### 4.6. VS Code SQL Developer Ühenduste Sünkroniseerimine (`register-connections.sh`)
+### 4.6. VS code SQL developer Ühenduste Sünkroniseerimine (`register-connections.sh`)
 Loob ja sünkroniseerib VS Code Oracle SQL Developer laienduse ühenduste puu koos salvestatud paroolidega:
 
 ```bash
@@ -366,7 +368,7 @@ Loob ja sünkroniseerib VS Code Oracle SQL Developer laienduse ühenduste puu ko
 
 ---
 
-### 4.7. Logide ja Ajutiste Failide Puhastus (`clean-logs.sh`)
+### 4.7. Logide ja ajutiste failide puhastus (`clean-logs.sh`)
 Kustutab `install_logs/*.log` failid ja ajutised lahtipakkimiskaustad:
 
 ```bash
@@ -375,11 +377,11 @@ Kustutab `install_logs/*.log` failid ja ajutised lahtipakkimiskaustad:
 
 ---
 
-## 5. Andmebaasi Hetktõmmiste (Golden Snapshots) Haldus (`scripts/snapshots/`)
+## 5. Andmebaasi Hetktõmmiste (golden snapshots) haldus (`scripts/snapshots/`)
 
 Kõik andmebaasi mahutite varundamise ja taastamise käsud asuvad kaustas `scripts/snapshots/`:
 
-### 5.1. Hetktõmmise loomine (`create-golden-snapshots.sh`)
+### 5.1. Hetktõmmise Loomine (`create-golden-snapshots.sh`)
 Peatab konteinerid ja loob andmebaasi mahutist tihendatud `.tar.gz` arhiivi kausta `golden-snapshots/`:
 ```bash
 # 1. Standardne baas-tõmmis (uuendab ka bp_0_latest.tar.gz viidet):
@@ -390,7 +392,7 @@ Peatab konteinerid ja loob andmebaasi mahutist tihendatud `.tar.gz` arhiivi kaus
 ./scripts/snapshots/create-golden-snapshots.sh -n "suur-app" -d "Peale 15m paigaldust"
 ```
 
-### 5.2. Hetktõmmisest taastamine (`restore-golden-snapshots.sh`)
+### 5.2. Hetktõmmisest Taastamine (`restore-golden-snapshots.sh`)
 Taastab andmebaasi seisu viimasesse tuntud-töötavasse olekusse:
 ```bash
 # 1. Taasta vaikimisi viimane puhas baastõmmis (latest):
@@ -412,7 +414,7 @@ Kustutab vanad arhiivid, jättes alati alles viimase `_latest.tar.gz` koopia:
 
 ---
 
-## 6. Kohalike Sertifikaatide Usaldamine (`scripts/certs/`)
+## 6. Kohalike sertifikaatide usaldamine (`scripts/certs/`)
 
 Kohalikud SSL/TLS juursertifikaadid genereeritakse automaatselt paigalduse ajal. Vajadusel saab neid käsitsi usaldada või eemaldada:
 
@@ -426,7 +428,7 @@ Kohalikud SSL/TLS juursertifikaadid genereeritakse automaatselt paigalduse ajal.
 
 ---
 
-## 7. Analytics Publisheri Haldus (`scripts/publisher/`)
+## 7. Analytics publisheri haldus (`scripts/publisher/`)
 
 Kõik Oracle Analytics Publisheri (Pixel Perfect) operatsioonid:
 
@@ -437,7 +439,7 @@ Kõik Oracle Analytics Publisheri (Pixel Perfect) operatsioonid:
 
 ---
 
-## 8. Pilve Kaugpaigaldus ja Multi-Cloud Testimine (`deploy-remote.sh` & `tests/test-remote-multicloud.sh`)
+## 8. Pilve kaugpaigaldus ja multi-cloud testimine (`deploy-remote.sh` & `tests/test-remote-multicloud.sh`)
 
 Skript `./scripts/deploy-remote.sh` võimaldab lokaalsest masinast ühe käsuga paigaldada ja käivitada valitud arhitektuuri blueprinti (nt Blueprint 10 ORDS Gateway või Blueprint 11 Analytics Publisher) kaugserverisse (Azure VM või OCI Compute instance):
 
@@ -465,7 +467,7 @@ Skript `./scripts/deploy-remote.sh` võimaldab lokaalsest masinast ühe käsuga 
   --wallet ~/Downloads/Wallet_FREEADB.zip
 ```
 
-### Automaatne Multi-Cloud valideerimistest (`tests/test-remote-multicloud.sh`)
+### Automaatne multi-cloud valideerimistest (`tests/test-remote-multicloud.sh`)
 
 Täielik 5-astmeline automatiseeritud testipakett, mis valideerib võrgu latentsuse, mTLS SEPS Walleti, ORDS Web ja APEX ligipääsu, Analytics Publisheri ning OCI tulemüüri (ACL):
 
@@ -484,7 +486,7 @@ Tulemused salvestatakse automaatselt failidesse:
 - `metrics/remote_multicloud_benchmarks.json`
 - `tests/reports/remote_multicloud_test_report.md`
 
-### Dev-Hub Brauseri Blueprintide E2E Testimine (`tests/test-devhub-browser-blueprints.sh`)
+### Dev-hub brauseri blueprintide E2E testimine (`tests/test-devhub-browser-blueprints.sh`)
 
 Testib kõigi 12 arhitektuurse blueprinti (#0 kuni #11) käivitamist ja haldamist läbi Dev-Hub veebiliidese, kontrollib kõigi veebiteenuste URL-e, testib parooli mälupõhist kleepimist vormidesse ning rakendab automaatset RAM Watchdogi koos vanemate konteinerite peatamise ja Tuumbaasi (Blueprint #0) kaitsega:
 
@@ -507,28 +509,28 @@ Tulemused salvestatakse automaatselt:
 
 ---
 
-## 9. Patchide Käsitsi Rakendamine (`scripts/patches/`)
+## 9. Patchide Käsitsi rakendamine (`scripts/patches/`)
 
 *   🩹 **APEX Patch Set Exception (PSE) paigaldus:** `./scripts/patches/apply-apex-patch.sh`
 *   🩹 **Analytics Publisher OPatch paigaldus:** `./scripts/patches/apply-publisher-patch.sh`
 
 ---
 
-## 10. Sisemised Abiskriptid (`scripts/internal/`)
+## 10. Sisemised abiskriptid (`scripts/internal/`)
 
 Kõik sisemised paigaldus-, profiili-, SQL- ja abiskriptid asuvad alamkataloogis `scripts/internal/`:
 *   📁 **[`scripts/internal/README.md`](internal/README.md)** (Profiilimootor, SEPS Walletid, sisemised SQL failid ja paigaldusmootorid).
 
 ---
 
-## 11. Veaotsing: Millal teostada Podman Machine taaskäivitus? (`podman machine stop && podman machine start`)
+## 11. Veaotsing: millal teostada Podman machine taaskäivitus? (`podman machine stop && podman machine start`)
 
 Kui arenduskeskkonnas või terminalis tekivad järgmised sümptomid:
 1. Käsk `./scripts/setup-all.sh` annab vea: `❌ Viga: Konteiner db-dev-full ei saavutanud 'healthy' olekut 450 sekundi jooksul!`.
 2. Podman käsud hanguvad või tagastavad pesa vea: `Error: Get ".../containers/json": EOF`.
 3. Konteiner hangub taaskäivitussilmuses veaga `ORA-01078 / LRM-00109: could not open parameter file`.
 
-### Veaotsingu sammud (Recovery Runbook):
+### Veaotsingu sammud (recovery runbook):
 
 ```bash
 # 1. Peata ja käivita macOS / Linux Podman virtuaalmasina pesa uuesti:

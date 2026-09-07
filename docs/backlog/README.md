@@ -1,6 +1,6 @@
 # Financial Enterprise Distributed Backlog (Jira Epics & Stories)
 
-[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](../et/enterprise-distributed-architecture.md)
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
 This backlog defines the transformation roadmap, technical deliverables, and Jira user stories for deploying the **Oracle DevOps & APEX Platform** across distributed remote Linux environments (**DEV, TEST, PROD**) with **Active/Standby High Availability** and integration with the enterprise core business database.
 

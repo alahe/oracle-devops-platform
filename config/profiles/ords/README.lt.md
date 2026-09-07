@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🌐 ORDS Šliuzo Profiliai (`config/profiles/ords/`)
+# 🌐 ORDS Šliuzo profiliai (`config/profiles/ords/`)
 
 Šiame kataloge yra aiškūs **ORDS (Oracle REST Data Services)** profiliai pagal 11 taisyklę.
 
-## 📂 Galimi Profiliai
+## 📂 Galimi profiliai
 1. **`ords-image.yaml`** (id: `app-ords-image`)
    - Centrinis kelių telkinių ORDS serveris, pagrįstas oficialiu Oracle OCR atvaizdu.
    - Prievadai: HTTP `8088`, HTTPS `8448`.

@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../devops-lifecycle-guide.md) | [ 🇪🇪 Eesti ](../et/devops-lifecycle-guide.md) | [ 🇫🇮 Suomi ](../fi/devops-lifecycle-guide.md) | [ 🇸🇪 Svenska ](devops-lifecycle-guide.md) | [ 🇱🇻 Latviešu ](../lv/devops-lifecycle-guide.md) | [ 🇱🇹 Lietuvių ](../lt/devops-lifecycle-guide.md)
 
-# 🔄 Guide för Behållaravbildningar, Ögonblicksbilder och Säkerhetskopior
+# 🔄 Guide för behållaravbildningar, ögonblicksbilder och säkerhetskopior
 
 Denna guide beskriver plattformens **3-nivåers katastrofåterställnings- och snabbstartsmodell (FastPath)**:
 1. **Behållaravbildningar (Images):** Oföränderligt OS och körtidsmotorer.

@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Oracle Forms 14c Toiminnalliset Komentosarjat (`scripts/forms/`)
+# 📐 Oracle Forms 14c toiminnalliset komentosarjat (`scripts/forms/`)
 
 Tämä hakemisto tarjoaa työkalut Oracle Forms 14c -suoritusympäristön, komentorivikääntämisen, WebLogic-toimialueen diagnostiikan ja sovellusten käyttöönoton hallintaan.
 
 ---
 
-## 🛠️ Käytettävissä Olevat Komentosarjat
+## 🛠️ Käytettävissä Olevat komentosarjat
 
 - **`build-forms-image.sh`:** Rakentaa paikallisen `localhost/oracle-forms:14.1.2`-säilökuvan.
   ```bash

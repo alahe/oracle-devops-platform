@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../security.md) | [ 🇪🇪 Eesti ](../et/security.md) | [ 🇫🇮 Suomi ](../fi/security.md) | [ 🇸🇪 Svenska ](../sv/security.md) | [ 🇱🇻 Latviešu ](security.md) | [ 🇱🇹 Lietuvių ](../lt/security.md)
 
-# 🛡️ Oracle Free DB & APEX Drošība un SSO Arhitektūra
+# 🛡️ Oracle Free DB & APEX drošība un SSO arhitektūra
 
 Šis dokuments apkopo platformas drošības apsvērumus, akreditācijas datu pārvaldību, izstrādātāju lomas un vienotās pieteikšanās (SSO / Azure Entra-ID) arhitektūru.
 
 ---
 
-## 1. Lokālā Noslēpumu Pārvaldība (Zero-Trust - 5. Noteikums)
+## 1. Lokālā noslēpumu pārvaldība (zero-trust - 5. noteikums)
 
 Visas paroles un noslēpumi tiek glabāti AES-256 šifrētā **Oracle SEPS (Secure External Password Store) Auto-Login Wallet** (`cwallet.sso`).
 
@@ -23,7 +23,7 @@ Visas paroles un noslēpumi tiek glabāti AES-256 šifrētā **Oracle SEPS (Secu
 
 ---
 
-## 2. Vides Autentifikācijas Matrica
+## 2. Vides autentifikācijas matrica
 
 | Vide (`ENVIRONMENT_TYPE`) | Atrašanās Vieta | Autentifikācijas Veids (APEX & DB) | Lietotāju Pārvaldība | TLS Šifrēšana (TCPS) |
 | :--- | :--- | :--- | :--- | :--- |
@@ -45,7 +45,7 @@ graph TD
 
 ---
 
-## 3. Adaptīvais 5 Līmeņu TLS/HTTPS Dzinējs
+## 3. Adaptīvais 5 līmeņu TLS/HTTPS dzinējs
 
 Tīmekļa pakalpojumi (ORDS, APEX, Analytics Publisher) izmanto adaptīvu 5 līmeņu sertifikātu hierarhiju bez administratora tiesībām (`scripts/internal/resolve-tls-mode.sh`):
 
@@ -60,7 +60,7 @@ config/certs/
 
 ---
 
-## 4. Vienotā Pieteikšanās (SSO)
+## 4. Vienotā pieteikšanās (SSO)
 
 - **Datubāzes Līmeņa SSO:** Oracle 23ai atbalsta Azure AD OAuth2 marķierus un globālās lomas.
 - **ORDS & REST API:** ORDS pārbauda ienākošos Bearer JWT marķierus pret Azure AD publiskajām atslēgām.

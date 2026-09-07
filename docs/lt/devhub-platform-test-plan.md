@@ -1,14 +1,14 @@
-# 🧪 Dev Hub ir Platformos Modernizavimo Testavimo Planas
+# 🧪 Dev Hub ir platformos modernizavimo testavimo planas
 
 [ 🇬🇧 English ](../devhub-platform-test-plan.md) | [ 🇪🇪 Eesti ](../et/devhub-platform-test-plan.md) | [ 🇫🇮 Suomi ](../fi/devhub-platform-test-plan.md) | [ 🇸🇪 Svenska ](../sv/devhub-platform-test-plan.md) | [ 🇱🇻 Latviešu ](../lv/devhub-platform-test-plan.md) | [ 🇱🇹 Lietuvių ](devhub-platform-test-plan.md)
 
 ---
 
-## 1. Apžvalga ir Tikslai
+## 1. Apžvalga ir tikslai
 
 Šis testavimo planas apibrėžia Developer Hub (`docs/dev-hub.html`) ir platformos orkestravimo atnaujinimų patikros strategiją bei standartizuotus testavimo atvejus.
 
-### Pagrindiniai Testavimo Tikslai:
+### Pagrindiniai testavimo tikslai:
 1. **Tikslus ir Autonomiškas Būsenos Nustatymas:** Užtikrinti, kad Dev Hub teisingai atpažįsta aktyvius blueprintus (įskaitant kelių blueprintų lygiagretų vykdymą) ir niekada klaidingai nerodo sustabdytų aplinkų (pvz., BP #3 ir BP #4) kaip aktyvių.
 2. **Išteklių Monitoriaus Patikimumas:** Patikrinti, kad antraštės RAM matuoklis (`X GB / 16 GB`) sumuoja tik faktiškai veikiančių konteinerių atminties ribas.
 3. **3 Kortelių Modalinio Lango Funkcionalumas:** Patvirtinti sklandų perjungimą tarp kortelių (`Architektūra`, `Vartotojai ir Saugumas`, `Vykdymai ir Valdymas`), interaktyvias Mermaid topologijos diagramas, SEPS Wallet kredencialus ir realaus laiko vykdymo laikmatį.
@@ -19,7 +19,7 @@
 
 ---
 
-## 2. Testavimo Piramidė ir Aprėpties Matrica
+## 2. Testavimo piramidė ir aprėpties matrica
 
 | Lygis | Sritis | Įrankiai | Trukmė | Dažnumas |
 | :--- | :--- | :--- | :--- | :--- |
@@ -30,9 +30,9 @@
 
 ---
 
-## 3. Išsamūs Testavimo Atvejai
+## 3. Išsamūs testavimo atvejai
 
-### A grupė: Būsenos Nustatymas ir Išteklių Stebėsena
+### A grupė: Būsenos nustatymas ir išteklių stebėsena
 
 - **TC-STATUS-01: Pavienio Blueprinto Nustatymas (BP #0)**
   - *Sąlyga:* Paleistas `./scripts/setup-all.sh --blueprint 0`.
@@ -44,7 +44,7 @@
   - *Sąlyga:* BP #0 ir BP #8 veikia lygiagrečiai.
   - *Laukiamas rezultatas:* Abu rodomi žaliai `Aktyvus`. Antraštėje rodoma `(2 aktyvūs)` ir RAM apskaičiuojamas kaip abiejų suma. Aktyvios kortelės rūšiuojamos priekyje.
 
-### B grupė: 3 Kortelių Modalinis Langas ir Valdiklis
+### B grupė: 3 kortelių modalinis langas ir valdiklis
 
 - **TC-MODAL-01: Kortelių Naršymas**
   - *Žingsniai:* Spustelėkite kortelėje `📐 Architektūra ↗` arba `⚡ Valdymas ↗`. Perjunkite tarp `📐 Architektūra`, `🔑 Vartotojai`, `⚡ Vykdymai ir Valdymas`.
@@ -55,7 +55,7 @@
   - *Žingsniai:* Skirtuke "Vykdymai ir Valdymas" patikrinkite vieningą veiksmų kortelių tinklelį (Įdiegti & Perjungti, Greitas atkūrimas iš Auksinės kopijos, Paleisti iš naujo, Gilus išvalymas, Sustabdyti paslaugas, Išsaugoti būseną). Spustelėkite bet kurį veiksmo mygtuką (pvz., `⚡ Aktyvuoti` arba `⚡ Atkurti Auksinę Kopiją`).
   - *Laukiamas rezultatas:* Kiekvienoje kortelėje pateikiamas paaiškinimas, nukopijuojamas apvalkalo komandos laukas ir mygtukas. Realaus laiko eigos konsolė (`modal-ops-console`) atsidaro tiesiai po kortelėmis ir automatiškai slenka į vaizdą su veikiančiu laikmačiu (`⏱️ 00:01`...). Pasikartojantis komandų blokas lango apačioje yra pašalintas.
 
-### C grupė: Paslaugų Kortelės ir Database Actions Paleidimo Pultas
+### C grupė: Paslaugų kortelės ir database Actions paleidimo pultas
 
 - **TC-LAUNCH-01: 5 Galinių Taškų Mygtukų Patikra**
   - *Laukiamas rezultatas:* Duomenų bazių kortelėse yra 5 mygtukai: `🛠️ APEX Workspace (DEV)`, `⚙️ APEX Admin (ADMIN)`, `📊 DB Actions (DEV)`, `📊 DB Actions (DBA_ADMIN)`, `🌐 ORDS (<pool>)`.
@@ -66,7 +66,7 @@
   - *Žingsniai:* Spustelėkite `🛠️ APEX Workspace (DEV)`.
   - *Laukiamas rezultatas:* Kūrėjo slaptažodis nukopijuojamas į iškarpinę ir atidaromas APEX prisijungimo puslapis.
 
-### D grupė: Oracle SEPS Wallet Credential Matrix
+### D grupė: Oracle SEPS Wallet credential matrix
 
 - **TC-WALLET-01: Dinaminis Paskyrų Sujungimas**
   - *Laukiamas rezultatas:* Visi YAML profilių vartotojai rodomi lentelėje prie atitinkamų duomenų bazių ir prievadų.
@@ -75,7 +75,7 @@
 - **TC-WALLET-03: Zero-Trust Saugumo Patikra**
   - *Laukiamas rezultatas:* Slaptažodžiai nėra matomi HTML kode; jie gaunami realiu laiku atmintyje iš piniginės.
 
-### E grupė: Valdytojai ir Filtrai
+### E grupė: Valdytojai ir filtrai
 
 - **TC-MGR-01: Profilių Valdytojas**
   - *Laukiamas rezultatas:* Kairėje sąrašas, dešinėje YAML turinys, klonavimo ir redagavimo galimybė.
@@ -91,7 +91,7 @@
 
 ---
 
-## 4. Automatizuotos Testavimo Komandos
+## 4. Automatizuotos testavimo komandos
 
 ```bash
 # 1. Dev Hub kompiliavimas ir 6 kalbų vienetų testai

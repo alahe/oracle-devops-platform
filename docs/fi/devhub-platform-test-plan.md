@@ -1,14 +1,14 @@
-# 🧪 Dev Hub & Alustan Uudistusten Testaussuunnitelma
+# 🧪 Dev Hub & alustan uudistusten testaussuunnitelma
 
 [ 🇬🇧 English ](../devhub-platform-test-plan.md) | [ 🇪🇪 Eesti ](../et/devhub-platform-test-plan.md) | [ 🇫🇮 Suomi ](devhub-platform-test-plan.md) | [ 🇸🇪 Svenska ](../sv/devhub-platform-test-plan.md) | [ 🇱🇻 Latviešu ](../lv/devhub-platform-test-plan.md) | [ 🇱🇹 Lietuvių ](../lt/devhub-platform-test-plan.md)
 
 ---
 
-## 1. Yleiskatsaus ja Tavoitteet
+## 1. Yleiskatsaus ja tavoitteet
 
 Tämä testaussuunnitelma määrittelee Developer Hubin (`docs/dev-hub.html`) ja alustan orkestroinnin uudistusten tarkastusstrategian ja standardoidut testitapaukset.
 
-### Ensisijaiset Testaussuunnitelman Tavoitteet:
+### Ensisijaiset testaussuunnitelman tavoitteet:
 1. **Tarkka ja Autonominen Tilantunnistus:** Varmistaa, että Dev Hub tunnistaa aktiiviset blueprintit oikein (mukaan lukien useiden blueprinttien samanaikainen käyttö) eikä koskaan näytä pysäytettyjä pinoja (kuten BP #3 ja BP #4) virheellisesti aktiivisina.
 2. **Resurssimonitorin Luotettavuus:** Varmistaa, että yläpalkin RAM-mittari (`X GB / 16 GB`) laskee yhteen vain todellisuudessa käynnissä olevien konttien muistirajat.
 3. **3-Välilehtisen Modaalidialogin Toiminta:** Vahvistaa saumattoman siirtymisen välilehtien (`Arkkitehtuuri`, `Käyttäjät & Turvallisuus`, `Käynnistykset & Hallinta`) välillä, interaktiiviset Mermaid-topologiakaaviot, SEPS Wallet -tunnukset ja reaaliaikaisen suoritusajastimen.
@@ -19,7 +19,7 @@ Tämä testaussuunnitelma määrittelee Developer Hubin (`docs/dev-hub.html`) ja
 
 ---
 
-## 2. Testauspyramidi ja Kattavuusmatriisi
+## 2. Testauspyramidi ja kattavuusmatriisi
 
 | Taso | Alue | Työkalut | Kesto | Tiheys |
 | :--- | :--- | :--- | :--- | :--- |
@@ -30,9 +30,9 @@ Tämä testaussuunnitelma määrittelee Developer Hubin (`docs/dev-hub.html`) ja
 
 ---
 
-## 3. Yksityiskohtaiset Testitapaukset
+## 3. Yksityiskohtaiset testitapaukset
 
-### Ryhmä A: Tilantunnistus ja Resurssimonitori
+### Ryhmä a: Tilantunnistus ja resurssimonitori
 
 - **TC-STATUS-01: Yksittäisen Blueprintin Tunnistus (BP #0)**
   - *Edellytys:* Suoritettu `./scripts/setup-all.sh --blueprint 0`.
@@ -44,7 +44,7 @@ Tämä testaussuunnitelma määrittelee Developer Hubin (`docs/dev-hub.html`) ja
   - *Edellytys:* BP #0 ja BP #8 käynnissä.
   - *Odotettu tulos:* Molemmat näkyvät vihreinä `Aktiivinen`. Yläpalkissa näkyy `(2 aktiivinen)` ja RAM lasketaan molempien summana. Aktiiviset kortit lajitellaan ensimmäisiksi.
 
-### Ryhmä B: 3-Välilehtinen Modaalidialogi & Elinkaariohjain
+### Ryhmä b: 3-välilehtinen modaalidialogi & elinkaariohjain
 
 - **TC-MODAL-01: Välilehtien Navigointi**
   - *Askeleet:* Napsauta kortilla `📐 Arkkitehtuuri ↗` tai `⚡ Hallinta ↗`. Vaihda välilehtiä: `📐 Arkkitehtuuri`, `🔑 Käyttäjät`, `⚡ Käynnistykset & Hallinta`.
@@ -55,7 +55,7 @@ Tämä testaussuunnitelma määrittelee Developer Hubin (`docs/dev-hub.html`) ja
   - *Askeleet:* Tarkasta "Käynnistykset & Hallinta" -välilehdellä yhtenäinen toimintokorttiruudukko (Ota käyttöön & Vaihda, Nopea Palautus Kultaisesta Vedoksesta, Käynnistä uudelleen, Syvä Puhdistus, Pysäytä palvelut, Tallenna tila). Napsauta mitä tahansa toimintopainiketta (esim. `⚡ Aktivoi` tai `⚡ Palauta Kultainen Vedos`).
   - *Odotettu tulos:* Jokainen kortti sisältää kuvauksen, kopioitavan shell-komentolaatikon ja painikkeen. Reaaliaikainen edistymiskonsoli (`modal-ops-console`) avautuu suoraan korttien alapuolelle ja vierittyy automaattisesti näkyviin live-ajastimella (`⏱️ 00:01`...). Päällekkäinen erillinen komentolaatikko ikkunan alaosassa on poistettu.
 
-### Ryhmä C: Palvelukortit ja Database Actions (DB Actions) Launchpad
+### Ryhmä c: Palvelukortit ja database Actions (DB Actions) launchpad
 
 - **TC-LAUNCH-01: 5 Päätepistepainikkeen Tarkastus**
   - *Odotettu tulos:* Tietokantakorteilla on 5 painiketta: `🛠️ APEX Workspace (DEV)`, `⚙️ APEX Admin (ADMIN)`, `📊 DB Actions (DEV)`, `📊 DB Actions (DBA_ADMIN)`, `🌐 ORDS (<pool>)`.
@@ -66,7 +66,7 @@ Tämä testaussuunnitelma määrittelee Developer Hubin (`docs/dev-hub.html`) ja
   - *Askeleet:* Napsauta `🛠️ APEX Workspace (DEV)`.
   - *Odotettu tulos:* Kehittäjän salasana kopioituu leikepöydälle ja APEX-kirjautumissivu avautuu.
 
-### Ryhmä D: Oracle SEPS Wallet Credential Matrix
+### Ryhmä d: Oracle SEPS Wallet credential matrix
 
 - **TC-WALLET-01: Dynaaminen Tunnusten Yhdistäminen**
   - *Odotettu tulos:* Kaikkien YAML-profiilien tilit näkyvät taulukossa vastaavien tietokantojen ja porttien kohdalla.
@@ -75,7 +75,7 @@ Tämä testaussuunnitelma määrittelee Developer Hubin (`docs/dev-hub.html`) ja
 - **TC-WALLET-03: Zero-Trust -Tarkastus**
   - *Odotettu tulos:* Salasanat eivät näy HTML-lähdekoodissa; ne haetaan reaaliaikaisesti muistipohjaisesti lompakosta.
 
-### Ryhmä E: Hallintapaneelit ja Suodattimet
+### Ryhmä e: Hallintapaneelit ja suodattimet
 
 - **TC-MGR-01: Profiilien Hallinta**
   - *Odotettu tulos:* Vasemmalla lista, oikealla YAML-sisältö, kloonaus- ja muokkaustoiminnot.
@@ -84,14 +84,14 @@ Tämä testaussuunnitelma määrittelee Developer Hubin (`docs/dev-hub.html`) ja
 - **TC-MGR-03: Korttiruudukko ja Suodattimet**
   - *Odotettu tulos:* Suodattimet (`Aktiiviset`, `Remote` jne.) toimivat viiveettä, 3 sarakkeen asettelu toimii.
 
-### Ryhmä F: Monikielisyys (i18n)
+### Ryhmä f: Monikielisyys (i18n)
 
 - **TC-I18N-01: 6 Kielen Dynaaminen Vaihto**
   - *Odotettu tulos:* Yläpalkin liput vaihtavat käyttöliittymän kielen virheettömästi (EN, ET, FI, SV, LV, LT).
 
 ---
 
-## 4. Automaattiset Testikomennot
+## 4. Automaattiset testikomennot
 
 ```bash
 # 1. Dev Hub kääntäminen ja 6 kielen yksikkötestit

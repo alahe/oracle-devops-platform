@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔒 Kasutajataseme Usaldatud Lokaalne CA (Variant 3)
+# 🔒 Kasutajataseme usaldatud lokaalne CA (variant 3)
 
 See kataloog sisaldab kohapeal genereeritud lokaalset juursertifikaati (`localCA.pem`) ja sellega allkirjastatud serveri sertifikaati (`localhost.crt` / `localhost.key`).
 
-## Omadused ja Olek:
+## Omadused ja olek:
 * **Tase:** **Variant 3 (Arendaja lokaalne usaldatud režiim)**
 * **Staatus:** 🟢 **Usaldatud kasutajahoidlas (0-Root / No Sudo)**
 * **Tulemus Brauseris:** Brauser (Chrome, Edge, Safari) avab HTTPS lingid **rohelise tabalukuga ilma hoiatusteta**.

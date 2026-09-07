@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🩹 Oracle Patchide Kaust (`patches/`)
+# 🩹 Oracle patchide kaust (`patches/`)
 
 Käesolev kataloog säilitatakse tagasiühilduvuse ja universaalsete patchide jaoks. Tootespetsiifilised patchid asuvad vastava toote alamkataloogis:
 

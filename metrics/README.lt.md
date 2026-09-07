@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📊 Našumo ir Etalonų Rodiklių Katalogas (`metrics/`)
+# 📊 Našumo Ir etalonų rodiklių katalogas (`metrics/`)
 
 Šiame kataloge saugomi ir Git valdomi diegimo žingsnių ir trukmės matavimai (1 taisyklė).
 
 ---
 
-## 📁 Pagrindiniai Failai
+## 📁 Pagrindiniai failai
 
 - **`setup_benchmarks.json`**: Tiksli diegimo žingsnių trukmė sekundėmis (JSON formatas).
 - **`setup_benchmarks.env`**: Trukmės parametrai kaip aplinkos kintamieji.

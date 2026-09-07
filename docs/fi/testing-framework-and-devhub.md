@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../testing-framework-and-devhub.md) | [ 🇪🇪 Eesti ](../et/testing-framework-and-devhub.md) | [ 🇫🇮 Suomi ](testing-framework-and-devhub.md) | [ 🇸🇪 Svenska ](../sv/testing-framework-and-devhub.md) | [ 🇱🇻 Latviešu ](../lv/testing-framework-and-devhub.md) | [ 🇱🇹 Lietuvių ](../lt/testing-framework-and-devhub.md)
 
-# 🧪 Testauskehys ja Developer Hub -integraatio
+# 🧪 Testauskehys ja developer Hub -integraatio
 
 Tämä tekninen opas dokumentoi alustan monitasoisen automatisoidun testausarkkitehtuurin, Developer Hubin (`docs/dev-hub.html`) interaktiivisen **Testauskeskuksen** (`tab-testing`), asynkronisen testien orkestroinnin `dev-hub-bridge.py`-sillan kautta sekä koodikattavuuden seurannan.
 
 ---
 
-## 🏛️ 1. Tekninen Arkkitehtuuri ja Komponenttivirta
+## 🏛️ 1. Tekninen arkkitehtuuri ja komponenttivirta
 
 Testausekosysteemi yhdistää kehittäjän käyttöliittymätoiminnot testiaureihin, reaaliaikaiseen lokitukseen ja Git-seurattuihin mittareihin:
 
@@ -56,7 +56,7 @@ flowchart TD
 
 ---
 
-## 🚀 2. Testisarjojen Yleiskatsaus
+## 🚀 2. Testisarjojen yleiskatsaus
 
 Alusta jakaa laadunvarmistuksen erikoistuneisiin testisarjoihin:
 
@@ -73,19 +73,19 @@ Alusta jakaa laadunvarmistuksen erikoistuneisiin testisarjoihin:
 
 ---
 
-## 🖥️ 3. Dev Hub Testauskeskus (`tab-testing`)
+## 🖥️ 3. Dev Hub testauskeskus (`tab-testing`)
 
 Developer Hubin testausvälilehti tarjoaa 4 alavälilehteä:
 
-### 3.1 🚀 Testisarjojen Suoritin (`test-subtab-runner`)
+### 3.1 🚀 Testisarjojen suoritin (`test-subtab-runner`)
 - **Sarjakortit**: Mahdollistaa koko sarjan tai alasvetovalikosta valitun yksittäisen skriptin ajamisen yhdellä klikkauksella.
 - **Upotettu Reaaliaikainen Pääte**: Pääteikkuna (`#0b0f19`), joka suoratoistaa stdout/stderr-tulostetta reaaliajassa, sisältää automaattisen vierityksen kytkimen, ajastimen, lokin latauksen ja prosessin keskeytyksen (`POST /api/tests/stop`).
 
-### 3.2 📑 Testiraporttien Arkisto (`test-subtab-reports`)
+### 3.2 📑 Testiraporttien arkisto (`test-subtab-reports`)
 - **Kaksipaneelinen Näkymä**: Vasemmalla listataan raportit (`tests/reports/*.md`) tilatunnisteilla (`PASS`, `FAIL`, `INFO`) ja aikaleimoilla.
 - **Renderöity Markdown**: Oikealla näytetään HTML-muotoiltu sisältö aktiivisilla Mermaid-kaavioilla ja kytkimellä raakatekstin tarkasteluun.
 
-### 3.3 📊 Koodikattavuuden Selain (`test-subtab-coverage`)
+### 3.3 📊 Koodikattavuuden selain (`test-subtab-coverage`)
 - **KPI-Yhteenveto**: Visuaalinen edistymispalkki, joka näyttää testattujen skriptien osuuden prosentteina, kokonaismäärän ja testaamattomat skriptit.
 - **Interaktiivinen Taulukko**: Listaa kaikki `scripts/*.sh`- ja `scripts/internal/*.sh`-tiedostot ja niihin liittyvät testitiedostot.
 - **Suodatus ja Haku**: Nopea tekstihaku ja tilasuodattimet ("Kaikki", "Testatut", "Kattamattomat").
@@ -97,9 +97,23 @@ Developer Hubin testausvälilehti tarjoaa 4 alavälilehteä:
 
 ---
 
-## 🔒 4. Zero-Trust Turvallisuus ja Sääntöjen Noudattaminen
+## 🔒 4. Zero-trust turvallisuus ja sääntöjen noudattaminen
 
 1. **Sääntö 1 (Ajoitus ja Lokitus)**: Jokainen testiajo ohjaa tulosteen automaattisesti tiedostoon `install_logs/test_<suite>_<timestamp>.log` ja tallentaa keston tiedostoon `metrics/test_execution_history.json`.
 2. **Sääntö 9 (Monikielisyys)**: Koko käyttöliittymä on käännetty kaikille kuudelle kielelle (EN, ET, FI, SV, LV, LT).
 3. **Sääntö 12 (Asynkroninen Tehtävä)**: Testit ajetaan taustalla `subprocess.Popen`-kutsulla ilman selaimen lukittumista tai HTTP-aikakatkaisuja.
 4. **Sääntö 13 (Siirrettävyys)**: Kaikki raportti- ja lokitiedostojen nimet käyttävät ASCII kebab-case -muotoa ilman Windows-kiellettyjä merkkejä.
+
+---
+
+## 🌐 5. Sanaston verkkolinkkien turvallinen nollalataustarkistus (`test-glossary-links.sh` / `.cmd`)
+
+Varmistaa, että dokumentaation ja Dev Hubin sanaston linkit eivät koskaan palauta `404 Not Found` -virhettä, taaten samalla täyden turvallisuuden ilman tiedostojen lataamista:
+
+1. **Muistipohjainen HTTP HEAD -kysely**: Tarkistusmoottori (`scripts/internal/check-glossary-links.py`) lähettää vain HTTP `HEAD` -pyyntöjä ja lukee pelkän tilakoodin (200, 301, 404). Vastausrunkoa ei lueta eikä tallenneta levylle.
+2. **Monialustainen tyhjälaite (Windows ja POSIX)**:
+   - **POSIX (macOS / Linux / WSL2)**: Tuloste ohjataan laitteelle `/dev/null`.
+   - **Windows (NTFS / CMD / PowerShell)**: Tuloste ohjataan laitteelle `NUL` skriptillä `tests/unit/test-glossary-links.cmd`.
+   - **Pythonin standardikirjasto**: `os.devnull` takaa nollalevykirjoituksen kaikilla käyttöjärjestelmillä.
+3. **Protokollalukitus**: Sallii vain `https://` -protokollat.
+4. **Dev Hub -suoritus**: Testi on rekisteröity Dev Hubin **Unit Test Suite** -osioon (`tab-testing`) ja se voidaan ajaa yhdellä napsautuksella reaaliaikaisessa konsolissa.

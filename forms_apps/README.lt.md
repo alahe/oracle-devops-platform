@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Oracle Forms Programų Katalogas (`forms_apps/`)
+# 📐 Oracle Forms programų katalogas (`forms_apps/`)
 
 Šis katalogas automatiškai prijungiamas prie Oracle Forms 14c konteinerio kelio `/u01/oracle/forms_apps` skaitymo ir rašymo režimu (`rw`).
 

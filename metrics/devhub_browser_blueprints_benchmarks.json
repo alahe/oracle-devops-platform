@@ -1,10 +1,10 @@
 {
   "suite": "devhub_browser_blueprints",
-  "timestamp": "20260907_125030",
-  "total_tested": 12,
-  "passed": 12,
+  "timestamp": "20260907_202125",
+  "total_tested": 1,
+  "passed": 1,
   "failed": 0,
-  "total_duration_secs": 26,
+  "total_duration_secs": 2,
   "dry_run": true,
   "core_base_protected": true,
   "deactivations_count": 0

@@ -238,3 +238,30 @@ To guarantee flawless Git clones, checkouts, and builds across all supported ope
 
 4. **Automated CI Enforcement:**
    - Every file added or modified in the repository must be verified by `tests/unit/test-filename-portability.sh` during local CI (`scripts/test-local-ci.sh`) and pull request pipelines.
+
+---
+
+## 14. Enterprise Windows & WSL2 Compatibility Rule
+
+To guarantee reliable execution across corporate-managed Windows workstations (Intune, GPO, Zero-Local-Admin, and TLS-inspecting proxies):
+
+1. **Native WSL2 Filesystem Invariant (Strict Prohibition of `/mnt/c/` Execution):**
+   - The repository **MUST ALWAYS be cloned and executed inside the native WSL2 Linux filesystem** (e.g., `/home/<username>/oracle-free-db-in-prod` or `~/oracle-free-db-in-prod`).
+   - Execution from the Windows NTFS host mount (`/mnt/c/...`) is strictly prohibited due to Plan9 (9P) I/O bottlenecks (10x–50x slower) and Linux permission stripping (`chmod 0600` failure on SEPS Wallets).
+   - Pre-flight checks (`check-prerequisites.sh`) and Windows launchers (`setup.cmd`) must detect and warn if the workspace resides under `/mnt/`.
+
+2. **LF Line Ending & `.gitattributes` Enforcement:**
+   - All shell scripts (`.sh`), SQL files (`.sql`), YAML profiles (`.yaml`), JSON files (`.json`), markdown documents (`.md`), and APEXlang DSL specifications (`.apx`) must strictly enforce **LF (`\n`)** line terminators via `.gitattributes`.
+   - Windows cmd/powershell scripts (`.cmd`, `.bat`, `.ps1`) must be explicitly declared as CRLF (`\r\n`).
+   - AI agents must never commit or convert shell scripts to CRLF (`/bin/bash^M: bad interpreter`).
+
+3. **Zero-Admin (0-Root / No-UAC) Standard:**
+   - All Windows bootstrap utilities (`setup.cmd`, `setup.ps1`, `trust-local-cert.cmd`) must operate 100% within unprivileged user space.
+   - SSL certificates must be registered into the CurrentUser store (`certutil -user -addstore Root`), requiring zero local administrator rights or UAC prompts.
+   - Container orchestration must run via rootless Podman inside WSL2.
+
+4. **Corporate Proxy, VPN DNS Tunneling & Hyper-V Port Protection:**
+   - Automation scripts must honor corporate proxy environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`) and support importing corporate Root CA certs from Windows into WSL2.
+   - Windows 11 `.wslconfig` must configure `networkingMode=mirrored` and `dnsTunneling=true` to prevent corporate VPN clients (AnyConnect, GlobalProtect) from dropping WSL2 DNS resolution.
+   - Hyper-V excluded port ranges (`netsh interface ipv4 show excludedportrange protocol=tcp`) must be inspected during pre-flight checks to prevent container port binding collisions on platform ports (1531–1537, 8088, 8448, 9502, 6083).
+

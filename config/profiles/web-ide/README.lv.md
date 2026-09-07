@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 💻 Web IDE Pakalpojuma Profilu Katalogs (`config/profiles/web-ide/`)
+# 💻 Web IDE pakalpojuma profilu katalogs (`config/profiles/web-ide/`)
 
 Šajā direktorijā atrodas YAML profili **Web IDE (`code-server`)** pakalpojumam.
 
-## 📂 Web IDE Profilu Matrica
+## 📂 Web IDE profilu matrica
 
 | Profila Fails | Profila ID | Apraksts | Iekļautie Rīki | Noklusējums Blueprints |
 | :--- | :--- | :--- | :--- | :--- |

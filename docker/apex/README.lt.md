@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🚀 Iš Anksto Sukonfigūruoto APEX Konteinerio Atvaizdo Kūrimas (`docker/apex/`)
+# 🚀 Iš Anksto Sukonfigūruoto APEX konteinerio atvaizdo Kūrimas (`docker/apex/`)
 
 - **Scenarijus:** `build-apex-prebuilt-image.sh`
 - **Rezultatas:** `localhost/oracle-free-apex:latest`

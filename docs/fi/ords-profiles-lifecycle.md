@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../ords-profiles-lifecycle.md) | [ 🇪🇪 Eesti ](../et/ords-profiles-lifecycle.md) | [ 🇫🇮 Suomi ](ords-profiles-lifecycle.md) | [ 🇸🇪 Svenska ](../sv/ords-profiles-lifecycle.md) | [ 🇱🇻 Latviešu ](../lv/ords-profiles-lifecycle.md) | [ 🇱🇹 Lietuvių ](../lt/ords-profiles-lifecycle.md)
 
-# 🌐 Oracle REST Data Services (ORDS) Profiilit ja Erotettu Elinkaariopas
+# 🌐 Oracle REST data services (ORDS) profiilit ja erotettu elinkaariopas
 
 Tämä opas dokumentoi **Oracle REST Data Services (ORDS)** -arkkitehtuurin, elinkaarenhallinnan ja konfiguroinnin paikallisissa konteissa, etäpalvelimilla ja Oracle Autonomous Database (ADB) -pilviympäristöissä.
 
 ---
 
-## 🏛️ 1. Erotetun Arkkitehtuurin Periaatteet
+## 🏛️ 1. Erotetun arkkitehtuurin periaatteet
 
 Nykyaikaisessa modulaarisessa arkkitehtuurissa verkkosovellusyhdyskäytävä on erotettu tietokantamoottorista:
 
@@ -33,7 +33,7 @@ flowchart TD
     DBEngine -.->|Rekisteröi altaan| POOLS
 ```
 
-### Keskeiset Arkkitehtuurisäännöt:
+### Keskeiset arkkitehtuurisäännöt:
 1. **`ords.enabled: true` Tietokantaprofiilissa:**
    - Valmistelee tietokantapuolen ORDS-skeemat, metatiedot (`ORDS_METADATA`) ja proxy-käyttäjät.
    - **EI KÄYNNISTÄ** `app-ords` verkkokonttia.
@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-## 📦 2. Kolme Kanonista ORDS-Profiilia
+## 📦 2. Kolme kanonista ORDS-profiilia
 
 Kaikki ORDS-profiilit sijaitsevat hakemistossa `config/profiles/ords/`:
 
@@ -57,7 +57,7 @@ Kaikki ORDS-profiilit sijaitsevat hakemistossa `config/profiles/ords/`:
 
 ---
 
-## ☁️ 3. Oracle Autonomous Database (ADB) -integraatio
+## ☁️ 3. Oracle autonomous database (ADB) -integraatio
 
 Oracle Autonomous Database (Cloud ADB Serverless) sisältää valmiiksi asennetun ja pilven hallinnoiman ORDS-ympäristön:
 
@@ -71,7 +71,7 @@ ords:
 
 ---
 
-## 💡 4. Ohjeet Jos ORDS-Palvelinta Ei Ole Konfiguroitu
+## 💡 4. Ohjeet jos ORDS-palvelinta ei ole konfiguroitu
 
 Jos käynnistetään tietokanta ilman `ORDS_PROFILE`-määritystä ja keskitetty ORDS ei ole käynnissä:
 - Terminaalissa näytetään opastava tila:

@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../publisher-setup.md) | [ 🇪🇪 Eesti ](publisher-setup.md) | [ 🇸🇪 Svenska ](../sv/README.md) | [ 🇱🇻 Latviešu ](../lv/README.md) | [ 🇱🇹 Lietuvių ](../lt/README.md)
 
-# Oracle Analytics Publisher (Pixel Perfect) Paigaldus- ja Kasutusjuhend
+# Oracle analytics Publisher (pixel perfect) paigaldus- ja kasutusjuhend
 
 See juhend kirjeldab **Oracle Analytics Publisheri (Pixel Perfect / BI Publisher)** paigaldamist, arhitektuuri, andmeallikate automaatset sidumist ja aruannete haldust blueprintide **Seeria 10–19 ja 40** raames.
 
 ---
 
-## 1. Arhitektuur ja Portide Jaotus
+## 1. Arhitektuur ja portide jaotus
 
 | Komponent | Port | URL / Sihtkoht | Kirjeldus & Roll |
 | :--- | :--- | :--- | :--- |
@@ -18,7 +18,7 @@ See juhend kirjeldab **Oracle Analytics Publisheri (Pixel Perfect / BI Publisher
 
 ---
 
-## 2. Toetatud Blueprintid (Seeria 10–19)
+## 2. Toetatud blueprintid (seeria 10–19)
 
 | Blueprint ID | Faili Nimi | Konteinerid | Otstarve ja Arhitektuur |
 | :---: | :--- | :--- | :--- |
@@ -31,7 +31,7 @@ See juhend kirjeldab **Oracle Analytics Publisheri (Pixel Perfect / BI Publisher
 
 ---
 
-## 3. Automaatne Andmeallikate ja SEPS Walleti Sidumine
+## 3. Automaatne andmeallikate ja SEPS walleti sidumine
 
 Publisher vajab äriandmete pärimiseks ligipääsu andmebaasile. Süsteem automatiseerib selle 100%:
 
@@ -44,7 +44,7 @@ Publisher vajab äriandmete pärimiseks ligipääsu andmebaasile. Süsteem autom
 
 ---
 
-## 4. Aruannete ja Mallide Tarne (`deploy-publisher-reports.sh`)
+## 4. Aruannete ja mallide tarne (`deploy-publisher-reports.sh`)
 
 Aruannete failide (`.xdo`, `.rtf`, `.xpt`) paigaldamiseks on 3 võimalust:
 
@@ -58,7 +58,7 @@ Aruannete failide (`.xdo`, `.rtf`, `.xpt`) paigaldamiseks on 3 võimalust:
 
 ---
 
-## 5. Igapäevased Käsurea Tööriistad
+## 5. Igapäevased käsurea tööriistad
 
 ```bash
 # 1. Kontrolli Publisheri staatust ja tervist:

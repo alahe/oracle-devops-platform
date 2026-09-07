@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Paikalliset Ohjelmistopaketit ja Binaarivälimuisti (`binaries/`)
+# 📦 Paikalliset ohjelmistopaketit ja Binaarivälimuisti (`binaries/`)
 
 Tämä hakemisto toimii paikallisena välimuistina offline-asennuksille ja yrityksen Artifactory-peileille (ZIP, RPM, JAR, VSIX, SQL).
 
 ---
 
-## 📁 Alihakemistot ja Tarkoitus
+## 📁 Alihakemistot ja tarkoitus
 
 | Alihakemisto | Kuvaus ja Tiedostot | Päivityshakemisto | Komentosarjat / Käyttö |
 | :--- | :--- | :--- | :--- |
@@ -21,7 +21,7 @@ Tämä hakemisto toimii paikallisena välimuistina offline-asennuksille ja yrity
 
 ---
 
-## 🔒 Git-Versiohallintaperiaate
+## 🔒 Git-versiohallintaperiaate
 
 - Kaikki binaaritiedostot (`*.zip`, `*.rpm`, `*.jar`, `*.vsix`) ovat tiedostossa `.gitignore` ja pysyvät **vain paikallisina**.
 - Hakemistorakenne ja `README*.md`-oppaat ovat versionhallinnassa.

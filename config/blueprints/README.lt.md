@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🏗️ Architektūros Projektų (Blueprints) Katalogas (0 .. 11)
+# 🏗️ Architektūros projektų (Blueprints) katalogas (0 .. 11)
 
 Šiame kataloge aprašomi **12 kanoninių modulinių architektūros projektų**, apimančių visą platformą:
 
@@ -41,7 +41,7 @@ flowchart TD
 
 ---
 
-## 🚀 CLI Komandos ir Projektų Valdymas
+## 🚀 CLI komandos ir projektų valdymas
 
 ```bash
 # 1. Paleisti su numatytuoju Blueprint 0 (Numatytasis Proxy DB + ORDS, be papildomų vėliavėlių):
@@ -65,7 +65,7 @@ flowchart TD
 
 ---
 
-## 📊 12 Architektūros Projektų Matrica
+## 📊 12 Architektūros projektų matrica
 
 | ID | Projekto Pavadinimas & Failas | Duomenų Bazės Profilis & Prievadas | Paslaugų Profiliai & Prievadai | Konteineriai | Aprašymas |
 | :---: | :--- | :--- | :--- | :--- | :--- |
@@ -84,13 +84,13 @@ flowchart TD
 
 ---
 
-## 🧩 Švari Projektų ir YAML Profilių Architektūra (Rule 11)
+## 🧩 Švari projektų ir YAML profilių architektūra (rule 11)
 
-### 1. Atsakomybių Atskyrimas
+### 1. Atsakomybių atskyrimas
 - **Projektai (`config/blueprints/.env.*`):** Deklaruoja tik aukšto lygio teigiamas nuorodas į YAML profilius. Jie apibrėžia *kokie konteineriai sukuriami*. Jokiu būdu neturi fiksuotų prievadų, slaptažodžių ar neigiamų `SKIP_*` vėliavėlių.
 - **YAML Profiliai (`config/profiles/**/*.yaml`):** Apima 100% domenui būdingų detalių: konteinerių atvaizdus, atminties limitus, prievadus, numatytąsias PDB, lentelių erdves ir vartotojų aprašus.
 
-### 2. Kaip Pridėti Pasirinktinį Projektą (1 po 1)
+### 2. Kaip pridėti pasirinktinį projektą (1 po 1)
 Kiekvienas gali sukurti naują projektą be scenarijaus kodo keitimo:
 1. Sukurkite naują failą: `config/blueprints/.env.<ID>-<pavadinimas>` (pvz., `.env.12-custom-analytics-workstation`):
    ```bash

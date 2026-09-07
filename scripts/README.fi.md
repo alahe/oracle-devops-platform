@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🛠️ CLI-Komentosarjat ja Kehittäjätyökalujen Käsikirja
+# 🛠️ Cli-komentosarjat ja Kehittäjätyökalujen Käsikirja
 
 Tämä opas tarjoaa kattavan dokumentaation kaikille projektin elinkaari-, diagnostiikka-, hallinta- ja kehittäjäskripteille.
 
@@ -8,7 +8,7 @@ Kaikki komentosarjat noudattavat tiukkaa **3-tasoista modulaarista hakemistorake
 
 ---
 
-## 📁 3-Tasoinen Komentosarjojen Hakemistorakenne
+## 📁 3-tasoinen komentosarjojen hakemistorakenne
 
 ```text
 scripts/
@@ -56,7 +56,7 @@ scripts/
 
 ---
 
-## 1. Ympäristön Automaattinen Asennus (`setup-all.sh`)
+## 1. Ympäristön Automaattinen asennus (`setup-all.sh`)
 
 Komentosarja `./scripts/setup-all.sh` suorittaa koko ympäristön täydellisen asennuksen: lataa ohjelmistopaketit, orkestroi säilöt, odottaa tietokantojen ja ORDS:n valmiutta, suorittaa skeeman migraatiot (Liquibase), asentaa APEX:n päivityksineen ja mittaa kunkin vaiheen keston (Rule 1).
 
@@ -130,7 +130,7 @@ Käynnistää olemassa olevat paikalliset tietokanta- ja ORDS-säilöt ja odotta
 
 ---
 
-## 3. Ympäristön ja Komponenttien Nollaus (`reset-all.sh`)
+## 3. Ympäristön Ja komponenttien nollaus (`reset-all.sh`)
 
 Modulaarinen profiilitietoinen siivousmoottori, joka pysäyttää ja poistaa säilöt, profiilit (`config/profiles/*.yaml`), volyymit ja verkot.
 
@@ -147,7 +147,7 @@ Modulaarinen profiilitietoinen siivousmoottori, joka pysäyttää ja poistaa sä
 
 ---
 
-## 4. Tilannevedosten Hallinta (`scripts/snapshots/`)
+## 4. Tilannevedosten hallinta (`scripts/snapshots/`)
 
 Tarjoaa tietokantavolyymien nopean kylmävarmuuskopioinnin ja palauttamisen (~15s):
 
@@ -159,7 +159,7 @@ Tarjoaa tietokantavolyymien nopean kylmävarmuuskopioinnin ja palauttamisen (~15
 
 ---
 
-## 4.5. Lokien Siivous ja Turvallisuus (`clean-logs.sh` & `sanitize-logs.sh`)
+## 4.5. Lokien siivous ja turvallisuus (`clean-logs.sh` & `sanitize-logs.sh`)
 
 ```bash
 ./scripts/clean-logs.sh [-y | --force]
@@ -171,21 +171,21 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 
 ---
 
-## 5. Kehittäjän ja Ylläpitäjän CLI-Työkalut
+## 5. Kehittäjän Ja Ylläpitäjän CLI-Työkalut
 
-### 5.1. Salasanojen Luku Walletista (`get-password.sh`)
+### 5.1. Salasanojen luku walletista (`get-password.sh`)
 ```bash
 ./scripts/get-password.sh <ALIAS>
 ./scripts/get-password.sh DB_PROXY_DEV
 ./scripts/get-password.sh DB_PROXY_APEX_ADMIN
 ```
 
-### 5.2. Verkkopalveluiden HTTP-Tarkistus (`check-urls.sh`)
+### 5.2. Verkkopalveluiden http-tarkistus (`check-urls.sh`)
 ```bash
 ./scripts/check-urls.sh
 ```
 
-### 5.3. SEPS-Yhteyksien Diagnostiikka (`check-wallet.sh`)
+### 5.3. Seps-yhteyksien diagnostiikka (`check-wallet.sh`)
 ```bash
 ./scripts/check-wallet.sh
 ```
@@ -201,21 +201,21 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 ./scripts/create-developer.sh
 ```
 
-### 5.6. VS Code -Yhteyksien Synkronointi (`register-connections.sh`)
+### 5.6. VS code -yhteyksien synkronointi (`register-connections.sh`)
 ```bash
 ./scripts/register-connections.sh
 ```
 
 ---
 
-## 6. Paikallisten Sertifikaattien Luottamus (`scripts/certs/`)
+## 6. Paikallisten sertifikaattien luottamus (`scripts/certs/`)
 
 * 🍎 **macOS:** `./scripts/certs/trust-local-cert-mac.sh`
 * 🪟 **Windows & WSL:** `scripts\certs\trust-local-cert.cmd` / `trust-local-cert.ps1`
 
 ---
 
-## 7. Analytics Publisherin Toiminnot (`scripts/publisher/`)
+## 7. Analytics publisherin toiminnot (`scripts/publisher/`)
 
 * `./scripts/publisher/status-publisher.sh`
 * `./scripts/publisher/restart-publisher.sh`
@@ -224,7 +224,7 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 
 ---
 
-## 8. Etäkäyttöönotto ja Monipilvitestaus (`deploy-remote.sh`)
+## 8. Etäkäyttöönotto Ja monipilvitestaus (`deploy-remote.sh`)
 
 ```bash
 ./scripts/deploy-remote.sh --host 20.123.45.67 --user azureuser --key ~/.ssh/id_rsa --blueprint 10
@@ -234,7 +234,7 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 
 ---
 
-## 9. Manuaalinen Päivitysten Asennus (`scripts/internal/`)
+## 9. Manuaalinen Päivitysten asennus (`scripts/internal/`)
 
 * `./scripts/internal/apply-apex-patch.sh`
 * `./scripts/internal/apply-publisher-patch.sh`
@@ -248,7 +248,7 @@ Katso tarkemmat tiedot hakemistosta:
 
 ---
 
-## 11. Vianmääritys: Podman Machine Palautusohje
+## 11. Vianmääritys: Podman machine palautusohje
 
 Jos Podman-liitännässä ilmenee virheitä tai säilöjen aikakatkaisuja:
 

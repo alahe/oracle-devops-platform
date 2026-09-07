@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Oracle Forms 14c Veiklos Scenarijai (`scripts/forms/`)
+# 📐 Oracle Forms 14c veiklos scenarijai (`scripts/forms/`)
 
 Šiame kataloge pateikiami įrankiai, skirti valdyti Oracle Forms 14c vykdymo aplinką, kompiliavimą iš komandinės eilutės, WebLogic domeno diagnostiką ir programų diegimą.
 
 ---
 
-## 🛠️ Prieinami Scenarijai
+## 🛠️ Prieinami scenarijai
 
 - **`build-forms-image.sh`:** Sukuria vietinį `localhost/oracle-forms:14.1.2` konteinerio atvaizdą.
   ```bash

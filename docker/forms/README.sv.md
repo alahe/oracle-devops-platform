@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Bygge av Oracle Forms 14c Containeravbildning (`docker/forms/`)
+# 📐 Bygge av Oracle Forms 14c containeravbildning (`docker/forms/`)
 
 - **Dockerfile:** `dockerfiles/14.1.2/Dockerfile`
 - **Skript:** `../../scripts/forms/build-forms-image.sh`

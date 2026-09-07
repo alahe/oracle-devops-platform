@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Pakotās APEX Lietotnes (`applications/`)
+# 📦 Pakotās APEX lietotnes (`applications/`)
 
 Šis direktorijs ir paredzēts deklaratīvām Oracle APEX lietotnēm, kas definētas, izmantojot [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) vai standarta SQLcl dalītos eksportus.
 

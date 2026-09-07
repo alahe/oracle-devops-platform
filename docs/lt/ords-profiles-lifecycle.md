@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../ords-profiles-lifecycle.md) | [ 🇪🇪 Eesti ](../et/ords-profiles-lifecycle.md) | [ 🇫🇮 Suomi ](../fi/ords-profiles-lifecycle.md) | [ 🇸🇪 Svenska ](../sv/ords-profiles-lifecycle.md) | [ 🇱🇻 Latviešu ](../lv/ords-profiles-lifecycle.md) | [ 🇱🇹 Lietuvių ](ords-profiles-lifecycle.md)
 
-# 🌐 Oracle REST Data Services (ORDS) Profilių ir Atsieto Gyvavimo Ciklo Vadovas
+# 🌐 Oracle REST data services (ORDS) profilių ir atsieto gyvavimo ciklo vadovas
 
 Šis vadovas dokumentuoja **Oracle REST Data Services (ORDS)** architektūrą, gyvavimo ciklo orkestravimą ir konfigūravimą vietiniuose konteineriuose, nuotoliniuose serveriuose bei Oracle Autonomous Database (ADB) debesų aplinkose.
 
 ---
 
-## 🏛️ 1. Atsietos Architektūros Principai
+## 🏛️ 1. Atsietos architektūros principai
 
 Šiuolaikinėje modulinėje architektūroje saityno programų šliuzas yra atskirtas nuo duomenų bazės variklio:
 
@@ -33,7 +33,7 @@ flowchart TD
     DBEngine -.->|Užregistruoja telkinį| POOLS
 ```
 
-### Pagrindinės Architektūros Taisyklės:
+### Pagrindinės architektūros taisyklės:
 1. **`ords.enabled: true` Duomenų Bazės Profilyje:**
    - Paruošia duomenų bazės ORDS schemas, metaduomenis (`ORDS_METADATA`) ir įgaliotuosius naudotojus.
    - **NEPALEIDŽIA** `app-ords` saityno konteinerio.
@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-## 📦 2. Trys Kanoniniai ORDS Profiliai
+## 📦 2. Trys kanoniniai ORDS profiliai
 
 Visi ORDS profiliai saugomi kataloge `config/profiles/ords/`:
 
@@ -57,7 +57,7 @@ Visi ORDS profiliai saugomi kataloge `config/profiles/ords/`:
 
 ---
 
-## ☁️ 3. Oracle Autonomous Database (ADB) Integravimas
+## ☁️ 3. Oracle autonomous database (ADB) integravimas
 
 Oracle Autonomous Database (Cloud ADB Serverless) apima iš anksto įdiegtą ir debesyje valdomą ORDS:
 
@@ -71,7 +71,7 @@ ords:
 
 ---
 
-## 💡 4. Nurodymai, Kai ORDS Serveris Nėra Sukonfigūruotas
+## 💡 4. Nurodymai, kai ORDS serveris nėra sukonfigūruotas
 
 Jei duomenų bazė paleidžiama be `ORDS_PROFILE` ir centrinis ORDS neveikia:
 - Terminale pateikiamas aiškus pranešimas:
@@ -80,7 +80,7 @@ Jei duomenų bazė paleidžiama be `ORDS_PROFILE` ir centrinis ORDS neveikia:
 
 ---
 
-## 🚀 5. Greitosios Komandos
+## 🚀 5. Greitosios komandos
 
 ```bash
 # 1. Paleisti nuolatinį centrinį ORDS šliuzą:

@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# ⚙️ Katalog för Interna Skript (`scripts/internal/`)
+# ⚙️ Katalog för interna skript (`scripts/internal/`)
 
 Enligt **Rule 3 (Directory Layout Rule for Scripts)** innehåller denna katalog kompletterande automationsmotorer, profilparser, databasinitierare, automatiserade installationssteg och SQL-filer som används internt av systemorkestreraren (`setup-all.sh`).
 
@@ -8,9 +8,9 @@ Enligt **Rule 3 (Directory Layout Rule for Scripts)** innehåller denna katalog 
 
 ---
 
-## 📂 Referens för Interna Skript
+## 📂 Referens för interna skript
 
-### 📦 1. Profilhanterare & Topologi
+### 📦 1. Profilhanterare & topologi
 | Skript | Beskrivning |
 | :--- | :--- |
 | **[load-profile.sh](load-profile.sh)** | Dynamisk YAML-profilparser (`config/profiles/*/*.yaml`). Tillämpar 3-nivåers prioritetshierarki för containeravbildningar och ZIP-URL:er. |
@@ -25,13 +25,13 @@ Enligt **Rule 3 (Directory Layout Rule for Scripts)** innehåller denna katalog 
 | **[deploy-apex-apps.sh](deploy-apex-apps.sh)** | Sekventiell importör av APEX-applikationer för filer i `binaries/apex_apps/`. |
 | **[deploy-apex.sql](deploy-apex.sql)** | SQLcl PL/SQL-omslag för att importera APEX-applikationsexporter i SQL-format. |
 
-### 🔌 3. Profildriven Instansinitiering
+### 🔌 3. Profildriven instansinitiering
 | Skript / SQL | Beskrivning |
 | :--- | :--- |
 | **[init-db-instance.sh](init-db-instance.sh)** | Generiskt profildrivet initieringsskript för valfri profil (`proxy`, `appinfra`, `bizapp`, `cicd`). |
 | **[init-db-instance.sql](init-db-instance.sql)** | Profildrivet PL/SQL-skript som konfigurerar minnesparametrar, tabellutrymmen och REST-nätverks-ACL. |
 
-### 🔑 4. Säkerhet, Hemligheter & Certifikat
+### 🔑 4. Säkerhet, Hemligheter & certifikat
 | Skript | Beskrivning |
 | :--- | :--- |
 | **[create-wallet.sh](create-wallet.sh)** | Genererar Oracle SEPS (Secure External Password Store) autologin-plånböcker (`cwallet.sso`). |
@@ -40,7 +40,7 @@ Enligt **Rule 3 (Directory Layout Rule for Scripts)** innehåller denna katalog 
 | **[sanitize-logs.sh](sanitize-logs.sh)** | Strömfilter för stdout/stderr-loggar; maskerar hemligheter/tokens (`token=***MASKED***`). Stöder `DEBUG_LOG_UNSANITIZED=true` för nödfelsökning. |
 | **[generate-local-certs.sh](generate-local-certs.sh)** | Genererar lokal Root CA och SSL-certifikat (`config/certs/`) och etablerar förtroende i macOS, Windows eller WSL. |
 
-### 💻 5. Initiering av Containerbaserad Webb-IDE
+### 💻 5. Initiering av containerbaserad webb-ide
 | Skript | Beskrivning |
 | :--- | :--- |
 | **[init-web-ide.sh](init-web-ide.sh)** | Förkonfigurerar code-server-inställningar, SEPS Wallet-synkronisering och SQL Developer-anslutningar inuti webb-IDE (`web-ide`). |

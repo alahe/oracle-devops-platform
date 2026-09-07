@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../../README.md) | [ 🇪🇪 Eesti ](../et/README.md) | [ 🇫🇮 Suomi ](../fi/README.md) | [ 🇸🇪 Svenska ](../sv/README.md) | [ 🇱🇻 Latviešu ](README.md) | [ 🇱🇹 Lietuvių ](../lt/README.md)
 
-# Oracle DevOps Platforma (Latviešu Rokasgrāmata)
+# Oracle DevOps platforma (latviešu rokasgrāmata)
 
 > **Ražošanai gatava, bez licences maksas (0 €) un 100% bezparoļu (SEPS Wallet) Oracle 23ai, APEX SSO Vārtejas, Forms 14c, Publisher un Web IDE izstrādes un DevOps platforma.**
 
 ---
 
-## ⚡ 60 Sekunžu Ātrā Palaišana
+## ⚡ 60 Sekunžu ātrā palaišana
 
 ```bash
 # 1. Klonēt krātuvi un pāriet uz mapi
@@ -30,7 +30,7 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 
 ---
 
-## 🗺️ Jauna Izstrādātāja Ceļvedis (Onboarding Journey)
+## 🗺️ Jauna izstrādātāja ceļvedis (onboarding journey)
 
 ```mermaid
 flowchart TD
@@ -56,7 +56,7 @@ flowchart TD
 
 ---
 
-## ⚡ Setup-All 10-Fāžu Dzīvescikla Arhitektūra
+## ⚡ Setup-all 10-fāžu dzīvescikla arhitektūra
 
 ```mermaid
 flowchart LR
@@ -73,7 +73,7 @@ flowchart LR
 
 ---
 
-## 🌐 Dev Hub (`http://localhost:8088/`) — Vienots Vadības Centrs (*Single Pane of Glass*)
+## 🌐 Dev Hub (`http://localhost:8088/`) — Vienots vadības centrs (*single pane of glass*)
 
 Izstrādātājiem nav jāatceras desmitiem dažādu portu. **Dev Hub** kalpo kā vienots portāls:
 - **1-Klikšķa Pakalpojumu Saites:** Tūlītēja piekļuve APEX Builder, Database Actions (SDW), Forms 14c, HTML5 noVNC Forms Builder un Analytics Publisher.
@@ -85,7 +85,7 @@ Izstrādātājiem nav jāatceras desmitiem dažādu portu. **Dev Hub** kalpo kā
 
 ---
 
-## 🌐 ORDS Viedā Vārteja un Autonomā Mikroreģistrācija (Variant 3)
+## 🌐 ORDS viedā vārteja un autonomā mikroreģistrācija (variant 3)
 
 Platforma novērš portu konfliktus un ORDS dublēšanos ar **Viedās Vārtejas un Autonomās Mikroreģistrācijas modeli**:
 
@@ -101,7 +101,7 @@ Platforma novērš portu konfliktus un ORDS dublēšanos ar **Viedās Vārtejas 
 
 ---
 
-## 🔑 Kur Ir Mana Parole? (SEPS Wallet Špikeris)
+## 🔑 Kur ir mana parole? (SEPS Wallet špikeris)
 
 Visas paroles tiek ģenerētas ar augstu kriptogrāfisko drošību un droši glabātas **Oracle SEPS (Secure External Password Store) Wallet** un Podman Secrets.
 
@@ -121,7 +121,7 @@ sql /@DB_PROXY_DEV
 
 ---
 
-## 🎯 3 Ieinteresēto Pušu Skatījumi un Biznesa Vērtība
+## 🎯 3 Ieinteresēto pušu skatījumi un biznesa vērtība
 
 | Skatījums | Galvenie Ieguvumi un Ikdienas Pieredze | Tehniskais Nodrošinātājs |
 | :--- | :--- | :--- |
@@ -131,7 +131,7 @@ sql /@DB_PROXY_DEV
 
 ---
 
-## 🔄 Oracle APEX un Forms 14c Integrācijas Loma
+## 🔄 Oracle APEX un Forms 14c integrācijas loma
 
 Šajā arhitektūrā **Oracle APEX 26.1** primāri tiek pozicionēts kā:
 1. **Forms Modernizācijas Tilts:** Pakāpeniska Forms 14c lietotņu pārnese uz modernām tīmekļa lietotnēm, izmantojot [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
@@ -139,7 +139,7 @@ sql /@DB_PROXY_DEV
 
 ---
 
-## 📋 11 Kurēti Arhitektūras Plāni (Blueprints)
+## 📋 11 Kurēti arhitektūras plāni (Blueprints)
 
 ```mermaid
 graph TD
@@ -170,7 +170,7 @@ graph TD
   end
 ```
 
-### 🚀 Plānu Izvēršana un Pārvaldība (`./scripts/deploy-blueprint.sh`)
+### 🚀 Plānu izvēršana un pārvaldība (`./scripts/deploy-blueprint.sh`)
 
 ```bash
 # 1. Pārbaudīt aktīvo plānu un pakalpojumu veselību:
@@ -191,7 +191,7 @@ graph TD
 
 ---
 
-## ⚡ Paātrināta ~15s Atjaunošana & Automatizēta Versiju Pārbaude
+## ⚡ Paātrināta ~15s atjaunošana & automatizēta versiju pārbaude
 
 Oracle Free DB in Prod ietver **inteliģentu daudzlīmeņu Golden Snapshot un Skip dzinēju** (`scripts/internal/snapshot-resolver.sh`), kas samazina otro palaišanas laiku no **~6–12 minūtēm līdz ~15 sekundēm**:
 
@@ -206,7 +206,7 @@ Oracle Free DB in Prod ietver **inteliģentu daudzlīmeņu Golden Snapshot un Sk
 
 ---
 
-## 🚀 Ātrā Palaišana (Quickstart CLI)
+## 🚀 Ātrā palaišana (quickstart CLI)
 
 ```bash
 # 1. Palaist izvēlēto blueprint:
@@ -246,7 +246,7 @@ Oracle Free DB in Prod ietver **inteliģentu daudzlīmeņu Golden Snapshot un Sk
 
 ---
 
-## 🧭 Oracle APEX DevHub Lietotne un APEXlang CI/CD
+## 🧭 Oracle APEX DevHub lietotne un APEXlang CI/CD
 
 Papildus atsevišķajam HTML Dev Hub (`docs/dev-hub.html`) platformā ir iekļauta uzņēmuma līmeņa **Oracle APEX lietotne (Lietotne 101: DevHub)**, kas deklaratīvi izveidota ar [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) direktorijā [`applications/devhub/`](../../applications/devhub/):
 
@@ -268,9 +268,10 @@ Papildus atsevišķajam HTML Dev Hub (`docs/dev-hub.html`) platformā ir iekļau
 
 ---
 
-## 📑 Lietotāja Rokasgrāmatas
+## 📑 Lietotāja rokasgrāmatas
 
 - 🏛️ **[docs/enterprise-distributed-architecture.md](../../docs/enterprise-distributed-architecture.md) | [docs/lv/enterprise-distributed-architecture.md](enterprise-distributed-architecture.md):** **Sadalītā Uzņēmuma Arhitektūra** — 4 līmeņu finanšu arhitektūra (ORDS, Publisher, Proxy DB, Publisher DB), integrācija ar esošo pamatdarbības datubāzi un PROD Active/Standby avārijas atjaunošana (RTO < 60s, RPO < 15m).
+- 🛡️ **[docs/security-audit-report.md](../../docs/security-audit-report.md) | [docs/lv/security-audit-report.md](security-audit-report.md):** **Uzņēmuma Drošības Audits & Hardening** — Automatizēts 7 līmeņu drošības skeneris (`test-security-audit.sh`), OWASP Top 10, CIS Benchmark un DORA.
 - 📋 **[docs/backlog/README.md](../../docs/backlog/README.md):** **Finanšu Jira Backlog** — 11 ražošanai gatavi Jira stāsti (62 SP) sadalītai izvietošanai, multi-pool maršrutēšanai un automātiskai kļūmjpārlēcei.
 - 🚀 **[docs/lv/forms-to-apex-migration-guide.md](forms-to-apex-migration-guide.md):** **Oracle Forms $\rightarrow$ APEX Modernizācijas un Pārejas Rokasgrāmata** — Biznesa pamatojums, TCO salīdzinājums, 5 posmu automatizēta darba plūsma un [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/).
 - 📐 **[docs/forms-setup.md](../../docs/forms-setup.md):** Oracle Forms 14c Rokasgrāmata.

@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../publisher-setup.md) | [ 🇪🇪 Eesti ](../et/publisher-setup.md) | [ 🇫🇮 Suomi ](publisher-setup.md) | [ 🇸🇪 Svenska ](../sv/README.md) | [ 🇱🇻 Latviešu ](../lv/README.md) | [ 🇱🇹 Lietuvių ](../lt/README.md)
 
-# Oracle Analytics Publisher (Pixel Perfect) Asennus- ja Käyttöohje
+# Oracle analytics Publisher (pixel perfect) asennus- ja käyttöohje
 
 Tämä ohje kuvaa **Oracle Analytics Publisherin (Pixel Perfect / BI Publisher)** asennuksen, arkkitehtuurin, tietolähteiden automaattisen liittämisen ja raporttien hallinnan **sarjoissa 10–19 ja 40**.
 
 ---
 
-## 1. Arkkitehtuuri ja Porttijako
+## 1. Arkkitehtuuri ja porttijako
 
 | Komponentti | Portti | URL / Kohde | Kuvaus & Rooli |
 | :--- | :--- | :--- | :--- |
@@ -18,7 +18,7 @@ Tämä ohje kuvaa **Oracle Analytics Publisherin (Pixel Perfect / BI Publisher)*
 
 ---
 
-## 2. Tuetut Blueprintit (Sarja 10–19)
+## 2. Tuetut blueprintit (sarja 10–19)
 
 | Blueprint ID | Tiedostonimi | Kontit | Tarkoitus ja Arkkitehtuuri |
 | :---: | :--- | :--- | :--- |
@@ -30,7 +30,7 @@ Tämä ohje kuvaa **Oracle Analytics Publisherin (Pixel Perfect / BI Publisher)*
 
 ---
 
-## 3. Automaattinen Tietolähteiden ja SEPS Walletin Liittäminen
+## 3. Automaattinen tietolähteiden ja SEPS walletin liittäminen
 
 1. **Salasanaton `PUBLISHER_READER` -Tili:**
    - Tietokantaan luodaan rajatun oikeuden tili `PUBLISHER_READER`.
@@ -41,7 +41,7 @@ Tämä ohje kuvaa **Oracle Analytics Publisherin (Pixel Perfect / BI Publisher)*
 
 ---
 
-## 4. Raporttien ja Mallien Jakelu (`deploy-publisher-reports.sh`)
+## 4. Raporttien ja mallien jakelu (`deploy-publisher-reports.sh`)
 
 1. **Paikallinen Kansio (`publisher-reports/`):**
    - Sijoita raportit kansioon `publisher-reports/Custom/`.

@@ -1,14 +1,14 @@
-# 🧪 Dev Hub & Plattform Modernisering Testplan
+# 🧪 Dev Hub & plattform modernisering testplan
 
 [ 🇬🇧 English ](../devhub-platform-test-plan.md) | [ 🇪🇪 Eesti ](../et/devhub-platform-test-plan.md) | [ 🇫🇮 Suomi ](../fi/devhub-platform-test-plan.md) | [ 🇸🇪 Svenska ](devhub-platform-test-plan.md) | [ 🇱🇻 Latviešu ](../lv/devhub-platform-test-plan.md) | [ 🇱🇹 Lietuvių ](../lt/devhub-platform-test-plan.md)
 
 ---
 
-## 1. Översikt och Mål
+## 1. Översikt och mål
 
 Denna testplan definierar verifieringsstrategin och standardiserade testfall för Developer Hub (`docs/dev-hub.html`) och plattformsorkestreringens moderniseringar.
 
-### Primära Testmål:
+### Primära testmål:
 1. **Exakt och Autonom Statusidentifiering:** Säkerställa att Dev Hub identifierar aktiva blueprints korrekt (inklusive samtidig körning av flera blueprints) och aldrig felaktigt visar stoppade miljöer (såsom BP #3 och BP #4) som aktiva.
 2. **Resursmonitorns Pålitlighet:** Verifiera att RAM-mätaren i sidhuvudet (`X GB / 16 GB`) summerar enbart minnesgränser från faktiskt körande containrar.
 3. **3-Flikars Modaldialogens Funktionalitet:** Bekräfta sömlös växling mellan flikarna (`Arkitektur`, `Användare & Säkerhet`, `Körningar & Hantering`), interaktiva Mermaid-topologidiagram, SEPS Wallet-uppgifter och realtidsstoppur.
@@ -19,7 +19,7 @@ Denna testplan definierar verifieringsstrategin och standardiserade testfall fö
 
 ---
 
-## 2. Testpyramid och Täckningsmatris
+## 2. Testpyramid och täckningsmatris
 
 | Nivå | Område | Verktyg | Varaktighet | Frekvens |
 | :--- | :--- | :--- | :--- | :--- |
@@ -30,9 +30,9 @@ Denna testplan definierar verifieringsstrategin och standardiserade testfall fö
 
 ---
 
-## 3. Detaljerade Testfall
+## 3. Detaljerade testfall
 
-### Grupp A: Statusidentifiering och Resursövervakning
+### Grupp a: Statusidentifiering och resursövervakning
 
 - **TC-STATUS-01: Identifiering av Enskild Blueprint (BP #0)**
   - *Förutsättning:* Körde `./scripts/setup-all.sh --blueprint 0`.
@@ -44,7 +44,7 @@ Denna testplan definierar verifieringsstrategin och standardiserade testfall fö
   - *Förutsättning:* BP #0 och BP #8 körs samtidigt.
   - *Förväntat resultat:* Båda visas som gröna `Aktiv`. Sidhuvudet visar `(2 aktiva)` och RAM beräknas som summan av båda. Aktiva kort sorteras först.
 
-### Grupp B: 3-Flikars Modaldialog & Livscykelkontroll
+### Grupp b: 3-flikars modaldialog & livscykelkontroll
 
 - **TC-MODAL-01: Fliknavigering**
   - *Steg:* Klicka på kortet `📐 Arkitektur ↗` eller `⚡ Hantering ↗`. Växla mellan `📐 Arkitektur`, `🔑 Användare`, `⚡ Körningar & Hantering`.
@@ -55,7 +55,7 @@ Denna testplan definierar verifieringsstrategin och standardiserade testfall fö
   - *Steg:* Kontrollera det enhetliga åtgärdsrutnätet på fliken "Körningar & Hantering" (Distribuera & Växla, Snabbåterställning från Golden Snapshot, Starta om, Djuprensning, Stoppa tjänster, Spara tillstånd). Klicka på valfri åtgärdsknapp (t.ex. `⚡ Aktivera` eller `⚡ Återställ Golden Snapshot`).
   - *Förväntat resultat:* Varje kort visar beskrivning, kopierbar skalkommandoruta och åtgärdsknapp. Realtidsförloppskonsolen (`modal-ops-console`) öppnas direkt under kortrutnätet och rullar automatiskt till vyn med en aktiv timer (`⏱️ 00:01`...). Den duplicerade kommandorutan längst ned har tagits bort.
 
-### Grupp C: Tjänstekort och Database Actions (DB Actions) Launchpad
+### Grupp c: Tjänstekort och database Actions (DB Actions) launchpad
 
 - **TC-LAUNCH-01: Kontroll av 5 Slutpunktsknappar**
   - *Förväntat resultat:* Databaskort har 5 knappar: `🛠️ APEX Workspace (DEV)`, `⚙️ APEX Admin (ADMIN)`, `📊 DB Actions (DEV)`, `📊 DB Actions (DBA_ADMIN)`, `🌐 ORDS (<pool>)`.
@@ -66,7 +66,7 @@ Denna testplan definierar verifieringsstrategin och standardiserade testfall fö
   - *Steg:* Klicka på `🛠️ APEX Workspace (DEV)`.
   - *Förväntat resultat:* Utvecklarlösenord kopieras till urklipp och APEX-inloggningssidan öppnas.
 
-### Grupp D: Oracle SEPS Wallet Credential Matrix
+### Grupp d: Oracle SEPS Wallet credential matrix
 
 - **TC-WALLET-01: Dynamisk Kontosamling**
   - *Förväntat resultat:* Alla YAML-profilers konton visas i tabellen under respektive databas och port.
@@ -75,7 +75,7 @@ Denna testplan definierar verifieringsstrategin och standardiserade testfall fö
 - **TC-WALLET-03: Zero-Trust Granskning**
   - *Förväntat resultat:* Lösenord exponeras inte i HTML-källkoden; de hämtas minnesbaserat i realtid.
 
-### Grupp E: Hanterare och Filter
+### Grupp e: Hanterare och filter
 
 - **TC-MGR-01: Profilhanterare**
   - *Förväntat resultat:* Vänster lista, höger YAML-innehåll, klonings- och redigeringsfunktion.
@@ -84,14 +84,14 @@ Denna testplan definierar verifieringsstrategin och standardiserade testfall fö
 - **TC-MGR-03: Kortrutnät och Filter**
   - *Förväntat resultat:* Filter (`Aktiva`, `Remote` etc.) fungerar direkt, 3-kolumners layout visas på breda skärmar.
 
-### Grupp F: Flerspråkighet (i18n)
+### Grupp f: Flerspråkighet (i18n)
 
 - **TC-I18N-01: Dynamisk Växling Mellan 6 Språk**
   - *Förväntat resultat:* Flaggknappar i sidhuvudet växlar hela användargränssnittet korrekt (EN, ET, FI, SV, LV, LT).
 
 ---
 
-## 4. Automatiserade Testkommandon
+## 4. Automatiserade testkommandon
 
 ```bash
 # 1. Dev Hub kompilering och 6-språks enhetstester

@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../testing-framework-and-devhub.md) | [ 🇪🇪 Eesti ](../et/testing-framework-and-devhub.md) | [ 🇫🇮 Suomi ](../fi/testing-framework-and-devhub.md) | [ 🇸🇪 Svenska ](testing-framework-and-devhub.md) | [ 🇱🇻 Latviešu ](../lv/testing-framework-and-devhub.md) | [ 🇱🇹 Lietuvių ](../lt/testing-framework-and-devhub.md)
 
-# 🧪 Testramverk och Developer Hub-integration
+# 🧪 Testramverk och developer Hub-integration
 
 Denna tekniska guide dokumenterar plattformens flerskiktade automatiserade testarkitektur, det interaktiva **Testcentret** (`tab-testing`) i Developer Hub (`docs/dev-hub.html`), asynkron testorkestrering via `dev-hub-bridge.py` samt kodtäckningsanalys.
 
 ---
 
-## 🏛️ 1. Teknisk Arkitektur och Komponentflöde
+## 🏛️ 1. Teknisk arkitektur och komponentflöde
 
 Testekosystemet kopplar samman utvecklarens gränssnittsåtgärder med underliggande testkörare, realtidsloggning och Git-spårade mätvärden:
 
@@ -56,7 +56,7 @@ flowchart TD
 
 ---
 
-## 🚀 2. Översikt över Testsviter
+## 🚀 2. Översikt över testsviter
 
 Plattformen delar in kvalitetssäkringen i specialiserade testsviter:
 
@@ -73,7 +73,7 @@ Plattformen delar in kvalitetssäkringen i specialiserade testsviter:
 
 ---
 
-## 🖥️ 3. Dev Hub Testcenter (`tab-testing`)
+## 🖥️ 3. Dev Hub testcenter (`tab-testing`)
 
 Developer Hubs testflik innehåller 4 specialiserade underflikar:
 
@@ -97,9 +97,23 @@ Developer Hubs testflik innehåller 4 specialiserade underflikar:
 
 ---
 
-## 🔒 4. Zero-Trust Säkerhet och Regelefterlevnad
+## 🔒 4. Zero-trust säkerhet och regelefterlevnad
 
 1. **Regel 1 (Tidtagning och Loggning)**: Varje testkörning dirigerar automatiskt utdata till `install_logs/test_<suite>_<timestamp>.log` och sparar varaktigheten i `metrics/test_execution_history.json`.
 2. **Regel 9 (Flerspråkighet)**: Hela gränssnittet är lokaliserat till alla sex språken (EN, ET, FI, SV, LV, LT).
 3. **Regel 12 (Asynkrona Uppgifter)**: Tester körs i bakgrunden via `subprocess.Popen` utan att låsa webbläsaren eller orsaka HTTP-tidsgränser.
 4. **Regel 13 (Portabilitet)**: Alla rapport- och loggfilnamn använder strikt ASCII kebab-case utan Windows-förbjudna tecken.
+
+---
+
+## 🌐 5. Nollnedladdningsgranskning av ordlistans webblänkar (`test-glossary-links.sh` / `.cmd`)
+
+Säkerställer att dokumentationens och Dev Hubs ordlistelänkar aldrig returnerar `404 Not Found`, samtidigt som noll risk för nedladdning av skadlig kod garanteras:
+
+1. **Minnesbaserad HTTP HEAD-förfrågan**: Granskningsmotorn (`scripts/internal/check-glossary-links.py`) skickar uteslutande HTTP `HEAD`-anrop och läser endast statuskoden (200, 301, 404). Svarsinnehållet läses eller sparas aldrig på disk.
+2. **Plattformsoberoende nollenhet (Windows & POSIX)**:
+   - **POSIX (macOS / Linux / WSL2)**: Utdata dirigeras till `/dev/null`.
+   - **Windows (NTFS / CMD / PowerShell)**: Utdata dirigeras till `NUL` via `tests/unit/test-glossary-links.cmd`.
+   - **Pythons standardbibliotek**: Portabel `os.devnull` garanterar noll skrivningar till disk på alla OS.
+3. **Protokolllåsning**: Begränsar anrop strikt till `https://`.
+4. **Dev Hub-körning**: Skriptet är tillgängligt under **Unit Test Suite** i Dev Hub (`tab-testing`) med direkt terminalströmning.

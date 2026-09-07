@@ -1,14 +1,14 @@
-# 🧪 Dev Hub & Platvormi Uuenduste Testimisplaan
+# 🧪 Dev Hub & platvormi uuenduste testimisplaan
 
 [ 🇬🇧 English ](../devhub-platform-test-plan.md) | [ 🇪🇪 Eesti ](devhub-platform-test-plan.md) | [ 🇫🇮 Suomi ](../fi/devhub-platform-test-plan.md) | [ 🇸🇪 Svenska ](../sv/devhub-platform-test-plan.md) | [ 🇱🇻 Latviešu ](../lv/devhub-platform-test-plan.md) | [ 🇱🇹 Lietuvių ](../lt/devhub-platform-test-plan.md)
 
 ---
 
-## 1. Ülevaade ja Eesmärgid
+## 1. Ülevaade ja eesmärgid
 
 Käesolev testimisplaan määratleb verifitseerimisstrateegia ja standardsed kontrolljuhtumid Developer Hubi (`docs/dev-hub.html`) ning platvormi orkestreerimise uuendustele.
 
-### Peamised Testimiseesmärgid:
+### Peamised testimiseesmärgid:
 1. **Täpne ja Autonoomne Staatuste Tuvastus:** Tagada, et Dev Hub tuvastab korrektselt aktiivsed blueprintid (sh mitme blueprinti samaaegne käitus) ega näita ekslikult seisatud keskkondi (nt BP #3 ja BP #4) aktiivsena.
 2. **Ressursimonitori Usaldusväärsus:** Kontrollida, et ülariba RAM arvestus (`X GB / 16 GB`) liidab ainult tegelikult töös olevate konteinerite ressursse.
 3. **3-Vahelehelise Modaalakna Funktsionaalsus:** Verifitseerida sujuv liikumine vahelehtede (`Arhitektuur`, `Kasutajad`, `Käivitused & Haldus`) vahel, Mermaid võrgugraafikud, kontoandmed ja reaalajas elutsükli stopper.
@@ -19,7 +19,7 @@ Käesolev testimisplaan määratleb verifitseerimisstrateegia ja standardsed kon
 
 ---
 
-## 2. Testipüramiid ja Katvusmaatriks
+## 2. Testipüramiid ja katvusmaatriks
 
 | Tase | Valdkond | Tööriistad | Kestus | Käivitussagedus |
 | :--- | :--- | :--- | :--- | :--- |
@@ -30,9 +30,9 @@ Käesolev testimisplaan määratleb verifitseerimisstrateegia ja standardsed kon
 
 ---
 
-## 3. Üksikasjalikud Testjuhtumid
+## 3. Üksikasjalikud testjuhtumid
 
-### Rühm A: Staatuse Tuvastus ja Ressursimonitor
+### Rühm a: Staatuse tuvastus ja ressursimonitor
 
 - **TC-STATUS-01: Üksiku Blueprinti Tuvastus (BP #0)**
   - *Eeldus:* Käivitatud `./scripts/setup-all.sh --blueprint 0`.
@@ -44,7 +44,7 @@ Käesolev testimisplaan määratleb verifitseerimisstrateegia ja standardsed kon
   - *Eeldus:* Käivitatud BP #0 ja lisaks BP #8.
   - *Oodatav tulemus:* Mõlemad on rohelised märgisega `Aktiivne`. Ülaribal kuvatakse `(2 aktiivne)` ning aktiivsed kaardid sorteeritakse ettepoole.
 
-### Rühm B: 3-Vahelehega Modaalaken & Elutsükli Kontroller
+### Rühm b: 3-vahelehega modaalaken & elutsükli kontroller
 
 - **TC-MODAL-01: Vahelehtede Navigatsioon**
   - *Sammud:* Ava kaardilt `📐 Arhitektuur ↗` või `⚡ Haldus ↗`. Vaheta vahelehti: `📐 Arhitektuur`, `🔑 Kasutajad`, `⚡ Käivitused & Haldus`.
@@ -55,7 +55,7 @@ Käesolev testimisplaan määratleb verifitseerimisstrateegia ja standardsed kon
   - *Sammud:* Vahelehel "Käivitused & Haldus" kontrolli ühtset tegevuste võrgustikku (Aktiviseeri & Juuruta, Kiirtaaste Golden Snapshotist, Taaskäivita & Uuenda, Süvapuhastus, Peata teenused, Salvesta hetkeseis). Klõpsa mis tahes nupul (nt `⚡ Aktiviseeri` või `⚡ Taasta Golden Snapshot`).
   - *Oodatav tulemus:* Igal kaardil kuvatakse selgitus, kopeeritav terminalikäsk ja nupp. Reaalajas edenemisriba ja konsool (`modal-ops-console`) avaneb vahetult kaartide alla ja kerib automaatselt fookusesse koos elava stopperiga (`⏱️ 00:01`...). Dubleeriv eraldiseisev käsuriba akna all on eemaldatud.
 
-### Rühm C: Kaardid ja Database Actions (DB Actions) Launchpad
+### Rühm c: Kaardid ja database Actions (DB Actions) launchpad
 
 - **TC-LAUNCH-01: 5 Otspunkti Nuppude Kontroll**
   - *Oodatav tulemus:* Andmebaasikaartidel on 5 nuppu: `🛠️ APEX Workspace (DEV)`, `⚙️ APEX Admin (ADMIN)`, `📊 DB Actions (DEV)`, `📊 DB Actions (DBA_ADMIN)`, `🌐 ORDS (<pool>)`.
@@ -66,7 +66,7 @@ Käesolev testimisplaan määratleb verifitseerimisstrateegia ja standardsed kon
   - *Sammud:* Klõpsa `🛠️ APEX Workspace (DEV)`.
   - *Oodatav tulemus:* Arendaja parool kopeeritakse lõikelauale ja avaneb APEXi sisselogimisleht.
 
-### Rühm D: Oracle SEPS Wallet Credential Matrix
+### Rühm d: Oracle SEPS Wallet credential matrix
 
 - **TC-WALLET-01: Dünaamiline Kontode Koondamine**
   - *Oodatav tulemus:* Kõigi YAML profiilide kontod kuvatakse tabelis vastavate andmebaaside ja portide juures.
@@ -75,7 +75,7 @@ Käesolev testimisplaan määratleb verifitseerimisstrateegia ja standardsed kon
 - **TC-WALLET-03: Zero-Trust Turvakontroll**
   - *Oodatav tulemus:* Paroolid ei ole HTML lähtekoodis nähtavad, vaid päritakse reaalajas mälupõhiselt.
 
-### Rühm E: Haldurid ja Filtrid
+### Rühm e: Haldurid ja filtrid
 
 - **TC-MGR-01: Profiilide Haldur**
   - *Oodatav tulemus:* Vasakul list, paremal YAML sisu, kloonimise ja muutmise võimalus.
@@ -84,14 +84,14 @@ Käesolev testimisplaan määratleb verifitseerimisstrateegia ja standardsed kon
 - **TC-MGR-03: Kaardiruudustik ja Filtrid**
   - *Oodatav tulemus:* Filtrid `Aktiivsed`, `Remote` jne töötavad viivituseta, kaardid asetsevad 3-veerulises ruudustikus.
 
-### Rühm F: Mitmekeelsus (i18n)
+### Rühm f: Mitmekeelsus (i18n)
 
 - **TC-I18N-01: 6 Keele Dünaamiline Lülitus**
   - *Oodatav tulemus:* Päise lipunupud lülitavad kogu kasutajaliidese korrektselt (EN, ET, FI, SV, LV, LT).
 
 ---
 
-## 4. Automatiseeritud Testide Käivitamise Käsud
+## 4. Automatiseeritud testide käivitamise käsud
 
 ```bash
 # 1. Dev Hub kompileerimise ja 6 keele ühikutestid

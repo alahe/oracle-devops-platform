@@ -1,0 +1,97 @@
+# ==============================================================================
+# Enterprise Specific Configuration (Template / Example)
+# Single Source of Truth for corporate environment customization
+#
+# Usage:
+#   1. Copy this file to config/enterprise.yaml:
+#      cp config/enterprise.yaml.example config/enterprise.yaml
+#   2. Adjust values to your corporate infrastructure (Artifactory, Proxy, CAs)
+#   3. Apply explicitly to all YAML profiles on disk:
+#      ./scripts/onboard-enterprise.sh --patch-profiles
+#   4. Revert back to upstream public registries anytime via:
+#      ./scripts/onboard-enterprise.sh --revert
+# ==============================================================================
+
+enterprise:
+  name: "Corporate Enterprise"
+  environment: "production" # development | test | staging | production
+
+# ------------------------------------------------------------------------------
+# 1. Container Registry & Artifact Mirror (Artifactory / Harbor / Nexus)
+# ------------------------------------------------------------------------------
+registry:
+  # Base registry URL accessible from corporate developer workstations & servers
+  base_url: "artifactory.corp.internal/docker-mirror"
+  
+  # Authentication mode:
+  # - anonymous: no credentials required for read-only pull
+  # - podman_secret: reads from podman secret or ~/.docker/config.json
+  # - token: bearer token or basic auth
+  auth_mode: "anonymous"
+  
+  # Upstream registry mappings to corporate mirror prefixes
+  # When ./scripts/onboard-enterprise.sh --patch-profiles is executed,
+  # these mappings replace upstream URLs in config/profiles/**/*.yaml:
+  mappings:
+    "container-registry.oracle.com/database/free": "artifactory.corp.internal/docker-mirror/oracle/database/free"
+    "container-registry.oracle.com/database/ords": "artifactory.corp.internal/docker-mirror/oracle/database/ords"
+    "container-registry.oracle.com/database/sqlcl": "artifactory.corp.internal/docker-mirror/oracle/database/sqlcl"
+    "docker.io/library/ubuntu": "artifactory.corp.internal/docker-mirror/dockerhub/library/ubuntu"
+    "ghcr.io": "artifactory.corp.internal/docker-mirror/ghcr"
+
+# ------------------------------------------------------------------------------
+# 2. Corporate Network, Proxy & CA Certificates
+# ------------------------------------------------------------------------------
+network:
+  # Corporate egress proxy (leave empty if direct connection is available)
+  http_proxy: ""
+  https_proxy: ""
+  no_proxy: "localhost,127.0.0.1,*.corp.internal,.local,podman-machine-default"
+  
+  # Path to corporate Root CA / Intermediate CA bundle (.pem / .crt)
+  # When configured, scripts/wsl/configure-wsl-enterprise.ps1 and containers
+  # automatically trust internal TLS interception proxies (Zscaler, Netskope).
+  corporate_ca_bundle_path: ""
+
+# ------------------------------------------------------------------------------
+# 3. Enterprise Domains & Custom TLS Certificates
+# ------------------------------------------------------------------------------
+domain:
+  # Internal DNS domain suffix
+  internal_domain: "corp.internal"
+  
+  # Custom corporate wildcard TLS certificates (optional, overrides self-signed mkcert)
+  custom_tls_cert: "" # e.g. /etc/ssl/certs/corp-wildcard.crt
+  custom_tls_key: ""  # e.g. /etc/ssl/private/corp-wildcard.key
+
+# ------------------------------------------------------------------------------
+# 4. Enterprise Security & Audit Compliance
+# ------------------------------------------------------------------------------
+security:
+  # Enforce Zero-Trust SEPS auto-login wallet for all database connections
+  enforce_seps_wallet: true
+  
+  # Mask bearer tokens, API keys, and Artifactory credentials in logs
+  mask_tokens_in_logs: true
+  
+  # Audit logging mode: standard | strict | compliance
+  audit_level: "strict"
+
+# ------------------------------------------------------------------------------
+# 5. Extension Templates (SSO & Enterprise Secrets Vault)
+# ------------------------------------------------------------------------------
+extensions:
+  # Enterprise Single Sign-On (Entra ID / Azure AD / Okta SAML2/OAuth2)
+  sso:
+    enabled: false
+    provider: "azure_ad" # azure_ad | okta | keycloak
+    tenant_id: ""
+    client_id: ""
+    discovery_url: ""
+    
+  # Enterprise Vault (HashiCorp Vault / CyberArk)
+  vault:
+    enabled: false
+    provider: "hashicorp_vault" # hashicorp_vault | cyberark | aws_secrets_manager
+    server_url: "https://vault.corp.internal:8200"
+    mount_path: "secret/oracle-platform"

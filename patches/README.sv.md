@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🩹 Katalog för Oracle-Patchar (`patches/`)
+# 🩹 Katalog för oracle-patchar (`patches/`)
 
 Denna katalog bibehålls för bakåtkompatibilitet och allmänna patchar. Produktspecifika patchar finns i respektive binärkatalog:
 
@@ -12,7 +12,7 @@ Denna katalog bibehålls för bakåtkompatibilitet och allmänna patchar. Produk
 
 ---
 
-## 🚀 Installationskommandon för Patchar
+## 🚀 Installationskommandon för patchar
 
 ```bash
 # Installera APEX Bundle Patch:

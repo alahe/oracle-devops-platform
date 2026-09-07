@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](../blueprint-testing-report.md) | [ 🇪🇪 Eesti ](../et/blueprint-testing-report.md) | [ 🇫🇮 Suomi ](../fi/blueprint-testing-report.md) | [ 🇸🇪 Svenska ](blueprint-testing-report.md) | [ 🇱🇻 Latviešu ](../lv/blueprint-testing-report.md) | [ 🇱🇹 Lietuvių ](../lt/blueprint-testing-report.md)
 
-# 📊 Architecture Blueprints (11 Curated Models) - Comprehensive Test Matrix Final Report
+# 📊 Architecture Blueprints (11 curated models) - comprehensive test matrix final report
 
 **Execution Timestamp:** 2026-09-01 04:38:33 | **Test Scope:** All 11 Canonical Production Blueprints (Series 1–49)
 
-## 🏆 Executive Summary & Scorecard
+## 🏆 Executive summary & scorecard
 
 - **Total Blueprints Tested:** `1 / 11`
 - **Matrix Pass Rate:** `✅ 100% PASS`
@@ -12,7 +12,7 @@
 - **Total Warm Recovery Duration:** `29s` (29s)
 - **Audit Log:** [`install_logs/blueprint_matrix_test_20260901_041916.log`](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/install_logs/blueprint_matrix_test_20260901_041916.log)
 
-### 📋 Executive Scorecard Table
+### 📋 Executive scorecard table
 
 | BP # | Architecture Blueprint Model | Cold Setup | Warm Restart | URLs Audit | SEPS Wallet | E2E Browser Login | Result |
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -20,7 +20,7 @@
 
 ---
 
-## 🌐 1. Web Services & URL Verification Audit Details
+## 🌐 1. Web services & URL verification audit details
 
 All HTTP/HTTPS endpoints were automatically verified with SSL certificate verification against `config/certs/localCA.pem`:
 
@@ -39,7 +39,7 @@ All HTTP/HTTPS endpoints were automatically verified with SSL certificate verifi
 
 ---
 
-## 🔐 2. SEPS Wallet & Password Authenticity Verification
+## 🔐 2. SEPS Wallet & password authenticity verification
 
 All database accounts (`DEV`, `ADMIN`, `USER_DEVELOPER`, `SYS`, `DBA_ADMIN`, `USER_VIEWER`, `USER_APP`) were authenticated strictly using credentials decrypted from **Oracle SEPS Client Wallet** (`cwallet.sso` / `ewallet.p12`):
 

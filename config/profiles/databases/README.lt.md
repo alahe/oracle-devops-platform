@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🗄️ Duomenų Bazių Profiliai (`config/profiles/databases/`)
+# 🗄️ Duomenų bazių profiliai (`config/profiles/databases/`)
 
 Šiame kataloge yra izoliuoti YAML profiliai **Oracle duomenų bazių konteineriams** (Standard 23ai Free, Autonomous ADB Free, Gvenzl 23c).
 
-## 📂 Duomenų Bazių Profilių Matrica
+## 📂 Duomenų bazių profilių matrica
 
 | Profilio Failas | Aprašymas | DB Tipas | Wallet Reikalingas | Paskirtis |
 | :--- | :--- | :--- | :--- | :--- |

@@ -38,8 +38,17 @@ This guide details the complete end-to-end testing workflow for launching, manag
 ### 1. Interactive or Automated Execution via CLI
 
 ```bash
-# Test all 12 blueprints sequentially:
+# Test all 12 blueprints sequentially (Start, URLs & Web Form Logins):
 ./tests/test-devhub-browser-blueprints.sh --all
+
+# Test full 3-step lifecycle (Start -> Stop -> Fast-Start) through Dev-Hub:
+./tests/test-devhub-browser-blueprints.sh --all --lifecycle --dry-run
+./tests/test-devhub-browser-blueprints.sh -b 1 --lifecycle
+
+# Dedicated Dev-Hub Full Lifecycle (Blueprints 0-9) Test Suite:
+./tests/test-devhub-lifecycle-full.sh --all --dry-run
+./tests/test-devhub-lifecycle-full.sh -b 1
+./tests/test-devhub-lifecycle-full.sh -b 0,1,8 --dry-run
 
 # Test a single blueprint (e.g. Blueprint #0 Core Base or Blueprint #9 Designer):
 ./tests/test-devhub-browser-blueprints.sh -b 0
@@ -55,8 +64,8 @@ This guide details the complete end-to-end testing workflow for launching, manag
 ### 2. 1-Click Execution via Developer Hub Web UI
 
 1. Open Dev Hub: **`https://localhost:8448/dev-hub`**
-2. Navigate to the **"DevOps Console"** tab.
-3. Select or click **"Test DevHub Blueprints"** (`test-devhub-blueprints`).
+2. Navigate to the **"DevOps Console"** tab or **"Testing Hub"** (Tab 5.5).
+3. Click **"Test DevHub Blueprints"** (`test-devhub-blueprints`) or **"Dev-Hub Blueprints 0-9 Lifecycle Test"** (`test-devhub-lifecycle-dryrun`).
 4. View real-time terminal output directly in the web console!
 
 ---
@@ -64,6 +73,8 @@ This guide details the complete end-to-end testing workflow for launching, manag
 ## 📊 Artifacts & Reports
 
 Execution results are automatically persisted to version-controlled directories:
-- **Test Report (Markdown):** `tests/reports/devhub_browser_blueprints_test_report.md`
-- **Benchmarks (JSON):** `metrics/devhub_browser_blueprints_benchmarks.json`
-- **Complete Execution Logs:** `install_logs/devhub_browser_blueprints_YYYYMMDD_HHMMSS.log`
+- **Browser Blueprints Report:** `tests/reports/devhub_browser_blueprints_test_report.md`
+- **Browser Blueprints Benchmarks (JSON):** `metrics/devhub_browser_blueprints_benchmarks.json`
+- **Full Lifecycle Report (Blueprints 0-9):** `tests/reports/devhub_lifecycle_full_report.md`
+- **Full Lifecycle Benchmarks (JSON):** `metrics/devhub_lifecycle_full_benchmarks.json`
+- **Complete Execution Logs:** `install_logs/devhub_lifecycle_full_YYYYMMDD_HHMMSS.log`

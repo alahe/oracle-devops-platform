@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Kohalike Tarkvarapakettide ja Binaarfailide Kataloog (`binaries/`)
+# 📦 Kohalike tarkvarapakettide ja binaarfailide kataloog (`binaries/`)
 
 See kataloog on ette nähtud kohalike ja allalaaditud paigalduspakettide (ZIP, JAR, RPM, VSIX, SQL) ning tootespetsiifiliste patchide puhverdamiseks, võimaldades võrguvaba (offline) või ettevõtte sise-Artifactory tuge.
 
 ---
 
-## 📁 Alamkataloogide Struktuur ja Otstarve
+## 📁 Alamkataloogide struktuur ja otstarve
 
 | Alamkataloog | Kirjeldus ja Toetatud Failid | Patchide Kataloog | Skriptid / Kasutuskoht |
 | :--- | :--- | :--- | :--- |
@@ -21,7 +21,7 @@ See kataloog on ette nähtud kohalike ja allalaaditud paigalduspakettide (ZIP, J
 
 ---
 
-## 🔒 Git Versioonihalduse Reeglid
+## 🔒 Git versioonihalduse reeglid
 
 - Kõik binaarfailid (`*.zip`, `*.rpm`, `*.jar`, `*.vsix`) on `.gitignore` failis ning jäävad **ainult lokaalseks**.
 - Kataloogide struktuur ja `README*.md` juhendid on versioonihaldusega tagatud.

@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Oracle Forms 14c Operatsioonide Skriptid (`scripts/forms/`)
+# 📐 Oracle Forms 14c operatsioonide skriptid (`scripts/forms/`)
 
 Käesolev kataloog sisaldab tööriistu Oracle Forms 14c käitussüsteemi, käsurea kompileerimise, WebLogic domeeni diagnostika ja vormirakenduste tarne haldamiseks.
 
 ---
 
-## 🛠️ Saadaolevad Skriptid
+## 🛠️ Saadaolevad skriptid
 
 - **`build-forms-image.sh`:** Ehitab kohaliku `localhost/oracle-forms:14.1.2` konteineripildi.
   ```bash

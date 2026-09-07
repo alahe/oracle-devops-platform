@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Oracle Fusion Middleware Infrastructure (`binaries/middleware/`)
+# 📦 Oracle fusion middleware infrastructure (`binaries/middleware/`)
 
 WebLogic Server and FMW Infrastructure installation packages.
 

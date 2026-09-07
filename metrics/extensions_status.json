@@ -1,81 +1,81 @@
 {
-  "timestamp": "2026-09-07 12:51:33",
+  "timestamp": "2026-09-07 18:44:55",
   "container": "web-ide-dev",
-  "container_running": true,
+  "container_running": false,
   "total_extensions": 8,
-  "updates_available": 5,
+  "updates_available": 0,
   "extensions": [
     {
       "id": "Oracle.sql-developer",
       "name": "Oracle SQL Developer for VS Code",
       "publisher": "Oracle",
-      "installed_version": "26.2.1",
-      "latest_version": "26.2.1",
+      "installed_version": "offline",
+      "latest_version": "offline",
       "status": "UP-TO-DATE",
-      "download_url": "https://Oracle.gallerycdn.vsassets.io/extensions/oracle/sql-developer/26.2.1/1786027715618/Microsoft.VisualStudio.Services.VSIXPackage"
+      "download_url": ""
     },
     {
       "id": "google.google-antigravity",
       "name": "Google Antigravity AI Assistant",
       "publisher": "Google",
-      "installed_version": "1.2.0",
-      "latest_version": "1.2.0",
+      "installed_version": "offline",
+      "latest_version": "offline",
       "status": "UP-TO-DATE",
-      "download_url": "https://Google.gallerycdn.vsassets.io/extensions/google/google-antigravity/1.2.0/1788448373935/Microsoft.VisualStudio.Services.VSIXPackage"
+      "download_url": ""
     },
     {
       "id": "ms-python.python",
       "name": "Python Extension for VS Code",
       "publisher": "Microsoft",
-      "installed_version": "2026.4.0",
-      "latest_version": "2026.7.2026082601",
-      "status": "UPDATE_AVAILABLE",
-      "download_url": "https://ms-python.gallerycdn.vsassets.io/extensions/ms-python/python/2026.7.2026082601/1787741724831/Microsoft.VisualStudio.Services.VSIXPackage"
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
     },
     {
       "id": "ms-python.vscode-pylance",
       "name": "Pylance Language Server",
       "publisher": "Microsoft",
-      "installed_version": "2026.3.1",
-      "latest_version": "2026.3.102",
-      "status": "UPDATE_AVAILABLE",
-      "download_url": "https://ms-python.gallerycdn.vsassets.io/extensions/ms-python/vscode-pylance/2026.3.102/1788553565132/Microsoft.VisualStudio.Services.VSIXPackage"
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
     },
     {
       "id": "ms-python.debugpy",
       "name": "Python Debugger",
       "publisher": "Microsoft",
-      "installed_version": "2026.6.0",
-      "latest_version": "2026.7.12401012",
-      "status": "UPDATE_AVAILABLE",
-      "download_url": "https://ms-python.gallerycdn.vsassets.io/extensions/ms-python/debugpy/2026.7.12401012/1787914929948/Microsoft.VisualStudio.Services.VSIXPackage"
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
     },
     {
       "id": "ms-python.vscode-python-envs",
       "name": "Python Environments",
       "publisher": "Microsoft",
-      "installed_version": "1.36.0",
-      "latest_version": "1.37.2026090401",
-      "status": "UPDATE_AVAILABLE",
-      "download_url": "https://ms-python.gallerycdn.vsassets.io/extensions/ms-python/vscode-python-envs/1.37.2026090401/1788519356603/Microsoft.VisualStudio.Services.VSIXPackage"
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
     },
     {
       "id": "github.vscode-github-actions",
       "name": "GitHub Actions",
       "publisher": "GitHub",
-      "installed_version": "0.32.3",
-      "latest_version": "0.32.3",
+      "installed_version": "offline",
+      "latest_version": "offline",
       "status": "UP-TO-DATE",
-      "download_url": "https://GitHub.gallerycdn.vsassets.io/extensions/github/vscode-github-actions/0.32.3/1784139132081/Microsoft.VisualStudio.Services.VSIXPackage"
+      "download_url": ""
     },
     {
       "id": "redhat.vscode-yaml",
       "name": "YAML Language Support",
       "publisher": "Red Hat",
-      "installed_version": "1.24.0",
-      "latest_version": "1.25.2026090408",
-      "status": "UPDATE_AVAILABLE",
-      "download_url": "https://redhat.gallerycdn.vsassets.io/extensions/redhat/vscode-yaml/1.25.2026090408/1788510258186/Microsoft.VisualStudio.Services.VSIXPackage"
+      "installed_version": "offline",
+      "latest_version": "offline",
+      "status": "UP-TO-DATE",
+      "download_url": ""
     }
   ]
 }

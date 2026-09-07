@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../ords-profiles-lifecycle.md) | [ 🇪🇪 Eesti ](../et/ords-profiles-lifecycle.md) | [ 🇫🇮 Suomi ](../fi/ords-profiles-lifecycle.md) | [ 🇸🇪 Svenska ](ords-profiles-lifecycle.md) | [ 🇱🇻 Latviešu ](../lv/ords-profiles-lifecycle.md) | [ 🇱🇹 Lietuvių ](../lt/ords-profiles-lifecycle.md)
 
-# 🌐 Oracle REST Data Services (ORDS) Profiler och Frikopplad Livscykelguide
+# 🌐 Oracle REST data services (ORDS) profiler och frikopplad livscykelguide
 
 Denna guide dokumenterar arkitektur, livscykelorkestrering och konfiguration för **Oracle REST Data Services (ORDS)** över lokala containrar, fjärrservrar och Oracle Autonomous Database (ADB) i molnet.
 
 ---
 
-## 🏛️ 1. Principer för Frikopplad Arkitektur
+## 🏛️ 1. Principer för frikopplad arkitektur
 
 I modern modulär arkitektur är webbapplikationsgatewayen frikopplad från databasmotorn:
 
@@ -33,7 +33,7 @@ flowchart TD
     DBEngine -.->|Registrerar pool| POOLS
 ```
 
-### Viktiga Arkitekturregler:
+### Viktiga arkitekturregler:
 1. **`ords.enabled: true` i Databasprofilen:**
    - Förbereder databasens ORDS-scheman, metadata (`ORDS_METADATA`) och proxy-användare.
    - **Startar INTE** webbcontainern `app-ords`.
@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-## 📦 2. Tre Kanoniska ORDS-Profiler
+## 📦 2. Tre kanoniska ORDS-profiler
 
 Alla ORDS-profiler finns i katalogen `config/profiles/ords/`:
 
@@ -57,7 +57,7 @@ Alla ORDS-profiler finns i katalogen `config/profiles/ords/`:
 
 ---
 
-## ☁️ 3. Oracle Autonomous Database (ADB) Integration
+## ☁️ 3. Oracle autonomous database (ADB) integration
 
 Oracle Autonomous Database (Cloud ADB Serverless) innehåller en förinstallerad och molnhanterad ORDS-instans:
 
@@ -71,7 +71,7 @@ ords:
 
 ---
 
-## 💡 4. Vägledning När ORDS-Server Saknas
+## 💡 4. Vägledning när ORDS-server saknas
 
 Om en databas startas utan `ORDS_PROFILE` och den centrala ORDS-containern inte körs:
 - Terminalen visar en informativ status och åtgärd:

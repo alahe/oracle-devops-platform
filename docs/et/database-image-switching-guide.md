@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../database-image-switching-guide.md) | [ 🇪🇪 Eesti ](database-image-switching-guide.md) | [ 🇫🇮 Suomi ](../fi/database-image-switching-guide.md) | [ 🇸🇪 Svenska ](../sv/database-image-switching-guide.md) | [ 🇱🇻 Latviešu ](../lv/database-image-switching-guide.md) | [ 🇱🇹 Lietuvių ](../lt/database-image-switching-guide.md)
 
-# 🔄 Andmebaasi Konteineripiltide Vahetamine ja Tarnijate Juhend
+# 🔄 Andmebaasi konteineripiltide vahetamine ja tarnijate juhend
 
 See juhend selgitab, kuidas vahetada Oracle 23ai konteineripilte, testida kogukonna vs ametlikke versioone, lukustada siseandmebaaside veebiliideseid ja säästa vahemälu.
 
 ---
 
-## 🎯 1. Toetatud Baaspildid ja Rollid
+## 🎯 1. Toetatud baaspildid ja rollid
 
 Platvorm toetab kahte välise tarnija baaspilti ning lokaalset FastStart kihti:
 
@@ -18,21 +18,21 @@ Platvorm toetab kahte välise tarnija baaspilti ning lokaalset FastStart kihti:
 
 ---
 
-## 🚀 2. Kuidas Vahetada Andmebaasi Pilti (3 Meetodit)
+## 🚀 2. Kuidas vahetada andmebaasi pilti (3 meetodit)
 
-### Meetod A: Ühe Käsuga läbi Blueprinti #7
+### Meetod a: Ühe käsuga läbi blueprinti #7
 Docker Hubi alternatiivse baaspildi testimiseks kõrvuti ametlikuga:
 ```bash
 ./scripts/deploy-blueprint.sh 7
 ```
 
-### Meetod B: Keskkonnamuutujaga ülekatmine (CLI)
+### Meetod b: Keskkonnamuutujaga ülekatmine (CLI)
 Konteineripildi dünaamiline asendamine ilma faile muutmata:
 ```bash
 ORACLE_CONTAINER_IMAGE="docker.io/gvenzl/oracle-free:latest" ./scripts/setup-all.sh -b 3 --fast
 ```
 
-### Meetod C: Deklaratiivne YAML Profiili Seadistus
+### Meetod c: Deklaratiivne YAML profiili seadistus
 Andmebaasi profiili failis (nt `config/profiles/databases/db-proxy-oracle.yaml`):
 ```yaml
 database:
@@ -41,7 +41,7 @@ database:
 
 ---
 
-## 🔒 3. Siseandmebaaside Turvalukustus (`--lock-internal-apex`)
+## 🔒 3. Siseandmebaaside turvalukustus (`--lock-internal-apex`)
 
 Mitme andmebaasiga virnades (nt Blueprint #21, #23) koos siseandmebaasidega (`db-forms`, `db-publisher`):
 ```bash
@@ -54,7 +54,7 @@ Mitme andmebaasiga virnades (nt Blueprint #21, #23) koos siseandmebaasidega (`db
 
 ---
 
-## ⚡ 4. Kiirtestimise ja Ühekordse Läbimise Lipud
+## ⚡ 4. Kiirtestimise ja ühekordse läbimise lipud
 
 | Lipp | Skript | Kirjeldus |
 | :--- | :--- | :--- |

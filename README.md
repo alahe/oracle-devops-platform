@@ -22,14 +22,19 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 ./scripts/get-password.sh
 ```
 
+### 🪟 Windows & WSL2 Enterprise 1-Click Launch
+On corporate-managed Windows workstations (Windows 10 / 11 Enterprise, zero-local-admin, WSL2):
+```cmd
+REM 1. Run 1-click launcher (delegates cleanly to WSL2):
+setup.cmd -b 0
+
+REM 2. Trust SSL certificates in Windows browsers (0-Admin / No UAC):
+scripts\certs\trust-local-cert.cmd
+```
 > [!TIP]
-> **Windows Git Configuration (Rule 13):**
-> Before cloning on Windows, configure Git to support long paths and protect NTFS filesystems:
-> ```powershell
-> git config --global core.protectNTFS true
-> git config --global core.longpaths true
-> git config --global core.autocrlf input
-> ```
+> **Windows Enterprise Best Practice (Rule 14):**
+> Always clone into the native WSL2 ext4 filesystem (`cd ~ && git clone ...`). Running from `C:\...` causes a 10x–50x I/O slowdown.
+> See the complete [Windows Enterprise Setup Guide](docs/windows-enterprise-setup-guide.md) for hardware sizing, corporate proxy (Zscaler), and VPN DNS configuration.
 
 ---
 
@@ -252,6 +257,11 @@ Oracle Free DB in Prod incorporates an **intelligent multi-tier Golden Snapshot 
 
 # 8. Audit cross-platform filename and path portability (Rule 13):
 ./tests/unit/test-filename-portability.sh
+
+# 9. Pre-commit & pre-push security & quality guard (Rule 5, 13, 14 & GDPR):
+./scripts/check-pre-commit.sh --staged                     # Check only staged files (~1s)
+./scripts/check-pre-commit.sh --full                       # Full repository audit (~5s)
+./scripts/check-pre-commit.sh --install-hook               # One-click Git hooks configuration
 ```
 
 ---
@@ -269,8 +279,8 @@ Oracle Free DB in Prod incorporates an **intelligent multi-tier Golden Snapshot 
 
 ## 📑 Dedicated User Guides
 
-- 🏛️ **[docs/enterprise-distributed-architecture.md](docs/enterprise-distributed-architecture.md):** **Enterprise Distributed Multi-Host Architecture** — 4-tier financial architecture (ORDS, Publisher, Proxy DB, Publisher DB), existing core Business DB integration, and PROD Active/Standby disaster recovery (RTO < 60s, RPO < 15m).
-- 📋 **[docs/backlog/README.md](docs/backlog/README.md):** **Financial Enterprise Jira Backlog** — 11 production-ready Jira stories (62 SP) covering multi-host automation, multi-pool routing, failover, and zero-trust security.
+- 🏛️ **[docs/enterprise-distributed-architecture.md](docs/enterprise-distributed-architecture.md):** **Enterprise Distributed Multi-Host Architecture** — 4-tier enterprise architecture (ORDS, Publisher, Proxy DB, Publisher DB), existing core mission-critical Business DB integration, and PROD Active/Standby disaster recovery (RTO < 60s, RPO < 15m).
+- 🛡️ **[docs/security-audit-report.md](docs/security-audit-report.md) | [docs/et/security-audit-report.md](docs/et/security-audit-report.md):** **Enterprise Security Audit & Hardening Report** — Automated 7-tier security scanner (`test-security-audit.sh`), OWASP Top 10, CIS Benchmark compliance, and DORA resilience posture.
 - 🛡️ **[docs/security.md](docs/security.md) | [docs/et/security.md](docs/et/security.md):** **Security & SSO Architecture Guide** — Zero-Trust credential storage, Azure Entra-ID SSO, 5-tier TLS architecture, and least-privilege roles.
 - 🏗️ **[docs/db-profiles-and-topology.md](docs/db-profiles-and-topology.md):** **Database Profiles & Topology Guide** — Clean blueprint references, YAML profile definitions, and dynamic port topology.
 - 🚀 **[docs/forms-to-apex-migration-guide.md](docs/forms-to-apex-migration-guide.md):** **Oracle Forms to APEX Modernization & Migration Guide** — Automated 5-stage migration workflow, PL/SQL extraction, and APEXlang DSL vibe-coding.

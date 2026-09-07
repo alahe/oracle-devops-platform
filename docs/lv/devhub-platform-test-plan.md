@@ -1,14 +1,14 @@
-# 🧪 Dev Hub & Platformas Modernizācijas Testēšanas Plāns
+# 🧪 Dev Hub & platformas modernizācijas testēšanas plāns
 
 [ 🇬🇧 English ](../devhub-platform-test-plan.md) | [ 🇪🇪 Eesti ](../et/devhub-platform-test-plan.md) | [ 🇫🇮 Suomi ](../fi/devhub-platform-test-plan.md) | [ 🇸🇪 Svenska ](../sv/devhub-platform-test-plan.md) | [ 🇱🇻 Latviešu ](devhub-platform-test-plan.md) | [ 🇱🇹 Lietuvių ](../lt/devhub-platform-test-plan.md)
 
 ---
 
-## 1. Pārskats un Mērķi
+## 1. Pārskats un mērķi
 
 Šis testēšanas plāns nosaka Developer Hub (`docs/dev-hub.html`) un platformas orķestrēšanas uzlabojumu pārbaudes stratēģiju un standartizētos testa gadījumus.
 
-### Galvenie Testēšanas Mērķi:
+### Galvenie testēšanas mērķi:
 1. **Precīza un Autonoma Statusa Noteikšana:** Nodrošināt, ka Dev Hub precīzi identificē aktīvos blueprintus (ieskaitot vairāku blueprintu vienlaicīgu darbību) un nekad kļūdaini neuzrāda apturētas vides (piemēram, BP #3 un BP #4) kā aktīvas.
 2. **Resursu Monitora Uzticamība:** Pārbaudīt, ka galvenes RAM mērītājs (`X GB / 16 GB`) summē tikai faktiski strādājošo konteineru atmiņas limitus.
 3. **3-Ciļņu Modālā Dialoga Funkcionalitāte:** Apstiprināt vienmērīgu pārslēgšanos starp cilnēm (`Arhitektūra`, `Lietotāji un Drošība`, `Izpilde un Pārvaldība`), interaktīvas Mermaid topoloģijas diagrammas, SEPS Wallet akreditācijas datus un reāllaika izpildes taimeri.
@@ -19,7 +19,7 @@
 
 ---
 
-## 2. Testēšanas Piramīda un Pārklājuma Matrica
+## 2. Testēšanas piramīda un pārklājuma matrica
 
 | Līmenis | Joma | Rīki | Ilgums | Biežums |
 | :--- | :--- | :--- | :--- | :--- |
@@ -30,9 +30,9 @@
 
 ---
 
-## 3. Detalizēti Testa Gadījumi
+## 3. Detalizēti testa gadījumi
 
-### A grupa: Statusa Noteikšana un Resursu Uzraudzība
+### A grupa: Statusa noteikšana un resursu uzraudzība
 
 - **TC-STATUS-01: Viena Blueprinta Noteikšana (BP #0)**
   - *Priekšnosacījums:* Palaists `./scripts/setup-all.sh --blueprint 0`.
@@ -44,7 +44,7 @@
   - *Priekšnosacījums:* BP #0 un BP #8 darbojas vienlaicīgi.
   - *Sagaidāmais rezultāts:* Abi ir zaļi `Aktīvs`. Galvenē redzams `(2 aktīvi)` un RAM tiek aprēķināts kā abu summa. Aktīvās kartītes tiek kārtotas saraksta sākumā.
 
-### B grupa: 3-Ciļņu Modālais Dialogs & Dzīvescikla Kontrolieris
+### B grupa: 3-ciļņu modālais dialogs & dzīvescikla kontrolieris
 
 - **TC-MODAL-01: Ciļņu Navigācija**
   - *Darbības:* Noklikšķiniet uz kartītes `📐 Arhitektūra ↗` vai `⚡ Pārvaldība ↗`. Pārslēdzieties starp `📐 Arhitektūra`, `🔑 Lietotāji`, `⚡ Izpilde un Pārvaldība`.
@@ -55,7 +55,7 @@
   - *Darbības:* Cilnē "Izpilde un Pārvaldība" pārbaudiet vienoto darbību kartīšu režģi (Izvietot & Pārslēgt, Ātrā atkopšana no Zelta kopijas, Restartēt, Dziļā tīrīšana, Apturēt pakalpojumus, Saglabāt stāvokli). Noklikšķiniet uz jebkuras darbības pogas (piemēram, `⚡ Aktivizēt` vai `⚡ Atjaunot Zelta Kopiju`).
   - *Sagaidāmais rezultāts:* Katrā kartītē ir skaidrojums, kopējams čaulas komandas lauks un poga. Reāllaika progresa konsole (`modal-ops-console`) atveras tieši zem kartītēm un automātiski ritinās skatā ar reāllaika taimeri (`⏱️ 00:01`...). Liekais komandu bloks loga apakšā ir noņemts.
 
-### C grupa: Pakalpojumu Kartītes un Database Actions Launchpad
+### C grupa: Pakalpojumu kartītes un database Actions launchpad
 
 - **TC-LAUNCH-01: 5 Galapunktu Pogu Pārbaude**
   - *Sagaidāmais rezultāts:* Datubāzu kartītēs ir 5 pogas: `🛠️ APEX Workspace (DEV)`, `⚙️ APEX Admin (ADMIN)`, `📊 DB Actions (DEV)`, `📊 DB Actions (DBA_ADMIN)`, `🌐 ORDS (<pool>)`.
@@ -66,7 +66,7 @@
   - *Darbības:* Noklikšķiniet uz `🛠️ APEX Workspace (DEV)`.
   - *Sagaidāmais rezultāts:* Izstrādātāja parole tiek nokopēta starpliktuvē un atveras APEX pieteikšanās lapa.
 
-### D grupa: Oracle SEPS Wallet Credential Matrix
+### D grupa: Oracle SEPS Wallet credential matrix
 
 - **TC-WALLET-01: Dinamiska Kontu Apvienošana**
   - *Sagaidāmais rezultāts:* Visi YAML profilu konti ir redzami tabulā pie attiecīgajām datubāzēm un portiem.
@@ -75,7 +75,7 @@
 - **TC-WALLET-03: Zero-Trust Drošības Pārbaude**
   - *Sagaidāmais rezultāts:* Paroles nav redzamas HTML avota kodā; tās tiek nolasītas reāllaikā no maka atmiņā.
 
-### E grupa: Pārvaldnieki un Filtri
+### E grupa: Pārvaldnieki un filtri
 
 - **TC-MGR-01: Profilu Pārvaldnieks**
   - *Sagaidāmais rezultāts:* Kreisajā pusē saraksts, labajā YAML saturs, klonēšanas un rediģēšanas funkcija.
@@ -91,7 +91,7 @@
 
 ---
 
-## 4. Automatizētās Testēšanas Komandas
+## 4. Automatizētās testēšanas komandas
 
 ```bash
 # 1. Dev Hub kompilācija un 6 valodu vienībtesti

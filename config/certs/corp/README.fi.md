@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🏢 Yrityksen Sisäiset PKI-Sertifikaatit (Corporate PKI)
+# 🏢 Yrityksen Sisäiset pki-sertifikaatit (corporate PKI)
 
 Tähän hakemistoon tallennetaan tai synkronoidaan organisaation sisäisen PKI-infrastruktuurin sertifikaatit:
 * `corp_cert.crt` — Yrityksen palvelinsertifikaatti

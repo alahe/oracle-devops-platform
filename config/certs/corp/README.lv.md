@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🏢 Uzņēmuma Iekšējās PKI Sertifikāti (Corporate PKI)
+# 🏢 Uzņēmuma Iekšējās PKI Sertifikāti (corporate PKI)
 
 Šajā direktorijā tiek glabāti vai sinhronizēti organizācijas iekšējās PKI infrastruktūras sertifikāti:
 * `corp_cert.crt` — Uzņēmuma servera sertifikāts

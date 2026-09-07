@@ -1,21 +1,21 @@
-# Ettevõtteklassi Hajutatud Multi-Host Arhitektuuri Spetsifikatsioon
+# Ettevõtteklassi hajutatud multi-host arhitektuuri spetsifikatsioon
 
 [ 🇬🇧 English ](../enterprise-distributed-architecture.md) | [ 🇪🇪 Eesti ](enterprise-distributed-architecture.md) | [ 🇫🇮 Suomi ](../fi/enterprise-distributed-architecture.md) | [ 🇸🇪 Svenska ](../sv/enterprise-distributed-architecture.md) | [ 🇱🇻 Latviešu ](../lv/enterprise-distributed-architecture.md) | [ 🇱🇹 Lietuvių ](../lt/enterprise-distributed-architecture.md)
 
 ---
 
-## 1. Ülevaade ja Finantsregulatsioonide Nõuetele Vastavus
+## 1. Ülevaade ja finantsregulatsioonide nõuetele vastavus
 
 Käesolev dokument sätestab toodangukõlbliku, kõrgkäideldava ja hajutatud arhitektuurse mudeli Oracle DevOps & APEX platvormi paigaldamiseks finantsettevõtte ja reguleeritud sektori remote Linux serveritele kolmes elutsükli etapis: **DEV**, **TEST** ja **PROD**.
 
-### Regulatiivsed ja Turvalisuse Invariandid
+### Regulatiivsed ja turvalisuse invariandid
 - **DORA (Digitaalse Tegevuskerksuse Määrus) & EBA Juhendid:** Garanteerib äritegevuse järjepidevuse kahe andmekeskuse **Active / Standby** mudeli kaudu, pakkudes **RTO < 60s** (taasteaja eesmärk) ja **RPO < 15m** (andmekao piirmäär).
 - **PCI-DSS & ISO/IEC 27001:** Null plaintext parooli kettal, kohustuslik otspunktidevaheline TLS 1.3 / mTLS krüpteering, AES-256 Oracle Secure External Password Store (SEPS) Auto-Login Walleti kasutamine, rootless Podman konteinerite isolatsioon ja vähimate õiguste printsiip andmebaasikasutajatele.
 - **Vastutusalade Selge Eraldamine (4 Kihti):** Likvideerib ühise tõrkepunkti ja mälukonkurentsi, hajutades töökoormuse 4 eraldiseisva serverisõlme vahel igas keskkonnas.
 
 ---
 
-## 2. Hajutatud 4-Kihiline Arhitektuuritopoloogia
+## 2. Hajutatud 4-kihiline arhitektuuritopoloogia
 
 Iga keskkond (DEV, TEST, PROD) koosneb 4 eraldiseisvast füüsilisest või virtuaalsest Linux hostist (RHEL 9 / Oracle Linux 9):
 
@@ -79,7 +79,7 @@ flowchart TB
 
 ---
 
-## 3. Toodangu (PROD) Active / Standby Avariitaaste
+## 3. Toodangu (PROD) active / standby avariitaaste
 
 Toodangukeskkonnas (PROD) peegeldatakse kõik 4 kihti kahe andmekeskuse vahel (DC-1 Aktiivne vs DC-2 Ootel/Standby):
 
@@ -125,7 +125,7 @@ flowchart LR
 
 ---
 
-## 4. Võrgupordi ja Tulemüüri Maatriks
+## 4. Võrgupordi ja tulemüüri maatriks
 
 | Lähteallikas | Sihtkoht | Port / Protokoll | Teenus | Kirjeldus |
 |:---|:---|:---|:---|:---|

@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📸 Andmebaasi Hetktõmmiste (Golden Snapshots) Halduse Skriptid (`scripts/snapshots/`)
+# 📸 Andmebaasi Hetktõmmiste (golden snapshots) halduse skriptid (`scripts/snapshots/`)
 
 Käesolev kataloog sisaldab skripte andmebaasi mahutite tihendatud külmvarunduse (Golden Snapshots) loomiseks, taastamiseks ja haldamiseks, tagades kiire ~15s taastumise ja töökindluse.
 
 ---
 
-## 🛠️ Saadaolevad Skriptid
+## 🛠️ Saadaolevad skriptid
 
 - **`create-golden-snapshots.sh`:** Loob andmemahtudest tihendatud `.tar.gz` arhiivi kausta `golden-snapshots/`.
   ```bash

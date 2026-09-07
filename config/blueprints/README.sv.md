@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🏗️ Katalog över Arkitekturritningar (Blueprints 0 .. 11)
+# 🏗️ Katalog över arkitekturritningar (Blueprints 0 .. 11)
 
 Denna katalog definierar de **12 kanoniska modulära arkitekturritningarna** som representerar hela plattformen:
 
@@ -41,7 +41,7 @@ flowchart TD
 
 ---
 
-## 🚀 CLI-Kommandon & Hantering av Ritningar
+## 🚀 CLI-kommandon & hantering av ritningar
 
 ```bash
 # 1. Starta med standardritning Blueprint 0 (Standard Proxy DB + ORDS, inga flaggor krävs):
@@ -65,7 +65,7 @@ flowchart TD
 
 ---
 
-## 📊 Matris över 12 Arkitekturritningar
+## 📊 Matris över 12 arkitekturritningar
 
 | ID | Ritningens Namn & Fil | Databasprofil & Port | Tjänsteprofiler & Portar | Containrar | Beskrivning |
 | :---: | :--- | :--- | :--- | :--- | :--- |
@@ -84,13 +84,13 @@ flowchart TD
 
 ---
 
-## 🧩 Ren Ritnings- och YAML-Profilarkitektur (Rule 11)
+## 🧩 Ren ritnings- och YAML-profilarkitektur (rule 11)
 
-### 1. Tydlig Ansvarsfördelning
+### 1. Tydlig ansvarsfördelning
 - **Ritningar (`config/blueprints/.env.*`):** Deklarerar endast övergripande positiva referenser till YAML-profiler. De definierar *vilka containrar som skapas*. Inga hårdkodade portar, lösenord eller negativa `SKIP_*`-flaggor.
 - **YAML-Profiler (`config/profiles/**/*.yaml`):** Innehåller 100% av domänspecifika inställningar: containeravbildningar, minnesgränser, portar, standard-PDB:er, tabellutrymmen och användardefinitioner.
 
-### 2. Hur Man Lägger Till en Anpassad Ritning (1-för-1)
+### 2. Hur man lägger till en anpassad ritning (1-för-1)
 Vem som helst kan skapa en ny ritning utan att ändra skriptkoden:
 1. Skapa en ny fil: `config/blueprints/.env.<ID>-<namn>` (t.ex. `.env.12-custom-analytics-workstation`):
    ```bash

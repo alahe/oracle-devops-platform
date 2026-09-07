@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../forms-setup.md) | [ 🇪🇪 Eesti ](forms-setup.md) | [ 🇸🇪 Svenska ](../sv/README.md) | [ 🇱🇻 Latviešu ](../lv/README.md) | [ 🇱🇹 Lietuvių ](../lt/README.md)
 
-# Oracle Forms 14c (14.1.2) Paigaldus-, Arendus- ja Kasutusjuhend
+# Oracle Forms 14c (14.1.2) paigaldus-, arendus- ja kasutusjuhend
 
 See juhend kirjeldab **Oracle Forms 14c (Fusion Middleware 14.1.2 / Forms Services)** paigaldamist, arhitektuuri, arendaja töövooge, failide edastamist konteinerisse, piltide ja hetktõmmiste haldust ning Forms rakenduste käitamist ja APEX-isse migreerimist.
 
 ---
 
-## 1. Arhitektuur ja Portide Jaotus
+## 1. Arhitektuur ja portide jaotus
 
 | Komponent | Port | Kirjeldus |
 | :--- | :--- | :--- |
@@ -19,14 +19,14 @@ See juhend kirjeldab **Oracle Forms 14c (Fusion Middleware 14.1.2 / Forms Servic
 
 ---
 
-## 2. Arhitektuurne Selgitus: Forms Builder (GUI) vs Konteineri Headless Runtime
+## 2. Arhitektuurne selgitus: Forms builder (GUI) VS konteineri headless runtime
 
-### Miks Forms Builderit (GUI) ei saa Macis/Linuxis otse avada?
+### Miks Forms builderit (GUI) ei saa macis/linuxis otse avada?
 1. **Pärand-Motif graafikaraamistik:** Linuxi Forms Builder (`frmbld`) põhineb 1990ndate aegsel **Motif / OpenMotif** graafikaraamistikul, mis vajab spetsiifilisi pärand-X11 laiendusi (8-bit PseudoColor Visuals, vanad fondiserverid). Kaasaegne macOS XQuartz ega kaasaegsed Linuxi aknahaldurid (Wayland/Xorg) ei toeta enam neid 30 aasta taguseid graafikastandardeid, visates vea `FRM-91111: internal error: window system startup failure`.
 2. **Oracle ametlik tootedokumentatsioon:** Oracle Forms 12c ja 14c dokumentatsioonis on sätestatud:
    > *Form Builder (GUI visuaalne toimetaja) on ametlikult toetatud AINULT Microsoft Windows operatsioonisüsteemis (`frmbld.exe`). Linuxi jaotuspaketid sisaldavad Forms Compileri (`frmcmp_batch`), Forms Services Runtime serverit (`frmweb` / WebLogic `WLS_FORMS`) ja migratsioonitööriistu (`Forms2XML`).*
 
-### Konteineri Tegelik Otstarve ja Roll
+### Konteineri tegelik otstarve ja roll
 Konteinerit kasutatakse **Headless DevOps, Kompileerimise ja Käituskeskkonnana**:
 - **Rakenduste Käitamine:** Kompileeritud vorme (`.fmx`) jooksutatakse reaalajas veebiserveri kaudu (`http://localhost:9001/forms/frmservlet?form=<minuvorm.fmx>`).
 - **Partii-Kompileerimine (CLI):** `.fmb` vormide kompileerimine `.fmx`-iks toimub käsurealt sekundiga läbi käsu `./scripts/forms/compile-form.sh`.
@@ -34,11 +34,11 @@ Konteinerit kasutatakse **Headless DevOps, Kompileerimise ja Käituskeskkonnana*
 
 ---
 
-## 3. Juhend: Kuidas Edastada Forms `.fmb` ja `.fmx` Faile Konteinerisse
+## 3. Juhend: Kuidas edastada Forms `.fmb` ja `.fmx` faile konteinerisse
 
 Forms failide konteinerisse toimetamiseks on **4 paindlikku meetodit**:
 
-### Meetod A (Kõige Lihtsam & Soovitatav): Lokaalne Monteeritud Kaust (`forms_apps/`)
+### Meetod a (kõige lihtsam & soovitatav): Lokaalne monteeritud kaust (`forms_apps/`)
 - Projekti juurkataloogis asuv kaust **`forms_apps/`** on automaatselt monteeritud konteineri kausta `/u01/oracle/forms_apps` reaalajas (`rw` režiimis).
 - **Kuidas kasutada:**
   1. Kopeeri või lohista oma olemasolevad `.fmb` või `.fmx` failid Finderis/Exploreris otse kausta `forms_apps/` (või käsurealt `cp /minu/kaust/*.fmb forms_apps/`).
@@ -46,7 +46,7 @@ Forms failide konteinerisse toimetamiseks on **4 paindlikku meetodit**:
   3. Kompileeri käsurealt: `./scripts/forms/compile-form.sh forms_apps/minuvorm.fmb`
   4. Ava veebis: `http://localhost:9001/forms/frmservlet?form=minuvorm.fmx`
 
-### Meetod B: Ametlik Tarne Skript (`deploy-forms-apps.sh`)
+### Meetod b: Ametlik tarne skript (`deploy-forms-apps.sh`)
 Kui soovid faile tarnida teisest kataloogist või automatiseeritud skriptist:
 ```bash
 # Tarnib üksiku vormi:
@@ -56,14 +56,14 @@ Kui soovid faile tarnida teisest kataloogist või automatiseeritud skriptist:
 ./scripts/forms/deploy-forms-apps.sh /minu/vanad_vormid/
 ```
 
-### Meetod C: Podman / Docker Kopeerimiskäsk (`podman cp`)
+### Meetod c: Podman / Docker kopeerimiskäsk (`podman cp`)
 Otsene kopeerimine käimasolevasse konteinerisse:
 ```bash
 podman cp /minu/kohalik/vorm.fmb app-forms:/u01/oracle/forms_apps/
 podman cp /minu/kohalik/vorm.fmx app-forms:/u01/oracle/forms_apps/
 ```
 
-### Meetod D: Windows Forms Builderist (`frmbld.exe`) Otse Salvestamine
+### Meetod d: Windows Forms builderist (`frmbld.exe`) otse salvestamine
 Kui arendaja kujundab vorme Windowsi masinas (või Maci virtuaalmasinas nagu Parallels / VMware):
 1. Jaga Maci kaust `forms_apps/` Windowsi virtuaalmasinaga võrgukettana (nt `Z:\forms_apps`).
 2. Windows Forms Builderis vali **File $\rightarrow$ Save As** ja salvesta otse kettale `Z:\forms_apps\minuvorm.fmb`.
@@ -71,11 +71,11 @@ Kui arendaja kujundab vorme Windowsi masinas (või Maci virtuaalmasinas nagu Par
 
 ---
 
-## 4. Konteineripiltide (Images) ja Kuldsete Hetktõmmiste (Snapshots) Haldus
+## 4. Konteineripiltide (images) ja kuldsete hetktõmmiste (snapshots) haldus
 
 Forms 14c keskkonna korduvkasutatavuse tagamiseks pakub repositoorium **4 võimekat mehhanismi**:
 
-### 1. Eelkonfigureeritud Pildiehitaja (`docker/forms/build-forms-prebuilt-image.sh`)
+### 1. Eelkonfigureeritud pildiehitaja (`docker/forms/build-forms-prebuilt-image.sh`)
 Skript ehitab ja sildistab valmis paigaldatud Forms 14c domeeniga OCI pildi:
 ```bash
 # Ehita lokaalne pilt:
@@ -86,7 +86,7 @@ Skript ehitab ja sildistab valmis paigaldatud Forms 14c domeeniga OCI pildi:
 ```
 *Tulemus:* Uues arendusmasinas või CI/CD-s käivitub Forms **5 sekundiga** ilma nullist 15-minutilise paigalduseta.
 
-### 2. Kuldsete Hetktõmmiste Süsteem (`scripts/snapshots/`)
+### 2. Kuldsete hetktõmmiste süsteem (`scripts/snapshots/`)
 Loob andmebaasi ja rakenduste püsimälumahtudest (Volumes) tihendatud `.tar.gz` arhiivid kausta `golden-snapshots/`:
 ```bash
 # Loo hetktõmmis:
@@ -96,7 +96,7 @@ Loob andmebaasi ja rakenduste püsimälumahtudest (Volumes) tihendatud `.tar.gz`
 ./scripts/snapshots/restore-golden-snapshots.sh
 ```
 
-### 3. OCI Pildi Lokaalne Eksport & Import (`podman save` / `podman load`)
+### 3. OCI pildi lokaalne eksport & import (`podman save` / `podman load`)
 Võimaldab pilti jagada ja arhiveerida ilma internetiühenduseta (air-gapped keskkonnad):
 ```bash
 # Eksport faili:
@@ -106,7 +106,7 @@ podman save -o binaries/forms/oracle-forms-14.1.2.tar localhost/oracle-forms:14.
 podman load -i binaries/forms/oracle-forms-14.1.2.tar
 ```
 
-### 4. Ettevõtte Sise-Artifactory ja Pilveregistri Tugi
+### 4. Ettevõtte sise-artifactory ja pilveregistri tugi
 Seadista `.env` failis muutuja `FORMS_CONTAINER_IMAGE=artifactory.corp/oracle-forms:14.1.2` ning laadi pilt registrisse:
 ```bash
 podman tag localhost/oracle-forms:14.1.2 artifactory.corp/oracle-forms:14.1.2
@@ -115,7 +115,7 @@ podman push artifactory.corp/oracle-forms:14.1.2
 
 ---
 
-## 5. Forms Kompileerimine ja Custom Andmebaasi Ühendus
+## 5. Forms kompileerimine ja custom andmebaasi ühendus
 
 Forms vormide (`.fmb`) kompileerimisel kontrollib `frmcmp_batch` andmebaasi skeemi (tabelid, vaated, paketid).
 
@@ -133,7 +133,7 @@ Kompileerimisel saab määrata sihtandmebaasi aliase (mis loetakse turvaliselt S
 
 ---
 
-## 6. Blueprintide Ülevaade
+## 6. Blueprintide ülevaade
 
 | Blueprint | Nimi | Kirjeldus |
 | :--- | :--- | :--- |
@@ -145,7 +145,7 @@ Kompileerimisel saab määrata sihtandmebaasi aliase (mis loetakse turvaliselt S
 
 ---
 
-## 7. Forms-to-APEX Moderniseerimise Töövoog (Tulevik)
+## 7. Forms-to-APEX moderniseerimise töövoog (tulevik)
 
 ```
 ┌─────────────────────────┐      1. export-forms-for-apex.sh      ┌─────────────────────────────┐

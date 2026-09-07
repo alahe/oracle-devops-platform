@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../web-ide-artifactory.md) | [ 🇪🇪 Eesti ](../et/web-ide-artifactory.md) | [ 🇫🇮 Suomi ](../fi/web-ide-artifactory.md) | [ 🇸🇪 Svenska ](../sv/web-ide-artifactory.md) | [ 🇱🇻 Latviešu ](../lv/web-ide-artifactory.md) | [ 🇱🇹 Lietuvių ](web-ide-artifactory.md)
 
-# Konteinerizuota Web IDE & Įmonės Plėtinių Parduotuvė
+# Konteinerizuota web IDE & įmonės plėtinių parduotuvė
 
 Šis vadovas aprašo **Konteinerizuotos Web IDE ( / )** nustatymą naršyklėje, integravimą su **Artifactory / VS Code Marketplace**, **Oracle SQL Developer, Google Antigravity ir Microsoft Python** plėtinius bei **100% vietinį ir saugų GitHub Actions testavimą (neprisijungus)**.
 
 ---
 
-## 1. Web IDE Architektūra & Įrankiai
+## 1. Web IDE architektūra & įrankiai
 
 - **Naršyklės URL:**  (HTTP) arba  (HTTPS).
 - **Įrankiai:** OpenJDK 21, Oracle SQLcl 26.2, Liquibase, Git, Python3 (, ), GitHub CLI (Work seamlessly with GitHub from the command line.

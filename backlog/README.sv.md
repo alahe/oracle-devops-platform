@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📋 Oracle DevOps Platform — Utvecklings- och Uppgiftsbacklog
+# 📋 Oracle DevOps platform — utvecklings- och uppgiftsbacklog
 
 Denna katalog rymmer plattformens modulära **backlogg-system**, där arkitekturförbättringar, funktioner och säkerhetskomponenter dokumenteras som Markdown-filer.
 
 ---
 
-## 🧭 Struktur och Livscykelregler
+## 🧭 Struktur och livscykelregler
 
 ```text
 backlog/

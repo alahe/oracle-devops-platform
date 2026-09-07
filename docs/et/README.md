@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../../README.md) | [ 🇪🇪 Eesti ](README.md) | [ 🇫🇮 Suomi ](../fi/README.md) | [ 🇸🇪 Svenska ](../sv/README.md) | [ 🇱🇻 Latviešu ](../lv/README.md) | [ 🇱🇹 Lietuvių ](../lt/README.md)
 
-# Oracle DevOps Platvorm (Eesti Juhend)
+# Oracle DevOps platvorm (eesti juhend)
 
 > **Toodangukõlblik, litsentsitasudeta (0 €) ja 100% paroolivaba (SEPS Wallet) Oracle 23ai, APEX SSO Lüüs, Forms 14c, Publisher ja Web IDE arendus- ning DevOps platvorm.**
 
 ---
 
-## ⚡ 60-Sekundi Kiirstart
+## ⚡ 60-sekundi kiirstart
 
 ```bash
 # 1. Klooni repositoorium ja liigu kausta
@@ -33,7 +33,7 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 
 ---
 
-## 🗺️ Uue Arendaja Onboarding Teekond
+## 🗺️ Uue arendaja onboarding teekond
 
 ```mermaid
 flowchart TD
@@ -63,7 +63,7 @@ flowchart TD
 
 ---
 
-## 🏗️ Arhitektuuri Blueprintid (12 Kanoonilist Moodulit)
+## 🏗️ Arhitektuuri blueprintid (12 kanoonilist moodulit)
 
 Oracle Free DB in Prod organiseerib oma arhitektuuri **12 kanoonilisse modulaarsesse blueprinti (0 .. 11)**, mis jagunevad nelja ettevõtte taseme kihti:
 
@@ -104,7 +104,7 @@ flowchart TD
 
 ---
 
-## 🧩 Puhas Blueprintide & YAML Profiilide Arhitektuur (Reegel 11)
+## 🧩 Puhas blueprintide & YAML profiilide arhitektuur (reegel 11)
 
 Täieliku modulaarsuse ja kõvakodeeringute vältimiseks kehtib järgmine arhitektuur:
 
@@ -134,7 +134,7 @@ Täieliku modulaarsuse ja kõvakodeeringute vältimiseks kehtib järgmine arhite
 
 ---
 
-## 🌐 Dev Hub (`http://localhost:8088/`) — Asünkroonne Juhtimiskeskus (Reegel 12)
+## 🌐 Dev Hub (`http://localhost:8088/`) — Asünkroonne juhtimiskeskus (reegel 12)
 
 Dev Hub toimib tervikliku juhtpaneelina teenuste ja blueprintide haldamiseks:
 
@@ -152,7 +152,7 @@ Dev Hub toimib tervikliku juhtpaneelina teenuste ja blueprintide haldamiseks:
 
 ---
 
-## 🌐 ORDS Nutivärav ja Autonoomne Mikroregistraator (Variant 3)
+## 🌐 ORDS nutivärav ja autonoomne mikroregistraator (variant 3)
 
 Platvorm lahendab mitme blueprinti vahelised pordikonfliktid ja mitmekordsed ORDS konteinerid läbi **Nutivärava ja Autonoomse Mikroregistraatori mustri**:
 
@@ -173,7 +173,7 @@ Platvorm lahendab mitme blueprinti vahelised pordikonfliktid ja mitmekordsed ORD
 
 ---
 
-## 🔑 Kus On Minu Parool? (SEPS Wallet Spikker)
+## 🔑 Kus on minu parool? (SEPS Wallet spikker)
 
 Kõik credentials-andmed genereeritakse krüptograafiliselt ja talletatakse turvaliselt **Oracle SEPS Auto-Login Walletis** ja Podman Secret Store'is.
 
@@ -190,7 +190,7 @@ sql /@DB_ALISE_DEV
 
 ---
 
-## ⚡ Kiirendatud ~15s Taastamine & Automaatne Versioonikontroll
+## ⚡ Kiirendatud ~15s taastamine & automaatne versioonikontroll
 
 Oracle Free DB in Prod sisaldab **kuldsnapshottide mootorit**, mis vähendab taaskäivituse aega **~6–8 minutilt ~15 sekundile**:
 
@@ -201,7 +201,7 @@ Oracle Free DB in Prod sisaldab **kuldsnapshottide mootorit**, mis vähendab taa
 
 ---
 
-## 🚀 Kiirkäskude Spikker
+## 🚀 Kiirkäskude spikker
 
 ```bash
 # 1. Käivita kanooniline vaike-blueprint (BP 0) või konkreetne blueprint:
@@ -235,11 +235,16 @@ Oracle Free DB in Prod sisaldab **kuldsnapshottide mootorit**, mis vähendab taa
 
 # 8. Kontrolli failinimede platvormiülest ühilduvust (Reegel 13):
 ./tests/unit/test-filename-portability.sh
+
+# 9. Pre-commit & pre-push turva- ja kvaliteedikontroll (Reeglid 5, 13, 14 & GDPR):
+./scripts/check-pre-commit.sh --staged                     # Kontrolli ainult lavastatud faile (~1s)
+./scripts/check-pre-commit.sh --full                       # Kogu repositooriumi täisaudit (~5s)
+./scripts/check-pre-commit.sh --install-hook               # Paigalda automaatsed Git hookid
 ```
 
 ---
 
-## 🧭 Oracle APEX DevHub Rakendus & APEXlang (TO-BE Teekaart)
+## 🧭 Oracle APEX DevHub rakendus & APEXlang (TO-BE teekaart)
 
 > [!NOTE]
 > **TO-BE Teekaart:** Lisaks iseseisvale HTML Dev Hubile (`docs/dev-hub.html`) on tulevikus plaanis täielikult deklaratiivne andmebaasisisene **Oracle APEX rakendus (App 101: DevHub)** [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) baasil kaustas [`applications/`](../../applications/README.md). Kogu baastaristu, APEXlang kompilaatorid ja tarneahelad on ette valmistatud:
@@ -250,9 +255,10 @@ Oracle Free DB in Prod sisaldab **kuldsnapshottide mootorit**, mis vähendab taa
 
 ---
 
-## 📑 Spetsiaalsed Juhendid
+## 📑 Spetsiaalsed juhendid
 
 - 🏛️ **[docs/enterprise-distributed-architecture.md](../../docs/enterprise-distributed-architecture.md) | [docs/et/enterprise-distributed-architecture.md](enterprise-distributed-architecture.md):** **Ettevõtteklassi Hajutatud Multi-Host Arhitektuur** — 4-kihiline finantsarhitektuur (ORDS, Publisher, Proxy DB, Publisher DB), olemasoleva äri-DB ühendamine ja PROD Active/Standby avariitaaste (RTO < 60s, RPO < 15m).
+- 🛡️ **[docs/security-audit-report.md](../../docs/security-audit-report.md) | [docs/et/security-audit-report.md](security-audit-report.md):** **Ettevõtteklassi Turvaauditi Aruanne & Hardening** — Automaatne 7-tasandiline turvaskänner (`test-security-audit.sh`), OWASP Top 10, CIS Benchmark ja DORA vastupidavus.
 - 📋 **[docs/backlog/README.md](../../docs/backlog/README.md):** **Finantsettevõtte Jira Backlog** — 11 tootmisvalmis Jira storyt (62 SP) hajutatud paigalduse, multi-pooli ja avariitaaste jaoks.
 - 🛡️ **[docs/security.md](../../docs/security.md) | [docs/et/security.md](security.md):** **Turvalisuse & SSO Arhitektuuri Juhend** — Zero-Trust paroolide haldus, Azure Entra-ID SSO ja 5-astmeline TLS.
 - 🏗️ **[docs/db-profiles-and-topology.md](../../docs/db-profiles-and-topology.md):** **Andmebaasi Profiilide ja Topoloogia Juhend** — Puhtad blueprintid, YAML profiilid ja dünaamilised pordid.

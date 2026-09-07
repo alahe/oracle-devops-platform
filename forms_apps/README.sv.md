@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Katalog för Oracle Forms Applikationer (`forms_apps/`)
+# 📐 Katalog för Oracle Forms applikationer (`forms_apps/`)
 
 Denna katalog monteras automatiskt i Oracle Forms 14c-containern på sökvägen `/u01/oracle/forms_apps` i läs- och skrivläge (`rw`).
 

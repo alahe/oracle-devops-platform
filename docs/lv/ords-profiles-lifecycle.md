@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../ords-profiles-lifecycle.md) | [ 🇪🇪 Eesti ](../et/ords-profiles-lifecycle.md) | [ 🇫🇮 Suomi ](../fi/ords-profiles-lifecycle.md) | [ 🇸🇪 Svenska ](../sv/ords-profiles-lifecycle.md) | [ 🇱🇻 Latviešu ](ords-profiles-lifecycle.md) | [ 🇱🇹 Lietuvių ](../lt/ords-profiles-lifecycle.md)
 
-# 🌐 Oracle REST Data Services (ORDS) Profilu un Atsevišķā Dzīvescikla Rokasgrāmata
+# 🌐 Oracle REST data services (ORDS) profilu un atsevišķā dzīvescikla rokasgrāmata
 
 Šī rokasgrāmata dokumentē **Oracle REST Data Services (ORDS)** arhitektūru, dzīvescikla pārvaldību un konfigurāciju vietējos konteineros, attālinātos serveros un Oracle Autonomous Database (ADB) mākoņvidēs.
 
 ---
 
-## 🏛️ 1. Atsevišķās Arhitektūras Principi
+## 🏛️ 1. Atsevišķās arhitektūras principi
 
 Modernā modulārā arhitektūrā tīmekļa lietojumprogrammu vārteja ir atdalīta no datubāzes dzinēja:
 
@@ -33,7 +33,7 @@ flowchart TD
     DBEngine -.->|Reģistrē pūlu| POOLS
 ```
 
-### Galvenie Arhitektūras Noteikumi:
+### Galvenie arhitektūras noteikumi:
 1. **`ords.enabled: true` Datubāzes Profilā:**
    - Sagatavo datubāzes ORDS shēmas, metadatus (`ORDS_METADATA`) un starpniekservera lietotājus.
    - **NEPALAIDĪS** `app-ords` tīmekļa konteineru.
@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-## 📦 2. Trīs Kanoniskie ORDS Profili
+## 📦 2. Trīs kanoniskie ORDS profili
 
 Visi ORDS profili atrodas mapē `config/profiles/ords/`:
 
@@ -57,7 +57,7 @@ Visi ORDS profili atrodas mapē `config/profiles/ords/`:
 
 ---
 
-## ☁️ 3. Oracle Autonomous Database (ADB) Integrācija
+## ☁️ 3. Oracle autonomous database (ADB) integrācija
 
 Oracle Autonomous Database (Cloud ADB Serverless) ietver iepriekš instalētu un mākoņa pārvaldītu ORDS:
 
@@ -71,7 +71,7 @@ ords:
 
 ---
 
-## 💡 4. Norādījumi, Ja ORDS Serveris Nav Konfigurēts
+## 💡 4. Norādījumi, ja ORDS serveris nav konfigurēts
 
 Ja datubāze tiek palaista bez `ORDS_PROFILE` un centrālais ORDS nedarbojas:
 - Terminālī tiek parādīts skaidrs paziņojums:
@@ -80,7 +80,7 @@ Ja datubāze tiek palaista bez `ORDS_PROFILE` un centrālais ORDS nedarbojas:
 
 ---
 
-## 🚀 5. Ātrās Komandas
+## 🚀 5. Ātrās komandas
 
 ```bash
 # 1. Palaist pastāvīgo centrālo ORDS vārteju:

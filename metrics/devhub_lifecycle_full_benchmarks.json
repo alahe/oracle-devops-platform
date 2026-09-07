@@ -1,0 +1,10 @@
+{
+  "suite": "devhub_lifecycle_full",
+  "timestamp": "20260907_202127",
+  "total_tested": 1,
+  "passed": 1,
+  "failed": 0,
+  "total_duration_secs": 0,
+  "dry_run": true,
+  "core_base_protected": true
+}

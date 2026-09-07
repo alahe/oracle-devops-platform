@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🗄️ Datubāzu Profilu Katalogs (`config/profiles/databases/`)
+# 🗄️ Datubāzu Profilu katalogs (`config/profiles/databases/`)
 
 Šajā direktorijā atrodas YAML profili **Oracle Database konteineriem** (Standard 23ai Free, Autonomous ADB Free, Gvenzl 23c).
 
-## 📂 Datubāzu Profilu Matrica
+## 📂 Datubāzu Profilu matrica
 
 | Profila Fails | Apraksts | DB Tips | Wallet Nepieciešams | Pielietojums |
 | :--- | :--- | :--- | :--- | :--- |

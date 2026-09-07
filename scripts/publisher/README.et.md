@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📑 Analytics Publisheri Operatsioonide Skriptid (`scripts/publisher/`)
+# 📑 Analytics publisheri operatsioonide skriptid (`scripts/publisher/`)
 
 Käesolev kataloog sisaldab tööriistu Oracle Analytics Publisheri (Pixel Perfect aruandlusmootori), selle WebLogic domeeni, aruannete kataloogi varunduse ja tarnimise haldamiseks.
 
 ---
 
-## 🛠️ Saadaolevad Skriptid
+## 🛠️ Saadaolevad skriptid
 
 - **`status-publisher.sh`:** Kontrollib Publisheri teenuse ja andmeallikate tervist ja staatust.
   ```bash

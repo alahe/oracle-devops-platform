@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🏗️ Arkkitehtuurimallien (Blueprints) Luettelo (0 .. 11)
+# 🏗️ Arkkitehtuurimallien (Blueprints) luettelo (0 .. 11)
 
 Tämä hakemisto sisältää **12 kanonista modulaarista arkkitehtuurimallia**, jotka kattavat koko yritystason alustan:
 
@@ -41,7 +41,7 @@ flowchart TD
 
 ---
 
-## 🚀 CLI-Komennot & Blueprinttien Hallinta
+## 🚀 CLI-komennot & blueprinttien hallinta
 
 ```bash
 # 1. Käynnistä oletusmallilla Blueprint 0 (Oletus Proxy DB + ORDS, ilman lisälippuja):
@@ -65,7 +65,7 @@ flowchart TD
 
 ---
 
-## 📊 12 Arkkitehtuurimallin Matriisi
+## 📊 12 Arkkitehtuurimallin matriisi
 
 | ID | Blueprint Nimi & Tiedosto | Tietokantaprofiili & Portti | Palveluprofiilit & Portit | Kontit | Kuvaus |
 | :---: | :--- | :--- | :--- | :--- | :--- |
@@ -84,13 +84,13 @@ flowchart TD
 
 ---
 
-## 🧩 Selkeä Blueprint- ja YAML-Profiiliarkkitehtuuri (Rule 11)
+## 🧩 Selkeä Blueprint- ja YAML-profiiliarkkitehtuuri (rule 11)
 
-### 1. Vastuiden Erottaminen
+### 1. Vastuiden erottaminen
 - **Blueprintit (`config/blueprints/.env.*`):** Ilmoittavat vain korkean tason positiivisia viitteitä YAML-profiileihin. Ne määrittävät *mitä säilöjä luodaan*. Ne eivät koskaan sisällä kovakoodattuja portteja, salasanoja tai negatiivisia `SKIP_*`-lippuja.
 - **YAML-Profiilit (`config/profiles/**/*.yaml`):** Sisältävät 100% toimialuekohtaisista määrityksistä: säilökuvat, muistirajat, portit, oletus-PDB:t, taulutilat, kiintiöt ja käyttäjämääritykset.
 
-### 2. Kuinka Lisätä Oma Blueprint (1-kerrallaan)
+### 2. Kuinka lisätä oma Blueprint (1-kerrallaan)
 Kehittäjä tai tekoäly voi luoda uuden blueprintin milloin tahansa muuttamatta komentosarjoja:
 1. Luo uusi tiedosto: `config/blueprints/.env.<ID>-<nimi>` (esim. `.env.12-custom-analytics-workstation`):
    ```bash

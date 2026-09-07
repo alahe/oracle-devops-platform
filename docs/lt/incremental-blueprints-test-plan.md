@@ -1,14 +1,14 @@
-# 🧪 Nuoseklaus Struktūrinių Planų Pridėjimo ir „Multi-Stack“ Testavimo Planas
+# 🧪 Nuoseklaus struktūrinių planų pridėjimo ir „multi-stack“ testavimo planas
 
 [ 🇬🇧 English ](../incremental-blueprints-test-plan.md) | [ 🇪🇪 Eesti ](../et/incremental-blueprints-test-plan.md) | [ 🇫🇮 Suomi ](../fi/incremental-blueprints-test-plan.md) | [ 🇸🇪 Svenska ](../sv/incremental-blueprints-test-plan.md) | [ 🇱🇻 Latviešu ](../lv/incremental-blueprints-test-plan.md) | [ 🇱🇹 Lietuvių ](incremental-blueprints-test-plan.md)
 
 ---
 
-## 1. Santrauka ir Tikslai
+## 1. Santrauka ir tikslai
 
 **Oracle DevOps platforma** palaiko modulinį ir dinaminį struktūrinių planų („blueprints“) aktyvavimą tiek per komandinę eilutę (`scripts/deploy-blueprint.sh`), tiek interaktyviajame Developer Hub (`docs/dev-hub.html`). Šis testavimo planas tikrina **nuoseklų struktūrinių planų pridėjimą (incremental addition)**, užtikrindamas, kad kelios architektūros konfigūracijos veikia lygiagrečiai be konfliktų, nenumatytų sustabdymų ar išteklių trūkumo.
 
-### Pagrindiniai Testavimo Tikslai:
+### Pagrindiniai testavimo tikslai:
 1. **Env 0 Bazinio Lygio Reikalavimas (Baseline Invariant):** Kiekvienas testas privalo prasidėti nuo **Blueprint 0 („.env.0-default-proxy-ords“)** kaip nuolatinio Core Base tinklo vartų modulio (`db-proxy` 1532 prievade ir `app-ords` 8088/8448 prievaduose).
 2. **Nedestruktyvus Pridėjimas (Non-Destructive Addition):** Naujo plano pridėjimas (pvz., BP 1 `db-alise` arba BP 8 `web-ide-dev`) **niekada negali** sustabdyti, pašalinti ar iš naujo inicijuoti anksčiau paleistų konteinerių ar duomenų bazių schemų.
 3. **Jokių Šmėklinių Konteinerių (Zero Ghost Containers):** Veikiančių konteinerių aibė turi tiksliai atitikti visų aktyvuotų planų sąjungą. Neautorizuotų ar nežinomų konteinerių kūrimas yra griežtai draudžiamas.
@@ -25,7 +25,7 @@
 
 ---
 
-## 2. Testavimo Architektūra ir Eiga
+## 2. Testavimo architektūra ir eiga
 
 ```mermaid
 flowchart TD
@@ -59,7 +59,7 @@ flowchart TD
 
 ---
 
-## 3. Nuoseklaus Testavimo Matrica (BP 0 .. BP 9)
+## 3. Nuoseklaus testavimo matrica (BP 0 .. BP 9)
 
 | Žingsnis | Plano Failas | Aprašymas | Tiksliniai Konteineriai | Prievadai | DB SEPS Alias | Tinklo Paslauga |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -78,9 +78,9 @@ flowchart TD
 
 ---
 
-## 4. Patikros Metodika
+## 4. Patikros metodika
 
-### 1. Lygis: Automatizuota Skriptų Diagnostika
+### 1. Lygis: Automatizuota skriptų diagnostika
 1. **Konteinerių Izoliacija ir Šmėklinių Procesų Patikra:**
    - Po kiekvieno žingsnio vykdyti `podman ps --format "{{.Names}}"`.
 2. **Oracle SEPS Automatinio Prisijungimo Patikra:**
@@ -88,7 +88,7 @@ flowchart TD
 3. **HTTP ir REST Patikros:**
    - Vykdyti `./scripts/check-urls.sh`.
 
-### 2. Lygis: Naršyklės ir Dev Hub Patikra
+### 2. Lygis: Naršyklės ir Dev Hub patikra
 1. **Dev Hub Realaus Laiko Sinchronizacija:**
    - Atverti `docs/dev-hub.html` ir patikrinti žalią būseną bei RAM skaitiklį.
 2. **1-Spustelėjimo Prisijungimas:**
@@ -96,27 +96,27 @@ flowchart TD
 
 ---
 
-## 5. Išteklių Apsauga ir Dublikatų Prevencija
+## 5. Išteklių apsauga ir dublikatų prevencija
 
-### TC-RES-01: Kelių Platformų RAM Patikra
+### TC-RES-01: Kelių platformų RAM patikra
 - **Tikslas:** Patikrinti laisvą atmintį Windows (PowerShell CIM), Linux (`/proc/meminfo`) ir macOS (`vm_stat`).
 
-### TC-RES-02: Blokavimas Esant Nepakankamai Atminčiai (< 2048 MB Buferis)
+### TC-RES-02: Blokavimas esant nepakankamai atminčiai (< 2048 MB buferis)
 - **Tikslas:** Blokuoti diegimą su klaida `RES_INSUFFICIENT_RAM`.
 
-### TC-DUP-01: Dvigubo Paleidimo Aptikimas (`STATUS_ALREADY_ACTIVE`)
+### TC-DUP-01: Dvigubo paleidimo aptikimas (`STATUS_ALREADY_ACTIVE`)
 - **Tikslas:** Pranešti `BP_ALREADY_ACTIVE` neperkraunant veikiančių konteinerių.
 
 ---
 
-## 6. Vykdymo 12 Valandų SLA Priežiūra
+## 6. Vykdymo 12 valandų SLA priežiūra
 
-### TC-TIME-01: Globalus SLA Laikmatis
+### TC-TIME-01: Globalus SLA laikmatis
 - **Tikslas:** Saugiai nutraukti testą ir išsaugoti duomenis faile `metrics/setup_benchmarks.json` prieš pasiekiant 12 valandų limitą.
 
 ---
 
-## 7. Komandų Atmintinė
+## 7. Komandų atmintinė
 
 ```bash
 # 1. Inicijuoti bazinę aplinką (Blueprint 0)
@@ -140,7 +140,7 @@ open ./docs/dev-hub.html
 
 ---
 
-## 8. Automatizuotų Inkrementinių Testų Rezultatai
+## 8. Automatizuotų inkrementinių testų rezultatai
 
 Automatizuotas vykdymas naudojant `./tests/test-all-blueprints-incremental.sh --stop-on-fail` sėkmingai patikrino visus 10 architektūrinių planų (BP 0 iki BP 9):
 

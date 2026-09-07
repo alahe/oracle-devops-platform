@@ -303,6 +303,26 @@ DOC_SPECS = [
         }
     },
     {
+        "id": "security-audit",
+        "rel": "docs/security-audit-report.md",
+        "titles": {
+            "en": "🛡️ Enterprise Security Audit & Hardening Report",
+            "et": "🛡️ Ettevõtteklassi Turvaauditi Aruanne & Hardening",
+            "fi": "🛡️ Yritystason Tietoturva-auditin Raportti",
+            "sv": "🛡️ Företagsklassad Säkerhetsrevisionsrapport",
+            "lv": "🛡️ Uzņēmuma Drošības Audita Ziņojums",
+            "lt": "🛡️ Įmonių Saugumo Audito Ataskaita"
+        },
+        "files": {
+            "en": "docs/security-audit-report.md",
+            "et": "docs/et/security-audit-report.md",
+            "fi": "docs/fi/security-audit-report.md",
+            "sv": "docs/sv/security-audit-report.md",
+            "lv": "docs/lv/security-audit-report.md",
+            "lt": "docs/lt/security-audit-report.md"
+        }
+    },
+    {
         "id": "enterprise-architecture",
         "rel": "docs/enterprise-distributed-architecture.md",
         "titles": {
@@ -484,6 +504,26 @@ DOC_SPECS = [
             "lt": "🧪 FIN-011: E2E Būsenos Patikrinimai & DR Testai (5 SP)"
         },
         "files": { "en": "docs/backlog/FIN-011-e2e-health-check-and-disaster-recovery-testing.md" }
+    },
+    {
+        "id": "glossary",
+        "rel": "docs/glossary.md",
+        "titles": {
+            "en": "📖 Architecture Glossary & Acronyms",
+            "et": "📖 Arhitektuurne sõnastik ja akronüümid",
+            "fi": "📖 Arkkitehtuurisanasto ja akronyymit",
+            "sv": "📖 Arkitekturordlista och akronymer",
+            "lv": "📖 Arhitektūras vārdnīca un akronīmi",
+            "lt": "📖 Architektūros žodynas ir akronimai"
+        },
+        "files": {
+            "en": "docs/glossary.md",
+            "et": "docs/et/glossary.md",
+            "fi": "docs/fi/glossary.md",
+            "sv": "docs/sv/glossary.md",
+            "lv": "docs/lv/glossary.md",
+            "lt": "docs/lt/glossary.md"
+        }
     }
 ]
 
@@ -617,12 +657,12 @@ BP_COLOR_THEMES = {
     11: {"icon": "📡", "color": "#f87171", "border": "rgba(248,113,113,0.4)"}
 }
 
-SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 12 • VISION &amp; STRATEGY',
-                        'et': '🌟 SLAID 1 / 12 • VISIOON JA STRATEEGIA',
-                        'fi': '🌟 DIA 1 / 12 • VISIO &amp; STRATEGIA',
-                        'sv': '🌟 BILD 1 / 12 • VISION &amp; STRATEGI',
-                        'lv': '🌟 SLAIDS 1 / 12 • VĪZIJA &amp; STRATĒĢIJA',
-                        'lt': '🌟 SKAIDRĖ 1 / 12 • VIZIJA IR STRATEGIJA'},
+SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &amp; STRATEGY',
+                        'et': '🌟 SLAID 1 / 13 • VISIOON JA STRATEEGIA',
+                        'fi': '🌟 DIA 1 / 13 • VISIO &amp; STRATEGIA',
+                        'sv': '🌟 BILD 1 / 13 • VISION &amp; STRATEGI',
+                        'lv': '🌟 SLAIDS 1 / 13 • VĪZIJA &amp; STRATĒĢIJA',
+                        'lt': '🌟 SKAIDRĖ 1 / 13 • VIZIJA IR STRATEGIJA'},
            'title': {   'en': 'Oracle DevOps Platform for Local &amp; Remote Environments',
                         'et': 'Oracle DevOps platvorm lokaalsetele ja serverkeskkondadele',
                         'fi': 'Oracle DevOps -alusta paikallisille ja palvelinympäristöille',
@@ -743,12 +783,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 12 • VISION &am
                                       'Hub suteikia pilną grafinę sąsają. Kūrėjai gali dirbti visiškai neprisijungę be '
                                       'įmonės VPN.<br/>⚠️ Ką akcentuoti: Saugumas įvaldomas nuo pat pradžių; tai '
                                       'sumažina rizikas ir leidžia naudoti Free DB gamyboje vidiniams įrankiams.'}},
-    2: {   'badge': {   'en': '🛑 SLIDE 2 / 12 • PROBLEMS &amp; PAIN POINTS',
-                        'et': '🛑 SLAID 2 / 12 • VALUPUNKTID JA PROBLEEMID',
-                        'fi': '🛑 DIA 2 / 12 • KIPUPISTEET &amp; HAASTEET',
-                        'sv': '🛑 BILD 2 / 12 • PROBLEM &amp; UTMANINGAR',
-                        'lv': '🛑 SLAIDS 2 / 12 • PROBLĒMAS &amp; IZAICINĀJUMI',
-                        'lt': '🛑 SKAIDRĖ 2 / 12 • PROBLEMOS IR IŠŠŪKIAI'},
+    2: {   'badge': {   'en': '🛑 SLIDE 2 / 13 • PROBLEMS &amp; PAIN POINTS',
+                        'et': '🛑 SLAID 2 / 13 • VALUPUNKTID JA PROBLEEMID',
+                        'fi': '🛑 DIA 2 / 13 • KIPUPISTEET &amp; HAASTEET',
+                        'sv': '🛑 BILD 2 / 13 • PROBLEM &amp; UTMANINGAR',
+                        'lv': '🛑 SLAIDS 2 / 13 • PROBLĒMAS &amp; IZAICINĀJUMI',
+                        'lt': '🛑 SKAIDRĖ 2 / 13 • PROBLEMOS IR IŠŠŪKIAI'},
            'title': {   'en': 'What Problems Are We Solving?',
                         'et': 'Millist probleemi me lahendame?',
                         'fi': 'Mitä ongelmia ratkaisemme?',
@@ -995,428 +1035,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 12 • VISION &am
                                       'Palyginkite bendrus serverius su izoliuotais konteineriais. Viena klaida '
                                       'sustabdo visos komandos darbą.<br/>⚠️ Ką akcentuoti: Priklausomybių pašalinimas '
                                       'tiesiogiai padidina pristatymo greitį.'}},
-    3: {   'badge': {   'en': '👨\u200d💻 SLIDE 3 / 12 • SOFTWARE DEVELOPER',
-                        'et': '👨\u200d💻 SLAID 3 / 12 • TARKVARAARENDAJA JA ARHITEKT',
-                        'fi': '👨\u200d💻 DIA 3 / 12 • OHJELMISTOKEHTTÄJÄ &amp; ARKKITEHTI',
-                        'sv': '👨\u200d💻 BILD 3 / 12 • PROGRAMVARUUTVECKLARE &amp; ARKITEKT',
-                        'lv': '👨\u200d💻 SLAIDS 3 / 12 • PROGRAMMATŪRAS IZSTRĀDĀTĀJS',
-                        'lt': '👨\u200d💻 SKAIDRĖ 3 / 12 • PROGRAMINĖS ĮRANGOS KŪRĖJAS'},
-           'title': {   'en': 'Developer Autonomy, Speed &amp; Declarative APEXlang',
-                        'et': 'Arendaja autonoomia, kiirus ja deklaratiivne APEXlang',
-                        'fi': 'Kehittäjän autonomia, nopeus ja deklaratiivinen APEXlang',
-                        'sv': 'Utvecklarautonomi, snabbhet och deklarativ APEXlang',
-                        'lv': 'Izstrādātāja autonomija, ātrums un deklaratīvais APEXlang',
-                        'lt': 'Kūrėjo autonomija, greitis ir deklaratyvus APEXlang'},
-           'lead': {   'en': 'Total freedom to innovate and experiment without fear of breaking shared systems or '
-                             'waiting on DBA tickets.',
-                       'et': 'Täielik vabadus eksperimenteerida ja eksida ilma teisi segamata või piletijärjekordades '
-                             'ootamata.',
-                       'fi': 'Täysi vapaus kokeilla ja epäonnistua sotkematta muiden työtä tai odottamatta '
-                             'DBA-lippuja.',
-                       'sv': 'Full frihet att experimentera utan rädsla för att förstöra delade system eller vänta på '
-                             'DBA-ärenden.',
-                       'lv': 'Pilnīga brīvība eksperimentēt un kļūdīties, netraucējot citiem un negaidot DBA '
-                             'apstiprinājumus.',
-                       'lt': 'Visiška laisvė eksperimentuoti ir klysti nesugadinant bendrų sistemų ir nelaukiant DBA '
-                             'bilietų.'},
-           'diagram': {   'label': {   'en': '💻 DEVELOPER INNER LOOP &amp; RESTORE WORKFLOW',
-                                       'et': '💻 ARENDAJA TÖÖVOOG JA KIIRTAASTE SKEEM',
-                                       'fi': '💻 KEHITTÄJÄN TYÖNKULKU JA PIKAPALAUTUS',
-                                       'sv': '💻 UTVECKLARENS ARBETSFLÖDE OCH ÅTERSTÄLLNING',
-                                       'lv': '💻 IZSTRĀDĀTĀJA DARBA CIKLS UN ATJAUNOŠANA',
-                                       'lt': '💻 KŪRĖJO DARBO CIKLAS IR ATKŪRIMAS'},
-                          'nodes': [   {   'icon': '💻',
-                                           'title': {   'en': 'APEXlang Code',
-                                                        'et': 'APEXlang kood',
-                                                        'fi': 'APEXlang-koodi',
-                                                        'sv': 'APEXlang-kod',
-                                                        'lv': 'APEXlang kods',
-                                                        'lt': 'APEXlang kodas'},
-                                           'sub': {   'en': 'Git declarative .apx',
-                                                      'et': 'Git deklaratiivne .apx',
-                                                      'fi': 'Git deklaratiivinen .apx',
-                                                      'sv': 'Git deklarativ .apx',
-                                                      'lv': 'Git deklaratīvs .apx',
-                                                      'lt': 'Git deklaratyvus .apx'},
-                                           'type': 'default'},
-                                       {   'icon': '⚡',
-                                           'title': {   'en': 'SQLcl Apply',
-                                                        'et': 'SQLcl rakendamine',
-                                                        'fi': 'SQLcl-ajo',
-                                                        'sv': 'SQLcl-körning',
-                                                        'lv': 'SQLcl izpilde',
-                                                        'lt': 'SQLcl taikymas'},
-                                           'sub': {   'en': 'Instant deployment',
-                                                      'et': 'Kohene paigaldus',
-                                                      'fi': 'Välitön asennus',
-                                                      'sv': 'Snabb distribution',
-                                                      'lv': 'Tūlītējs izvietojums',
-                                                      'lt': 'Greitas diegimas'},
-                                           'type': 'active'},
-                                       {   'icon': '🧪',
-                                           'title': {   'en': 'Risky Test',
-                                                        'et': 'Julge katsetus',
-                                                        'fi': 'Rohkea testi',
-                                                        'sv': 'Riskabelt test',
-                                                        'lv': 'Drosmīgs tests',
-                                                        'lt': 'Drąsus testas'},
-                                           'sub': {   'en': 'Schema & PL/SQL',
-                                                      'et': 'Skeem & PL/SQL',
-                                                      'fi': 'Skeemat & PL/SQL',
-                                                      'sv': 'Schema & PL/SQL',
-                                                      'lv': 'Shēma & PL/SQL',
-                                                      'lt': 'Schema ir PL/SQL'},
-                                           'type': 'accent'},
-                                       {   'icon': '↩️',
-                                           'title': {   'en': '1–2 Min Undo',
-                                                        'et': '1–2 min Undo',
-                                                        'fi': '1–2 min Kumoa',
-                                                        'sv': '1–2 min Ångra',
-                                                        'lv': '1–2 min Atcelt',
-                                                        'lt': '1–2 min Atšaukti'},
-                                           'sub': {   'en': 'Pristine rollback',
-                                                      'et': 'Puhas algseis',
-                                                      'fi': 'Puhdas palautus',
-                                                      'sv': 'Ren återställning',
-                                                      'lv': 'Tīrs stāvoklis',
-                                                      'lt': 'Švarus atkūrimas'},
-                                           'type': 'success'}],
-                          'title': {   'en': 'Golden Snapshot Instant Recovery Timeline',
-                                       'et': 'Golden Snapshot kiirtaaste ajajoon',
-                                       'fi': 'Golden Snapshot -pikapalautuksen aikajana',
-                                       'sv': 'Tidslinje för snabbåterställning med Golden Snapshot',
-                                       'lv': 'Golden Snapshot ātrās atjaunošanas laika skala',
-                                       'lt': 'Golden Snapshot greito atkūrimo laiko juosta'}},
-           'cards': [   {   'icon': '🧪',
-                            'kpi': '1–2 MIN',
-                            'title': {   'en': 'Freedom to Fail &amp; Rapid Recovery',
-                                         'et': 'Vabadus eksida ja kiirtaaste',
-                                         'fi': 'Vapaus kokeilla ja nopea palautus',
-                                         'sv': 'Frihet att experimentera och snabb återställning',
-                                         'lv': 'Brīvība kļūdīties un ātra atjaunošana',
-                                         'lt': 'Laisvė klysti ir greitas atkūrimas'},
-                            'desc': {   'en': 'Test risky schema migrations or PL/SQL refactoring freely. Roll back '
-                                              'the entire database to a clean baseline in 1–2 minutes.',
-                                        'et': 'Katseta julgelt keerulisi skeemimuudatusi ja PL/SQL koodi. Taasta kogu '
-                                              'andmebaas puhtasse algseisu vaid 1–2 minutiga.',
-                                        'fi': 'Kokeile rohkeasti skeemamuutoksia ja PL/SQL-koodia. Palauta koko '
-                                              'tietokanta alkutilaan 1–2 minuutissa.',
-                                        'sv': 'Testa riskabla schemamigreringar och PL/SQL fritt. Återställ hela '
-                                              'databasen till rent utgångsläge på 1–2 minuter.',
-                                        'lv': 'Eksperimentējiet ar shēmu migrācijām un PL/SQL. Atjaunojiet visu '
-                                              'datubāzi tīrā sākumstāvoklī 1–2 minūtēs.',
-                                        'lt': 'Drąsiai bandykite schemų migracijas ir PL/SQL. Atkurkite visą duomenų '
-                                              'bazę į švarią būseną per 1–2 minutes.'}},
-                        {   'icon': '✈️',
-                            'kpi': '100% OFFLINE',
-                            'title': {   'en': 'True Offline Autonomy',
-                                         'et': 'Täielik võrguühenduseta töö',
-                                         'fi': 'Täysi offline-autonomia',
-                                         'sv': 'Full offline-autonomi',
-                                         'lv': 'Pilnīga bezsaistes autonomija',
-                                         'lt': 'Visiška autonomija be interneto'},
-                            'desc': {   'en': 'Code, query, and test on flights, trains, or offsite without requiring '
-                                              'corporate VPN or constant connectivity.',
-                                        'et': 'Arenda ja testi lennukis, rongis või suvilas ilma ettevõtte VPN-i või '
-                                              'stabiilse internetiühenduseta.',
-                                        'fi': 'Kehitä ja testaa lentokoneessa, junassa tai etänä ilman yrityksen '
-                                              'VPN-yhteyttä.',
-                                        'sv': 'Koda och testa på flyg, tåg eller distans utan företags-VPN eller '
-                                              'ständig uppkoppling.',
-                                        'lv': 'Izstrādājiet un testējiet lidmašīnā, vilcienā vai bezsaistē bez '
-                                              'uzņēmuma VPN.',
-                                        'lt': 'Programuokite ir testuokite lėktuve, traukinyje ar gamtoje be įmonės '
-                                              'VPN.'}},
-                        {   'icon': '🪄',
-                            'kpi': '10x SPEED',
-                            'title': {   'en': 'APEX 26.1 &amp; Declarative APEXlang',
-                                         'et': 'APEX 26.1 ja deklaratiivne APEXlang',
-                                         'fi': 'APEX 26.1 ja deklaratiivinen APEXlang',
-                                         'sv': 'APEX 26.1 och deklarativ APEXlang',
-                                         'lv': 'APEX 26.1 un deklaratīvais APEXlang',
-                                         'lt': 'APEX 26.1 ir deklaratyvus APEXlang'},
-                            'desc': {   'en': '10x faster UI delivery with low-code APEX and official SQLcl 26.2 '
-                                              'declarative <code>.apx</code> code in Git.',
-                                        'et': '10x kiirem kasutajaliideste tarne APEX low-code abil ning ametlik SQLcl '
-                                              '26.2 deklaratiivne <code>.apx</code> kood Gitis.',
-                                        'fi': '10x nopeampi käyttöliittymien toimitus APEX low-codella ja virallinen '
-                                              'SQLcl 26.2 APEXlang <code>.apx</code> Gitissä.',
-                                        'sv': '10x snabbare leverans med APEX low-code och officiell SQLcl 26.2 '
-                                              'deklarativ <code>.apx</code> i Git.',
-                                        'lv': '10x ātrāka saskarņu izstrāde ar APEX low-code un oficiālo SQLcl 26.2 '
-                                              'deklaratīvo <code>.apx</code> Gitā.',
-                                        'lt': '10x greitesnis sąsajų kūrimas su APEX low-code ir oficialiu SQLcl 26.2 '
-                                              'deklaratyviu <code>.apx</code> Gite.'}}],
-           'speaker_notes': {   'en': '🎯 Core Takeaway: Developers move with 10x velocity when they are not afraid of '
-                                      'breaking things.<br/>💡 Talking Points: Emphasize that when a database can be '
-                                      'reset in 1–2 minutes, developers take bolder technical decisions. Highlight the '
-                                      'power of APEXlang in Git.<br/>⚠️ Key Emphasis: Point out that offline '
-                                      'capability means zero productivity loss during commutes or remote work.',
-                                'et': '🎯 Peamine sõnum: Arendaja liigub 10x kiiremini, kui tal puudub hirm süsteemi '
-                                      'lõhkumise ees.<br/>💡 Esitaja rääkimispunktid: Kui andmebaasi saab 1–2 minutiga '
-                                      'algseisu taastada, julgevad arendajad teha julgemaid optimeerimisi. Too välja '
-                                      'APEXlangi koodipõhisus Gitis.<br/>⚠️ Mida rõhutada: Täielik võrguühenduseta töö '
-                                      'välistab seisakud reisidel või VPN-i tõrgete korral.',
-                                'fi': '🎯 Pääviesti: Kehittäjät etenevät 10x nopeammin, kun heidän ei tarvitse pelätä '
-                                      'järjestelmän rikkomista.<br/>💡 Puhujan muistiinpanot: Kun tietokanta palautuu '
-                                      '1–2 minuutissa, tiimi uskaltaa kokeilla ja optimoida rohkeammin. APEXlang tuo '
-                                      'APEXin suoraan Git-maailmaan.<br/>⚠️ Tärkeä painotus: Offline-kyky takaa '
-                                      'katkeamattoman tuottavuuden missä tahansa.',
-                                'sv': '🎯 Huvudbudskap: Utvecklare rör sig 10x snabbare när de inte är rädda för att '
-                                      'göra fel.<br/>💡 Talarpunkter: När databasen kan återställas på 1–2 minuter '
-                                      'vågar teamet göra modigare förändringar. Lyft fram APEXlang i Git.<br/>⚠️ Vad '
-                                      'som bör betonas: Full offline-kapacitet gör att arbetet aldrig stannar upp på '
-                                      'grund av nätverksproblem.',
-                                'lv': '🎯 Galvenais vēstījums: Izstrādātāji strādā 10x ātrāk, ja nav baiļu sabojāt '
-                                      'kopējo sistēmu.<br/>💡 Runātāja piezīmes: Ja datubāzi var atjaunot 1–2 minūtēs, '
-                                      'komanda pieņem drosmīgākus lēmumus. Uzsveriet APEXlang lomu Gitā.<br/>⚠️ Ko '
-                                      'uzsvērt: Bezsaistes darbs novērš dīkstāves ceļojumos un VPN kļūmju gadījumos.',
-                                'lt': '🎯 Pagrindinė žinutė: Kūrėjai juda 10x greičiau, kai nebijo suklysti ar '
-                                      'sugadinti sistemos.<br/>💡 Pranešėjo pastabos: Kai DB atkuriama per 1–2 minutes, '
-                                      'programuotojai priima drąsesnius sprendimus. Pabrėžkite APEXlang Gite.<br/>⚠️ '
-                                      'Ką akcentuoti: Darbas be interneto užtikrina nepertraukiamą produktyvumą bet '
-                                      'kokiomis sąlygomis.'}},
-    4: {   'badge': {   'en': '🚀 SLIDE 4 / 12 • DEVOPS &amp; CI/CD',
-                        'et': '🚀 SLAID 4 / 12 • DEVOPS JA CI/CD INSENER',
-                        'fi': '🚀 DIA 4 / 12 • DEVOPS &amp; CI/CD -INSINÖÖRI',
-                        'sv': '🚀 BILD 4 / 12 • DEVOPS &amp; CI/CD-INGENJÖR',
-                        'lv': '🚀 SLAIDS 4 / 12 • DEVOPS UN CI/CD INŽENIERIS',
-                        'lt': '🚀 SKAIDRĖ 4 / 12 • DEVOPS IR CI/CD INŽINIERIUS'},
-           'title': {   'en': 'Everything-as-Code &amp; Predictable CI/CD Pipelines',
-                        'et': 'Kõik on kood (Git) ja etteaimatavad CI/CD torud',
-                        'fi': 'Kaikki koodina (Git) ja ennustettavat CI/CD-putket',
-                        'sv': 'Allt som kod (Git) och förutsägbara CI/CD-pipelines',
-                        'lv': 'Viss kā kods (Git) un paredzami CI/CD konveijeri',
-                        'lt': 'Viskas kaip kodas (Git) ir nuspėjami CI/CD konvejeriai'},
-           'lead': {   'en': '100% parity between local developer laptops and central CI/CD runners with reproducible '
-                             'container stacks.',
-                       'et': '100% identne käitumine arendaja arvutis ja tsentraalses CI serveris tänu '
-                             'reprodutseeritavatele konteineritele.',
-                       'fi': '100% identtinen toiminta kehittäjän kannettavalla ja CI-palvelimella toistettavien '
-                             'konttien ansiosta.',
-                       'sv': '100% paritet mellan utvecklarens dator och central CI-server tack vare reproducerbara '
-                             'containrar.',
-                       'lv': '100% identiska darbība izstrādātāja datorā un CI serverī, pateicoties atkārtojamiem '
-                             'konteineriem.',
-                       'lt': '100% identiškas veikimas programuotojo kompiuteryje ir CI serveryje dėka atkuriamų '
-                             'konteinerių.'},
-           'cards': [   {   'icon': '📜',
-                            'kpi': '100% GIT',
-                            'title': {   'en': 'Declarative Migrations',
-                                         'et': 'Deklaratiivsed migratsioonid',
-                                         'fi': 'Deklaratiiviset migraatiot',
-                                         'sv': 'Deklarativa migreringar',
-                                         'lv': 'Deklaratīvās migrācijas',
-                                         'lt': 'Deklaratyvios migracijos'},
-                            'desc': {   'en': 'Automated schema diffs, changelog validation, and AST quality gating '
-                                              'via SQLcl and Liquibase in Git.',
-                                        'et': 'Automaatsed skeemide võrdlused, muudatuslogid ja AST kvaliteedikontroll '
-                                              'SQLcl ja Liquibase abil Gitis.',
-                                        'fi': 'Automaattiset skeemaerot, muutoslokit ja AST-laaduntarkistus SQLcl:n ja '
-                                              'Liquibasen avulla Gitissä.',
-                                        'sv': 'Automatiserade schemadiffar, ändringsloggar och AST-kvalitetsgranskning '
-                                              'med SQLcl och Liquibase i Git.',
-                                        'lv': 'Automatizēti shēmu salīdzinājumi, izmaiņu žurnāli un AST kvalitātes '
-                                              'vārteja ar SQLcl un Liquibase Gitā.',
-                                        'lt': 'Automatizuoti schemų palyginimai, pakeitimų žurnalai ir AST kokybės '
-                                              'patikra su SQLcl ir Liquibase Gite.'}},
-                        {   'icon': '🔄',
-                            'kpi': 'PARITEET',
-                            'title': {   'en': 'Local &amp; CI Container Parity',
-                                         'et': 'Lokaalse ja CI konteineri identsus',
-                                         'fi': 'Paikallisen ja CI-kontin pariteetti',
-                                         'sv': 'Paritet mellan lokal miljö och CI',
-                                         'lv': 'Lokālās un CI vides identitāte',
-                                         'lt': 'Vietinės ir CI aplinkos paritetas'},
-                            'desc': {   'en': 'Same compose blueprints run in GitHub Actions, GitLab CI, or developer '
-                                              'laptops with ephemeral <code>--rm</code> cleanup.',
-                                        'et': 'Samad blueprintid jooksevad GitHub Actionsis, GitLab CI-s või '
-                                              'sülearvutis koos ephemeral <code>--rm</code> puhastusega.',
-                                        'fi': 'Samat mallit ajetaan GitHub Actionsissa, GitLab CI:ssä tai '
-                                              'kannettavalla efemeerisellä <code>--rm</code>-siivouksella.',
-                                        'sv': 'Samma ritningar körs i GitHub Actions, GitLab CI eller på bärbar dator '
-                                              'med efemer <code>--rm</code>-rensning.',
-                                        'lv': 'Vienādi rasējumi darbojas GitHub Actions, GitLab CI vai datorā ar '
-                                              'efemēru <code>--rm</code> tīrīšanu.',
-                                        'lt': 'Tie patys brėžiniai veikia GitHub Actions, GitLab CI arba kompiuteryje '
-                                              'su efemeriniu <code>--rm</code> išvalymu.'}},
-                        {   'icon': '🎯',
-                            'kpi': '0 SAASTUMIST',
-                            'title': {   'en': 'Zero Test Cross-Contamination',
-                                         'et': 'Null testisaastumist',
-                                         'fi': 'Nolla testien ristiinsaastumista',
-                                         'sv': 'Noll korskontaminering i tester',
-                                         'lv': 'Nulle testu savstarpēja piesārņojuma',
-                                         'lt': 'Nulis testų tarpusavio užterštumo'},
-                            'desc': {   'en': 'Each automated test suite runs against a deterministic baseline '
-                                              'snapshot, ensuring 100% test repeatability.',
-                                        'et': 'Iga automaattest alustab garanteeritult samast deterministlikust '
-                                              'algseisust ilma eelmiste testide jääkideta.',
-                                        'fi': 'Jokainen automatisoitu testi alkaa taatusti samasta deterministisestä '
-                                              'tilasta ilman edellisten testien jäämiä.',
-                                        'sv': 'Varje automatiserat test körs mot ett deterministiskt utgångsläge utan '
-                                              'spår av tidigare tester.',
-                                        'lv': 'Katra testa izpilde sākas no garantēta identiska stāvokļa bez '
-                                              'iepriekšējo testu atlikumiem.',
-                                        'lt': 'Kiekvienas automatizuotas testas prasideda nuo garantuotos pradinės '
-                                              'būsenos be ankstesnių testų pėdsakų.'}}],
-           'speaker_notes': {   'en': '🎯 Core Takeaway: Eliminates the infamous "works on my machine" dispute between '
-                                      'developers and operations.<br/>💡 Talking Points: Explain the ephemeral '
-                                      'container pattern (--rm) which destroys test containers and memory buffers '
-                                      'automatically upon exit, leaving zero state.<br/>⚠️ Key Emphasis: Mention that '
-                                      'SQLcl Liquibase automates changelog generation, catching breaking changes '
-                                      'before they reach main branches.',
-                                'et': '🎯 Peamine sõnum: Kaotab lõplikult klassikalise vaidluse "aga minu masinas see '
-                                      'ju töötas".<br/>💡 Esitaja rääkimispunktid: Selgita ephemeral konteinerite '
-                                      'mustrit (--rm), mis hävitab testkonteinerid ja mälupuhvrid väljumisel, jätmata '
-                                      'mingit jääkolekut.<br/>⚠️ Mida rõhutada: SQLcl Liquibase automatiseerib '
-                                      'muudatuste kontrolli, püüdes lõhkuvad skeemimuudatused kinni enne peaharudesse '
-                                      'jõudmist.',
-                                'fi': '🎯 Pääviesti: Poistaa lopullisesti "toimii minun koneellani" -ristiriidat '
-                                      'kehittäjien ja ylläpidon väliltä.<br/>💡 Puhujan muistiinpanot: Selitä '
-                                      'efemeeristen konttien malli (--rm), joka tuhoaa testikontit ja muistipuskurit '
-                                      'automaattisesti testin päätyttyä.<br/>⚠️ Tärkeä painotus: SQLcl Liquibase '
-                                      'automatisoi muutoslokien tarkistuksen ja estää rikkovat muutokset ennen '
-                                      'päähaaraa.',
-                                'sv': '🎯 Huvudbudskap: Eliminerar slutgiltigt diskussionen "men det fungerar på min '
-                                      'maskin".<br/>💡 Talarpunkter: Förklara mönstret med efemära containrar (--rm) '
-                                      'som automatiskt raderar testmiljön och minnesbuffertar vid avslut.<br/>⚠️ Vad '
-                                      'som bör betonas: SQLcl Liquibase automatiserar ändringskontroll och fångar '
-                                      'felaktiga scheman före merge till main.',
-                                'lv': '🎯 Galvenais vēstījums: Novērš mūžīgo strīdu "bet manā datorā tas '
-                                      'darbojās".<br/>💡 Runātāja piezīmes: Paskaidrojiet efemēro konteineru modeli '
-                                      '(--rm), kas pēc testa automātiski iznīcina vidi un atmiņas buferus.<br/>⚠️ Ko '
-                                      'uzsvērt: SQLcl Liquibase automatizē izmaiņu validāciju, apturot kļūdainas '
-                                      'shēmas pirms nonākšanas galvenajā zarā.',
-                                'lt': '🎯 Pagrindinė žinutė: Galutinai panaikina konfliktą "pas mane kompiuteryje '
-                                      'veikė".<br/>💡 Pranešėjo pastabos: Paaiškinkite efemerinių konteinerių modelį '
-                                      '(--rm), kuris automatiškai sunaikina testų konteinerius ir atmintį baigus '
-                                      'darbą.<br/>⚠️ Ką akcentuoti: SQLcl Liquibase automatizuoja pakeitimų patikrą ir '
-                                      'sulaiko klaidingas schemas prieš merge į pagrindinę šaką.'}},
-    5: {   'badge': {   'en': '🛡️ SLIDE 5 / 12 • DBA &amp; SECURITY OFFICER',
-                        'et': '🛡️ SLAID 5 / 12 • DBA JA TURVAJUHT',
-                        'fi': '🛡️ DIA 5 / 12 • DBA &amp; TIETOTURVAJOHTAJA',
-                        'sv': '🛡️ BILD 5 / 12 • DBA &amp; SÄKERHETSANSVARIG',
-                        'lv': '🛡️ SLAIDS 5 / 12 • DBA UN DROŠĪBAS VADĪTĀJS',
-                        'lt': '🛡️ SKAIDRĖ 5 / 12 • DBA IR SAUGUMO VADOVAS'},
-           'title': {   'en': 'Zero-Trust Hardening, SEPS Wallet &amp; Production Parity',
-                        'et': 'Zero-Trust turvalisus, SEPS Wallet ja toodangupariteet',
-                        'fi': 'Zero-Trust-tietoturva, SEPS Wallet ja tuotantopariteetti',
-                        'sv': 'Zero-Trust-säkerhet, SEPS Wallet och produktionsparitet',
-                        'lv': 'Zero-Trust drošība, SEPS Wallet un ražošanas paritāte',
-                        'lt': 'Zero-Trust saugumas, SEPS Wallet ir gamybos paritetas'},
-           'lead': {   'en': 'Eliminate plaintext credentials completely while maintaining full architectural '
-                             'governance and audit compliance.',
-                       'et': 'Välista täielikult paroolid tekstifailides, tagades range arhitektuurse kontrolli ja '
-                             'vastavuse turvastandarditele.',
-                       'fi': 'Poista selkokieliset salasanat kokonaan säilyttäen samalla arkkitehtuurisen hallinnan ja '
-                             'auditoitavuuden.',
-                       'sv': 'Eliminera klartextlösenord helt med bibehållen arkitekturkontroll och revisionskrav.',
-                       'lv': 'Pilnībā novērsiet atklāta teksta paroles, nodrošinot stingru arhitektūras kontroli un '
-                             'atbilstību auditiem.',
-                       'lt': 'Visiškai pašalinkite atviro teksto slaptažodžius, išlaikydami griežtą architektūros '
-                             'kontrolę ir auditą.'},
-           'cards': [   {   'icon': '🔐',
-                            'kpi': 'AES-256',
-                            'title': {   'en': 'SEPS Auto-Login Wallet',
-                                         'et': 'SEPS paroolivaba Wallet',
-                                         'fi': 'SEPS Auto-Login Wallet',
-                                         'sv': 'SEPS Auto-Login Wallet',
-                                         'lv': 'SEPS bezparoļu maks',
-                                         'lt': 'SEPS beslaptažodė piniginė'},
-                            'desc': {   'en': 'Secrets encrypted at rest with AES-256 in <code>cwallet.sso</code>. '
-                                              'In-memory decryption only; zero plaintext on disk.',
-                                        'et': 'Saladused krüpteeritud AES-256-ga <code>cwallet.sso</code> failis. '
-                                              'Dekrüpteerimine toimub ainult mälus, mitte kunagi kettal.',
-                                        'fi': 'Salaisuudet tallennetaan AES-256-salattuina '
-                                              '<code>cwallet.sso</code>-tiedostoon. Purkaminen tapahtuu vain '
-                                              'muistissa.',
-                                        'sv': 'Hemligheter lagras krypterade med AES-256 i <code>cwallet.sso</code>. '
-                                              'Dekryptering sker enbart i minnet.',
-                                        'lv': 'Noslēpumi šifrēti ar AES-256 failā <code>cwallet.sso</code>. '
-                                              'Atšifrēšana notiek tikai operatīvajā atmiņā.',
-                                        'lt': 'Paslaptys šifruojamos AES-256 faile <code>cwallet.sso</code>. '
-                                              'Iššifravimas atliekamas tik atmintyje.'}},
-                        {   'icon': '🧠',
-                            'kpi': 'RAM TMPFS',
-                            'title': {   'en': 'RAM-Mounted Secrets',
-                                         'et': 'Mälupõhine hoidla (tmpfs)',
-                                         'fi': 'Muistipohjainen tmpfs-tallennus',
-                                         'sv': 'Minnesbaserad tmpfs-lagring',
-                                         'lv': 'Atmiņas tmpfs krātuve',
-                                         'lt': 'Atmintyje esanti tmpfs saugykla'},
-                            'desc': {   'en': 'Container administrator passwords injected dynamically into RAM tmpfs '
-                                              'mounts, never written to disk or image layers.',
-                                        'et': 'Konteinerite paroolid süstitakse käivitamisel RAM-põhisesse tmpfs '
-                                              'hoidlasse, mitte püsikettale ega tõmmise kihtidesse.',
-                                        'fi': 'Konttien salasanat syötetään käynnistyksessä suoraan muistin '
-                                              'tmpfs-liitokseen, ei koskaan levylle tai levykuviin.',
-                                        'sv': 'Lösenord matas in vid start direkt till minnets tmpfs, aldrig till disk '
-                                              'eller containerlager.',
-                                        'lv': 'Paroles tiek ievadītas konteineru startēšanā tieši atmiņas tmpfs '
-                                              'krātuvē, nevis diska slāņos.',
-                                        'lt': 'Slaptažodžiai įterpiami paleidžiant tiesiai į atminties tmpfs, niekada '
-                                              'neįrašomi į diską ar atvaizdą.'}},
-                        {   'icon': '🔄',
-                            'kpi': '1-KLIKK',
-                            'title': {   'en': '1-Click Credential Rotation',
-                                         'et': '1-klikiga paroolide rotatsioon',
-                                         'fi': '1-klikkauksen salasanarotaatio',
-                                         'sv': '1-klicks lösenordsrotation',
-                                         'lv': '1-klikšķa paroļu rotācija',
-                                         'lt': '1-paspaudimo slaptažodžių rotacija'},
-                            'desc': {   'en': 'Execute <code>./scripts/rotate-password.sh</code> to automatically '
-                                              'update database and wallet credentials in lockstep.',
-                                        'et': 'Käsk <code>./scripts/rotate-password.sh</code> uuendab sünkroonis nii '
-                                              'andmebaasi kui ka Walleti paroolid ilma seisakuta.',
-                                        'fi': 'Komento <code>./scripts/rotate-password.sh</code> päivittää sekä '
-                                              'tietokannan että Walletin salasanat ilman katkoa.',
-                                        'sv': 'Kör <code>./scripts/rotate-password.sh</code> för att uppdatera databas '
-                                              'och wallet i ett enda steg.',
-                                        'lv': 'Komanda <code>./scripts/rotate-password.sh</code> sinhroni atjaunina '
-                                              'paroles datubāzē un makā bez dīkstāves.',
-                                        'lt': 'Komanda <code>./scripts/rotate-password.sh</code> atnaujina '
-                                              'slaptažodžius DB ir piniginėje be prastovos.'},
-                            'command': './scripts/rotate-password.sh'}],
-           'speaker_notes': {   'en': '🎯 Core Takeaway: DBAs retain strict architectural and security standards while '
-                                      'liberating developers to move fast.<br/>💡 Talking Points: Point out that '
-                                      'plaintext passwords on laptops are a massive enterprise audit liability. SEPS '
-                                      'Wallet enforces production security in local environments.<br/>⚠️ Key Emphasis: '
-                                      'Emphasize that rotating passwords requires zero downtime and zero code '
-                                      'modifications because apps connect via TNS aliases.',
-                                'et': '🎯 Peamine sõnum: DBA säilitab täieliku kontrolli turvastandardite üle, '
-                                      'vabastades samal ajal arendajad administratiivsest koormusest.<br/>💡 Esitaja '
-                                      'rääkimispunktid: Paroolide hoidmine tekstifailides või .env failides on '
-                                      'ettevõtte auditile suur risk. SEPS Wallet toob toodangutasemel turvalisuse juba '
-                                      'lokaalsesse masinasse.<br/>⚠️ Mida rõhutada: Paroolide rotatsioon toimub ilma '
-                                      'seisakuta ja koodi muutmata, sest kõik ühendused kasutavad TNS aliaseid.',
-                                'fi': '🎯 Pääviesti: DBA säilyttää tiukat arkkitehtuuri- ja tietoturvastandardit antaen '
-                                      'kehittäjille vapauden toimia nopeasti.<br/>💡 Puhujan muistiinpanot: '
-                                      'Selkokieliset salasanat tiedostoissa ovat merkittävä auditointiriski. SEPS '
-                                      'Wallet tuo tuotantoturvallisuuden paikalliseen kehitykseen.<br/>⚠️ Tärkeä '
-                                      'painotus: Salasanarotaatio tapahtuu ilman katkoja ja ilman koodimuutoksia '
-                                      'TNS-aliasten ansiosta.',
-                                'sv': '🎯 Huvudbudskap: DBA behåller full arkitektur- och säkerhetskontroll samtidigt '
-                                      'som utvecklarna kan agera snabbt.<br/>💡 Talarpunkter: Klartextlösenord på '
-                                      'utvecklardatorer är en stor revisionsrisk. SEPS Wallet tillämpar samma säkerhet '
-                                      'lokalt som i produktion.<br/>⚠️ Vad som bör betonas: Lösenordsrotation sker '
-                                      'utan driftstopp och utan kodändringar tack vare TNS-alias.',
-                                'lv': '🎯 Galvenais vēstījums: DBA saglabā pilnu drošības kontroli, vienlaikus '
-                                      'atbrīvojot izstrādātājus no administratīvā sloga.<br/>💡 Runātāja piezīmes: '
-                                      'Atklāta teksta paroles datoros ir liels drošības risks. SEPS Wallet ievieš '
-                                      'ražošanas līmeņa drošību jau lokāli.<br/>⚠️ Ko uzsvērt: Paroļu rotācija notiek '
-                                      'bez dīkstāves un bez koda labošanas, jo tiek izmantoti TNS aizstājējvārdi.',
-                                'lt': '🎯 Pagrindinė žinutė: DBA išlaiko pilną saugumo kontrolę, suteikdamas kūrėjams '
-                                      'laisvę veikti greitai.<br/>💡 Pranešėjo pastabos: Tekstiniai slaptažodžiai '
-                                      'kompiuteriuose kelia didelę audito riziką. SEPS Wallet suteikia gamybos lygio '
-                                      'saugumą vietiškai.<br/>⚠️ Ką akcentuoti: Slaptažodžių rotacija vyksta be '
-                                      'prastovų ir be kodo keitimo, nes visur naudojami TNS aliasai.'}},
-    6: {   'badge': {   'en': '💼 SLIDE 6 / 12 • BUSINESS LEADER &amp; CIO',
-                        'et': '💼 SLAID 6 / 12 • ÄRIJUHT JA CIO',
-                        'fi': '💼 DIA 6 / 12 • LIIKETOIMINTAJOHTAJA &amp; CIO',
-                        'sv': '💼 BILD 6 / 12 • VERKSAMHETSLEDARE &amp; CIO',
-                        'lv': '💼 SLAIDS 6 / 12 • BIZNESA VADĪTĀJS UN CIO',
-                        'lt': '💼 SKAIDRĖ 6 / 12 • VERSLO VADOVAS IR CIO'},
+    3: {   'badge': {   'en': '💼 SLIDE 3 / 13 • BUSINESS LEADER &amp; CIO',
+                        'et': '💼 SLAID 3 / 13 • ÄRIJUHT JA CIO',
+                        'fi': '💼 DIA 3 / 13 • LIIKETOIMINTAJOHTAJA &amp; CIO',
+                        'sv': '💼 BILD 3 / 13 • VERKSAMHETSLEDARE &amp; CIO',
+                        'lv': '💼 SLAIDS 3 / 13 • BIZNESA VADĪTĀJS UN CIO',
+                        'lt': '💼 SKAIDRĖ 3 / 13 • VERSLO VADOVAS IR CIO'},
            'title': {   'en': '0€ Dev Licenses, Faster Time-to-Market &amp; Lower TCO',
                         'et': '0€ arenduslitsentsid, kiirem turulejõudmine ja madalam TCO',
                         'fi': '0€ kehityslisenssit, nopeampi markkinoilletulo ja alhaisempi TCO',
@@ -1595,12 +1219,428 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 12 • VISION &am
                                       'sudaryti iki 40% Oracle biudžeto. Free DB visiškai panaikina šias '
                                       'išlaidas.<br/>⚠️ Ką akcentuoti: Prototipai ir vidiniai įrankiai gali būti '
                                       'paleidžiami gamyboje be didelių finansinių įsipareigojimų.'}},
-    7: {   'badge': {   'en': '🧩 SLIDE 7 / 12 • MODULAR SERVICES',
-                        'et': '🧩 SLAID 7 / 12 • MODULAARSED TEENUSED',
-                        'fi': '🧩 DIA 7 / 12 • MODULAARISET PALVELUT',
-                        'sv': '🧩 BILD 7 / 12 • MODULÄRA TJÄNSTER',
-                        'lv': '🧩 SLAIDS 7 / 12 • MODULĀRI PAKALPOJUMI',
-                        'lt': '🧩 SKAIDRĖ 7 / 12 • MODULINĖS PASLAUGOS'},
+    4: {   'badge': {   'en': '👨\u200d💻 SLIDE 4 / 13 • SOFTWARE DEVELOPER',
+                        'et': '👨\u200d💻 SLAID 4 / 13 • TARKVARAARENDAJA JA ARHITEKT',
+                        'fi': '👨\u200d💻 DIA 4 / 13 • OHJELMISTOKEHTTÄJÄ &amp; ARKKITEHTI',
+                        'sv': '👨\u200d💻 BILD 4 / 13 • PROGRAMVARUUTVECKLARE &amp; ARKITEKT',
+                        'lv': '👨\u200d💻 SLAIDS 4 / 13 • PROGRAMMATŪRAS IZSTRĀDĀTĀJS',
+                        'lt': '👨\u200d💻 SKAIDRĖ 4 / 13 • PROGRAMINĖS ĮRANGOS KŪRĖJAS'},
+           'title': {   'en': 'Developer Autonomy, Speed &amp; Declarative APEXlang',
+                        'et': 'Arendaja autonoomia, kiirus ja deklaratiivne APEXlang',
+                        'fi': 'Kehittäjän autonomia, nopeus ja deklaratiivinen APEXlang',
+                        'sv': 'Utvecklarautonomi, snabbhet och deklarativ APEXlang',
+                        'lv': 'Izstrādātāja autonomija, ātrums un deklaratīvais APEXlang',
+                        'lt': 'Kūrėjo autonomija, greitis ir deklaratyvus APEXlang'},
+           'lead': {   'en': 'Total freedom to innovate and experiment without fear of breaking shared systems or '
+                             'waiting on DBA tickets.',
+                       'et': 'Täielik vabadus eksperimenteerida ja eksida ilma teisi segamata või piletijärjekordades '
+                             'ootamata.',
+                       'fi': 'Täysi vapaus kokeilla ja epäonnistua sotkematta muiden työtä tai odottamatta '
+                             'DBA-lippuja.',
+                       'sv': 'Full frihet att experimentera utan rädsla för att förstöra delade system eller vänta på '
+                             'DBA-ärenden.',
+                       'lv': 'Pilnīga brīvība eksperimentēt un kļūdīties, netraucējot citiem un negaidot DBA '
+                             'apstiprinājumus.',
+                       'lt': 'Visiška laisvė eksperimentuoti ir klysti nesugadinant bendrų sistemų ir nelaukiant DBA '
+                             'bilietų.'},
+           'diagram': {   'label': {   'en': '💻 DEVELOPER INNER LOOP &amp; RESTORE WORKFLOW',
+                                       'et': '💻 ARENDAJA TÖÖVOOG JA KIIRTAASTE SKEEM',
+                                       'fi': '💻 KEHITTÄJÄN TYÖNKULKU JA PIKAPALAUTUS',
+                                       'sv': '💻 UTVECKLARENS ARBETSFLÖDE OCH ÅTERSTÄLLNING',
+                                       'lv': '💻 IZSTRĀDĀTĀJA DARBA CIKLS UN ATJAUNOŠANA',
+                                       'lt': '💻 KŪRĖJO DARBO CIKLAS IR ATKŪRIMAS'},
+                          'nodes': [   {   'icon': '💻',
+                                           'title': {   'en': 'APEXlang Code',
+                                                        'et': 'APEXlang kood',
+                                                        'fi': 'APEXlang-koodi',
+                                                        'sv': 'APEXlang-kod',
+                                                        'lv': 'APEXlang kods',
+                                                        'lt': 'APEXlang kodas'},
+                                           'sub': {   'en': 'Git declarative .apx',
+                                                      'et': 'Git deklaratiivne .apx',
+                                                      'fi': 'Git deklaratiivinen .apx',
+                                                      'sv': 'Git deklarativ .apx',
+                                                      'lv': 'Git deklaratīvs .apx',
+                                                      'lt': 'Git deklaratyvus .apx'},
+                                           'type': 'default'},
+                                       {   'icon': '⚡',
+                                           'title': {   'en': 'SQLcl Apply',
+                                                        'et': 'SQLcl rakendamine',
+                                                        'fi': 'SQLcl-ajo',
+                                                        'sv': 'SQLcl-körning',
+                                                        'lv': 'SQLcl izpilde',
+                                                        'lt': 'SQLcl taikymas'},
+                                           'sub': {   'en': 'Instant deployment',
+                                                      'et': 'Kohene paigaldus',
+                                                      'fi': 'Välitön asennus',
+                                                      'sv': 'Snabb distribution',
+                                                      'lv': 'Tūlītējs izvietojums',
+                                                      'lt': 'Greitas diegimas'},
+                                           'type': 'active'},
+                                       {   'icon': '🧪',
+                                           'title': {   'en': 'Risky Test',
+                                                        'et': 'Julge katsetus',
+                                                        'fi': 'Rohkea testi',
+                                                        'sv': 'Riskabelt test',
+                                                        'lv': 'Drosmīgs tests',
+                                                        'lt': 'Drąsus testas'},
+                                           'sub': {   'en': 'Schema & PL/SQL',
+                                                      'et': 'Skeem & PL/SQL',
+                                                      'fi': 'Skeemat & PL/SQL',
+                                                      'sv': 'Schema & PL/SQL',
+                                                      'lv': 'Shēma & PL/SQL',
+                                                      'lt': 'Schema ir PL/SQL'},
+                                           'type': 'accent'},
+                                       {   'icon': '↩️',
+                                           'title': {   'en': '1–2 Min Undo',
+                                                        'et': '1–2 min Undo',
+                                                        'fi': '1–2 min Kumoa',
+                                                        'sv': '1–2 min Ångra',
+                                                        'lv': '1–2 min Atcelt',
+                                                        'lt': '1–2 min Atšaukti'},
+                                           'sub': {   'en': 'Pristine rollback',
+                                                      'et': 'Puhas algseis',
+                                                      'fi': 'Puhdas palautus',
+                                                      'sv': 'Ren återställning',
+                                                      'lv': 'Tīrs stāvoklis',
+                                                      'lt': 'Švarus atkūrimas'},
+                                           'type': 'success'}],
+                          'title': {   'en': 'Golden Snapshot Instant Recovery Timeline',
+                                       'et': 'Golden Snapshot kiirtaaste ajajoon',
+                                       'fi': 'Golden Snapshot -pikapalautuksen aikajana',
+                                       'sv': 'Tidslinje för snabbåterställning med Golden Snapshot',
+                                       'lv': 'Golden Snapshot ātrās atjaunošanas laika skala',
+                                       'lt': 'Golden Snapshot greito atkūrimo laiko juosta'}},
+           'cards': [   {   'icon': '🧪',
+                            'kpi': '1–2 MIN',
+                            'title': {   'en': 'Freedom to Fail &amp; Rapid Recovery',
+                                         'et': 'Vabadus eksida ja kiirtaaste',
+                                         'fi': 'Vapaus kokeilla ja nopea palautus',
+                                         'sv': 'Frihet att experimentera och snabb återställning',
+                                         'lv': 'Brīvība kļūdīties un ātra atjaunošana',
+                                         'lt': 'Laisvė klysti ir greitas atkūrimas'},
+                            'desc': {   'en': 'Test risky schema migrations or PL/SQL refactoring freely. Roll back '
+                                              'the entire database to a clean baseline in 1–2 minutes.',
+                                        'et': 'Katseta julgelt keerulisi skeemimuudatusi ja PL/SQL koodi. Taasta kogu '
+                                              'andmebaas puhtasse algseisu vaid 1–2 minutiga.',
+                                        'fi': 'Kokeile rohkeasti skeemamuutoksia ja PL/SQL-koodia. Palauta koko '
+                                              'tietokanta alkutilaan 1–2 minuutissa.',
+                                        'sv': 'Testa riskabla schemamigreringar och PL/SQL fritt. Återställ hela '
+                                              'databasen till rent utgångsläge på 1–2 minuter.',
+                                        'lv': 'Eksperimentējiet ar shēmu migrācijām un PL/SQL. Atjaunojiet visu '
+                                              'datubāzi tīrā sākumstāvoklī 1–2 minūtēs.',
+                                        'lt': 'Drąsiai bandykite schemų migracijas ir PL/SQL. Atkurkite visą duomenų '
+                                              'bazę į švarią būseną per 1–2 minutes.'}},
+                        {   'icon': '✈️',
+                            'kpi': '100% OFFLINE',
+                            'title': {   'en': 'True Offline Autonomy',
+                                         'et': 'Täielik võrguühenduseta töö',
+                                         'fi': 'Täysi offline-autonomia',
+                                         'sv': 'Full offline-autonomi',
+                                         'lv': 'Pilnīga bezsaistes autonomija',
+                                         'lt': 'Visiška autonomija be interneto'},
+                            'desc': {   'en': 'Code, query, and test on flights, trains, or offsite without requiring '
+                                              'corporate VPN or constant connectivity.',
+                                        'et': 'Arenda ja testi lennukis, rongis või suvilas ilma ettevõtte VPN-i või '
+                                              'stabiilse internetiühenduseta.',
+                                        'fi': 'Kehitä ja testaa lentokoneessa, junassa tai etänä ilman yrityksen '
+                                              'VPN-yhteyttä.',
+                                        'sv': 'Koda och testa på flyg, tåg eller distans utan företags-VPN eller '
+                                              'ständig uppkoppling.',
+                                        'lv': 'Izstrādājiet un testējiet lidmašīnā, vilcienā vai bezsaistē bez '
+                                              'uzņēmuma VPN.',
+                                        'lt': 'Programuokite ir testuokite lėktuve, traukinyje ar gamtoje be įmonės '
+                                              'VPN.'}},
+                        {   'icon': '🪄',
+                            'kpi': '10x SPEED',
+                            'title': {   'en': 'APEX 26.1 &amp; Declarative APEXlang',
+                                         'et': 'APEX 26.1 ja deklaratiivne APEXlang',
+                                         'fi': 'APEX 26.1 ja deklaratiivinen APEXlang',
+                                         'sv': 'APEX 26.1 och deklarativ APEXlang',
+                                         'lv': 'APEX 26.1 un deklaratīvais APEXlang',
+                                         'lt': 'APEX 26.1 ir deklaratyvus APEXlang'},
+                            'desc': {   'en': '10x faster UI delivery with low-code APEX and official SQLcl 26.2 '
+                                              'declarative <code>.apx</code> code in Git.',
+                                        'et': '10x kiirem kasutajaliideste tarne APEX low-code abil ning ametlik SQLcl '
+                                              '26.2 deklaratiivne <code>.apx</code> kood Gitis.',
+                                        'fi': '10x nopeampi käyttöliittymien toimitus APEX low-codella ja virallinen '
+                                              'SQLcl 26.2 APEXlang <code>.apx</code> Gitissä.',
+                                        'sv': '10x snabbare leverans med APEX low-code och officiell SQLcl 26.2 '
+                                              'deklarativ <code>.apx</code> i Git.',
+                                        'lv': '10x ātrāka saskarņu izstrāde ar APEX low-code un oficiālo SQLcl 26.2 '
+                                              'deklaratīvo <code>.apx</code> Gitā.',
+                                        'lt': '10x greitesnis sąsajų kūrimas su APEX low-code ir oficialiu SQLcl 26.2 '
+                                              'deklaratyviu <code>.apx</code> Gite.'}}],
+           'speaker_notes': {   'en': '🎯 Core Takeaway: Developers move with 10x velocity when they are not afraid of '
+                                      'breaking things.<br/>💡 Talking Points: Emphasize that when a database can be '
+                                      'reset in 1–2 minutes, developers take bolder technical decisions. Highlight the '
+                                      'power of APEXlang in Git.<br/>⚠️ Key Emphasis: Point out that offline '
+                                      'capability means zero productivity loss during commutes or remote work.',
+                                'et': '🎯 Peamine sõnum: Arendaja liigub 10x kiiremini, kui tal puudub hirm süsteemi '
+                                      'lõhkumise ees.<br/>💡 Esitaja rääkimispunktid: Kui andmebaasi saab 1–2 minutiga '
+                                      'algseisu taastada, julgevad arendajad teha julgemaid optimeerimisi. Too välja '
+                                      'APEXlangi koodipõhisus Gitis.<br/>⚠️ Mida rõhutada: Täielik võrguühenduseta töö '
+                                      'välistab seisakud reisidel või VPN-i tõrgete korral.',
+                                'fi': '🎯 Pääviesti: Kehittäjät etenevät 10x nopeammin, kun heidän ei tarvitse pelätä '
+                                      'järjestelmän rikkomista.<br/>💡 Puhujan muistiinpanot: Kun tietokanta palautuu '
+                                      '1–2 minuutissa, tiimi uskaltaa kokeilla ja optimoida rohkeammin. APEXlang tuo '
+                                      'APEXin suoraan Git-maailmaan.<br/>⚠️ Tärkeä painotus: Offline-kyky takaa '
+                                      'katkeamattoman tuottavuuden missä tahansa.',
+                                'sv': '🎯 Huvudbudskap: Utvecklare rör sig 10x snabbare när de inte är rädda för att '
+                                      'göra fel.<br/>💡 Talarpunkter: När databasen kan återställas på 1–2 minuter '
+                                      'vågar teamet göra modigare förändringar. Lyft fram APEXlang i Git.<br/>⚠️ Vad '
+                                      'som bör betonas: Full offline-kapacitet gör att arbetet aldrig stannar upp på '
+                                      'grund av nätverksproblem.',
+                                'lv': '🎯 Galvenais vēstījums: Izstrādātāji strādā 10x ātrāk, ja nav baiļu sabojāt '
+                                      'kopējo sistēmu.<br/>💡 Runātāja piezīmes: Ja datubāzi var atjaunot 1–2 minūtēs, '
+                                      'komanda pieņem drosmīgākus lēmumus. Uzsveriet APEXlang lomu Gitā.<br/>⚠️ Ko '
+                                      'uzsvērt: Bezsaistes darbs novērš dīkstāves ceļojumos un VPN kļūmju gadījumos.',
+                                'lt': '🎯 Pagrindinė žinutė: Kūrėjai juda 10x greičiau, kai nebijo suklysti ar '
+                                      'sugadinti sistemos.<br/>💡 Pranešėjo pastabos: Kai DB atkuriama per 1–2 minutes, '
+                                      'programuotojai priima drąsesnius sprendimus. Pabrėžkite APEXlang Gite.<br/>⚠️ '
+                                      'Ką akcentuoti: Darbas be interneto užtikrina nepertraukiamą produktyvumą bet '
+                                      'kokiomis sąlygomis.'}},
+    5: {   'badge': {   'en': '🚀 SLIDE 5 / 13 • DEVOPS &amp; CI/CD',
+                        'et': '🚀 SLAID 5 / 13 • DEVOPS JA CI/CD INSENER',
+                        'fi': '🚀 DIA 5 / 13 • DEVOPS &amp; CI/CD -INSINÖÖRI',
+                        'sv': '🚀 BILD 5 / 13 • DEVOPS &amp; CI/CD-INGENJÖR',
+                        'lv': '🚀 SLAIDS 5 / 13 • DEVOPS UN CI/CD INŽENIERIS',
+                        'lt': '🚀 SKAIDRĖ 5 / 13 • DEVOPS IR CI/CD INŽINIERIUS'},
+           'title': {   'en': 'Everything-as-Code &amp; Predictable CI/CD Pipelines',
+                        'et': 'Kõik on kood (Git) ja etteaimatavad CI/CD torud',
+                        'fi': 'Kaikki koodina (Git) ja ennustettavat CI/CD-putket',
+                        'sv': 'Allt som kod (Git) och förutsägbara CI/CD-pipelines',
+                        'lv': 'Viss kā kods (Git) un paredzami CI/CD konveijeri',
+                        'lt': 'Viskas kaip kodas (Git) ir nuspėjami CI/CD konvejeriai'},
+           'lead': {   'en': '100% parity between local developer laptops and central CI/CD runners with reproducible '
+                             'container stacks.',
+                       'et': '100% identne käitumine arendaja arvutis ja tsentraalses CI serveris tänu '
+                             'reprodutseeritavatele konteineritele.',
+                       'fi': '100% identtinen toiminta kehittäjän kannettavalla ja CI-palvelimella toistettavien '
+                             'konttien ansiosta.',
+                       'sv': '100% paritet mellan utvecklarens dator och central CI-server tack vare reproducerbara '
+                             'containrar.',
+                       'lv': '100% identiska darbība izstrādātāja datorā un CI serverī, pateicoties atkārtojamiem '
+                             'konteineriem.',
+                       'lt': '100% identiškas veikimas programuotojo kompiuteryje ir CI serveryje dėka atkuriamų '
+                             'konteinerių.'},
+           'cards': [   {   'icon': '📜',
+                            'kpi': '100% GIT',
+                            'title': {   'en': 'Declarative Migrations',
+                                         'et': 'Deklaratiivsed migratsioonid',
+                                         'fi': 'Deklaratiiviset migraatiot',
+                                         'sv': 'Deklarativa migreringar',
+                                         'lv': 'Deklaratīvās migrācijas',
+                                         'lt': 'Deklaratyvios migracijos'},
+                            'desc': {   'en': 'Automated schema diffs, changelog validation, and AST quality gating '
+                                              'via SQLcl and Liquibase in Git.',
+                                        'et': 'Automaatsed skeemide võrdlused, muudatuslogid ja AST kvaliteedikontroll '
+                                              'SQLcl ja Liquibase abil Gitis.',
+                                        'fi': 'Automaattiset skeemaerot, muutoslokit ja AST-laaduntarkistus SQLcl:n ja '
+                                              'Liquibasen avulla Gitissä.',
+                                        'sv': 'Automatiserade schemadiffar, ändringsloggar och AST-kvalitetsgranskning '
+                                              'med SQLcl och Liquibase i Git.',
+                                        'lv': 'Automatizēti shēmu salīdzinājumi, izmaiņu žurnāli un AST kvalitātes '
+                                              'vārteja ar SQLcl un Liquibase Gitā.',
+                                        'lt': 'Automatizuoti schemų palyginimai, pakeitimų žurnalai ir AST kokybės '
+                                              'patikra su SQLcl ir Liquibase Gite.'}},
+                        {   'icon': '🔄',
+                            'kpi': 'PARITEET',
+                            'title': {   'en': 'Local &amp; CI Container Parity',
+                                         'et': 'Lokaalse ja CI konteineri identsus',
+                                         'fi': 'Paikallisen ja CI-kontin pariteetti',
+                                         'sv': 'Paritet mellan lokal miljö och CI',
+                                         'lv': 'Lokālās un CI vides identitāte',
+                                         'lt': 'Vietinės ir CI aplinkos paritetas'},
+                            'desc': {   'en': 'Same compose blueprints run in GitHub Actions, GitLab CI, or developer '
+                                              'laptops with ephemeral <code>--rm</code> cleanup.',
+                                        'et': 'Samad blueprintid jooksevad GitHub Actionsis, GitLab CI-s või '
+                                              'sülearvutis koos ephemeral <code>--rm</code> puhastusega.',
+                                        'fi': 'Samat mallit ajetaan GitHub Actionsissa, GitLab CI:ssä tai '
+                                              'kannettavalla efemeerisellä <code>--rm</code>-siivouksella.',
+                                        'sv': 'Samma ritningar körs i GitHub Actions, GitLab CI eller på bärbar dator '
+                                              'med efemer <code>--rm</code>-rensning.',
+                                        'lv': 'Vienādi rasējumi darbojas GitHub Actions, GitLab CI vai datorā ar '
+                                              'efemēru <code>--rm</code> tīrīšanu.',
+                                        'lt': 'Tie patys brėžiniai veikia GitHub Actions, GitLab CI arba kompiuteryje '
+                                              'su efemeriniu <code>--rm</code> išvalymu.'}},
+                        {   'icon': '🎯',
+                            'kpi': '0 SAASTUMIST',
+                            'title': {   'en': 'Zero Test Cross-Contamination',
+                                         'et': 'Null testisaastumist',
+                                         'fi': 'Nolla testien ristiinsaastumista',
+                                         'sv': 'Noll korskontaminering i tester',
+                                         'lv': 'Nulle testu savstarpēja piesārņojuma',
+                                         'lt': 'Nulis testų tarpusavio užterštumo'},
+                            'desc': {   'en': 'Each automated test suite runs against a deterministic baseline '
+                                              'snapshot, ensuring 100% test repeatability.',
+                                        'et': 'Iga automaattest alustab garanteeritult samast deterministlikust '
+                                              'algseisust ilma eelmiste testide jääkideta.',
+                                        'fi': 'Jokainen automatisoitu testi alkaa taatusti samasta deterministisestä '
+                                              'tilasta ilman edellisten testien jäämiä.',
+                                        'sv': 'Varje automatiserat test körs mot ett deterministiskt utgångsläge utan '
+                                              'spår av tidigare tester.',
+                                        'lv': 'Katra testa izpilde sākas no garantēta identiska stāvokļa bez '
+                                              'iepriekšējo testu atlikumiem.',
+                                        'lt': 'Kiekvienas automatizuotas testas prasideda nuo garantuotos pradinės '
+                                              'būsenos be ankstesnių testų pėdsakų.'}}],
+           'speaker_notes': {   'en': '🎯 Core Takeaway: Eliminates the infamous "works on my machine" dispute between '
+                                      'developers and operations.<br/>💡 Talking Points: Explain the ephemeral '
+                                      'container pattern (--rm) which destroys test containers and memory buffers '
+                                      'automatically upon exit, leaving zero state.<br/>⚠️ Key Emphasis: Mention that '
+                                      'SQLcl Liquibase automates changelog generation, catching breaking changes '
+                                      'before they reach main branches.',
+                                'et': '🎯 Peamine sõnum: Kaotab lõplikult klassikalise vaidluse "aga minu masinas see '
+                                      'ju töötas".<br/>💡 Esitaja rääkimispunktid: Selgita ephemeral konteinerite '
+                                      'mustrit (--rm), mis hävitab testkonteinerid ja mälupuhvrid väljumisel, jätmata '
+                                      'mingit jääkolekut.<br/>⚠️ Mida rõhutada: SQLcl Liquibase automatiseerib '
+                                      'muudatuste kontrolli, püüdes lõhkuvad skeemimuudatused kinni enne peaharudesse '
+                                      'jõudmist.',
+                                'fi': '🎯 Pääviesti: Poistaa lopullisesti "toimii minun koneellani" -ristiriidat '
+                                      'kehittäjien ja ylläpidon väliltä.<br/>💡 Puhujan muistiinpanot: Selitä '
+                                      'efemeeristen konttien malli (--rm), joka tuhoaa testikontit ja muistipuskurit '
+                                      'automaattisesti testin päätyttyä.<br/>⚠️ Tärkeä painotus: SQLcl Liquibase '
+                                      'automatisoi muutoslokien tarkistuksen ja estää rikkovat muutokset ennen '
+                                      'päähaaraa.',
+                                'sv': '🎯 Huvudbudskap: Eliminerar slutgiltigt diskussionen "men det fungerar på min '
+                                      'maskin".<br/>💡 Talarpunkter: Förklara mönstret med efemära containrar (--rm) '
+                                      'som automatiskt raderar testmiljön och minnesbuffertar vid avslut.<br/>⚠️ Vad '
+                                      'som bör betonas: SQLcl Liquibase automatiserar ändringskontroll och fångar '
+                                      'felaktiga scheman före merge till main.',
+                                'lv': '🎯 Galvenais vēstījums: Novērš mūžīgo strīdu "bet manā datorā tas '
+                                      'darbojās".<br/>💡 Runātāja piezīmes: Paskaidrojiet efemēro konteineru modeli '
+                                      '(--rm), kas pēc testa automātiski iznīcina vidi un atmiņas buferus.<br/>⚠️ Ko '
+                                      'uzsvērt: SQLcl Liquibase automatizē izmaiņu validāciju, apturot kļūdainas '
+                                      'shēmas pirms nonākšanas galvenajā zarā.',
+                                'lt': '🎯 Pagrindinė žinutė: Galutinai panaikina konfliktą "pas mane kompiuteryje '
+                                      'veikė".<br/>💡 Pranešėjo pastabos: Paaiškinkite efemerinių konteinerių modelį '
+                                      '(--rm), kuris automatiškai sunaikina testų konteinerius ir atmintį baigus '
+                                      'darbą.<br/>⚠️ Ką akcentuoti: SQLcl Liquibase automatizuoja pakeitimų patikrą ir '
+                                      'sulaiko klaidingas schemas prieš merge į pagrindinę šaką.'}},
+    6: {   'badge': {   'en': '🛡️ SLIDE 6 / 13 • DBA &amp; SECURITY OFFICER',
+                        'et': '🛡️ SLAID 6 / 13 • DBA JA TURVAJUHT',
+                        'fi': '🛡️ DIA 6 / 13 • DBA &amp; TIETOTURVAJOHTAJA',
+                        'sv': '🛡️ BILD 6 / 13 • DBA &amp; SÄKERHETSANSVARIG',
+                        'lv': '🛡️ SLAIDS 6 / 13 • DBA UN DROŠĪBAS VADĪTĀJS',
+                        'lt': '🛡️ SKAIDRĖ 6 / 13 • DBA IR SAUGUMO VADOVAS'},
+           'title': {   'en': 'Zero-Trust Hardening, SEPS Wallet &amp; Production Parity',
+                        'et': 'Zero-Trust turvalisus, SEPS Wallet ja toodangupariteet',
+                        'fi': 'Zero-Trust-tietoturva, SEPS Wallet ja tuotantopariteetti',
+                        'sv': 'Zero-Trust-säkerhet, SEPS Wallet och produktionsparitet',
+                        'lv': 'Zero-Trust drošība, SEPS Wallet un ražošanas paritāte',
+                        'lt': 'Zero-Trust saugumas, SEPS Wallet ir gamybos paritetas'},
+           'lead': {   'en': 'Eliminate plaintext credentials completely while maintaining full architectural '
+                             'governance and audit compliance.',
+                       'et': 'Välista täielikult paroolid tekstifailides, tagades range arhitektuurse kontrolli ja '
+                             'vastavuse turvastandarditele.',
+                       'fi': 'Poista selkokieliset salasanat kokonaan säilyttäen samalla arkkitehtuurisen hallinnan ja '
+                             'auditoitavuuden.',
+                       'sv': 'Eliminera klartextlösenord helt med bibehållen arkitekturkontroll och revisionskrav.',
+                       'lv': 'Pilnībā novērsiet atklāta teksta paroles, nodrošinot stingru arhitektūras kontroli un '
+                             'atbilstību auditiem.',
+                       'lt': 'Visiškai pašalinkite atviro teksto slaptažodžius, išlaikydami griežtą architektūros '
+                             'kontrolę ir auditą.'},
+           'cards': [   {   'icon': '🔐',
+                            'kpi': 'AES-256',
+                            'title': {   'en': 'SEPS Auto-Login Wallet',
+                                         'et': 'SEPS paroolivaba Wallet',
+                                         'fi': 'SEPS Auto-Login Wallet',
+                                         'sv': 'SEPS Auto-Login Wallet',
+                                         'lv': 'SEPS bezparoļu maks',
+                                         'lt': 'SEPS beslaptažodė piniginė'},
+                            'desc': {   'en': 'Secrets encrypted at rest with AES-256 in <code>cwallet.sso</code>. '
+                                              'In-memory decryption only; zero plaintext on disk.',
+                                        'et': 'Saladused krüpteeritud AES-256-ga <code>cwallet.sso</code> failis. '
+                                              'Dekrüpteerimine toimub ainult mälus, mitte kunagi kettal.',
+                                        'fi': 'Salaisuudet tallennetaan AES-256-salattuina '
+                                              '<code>cwallet.sso</code>-tiedostoon. Purkaminen tapahtuu vain '
+                                              'muistissa.',
+                                        'sv': 'Hemligheter lagras krypterade med AES-256 i <code>cwallet.sso</code>. '
+                                              'Dekryptering sker enbart i minnet.',
+                                        'lv': 'Noslēpumi šifrēti ar AES-256 failā <code>cwallet.sso</code>. '
+                                              'Atšifrēšana notiek tikai operatīvajā atmiņā.',
+                                        'lt': 'Paslaptys šifruojamos AES-256 faile <code>cwallet.sso</code>. '
+                                              'Iššifravimas atliekamas tik atmintyje.'}},
+                        {   'icon': '🧠',
+                            'kpi': 'RAM TMPFS',
+                            'title': {   'en': 'RAM-Mounted Secrets',
+                                         'et': 'Mälupõhine hoidla (tmpfs)',
+                                         'fi': 'Muistipohjainen tmpfs-tallennus',
+                                         'sv': 'Minnesbaserad tmpfs-lagring',
+                                         'lv': 'Atmiņas tmpfs krātuve',
+                                         'lt': 'Atmintyje esanti tmpfs saugykla'},
+                            'desc': {   'en': 'Container administrator passwords injected dynamically into RAM tmpfs '
+                                              'mounts, never written to disk or image layers.',
+                                        'et': 'Konteinerite paroolid süstitakse käivitamisel RAM-põhisesse tmpfs '
+                                              'hoidlasse, mitte püsikettale ega tõmmise kihtidesse.',
+                                        'fi': 'Konttien salasanat syötetään käynnistyksessä suoraan muistin '
+                                              'tmpfs-liitokseen, ei koskaan levylle tai levykuviin.',
+                                        'sv': 'Lösenord matas in vid start direkt till minnets tmpfs, aldrig till disk '
+                                              'eller containerlager.',
+                                        'lv': 'Paroles tiek ievadītas konteineru startēšanā tieši atmiņas tmpfs '
+                                              'krātuvē, nevis diska slāņos.',
+                                        'lt': 'Slaptažodžiai įterpiami paleidžiant tiesiai į atminties tmpfs, niekada '
+                                              'neįrašomi į diską ar atvaizdą.'}},
+                        {   'icon': '🔄',
+                            'kpi': '1-KLIKK',
+                            'title': {   'en': '1-Click Credential Rotation',
+                                         'et': '1-klikiga paroolide rotatsioon',
+                                         'fi': '1-klikkauksen salasanarotaatio',
+                                         'sv': '1-klicks lösenordsrotation',
+                                         'lv': '1-klikšķa paroļu rotācija',
+                                         'lt': '1-paspaudimo slaptažodžių rotacija'},
+                            'desc': {   'en': 'Execute <code>./scripts/rotate-password.sh</code> to automatically '
+                                              'update database and wallet credentials in lockstep.',
+                                        'et': 'Käsk <code>./scripts/rotate-password.sh</code> uuendab sünkroonis nii '
+                                              'andmebaasi kui ka Walleti paroolid ilma seisakuta.',
+                                        'fi': 'Komento <code>./scripts/rotate-password.sh</code> päivittää sekä '
+                                              'tietokannan että Walletin salasanat ilman katkoa.',
+                                        'sv': 'Kör <code>./scripts/rotate-password.sh</code> för att uppdatera databas '
+                                              'och wallet i ett enda steg.',
+                                        'lv': 'Komanda <code>./scripts/rotate-password.sh</code> sinhroni atjaunina '
+                                              'paroles datubāzē un makā bez dīkstāves.',
+                                        'lt': 'Komanda <code>./scripts/rotate-password.sh</code> atnaujina '
+                                              'slaptažodžius DB ir piniginėje be prastovos.'},
+                            'command': './scripts/rotate-password.sh'}],
+           'speaker_notes': {   'en': '🎯 Core Takeaway: DBAs retain strict architectural and security standards while '
+                                      'liberating developers to move fast.<br/>💡 Talking Points: Point out that '
+                                      'plaintext passwords on laptops are a massive enterprise audit liability. SEPS '
+                                      'Wallet enforces production security in local environments.<br/>⚠️ Key Emphasis: '
+                                      'Emphasize that rotating passwords requires zero downtime and zero code '
+                                      'modifications because apps connect via TNS aliases.',
+                                'et': '🎯 Peamine sõnum: DBA säilitab täieliku kontrolli turvastandardite üle, '
+                                      'vabastades samal ajal arendajad administratiivsest koormusest.<br/>💡 Esitaja '
+                                      'rääkimispunktid: Paroolide hoidmine tekstifailides või .env failides on '
+                                      'ettevõtte auditile suur risk. SEPS Wallet toob toodangutasemel turvalisuse juba '
+                                      'lokaalsesse masinasse.<br/>⚠️ Mida rõhutada: Paroolide rotatsioon toimub ilma '
+                                      'seisakuta ja koodi muutmata, sest kõik ühendused kasutavad TNS aliaseid.',
+                                'fi': '🎯 Pääviesti: DBA säilyttää tiukat arkkitehtuuri- ja tietoturvastandardit antaen '
+                                      'kehittäjille vapauden toimia nopeasti.<br/>💡 Puhujan muistiinpanot: '
+                                      'Selkokieliset salasanat tiedostoissa ovat merkittävä auditointiriski. SEPS '
+                                      'Wallet tuo tuotantoturvallisuuden paikalliseen kehitykseen.<br/>⚠️ Tärkeä '
+                                      'painotus: Salasanarotaatio tapahtuu ilman katkoja ja ilman koodimuutoksia '
+                                      'TNS-aliasten ansiosta.',
+                                'sv': '🎯 Huvudbudskap: DBA behåller full arkitektur- och säkerhetskontroll samtidigt '
+                                      'som utvecklarna kan agera snabbt.<br/>💡 Talarpunkter: Klartextlösenord på '
+                                      'utvecklardatorer är en stor revisionsrisk. SEPS Wallet tillämpar samma säkerhet '
+                                      'lokalt som i produktion.<br/>⚠️ Vad som bör betonas: Lösenordsrotation sker '
+                                      'utan driftstopp och utan kodändringar tack vare TNS-alias.',
+                                'lv': '🎯 Galvenais vēstījums: DBA saglabā pilnu drošības kontroli, vienlaikus '
+                                      'atbrīvojot izstrādātājus no administratīvā sloga.<br/>💡 Runātāja piezīmes: '
+                                      'Atklāta teksta paroles datoros ir liels drošības risks. SEPS Wallet ievieš '
+                                      'ražošanas līmeņa drošību jau lokāli.<br/>⚠️ Ko uzsvērt: Paroļu rotācija notiek '
+                                      'bez dīkstāves un bez koda labošanas, jo tiek izmantoti TNS aizstājējvārdi.',
+                                'lt': '🎯 Pagrindinė žinutė: DBA išlaiko pilną saugumo kontrolę, suteikdamas kūrėjams '
+                                      'laisvę veikti greitai.<br/>💡 Pranešėjo pastabos: Tekstiniai slaptažodžiai '
+                                      'kompiuteriuose kelia didelę audito riziką. SEPS Wallet suteikia gamybos lygio '
+                                      'saugumą vietiškai.<br/>⚠️ Ką akcentuoti: Slaptažodžių rotacija vyksta be '
+                                      'prastovų ir be kodo keitimo, nes visur naudojami TNS aliasai.'}},
+    7: {   'badge': {   'en': '🧩 SLIDE 7 / 13 • MODULAR SERVICES',
+                        'et': '🧩 SLAID 7 / 13 • MODULAARSED TEENUSED',
+                        'fi': '🧩 DIA 7 / 13 • MODULAARISET PALVELUT',
+                        'sv': '🧩 BILD 7 / 13 • MODULÄRA TJÄNSTER',
+                        'lv': '🧩 SLAIDS 7 / 13 • MODULĀRI PAKALPOJUMI',
+                        'lt': '🧩 SKAIDRĖ 7 / 13 • MODULINĖS PASLAUGOS'},
            'title': {   'en': '8 Modular Services Across 4 Architecture Tiers',
                         'et': '8 modulaarset teenust neljas arhitektuurikihis',
                         'fi': '8 modulaarista palvelua neljässä arkkitehtuurikerroksessa',
@@ -1760,12 +1800,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 12 • VISION &am
                                       'problemą, kai įmonės kompiuteriuose draudžiama diegti programas.<br/>⚠️ Ką '
                                       'akcentuoti: Paminėkite, kad Publisher Designer ir Antigravity AI šiuo metu yra '
                                       'bandomojoje fazėje.'}},
-    8: {   'badge': {   'en': '🐳 SLIDE 8 / 12 • PODMAN &amp; HYBRID CLOUD',
-                        'et': '🐳 SLAID 8 / 12 • PODMAN JA HÜBRIIDPILV',
-                        'fi': '🐳 DIA 8 / 12 • PODMAN &amp; HYBRIDI-PILVI',
-                        'sv': '🐳 BILD 8 / 12 • PODMAN &amp; HYBRIDMOLN',
-                        'lv': '🐳 SLAIDS 8 / 12 • PODMAN UN HIBRĪDA MĀKONIS',
-                        'lt': '🐳 SKAIDRĖ 8 / 12 • PODMAN IR HIBRIDINIS DEBESIS'},
+    8: {   'badge': {   'en': '🐳 SLIDE 8 / 13 • PODMAN &amp; HYBRID CLOUD',
+                        'et': '🐳 SLAID 8 / 13 • PODMAN JA HÜBRIIDPILV',
+                        'fi': '🐳 DIA 8 / 13 • PODMAN &amp; HYBRIDI-PILVI',
+                        'sv': '🐳 BILD 8 / 13 • PODMAN &amp; HYBRIDMOLN',
+                        'lv': '🐳 SLAIDS 8 / 13 • PODMAN UN HIBRĪDA MĀKONIS',
+                        'lt': '🐳 SKAIDRĖ 8 / 13 • PODMAN IR HIBRIDINIS DEBESIS'},
            'title': {   'en': 'Podman Infrastructure Cockpit &amp; Hybrid Cloud Migration',
                         'et': 'Podman taristu juhtimine ja hübriidne pilvemigratsioon',
                         'fi': 'Podman-infrastruktuurin hallinta ja hybridi-pilvimigraatio',
@@ -1877,12 +1917,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 12 • VISION &am
                                       'Pabrėžkite naują Podman skiltį Dev Hub, kuri leidžia valdyti konteinerius be '
                                       'komandinės eilutės.<br/>⚠️ Ką akcentuoti: Rootless konteineriai atitinka '
                                       'griežčiausius saugumo reikalavimus, kur Docker daemon yra draudžiamas.'}},
-    9: {   'badge': {   'en': '🔐 SLIDE 9 / 12 • ZERO-TRUST ARCHITECTURE',
-                        'et': '🔐 SLAID 9 / 12 • ZERO-TRUST ARHITEKTUUR',
-                        'fi': '🔐 DIA 9 / 12 • ZERO-TRUST -ARKKITEHTUURI',
-                        'sv': '🔐 BILD 9 / 12 • ZERO-TRUST-ARKITEKTUR',
-                        'lv': '🔐 SLAIDS 9 / 12 • ZERO-TRUST ARHITEKTŪRA',
-                        'lt': '🔐 SKAIDRĖ 9 / 12 • ZERO-TRUST ARCHITEKTŪRA'},
+    9: {   'badge': {   'en': '🔐 SLIDE 9 / 13 • ZERO-TRUST ARCHITECTURE',
+                        'et': '🔐 SLAID 9 / 13 • ZERO-TRUST ARHITEKTUUR',
+                        'fi': '🔐 DIA 9 / 13 • ZERO-TRUST -ARKKITEHTUURI',
+                        'sv': '🔐 BILD 9 / 13 • ZERO-TRUST-ARKITEKTUR',
+                        'lv': '🔐 SLAIDS 9 / 13 • ZERO-TRUST ARHITEKTŪRA',
+                        'lt': '🔐 SKAIDRĖ 9 / 13 • ZERO-TRUST ARCHITEKTŪRA'},
            'title': {   'en': 'Oracle SEPS Wallet &amp; Passwordless Connectivity',
                         'et': 'Oracle SEPS Wallet ja paroolivaba autentimine',
                         'fi': 'Oracle SEPS Wallet ja salasanaton yhteys',
@@ -1995,12 +2035,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 12 • VISION &am
                                       'programuotojas neveda slaptažodžio; SQLcl jį nuskaito tiesiai į RAM.<br/>⚠️ Ką '
                                       'akcentuoti: Net jei repozitorija būtų nukopijuota, joje nėra jokių atviro '
                                       'teksto slaptažodžių.'}},
-    10: {   'badge': {   'en': '⚡ SLIDE 10 / 12 • DISASTER RECOVERY',
-                         'et': '⚡ SLAID 10 / 12 • KIIRTAASTE JA TURVALISUS',
-                         'fi': '⚡ DIA 10 / 12 • KATASTROFIPALAUTUS',
-                         'sv': '⚡ BILD 10 / 12 • KATASTROFÅTERSTÄLLNING',
-                         'lv': '⚡ SLAIDS 10 / 12 • AVĀRIJAS ATJAUNOŠANA',
-                         'lt': '⚡ SKAIDRĖ 10 / 12 • AVARINIS ATKŪRIMAS'},
+    10: {   'badge': {   'en': '⚡ SLIDE 10 / 13 • DISASTER RECOVERY',
+                         'et': '⚡ SLAID 10 / 13 • KIIRTAASTE JA TURVALISUS',
+                         'fi': '⚡ DIA 10 / 13 • KATASTROFIPALAUTUS',
+                         'sv': '⚡ BILD 10 / 13 • KATASTROFÅTERSTÄLLNING',
+                         'lv': '⚡ SLAIDS 10 / 13 • AVĀRIJAS ATJAUNOŠANA',
+                         'lt': '⚡ SKAIDRĖ 10 / 13 • AVARINIS ATKŪRIMAS'},
             'title': {   'en': 'Golden Snapshots: Deterministic 1–2 Min Recovery',
                          'et': 'Golden Snapshots: deterministlik 1–2 minuti kiirtaaste',
                          'fi': 'Golden Snapshots: deterministinen 1–2 minuutin pikapalautus',
@@ -2173,12 +2213,304 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 12 • VISION &am
                                        'pilnas konteinerių sustabdymas, tomo atkūrimas ir DB paleidimas trunka 1–2 '
                                        'minutes.<br/>⚠️ Ką akcentuoti: CI/CD sistema naudoja šį mechanizmą prieš '
                                        'kiekvieną testą, garantuodama 100% atkuriamumą.'}},
-    11: {   'badge': {   'en': '🎯 SLIDE 11 / 12 • ARCHITECT &amp; DBA Q&amp;A',
-                         'et': '🎯 SLAID 11 / 12 • KRIITILISED K&amp;V ARHITEKTILT JA DBA-LT',
-                         'fi': '🎯 DIA 11 / 12 • ARKKITEHDIN &amp; DBA:N K&amp;V',
-                         'sv': '🎯 BILD 11 / 12 • ARKITEKT- OCH DBA-FRÅGOR',
-                         'lv': '🎯 SLAIDS 11 / 12 • ARHITEKTA UN DBA J&amp;A',
-                         'lt': '🎯 SKAIDRĖ 11 / 12 • ARCHITEKTO IR DBA K&amp;A'},
+    11: {   'badge': {   'en': '💎 SLIDE 11 / 13 • LOW-CODE AS CODE &amp; APEXLANG',
+                         'et': '💎 SLAID 11 / 13 • LOW-CODE KOODINA JA APEXLANG',
+                         'fi': '💎 DIA 11 / 13 • LOW-CODE KOODINA &amp; APEXLANG',
+                         'sv': '💎 BILD 11 / 13 • LÅGKOD SOM KOD &amp; APEXLANG',
+                         'lv': '💎 SLAIDS 11 / 13 • LOW-CODE KĀ KODS &amp; APEXLANG',
+                         'lt': '💎 SKAIDRĖ 11 / 13 • LOW-CODE KAIP KODAS IR APEXLANG'},
+            'title': {   'en': 'Application Intent vs. Imperative Code: Eliminating Code Ownership Burden',
+                         'et': 'Rakenduse kavatsus vs toorkood: Koodi omamise koormuse välistamine',
+                         'fi': 'Sovelluksen tarkoitus vs raakakoodi: Koodin omistustaakan poistaminen',
+                         'sv': 'Applikationsavsikt vs råkod: Eliminera förvaltningsbördan för kod',
+                         'lv': 'Lietotnes nolūks vs neapstrādāts kods: Koda pārvaldības sloga novēršana',
+                         'lt': 'Programos ketinimas vs neapdorotas kodas: Kodo atsakomybės naštos panaikinimas'},
+            'lead': {   'en': 'Why generating 10,000s of lines of raw imperative glue code creates a maintenance trap, '
+                              'and how declarative APEX blueprints deliver faster, safer systems.',
+                        'et': 'Miks 10 000+ rea imperatiivse toorkoodi genereerimine on hoolduslõks ja kuidas '
+                              'deklaratiivne APEX blueprint tagab kiirema ja turvalisema tarne.',
+                        'fi': 'Miksi 10 000+ rivin liimakoodin generointi luo ylläpitoansan ja miten deklaratiiviset '
+                              'APEX-blueprintit takaavat nopeamman ja turvallisemman toimituksen.',
+                        'sv': 'Varför generering av 10 000+ rader imperativ limkod skapar en underhållsfälla och hur '
+                              'deklarativa APEX-ritningar ger snabbare och säkrare leverans.',
+                        'lv': 'Kāpēc 10 000+ rindu savienojuma koda ģenerēšana rada uzturēšanas slazdu un kā '
+                              'deklaratīvi APEX rasējumi nodrošina ātrāku un drošāku piegādi.',
+                        'lt': 'Kodėl 10 000+ eilučių klijavimo kodo generavimas sukuria priežiūros spąstus ir kaip '
+                              'deklaratyvūs APEX brėžiniai užtikrina greitesnį bei saugesnį diegimą.'},
+            'comparison_diagram': {   'title': {   'en': 'Imperative Code Generation vs. Declarative APEXlang '
+                                                         'Specification',
+                                                   'et': 'Toorkoodi genereerimine vs Deklaratiivne APEXlang '
+                                                         'spetsifikatsioon',
+                                                   'fi': 'Raakakoodin generointi vs Deklaratiivinen '
+                                                         'APEXlang-spesifikaatio',
+                                                   'sv': 'Generering av råkod vs Deklarativ APEXlang-specifikation',
+                                                   'lv': 'Neapstrādāta koda ģenerēšana vs Deklaratīva APEXlang '
+                                                         'specifikācija',
+                                                   'lt': 'Neapdoroto kodo generavimas vs Deklaratyvi APEXlang '
+                                                         'specifikacija'},
+                                      'bad': {   'label': {   'en': '❌ RAW CODE GENERATION (10,000+ LINES &amp; DAY-2 '
+                                                                    'ROT)',
+                                                              'et': '❌ TOORKOODI GENEREERIMINE (10 000+ RIDA JA '
+                                                                    'HOOLDUSLÕKS)',
+                                                              'fi': '❌ RAAKAKOODIN GENEROINTI (10 000+ RIVIÄ &amp; '
+                                                                    'YLLÄPITOTAACCA)',
+                                                              'sv': '❌ RÅKODSGENERERING (10 000+ RADER &amp; '
+                                                                    'FÖRVALTNINGSBÖRDA)',
+                                                              'lv': '❌ KODA ĢENERĒŠANA (10 000+ RINDU &amp; '
+                                                                    'PĀRVALDĪBAS SLOGS)',
+                                                              'lt': '❌ KODO GENERAVIMAS (10 000+ EILUČIŲ IR PRIEŽIŪROS '
+                                                                    'NAŠTA)'},
+                                                 'nodes': [   {   'icon': '📜',
+                                                                  'title': {   'en': '10,000+ Lines Glue',
+                                                                               'et': '10 000+ rida toorkoodi',
+                                                                               'fi': '10 000+ riviä liimakoodia',
+                                                                               'sv': '10 000+ rader limkod',
+                                                                               'lv': '10 000+ rindu savienojuma koda',
+                                                                               'lt': '10 000+ eilučių klijavimo kodo'},
+                                                                  'sub': {   'en': 'React, Node, HTML boilerplate',
+                                                                             'et': 'React, Node, HTML šabloonid',
+                                                                             'fi': 'React, Node, HTML-mallit',
+                                                                             'sv': 'React, Node, HTML-mallar',
+                                                                             'lv': 'React, Node, HTML veidnes',
+                                                                             'lt': 'React, Node, HTML šablonai'}},
+                                                              {   'icon': '🔓',
+                                                                  'title': {   'en': 'Hand-Rolled Auth',
+                                                                               'et': 'Käsitsi turvalisus',
+                                                                               'fi': 'Käsintehty tietoturva',
+                                                                               'sv': 'Egendesignad säkerhet',
+                                                                               'lv': 'Manuāla drošība',
+                                                                               'lt': 'Rankinė apsauga'},
+                                                                  'sub': {   'en': 'JWT bugs, N+1 query latency',
+                                                                             'et': 'JWT vead, N+1 võrgulatents',
+                                                                             'fi': 'JWT-aukot, N+1 verkkoviive',
+                                                                             'sv': 'JWT-brister, N+1 latens',
+                                                                             'lv': 'JWT kļūdas, N+1 aizture',
+                                                                             'lt': 'JWT klaidos, N+1 delsa'}},
+                                                              {   'icon': '🍂',
+                                                                  'title': {   'en': 'Dependency Rot',
+                                                                               'et': 'Teekide aegumine',
+                                                                               'fi': 'Riippuvuuksien vanheneminen',
+                                                                               'sv': 'Beroenderöta (npm)',
+                                                                               'lv': 'Pakotņu novecošanās',
+                                                                               'lt': 'Priklausomybių pasenimas'},
+                                                                  'sub': {   'en': 'CVE patches, breaking npm APIs',
+                                                                             'et': 'npm CVE-d, purunevad API-d',
+                                                                             'fi': 'npm CVE:t, muuttuvat API:t',
+                                                                             'sv': 'npm CVE, brutna API:er',
+                                                                             'lv': 'npm CVE, bojāti API',
+                                                                             'lt': 'npm CVE, kintantys API'}},
+                                                              {   'icon': '🪤',
+                                                                  'title': {   'en': 'Ownership Trap',
+                                                                               'et': 'Hoolduslõks',
+                                                                               'fi': 'Omistusansa',
+                                                                               'sv': 'Förvaltningsfälla',
+                                                                               'lv': 'Uzturēšanas slazds',
+                                                                               'lt': 'Priežiūros spąstai'},
+                                                                  'sub': {   'en': 'Developers maintain AI debt',
+                                                                             'et': 'Tiim parandab AI koodi',
+                                                                             'fi': 'Tiimi korjaa tekoälyn koodia',
+                                                                             'sv': 'Teamet underhåller AI-skuld',
+                                                                             'lv': 'Komanda uztur MI parādu',
+                                                                             'lt': 'Komanda taiso DI skolą'}}]},
+                                      'good': {   'label': {   'en': '✅ DECLARATIVE APEXLANG SPECIFICATION '
+                                                                     '(INTENT-DRIVEN)',
+                                                               'et': '✅ DEKLARATIIVNE APEXLANG SPETSIFIKATSIOON '
+                                                                     '(KAVATSUSPÕHINE)',
+                                                               'fi': '✅ DEKLARATIIVINEN APEXLANG-SPESIFIKAATIO '
+                                                                     '(TARKOITUSPOHJAINEN)',
+                                                               'sv': '✅ DEKLARATIV APEXLANG-SPECIFIKATION '
+                                                                     '(AVSIKTSBASERAD)',
+                                                               'lv': '✅ DEKLARATĪVA APEXLANG SPECIFIKĀCIJA (NOLŪKĀ '
+                                                                     'BALSTĪTA)',
+                                                               'lt': '✅ DEKLARATYVI APEXLANG SPECIFIKACIJA (KETINIMU '
+                                                                     'GRĮSTA)'},
+                                                  'nodes': [   {   'icon': '🎯',
+                                                                   'title': {   'en': '30 Lines of Intent',
+                                                                                'et': '30 rida kavatsust',
+                                                                                'fi': '30 riviä tarkoitusta',
+                                                                                'sv': '30 rader avsikt',
+                                                                                'lv': '30 rindiņas nolūka',
+                                                                                'lt': '30 eilučių ketinimo'},
+                                                                   'sub': {   'en': 'Declarative .apx specification',
+                                                                              'et': 'Deklaratiivne .apx '
+                                                                                    'spetsifikatsioon',
+                                                                              'fi': 'Deklaratiivinen '
+                                                                                    '.apx-spesifikaatio',
+                                                                              'sv': 'Deklarativ .apx-specifikation',
+                                                                              'lv': 'Deklaratīva .apx specifikācija',
+                                                                              'lt': 'Deklaratyvi .apx specifikacija'}},
+                                                               {   'icon': '🛡️',
+                                                                   'title': {   'en': 'Built-in Security',
+                                                                                'et': 'Tuumataseme turvalisus',
+                                                                                'fi': 'Ydintason tietoturva',
+                                                                                'sv': 'Kärnsäkerhet',
+                                                                                'lv': 'Kodola drošība',
+                                                                                'lt': 'Branduolio apsauga'},
+                                                                   'sub': {   'en': 'Bind vars, CSRF, RLS in kernel',
+                                                                              'et': 'Sidusmuutujad, CSRF, RLS baasis',
+                                                                              'fi': 'Sidosmuuttujat, CSRF, RLS '
+                                                                                    'kannassa',
+                                                                              'sv': 'Bindvariabler, CSRF, RLS i motorn',
+                                                                              'lv': 'Piesaistes mainīgie, CSRF, RLS',
+                                                                              'lt': 'Susiejimo kintamieji, CSRF, RLS'}},
+                                                               {   'icon': '⚡',
+                                                                   'title': {   'en': '0ms Network Latency',
+                                                                                'et': '0ms võrgulatentsus',
+                                                                                'fi': '0ms verkkoviive',
+                                                                                'sv': '0ms nätverkslatens',
+                                                                                'lv': '0ms tīkla aizture',
+                                                                                'lt': '0ms tinklo delsa'},
+                                                                   'sub': {   'en': 'Runs natively inside SQL engine',
+                                                                              'et': 'Töötab otse andmebaasi tuumas',
+                                                                              'fi': 'Toimii suoraan SQL-ytimessä',
+                                                                              'sv': 'Körs i databasmotorn',
+                                                                              'lv': 'Darbojas SQL kodolā',
+                                                                              'lt': 'Veikia SQL branduolyje'}},
+                                                               {   'icon': '✨',
+                                                                   'title': {   'en': 'Zero Technical Debt',
+                                                                                'et': 'Null tehnilist võlga',
+                                                                                'fi': 'Nolla teknistä velkaa',
+                                                                                'sv': 'Noll teknisk skuld',
+                                                                                'lv': 'Nulle tehniskā parāda',
+                                                                                'lt': 'Nulis techninės skolos'},
+                                                                   'sub': {   'en': 'Auto-upgrades with APEX engine',
+                                                                              'et': 'Automaatsed mootori uuendused',
+                                                                              'fi': 'Automaattiset moottoripäivitykset',
+                                                                              'sv': 'Automatiska motoruppgraderingar',
+                                                                              'lv': 'Automātiski dzinēja jauninājumi',
+                                                                              'lt': 'Automatiniai variklio '
+                                                                                    'atnaujinimai'}}]}},
+            'cards': [   {   'icon': '📦',
+                             'kpi': 'KOORMUS / DEBT',
+                             'title': {   'en': 'The Code Ownership Burden: Generate What You Want to Own',
+                                          'et': 'Koodi omamise koormus: Oma seda, mida genereerid',
+                                          'fi': 'Koodin omistustaakka: Omista se mitä generoita',
+                                          'sv': 'Förvaltningsbördan: Äg det du genererar',
+                                          'lv': 'Koda pārvaldības slogs: Pārvaldi to, ko ģenerē',
+                                          'lt': 'Kodo atsakomybės našta: Valdykite tai, ką generuojate'},
+                             'desc': {   'en': 'Every line of generated React/Node glue code must be reviewed, '
+                                               'secured, and maintained by your developers when npm packages deprecate '
+                                               'or security CVEs emerge.',
+                                         'et': 'Iga AI genereeritud toorkoodi rida nõuab arendustiimi pidevat '
+                                               'ülevaatust, turvaaukude paikamist ja refaktoreerimist, kui npm teegid '
+                                               'aeguvad.',
+                                         'fi': 'Jokainen tekoälyn luoma raakakoodirivi vaatii kehittäjiltä jatkuvaa '
+                                               'katselmointia, tietoturvapaikkausta ja refaktorointia kirjastojen '
+                                               'vanhentuessa.',
+                                         'sv': 'Varje rad AI-genererad limkod måste granskas, säkras och underhållas '
+                                               'av teamet när npm-paket föråldras eller säkerhetsbrister uppstår.',
+                                         'lv': 'Katra MI ģenerētā koda rinda prasa pastāvīgu pārskatīšanu, drošības '
+                                               'ielāpus un uzturēšanu, kad noveco npm pakotnes.',
+                                         'lt': 'Kiekviena DI sugeneruota kodo eilutė reikalauja nuolatinės peržiūros, '
+                                               'saugumo spragų lopymo ir priežiūros pasenus npm bibliotekoms.'}},
+                         {   'icon': '🛡️',
+                             'kpi': '0ms / BY DESIGN',
+                             'title': {   'en': 'In-Database Execution & Automatic Platform Security',
+                                          'et': 'Andmebaasisüsteemi kiirus ja sisseehitatud turvalisus',
+                                          'fi': 'Tietokannan sisäinen suoritus ja alustan tietoturva',
+                                          'sv': 'Körning i databasen och inbyggd plattformssäkerhet',
+                                          'lv': 'Izpilde datubāzē un iebūvēta platformas drošība',
+                                          'lt': 'Vykdymas duomenų bazėje ir integruota sauga'},
+                             'desc': {   'en': 'APEX executes directly in the SQL/PLSQL kernel with 0ms network '
+                                               'latency. Session state protection, CSRF/XSS escaping, and row-level '
+                                               'security (RLS) are enforced by design.',
+                                         'et': 'APEX töötab otse andmebaasis 0ms lisalatentsusega. Seansikaitse, '
+                                               'CSRF/XSS varjestamine ja reataseme turvalisus (RLS) on mootorisse '
+                                               'sisse ehitatud.',
+                                         'fi': 'APEX suoritetaan suoraan SQL/PLSQL-ytimessä 0ms verkkoviiveellä. '
+                                               'Istunnon suojaus, CSRF/XSS-käsittely ja rivitason suojaus (RLS) '
+                                               'toimivat oletuksena.',
+                                         'sv': 'APEX körs direkt i SQL/PLSQL-kärnan med 0ms latens. Sessionsskydd, '
+                                               'CSRF/XSS-hantering och radnivåsäkerhet (RLS) är inbyggda i motorn.',
+                                         'lv': 'APEX izpildās tieši SQL/PLSQL kodolā ar 0ms aizturi. Sesiju '
+                                               'aizsardzība, CSRF/XSS novēršana un rindu līmeņa drošība (RLS) ir '
+                                               'iebūvēta pēc noklusējuma.',
+                                         'lt': 'APEX veikia tiesiogiai SQL/PLSQL branduolyje su 0ms delsa. Sesijų '
+                                               'apsauga, CSRF/XSS valdymas ir eilučių lygio sauga (RLS) yra integruoti '
+                                               'standartiškai.'}},
+                         {   'icon': '⚡',
+                             'kpi': '0 ROT / SPEC',
+                             'title': {   'en': 'Declarative Blueprints: Zero Day-2 Maintenance Debt',
+                                          'et': 'Deklaratiivne blueprint: Null tehnilist võlga uuendustel',
+                                          'fi': 'Deklaratiivinen blueprint: Nolla päivän 2 ylläpitovelkaa',
+                                          'sv': 'Deklarativ ritning: Noll teknisk skuld vid uppgradering',
+                                          'lv': 'Deklaratīvs rasējums: Nulle tehniskā parāda jauninājumos',
+                                          'lt': 'Deklaratyvus brėžinys: Nulis techninės skolos atnaujinant'},
+                             'desc': {   'en': 'APEXlang (.apx) expresses high-level intent, not procedural plumbing. '
+                                               'As Oracle upgrades APEX, applications inherit WCAG accessibility and '
+                                               'modern UX with zero code refactoring.',
+                                         'et': 'APEXlang (.apx) kirjeldab ärilist kavatsust, mitte tehnilist '
+                                               'torustikku. APEXi versiooniuuendused kaasajastavad rakendused '
+                                               'automaatselt ilma koodi ümberkirjutamata.',
+                                         'fi': 'APEXlang (.apx) ilmaisee sovelluksen tarkoituksen, ei teknistä '
+                                               'putkitusta. APEX-moottorin päivitykset uudistavat sovellukset ilman '
+                                               'koodin uudelleenkirjoitusta.',
+                                         'sv': 'APEXlang (.apx) beskriver syftet och avsikten. '
+                                               'APEX-motoruppgraderingar moderniserar applikationen automatiskt utan '
+                                               'att skriva om en enda rad kod.',
+                                         'lv': 'APEXlang (.apx) izsaka augsta līmeņa nolūku. APEX dzinēja jauninājumi '
+                                               'automātiski atjauno lietotni bez nepieciešamības pārrakstīt kodu.',
+                                         'lt': 'APEXlang (.apx) išreiškia verslo ketinimą. APEX variklio atnaujinimai '
+                                               'automatiškai modernizuoja taikomąją programą be kodo perrašymo.'}}],
+            'speaker_notes': {   'en': '🎯 Core Takeaway: Enterprise leaders prioritize solutions that eliminate code '
+                                       'maintenance debt. APEX replaces massive raw code generation with concise, '
+                                       'declarative blueprints.<br/>💡 Talking Points: Emphasize the "code ownership '
+                                       'burden" — generating 10,000s of lines of imperative React/Node/glue code '
+                                       'forces your team to audit, debug, and maintain every single line. In APEX, '
+                                       'blueprints act as a high-level specification language (APEXlang), leaving '
+                                       'session state, CSRF/XSS protection, and execution to the battle-tested '
+                                       "database engine.<br/>⚠️ Key Emphasis: Mention Justin Miller and Marc Sewtz's "
+                                       '"Low-Code as Code" vision: applications defined as diffable, '
+                                       'version-controlled .apx metadata in Git, giving teams complete DevOps velocity '
+                                       'without the ongoing maintenance nightmare of unowned generated code.',
+                                 'et': '🎯 Peamine sõnum: Ettevõtte IT-juhid väärtustavad lahendusi, mis välistavad '
+                                       'tehnilise hooldusvõla. APEX asendab toorkoodi massilise genereerimise '
+                                       'kompaktse deklaratiivse blueprintiga.<br/>💡 Esitaja rääkimispunktid: Rõhuta '
+                                       '"koodi omamise koormust" (code ownership burden) — 10 000+ rea Reacti/Node '
+                                       'liimkoodi genereerimine sunnib oma meeskonda vastutama iga üksiku rea '
+                                       'turvalisuse ja hoolduse eest. APEXis toimib blueprint kui deklaratiivne '
+                                       'spetsifikatsioonikeel (APEXlang), kus turvalisus ja sessioonihaldus on '
+                                       'garanteeritud andmebaasimootori poolt.<br/>⚠️ Mida rõhutada: Oracle juhtkonna '
+                                       '(Marc Sewtz, Justin Miller) "Low-Code as Code" visioon: rakenduse kavatsus '
+                                       'salvestatakse versioonitava .apx tekstina Gitis, tagades täieliku CI/CD '
+                                       'kiiruse ilma toorkoodi roiskumiseta.',
+                                 'fi': '🎯 Pääviesti: Yritysjohdolle tärkeintä on teknisen ylläpitovelan eliminointi. '
+                                       'APEX korvaa koodin massageneroinnin tiiviillä deklaratiivisella '
+                                       'blueprintillä.<br/>💡 Puhujan muistiinpanot: Korosta koodin omistustaakkaa '
+                                       '(code ownership burden) — 10 000+ rivin liimakoodin generointi siirtää kaiken '
+                                       'ylläpito- ja tietoturvavastuun omalle tiimille. APEXissa blueprint toimii '
+                                       'korkean tason spesifikaationa (APEXlang).<br/>⚠️ Tärkeä painotus: '
+                                       'Oracle-johdon (Marc Sewtz, Justin Miller) "Low-Code as Code" -visio: '
+                                       'sovellukset versioidaan .apx-tiedostoina Gitiin.',
+                                 'sv': '🎯 Huvudbudskap: Verksamhetsledare prioriterar lösningar som eliminerar '
+                                       'förvaltningsskuld. APEX ersätter massiv kodgenerering med koncisa deklarativa '
+                                       'ritningar.<br/>💡 Talarpunkter: Betona förvaltningsbördan (code ownership '
+                                       'burden) — att generera 10 000-tals rader råkod tvingar det egna teamet att '
+                                       'underhålla varje rad. Med APEX fungerar ritningen som en specifikation '
+                                       '(APEXlang).<br/>⚠️ Vad som bör betonas: Marc Sewtz och Justin Millers vision '
+                                       '"Low-Code as Code": .apx-specifikation i Git ger full DevOps-hastighet utan '
+                                       'kodförfall.',
+                                 'lv': '🎯 Galvenais vēstījums: Uzņēmumu vadītāji augstu vērtē risinājumus, kas novērš '
+                                       'uzturēšanas parādu. APEX aizstāj masveida koda ģenerēšanu ar deklaratīvu '
+                                       'rasējumu.<br/>💡 Runātāja piezīmes: Uzsveriet koda pārvaldības slogu (code '
+                                       'ownership burden) — ģenerējot 10 000+ rindu savienojuma koda, komanda uzņemas '
+                                       'visu atbildību par uzturēšanu. APEXā rasējums kalpo kā specifikācija '
+                                       '(APEXlang).<br/>⚠️ Ko uzsvērt: Oracle vadības "Low-Code as Code" pieeja: .apx '
+                                       'specifikācija Gitā novērš neapstrādāta koda novecošanos.',
+                                 'lt': '🎯 Pagrindinė žinutė: Įmonių vadovai vertina sprendimus, kurie panaikina '
+                                       'techninę priežiūros skolą. APEX pakeičia masinį kodo generavimą deklaratyviais '
+                                       'brėžiniais.<br/>💡 Pranešėjo pastabos: Pabrėžkite kodo atsakomybės naštą (code '
+                                       'ownership burden) — sugeneravus 10 000+ eilučių kodo, visa priežiūros '
+                                       'atsakomybė tenka komandai. APEX brėžinys veikia kaip specifikacija '
+                                       '(APEXlang).<br/>⚠️ Ką akcentuoti: Marc Sewtz ir Justin Miller "Low-Code as '
+                                       'Code" vizija: .apx specifikacija Gite užtikrina DevOps greitį be kodo gedimo '
+                                       'rizikos.'}},
+    12: {   'badge': {   'en': '🎯 SLIDE 12 / 13 • ARCHITECT &amp; DBA Q&amp;A',
+                         'et': '🎯 SLAID 12 / 13 • KRIITILISED K&amp;V ARHITEKTILT JA DBA-LT',
+                         'fi': '🎯 DIA 12 / 13 • ARKKITEHDIN &amp; DBA:N K&amp;V',
+                         'sv': '🎯 BILD 12 / 13 • ARKITEKT- OCH DBA-FRÅGOR',
+                         'lv': '🎯 SLAIDS 12 / 13 • ARHITEKTA UN DBA J&amp;A',
+                         'lt': '🎯 SKAIDRĖ 12 / 13 • ARCHITEKTO IR DBA K&amp;A'},
             'title': {   'en': 'Critical Architect &amp; DBA Questions Answered',
                          'et': 'Vastused arhitektide ja DBA-de kriitilistele küsimustele',
                          'fi': 'Vastaukset arkkitehdin ja DBA:n kriittisiin kysymyksiin',
@@ -2196,25 +2528,31 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 12 • VISION &am
                         'lt': 'Atsakymai į griežtus klausimus apie low-code, DB resursų ribas ir CI/CD versijų '
                               'valdymą.'},
             'cards': [   {   'icon': '⚡',
-                             'kpi': '0ms LATENTS',
-                             'title': {   'en': 'Q: Why APEX instead of React/Node microservices?',
-                                          'et': 'K: Miks APEX, mitte React/Node mikroteenused?',
-                                          'fi': 'K: Miksi APEX eikä React/Node-mikropalvelut?',
-                                          'sv': 'F: Varför APEX istället för React/Node mikrotjänster?',
-                                          'lv': 'J: Kāpēc APEX, nevis React/Node mikropakalpojumi?',
-                                          'lt': 'K: Kodėl APEX, o ne React/Node mikropaslaugos?'},
-                             'desc': {   'en': 'A: Runs directly in-database, 0 network latency, built-in CSRF/XSS '
-                                               'defenses, official APEXlang CI/CD, and 10x delivery speed.',
-                                         'et': 'V: APEX töötab otse baasis, 0ms võrgu lisalatentsust, automaatne '
-                                               'CSRF/XSS kaitse, ametlik APEXlang CI/CD ja 10x kiirem tarne.',
-                                         'fi': 'V: APEX toimii suoraan tietokannassa ilman verkkoviiveitä, '
-                                               'sisäänrakennettu CSRF/XSS-suoja ja 10x nopeampi toimitus.',
-                                         'sv': 'S: APEX körs direkt i databasen med 0 nätverkslatens, inbyggt '
-                                               'CSRF/XSS-skydd och 10x snabbare leveranstid.',
-                                         'lv': 'A: APEX darbojas tieši datubāzē ar 0 tīkla aizkavi, iebūvētu drošību '
-                                               'un 10x ātrāku piegādi.',
-                                         'lt': 'A: APEX veikia tiesiogiai duomenų bazėje be tinklo delsos, su '
-                                               'integruota apsauga ir 10x greitesniu pristatymu.'}},
+                             'kpi': 'SPETSIFIKATSIOON',
+                             'title': {   'en': 'Q: Why APEX instead of React/Node or code generation?',
+                                          'et': 'K: Miks APEX, mitte React/Node või koodi genereerimine?',
+                                          'fi': 'K: Miksi APEX eikä React/Node tai koodigenerointi?',
+                                          'sv': 'F: Varför APEX istället för React/Node eller kodgenerering?',
+                                          'lv': 'J: Kāpēc APEX, nevis React/Node vai koda ģenerēšana?',
+                                          'lt': 'K: Kodėl APEX, o ne React/Node ar kodo generavimas?'},
+                             'desc': {   'en': 'A: Faster, safer delivery via built-in security, 0ms latency, and '
+                                               'blueprints instead of code generation. Eliminates the burden of owning '
+                                               'and maintaining 10,000+ lines of generated code.',
+                                         'et': 'V: Kiirem ja turvalisem tarne: 0ms latents, sisseehitatud kaitse ning '
+                                               'koodi genereerimise asemel blueprint-spetsifikatsioon. Välistab 10 '
+                                               '000+ rea genereeritud koodi omamise koormuse.',
+                                         'fi': 'V: Nopeampi ja turvallisempi toimitus: 0ms viive, sisäänrakennettu '
+                                               'suoja ja blueprint koodigeneroinnin sijaan. Poistaa 10 000+ rivin '
+                                               'generoidun koodin omistus- ja ylläpitotaakan.',
+                                         'sv': 'S: Snabbare, säkrare leverans: 0ms latens, inbyggt skydd och '
+                                               'blueprints istället för kodgenerering. Eliminerar förvaltningsbördan '
+                                               'att äga och underhålla 10 000+ rader genererad kod.',
+                                         'lv': 'A: Ātrāka, drošāka piegāde: 0ms aizture, iebūvēta aizsardzība un '
+                                               'deklaratīvi plāni koda ģenerēšanas vietā. Novērš slogu uzturēt un '
+                                               'pārvaldīt 10 000+ rindu ģenerēta koda.',
+                                         'lt': 'A: Greitesnis, saugesnis diegimas: 0ms delsa, integruota apsauga ir '
+                                               'deklaratyvūs planai vietoje kodo generavimo. Panaikina 10 000+ eilučių '
+                                               'sugeneruoto kodo priežiūros ir atsakomybės naštą.'}},
                          {   'icon': '💾',
                              'kpi': '2GB / 12GB',
                              'title': {   'en': 'Q: Are Free DB limits (2GB RAM / 12GB disk) sufficient?',
@@ -2255,46 +2593,67 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 12 • VISION &am
                                                'pārbaudes, Liquibase un bezparoļu SEPS Wallet.',
                                          'lt': 'A: Oficialus SQLcl 26.2 APEXlang DSL (<code>.apx</code>), AST patikra, '
                                                'Liquibase ir beslaptažodis SEPS Wallet.'}}],
-            'speaker_notes': {   'en': '🎯 Core Takeaway: Enterprise architects appreciate answers that are backed by '
-                                       'hard numbers and official Oracle standards.<br/>💡 Talking Points: Address the '
-                                       'React vs APEX debate head-on: APEX executes directly where data lives, '
-                                       'eliminating JSON serialization roundtrips.<br/>⚠️ Key Emphasis: Emphasize that '
-                                       'Free DB is strictly for dev/test and lightweight services; production '
-                                       'workloads migrate effortlessly to Autonomous Database.',
-                                 'et': '🎯 Peamine sõnum: Ettevõtte arhitektid väärtustavad vastuseid, mis tuginevad '
-                                       'ametlikele Oracle standarditele ja reaalsetele numbritele.<br/>💡 Esitaja '
-                                       'rääkimispunktid: Vasta julgelt APEX vs React arutelule: APEX töötab otse seal, '
-                                       'kus asuvad andmed, kaotades võrguliikluse ja JSON serialiseerimise.<br/>⚠️ '
-                                       'Mida rõhutada: Free DB on ideaalne arenduseks ja mittekriitilisteks '
-                                       "rakendusteks; suuremad toodangumahud liiguvad sujuvalt Autonomous Database'i.",
-                                 'fi': '🎯 Pääviesti: Arkkitehdit arvostavat vastauksia, jotka perustuvat mitattaviin '
-                                       'faktoihin ja virallisiin Oracle-standardeihin.<br/>💡 Puhujan muistiinpanot: '
-                                       'Vastaa suoraan APEX vs React -vertailuun: APEX suorittaa koodin suoraan datan '
-                                       'luona ilman verkkolatenssia.<br/>⚠️ Tärkeä painotus: Free DB on kehitykseen ja '
-                                       'kevyisiin palveluihin; suuret kuormat siirtyvät suoraan OCI Autonomous '
-                                       'Databaseen.',
-                                 'sv': '🎯 Huvudbudskap: Företagsarkitekter uppskattar svar som backas upp av '
-                                       'officiella standarder och mätbar fakta.<br/>💡 Talarpunkter: Bemöt APEX vs '
-                                       'React direkt: APEX exekverar där datan finns, vilket eliminerar nätverkslatens '
-                                       'och JSON-serialisering.<br/>⚠️ Vad som bör betonas: Free DB är till för '
-                                       'dev/test och lätta tjänster; tyngre laster flyttas smidigt till Autonomous '
-                                       'Database.',
-                                 'lv': '🎯 Galvenais vēstījums: Arhitekti novērtē atbildes, kas balstītas uz oficiāliem '
-                                       'Oracle standartiem un datiem.<br/>💡 Runātāja piezīmes: Paskaidrojiet APEX '
-                                       'priekšrocības: tas darbojas tieši pie datiem bez JSON serializācijas un tīkla '
-                                       'aiztures.<br/>⚠️ Ko uzsvērt: Free DB ir izstrādei un viegliem rīkiem; lielas '
-                                       'slodzes dabiski migrē uz Autonomous Database.',
-                                 'lt': '🎯 Pagrindinė žinutė: Architektai vertina atsakymus, paremtus oficialiais '
-                                       'standartais ir faktais.<br/>💡 Pranešėjo pastabos: Atsakykite į APEX vs React '
-                                       'klausimą: APEX veikia tiesiogiai prie duomenų, be tinklo vėlavimo ir JSON '
-                                       'serializacijos.<br/>⚠️ Ką akcentuoti: Free DB skirta kūrimui ir lengvoms '
-                                       'paslaugoms; didelės apkrovos sklandžiai perkeliamos į Autonomous Database.'}},
-    12: {   'badge': {   'en': '🚀 SLIDE 12 / 12 • GET STARTED &amp; LINKS',
-                         'et': '🚀 SLAID 12 / 12 • ALUSTAMINE JA LINGID',
-                         'fi': '🚀 DIA 12 / 12 • ALOITUS &amp; LINKIT',
-                         'sv': '🚀 BILD 12 / 12 • KOM IGÅNG &amp; LÄNKAR',
-                         'lv': '🚀 SLAIDS 12 / 12 • SĀKUMS UN SAITES',
-                         'lt': '🚀 SKAIDRĖ 12 / 12 • PRADŽIA IR NUORODOS'},
+            'speaker_notes': {   'en': '🎯 Core Takeaway: Enterprise architects value solutions that eliminate code '
+                                       'maintenance debt. APEX replaces massive raw code generation with concise, '
+                                       'declarative blueprints.<br/>💡 Talking Points: Emphasize the "code ownership '
+                                       'burden" — generating 10,000s of lines of imperative React/Node/glue code '
+                                       'forces your team to audit, debug, and maintain every single line. In APEX, '
+                                       'blueprints act as a high-level specification language (APEXlang), leaving '
+                                       'session state, CSRF/XSS protection, and execution to the battle-tested '
+                                       'database engine.<br/>⚠️ Key Emphasis: Free DB provides a zero-latency, '
+                                       'full-featured development sandbox; production workloads scale seamlessly to '
+                                       'Autonomous Database without refactoring.',
+                                 'et': '🎯 Peamine sõnum: Ettevõtte arhitektid väärtustavad lahendusi, mis välistavad '
+                                       'koodi hooldusvõla. APEX asendab toorkoodi massilise genereerimise '
+                                       'deklaratiivsete blueprint-kavanditega.<br/>💡 Esitaja rääkimispunktid: Selgita '
+                                       '"koodi omamise koormust" (code ownership burden) — 10 000+ rea '
+                                       'React/Node/liimkoodi genereerimisel peab meeskond seda kõike pikaajaliselt '
+                                       'auditeerima, siluma ja hooldama. APEXis on blueprint nagu '
+                                       'spetsifikatsioonikeel (APEXlang), kus turvalisuse, sessioonihalduse ja käituse '
+                                       'tagab automaatselt sertifitseeritud platvormimootor.<br/>⚠️ Mida rõhutada: '
+                                       'Free DB pakub 0ms latentsusega ja sisseehitatud turvalisusega '
+                                       "arenduskeskkonda; toodangumahud liiguvad sujuvalt Autonomous Database'i ilma "
+                                       'koodi ümber kirjutamata.',
+                                 'fi': '🎯 Pääviesti: Yritysarkkitehdit arvostavat ratkaisuja, jotka poistavat koodin '
+                                       'ylläpitovelan. APEX korvaa raakakoodin massageneroinnin deklaratiivisilla '
+                                       'blueprinteillä.<br/>💡 Puhujan muistiinpanot: Korosta "koodin '
+                                       'omistajuustaakkaa" (code ownership burden) — 10 000+ riviä '
+                                       'React/Node-liimakoodia vaatii jatkuvaa auditointia, virheenkorjausta ja '
+                                       'ylläpitoa. APEXissa blueprint toimii määrittelykielenä (APEXlang), jolloin '
+                                       'tietoturva ja istunnonhallinta ovat alustaan sisäänrakennettuja.<br/>⚠️ Tärkeä '
+                                       'painotus: Free DB tarjoaa nollaviiveisen kehitysympäristön; tuotantokuormat '
+                                       'skaalautuvat saumattomasti OCI Autonomous Databaseen ilman koodimuutoksia.',
+                                 'sv': '🎯 Huvudbudskap: Företagsarkitekter uppskattar lösningar som eliminerar '
+                                       'underhållsskulden för kod. APEX ersätter massiv kodgenerering med deklarativa '
+                                       'blueprints.<br/>💡 Talarpunkter: Betona "kodägandets börda" (code ownership '
+                                       'burden) — 10 000+ rader genererad React/Node-kod måste granskas, felsökas och '
+                                       'förvaltas av teamet. I APEX fungerar blueprint som ett specifikationsspråk '
+                                       '(APEXlang), medan säkerhet och sessionshantering sköts direkt av '
+                                       'motorn.<br/>⚠️ Vad som bör betonas: Free DB ger en säker utvecklingsmiljö med '
+                                       '0ms latens; produktionslaster flyttas sömlöst till Autonomous Database utan '
+                                       'omskrivning.',
+                                 'lv': '🎯 Galvenais vēstījums: Uzņēmuma arhitekti novērtē risinājumus, kas novērš koda '
+                                       'uzturēšanas parādu. APEX aizstāj masveida koda ģenerēšanu ar deklaratīviem '
+                                       'plāniem (blueprints).<br/>💡 Runātāja piezīmes: Uzsveriet "koda īpašumtiesību '
+                                       'slogu" — 10 000+ rindu ģenerēta React/Node koda prasa nepārtrauktu auditu un '
+                                       'uzturēšanu. APEX gadījumā blueprint darbojas kā specifikācijas valoda '
+                                       '(APEXlang), kur drošība un sesiju pārvaldība ir iebūvēta dzinējā.<br/>⚠️ Ko '
+                                       'uzsvērt: Free DB nodrošina 0ms aiztures izstrādes vidi; ražošanas slodzes '
+                                       'migrē uz Autonomous Database bez koda maiņas.',
+                                 'lt': '🎯 Pagrindinė žinutė: Įmonių architektai vertina sprendimus, kurie panaikina '
+                                       'kodo priežiūros skolą. APEX pakeičia kodo generavimą deklaratyviais planais '
+                                       '(blueprints).<br/>💡 Pranešėjo pastabos: Pabrėžkite "kodo atsakomybės naštą" — '
+                                       '10 000+ eilučių React/Node kodo reikalauja nuolatinio audito, derinimo ir '
+                                       'palaikymo. APEX atveju blueprint veikia kaip specifikacijos kalba (APEXlang), '
+                                       'o saugumas ir sesijų valdymas yra integruoti tiesiogiai į branduolį.<br/>⚠️ Ką '
+                                       'akcentuoti: Free DB suteikia 0ms delsos aplinką; gamybinės apkrovos sklandžiai '
+                                       'perkeliamos į Autonomous Database be kodo perdarymo.'}},
+    13: {   'badge': {   'en': '🚀 SLIDE 13 / 13 • GET STARTED &amp; LINKS',
+                         'et': '🚀 SLAID 13 / 13 • ALUSTAMINE JA LINGID',
+                         'fi': '🚀 DIA 13 / 13 • ALOITUS &amp; LINKIT',
+                         'sv': '🚀 BILD 13 / 13 • KOM IGÅNG &amp; LÄNKAR',
+                         'lv': '🚀 SLAIDS 13 / 13 • SĀKUMS UN SAITES',
+                         'lt': '🚀 SKAIDRĖ 13 / 13 • PRADŽIA IR NUORODOS'},
             'title': {   'en': 'How to Get Started Immediately',
                          'et': 'Kuidas kohe alustada',
                          'fi': 'Miten aloittaa heti',
@@ -2489,4 +2848,3 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 12 • VISION &am
                                        'Paslaugų ir Brėžinių skiltis Dev Hub.<br/>⚠️ Ką akcentuoti: Nukreipkite į '
                                        'oficialias Oracle dokumentacijos nuorodas išsamiam APEXlang ir ORDS '
                                        'tyrinėjimui.'}}}
-

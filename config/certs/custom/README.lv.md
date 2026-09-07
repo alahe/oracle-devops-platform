@@ -1,10 +1,10 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🛠️ Pielāgoti SSL/TLS Sertifikāti (Custom Certificate Drop-In)
+# 🛠️ Pielāgoti SSL/TLS Sertifikāti (custom certificate drop-in)
 
 Izstrādātāji vai administratori šeit var iekopēt esošu SSL/TLS sertifikātu un privāto atslēgu, ko sistēma automātiski nosaka ar visaugstāko prioritāti (**Solis 0**).
 
-## Failu Nosaukumu Noteikumi:
+## Failu nosaukumu noteikumi:
 Ievietojiet šajā direktorijā šādus failus:
 * **Sertifikāts:** `tls.crt` (vai `cert.crt`, `fullchain.pem`)
 * **Privātā atslēga:** `tls.key` (vai `key.key`, `privkey.pem`)

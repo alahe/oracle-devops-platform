@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../devops-lifecycle-guide.md) | [ 🇪🇪 Eesti ](devops-lifecycle-guide.md) | [ 🇫🇮 Suomi ](../fi/devops-lifecycle-guide.md) | [ 🇸🇪 Svenska ](../sv/devops-lifecycle-guide.md) | [ 🇱🇻 Latviešu ](../lv/devops-lifecycle-guide.md) | [ 🇱🇹 Lietuvių ](../lt/devops-lifecycle-guide.md)
 
-# 🔄 Konteineripiltide, Kuldsete Hetktõmmiste ja Varukoopiate Elutsükli Juhend
+# 🔄 Konteineripiltide, kuldsete hetktõmmiste ja varukoopiate elutsükli juhend
 
 See juhend kirjeldab platvormi **3-tasemelise katastroofitaaste ja kiirpaigalduse (FastPath) mudeli** arhitektuuri, salvestusasukohti ja töövooge:
 1. **Konteineripildid (Images):** Muutumatu operatsioonisüsteem, teegid ja tarkvaramootorid.
@@ -9,7 +9,7 @@ See juhend kirjeldab platvormi **3-tasemelise katastroofitaaste ja kiirpaigaldus
 
 ---
 
-## 🗺️ 1. Otsustus- ja Kasutusvoo Joonis (Mermaid)
+## 🗺️ 1. Otsustus- ja kasutusvoo joonis (mermaid)
 
 ```mermaid
 flowchart TD
@@ -60,7 +60,7 @@ flowchart TD
 
 ---
 
-## 📊 2. Kolme Taseme Võrdlustabel: Images vs Golden Snapshots vs Backups
+## 📊 2. Kolme taseme võrdlustabel: Images VS golden snapshots VS backups
 
 | Mõiste | 📂 Asukoht | 🎯 Millal kasutatakse? | ⚙️ Kuidas kasutatakse? | ⏱️ Taastekiirus |
 | :--- | :--- | :--- | :--- | :--- |
@@ -88,17 +88,17 @@ flowchart TD
 
 ---
 
-## 🚀 2. FastStart Baaspilt ja Hetktõmmise Režiimid
+## 🚀 2. Faststart baaspilt ja hetktõmmise režiimid
 
-### A. FastStart Baaspilt (`oracle-free-apex:23ai-apex26.1`)
+### A. faststart baaspilt (`oracle-free-apex:23ai-apex26.1`)
 - **Kuidas see toimib:** Pärast 1. grupi paigaldust salvestatakse APEX-iga andmebaasi pilt ja taaskasutatakse kõigis profiilides (`db-alise`, `db-forms`, `db-publisher`).
 - **Mõju:** Lühendab mitme andmebaasiga paigaldust **27 minutilt ~6.5 minutile (76% kiirem)**.
 
-### B. Hetktõmmise Režiimid: Base vs Release
+### B. hetktõmmise režiimid: Base VS release
 - **`SNAPSHOT_MODE=base` (`--snapshot-mode base`):** Loob puhta andmebaasi ja APEX mootori tõmmise **enne** rakenduste importi (arendaja puhas testbaas).
 - **`SNAPSHOT_MODE=release` (`--snapshot-mode release`, Vaikimisi):** Loob tõmmise koos paigaldatud rakendustega toodangureliisi ja rollbäki jaoks.
 
-### C. Kiirtestimise ja CI/CD Lipud
+### C. kiirtestimise ja CI/CD lipud
 - `--fast` / `--skip-tests`: Jätab vahele paigaldusjärgsed testid (~30–45s sääst).
 - `--lock-internal-apex`: Lukustab siseandmebaaside veebiligipääsud (`ACCOUNT LOCK`).
 - `--single-pass`: Käivitab CI-s ainult Pass 1 testi (~1.5h sääst).

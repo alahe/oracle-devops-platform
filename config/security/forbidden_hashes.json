@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0",
+  "description": "Zero-Knowledge SHA-256 hashes of forbidden terms, internal domain names, and confidential identifiers. Generated via ./scripts/check-pre-commit.sh --add-forbidden-hash.",
+  "hashes": []
+}

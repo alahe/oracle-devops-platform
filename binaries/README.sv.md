@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Lokala Programvarupaket och Binär Cache (`binaries/`)
+# 📦 Lokala programvarupaket och Binär cache (`binaries/`)
 
 Denna katalog fungerar som lokal cache för offlineinstallationer och företags Artifactory-speglingar (ZIP, RPM, JAR, VSIX, SQL).
 
 ---
 
-## 📁 Underkataloger och Syfte
+## 📁 Underkataloger och syfte
 
 | Underkatalog | Beskrivning & Filer | Patchkatalog | Skript / Används av |
 | :--- | :--- | :--- | :--- |
@@ -21,7 +21,7 @@ Denna katalog fungerar som lokal cache för offlineinstallationer och företags 
 
 ---
 
-## 🔒 Git-Versionshanteringspolicy
+## 🔒 Git-versionshanteringspolicy
 
 - Alla binärfiler (`*.zip`, `*.rpm`, `*.jar`, `*.vsix`) finns i `.gitignore` och förblir **strikt lokala**.
 - Katalogstrukturen och `README*.md`-guiderna är versionshanterade.

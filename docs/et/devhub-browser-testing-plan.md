@@ -1,12 +1,12 @@
 <!-- [ 🇬🇧 English ](../devhub-browser-testing-plan.md) | [ 🇪🇪 Eesti ](devhub-browser-testing-plan.md) -->
 
-# 🧪 Dev-Hub Brauseri Blueprintide E2E Testimise ja Haldamise Juhend
+# 🧪 Dev-Hub brauseri blueprintide E2E testimise ja haldamise juhend
 
 See juhend kirjeldab täielikku töövoogu arhitektuuri blueprintide käivitamiseks, haldamiseks ning teenustesse sisselogimise testimiseks otse **Developer Hub veebiliidese kaudu** (`https://localhost:8448/dev-hub` või `http://localhost:8088/dev-hub`).
 
 ---
 
-## 🎯 Arhitektuur ja Eesmärgid
+## 🎯 Arhitektuur ja eesmärgid
 
 1. **Brauseripõhine Blueprintide Haldus:**
    - Kõigi 12 arhitektuurse blueprinti (#0 kuni #11) juhtimine läbi Dev Hub veebiliidese või taustal töötava Dev Hub Bridge REST API (`http://localhost:8089/api/toggle`).
@@ -33,13 +33,22 @@ See juhend kirjeldab täielikku töövoogu arhitektuuri blueprintide käivitamis
 
 ---
 
-## 🚀 Testipaketi Käivitamine
+## 🚀 Testipaketi käivitamine
 
-### 1. Käivitamine Terminalist (CLI)
+### 1. Käivitamine terminalist (CLI)
 
 ```bash
-# Testi kõiki 12 blueprinti järjestikku:
+# Testi kõiki 12 blueprinti järjestikku (käivitus, URL-id ja veebivormi sisselogimine):
 ./tests/test-devhub-browser-blueprints.sh --all
+
+# Testi täielikku 3-etapilist elutsüklit (käivitus -> seiskamine -> kiirkäivitus) läbi Dev Hubi:
+./tests/test-devhub-browser-blueprints.sh --all --lifecycle --dry-run
+./tests/test-devhub-browser-blueprints.sh -b 1 --lifecycle
+
+# Spetsiaalne Dev-Hub täieliku elutsükli (blueprintid 0-9) testmootor:
+./tests/test-devhub-lifecycle-full.sh --all --dry-run
+./tests/test-devhub-lifecycle-full.sh -b 1
+./tests/test-devhub-lifecycle-full.sh -b 0,1,8 --dry-run
 
 # Testi üksikut blueprinti (nt Blueprint #0 Tuum või Blueprint #9 Designer):
 ./tests/test-devhub-browser-blueprints.sh -b 0
@@ -52,18 +61,20 @@ See juhend kirjeldab täielikku töövoogu arhitektuuri blueprintide käivitamis
 ./tests/test-devhub-browser-blueprints.sh --all --min-ram 3000
 ```
 
-### 2. 1-Klikiga Käivitamine Dev Hub Veebiliidesest
+### 2. 1-klikiga käivitamine Dev Hub veebiliidesest
 
 1. Ava Dev Hub: **`https://localhost:8448/dev-hub`**
-2. Vali sakk **"DevOps Console"**.
-3. Vali nimekirjast või klõpsa nupule **"Test DevHub Blueprints"** (`test-devhub-blueprints`).
+2. Vali sakk **"DevOps Console"** või **"Testimiskeskus"** (Tab 5.5).
+3. Klõpsa nupule **"Test DevHub Blueprints"** (`test-devhub-blueprints`) või **"Dev-Hub blueprintide 0-9 elutsükli test"** (`test-devhub-lifecycle-dryrun`).
 4. Jälgi reaalajas terminali väljundit otse brauseris!
 
 ---
 
-## 📊 Raportid ja Tulemused
+## 📊 Raportid ja tulemused
 
 Testitulemused ja mõõdikud salvestatakse automaatselt:
-- **Testiraport (Markdown):** `tests/reports/devhub_browser_blueprints_test_report.md`
-- **Mõõdikud (JSON):** `metrics/devhub_browser_blueprints_benchmarks.json`
-- **Täielik logifail:** `install_logs/devhub_browser_blueprints_YYYYMMDD_HHMMSS.log`
+- **Brauseri blueprintide raport:** `tests/reports/devhub_browser_blueprints_test_report.md`
+- **Brauseri blueprintide mõõdikud (JSON):** `metrics/devhub_browser_blueprints_benchmarks.json`
+- **Täieliku elutsükli raport (blueprintid 0-9):** `tests/reports/devhub_lifecycle_full_report.md`
+- **Täieliku elutsükli mõõdikud (JSON):** `metrics/devhub_lifecycle_full_benchmarks.json`
+- **Täielik logifail:** `install_logs/devhub_lifecycle_full_YYYYMMDD_HHMMSS.log`

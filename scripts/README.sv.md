@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🛠️ CLI-Skript och Utvecklarverktyg Referensguide
+# 🛠️ Cli-skript och utvecklarverktyg referensguide
 
 Denna guide tillhandahåller fullständig dokumentation för alla miljö-, diagnostik-, administrations- och utvecklarscript i projektet.
 
@@ -8,7 +8,7 @@ Alla skript följer en strikt **3-nivåers modulär kataloglayout** (Rule 3), d�
 
 ---
 
-## 📁 3-Nivåers Katalogstruktur för Skript
+## 📁 3-Nivåers Katalogstruktur för skript
 
 ```text
 scripts/
@@ -119,7 +119,7 @@ Skriptet `./scripts/setup-all.sh` utför en komplett miljöinstallation: laddar 
 
 ---
 
-## 2. Starta Containrar (`start-containers.sh`)
+## 2. Starta containrar (`start-containers.sh`)
 
 Startar befintliga lokala databas- och ORDS-containrar och väntar tills databaserna uppnår status `healthy`.
 
@@ -129,7 +129,7 @@ Startar befintliga lokala databas- och ORDS-containrar och väntar tills databas
 
 ---
 
-## 3. Återställning av Miljö och Komponenter (`reset-all.sh`)
+## 3. Återställning Av miljö och komponenter (`reset-all.sh`)
 
 Modulär profilmedveten saneringsmotor som stoppar och tar bort containrar, profiler (`config/profiles/*.yaml`), volymer och nätverk.
 
@@ -168,7 +168,7 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 
 ---
 
-## 5. CLI-Verktyg för Utvecklare och Administratörer
+## 5. Cli-verktyg för utvecklare och Administratörer
 
 ### 5.1. Läsa Lösenord från Wallet (`get-password.sh`)
 ```bash
@@ -182,30 +182,30 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 ./scripts/check-urls.sh
 ```
 
-### 5.3. Diagnostik av SEPS-Anslutningar (`check-wallet.sh`)
+### 5.3. Diagnostik av seps-anslutningar (`check-wallet.sh`)
 ```bash
 ./scripts/check-wallet.sh
 ```
 
-### 5.4. Smart SQLcl CLI-Omslag (`sqlcl.sh`)
+### 5.4. Smart SQLcl cli-omslag (`sqlcl.sh`)
 ```bash
 ./scripts/sqlcl.sh /@DB_PROXY_DEV
 ./scripts/sqlcl.sh /@DB_PROXY_SYS as sysdba
 ```
 
-### 5.5. Skapa Utvecklarkonto (`create-developer.sh`)
+### 5.5. Skapa utvecklarkonto (`create-developer.sh`)
 ```bash
 ./scripts/create-developer.sh
 ```
 
-### 5.6. Synkronisera VS Code-Anslutningar (`register-connections.sh`)
+### 5.6. Synkronisera VS code-anslutningar (`register-connections.sh`)
 ```bash
 ./scripts/register-connections.sh
 ```
 
 ---
 
-## 6. Förtroende för Lokala Certifikat (`scripts/certs/`)
+## 6. Förtroende för Lokala certifikat (`scripts/certs/`)
 
 * 🍎 **macOS:** `./scripts/certs/trust-local-cert-mac.sh`
 * 🪟 **Windows & WSL:** `scripts\certs\trust-local-cert.cmd` / `trust-local-cert.ps1`
@@ -221,7 +221,7 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 
 ---
 
-## 8. Fjärrdriftsättning & Multi-Molntestning (`deploy-remote.sh`)
+## 8. Fjärrdriftsättning & Multi-molntestning (`deploy-remote.sh`)
 
 ```bash
 ./scripts/deploy-remote.sh --host 20.123.45.67 --user azureuser --key ~/.ssh/id_rsa --blueprint 10
@@ -231,21 +231,21 @@ DEBUG_LOG_UNSANITIZED=true ./scripts/setup-all.sh
 
 ---
 
-## 9. Manuell Installation av Patchar (`scripts/internal/`)
+## 9. Manuell installation av patchar (`scripts/internal/`)
 
 * `./scripts/internal/apply-apex-patch.sh`
 * `./scripts/internal/apply-publisher-patch.sh`
 
 ---
 
-## 10. Interna Automationsmotorer (`scripts/internal/`)
+## 10. Interna automationsmotorer (`scripts/internal/`)
 
 Se detaljerad information i katalogen:
 * 📁 **[`scripts/internal/README.sv.md`](internal/README.sv.md)**
 
 ---
 
-## 11. Felsökning: Återställningsrutin för Podman Machine
+## 11. Felsökning: Återställningsrutin för Podman machine
 
 Vid socket-fel eller timeout i containrar:
 

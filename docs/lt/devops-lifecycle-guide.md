@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../devops-lifecycle-guide.md) | [ 🇪🇪 Eesti ](../et/devops-lifecycle-guide.md) | [ 🇫🇮 Suomi ](../fi/devops-lifecycle-guide.md) | [ 🇸🇪 Svenska ](../sv/devops-lifecycle-guide.md) | [ 🇱🇻 Latviešu ](../lv/devops-lifecycle-guide.md) | [ 🇱🇹 Lietuvių ](devops-lifecycle-guide.md)
 
-# 🔄 Konteinerių Paveikslėlių, Momentinių Kopijų ir Atsarginių Kopijų Vadovas
+# 🔄 Konteinerių paveikslėlių, momentinių kopijų ir atsarginių kopijų vadovas
 
 Šis vadovas aprašo platformos **3 lygių atkūrimo po avarijų ir FastPath modelį**:
 1. **Konteinerių Paveikslėliai (Images):** Nekintama OS ir vykdymo varikliai.
@@ -9,7 +9,7 @@
 
 ---
 
-## 🛠️ Greitosios Komandos
+## 🛠️ Greitosios komandos
 
 ```bash
 # 1. Atkurti Golden Snapshot (~15s):

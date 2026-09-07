@@ -1,19 +1,19 @@
-# Oracle Forms ir Reports Modernizavimo bei Perkėlimo į Oracle APEX Vadovas
+# Oracle Forms ir reports modernizavimo bei perkėlimo į Oracle APEX vadovas
 
 [ 🇬🇧 English ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/forms-to-apex-migration-guide.md) | [ 🇪🇪 Eesti ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/et/forms-to-apex-migration-guide.md) | [ 🇫🇮 Suomi ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/fi/forms-to-apex-migration-guide.md) | [ 🇸🇪 Svenska ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/sv/forms-to-apex-migration-guide.md) | [ 🇱🇻 Latviešu ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/lv/forms-to-apex-migration-guide.md) | [ 🇱🇹 Lietuvių ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/lt/forms-to-apex-migration-guide.md)
 
 ---
 
-## 1. Santrauka ir Verslo Paskatos 2026 Metais
+## 1. Santrauka ir verslo paskatos 2026 metais
 
 Ar 2026 metais vis dar naudojate Oracle Forms & Reports? Pagrindinė priežastis pereiti prie Oracle APEX yra **KAŠTŲ MAŽINIMAS, lankstumas ir infrastruktūros supaprastinimas.**
 
-### Oracle Forms Iššūkiai
+### Oracle Forms iššūkiai
 - ❌ **Sunki Vidurinioji Įranga (Middleware):** Reikalingi atskiri WebLogic serveriai ir RCU schemos.
 - ❌ **Aukšti Infrastruktūros Kaštai:** Didelis operatyviosios atminties (RAM) poreikis ir lėtas startas.
 - ❌ **Kliento Apribojimai:** Priklausomybė nuo Java Web Start ar nuotolinio darbalaukio.
 
-### Oracle APEX Privalumai
+### Oracle APEX privalumai
 - ✅ **Nėra Atskiros Vidurinės Įrangos:** APEX veikia tiesiogiai Oracle duomenų bazės branduolyje kartu su ORDS.
 - ✅ **Įtraukta į Duomenų Bazės Licenciją:** Jokių papildomų licencijavimo mokesčių.
 - ✅ **100 % PL/SQL Logikos Pakartotinis Panaudojimas:** Esamos verslo taisyklės ir paketai išsaugomi be perrašymo.
@@ -21,7 +21,7 @@ Ar 2026 metais vis dar naudojate Oracle Forms & Reports? Pagrindinė priežastis
 
 ---
 
-## 2. Kodėl APEX yra Pranašesnis Šiuolaikiniame Generatyvinio AI Pasaulyje
+## 2. Kodėl APEX yra pranašesnis šiuolaikiniame generatyvinio AI pasaulyje
 
 *(Parengta pagal Justin Miller, Oracle, architektūrinę analizę)*
 
@@ -31,9 +31,13 @@ Generatyvinio AI eroje egzistuoja du būdai kurti taikomąsias programas naudoja
 
 > **Privalumas:** 100x didesnis architektūrinis patikimumas ir 1000x lengvesnis kodo supratimas žmogui.
 
+> [!IMPORTANT]
+> **Deklaratyvūs brėžiniai kaip specifikacija vs Kodo atsakomybės našta:**
+> Greitesnis ir saugesnis diegimas pasiekiamas taikant **paprastesnę ir saugesnę architektūrą**, o ne masiškai generuojant kodą. Kai DI sugeneruoja 10 000+ eilučių tiesioginio kodo, komanda paveldi visą kodo atsakomybės naštą (*code ownership burden*): spragų lopymą ir uztikrinimą. APEX brėžiniai ir APEXlang (`.apx`) veikia kaip deklaratyvi specifikacija be papildomos klijavimo kodo naštos.
+
 ---
 
-## 3. Modulinio Monolito Privalumai: Kaip Išvengti Mikropaslaugų Spąstų
+## 3. Modulinio monolito privalumai: Kaip išvengti mikropaslaugų spąstų
 
 *(Parengta pagal Anton Martyniuk architektūrinę analizę)*
 
@@ -46,7 +50,7 @@ Modernizuojant senąsias sistemas, daugelis komandų per anksti suskaido kodą �
 
 ---
 
-## 4. Strateginė Sprendimų Priėmimo Struktūra: APEX vs. Next.js vs. Hibridinė Migracija
+## 4. Strateginė sprendimų priėmimo struktūra: APEX VS. next.js VS. hibridinė migracija
 
 *(Parengta pagal Marcio Ramo ir Wojciech Bielawski architektūrinę analizę)*
 
@@ -57,7 +61,7 @@ Modernizuojant dideles Forms sistemas:
 
 ---
 
-## 5. 5 Žingsnių Migracijos Procesas
+## 5. 5 Žingsnių migracijos procesas
 
 ```bash
 # 1. Konvertuoti FMB failus į XML:

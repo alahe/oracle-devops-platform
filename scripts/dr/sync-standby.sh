@@ -108,8 +108,12 @@ RSYNC_OPTS="-avz --delete"
 [ "$VERBOSE" = "true" ] && RSYNC_OPTS="-avzh --progress --delete"
 
 if [ -n "$STANDBY_TARGET_HOST" ]; then
+  SSH_HOSTKEY_OPTS="-o StrictHostKeyChecking=accept-new"
+  if [ -n "${KNOWN_HOSTS_FILE:-}" ] && [ -f "${KNOWN_HOSTS_FILE}" ]; then
+    SSH_HOSTKEY_OPTS="-o StrictHostKeyChecking=yes -o UserKnownHostsFile=${KNOWN_HOSTS_FILE}"
+  fi
   rsync $RSYNC_OPTS \
-    -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no -o ConnectTimeout=10" \
+    -e "ssh -i $SSH_KEY $SSH_HOSTKEY_OPTS -o ConnectTimeout=10" \
     "${SNAPSHOT_LOCAL_DIR}/" \
     "${SSH_USER}@${STANDBY_TARGET_HOST}:${SNAPSHOT_LOCAL_DIR}/" || {
       echo "${YELLOW}⚠️  SSH connection to ${STANDBY_TARGET_HOST} failed or simulated. Verification recorded.${NC}"

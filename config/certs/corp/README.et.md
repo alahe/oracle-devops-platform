@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🏢 Ettevõtte Sise-PKI Sertifikaadid (Corporate PKI)
+# 🏢 Ettevõtte Sise-pki sertifikaadid (corporate PKI)
 
 Sellesse kataloogi laetakse või sünkroniseeritakse ettevõtte sise-PKI sertifikaadid:
 * `corp_cert.crt` — Ettevõtte serveri sertifikaat

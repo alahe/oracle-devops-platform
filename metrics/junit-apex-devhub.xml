@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="OracleAPEXDevHubSuite" tests="6" failures="0" errors="0" time="1">
-  <testcase classname="DevHub" name="TC-DB: DEV_HUB_PKG & utPLSQL Suite" time="0"/>
+<testsuite name="OracleAPEXDevHubSuite" tests="6" failures="1" errors="0" time="11">
+  <testcase classname="DevHub" name="TC-DB: DEV_HUB_PKG & utPLSQL Suite" time="8"/>
   <testcase classname="DevHub" name="TC-INT-01: REST Bridge Health Check" time="0"/>
   <testcase classname="DevHub" name="TC-INT-02: 6-Language Markdown Retrieval" time="0"/>
-  <testcase classname="DevHub" name="TC-E2E-01: Unauthenticated Redirect to Login" time="0"/>
+  <testcase classname="DevHub" name="TC-E2E-01: Unauthenticated Redirect to Login" time="2"/>
   <testcase classname="DevHub" name="TC-E2E-02: Playwright DOM & Mermaid UI Flows" time="0"/>
-  <testcase classname="DevHub" name="TC-SEC-01: APEXlang Compiler Linter (0 errors)" time="1"/>
+  <testcase classname="DevHub" name="TC-SEC-01: APEXlang Compiler Linter (0 errors)" time="1"><failure message="Linter found errors"/></testcase>
 </testsuite>

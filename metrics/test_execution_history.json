@@ -1,5 +1,65 @@
 [
   {
+    "id": "run_20260908_002333",
+    "timestamp": "2026-09-08 00:23:33",
+    "suite": "apex",
+    "target": "apex",
+    "duration_sec": 12.0,
+    "exit_code": 1,
+    "status": "FAIL",
+    "log_file": "test_apex_20260908_002321.log"
+  },
+  {
+    "id": "run_20260908_000157",
+    "timestamp": "2026-09-08 00:01:57",
+    "suite": "glossary",
+    "target": "glossary",
+    "duration_sec": 1.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_glossary_20260908_000156.log"
+  },
+  {
+    "id": "run_20260908_000141",
+    "timestamp": "2026-09-08 00:01:41",
+    "suite": "mermaid",
+    "target": "mermaid",
+    "duration_sec": 16.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_mermaid_20260908_000124.log"
+  },
+  {
+    "id": "run_20260907_214920",
+    "timestamp": "2026-09-07 21:49:20",
+    "suite": "windows_enterprise",
+    "target": "windows_enterprise",
+    "duration_sec": 1.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_windows_enterprise_20260907_214918.log"
+  },
+  {
+    "id": "run_20260907_214855",
+    "timestamp": "2026-09-07 21:48:55",
+    "suite": "windows_enterprise",
+    "target": "windows_enterprise",
+    "duration_sec": 1.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_windows_enterprise_20260907_214853.log"
+  },
+  {
+    "id": "run_20260907_214843",
+    "timestamp": "2026-09-07 21:48:43",
+    "suite": "windows_enterprise",
+    "target": "windows_enterprise / test-windows-dryrun.sh",
+    "duration_sec": 1.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_windows_enterprise_20260907_214842.log"
+  },
+  {
     "id": "run_20260907_135537",
     "timestamp": "2026-09-07 13:55:37",
     "suite": "coverage",

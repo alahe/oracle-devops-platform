@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Oracle APEX Paigalduspaketid (`binaries/apex/`)
+# 📦 Oracle APEX paigalduspaketid (`binaries/apex/`)
 
 Kohalikud Oracle APEX paigaldusarhiivid (nt apex-latest.zip, apex_26.1_en.zip).
 

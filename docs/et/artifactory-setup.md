@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../artifactory-setup.md) | [ 🇪🇪 Eesti ](artifactory-setup.md) | [ 🇫🇮 Suomi ](../fi/artifactory-setup.md) | [ 🇸🇪 Svenska ](../sv/artifactory-setup.md) | [ 🇱🇻 Latviešu ](../lv/artifactory-setup.md) | [ 🇱🇹 Lietuvių ](../lt/artifactory-setup.md)
 
-# 🏢 Ettevõtte Artifactory Hoidla, Tootekataloog & Zero-Trust Metaandmete Juhend
+# 🏢 Ettevõtte artifactory hoidla, tootekataloog & zero-trust metaandmete juhend
 
 Tulemüüriga piiratud, suletud võrguga (*air-gapped*) või rangete turvanõuetega ettevõtte keskkonnas võimaldab platvorm suunata nii binaarpaketid (ORDS ja APEX `.zip` failid), veaparandused kui ka Kuldsed Hetktõmmised ettevõtte sisesesse **JFrog Artifactory**, **Harbor**, **Nexus** või **GitLab Container Registry** hoidlasse.
 
 ---
 
-## 🎯 1. Peamised Eelised & LAN FastPath
+## 🎯 1. Peamised eelised & LAN fastpath
 
 1. **🚀 ~15s LAN Kiirpaigaldus (FastPath):** Kuldsete Hetktõmmiste ja OCI konteineripiltide allalaadimine sisevõrgu LAN-ist võtab 5–15 sekundit (avalikust internetist 5–15 min).
 2. **📑 Kergekaaluline `.meta.json` Eelkontroll:** Enne gigabaitide allalaadimist laaditakse alla väike `.meta.json` (< 1 KB), et kontrollida APEX, DB ja middleware versioone.
@@ -15,7 +15,7 @@ Tulemüüriga piiratud, suletud võrguga (*air-gapped*) või rangete turvanõuet
 
 ---
 
-## 🏗 2. Unifitseeritud Tootekeskne Kataloogipuu
+## 🏗 2. Unifitseeritud tootekeskne kataloogipuu
 
 ```text
 {ARTIFACTORY_URL}/{ARTIFACTORY_REPO}/products/
@@ -53,7 +53,7 @@ Tulemüüriga piiratud, suletud võrguga (*air-gapped*) või rangete turvanõuet
 
 ---
 
-## 🚀 3. Universaalne Publitseerija (`./scripts/publish-to-artifactory.sh`)
+## 🚀 3. Universaalne publitseerija (`./scripts/publish-to-artifactory.sh`)
 
 ```bash
 # 1. Publitseeri Blueprint 3 Golden Snapshot ja metaandmed:
@@ -65,7 +65,7 @@ Tulemüüriga piiratud, suletud võrguga (*air-gapped*) või rangete turvanõuet
 
 ---
 
-## ⚙️ 4. Seadistuse Näidis (`.env`)
+## ⚙️ 4. Seadistuse näidis (`.env`)
 
 ```bash
 ARTIFACTORY_URL="https://artifactory.ettevote.ee/artifactory"

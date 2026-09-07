@@ -7,12 +7,22 @@ import json
 from datetime import datetime
 
 SCRIPT_DOC_PATTERNS = [
-    (r"^test-(devhub-testing-tab|dev-hub-generation|i18n-translations|filename-portability|multilingual-support|live-platform)\.sh$", {
+    (r"^test-(apex-suite|apex-devhub.*)\.sh$", {
+        "doc_file": "docs/apex-devhub-test-plan.md",
+        "doc_key": "apex_testing",
+        "title": "Oracle APEX DevHub Testing Plan"
+    }),
+    (r"^test-.*glossary.*\.sh$", {
+        "doc_file": "docs/glossary.md",
+        "doc_key": "glossary",
+        "title": "Architecture Glossary & Acronyms"
+    }),
+    (r"^test-(devhub-mermaid-rendering|devhub-search-and-filters|devhub-testing-tab|dev-hub-generation|i18n-translations|filename-portability|multilingual-support|live-platform|pre-commit.*)\.sh$", {
         "doc_file": "docs/testing-framework-and-devhub.md",
         "doc_key": "testing_framework",
         "title": "Testing Framework & Dev Hub Architecture"
     }),
-    (r"^test-(browser-login|devhub-browser-blueprints)\.sh$", {
+    (r"^test-(browser-login|devhub-browser-blueprints|devhub-lifecycle.*)\.sh$", {
         "doc_file": "docs/devhub-browser-testing-plan.md",
         "doc_key": "devhub_browser_testing",
         "title": "DevHub Browser Blueprints E2E Testing Plan"
@@ -52,6 +62,21 @@ SCRIPT_DOC_PATTERNS = [
         "doc_key": "remote_multicloud",
         "title": "Multi-Cloud Enterprise Remote DB Architecture"
     }),
+    (r"^test-.*(windows|wsl).*\.sh$", {
+        "doc_file": "docs/windows-enterprise-setup-guide.md",
+        "doc_key": "windows_enterprise_guide",
+        "title": "Enterprise Windows & WSL2 Setup Guide"
+    }),
+    (r"^test-.*enterprise-onboarding.*\.sh$", {
+        "doc_file": "docs/enterprise-onboarding-guide.md",
+        "doc_key": "enterprise_onboarding_guide",
+        "title": "Enterprise Onboarding & Registry Mirrors Guide"
+    }),
+    (r"^test-.*security-audit.*\.sh$", {
+        "doc_file": "docs/security-audit-report.md",
+        "doc_key": "security_audit",
+        "title": "Enterprise Security Audit & Hardening"
+    }),
     (r"^test-(all-components|subcomponent-services|instance-initializer|e2e-system|devhub-async-guardrails|credentials-matrix)\.sh$", {
         "doc_file": "docs/devhub-platform-test-plan.md",
         "doc_key": "devhub_platform_testing",
@@ -90,6 +115,7 @@ def get_test_suites_catalog(ws):
     return {
         "unit": {
             "key": "unit",
+            "category": "core",
             "title": "Unit Test Suite",
             "desc": f"Fast isolation tests ({len(unit_tests)} scripts) validating configs, SEPS wallet, script syntax, and logic without live DB",
             "icon": "🧪",
@@ -99,6 +125,7 @@ def get_test_suites_catalog(ws):
         },
         "integration": {
             "key": "integration",
+            "category": "core",
             "title": "Integration Test Suite",
             "desc": f"Multi-database topology ({len(integration_tests)} scripts), compose override generation, profile roles, and connection handshakes",
             "icon": "⚙️",
@@ -106,8 +133,29 @@ def get_test_suites_catalog(ws):
             "tests": integration_tests,
             "cmd": "tests/integration/*.sh"
         },
+        "apex": {
+            "key": "apex",
+            "category": "e2e",
+            "title": "Oracle APEX Full Test Suite",
+            "desc": "4-tier comprehensive APEX suite: Level 1 (utPLSQL), Level 2 (REST Bridge), Level 3 (Browser E2E), Level 4 (APEX Advisor)",
+            "icon": "⚡",
+            "count": 4,
+            "tests": ["test-apex-suite.sh --tier db", "test-apex-suite.sh --tier rest", "test-apex-suite.sh --tier e2e", "test-apex-suite.sh --tier advisor"],
+            "cmd": "./tests/test-apex-suite.sh"
+        },
+        "browser": {
+            "key": "browser",
+            "category": "e2e",
+            "title": "Browser & SSO End-to-End",
+            "desc": "Simulates browser interactions, APEX login flows, Dev Hub shortcuts, and SSO authentication",
+            "icon": "🖥️",
+            "count": 2,
+            "tests": ["test-browser-login.sh", "test-devhub-browser-blueprints.sh"],
+            "cmd": "./tests/test-browser-login.sh"
+        },
         "live": {
             "key": "live",
+            "category": "e2e",
             "title": "End-to-End Live Platform",
             "desc": "Full regression against active running containers, database listeners, and web service endpoints",
             "icon": "🚀",
@@ -115,8 +163,49 @@ def get_test_suites_catalog(ws):
             "tests": ["test-live-platform.sh"],
             "cmd": "./tests/test-live-platform.sh"
         },
+        "blueprints_matrix": {
+            "key": "blueprints_matrix",
+            "category": "e2e",
+            "title": "Blueprints Matrix & Incremental Lifecycle",
+            "desc": "Incremental and live test suite covering Blueprints 0 through 11 and state transitions",
+            "icon": "🏗️",
+            "count": 3,
+            "tests": ["test-all-blueprints-live.sh", "test-all-blueprints-incremental.sh", "test-blueprints-6-11.sh"],
+            "cmd": "./tests/test-all-blueprints-live.sh"
+        },
+        "devhub_lifecycle": {
+            "key": "devhub_lifecycle",
+            "category": "e2e",
+            "title": "Dev-Hub Full Lifecycle (0-9)",
+            "desc": "Tests the complete 3-step lifecycle (Start -> Stop -> Fast-Start) through Dev-Hub Bridge API for Blueprints 0 through 9",
+            "icon": "🔄",
+            "count": 2,
+            "tests": ["test-devhub-lifecycle-full.sh", "test-devhub-browser-blueprints.sh"],
+            "cmd": "./tests/test-devhub-lifecycle-full.sh --all --dry-run"
+        },
+        "containers_infra": {
+            "key": "containers_infra",
+            "category": "e2e",
+            "title": "Container Health & Multi-DB Services",
+            "desc": "Verifies active container sockets, multi-cloud topologies, and ORDS/Publisher connection pools",
+            "icon": "🐳",
+            "count": 4,
+            "tests": ["test-containers-live.sh", "test-ords-lifecycle-matrix.sh", "test-remote-multicloud.sh", "test-tiered-lifecycle-matrix.sh"],
+            "cmd": "./tests/test-containers-live.sh"
+        },
+        "windows_enterprise": {
+            "key": "windows_enterprise",
+            "category": "compliance",
+            "title": "Enterprise Windows & WSL2 Diagnostics",
+            "desc": "Non-destructive dry-run compatibility verification (Rule 14): WSL2 ext4, RAM, Hyper-V ports, CRLF, corporate TLS/proxy, VPN DNS",
+            "icon": "🪟",
+            "count": 2,
+            "tests": ["test-windows-dryrun.sh", "test-windows-enterprise-rules.sh"],
+            "cmd": "./tests/test-windows-dryrun.sh"
+        },
         "i18n": {
             "key": "i18n",
+            "category": "compliance",
             "title": "Multilingual & i18n Parity",
             "desc": "Full 6-language compliance audit (Rule 9): checks dictionary symmetry, headers, and translations",
             "icon": "🌐",
@@ -126,6 +215,7 @@ def get_test_suites_catalog(ws):
         },
         "portability": {
             "key": "portability",
+            "category": "compliance",
             "title": "Cross-Platform Portability",
             "desc": "Strict verification of Rule 13: Windows NTFS/FAT forbidden chars, device names, and ASCII path standards",
             "icon": "🛡️",
@@ -133,26 +223,69 @@ def get_test_suites_catalog(ws):
             "tests": ["test-filename-portability.sh"],
             "cmd": "./tests/unit/test-filename-portability.sh"
         },
-        "browser": {
-            "key": "browser",
-            "title": "Browser & SSO End-to-End",
-            "desc": "Simulates browser interactions, APEX login flows, Dev Hub shortcuts, and SSO authentication",
-            "icon": "🖥️",
+        "mermaid": {
+            "key": "mermaid",
+            "category": "compliance",
+            "title": "Mermaid & Architecture Diagrams",
+            "desc": "Validates marked-to-mermaid transformation, toolbars, zoom modal, 6-language i18n, and dynamic diagram rendering",
+            "icon": "📊",
+            "count": 1,
+            "tests": ["test-devhub-mermaid-rendering.sh"],
+            "cmd": "./tests/unit/test-devhub-mermaid-rendering.sh"
+        },
+        "precommit": {
+            "key": "precommit",
+            "category": "compliance",
+            "title": "Git Pre-Commit & Pre-Push Security Guard",
+            "desc": "Lightning-fast 6-phase verification: Zero-Trust secrets, GDPR/PII leaks, Zero-Knowledge hashed company info, Rule 13 portability, script syntax, and CRLF line endings",
+            "icon": "🛡️",
             "count": 2,
-            "tests": ["test-browser-login.sh", "test-devhub-browser-blueprints.sh"],
-            "cmd": "./scripts/test-browser-login.sh"
+            "tests": ["check-pre-commit.sh --full", "test-pre-commit-check.sh"],
+            "cmd": "./scripts/check-pre-commit.sh --full"
+        },
+        "glossary": {
+            "key": "glossary",
+            "category": "compliance",
+            "title": "Architecture Glossary & Acronyms Parity",
+            "desc": "Validates 6-language glossary parity, Markdown generation, and Dev Hub search registry across 50+ acronyms",
+            "icon": "📖",
+            "count": 1,
+            "tests": ["test-glossary-parity.sh"],
+            "cmd": "./tests/unit/test-glossary-parity.sh"
+        },
+        "tls_security": {
+            "key": "tls_security",
+            "category": "compliance",
+            "title": "TLS & Certificate Lifecycle Safety",
+            "desc": "Validates self-signed Root CA generation, OS trust store injection, and safe cert cleanups",
+            "icon": "🔒",
+            "count": 2,
+            "tests": ["test-tls-scenarios.sh", "test-clean-certs-safety.sh"],
+            "cmd": "./tests/test-tls-scenarios.sh"
+        },
+        "security_audit": {
+            "key": "security_audit",
+            "category": "compliance",
+            "title": "Enterprise Security Audit (DORA / PCI-DSS / CIS)",
+            "desc": "16-point automated enterprise security audit covering OWASP Top 10, CIS Oracle DB, CIS Podman, Zero-Trust secrets, DevHub bridge, and network ACLs",
+            "icon": "🛡️",
+            "count": 1,
+            "tests": ["test-security-audit.sh"],
+            "cmd": "./scripts/test-security-audit.sh"
         },
         "ci_sim": {
             "key": "ci_sim",
+            "category": "ci",
             "title": "Local GitHub Actions CI Simulator",
             "desc": "Executes or dry-runs repository CI/CD workflows offline using ephemeral containers",
             "icon": "🐙",
             "count": 1,
             "tests": ["test-local-ci.sh"],
-            "cmd": "./scripts/test-local-ci.sh --dry-run"
+            "cmd": "./tests/test-local-ci.sh --dry-run"
         },
         "coverage": {
             "key": "coverage",
+            "category": "ci",
             "title": "Test Coverage Report Generator",
             "desc": "Analyzes test coverage of all scripts/ and scripts/internal/ files and updates markdown reports",
             "icon": "📊",

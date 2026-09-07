@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📑 Analytics Publisher -Raporttien Hakemisto (`publisher-reports/`)
+# 📑 Analytics Publisher -raporttien hakemisto (`publisher-reports/`)
 
 Tämä hakemisto sisältää Oracle Analytics Publisherin raporttimallit (`.rtf`, `.xpt`) ja tietomallit (`.xdm`).
 

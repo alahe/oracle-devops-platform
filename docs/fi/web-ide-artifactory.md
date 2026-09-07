@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../web-ide-artifactory.md) | [ 🇪🇪 Eesti ](../et/web-ide-artifactory.md) | [ 🇫🇮 Suomi ](web-ide-artifactory.md) | [ 🇸🇪 Svenska ](../sv/web-ide-artifactory.md) | [ 🇱🇻 Latviešu ](../lv/web-ide-artifactory.md) | [ 🇱🇹 Lietuvių ](../lt/web-ide-artifactory.md)
 
-# Konttipohjainen Web IDE & Yrityksen Laajennusmarkkinapaikka
+# Konttipohjainen web IDE & yrityksen laajennusmarkkinapaikka
 
 Tämä ohje kuvaa **konttipohjaisen Web IDE:n (`web-ide` / `code-server`)** määritystä ja käyttöä selaimessa, integrointia yrityksen sisäiseen **Artifactory / VS Code Marketplace** -rekisteriin, **Oracle SQL Developer, Google Antigravity ja Microsoft Python** -laajennuksia sekä **GitHub Actions -työnkulkujen paikallista ja turvallista verkkotonta (offline) testausta**.
 
 ---
 
-## 1. Web IDE -Arkkitehtuuri & Esiasennetut Työkalut
+## 1. Web IDE -arkkitehtuuri & esiasennetut työkalut
 
 Web IDE kokoaa täydellisen Oracle-, tekoäly- ja CI/CD-kehitysympäristön yhteen selainpohjaiseen VS Code -liittymään (`localhost/oracle-web-ide:latest`):
 - **Selaimen URL:** `http://localhost:8090` (HTTP) tai `https://localhost:8449` (HTTPS).
@@ -26,7 +26,7 @@ Web IDE kokoaa täydellisen Oracle-, tekoäly- ja CI/CD-kehitysympäristön yhte
 
 ---
 
-## 2. 4-Tasoinen Laajennusten Ratkaisujärjestys & Välimuisti (`binaries/extensions/`)
+## 2. 4-tasoinen laajennusten ratkaisujärjestys & välimuisti (`binaries/extensions/`)
 
 ```
 1. 📁 binaries/extensions/*.vsix         ➔ Paikallinen Air-Gapped välimuisti (Korkein prioriteetti, 0 verkkopyyntöä)
@@ -43,7 +43,7 @@ VSCODE_MARKETPLACE_PROVIDER=microsoft
 
 ---
 
-## 3. GitHub Actions -Työnkulkujen Verkkoton Testaus (`act` ja `actionlint`)
+## 3. GitHub Actions -työnkulkujen verkkoton testaus (`act` ja `actionlint`)
 
 ```bash
 # 1. Staattinen tietoturva- ja syntaksitarkistus

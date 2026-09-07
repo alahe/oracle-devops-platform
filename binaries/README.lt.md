@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Vietinių Programinės Įrangos Paketų ir Dvejetainių Talpykla (`binaries/`)
+# 📦 Vietinių Programinės Įrangos paketų ir dvejetainių talpykla (`binaries/`)
 
 Šis katalogas naudojamas kaip vietinė talpykla diegimams be interneto ir įmonės Artifactory veidrodžiams (ZIP, RPM, JAR, VSIX, SQL).
 
 ---
 
-## 📁 Pakatalogiai ir Paskirtis
+## 📁 Pakatalogiai ir paskirtis
 
 | Pakatalogis | Aprašymas ir Failai | Pataisų Katalogas | Scenarijai / Kur Naudojama |
 | :--- | :--- | :--- | :--- |
@@ -21,7 +21,7 @@
 
 ---
 
-## 🔒 Git Versijų Kontrolės Taisyklės
+## 🔒 Git versijų Kontrolės Taisyklės
 
 - Visi dvejetainiai failai (`*.zip`, `*.rpm`, `*.jar`, `*.vsix`) yra `.gitignore` faile ir lieka **tik vietiškai**.
 - Katalogo struktūra ir `README*.md` vadovai yra valdomi versijų kontrolės.

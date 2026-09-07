@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../security.md) | [ 🇪🇪 Eesti ](../et/security.md) | [ 🇫🇮 Suomi ](../fi/security.md) | [ 🇸🇪 Svenska ](../sv/security.md) | [ 🇱🇻 Latviešu ](../lv/security.md) | [ 🇱🇹 Lietuvių ](security.md)
 
-# 🛡️ Oracle Free DB & APEX Sauga ir SSO Architektūra
+# 🛡️ Oracle Free DB & APEX sauga ir SSO architektūra
 
 Šiame dokumente pateikiami platformos saugumo principai, slaptažodžių valdymas, kūrėjų vaidmenys ir vieningo prisijungimo (SSO / Azure Entra-ID) architektūra.
 
 ---
 
-## 1. Vietinis Paslapčių Valdymas (Zero-Trust - 5 Taisyklė)
+## 1. Vietinis paslapčių valdymas (zero-trust - 5 taisyklė)
 
 Visi slaptažodžiai ir paslaptys saugomi AES-256 užšifruotoje **Oracle SEPS (Secure External Password Store) Auto-Login Wallet** piniginėje (`cwallet.sso`).
 
@@ -23,7 +23,7 @@ Visi slaptažodžiai ir paslaptys saugomi AES-256 užšifruotoje **Oracle SEPS (
 
 ---
 
-## 2. Aplinkų Autentifikavimo Matrica
+## 2. Aplinkų autentifikavimo matrica
 
 | Aplinka (`ENVIRONMENT_TYPE`) | Vieta | Autentifikavimo Tipas (APEX & DB) | Vartotojų Valdymas | TLS Šifravimas (TCPS) |
 | :--- | :--- | :--- | :--- | :--- |
@@ -45,7 +45,7 @@ graph TD
 
 ---
 
-## 3. Adaptyvus 5 Lygių TLS/HTTPS Variklis
+## 3. Adaptyvus 5 lygių TLS/HTTPS variklis
 
 Žiniatinklio paslaugos (ORDS, APEX, Analytics Publisher) naudoja adaptyvią sertifikatų hierarchiją be administratoriaus teisių (`scripts/internal/resolve-tls-mode.sh`):
 
@@ -60,7 +60,7 @@ config/certs/
 
 ---
 
-## 4. Vieningas Prisijungimas (SSO)
+## 4. Vieningas prisijungimas (SSO)
 
 - **Duomenų Bazės Lygio SSO:** Oracle 23ai palaiko Azure AD OAuth2 žetonus ir visuotines roles.
 - **ORDS & REST API:** ORDS tikrina gaunamus Bearer JWT žetonus pagal Azure AD viešuosius raktus.

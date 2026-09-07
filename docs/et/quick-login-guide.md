@@ -1,12 +1,12 @@
 <!-- [ 🇬🇧 English ](../quick-login-guide.md) | [ 🇪🇪 Eesti ](quick-login-guide.md) | [ 🇸🇪 Svenska ](../quick-login-guide.md) | [ 🇱🇻 Latviešu ](../quick-login-guide.md) | [ 🇱🇹 Lietuvių ](../quick-login-guide.md) -->
 
-# 🚀 Kiire ja Turvalise Sisselogimise Juhend
+# 🚀 Kiire ja turvalise sisselogimise juhend
 
 See juhend kirjeldab kõige kiiremat ja turvalisemat viisi Oracle DevOps Platvormi veebiteenustesse, andmebaasidesse ja haldusliidestesse sisselogimiseks.
 
 ---
 
-## ⚡ Kiireim 2-Sammuline Sisselogimine (Lõikelaua Tugi `-c`)
+## ⚡ Kiireim 2-sammuline sisselogimine (lõikelaua tugi `-c`)
 
 Paroolide ekraanile kuvamise või käsitsi kopeerimise asemel saab parooli kopeerida otse arvuti lõikelauale (`pbcopy` Macis, `xclip`/`wl-copy` Linuxis, `clip.exe` Windowsis/WSL-is) ilma parooli ekraanile manamata:
 
@@ -20,7 +20,7 @@ Paroolide ekraanile kuvamise või käsitsi kopeerimise asemel saab parooli kopee
 
 ---
 
-## 🌐 Teenuste ja Kasutajate Kiirspikker
+## 🌐 Teenuste ja kasutajate kiirspikker
 
 | Teenus / Veebiliides | Otselink Brauseris (Eeltäidetud) | Vaikekasutaja / Workspace | Parooli Hankimine (Lõikelaud) |
 | :--- | :--- | :--- | :--- |
@@ -42,7 +42,7 @@ Paroolide ekraanile kuvamise või käsitsi kopeerimise asemel saab parooli kopee
 
 ---
 
-## 💾 Käsurea Kiirühendused (Oracle SQLcl läbi SEPS Walleti)
+## 💾 Käsurea kiirühendused (Oracle SQLcl läbi SEPS walleti)
 
 Otseühendus andmebaasi ilma parooli terminalis näitamata:
 
@@ -57,7 +57,7 @@ sql /@DB_PROXY_DBA_ADMIN
 sql /@DB_PROXY_SYS as sysdba
 ```
 
-## 🧪 Automaatne Sisselogimise Testimine (E2E Login Test)
+## 🧪 Automaatne sisselogimise testimine (E2E login test)
 
 Automaatne test, mis simuleerib reaalset vormi POST autentimist ja kontrollib sessiooni toimimist:
 
@@ -72,7 +72,7 @@ See test valideerib:
 
 ---
 
-## 🔄 Paroolide Roteerimine
+## 🔄 Paroolide roteerimine
 
 Paroolide turvaliseks vahetamiseks andmebaasis, Podman Secrets hoidlas ja Walletis korraga:
 
@@ -86,7 +86,7 @@ Paroolide turvaliseks vahetamiseks andmebaasis, Podman Secrets hoidlas ja Wallet
 
 ---
 
-## 💡 Veatuvastus ja Brauseri Sessiooniküpsiste Isoleerimine
+## 💡 Veatuvastus ja brauseri sessiooniküpsiste isoleerimine
 
 > [!NOTE]
 > **APEX Sessioonide Isoleerimine (`INTERNAL` vs Tööruum):**

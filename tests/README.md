@@ -13,7 +13,8 @@ All 12 canonical architecture blueprints are defined centrally in **[`config/blu
 - **`config/blueprints/`** ➔ 12 canonical architecture blueprints (`.env.0-*` through `.env.11-*`).
 - **`tests/reports/`** ➔ Architecture test reports and benchmark matrix ([`blueprint_benchmark_matrix.md`](reports/blueprint_benchmark_matrix.md)).
 - **`tests/reports/blueprints/`** ➔ Automatically generated test reports (`blueprint_0_report.md` through `blueprint_11_report.md`).
-- **`tests/unit/`** ➔ Modular unit test scripts verifying CLI stability contracts, DevHub generators, and credential safety.
+- **`tests/unit/`
+  - **`tests/unit/test-glossary-links.sh` / `.cmd`** ➔ Zero-download audit of all 57 external glossary and Wikipedia links (in-memory HTTP HEAD, virtual null device NUL / /dev/null).** ➔ Modular unit test scripts verifying CLI stability contracts, DevHub generators, and credential safety.
 
 ---
 

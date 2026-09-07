@@ -1,16 +1,16 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔌 Tietokantayhteydet ja VS Coden Asetusopas
+# 🔌 Tietokantayhteydet ja VS coden asetusopas
 
 Tämä opas kuvaa Oracle-tietokantayhteyksien automaattisen ja manuaalisen rekisteröinnin **Oracle SQL Developer for VS Code** -laajennukselle (sekä paikallisella isäntäkoneella että säilöidyssä Web-IDE:ssä) ja salasanattomat yhteydet Oracle SEPS Walletin kautta.
 
 ---
 
-## 🔄 Kaksitasoinen Automaattinen Rekisteröinti (Host PC & Web IDE)
+## 🔄 Kaksitasoinen automaattinen rekisteröinti (host PC & web IDE)
 
 Koko alusta käyttää keskitettyä yhteyksien rekisteröintimoottoria (`scripts/register-connections.sh`), joka luo ja synkronoi tietokantayhteydet samanaikaisesti **paikalliseen VS Codeen (Host PC)** ja **Säilöityyn Web-IDE:hen (`web-ide-dev`)**:
 
-### 📊 Yhteyksien Rekisteröintiprosessin Työnkulkukaavio
+### 📊 Yhteyksien rekisteröintiprosessin työnkulkukaavio
 
 ```mermaid
 flowchart TD
@@ -33,7 +33,7 @@ flowchart TD
   SANITIZE --> READY(["🎉 Valmis:<br/>1-klikkauksen DB-yhteydet<br/>Isännässä & Web-IDE:ssä!"])
 ```
 
-### CLI-Käynnistys:
+### CLI-käynnistys:
 
 ```bash
 ./scripts/register-connections.sh
@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-## 📥 Yhteyksien Manuaalinen Tuonti VS Code SQL Developer UI:ssa
+## 📥 Yhteyksien manuaalinen tuonti VS Code SQL developer UI:Ssa
 
 Yhteydet voidaan tuoda suoraan tiedostosta **`connections/sqldev-connections.json`**:
 
@@ -57,7 +57,7 @@ Yhteydet voidaan tuoda suoraan tiedostosta **`connections/sqldev-connections.jso
 
 ---
 
-## 🔑 Salasanojen Haku Käyttäjille ja Ylläpitäjille
+## 🔑 Salasanojen haku käyttäjille ja ylläpitäjille
 
 Jos haluat määrittää yhteydet manuaalisesti DBeaver- tai IntelliJ-työkaluissa:
 * **APEX Admin (INTERNAL):** `./scripts/get-password.sh APEX_ADMIN`
@@ -69,16 +69,16 @@ Jos haluat määrittää yhteydet manuaalisesti DBeaver- tai IntelliJ-työkaluis
 
 ---
 
-## 🔐 Salasanattomat Yhteydet Oracle Walletin Kautta (SEPS)
+## 🔐 Salasanattomat yhteydet Oracle walletin kautta (SEPS)
 
 Paikallisessa kehityksessä todennus on suojattu **Oracle Wallet (SEPS)** -lompakolla ilman selkokielisiä salasanoja tiedostoissa.
 
-### Isäntäympäristön Asetus:
+### Isäntäympäristön asetus:
 ```bash
 export TNS_ADMIN=$(pwd)/config/tns_admin
 ```
 
-### Pikayhteys SQLcl:n Kautta:
+### Pikayhteys SQLcl:N kautta:
 ```bash
 # Kirjaudu kehittäjänä:
 sql /@DB_PROXY_DEV
@@ -89,7 +89,7 @@ sql /@DB_PROXY_SYS as sysdba
 
 ---
 
-## 🔒 Windows & SSL/TLS-Sertifikaattien Luottamus
+## 🔒 Windows & SSL/TLS-sertifikaattien luottamus
 
 Jos kehität Windowsilla (WSL2) ja haluat poistaa selaimen SSL-varoitukset:
 

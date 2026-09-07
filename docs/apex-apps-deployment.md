@@ -18,3 +18,7 @@ Andmebaasi seadistamisel toetab projekt mitme APEX rakenduse täielikult automat
 ## Arendus ja versioonihaldus (APEXlang + AI Skill)
 
 APEX rakendusi (nagu monitooringu dashboard) arendatakse iseseisvates repositooriumides. Arenduses on soovitatav kasutada Oracle APEX AI skilli **`oracle/skills/apex`**, mis juhendab tehisintellekti agente APEXlang tekstipõhise süntaksi muutmisel ja loomisel, tagades loetava ja versioonitava koodibaasi.
+
+> [!TIP]
+> **Deklaratiivsed blueprint-spetsifikatsioonid vs toorkoodi haldamise koormus:**
+> APEX blueprints ja APEXlang (`.apx`) toimivad kui deklaratiivsed spetsifikatsioonid. Koodi massilise genereerimise asemel (kus arendustiim peab omama ja hooldama 10 000+ rida genereeritud liimkoodi) tagab andmebaasi sisse ehitatud turvalisus ja 0ms latentsus kiirema ja oluliselt turvalisema tarne ilma koodi roiskumise ohuta.

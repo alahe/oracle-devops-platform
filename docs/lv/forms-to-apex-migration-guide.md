@@ -1,19 +1,19 @@
-# Oracle Forms & Reports Modernizācijas un Pārejas uz Oracle APEX Rokasgrāmata
+# Oracle Forms & reports modernizācijas un pārejas uz Oracle APEX rokasgrāmata
 
 [ 🇬🇧 English ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/forms-to-apex-migration-guide.md) | [ 🇪🇪 Eesti ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/et/forms-to-apex-migration-guide.md) | [ 🇫🇮 Suomi ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/fi/forms-to-apex-migration-guide.md) | [ 🇸🇪 Svenska ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/sv/forms-to-apex-migration-guide.md) | [ 🇱🇻 Latviešu ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/lv/forms-to-apex-migration-guide.md) | [ 🇱🇹 Lietuvių ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/lt/forms-to-apex-migration-guide.md)
 
 ---
 
-## 1. Kopsavilkums un Biznesa Pamatojums 2026. Gadā
+## 1. Kopsavilkums un biznesa pamatojums 2026. gadā
 
 Vai 2026. gadā joprojām izmantojat Oracle Forms & Reports? Galvenais iemesls pārejai uz Oracle APEX ir **IZMAKSAS, elastība un infrastruktūras vienkāršošana.**
 
-### Oracle Forms Trūkumi
+### Oracle Forms trūkumi
 - ❌ **Sarežģīta Starpnodrošinājuma (Middleware) Struktūra:** Nepieciešami atsevišķi WebLogic serveri un RCU shēmas.
 - ❌ **Augstas Uzturēšanas Izmaksas:** Liels operatīvās atmiņas patēriņš un lēna palaišana.
 - ❌ **Klienta Ierobežojumi:** Atkarība no Java Web Start vai attālās darbvirsmas risinājumiem.
 
-### Oracle APEX Priekšrocības
+### Oracle APEX priekšrocības
 - ✅ **Nav Nepieciešams Papildu Middleware:** APEX darbojas tieši Oracle datubāzes kodolā ar ORDS.
 - ✅ **Iekļauts Datubāzes Licencē:** Nav papildu licenču maksas.
 - ✅ **100% PL/SQL Loģikas Pārtēriņa:** Esošā biznesa loģika tiek saglabāta bez pārrakstīšanas.
@@ -21,7 +21,7 @@ Vai 2026. gadā joprojām izmantojat Oracle Forms & Reports? Galvenais iemesls p
 
 ---
 
-## 2. Kāpēc APEX ir Pārāks Mūsdienu Ģeneratīvā AI Laikmetā
+## 2. Kāpēc APEX ir pārāks mūsdienu ģeneratīvā AI laikmetā
 
 *(Balstoties uz Džastina Millera, Oracle, arhitektūras analīzi)*
 
@@ -31,9 +31,13 @@ Vai 2026. gadā joprojām izmantojat Oracle Forms & Reports? Galvenais iemesls p
 
 > **Ieguvums:** 100x augstāka arhitektūras pareizība un 1000x labāka koda lasāmība cilvēkam.
 
+> [!IMPORTANT]
+> **Deklaratīvi plāni kā specifikācija vs Koda pārvaldības slogs:**
+> Ātrāka un drošāka piegāde tiek panākta ar **vienkāršāku un drošāku arhitektūru**, nevis koda masveida ģenerēšanu. Kad MI ģenerē 10 000+ rindu nepastarpināta koda, komanda manto pilnu koda pārvaldības slogu (*code ownership burden*): drošības ielāpus un uzturēšanu. APEX rasējumi un APEXlang (`.apx`) darbojas kā deklaratīva specifikācija bez nevajadzīga koda sloga.
+
 ---
 
-## 3. Modulārā Monolīta Priekšrocības: Kā Izvairīties no Mikropakalpojumu Lamatām
+## 3. Modulārā monolīta priekšrocības: Kā izvairīties no mikropakalpojumu lamatām
 
 *(Balstoties uz Antona Martinjuka arhitektūras analīzi)*
 
@@ -46,7 +50,7 @@ Modernizējot mantotās sistēmas, daudzas komandas priekšlaicīgi sadala kodu 
 
 ---
 
-## 4. Stratēģiskā Lēmumu Pieņemšanas Struktūra: APEX vs. Next.js vs. Hibrīdā Migrācija
+## 4. Stratēģiskā lēmumu pieņemšanas struktūra: APEX VS. next.js VS. hibrīdā migrācija
 
 *(Balstoties uz Marcio Ramo un Voiceha Bjelavska analīzi)*
 
@@ -57,7 +61,7 @@ Modernizējot lielas Forms sistēmas:
 
 ---
 
-## 5. 5 Posmu Migrācijas Process
+## 5. 5 Posmu migrācijas process
 
 ```bash
 # 1. Konvertēt FMB bināros failus uz XML:

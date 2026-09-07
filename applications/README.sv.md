@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Paketerade APEX-Applikationer (`applications/`)
+# 📦 Paketerade apex-applikationer (`applications/`)
 
 Denna katalog är avsedd för deklarativa Oracle APEX-applikationer som definierats med [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) eller SQLcl split-exporter.
 

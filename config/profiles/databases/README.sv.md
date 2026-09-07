@@ -4,7 +4,7 @@
 
 Denna katalog innehåller domänisolerade YAML-profiler för **Oracle Database-behållare** (Standard 23ai Free, Autonomous ADB Free, Gvenzl 23c).
 
-## 📂 Matris för Databasprofiler
+## 📂 Matris för databasprofiler
 
 | Profilfil | Beskrivning | DB-typ | Wallet krävs | Användningsområde |
 | :--- | :--- | :--- | :--- | :--- |

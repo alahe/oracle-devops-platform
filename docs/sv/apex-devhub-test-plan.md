@@ -4,7 +4,7 @@
 
 ---
 
-## 1. Sammanfattning och Mål
+## 1. Sammanfattning och mål
 
 Syftet med denna testplan är att fastställa en rigorös verifieringsstrategi i flera nivåer för **Oracle APEX DevHub-applikationen (App 101)**, dess underliggande PL/SQL-motor (`DEVHUB.DEV_HUB_PKG`), den lokala REST-dokumentationsbryggan och den automatiserade SQLcl APEXlang CI/CD-pipelinen.
 
@@ -17,7 +17,7 @@ Syftet med denna testplan är att fastställa en rigorös verifieringsstrategi i
 
 ---
 
-## 2. Testpyramid och Omfattningsmatris
+## 2. Testpyramid och omfattningsmatris
 
 | Nivå | Testad Komponent | Verktyg | Körningsfrekvens | Förväntad Tid |
 | :--- | :--- | :--- | :--- | :--- |
@@ -28,9 +28,9 @@ Syftet med denna testplan är att fastställa en rigorös verifieringsstrategi i
 
 ---
 
-## 3. Testnivåer och Testfall
+## 3. Testnivåer och testfall
 
-### 3.1. Nivå 1: Enhetstestning i Databasen (utPLSQL)
+### 3.1. Nivå 1: Enhetstestning i databasen (utplsql)
 Mål: `DEVHUB`-schemaobjekt i `FREEPDB1`.
 - **TC-DB-01:** Schemavalidering och integritetsbegränsningar.
 - **TC-DB-02:** `DEV_HUB_PKG.check_single_service` och statusuppdateringar (ONLINE/OFFLINE).
@@ -46,7 +46,7 @@ Mål: Värd-till-container REST-brygga (`scripts/internal/dev-hub-bridge.py`) p�
 - **TC-INT-03:** Containerintern routing till `http://host.containers.internal:8089`.
 - **TC-INT-04:** HTML-konvertering i databasen via `APEX_MARKDOWN.TO_HTML`.
 
-### 3.3. Nivå 3: E2E-Webbläsartestning (Hybrid: Playwright + Curl)
+### 3.3. Nivå 3: E2E-webbläsartestning (hybrid: Playwright + curl)
 Mål: Oracle APEX Applikation 101 (`https://localhost:8448/ords/r/proxy_workspace/devhub/`).
 - **TC-E2E-01:** Oautentiserad omdirigering till inloggningssidan.
 - **TC-E2E-02:** 1-klicks utvecklarinloggning och sessionscookie.
@@ -58,14 +58,14 @@ Mål: Oracle APEX Applikation 101 (`https://localhost:8448/ords/r/proxy_workspac
 - **TC-E2E-08:** Sida 5 (DevOps-kommandocenter).
 - **TC-E2E-09:** Sida 6 (Prestandamätvärden).
 
-### 3.4. Nivå 4: Kvalitet, APEX Advisor och Säkerhet
+### 3.4. Nivå 4: Kvalitet, APEX advisor och säkerhet
 - **TC-SEC-01:** Körning av APEX Advisor via CLI (0 kritiska fel).
 - **TC-SEC-02:** Session State Protection (SSP) och kontrollsummor.
 - **TC-SEC-03:** Zero-Trust säkerhetskontroll mot läckor av lösenord eller nycklar.
 
 ---
 
-## 4. Testmiljö och Golden Snapshot-isolering
+## 4. Testmiljö och golden snapshot-isolering
 
 Före stora testsviter återställs ren miljö via:
 ```bash
@@ -75,7 +75,7 @@ Före stora testsviter återställs ren miljö via:
 
 ---
 
-## 5. Automatisering och Rapportering
+## 5. Automatisering och rapportering
 
 ```bash
 # Kör hela testsviten:

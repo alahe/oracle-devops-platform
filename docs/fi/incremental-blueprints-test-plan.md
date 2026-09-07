@@ -1,14 +1,14 @@
-# 🧪 Blueprintien Vaiheittaisen Lisäämisen ja Multi-Stack-Testaussuunnitelma
+# 🧪 Blueprintien vaiheittaisen lisäämisen ja multi-stack-testaussuunnitelma
 
 [ 🇬🇧 English ](../incremental-blueprints-test-plan.md) | [ 🇪🇪 Eesti ](../et/incremental-blueprints-test-plan.md) | [ 🇫🇮 Suomi ](incremental-blueprints-test-plan.md) | [ 🇸🇪 Svenska ](../sv/incremental-blueprints-test-plan.md) | [ 🇱🇻 Latviešu ](../lv/incremental-blueprints-test-plan.md) | [ 🇱🇹 Lietuvių ](../lt/incremental-blueprints-test-plan.md)
 
 ---
 
-## 1. Yleiskatsaus ja Tavoitteet
+## 1. Yleiskatsaus ja tavoitteet
 
 **Oracle DevOps -alusta** tukee modulaaristen blueprintien dynaamista aktivointia sekä komentoriviltä (`scripts/deploy-blueprint.sh`) että interaktiivisesta Developer Hubista (`docs/dev-hub.html`). Tämä testaussuunnitelma vahvistaa **blueprintien vaiheittaisen lisäämisen (incremental addition)** varmistaen, että useat arkkitehtuuripinot toimivat rinnakkain ilman ristiriitoja, odottamattomia alasajoja tai resurssien ehtymistä.
 
-### Tärkeimmät Testaustoimenpiteet:
+### Tärkeimmät testaustoimenpiteet:
 1. **Env 0 -perustason Vaatimus (Baseline Invariant):** Jokaisen testiajon on aina alettava **Blueprint 0:sta (`.env.0-default-proxy-ords`)** pysyvänä Core Base -yhdyskäytävänä (`db-proxy` portissa 1532 ja `app-ords` porteissa 8088/8448).
 2. **Tuhoamaton Lisääminen (Non-Destructive Addition):** Uuden blueprintin lisääminen (esim. BP 1 `db-alise` tai BP 8 `web-ide-dev`) **ei saa koskaan** pysäyttää, poistaa tai alustaa uudelleen aiemmin käynnissä olleita kontteja tai tietokantaskeemoja.
 3. **Ei Haamukontteja (Zero Ghost Containers):** Käynnissä olevien konttien joukon on vastattava tarkasti kaikkien aktivoitujen blueprintien liittoa. Luvattomia tai tuntemattomia kontteja ei saa muodostua.
@@ -25,7 +25,7 @@
 
 ---
 
-## 2. Testauksen Arkkitehtuuri ja Kulku
+## 2. Testauksen arkkitehtuuri ja kulku
 
 ```mermaid
 flowchart TD
@@ -59,7 +59,7 @@ flowchart TD
 
 ---
 
-## 3. Vaiheittainen Testausmatriisi (BP 0 .. BP 9)
+## 3. Vaiheittainen testausmatriisi (BP 0 .. BP 9)
 
 | Vaihe | Blueprint-tiedosto | Kuvaus | Kohdekontit | Portit | DB SEPS Alias | Verkkopalvelu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -80,7 +80,7 @@ flowchart TD
 
 ## 4. Varmistusmetodologia
 
-### Taso 1: Automaattinen Skripti- ja Komentorividiagnostiikka
+### Taso 1: Automaattinen skripti- ja komentorividiagnostiikka
 1. **Konttien Eristys ja Haamuprosessien Tarkistus:**
    - Aja `podman ps --format "{{.Names}}"` jokaisen vaiheen jälkeen.
    - Varmista, että aiemmat kontit pysyvät aktiivisina ja uudet kontit vastaavat määrittelyä.
@@ -96,7 +96,7 @@ flowchart TD
 3. **HTTP- ja REST-palvelujen Tarkistus:**
    - Suorita `./scripts/check-urls.sh` päätepisteiden tarkistamiseksi.
 
-### Taso 2: Interaktiivinen Selain- ja Dev Hub -tarkistus
+### Taso 2: Interaktiivinen selain- ja Dev Hub -tarkistus
 1. **Dev Hub -reaaliaikasynkronointi:**
    - Avaa `docs/dev-hub.html` selaimessa ja varmista aktiivisten blueprintien vihreä tila ja tarkka RAM-laskuri.
 2. **1-Klikkauksen Kirjautuminen:**
@@ -104,9 +104,9 @@ flowchart TD
 
 ---
 
-## 5. Resurssisuoja ja Kaksoiskäynnistyksen Esto
+## 5. Resurssisuoja ja kaksoiskäynnistyksen esto
 
-### TC-RES-01: Alustariippumaton Dynaaminen RAM-tarkistus
+### TC-RES-01: Alustariippumaton dynaaminen RAM-tarkistus
 - **Tavoite:** Tunnistaa vapaa fyysinen muisti ennen käynnistystä Windowsissa, Linuxissa ja macOS:ssä.
 - **Komennot:**
   - **Windows (PowerShell):** `powershell.exe -NoProfile -Command "(Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory"`
@@ -114,22 +114,22 @@ flowchart TD
   - **macOS:** `vm_stat` sivulaskenta
   - **Kontit:** `podman stats --no-stream --format "{{.Name}}: {{.MemUsage}}"`
 
-### TC-RES-02: Riittämättömän Muistin Esto (< 2048 MB Puskuri)
+### TC-RES-02: Riittämättömän muistin esto (< 2048 MB puskuri)
 - **Tavoite:** Estää asennus, jos vapaa muisti laskee alle 2.0 GB:n virheellä `RES_INSUFFICIENT_RAM`.
 
-### TC-DUP-01: Kaksoiskäynnistyksen Tunnistus (`STATUS_ALREADY_ACTIVE`)
+### TC-DUP-01: Kaksoiskäynnistyksen tunnistus (`STATUS_ALREADY_ACTIVE`)
 - **Tavoite:** Varmistaa, että saman blueprintin uudelleenajo ilmoittaa `BP_ALREADY_ACTIVE` eikä käynnistä kontteja uudelleen.
 
 ---
 
-## 6. Suoritusajan 12 Tunnin SLA-Vahtikoira
+## 6. Suoritusajan 12 tunnin SLA-vahtikoira
 
-### TC-TIME-01: Globaali SLA-Vahtikoira
+### TC-TIME-01: Globaali SLA-vahtikoira
 - **Tavoite:** Varmistaa, että koko sarja keskeytyy hallitusti ennen 12 tunnin (43 200s) aikarajan ylittymistä tallentaen mittaustiedot tiedostoon `metrics/setup_benchmarks.json`.
 
 ---
 
-## 7. Suorituskomentojen Pikaohje
+## 7. Suorituskomentojen pikaohje
 
 ```bash
 # 1. Alusta Perusympäristö (Blueprint 0)

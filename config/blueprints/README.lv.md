@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🏗️ Arhitektūras Projektējumu (Blueprints) Katalogs (0 .. 11)
+# 🏗️ Arhitektūras projektējumu (Blueprints) katalogs (0 .. 11)
 
 Šis direktorijs definē **12 kanoniskos modulāros arhitektūras projektējumus**, kas aptver visu platformu:
 
@@ -41,7 +41,7 @@ flowchart TD
 
 ---
 
-## 🚀 CLI Komandas & Projektējumu Pārvaldība
+## 🚀 CLI komandas & projektējumu pārvaldība
 
 ```bash
 # 1. Palaist ar noklusējuma modeli Blueprint 0 (Noklusējuma Proxy DB + ORDS, bez papildu karodziņiem):
@@ -65,7 +65,7 @@ flowchart TD
 
 ---
 
-## 📊 12 Arhitektūras Projektējumu Matrica
+## 📊 12 Arhitektūras projektējumu matrica
 
 | ID | Projektējuma Nosaukums & Fails | Datubāzes Profils & Ports | Servisa Profili & Porti | Konteineri | Apraksts |
 | :---: | :--- | :--- | :--- | :--- | :--- |
@@ -84,13 +84,13 @@ flowchart TD
 
 ---
 
-## 🧩 Tīra Projektējumu un YAML Profilu Arhitektūra (Rule 11)
+## 🧩 Tīra projektējumu un YAML profilu arhitektūra (rule 11)
 
-### 1. Atbildības Sadale
+### 1. Atbildības sadale
 - **Projektējumi (`config/blueprints/.env.*`):** Deklarē tikai augsta līmeņa pozitīvas atsauces uz YAML profiliem. Tie nosaka *kādi konteineri tiek izveidoti*. Nekad nesatur fiksētus portus, paroles vai negatīvus `SKIP_*` karodziņus.
 - **YAML Profili (`config/profiles/**/*.yaml`):** Satur 100% no domēna detaļām: konteineru attēlus, atmiņas ierobežojumus, portus, noklusējuma PDB, tabultelpas un lietotāju definīcijas.
 
-### 2. Kā Pievienot Pielāgotu Projektējumu (1 pa 1)
+### 2. Kā pievienot pielāgotu projektējumu (1 pa 1)
 Jebkurš var izveidot jaunu modeli bez skriptu koda modifikācijas:
 1. Izveidojiet jaunu failu: `config/blueprints/.env.<ID>-<nosaukums>` (piem., `.env.12-custom-analytics-workstation`):
    ```bash

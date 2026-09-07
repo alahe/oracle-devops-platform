@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../testing-framework-and-devhub.md) | [ 🇪🇪 Eesti ](../et/testing-framework-and-devhub.md) | [ 🇫🇮 Suomi ](../fi/testing-framework-and-devhub.md) | [ 🇸🇪 Svenska ](../sv/testing-framework-and-devhub.md) | [ 🇱🇻 Latviešu ](../lv/testing-framework-and-devhub.md) | [ 🇱🇹 Lietuvių ](testing-framework-and-devhub.md)
 
-# 🧪 Testavimo Sistema ir Developer Hub Integracija
+# 🧪 Testavimo sistema ir developer Hub integracija
 
 Šiame techniniame vadove aprašoma platformos kelių lygių automatizuoto testavimo architektūra, interaktyvus **Testavimo Centras** (`tab-testing`) sistemoje Developer Hub (`docs/dev-hub.html`), asinchroninis testų vykdymas per `dev-hub-bridge.py` ir kodo aprėpties stebėjimas.
 
 ---
 
-## 🏛️ 1. Techninė Architektūra ir Komponentų Srautas
+## 🏛️ 1. Techninė architektūra ir komponentų srautas
 
 Testavimo ekosistema sujungia kūrėjo vartotojo sąsajos veiksmus su testų vykdytojais, realaus laiko registravimu ir Git sekamais rodikliais:
 
@@ -56,7 +56,7 @@ flowchart TD
 
 ---
 
-## 🚀 2. Testų Rinkinių Apžvalga
+## 🚀 2. Testų rinkinių apžvalga
 
 Platforma kokybės užtikrinimą suskirsto į specializuotus testų rinkinius:
 
@@ -73,33 +73,47 @@ Platforma kokybės užtikrinimą suskirsto į specializuotus testų rinkinius:
 
 ---
 
-## 🖥️ 3. Dev Hub Testavimo Centras (`tab-testing`)
+## 🖥️ 3. Dev Hub testavimo centras (`tab-testing`)
 
 Developer Hub testavimo skirtukas siūlo 4 specializuotus poskirtukus:
 
-### 3.1 🚀 Testų Rinkinių Vykdytojas (`test-subtab-runner`)
+### 3.1 🚀 Testų rinkinių vykdytojas (`test-subtab-runner`)
 - **Rinkinių Kortelės**: Leidžia vienu spustelėjimu vykdyti visą rinkinį arba išskleidžiamajame sąraše pasirinktą atskirą skriptą.
 - **Integruotas Realaus Laiko Terminalas**: Terminalo langas (`#0b0f19`), rodantis stdout/stderr realiuoju laiku, su automatiniu slinkimu, laikmačiu, žurnalo atsisiuntimu ir stabdymu (`POST /api/tests/stop`).
 
-### 3.2 📑 Testų Ataskaitų Archyvas (`test-subtab-reports`)
+### 3.2 📑 Testų ataskaitų archyvas (`test-subtab-reports`)
 - **Dvigubos Skilties Rodinys**: Kairiajame skydelyje pateikiamos ataskaitos (`tests/reports/*.md`) su būsenos žymomis (`PASS`, `FAIL`, `INFO`) ir laiko žymomis.
 - **Renderuotas Markdown**: Dešiniajame skydelyje rodomas suformatuotas HTML su veikiančiomis Mermaid diagramomis ir perjungikliu į neapdorotą tekstą.
 
-### 3.3 📊 Kodo Aprėpties Naršyklė (`test-subtab-coverage`)
+### 3.3 📊 Kodo aprėpties naršyklė (`test-subtab-coverage`)
 - **KPI Suvestinė**: Vaizdinė eigos juosta, rodanti padengtų skriptų procentą, bendrą skaičių, padengtus ir nepadengtus skriptus.
 - **Interaktyvi Lentelė**: Išvardija visus skriptus `scripts/*.sh` ir `scripts/internal/*.sh` bei susijusius testų failus.
 - **Filtravimas ir Paieška**: Greita teksto paieška ir būsenos filtrai ("Visi", "Padengti", "Nepadengti").
 - **Analizės Atnaujinimas**: Vykdo `generate-test-coverage-report.sh` tiesiai iš sąsajos.
 
-### 3.4 📜 Vykdymo Istorija (`test-subtab-history`)
+### 3.4 📜 Vykdymo istorija (`test-subtab-history`)
 - Rodo faile `metrics/test_execution_history.json` užregistruotą istoriją.
 - Pateikia laiko žymą, rinkinį, skripto pavadinimą, trukmę sekundėmis, rezultatą, tiesioginę nuorodą į `install_logs/test_*.log` ir mygtuką **Vykdyti iš naujo**.
 
 ---
 
-## 🔒 4. Zero-Trust Saugumas ir Taisyklių Atitiktis
+## 🔒 4. Zero-trust saugumas ir taisyklių atitiktis
 
 1. **Taisyklė 1 (Laiko Matavimas ir Žurnalas)**: Kiekvienas testas automatiškai nukreipia išvestį į `install_logs/test_<suite>_<timestamp>.log` ir išsaugo trukmę faile `metrics/test_execution_history.json`.
 2. **Taisyklė 9 (Daugiakalbystė)**: Visa sąsaja yra visiškai išversta į visas šešias kalbas (EN, ET, FI, SV, LV, LT).
 3. **Taisyklė 12 (Asinchroninė Užduotis)**: Testai vykdomi fone per `subprocess.Popen`, neužblokuojant naršyklės ir nesukeliant HTTP skirtųjų laikų.
 4. **Taisyklė 13 (Perkeliamumas)**: Visi ataskaitų ir žurnalų failų vardai naudoja griežtą ASCII kebab-case standartą be Windows draudžiamų simbolių.
+
+---
+
+## 🌐 5. Žodyno nuorodų saugus auditas be atsisiuntimų (`test-glossary-links.sh` / `.cmd`)
+
+Užtikrina, kad dokumentacijos ir Dev Hub žodyno nuorodos niekada negrąžintų `404 Not Found` klaidos, garantuojant apsaugą nuo failų atsisiuntimo:
+
+1. **Atmintyje vykdomos HTTP HEAD užklausos**: Tikrinimo variklis (`scripts/internal/check-glossary-links.py`) naudoja tik HTTP `HEAD` užklausas ir nuskaito tik būsenos kodą (200, 301, 404). Atsako turinys niekada neįrašomas į diską.
+2. **Tarpplatforminis nulinis įrenginys (Windows ir POSIX)**:
+   - **POSIX (macOS / Linux / WSL2)**: Išvestis nukreipiama į `/dev/null`.
+   - **Windows (NTFS / CMD / PowerShell)**: Išvestis nukreipiama į `NUL` per `tests/unit/test-glossary-links.cmd`.
+   - **Python standartinė biblioteka**: `os.devnull` garantuoja nulinį disko naudojimą visose OS.
+3. **Protokolo apsauga**: Leidžiamas tik `https://`.
+4. **Dev Hub vykdymas**: Testas pasiekiamas Dev Hub **Unit Test Suite** skirtuke (`tab-testing`) su tiesioginiu konsolės transliavimu.

@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔒 Modul för SSL/TLS-Certifikat och Förtroendehantering (Zero-Admin / Non-Root)
+# 🔒 Modul för SSL/tls-certifikat och Förtroendehantering (zero-admin / non-root)
 
 Denna modul hanterar säkra HTTPS- och TCPS-anslutningar, certifikatval och automatisk installation av förtroende i macOS- och Windows-miljöer utan administratörsbehörighet (`root` / `sudo`).
 
 ---
 
-## 🧭 5-Nivåers Hierarkisk TLS-Prioritetskedja (Priority Chain)
+## 🧭 5-Nivåers Hierarkisk tls-prioritetskedja (priority chain)
 
 Under uppstart och konfiguration identifierar [`scripts/internal/resolve-tls-mode.sh`](../internal/resolve-tls-mode.sh) automatiskt det lämpligaste certifikatet:
 
@@ -23,7 +23,7 @@ Under uppstart och konfiguration identifierar [`scripts/internal/resolve-tls-mod
 
 ---
 
-## 💻 Skript på Användarnivå Utan Admin-Rättigheter
+## 💻 Skript på Användarnivå utan Admin-Rättigheter
 
 * **macOS:**
   * [`trust-local-cert-mac.sh`](trust-local-cert-mac.sh): Lägger till CA i nyckelringen `~/Library/Keychains/login.keychain-db` utan `sudo`.
@@ -40,7 +40,7 @@ Under uppstart och konfiguration identifierar [`scripts/internal/resolve-tls-mod
 
 ---
 
-## 🧪 TLS-Testning
+## 🧪 Tls-testning
 ```bash
 ./tests/test-tls-scenarios.sh
 ```

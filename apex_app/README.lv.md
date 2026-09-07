@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 APEX Lietotņu Pirmkods un Eksports (`apex_app/`)
+# 📦 APEX Lietotņu pirmkods un eksports (`apex_app/`)
 
 Šis direktorijs satur APEX lietotņu `*.apx` failus un deklaratīvos pirmkoda komponentus.
 

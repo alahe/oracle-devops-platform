@@ -1,10 +1,10 @@
-# Oracle Forms & Reports Moderniseerimise ja Oracle APEX-ile Üleviimise Juhend
+# Oracle Forms & reports moderniseerimise ja Oracle APEX-ile üleviimise juhend
 
 [ 🇬🇧 English ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/forms-to-apex-migration-guide.md) | [ 🇪🇪 Eesti ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/et/forms-to-apex-migration-guide.md) | [ 🇫🇮 Suomi ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/fi/forms-to-apex-migration-guide.md) | [ 🇸🇪 Svenska ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/sv/forms-to-apex-migration-guide.md) | [ 🇱🇻 Latviešu ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/lv/forms-to-apex-migration-guide.md) | [ 🇱🇹 Lietuvių ](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/lt/forms-to-apex-migration-guide.md)
 
 ---
 
-## 1. Juhtkonna Kokkuvõte & Äriline Põhjendus 2026. Aastal
+## 1. Juhtkonna kokkuvõte & äriline põhjendus 2026. aastal
 
 Kasutad 2026. aastal endiselt Oracle Forms & Reports süsteeme? Peamine põhjus, miks ettevõtted üle maailma liiguvad Oracle APEX-ile, ei ole enam pelgalt tehnoloogiline uudsus — **see on otsene KULU, tegevuskiirus ja ressursside kokkuhoid.**
 
@@ -27,7 +27,7 @@ graph TD
   end
 ```
 
-### Forms & Reports Pärandvara Tegelik Kulu
+### Forms & reports pärandvara tegelik kulu
 Oracle Forms keskkondade käigushoidmine nõuab märkimisväärseid ressursse:
 - ❌ **Raskepärane Vahetarkvara:** Vajab eraldi WebLogic Server klastreid, Node Manageri ja RCU skeeme.
 - ❌ **Kõrged Taristukulud:** Mitmed gigabaidid RAM-i hallatava serveri kohta ning aeglane käivitusaeg.
@@ -35,7 +35,7 @@ Oracle Forms keskkondade käigushoidmine nõuab märkimisväärseid ressursse:
 - ❌ **Kasutajapoolsed Tõrked:** Sõltuvus Java Web Startist, brauseri pistikprogrammidest või noVNC töölauaühendustest.
 - ❌ **Kulukas Hooldus:** Kahanev spetsialistide hulk ja kõrgendatud tugilitsentside tasud.
 
-### Oracle APEX-i Eelised
+### Oracle APEX-i eelised
 Samal ajal töötab Oracle APEX **natiivselt Oracle andmebaasi tuumas**:
 - ✅ **Puudub Eraldiseisev Vahetarkvara:** ORDS tegeleb kergekaalulise HTTP/REST ruutimisega; APEX käivitatakse otse SQL/PLSQL mootoris.
 - ✅ **Litsentsitasuta:** Sisaldub tasuta Oracle andmebaasi litsentsis (Free DB, SE2, EE, Autonomous Database).
@@ -50,7 +50,7 @@ Samal ajal töötab Oracle APEX **natiivselt Oracle andmebaasi tuumas**:
 
 ---
 
-## 2. Miks APEX on Tehisintellekti Ajastul Arhitektuurselt Ülimalt Tõhus: "Low-Code kui Kood"
+## 2. Miks APEX on tehisintellekti ajastul arhitektuurselt ülimalt tõhus: "Low-Code kui kood"
 
 *(Inspireeritud Justin Milleri ja Cristina Varase tehisintellekti strateegiast)*
 
@@ -72,11 +72,11 @@ graph TD
   end
 ```
 
-### SQL Analoogia: Miks me ei genereeri 100 000 rida C või Java koodi?
+### SQL analoogia: Miks me ei genereeri 100 000 rida c või java koodi?
 Kõike, mida saab teha SQL-is, saaks põhimõtteliselt teha ka C või Java keeles. Me ei *vaja* tingimata andmebaasimootorit; LLM võiks genereerida oma faililukustuse ja andmehalduse süsteemi (**Valik 1: Otsene Genereerimine**).
 Kuid mitte keegi ei tee seda. Selle asemel kirjutame **10 rida deklaratiivset SQL-i** ning usaldame andmebaasimootorit (RDBMS), mis tagab samaaegsuse (MVCC), ACID transaktsioonid, indekseerimise ja tabelite liitmised (**Valik 2: Kaudne Genereerimine**).
 
-### APEXlang Läbimurre (APEX 26.1+)
+### APEXlang läbimurre (APEX 26.1+)
 Andmekesksed veebirakendused koosnevad standardsetest ehitusplokkidest: raportid, graafikud, liigendotsing (*faceted search*), vormid, sessioonihaldus, autentimine ja autoriseerimine.
 
 - **Otsene Genereerimine (Valik 1):** Paludes LLM-il genereerida tuhandeid ridu React/TypeScript/CSS liimkoodi, tekitatakse tehnilist võlga, turvaauke ja läbipaistmatuid vigu.
@@ -91,7 +91,7 @@ Andmekesksed veebirakendused koosnevad standardsetest ehitusplokkidest: raportid
 | **Pikaajaline Elutsükkel (LCM)**| Sõltuvuste roiskumine (npm/raamistike vahetus)| **Null Roiskumist** (Mootori uuendused säilitavad koodi) |
 | **Inimkontroll (Human-in-the-Loop)** | Habras must kast | **Auditeeritav, versioonitav ja lihtsalt hallatav** |
 
-### Juhitud Sisend vs Juhitud Käitusaeg: AI Usaldusmudeli Pööramine
+### Juhitud sisend VS juhitud käitusaeg: AI usaldusmudeli pööramine
 
 *(Inspireeritud Kris Rice'i, Oracle Database tarkvaraarenduse asepresidendi analüüsist)*
 
@@ -125,8 +125,13 @@ graph TD
 > **Juhitud Sisend vs Juhitud Käitusaeg:**
 > Võid kulutada tohutult aega ja raha vigade püüdmisele pärast seda, kui AI on need tekitanud — või ehitada platvormile, kus enamik turvaauke on juba arhitektuurselt võimatud. Vaata ametlikku masinloetavat [APEXlang EBNF Grammatikat](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/apexlang.ebnf).
 
-### Genereeri seda, mida soovid omada; oma seda, mida genereerid
+### Koodi omamise koormus: Genereeri seda, mida soovid omada; oma seda, mida genereerid
 Kaasaegsete AI agentidega (Antigravity, Claude Code, Codex) saab genereerida mistahes rakenduse — piiriks on vaid idee kvaliteet. Kuid ettevõtte kriitiliste süsteemide puhul ei piisa sellest, et rakendus läbib 1. päeval AI automaattestid:
+
+> [!IMPORTANT]
+> **Deklaratiivne blueprint kui spetsifikatsioon vs Koodi omamise koormus:**
+> Kiirem ja turvalisem tarne saavutatakse kaasaegses arhitektuuris mitte toorkoodi massilise genereerimise, vaid **lihtsama ja turvalisema arhitektuuri** abil. Kui AI genereerib 10 000+ rida Reacti, Node'i või mikroteenuste liimkoodi, langeb kogu koodi omamise ja haldamise koormus (*code ownership burden*) arendusmeeskonnale: turvaaukude paikamine, teekide aegumine ja pidev refaktoreerimine.
+> Seevastu APEX blueprint ja APEXlang (`.apx`) töötavad kui **deklaratiivne spetsifikatsioonikeel**. Turvalisus (CSRF, XSS, RLS, sidusmuutujad) on mootorisse sisse ehitatud, võrgulatents on 0ms ning puudub vajadus hallata ja omada tuhandeid ridu genereeritud toorkoodi.
 
 1. **Lühiajalise rahulolu lõks (Otsene AI genereerimine):** Kui lased AI-l genereerida 10 000 rida React/Node koodi, vastutab sinu meeskond iga üksiku rea eest. Mõne kuu pärast aeguvad teegid, tekivad turvaaugud ja brauseri API-d muutuvad, sundides arendajaid pidevale koodi ümbertegemisele.
 2. **Pikaajaline ettevõtte standard (Mudelipõhine APEX mootor):** Kui genereerid deklaratiivset **APEXlang** koodi, püsib rakenduse kood puhas ja vigadeta aastaid. Kui Oracle uuendab APEX-it ja andmebaasi, saab rakendus automaatselt uued turvauuendused, ligipääsetavuse ja jõudluse ilma, et arendaja peaks muutma ainsatki koodirida.
@@ -140,7 +145,7 @@ Kaasaegsete AI agentidega (Antigravity, Claude Code, Codex) saab genereerida mis
 
 ---
 
-## 3. Modulaarse Monoliidi Eelis: Miks Vältida Mikroteenuste Keerukuse Lõksu
+## 3. Modulaarse monoliidi eelis: Miks vältida mikroteenuste keerukuse lõksu
 
 *(Inspireeritud Anton Martyniuki ja Enterprise Architecture parimatest praktikatest)*
 
@@ -169,14 +174,14 @@ graph TD
   end
 ```
 
-### Mikroteenused Ei Kaota Keerukust — Nad Viivad Selle Võrku
+### Mikroteenused ei kaota keerukust — Nad viivad selle võrku
 Kui monoliitne süsteem lõhutakse mikroteenusteks, vahetatakse hallatav koodi keerukus massiivse võrgu- ja taristu ülalpidamiskulu vastu:
 - ❌ Hajutatud transaktsioonid nõuavad keerulist ja habrast Saga kompensatsiooniloogikat.
 - ❌ Võrgu latentsus ja andmete JSON-iks serialiseerimine aeglustab iga päringut.
 - ❌ Andmed triivivad erinevate dokumentide/SQL andmebaaside vahel sünkroonist välja.
 - ❌ Kohaliku arenduskeskkonna ülesseadmine võtab uuel arendajal terve nädala.
 
-### Oracle APEX: Tipptasemel Modulaarne Monoliit
+### Oracle APEX: Tipptasemel modulaarne monoliit
 Oracle APEX ja Oracle 23ai pakuvad ideaalset **Modulaarse Monoliidi arhitektuuri**:
 1. **Puhtad Domeenipiirid:** Loogika eraldatakse andmebaasi skeemide, PL/SQL pakettide ja APEX rakenduste abil ilma võrgumakse maksmata.
 2. **Natiivne ACID & Mitmemudelisus:** Relatsioonilised tabelid, JSON Duality vaated ja AI Vector manused on pärandatavad ühesainsas transaktsioonis ilma andmete triivita.
@@ -184,7 +189,7 @@ Oracle APEX ja Oracle 23ai pakuvad ideaalset **Modulaarse Monoliidi arhitektuuri
 
 ---
 
-## 4. Strateegiline Otsustusraamistik: APEX vs. Next.js vs. Hübriidmigratsioon
+## 4. Strateegiline otsustusraamistik: APEX VS. next.js VS. hübriidmigratsioon
 
 *(Inspireeritud Marcio Ramo ja Wojciech Bielawski arhitektuuriarutelust)*
 
@@ -199,7 +204,7 @@ graph TD
   F -->|Eesmärk: Avalik B2C E-Pood| NEXT[3. Next.js Kasutajaliides + ORDS REST API<br/>Eraldatud UI Kiht koos Vahekihi Halduskuluga]
 ```
 
-### "Armu probleemi, mitte tehnoloogiasse" (Domeeniteadmus on ettevõtte tõeline vara)
+### "Armu probleemi, mitte tehnoloogiasse" (domeeniteadmus on ettevõtte tõeline vara)
 
 *(Inspireeritud Simon Martinellist, AI Unified Process loojast ja Oracle ACE Pro-st)*
 
@@ -207,7 +212,7 @@ Generatiivse AI ajastul on koodi genereerimine muutunud kiireks ja odavaks. Ette
 
 Oracle Formsi pärandsüsteemid kätkevad endas 15–25 aasta jooksul lihvitud ärireegleid ja erijuhtumeid. Tarkvaratehnika distsipliin ei seisne uusima veebiraamistiku tagaajamises, vaid domeeniprobleemile õige lahenduse ehitamises. Moderniseerimisel peab peamine siht olema **selle domeeniteadmuse säilitamine** võimalikult lihtsa ja vahetu arhitektuuriga.
 
-### Juhusliku Sidususe Minimeerimine (Accidental Coupling & IVP)
+### Juhusliku sidususe minimeerimine (accidental coupling & IVP)
 
 *(Inspireeritud Yannick Lothist, Independent Variation Principle / IVP autorist)*
 
@@ -215,7 +220,7 @@ Iga arhitektuurne otsus kas minimeerib või võimendab **juhuslikku tehnilist si
 - **Juhuslik Sidusus Vahekihiga Ümberkirjutamisel (Next.js / Node):** Andmebaasi domeeni lahutamine eraldi esiotsa raamistikuks sunnib meeskondi ehitama ja hooldama tarbetut tehnilist liimi: võrgu serialiseerimist, DTO objekte ja dubleeritud valideerimisloogikat.
 - **Minimaalne Sidusus Oracle APEX-is:** Kuna APEX käivitub otse andmebaasi tuumas PL/SQL pakettide peal, on juhuslikud tehnilised sõltuvused viidud miinimumini. Domeenimudeli muudatused kanduvad rakendusse loomulikult ilma 5 võrgukihi ümberkirjutamiseta.
 
-### Strateegiline Otsustusmaatriks
+### Strateegiline otsustusmaatriks
 
 | Mõõde | Oracle APEX (Andmebaasisiseselt) | Next.js / React (Vahekiht) | Hübriidmigratsioon (Strangler Fig) |
 | :--- | :--- | :--- | :--- |
@@ -231,7 +236,7 @@ Iga arhitektuurne otsus kas minimeerib või võimendab **juhuslikku tehnilist si
 
 ---
 
-## 5. Tehnoloogiline Võrdlustabel
+## 5. Tehnoloogiline võrdlustabel
 
 | Arhitektuurne Omadus | Oracle Forms 14c / 12c | Kaasaegne Oracle APEX (23ai / 26.1) |
 | :--- | :--- | :--- |
@@ -246,7 +251,7 @@ Iga arhitektuurne otsus kas minimeerib või võimendab **juhuslikku tehnilist si
 
 ---
 
-## 6. Praktiline 5-Etapiline Migratsiooni Töövoog
+## 6. Praktiline 5-etapiline migratsiooni töövoog
 
 Meie repositoorium sisaldab valmis automatiseerimisskripte kaustas [`scripts/forms/`](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/forms).
 
@@ -270,7 +275,7 @@ sequenceDiagram
 
 ---
 
-### Etapp 1: Inventuur ja XML Teisendus
+### Etapp 1: Inventuur ja XML teisendus
 
 Kuna APEX ei loe suletud binaarset `.fmb` formaati, teisendatakse moodulid struktureeritud XML-kujule:
 
@@ -284,7 +289,7 @@ find forms_apps -name "*.fmb" -exec ./scripts/forms/form-to-xml.sh {} \;
 
 ---
 
-### Etapp 2: PL/SQL Äriloogika Eraldamine Pakettidesse
+### Etapp 2: PL/SQL äriloogika eraldamine pakettidesse
 
 Formsi päästikutesse (`WHEN-BUTTON-PRESSED`, `POST-QUERY`, `KEY-NEXT-ITEM`) peidetud kood eraldatakse puhasteks andmebaasipakettideks:
 
@@ -296,7 +301,7 @@ Tulemuseks on `PKG_ORDERS_FORMS_LOGIC.sql`, mis paigaldatakse andmebaasi skeemi 
 
 ---
 
-### Etapp 3: APEX Migratsioonipaketi Loomine
+### Etapp 3: APEX migratsioonipaketi loomine
 
 Kõik XML failid ja SQL sõltuvused koondatakse üheks standardseks paketiks:
 
@@ -307,7 +312,7 @@ Väljund: `build/apex_migration_bundle.zip`.
 
 ---
 
-### Etapp 4: Importimine APEX Application Migration Workshopi
+### Etapp 4: Importimine APEX application migration workshopi
 
 1. Ava **Oracle APEX App Builder** (`http://localhost:8088/ords` või `https://localhost:8448/ords`).
 2. Vali menüüst **App Builder** $\rightarrow$ **Application Migration Workshop**.
@@ -316,7 +321,7 @@ Väljund: `build/apex_migration_bundle.zip`.
 
 ---
 
-### Etapp 5: Tehisintellekti ja APEXlang DSL Viimistlus läbi SQLcl MCP
+### Etapp 5: Tehisintellekti ja APEXlang DSL viimistlus läbi SQLcl MCP
 
 Ekspordi baasrakendus tekstipõhisesse `APEXlang` (`.apx`) formaati:
 
@@ -338,7 +343,7 @@ Kasuta skilli [`apexlang_app_generation`](file:///Users/allanlahe/Oracle/oracle-
 
 ---
 
-## 7. Oracle Reports (`.rdf`) Migreerimine
+## 7. Oracle reports (`.rdf`) migreerimine
 
 | Oracle Reports Pärandkood | Kaasaegne APEX Sihtlahendus |
 | :--- | :--- |
@@ -348,7 +353,7 @@ Kasuta skilli [`apexlang_app_generation`](file:///Users/allanlahe/Oracle/oracle-
 
 ---
 
-## 8. Kokkuvõte ja Järgmised Sammud
+## 8. Kokkuvõte ja järgmised sammud
 
 Formsilt APEX-ile üleminek on madala riskiga ja kiire tasuvusega projekt:
 

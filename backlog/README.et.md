@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📋 Oracle DevOps Platform — Arendus- ja Arhitektuuri Backlog
+# 📋 Oracle DevOps platform — arendus- ja arhitektuuri backlog
 
 See kataloog sisaldab projekti tsentraalset ja modulaarset **Backlog süsteemi**, kus igal funktsionaalsusel, täiendusel ja turvakomponendil on oma eraldiseisev Markdown fail.
 
 ---
 
-## 🧭 Backlogi Struktuur ja Elutsükli Reeglid
+## 🧭 Backlogi struktuur ja Elutsükli reeglid
 
 ```text
 backlog/
@@ -16,7 +16,7 @@ backlog/
 └── done/                   # Teostatud, testitud ja valideeritud funktsionaalsused
 ```
 
-### Elutsükli Reeglid (Workflow):
+### Elutsükli Reeglid (workflow):
 1. **Uue idee lisamine:** Kopeeri [`template.md`](template.md) fail kausta `todo/` nimega `TASK-XXX-[nimi].md` ja täida vastavad jaotised.
 2. **Teostamine:** Kui ülesanne võetakse töösse, märgitakse selle staatus faili päises: `IN_PROGRESS`.
 3. **Valmimine ja Arhiveerimine:** Kui kood on realiseeritud, dokumenteeritud ja kõik testid (`tests/unit/`, `tests/integration/`) läbivad 100%, liigutatakse fail kausta `done/` käsuga:
@@ -29,7 +29,7 @@ backlog/
 
 ## 📊 KOKKUVÕTLIK STAATUSE MAATRIKS (STATUS MATRIX)
 
-### 🟢 Teostatud ja Valideeritud Funktsionaalsused (`done/`)
+### 🟢 Teostatud ja valideeritud funktsionaalsused (`done/`)
 
 | ID | Teema / Funktsionaalsus | Valdkond | Fail | Reaalne Staatus |
 | :--- | :--- | :--- | :--- | :--- |
@@ -60,7 +60,7 @@ backlog/
 
 ---
 
-### 🟡 Ootel ja Kavandatavad Ülesanded (`todo/`)
+### 🟡 Ootel ja kavandatavad Ülesanded (`todo/`)
 
 | ID | Teema / Funktsionaalsus | Valdkond | Fail | Staatus |
 | :--- | :--- | :--- | :--- | :--- |

@@ -1,16 +1,16 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔌 Datubāzes Savienojumi un VS Code Iestatīšanas Rokasgrāmata
+# 🔌 Datubāzes savienojumi un VS Code iestatīšanas rokasgrāmata
 
 Šī rokasgrāmata apraksta automātisku un manuālu Oracle datubāzes savienojumu reģistrāciju paplašinājumam **Oracle SQL Developer for VS Code** (gan lokālajā resursdatorā, gan konteinerizētajā Web IDE), kā arī bezparoles savienojumus, izmantojot Oracle SEPS Wallet.
 
 ---
 
-## 🔄 Divlīmeņu Automatizēta Reģistrācija (Host PC & Web IDE)
+## 🔄 Divlīmeņu automatizēta reģistrācija (host PC & web IDE)
 
 Visa platforma izmanto centralizētu savienojumu reģistrācijas dzinēju (`scripts/register-connections.sh`), kas vienlaikus izveido un sinhronizē datubāzes savienojumus **lokālajā VS Code (Host PC)** un **Konteinerizētajā Web IDE (`web-ide-dev`)**:
 
-### 📊 Savienojumu Reģistrācijas Procesu Shēma
+### 📊 Savienojumu reģistrācijas procesu shēma
 
 ```mermaid
 flowchart TD
@@ -33,7 +33,7 @@ flowchart TD
   SANITIZE --> READY(["🎉 Gatavs:<br/>1-klikšķa DB savienojumi<br/>Resursdatorā & Web IDE!"])
 ```
 
-### CLI Izsaukšana:
+### CLI izsaukšana:
 
 ```bash
 ./scripts/register-connections.sh
@@ -45,7 +45,7 @@ flowchart TD
 
 ---
 
-## 📥 Savienojumu Manuāla Importēšana VS Code SQL Developer UI
+## 📥 Savienojumu manuāla importēšana VS Code SQL developer UI
 
 Savienojumus var importēt tieši no faila **`connections/sqldev-connections.json`**:
 
@@ -57,7 +57,7 @@ Savienojumus var importēt tieši no faila **`connections/sqldev-connections.jso
 
 ---
 
-## 🔑 Paroļu Nolasīšana Izstrādātājiem un Administratoriem
+## 🔑 Paroļu nolasīšana izstrādātājiem un administratoriem
 
 Ja vēlaties konfigurēt savienojumus manuāli tādās programmās kā DBeaver vai IntelliJ:
 * **APEX Admin (INTERNAL):** `./scripts/get-password.sh APEX_ADMIN`
@@ -69,16 +69,16 @@ Ja vēlaties konfigurēt savienojumus manuāli tādās programmās kā DBeaver v
 
 ---
 
-## 🔐 Bezparoles Savienojumi caur Oracle Wallet (SEPS)
+## 🔐 Bezparoles savienojumi caur Oracle Wallet (SEPS)
 
 Lokālajā izstrādē autentifikācija tiek aizsargāta ar **Oracle Wallet (SEPS)** bez atklāta teksta parolēm uz diska.
 
-### Resursdatora Vides Iestatīšana:
+### Resursdatora vides iestatīšana:
 ```bash
 export TNS_ADMIN=$(pwd)/config/tns_admin
 ```
 
-### Ātrais Savienojums caur SQLcl:
+### Ātrais savienojums caur SQLcl:
 ```bash
 # Pieslēgties kā izstrādātājam:
 sql /@DB_PROXY_DEV
@@ -89,7 +89,7 @@ sql /@DB_PROXY_SYS as sysdba
 
 ---
 
-## 🔒 Windows & SSL/TLS Sertifikātu Uzticamība
+## 🔒 Windows & SSL/TLS sertifikātu uzticamība
 
 Izstrādājot operētājsistēmā Windows (WSL2), lai novērstu pārlūkprogrammas drošības brīdinājumus:
 

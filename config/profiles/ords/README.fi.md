@@ -4,7 +4,7 @@
 
 Tämä hakemisto sisältää **ORDS (Oracle REST Data Services)** -profiilit, jotka määrittävät verkkokokoonpanot Rule 11 -sääntöjen mukaisesti.
 
-## 📂 Saatavilla Olevat Profiilit
+## 📂 Saatavilla olevat profiilit
 1. **`ords-image.yaml`** (id: `app-ords-image`)
    - Viralliseen Oracle OCR -kuvaan perustuva keskitetty multi-pool ORDS -palvelin.
    - Portit: HTTP `8088`, HTTPS `8448`.

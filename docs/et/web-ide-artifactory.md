@@ -1,12 +1,12 @@
 [ 🇬🇧 English ](../web-ide-artifactory.md) | [ 🇪🇪 Eesti ](web-ide-artifactory.md) | [ 🇫🇮 Suomi ](../fi/web-ide-artifactory.md) | [ 🇸🇪 Svenska ](../sv/web-ide-artifactory.md) | [ 🇱🇻 Latviešu ](../lv/web-ide-artifactory.md) | [ 🇱🇹 Lietuvių ](../lt/web-ide-artifactory.md)
 
-# Konteineriseeritud Web IDE & Ettevõtte Laienduste Turg
+# Konteineriseeritud web IDE & ettevõtte laienduste turg
 
 See juhend kirjeldab **Konteineriseeritud Web IDE (`web-ide` / `code-server`)** seadistamist ja kasutamist brauseris, selle integreerimist ettevõtte sisese **Artifactory / VS Code Marketplace** turuga, **Oracle SQL Developer, Google Antigravity ja Microsoft Python** laiendusi ning **GitHub Actions töövoogude lokaalset ja turvalist võrguvaba (offline) testimist**.
 
 ---
 
-## 1. Web IDE Arhitektuur & Eelpaigaldatud Tööriistad
+## 1. Web IDE arhitektuur & eelpaigaldatud tööriistad
 
 Web IDE koondab täieliku Oracle, AI ja CI/CD arenduskeskkonna ühte brauseripõhisesse VS Code liidesesse (`localhost/oracle-web-ide:latest`):
 - **Brauseri URL:** `http://localhost:8090` (HTTP) või `https://localhost:8449` (HTTPS).
@@ -26,7 +26,7 @@ Web IDE koondab täieliku Oracle, AI ja CI/CD arenduskeskkonna ühte brauseripõ
 
 ---
 
-## 2. 4-Tasemeline Laienduste Lahendamine & Puhver (`binaries/extensions/`)
+## 2. 4-tasemeline laienduste lahendamine & puhver (`binaries/extensions/`)
 
 Web IDE käivitumisel lahendatakse laiendused järgmises järjekorras:
 ```
@@ -36,7 +36,7 @@ Web IDE käivitumisel lahendatakse laiendused järgmises järjekorras:
 4. 🌐 code-server --install-extension    ➔ Seadistatud turg (Open VSX või Microsoft Marketplace)
 ```
 
-### Turupakkuja Valik (`.env`):
+### Turupakkuja valik (`.env`):
 Saad määrata laienduste turu failis `.env`:
 ```bash
 # Valikud: openvsx (vaikimisi) | microsoft | artifactory
@@ -45,11 +45,11 @@ VSCODE_MARKETPLACE_PROVIDER=microsoft
 
 ---
 
-## 3. GitHub Actions Töövoogude Täielik Võrguvaba Testimine (`act` ja `actionlint`)
+## 3. GitHub Actions töövoogude täielik võrguvaba testimine (`act` ja `actionlint`)
 
 Web IDE võimaldab testida ja siluda repositooriumi GitHub Actions töövooge (`.github/workflows/*.yml`) **100% lokaalselt ilma GitHubi ühenduseta ja ilma koodi/saladuste üleslaadimiseta**:
 
-### 💻 Kasulikud käsud Web IDE terminalis:
+### 💻 Kasulikud käsud web IDE terminalis:
 1. **Staatiline turva- ja süntaksianalüüs (actionlint):**
    ```bash
    actionlint
@@ -69,7 +69,7 @@ Web IDE võimaldab testida ja siluda repositooriumi GitHub Actions töövooge (`
 
 ---
 
-## 4. Ettevõtte Artifactory Registri Seadistamine (.env)
+## 4. Ettevõtte artifactory registri seadistamine (.env)
 
 Selleks, et kasutada ettevõtte sisest Artifactory registrit avalike registrite asemel (Reegel 4), seadista failis `.env`:
 ```bash
@@ -79,7 +79,7 @@ VSCODE_MARKETPLACE_PROVIDER=artifactory
 
 ---
 
-## 4. Kohalikud VS Code (.vsix) Laiendused ja Uuendused (UI Update)
+## 4. Kohalikud VS Code (.VSIX) laiendused ja uuendused (UI update)
 
 1. **Laienduste uuendamine veebiliideses:**
    - Web IDE veebiliideses ("Extensions" vahekaart) saab arendaja teha igal ajal vabalt "Update" või otsida Marketplace'ist uusi laiendusi. Need salvestuvad püsivasse `/config` kettamahtu.
@@ -89,7 +89,7 @@ VSCODE_MARKETPLACE_PROVIDER=artifactory
 
 ---
 
-## 5. Web IDE Elutsükli Käsud
+## 5. Web IDE elutsükli käsud
 
 ```bash
 # 1. Käivita Blueprint koos Web IDE-ga (nt Blueprint 30):
