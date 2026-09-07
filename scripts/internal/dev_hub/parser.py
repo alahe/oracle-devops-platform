@@ -16,13 +16,17 @@ def parse_blueprint_env_and_metadata(bp_file, b_num):
                 k, v = line_str.split("=", 1)
                 env_v[k.strip()] = v.strip().strip('"\'')
 
-    # Resolve active DBs for this blueprint
+    # Resolve active DBs for this blueprint dynamically from env_v
     dbs = []
-    for db_k, def_c in [("DB_PROXY", "db-proxy"), ("DB_ALISE", "db-alise"), ("DB_PUBLISHER", "db-publisher"), ("DB_FORMS", "db-forms")]:
+    db_keys = [k for k in env_v.keys() if k.startswith("DB_") and k not in ["DB_ENABLED", "DB_USER", "DB_PASS", "DB_PASSWORD", "DB_REMOTE"]]
+    priority_order = ["DB_PROXY", "DB_ALISE", "DB_PROXY_STANDALONE", "DB_GVENZL", "DB_ADB", "DB_PUBLISHER", "DB_FORMS"]
+    sorted_db_keys = sorted(db_keys, key=lambda k: priority_order.index(k) if k in priority_order else 99)
+    for db_k in sorted_db_keys:
         pval = env_v.get(db_k, "")
         if pval and pval.upper() != "NONE":
             p_data = load_yaml_profile(pval)
             db_cfg = p_data.get("database", {})
+            def_c = db_k.lower().replace("_", "-")
             c_name = db_cfg.get("container_name") or (f"db-{pval}" if not pval.startswith("db-") else pval) or def_c
             c_short = c_name.replace("db-", "").replace("-", "_").upper()
             comp = p_data.get("database_features", p_data.get("components", {}))
@@ -41,6 +45,30 @@ def parse_blueprint_env_and_metadata(bp_file, b_num):
                 "port": str(db_cfg.get("db_port", "1521")),
                 "users": p_data.get("users", [])
             })
+
+    # Fallback if MAIN_DB_PROFILE is specified and not NONE
+    if not dbs and env_v.get("MAIN_DB_PROFILE") and env_v.get("MAIN_DB_PROFILE").upper() != "NONE":
+        pval = env_v.get("MAIN_DB_PROFILE")
+        p_data = load_yaml_profile(pval)
+        db_cfg = p_data.get("database", {})
+        c_name = db_cfg.get("container_name") or (f"db-{pval}" if not pval.startswith("db-") else pval) or "db-proxy"
+        c_short = c_name.replace("db-", "").replace("-", "_").upper()
+        comp = p_data.get("database_features", p_data.get("components", {}))
+        ords_conf = comp.get("ords", {})
+        apex_conf = comp.get("apex", {})
+        pool_name = ords_conf.get("pool_name", c_name.replace("db-", "").replace("-", "_"))
+        dbs.append({
+            "key": "MAIN_DB_PROFILE",
+            "c_name": c_name,
+            "short": c_short,
+            "prof_name": pval,
+            "pool_name": pool_name,
+            "ords_enabled": str(ords_conf.get("enabled", "true")).lower() == "true",
+            "apex_enabled": str(apex_conf.get("enabled", "false")).lower() == "true",
+            "workspace": apex_conf.get("workspace", f"{c_short}_WORKSPACE"),
+            "port": str(db_cfg.get("db_port", "1521")),
+            "users": p_data.get("users", [])
+        })
 
     # Components list (Derived 100% from positive YAML Profile references)
     components = []

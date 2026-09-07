@@ -1141,7 +1141,7 @@ function cloneCurrentBlueprint() {
 
   if (cnt) {
     // Check DB
-    const mDb = cnt.match(/^(?:DB_PROXY|DB_ALISE|DB_PUBLISHER|DB_FORMS)=([^\s\r\n]+)/m);
+    const mDb = cnt.match(/^(?:DB_[A-Z0-9_]+)=([^\s\r\n]+)/m);
     if (mDb && dbSelect) {
       const dbVal = mDb[1];
       for (let opt of dbSelect.options) {

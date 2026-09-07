@@ -170,14 +170,19 @@ def build_dev_hub(output_file=None, workspace_dir=None):
                     env_vars[k.strip()] = v.strip().strip('"\'')
 
     # 4. Resolve active databases
+    # 4. Resolve active databases
     active_db_list = []
-    for db_k, def_c in [("DB_PROXY", "db-proxy"), ("DB_ALISE", "db-alise"), ("DB_PUBLISHER", "db-publisher"), ("DB_FORMS", "db-forms")]:
+    db_keys = [k for k in env_vars.keys() if k.startswith("DB_") and k not in ["DB_ENABLED", "DB_USER", "DB_PASS", "DB_PASSWORD", "DB_REMOTE"]]
+    priority_order = ["DB_PROXY", "DB_ALISE", "DB_PROXY_STANDALONE", "DB_GVENZL", "DB_ADB", "DB_PUBLISHER", "DB_FORMS"]
+    sorted_db_keys = sorted(db_keys, key=lambda k: priority_order.index(k) if k in priority_order else 99)
+    for db_k in sorted_db_keys:
         pval = env_vars.get(db_k, "")
         if not pval or pval.upper() == "NONE":
             continue
         p_data = load_yaml_profile(pval)
         db_cfg = p_data.get("database", {})
-        c_name = db_cfg.get("container_name") or def_c
+        def_c = db_k.lower().replace("_", "-")
+        c_name = db_cfg.get("container_name") or (f"db-{pval}" if not pval.startswith("db-") else pval) or def_c
         c_short = c_name.replace("db-", "").replace("-", "_").upper()
         comp = p_data.get("database_features", p_data.get("components", {}))
         ords_conf = comp.get("ords", {})
@@ -203,9 +208,43 @@ def build_dev_hub(output_file=None, workspace_dir=None):
             "users": p_data.get("users", [])
         })
 
+    # Fallback if MAIN_DB_PROFILE is specified and not NONE
+    if not active_db_list and env_vars.get("MAIN_DB_PROFILE") and env_vars.get("MAIN_DB_PROFILE").upper() != "NONE":
+        pval = env_vars.get("MAIN_DB_PROFILE")
+        p_data = load_yaml_profile(pval)
+        db_cfg = p_data.get("database", {})
+        c_name = db_cfg.get("container_name") or (f"db-{pval}" if not pval.startswith("db-") else pval) or "db-proxy"
+        c_short = c_name.replace("db-", "").replace("-", "_").upper()
+        comp = p_data.get("database_features", p_data.get("components", {}))
+        ords_conf = comp.get("ords", {})
+        apex_conf = comp.get("apex", {})
+        pool_name = ords_conf.get("pool_name", c_name.replace("db-", "").replace("-", "_"))
+        active_db_list.append({
+            "key": "MAIN_DB_PROFILE",
+            "c_name": c_name,
+            "short": c_short,
+            "prof_name": pval,
+            "profile": p_data,
+            "pool_name": pool_name,
+            "ords_enabled": str(ords_conf.get("enabled", "true")).lower() == "true",
+            "apex_enabled": str(apex_conf.get("enabled", "false")).lower() == "true",
+            "workspace": apex_conf.get("workspace", f"{c_short}_WORKSPACE"),
+            "port": str(db_cfg.get("db_port", "1521")),
+            "users": p_data.get("users", [])
+        })
+
     # Fallback: check running DB containers if empty
     if not active_db_list:
-        for def_c, def_k, def_prof in [("db-proxy", "DB_PROXY", "db-proxy-oracle"), ("db-alise", "DB_ALISE", "db-alise-oracle"), ("db-publisher", "DB_PUBLISHER", "db-oracle"), ("db-forms", "DB_FORMS", "db-oracle")]:
+        fallback_candidates = [
+            ("db-proxy", "DB_PROXY", "db-proxy-oracle"),
+            ("db-alise", "DB_ALISE", "db-alise-oracle"),
+            ("db-proxy-standalone", "DB_PROXY_STANDALONE", "db-proxy-standalone"),
+            ("db-gvenzl", "DB_GVENZL", "db-gvenzl"),
+            ("db-adb", "DB_ADB", "db-adb"),
+            ("db-publisher", "DB_PUBLISHER", "db-publisher-oracle"),
+            ("db-forms", "DB_FORMS", "db-forms-oracle"),
+        ]
+        for def_c, def_k, def_prof in fallback_candidates:
             try:
                 import subprocess
                 res = subprocess.run(["podman", "container", "exists", def_c], capture_output=True)
