@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<INVOICE>
+  <SELLER>
+    <COMPANY_NAME>Eesti Pilveplatvorm OÜ</COMPANY_NAME>
+    <REG_CODE>12345678</REG_CODE>
+    <VAT_NUMBER>EE101234567</VAT_NUMBER>
+    <ADDRESS>Lõõtsa tn 8a, 11415 Tallinn, Harjumaa, Eesti</ADDRESS>
+    <EMAIL>arved@pilveplatvorm.ee</EMAIL>
+    <PHONE>+372 600 1234</PHONE>
+    <BANK_NAME>LHV Pank AS</BANK_NAME>
+    <IBAN>EE667700771001234567</IBAN>
+    <SWIFT_BIC>LHVBEE22</SWIFT_BIC>
+  </SELLER>
+  <INVOICE_METADATA>
+    <INVOICE_NUM>VARAD-2026-088</INVOICE_NUM>
+    <INVOICE_DATE>2026-09-08</INVOICE_DATE>
+    <DUE_DATE>2026-09-22</DUE_DATE>
+    <PAYMENT_REFERENCE>202609088</PAYMENT_REFERENCE>
+  </INVOICE_METADATA>
+  <BUYER>
+    <COMPANY_NAME>Nordic Innovation AS</COMPANY_NAME>
+    <REG_CODE>87654321</REG_CODE>
+    <VAT_NUMBER>EE109876543</VAT_NUMBER>
+    <ADDRESS>Narva mnt 5, 10117 Tallinn, Eesti</ADDRESS>
+    <CONTACT_PERSON>Jaan Tamm</CONTACT_PERSON>
+    <EMAIL>raamatupidamine@nordic-innovation.ee</EMAIL>
+  </BUYER>
+  <LINES>
+    <LINE>
+      <LINE_NUM>1</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-001</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #1</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>2</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-002</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #2</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>3</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-003</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #3</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>4</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-004</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #4</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>5</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-005</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #5</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>6</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-006</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #6</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>7</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-007</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #7</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>8</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-008</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #8</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>9</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-009</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #9</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>10</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-010</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #10</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>11</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-011</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #11</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>12</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-012</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #12</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>13</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-013</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #13</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>14</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-014</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #14</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>15</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-015</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #15</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>16</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-016</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #16</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>17</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-017</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #17</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>18</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-018</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #18</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>19</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-019</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #19</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>20</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-020</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #20</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>21</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-021</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #21</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>22</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-022</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #22</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>23</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-023</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #23</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>24</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-024</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #24</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>25</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-025</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #25</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>26</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-026</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #26</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>27</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-027</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #27</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>28</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-028</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #28</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>29</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-029</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #29</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>30</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-030</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #30</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>31</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-031</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #31</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>32</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-032</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #32</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>33</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-033</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #33</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>34</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-034</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #34</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>    <LINE>
+      <LINE_NUM>35</LINE_NUM>
+      <ITEM_CODE>SRV-DEV-035</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Pilveplatvormi Teenusesõlm #35</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>120.00</LINE_TOTAL>
+    </LINE>
+  </LINES>
+  <TOTALS>
+    <SUBTOTAL>4,200.00</SUBTOTAL>
+    <DISCOUNT_TOTAL>0.00</DISCOUNT_TOTAL>
+    <VAT_RATE>22%</VAT_RATE>
+    <VAT_AMOUNT>924.00</VAT_AMOUNT>
+    <GRAND_TOTAL>5,124.00</GRAND_TOTAL>
+    <TOTAL_IN_WORDS>viis tuhat ükssada kakskümmend neli eurot</TOTAL_IN_WORDS>
+  </TOTALS>
+  <FOOTER>
+    <PAYMENT_NOTICE>Makse laekumisel märgi viitenumber.</PAYMENT_NOTICE>
+    <LATE_FEE_NOTICE>Tähtaegselt tasumata summalt arvestatakse viivist 0.05% päevas.</LATE_FEE_NOTICE>
+    <THANK_YOU_MESSAGE>Täname meeldiva koostöö eest!</THANK_YOU_MESSAGE>
+  </FOOTER>
+</INVOICE>

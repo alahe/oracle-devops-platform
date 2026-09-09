@@ -37,6 +37,12 @@ To run automated blueprint tests from a clean baseline (with automatic `reset-al
 
 # 5. Remote Multi-Cloud Test Suite:
 ./tests/test-remote-multicloud.sh --dry-run
+
+# 6. Architecture Blueprints & Profiles Integrity Audit:
+./tests/unit/test-blueprint-profiles-integrity.sh
+
+# 7. Repository Statistics & Codebase Metrics Report:
+./tests/report-repo-stats.sh
 ```
 
 ---

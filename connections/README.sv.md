@@ -24,7 +24,7 @@ flowchart TD
   
   HOST_REG --> CHECK_WEBIDE{"❓ Körs Webb-IDE<br/>(web-ide-dev)<br/>containern?"}
   
-  CHECK_WEBIDE -->|"✅ JA / Körs"| WEBIDE_REG["🌐 5. Registrera i Webb-IDE<br/>- Container SQLcl batch<br/>- /config/.dbtools/conns<br/>- /config/.sqldev/conns.json<br/>- Rättigheter chown abc"]
+  CHECK_WEBIDE -->|"✅ JA / Körs"| WEBIDE_REG["🌐 5. Registrera i Webb-IDE<br/>• Container SQLcl batch<br/>• /config/.dbtools & .sqldev<br/>• Behörighetsfix (chown)"]
   
   CHECK_WEBIDE -->|"❌ NEJ / Saknas"| SANITIZE["🧹 6. Rensa folders.json<br/>(Ta bort föräldralösa GUID<br/>Förhindra DBTU-03001)"]
   

@@ -7,28 +7,63 @@ import os
 import glob
 import re
 import json
+import sys
 from pathlib import Path
 from datetime import datetime
 
-from .catalog import DOC_SPECS, BP_CATALOG, SLIDES_CONTENT
-from .topology import load_yaml_profile, generate_active_blueprint_mermaid
-from .parser import parse_blueprint_env_and_metadata
-from .diagnostics import (
-    load_all_passwords,
-    load_benchmarks_and_logs,
-    get_ords_version,
-    get_running_containers,
-    get_live_modules,
-    find_latest_log_for_blueprint,
-)
-from .cards import render_service_cards, render_wallet_table_rows
-from .testing import (
-    get_test_suites_catalog,
-    get_test_reports_list,
-    get_test_coverage_data,
-    get_test_execution_history,
-)
-from .glossary import get_glossary_catalog
+if __package__ is None or __package__ == '':
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+    from dev_hub.catalog import DOC_SPECS, BP_CATALOG, SLIDES_CONTENT
+    from dev_hub.topology import load_yaml_profile, generate_active_blueprint_mermaid, get_all_profiles_metadata
+    from dev_hub.parser import parse_blueprint_env_and_metadata
+    from dev_hub.diagnostics import (
+        load_all_passwords,
+        load_benchmarks_and_logs,
+        get_ords_version,
+        get_running_containers,
+        get_live_modules,
+        find_latest_log_for_blueprint,
+        find_all_logs_for_blueprint,
+    )
+    from dev_hub.cards import render_service_cards, render_wallet_table_rows
+    from dev_hub.testing import (
+        get_test_suites_catalog,
+        get_test_reports_list,
+        get_test_coverage_data,
+        get_test_execution_history,
+    )
+    from dev_hub.glossary import get_glossary_catalog
+    from dev_hub.faq import get_faq_catalog, get_faq_categories
+    from dev_hub.oracle_resources import get_oracle_resources_catalog, get_oracle_resource_categories
+    from dev_hub.skills import get_skills_catalog, generate_skills_mermaid, get_skills_task_matrix
+    from dev_hub.search import generate_search_index
+else:
+    from .catalog import DOC_SPECS, BP_CATALOG, SLIDES_CONTENT
+    from .topology import load_yaml_profile, generate_active_blueprint_mermaid, get_all_profiles_metadata
+    from .parser import parse_blueprint_env_and_metadata
+    from .diagnostics import (
+        load_all_passwords,
+        load_benchmarks_and_logs,
+        get_ords_version,
+        get_running_containers,
+        get_live_modules,
+        find_latest_log_for_blueprint,
+        find_all_logs_for_blueprint,
+    )
+    from .cards import render_service_cards, render_wallet_table_rows
+    from .testing import (
+        get_test_suites_catalog,
+        get_test_reports_list,
+        get_test_coverage_data,
+        get_test_execution_history,
+    )
+    from .glossary import get_glossary_catalog
+    from .faq import get_faq_catalog, get_faq_categories
+    from .oracle_resources import get_oracle_resources_catalog, get_oracle_resource_categories
+    from .skills import get_skills_catalog, generate_skills_mermaid, get_skills_task_matrix
+    from .search import generate_search_index
 
 WORKSPACE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
@@ -103,11 +138,22 @@ def build_dev_hub(output_file=None, workspace_dir=None):
             
             latest_log_info = find_latest_log_for_blueprint(ws, b_num)
             latest_log = latest_log_info["file"] if latest_log_info else None
+            all_logs_info = find_all_logs_for_blueprint(ws, b_num)
 
             details = parse_blueprint_env_and_metadata(bp_file, b_num)
+            bp_content = ""
+            try:
+                with open(bp_file, "r", encoding="utf-8", errors="ignore") as bf:
+                    bp_content = bf.read()
+            except Exception:
+                pass
+
             bp_list.append({
                 "num": b_num,
                 "file": b_base,
+                "name": b_base,
+                "rel_path": os.path.relpath(bp_file, ws),
+                "content": bp_content,
                 "cat": cat,
                 "ram": ram,
                 "containers": conts,
@@ -122,7 +168,12 @@ def build_dev_hub(output_file=None, workspace_dir=None):
                 "diagrams": details["diagrams"],
                 "benchmarks": bp_bench,
                 "latest_log": latest_log,
-                "latest_log_info": latest_log_info
+                "latest_log_info": latest_log_info,
+                "all_logs": all_logs_info,
+                "guide_id": info.get("guide_id", "readme") if info else "readme",
+                "quickstart": info.get("quickstart", {}) if info else {},
+                "workflow_diagram": info.get("workflow_diagram", {}) if info else {},
+                "tests": info.get("tests", []) if info else []
             })
 
     bp_list.sort(key=lambda x: x["num"])
@@ -294,6 +345,8 @@ def build_dev_hub(output_file=None, workspace_dir=None):
         for f in sorted(os.listdir(db_profiles_dir)):
             if f.endswith(".yaml"):
                 prof_name = f[:-5]
+                if prof_name == "db-oracle":
+                    continue
                 try:
                     p_data = load_yaml_profile(prof_name)
                     if not p_data:
@@ -302,6 +355,8 @@ def build_dev_hub(output_file=None, workspace_dir=None):
                     c_name = db_cfg.get("container_name") or prof_name.replace("-oracle", "")
                     if not c_name.startswith("db-"):
                         c_name = "db-" + c_name
+                    if c_name == "db-db":
+                        continue
                     if c_name not in existing_cnames:
                         c_short = c_name.replace("db-", "").replace("-", "_").upper()
                         comp = p_data.get("database_features", p_data.get("components", {}))
@@ -330,6 +385,8 @@ def build_dev_hub(output_file=None, workspace_dir=None):
     running_containers = get_running_containers()
     if not running_containers:
         running_containers = [d["c_name"] for d in active_db_list]
+        if env_vars.get("ORDS_PROFILE"):
+            running_containers.append("app-ords")
     live_modules = get_live_modules(running_containers)
 
     # 6. Active blueprint Mermaid diagram (6 languages)
@@ -348,7 +405,9 @@ def build_dev_hub(output_file=None, workspace_dir=None):
     pub_profile = env_vars.get("PUBLISHER_PROFILE", "publisher-standard")
     forms_profile = env_vars.get("FORMS_PROFILE", "forms-standard")
     services_cards_html = render_service_cards(
-        bp_list, active_bp_num, running_containers, all_dbs_for_services, ide_profile, designer_profile
+        bp_list, active_bp_num, running_containers, all_dbs_for_services,
+        ide_profile=ide_profile, designer_profile=designer_profile,
+        pub_profile=pub_profile, forms_profile=forms_profile
     )
     wallet_table_rows_html = render_wallet_table_rows(
         all_dbs_for_services, passwords_map, pub_profile, forms_profile, running_containers=running_containers
@@ -398,6 +457,17 @@ def build_dev_hub(output_file=None, workspace_dir=None):
         except Exception:
             pass
 
+    # 9.8 Gather all YAML profiles metadata and content
+    profiles_data = get_all_profiles_metadata(ws=ws, include_content=True)
+
+    # 9.9 Gather AI skills catalog, relationships Mermaid, and practical tasks matrix
+    skills_catalog_data = get_skills_catalog(ws)
+    skills_mermaid_code = generate_skills_mermaid()
+    skills_tasks_data = get_skills_task_matrix()
+
+    # 9.10 Universal Omnisearch Pre-Indexed Catalog
+    search_index_data = generate_search_index(ws)
+
     # 10. Assemble Standalone HTML
     replacements = {
         "%STYLE_CSS%": style_css,
@@ -409,6 +479,7 @@ def build_dev_hub(output_file=None, workspace_dir=None):
         "%WALLET_TABLE_ROWS_HTML%": wallet_table_rows_html,
         "%DOCS_DATA_JSON%": json.dumps(docs_data, ensure_ascii=False),
         "%BLUEPRINTS_DATA_JSON%": json.dumps(bp_list, ensure_ascii=False),
+        "%PROFILES_DATA_JSON%": json.dumps(profiles_data, ensure_ascii=False),
         "%ACTIVE_BP_MERMAID_JSON%": json.dumps(active_bp_mermaid_dict),
         "%BENCHMARKS_DATA_JSON%": json.dumps(benchmarks_raw["setup"]),
         "%RESET_BENCHMARKS_DATA_JSON%": json.dumps(benchmarks_raw["reset"]),
@@ -423,7 +494,15 @@ def build_dev_hub(output_file=None, workspace_dir=None):
         "%TEST_COVERAGE_JSON%": json.dumps(test_coverage_data, ensure_ascii=False),
         "%TEST_HISTORY_JSON%": json.dumps(test_history_data, ensure_ascii=False),
         "%GLOSSARY_DATA_JSON%": json.dumps(get_glossary_catalog(), ensure_ascii=False),
-        "%REPO_STATS_JSON%": json.dumps(repo_stats_data, ensure_ascii=False)
+        "%FAQ_DATA_JSON%": json.dumps(get_faq_catalog(), ensure_ascii=False),
+        "%FAQ_CATEGORIES_JSON%": json.dumps(get_faq_categories(), ensure_ascii=False),
+        "%ORACLE_RESOURCES_DATA_JSON%": json.dumps(get_oracle_resources_catalog(), ensure_ascii=False),
+        "%ORACLE_RESOURCE_CATEGORIES_JSON%": json.dumps(get_oracle_resource_categories(), ensure_ascii=False),
+        "%REPO_STATS_JSON%": json.dumps(repo_stats_data, ensure_ascii=False),
+        "%SKILLS_DATA_JSON%": json.dumps(skills_catalog_data, ensure_ascii=False),
+        "%SKILLS_MERMAID_JSON%": json.dumps(skills_mermaid_code, ensure_ascii=False),
+        "%SKILLS_TASKS_JSON%": json.dumps(skills_tasks_data, ensure_ascii=False),
+        "%SEARCH_INDEX_JSON%": json.dumps(search_index_data, ensure_ascii=False)
     }
 
     final_html = layout_tpl

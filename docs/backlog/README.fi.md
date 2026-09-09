@@ -1,4 +1,4 @@
-# Rahoitusalan Hajautetun Arkkitehtuurin Backlog (Jira Eepokset & Tarinat)
+# Rahoitusalan hajautetun arkkitehtuurin backlog (Jira eepokset & tarinat)
 
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 

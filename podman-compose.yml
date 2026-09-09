@@ -87,7 +87,7 @@ services:
     container_name: web-ide-dev
     ports:
       - "${WEB_IDE_HTTP_PORT:-8090}:8443"
-      - "${WEB_IDE_HTTPS_PORT:-8449}:8443"
+      - "${WEB_IDE_HTTPS_PORT:-8450}:8443"
       - "${CICD_WEB_UI_PORT:-8091}:8091"
     environment:
       - PWD=/workspace
@@ -122,6 +122,12 @@ services:
       - DB_SERVICE=${PUBLISHER_DB_SERVICE:-FREEPDB1}
     volumes:
       - publisher_data:/u01/oracle/user_projects
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9502/xmlpserver/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
@@ -140,16 +146,25 @@ services:
       - "${PUBLISHER_DESIGNER_VNC_PORT:-5903}:5900"
     volumes:
       - ./templates/publisher:/u01/templates:z
+      - ./binaries/publisher:/u01/binaries:z
       - ./install_logs:/u01/logs:z
+      - publisher_designer_wine:/u01/oracle/.wine:z
     environment:
       - DISPLAY=:1
       - VNC_PORT=5900
       - NOVNC_PORT=6080
+      - WINEARCH=win32
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6080/vnc.html || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     deploy:
       resources:
         limits:
           cpus: '2.00'
-          memory: 1536M
+          memory: 2048M
     restart: unless-stopped
 
 volumes:
@@ -159,6 +174,8 @@ volumes:
   apex_images:
   apex_proxy_data:
   web_ide_data:
+  publisher_designer_wine:
+  publisher_designer_win_storage:
 
 secrets:
 

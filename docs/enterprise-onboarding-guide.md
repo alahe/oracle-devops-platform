@@ -134,3 +134,51 @@ Output:
 Enterprise status, clipboard commands, and onboarding workflows are fully integrated into Developer Hub ([`docs/dev-hub.html`](dev-hub.html)):
 - Navigate to the **DevOps & Quick Commands** tab.
 - Click **Enterprise Artifactory & Onboarding** to copy ready-to-run terminal commands or trigger health diagnostics.
+
+---
+
+## 7. Enterprise Document Branding & Accessibility Customization (PDF/UA-1 & WCAG 2.1 AA)
+
+When onboarding new enterprise systems, document templates (Invoices, Receipts, Delivery Notes, Financial Statements) must adhere to corporate visual identity and mandatory accessibility laws (**European Accessibility Act / EN 301 549, US Section 508, PDF/UA-1 ISO 14289-1**). Non-compliance risks legal penalties or public procurement exclusions.
+
+### 1. Centralized Image Repository & Logo Management (Single Source of Assets)
+To avoid hardcoding machine-specific file paths (such as `C:\logo.png`) or embedding duplicate raster images into dozens of RTF templates:
+1. **Host Asset Repository:** Store official high-resolution corporate vector/PNG logos in:
+   ```text
+   templates/publisher/common/images/company_logo.png
+   ```
+2. **Container Runtime Path:** The designer container automatically mounts this directory at `/u01/common/images/company_logo.png`.
+3. **Dynamic Template Reference:** In Microsoft Word or LibreOffice Writer, insert a dummy placeholder image, right-click -> **Alt Text / Description / Web Tab**, and specify the dynamic Oracle XDO URL:
+   ```text
+   url:{concat($IMAGE_DIR, '/company_logo.png')}
+   ```
+   Set Alt Text to the official corporate description (e.g. `Official Company Logo`).
+4. **Automated Server Synchronization:** When deploying templates to test or production Oracle Analytics Publisher instances via `./scripts/publisher/deploy-publisher-reports.sh`, all assets in `common/images/` are automatically synchronized to the target Publisher catalog server.
+
+### 2. Accessible Starter Template (`accessible_starter_template.rtf`)
+The platform includes an enterprise-grade accessible starter template at:
+[`templates/publisher/samples/accessible_starter_template.rtf`](../templates/publisher/samples/accessible_starter_template.rtf)
+
+It features:
+- **`\trhdr` Table Header Row Repeat:** Guarantees screen readers announce column headers across multi-page document pagination.
+- **Summary-First Financial Block:** High-contrast summary (Total Due, Due Date, IBAN) placed immediately below the title for quick accessibility.
+- **Strict WCAG AA Color Contrast:** Deep enterprise blue (`#0A3663`) and dark gray (`#222222`), achieving **7.1:1 contrast ratio** against white backgrounds (surpassing the 4.5:1 statutory requirement).
+- **Embedded PDF/UA-1 Structural Tags:** Fully tagged headings (`Heading 1`, `Heading 2`), tables (`/S/Table`, `/S/TR`, `/S/TH`, `/S/TD`), and document metadata.
+
+### 3. Automated Accessibility Audit CLI & Screen Reader Simulator
+Before deploying templates to testing or production environments, run automated audits:
+
+```bash
+# 1. Audit RTF Template for WCAG AA compliance & actionable fix instructions:
+./scripts/publisher/validate-rtf-accessibility.sh templates/publisher/samples/accessible_starter_template.rtf
+
+# 2. Validate rendered PDF tags and generate simulated screen reader speech:
+./scripts/publisher/validate-pdf-accessibility.sh build/accessible_starter_template_en.pdf
+```
+
+### 4. Zero-Tolerance CI/CD Quality Gate
+The platform runs automated document accessibility verification in continuous integration:
+```bash
+./tests/integration/test-publisher-accessibility-suite.sh
+```
+This suite compiles multi-page invoices, high-volume line item reports, and financial summaries, verifying that all output PDFs score **100% compliance** on structural tagging and metadata before deployment.

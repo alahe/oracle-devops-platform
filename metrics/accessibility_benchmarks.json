@@ -1,0 +1,14 @@
+{
+  "test_suite": "oracle_publisher_accessibility_suite",
+  "standard": "PDF/UA-1 (ISO 14289-1:2014) & WCAG 2.1 Level AA",
+  "timestamp": "2026-09-09T07:40:33Z",
+  "git_commit": "0cbc8d0c",
+  "total_cases": 3,
+  "passed_cases": 3,
+  "failed_cases": 0,
+  "compliance_rate_pct": 100,
+  "total_duration_sec": 0,
+  "cases": [
+    {"case": "01-standard-invoice", "title": "Standard Accessible Electronic Invoice", "status": "PASSED", "duration_sec": 0, "pdf_size_bytes": 64487, "locale": "et"},{"case": "02-multipage-table-report", "title": "Multi-Page Accessible Inventory Audit Report", "status": "PASSED", "duration_sec": 0, "pdf_size_bytes": 64024, "locale": "et"},{"case": "03-summary-financial-report", "title": "Quarterly Accessible Financial Summary Report", "status": "PASSED", "duration_sec": 0, "pdf_size_bytes": 64487, "locale": "et"}
+  ]
+}

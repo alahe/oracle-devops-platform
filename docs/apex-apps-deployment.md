@@ -1,24 +1,26 @@
-# APEX Rakenduste Automaatne Paigaldamine
+[ 🇬🇧 English ](apex-apps-deployment.md) | [ 🇪🇪 Eesti ](et/apex-apps-deployment.md) | [ 🇫🇮 Suomi ](fi/apex-apps-deployment.md) | [ 🇸🇪 Svenska ](sv/apex-apps-deployment.md) | [ 🇱🇻 Latviešu ](lv/apex-apps-deployment.md) | [ 🇱🇹 Lietuvių ](lt/apex-apps-deployment.md)
 
-Andmebaasi seadistamisel toetab projekt mitme APEX rakenduse täielikult automatiseeritud importi.
+# Automated APEX Application Deployment
 
----
-
-## Rakenduste paigaldamise sammud
-
-1.  **Rakenduste hoidmine:**
-    Kopeeri oma paigaldatavad APEX rakenduste failid (sobivad nii tavalised `.sql` ekspordid kui ka uued **APEXlang** `.apex` failid) kataloogi `binaries/apex_apps/`.
-2.  **Importskript (`deploy-apex-apps.sh`):**
-    Sisemine abiskript **[scripts/internal/deploy-apex-apps.sh](../scripts/internal/deploy-apex-apps.sh)** teostab failide järjestikuse paigalduse APEX-isse, seadistades importimisel automaatselt siht-tööruumi (`PROXY_WORKSPACE`) ja skeemi (`APEX_PROXY_SCHEMA`).
-3.  **Setup-all integratsioon (Samm 8):**
-    Keskkonna loomise skript `./scripts/setup-all.sh` käivitab selle sammu automaatselt. Rakenduste paigaldamise saab täielikult vahele jätta parameetriga `--no-monitor-app` (või seadistades keskkonnamuutuja `.env` failis).
+During database provisioning, the platform supports fully automated import, workspace configuration, and lifecycle management for multiple Oracle APEX applications.
 
 ---
 
-## Arendus ja versioonihaldus (APEXlang + AI Skill)
+## Application Deployment Workflow
 
-APEX rakendusi (nagu monitooringu dashboard) arendatakse iseseisvates repositooriumides. Arenduses on soovitatav kasutada Oracle APEX AI skilli **`oracle/skills/apex`**, mis juhendab tehisintellekti agente APEXlang tekstipõhise süntaksi muutmisel ja loomisel, tagades loetava ja versioonitava koodibaasi.
+1. **Application Storage:**
+   Place your installable APEX application files (standard `.sql` export files as well as declarative **APEXlang** `.apx` / `.apex` files) into the `binaries/apex_apps/` directory.
+2. **Import Engine (`deploy-apex-apps.sh`):**
+   The internal automation helper **[`scripts/internal/deploy-apex-apps.sh`](../scripts/internal/deploy-apex-apps.sh)** sequentially installs all applications into Oracle APEX, automatically provisioning the target workspace (`PROXY_WORKSPACE`) and schema (`APEX_PROXY_SCHEMA`).
+3. **Setup-All Integration (Step 8):**
+   The primary environment provisioning script `./scripts/setup-all.sh` invokes this step automatically. Application deployment can be skipped entirely by passing the `--no-monitor-app` flag (or by configuring the corresponding variable in the `.env` file).
+
+---
+
+## Development and Version Control (APEXlang + AI Skill)
+
+APEX applications (such as monitoring dashboards and enterprise tools) are version-controlled in dedicated repositories. For active development, use the Oracle APEX AI Skill **`oracle/skills/apex`**, which guides AI agents in reading, generating, and modifying declarative APEXlang text syntax.
 
 > [!TIP]
-> **Deklaratiivsed blueprint-spetsifikatsioonid vs toorkoodi haldamise koormus:**
-> APEX blueprints ja APEXlang (`.apx`) toimivad kui deklaratiivsed spetsifikatsioonid. Koodi massilise genereerimise asemel (kus arendustiim peab omama ja hooldama 10 000+ rida genereeritud liimkoodi) tagab andmebaasi sisse ehitatud turvalisus ja 0ms latentsus kiirema ja oluliselt turvalisema tarne ilma koodi roiskumise ohuta.
+> **Declarative Blueprint Specifications vs. Raw Glue Code Maintenance:**
+> APEX blueprints and APEXlang (`.apx`) act as concise declarative specifications. Instead of generating massive codebases (where engineering teams must maintain 10,000+ lines of fragile UI glue code), the database-native security model and 0ms data latency deliver higher productivity and bulletproof security without technical debt.

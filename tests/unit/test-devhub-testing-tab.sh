@@ -32,7 +32,7 @@ LAYOUT_HTML="$WORKSPACE_DIR/scripts/internal/dev_hub/assets/templates/layout.htm
 
 echo "Checking HTML structure in layout template & compiled dev-hub.html..."
 assert_contains "$LAYOUT_HTML" 'id="tab-testing"' "Testing tab container exists in layout"
-assert_contains "$LAYOUT_HTML" 'class="ci-scorecard-strip"' "CI Readiness Scorecard strip exists in layout"
+assert_contains "$LAYOUT_HTML" 'id="testing-ci-scorecard"' "CI Readiness Scorecard strip exists in layout"
 assert_contains "$LAYOUT_HTML" 'id="testing-subtab-runner"' "Sub-tab runner exists in layout"
 assert_contains "$LAYOUT_HTML" 'id="testing-subtab-reports"' "Sub-tab reports exists in layout"
 assert_contains "$LAYOUT_HTML" 'id="testing-subtab-coverage"' "Sub-tab coverage exists in layout"
@@ -104,6 +104,34 @@ CATALOG_PY="$WORKSPACE_DIR/scripts/internal/dev_hub/catalog.py"
 echo "Checking catalog registration..."
 assert_contains "$CATALOG_PY" '"id": "testing-framework"' "Registered in DOC_SPECS"
 
+# 6. Check Blueprint modal Testing & Diagnostics tab includes Dry-Run card
+APP_JS="$WORKSPACE_DIR/scripts/internal/dev_hub/assets/app.js"
+echo "Checking Blueprint modal Testing & Diagnostics tab (Dry-Run card placement)..."
+assert_contains "$APP_JS" "key: 'dry-run'" "Dry-Run card registered in renderBlueprintDiagTab (app.js)"
+assert_contains "$DEV_HUB_HTML" "key: 'dry-run'" "Dry-Run card compiled into renderBlueprintDiagTab (dev-hub.html)"
+
+# 7. Check Blueprint modal Execution Logs tab (tab-btn-bp-logs / bp-modal-tab-logs)
+echo "Checking Blueprint modal Execution Logs tab..."
+assert_contains "$LAYOUT_HTML" 'id="tab-btn-bp-logs"' "Blueprint modal tab button exists in layout.html"
+assert_contains "$DEV_HUB_HTML" 'id="tab-btn-bp-logs"' "Blueprint modal tab button exists in dev-hub.html"
+assert_contains "$LAYOUT_HTML" 'id="bp-modal-tab-logs"' "Blueprint modal logs container exists in layout.html"
+assert_contains "$DEV_HUB_HTML" 'id="bp-modal-tab-logs"' "Blueprint modal logs container exists in dev-hub.html"
+assert_contains "$LAYOUT_HTML" 'class="bp-logs-split-container"' "Master-Detail split container exists in layout.html"
+assert_contains "$LAYOUT_HTML" 'id="bp-modal-logs-list-pane"' "Left list pane exists in layout.html"
+assert_contains "$LAYOUT_HTML" 'id="bp-modal-logs-viewer-pane"' "Right viewer pane exists in layout.html"
+assert_contains "$LAYOUT_HTML" 'id="bp-log-search-input"' "Search input exists in layout.html"
+assert_contains "$APP_JS" "renderBlueprintLogsTab" "renderBlueprintLogsTab function exists in app.js"
+assert_contains "$APP_JS" "filterBpLogsCategory" "filterBpLogsCategory function exists in app.js"
+assert_contains "$APP_JS" "selectBpLogFile" "selectBpLogFile function exists in app.js"
+assert_contains "$DEV_HUB_HTML" "renderBlueprintLogsTab" "renderBlueprintLogsTab function compiled into dev-hub.html"
+assert_contains "$DEV_HUB_HTML" "filterBpLogsCategory" "filterBpLogsCategory compiled into dev-hub.html"
+assert_contains "$DEV_HUB_HTML" "selectBpLogFile" "selectBpLogFile compiled into dev-hub.html"
+assert_contains "$BRIDGE_PY" '/api/logs/blueprint' "Bridge endpoint: /api/logs/blueprint"
+assert_contains "$I18N_JS" 'modal_tab_logs: "📄 Execution Logs"' "EN translation: modal_tab_logs"
+assert_contains "$I18N_JS" 'modal_tab_logs: "📄 Teostuse logid"' "ET translation: modal_tab_logs"
+assert_contains "$I18N_JS" 'logs_cat_setup: "Setup"' "EN translation: logs_cat_setup"
+assert_contains "$I18N_JS" 'logs_cat_setup: "Paigaldus"' "ET translation: logs_cat_setup"
+
 if [ "$ERRORS" -gt 0 ]; then
   echo "❌ $ERRORS assertions failed."
   exit 1
@@ -111,3 +139,4 @@ fi
 
 echo "🎉 All Dev Hub testing tab unit tests passed successfully!"
 exit 0
+

@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🐳 Konteinerių Kūrimo Šablonai (`docker/`)
+# 🐳 Konteinerių kūrimo šablonai (`docker/`)
 
 Šiame kataloge yra kūrimo scenarijai, Dockerfile failai ir vykdymo laiko konfigūracijos pasirinktiniams konteinerių atvaizdams.
 

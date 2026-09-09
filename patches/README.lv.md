@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🩹 Oracle Ielāpu direktorijs (`patches/`)
+# 🩹 Oracle ielāpu direktorijs (`patches/`)
 
 Šis direktorijs tiek saglabāts atpakaļsaderībai un vispārējiem ielāpiem. Produktu specifiskie ielāpi atrodas atbilstošajos bināro failu apakšdirektorijos:
 

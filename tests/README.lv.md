@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🧪 Automatizētā Testēšana Un Projektējumu Verifikācija (`tests/`)
+# 🧪 Automatizētā testēšana un projektējumu verifikācija (`tests/`)
 
 Šis direktorijs satur automatizētās testēšanas infrastruktūru, etalonu pārskatus un verifikācijas komplektus Oracle DevOps platformai.
 
@@ -37,6 +37,12 @@ Lai palaistu testus no tīra stāvokļa (ar automātisku `reset-all.sh -y`):
 
 # 5. Multi-mākoņu testi:
 ./tests/test-remote-multicloud.sh --dry-run
+
+# 6. Arhitektūras rasējumu un profilu integritātes audits:
+./tests/unit/test-blueprint-profiles-integrity.sh
+
+# 7. Krātuves statistikas un koda bāzes metrikas atskaite:
+./tests/report-repo-stats.sh
 ```
 
 ---

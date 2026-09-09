@@ -104,7 +104,7 @@ def parse_blueprint_env_and_metadata(bp_file, b_num):
     if pub_p and pub_p.upper() != "NONE":
         p_data = load_yaml_profile(pub_p)
         pub_cfg = p_data.get("publisher", {})
-        c_name = pub_cfg.get("container_name", "oracle-publisher-dev")
+        c_name = pub_cfg.get("container_name", "app-publisher")
         h_port = pub_cfg.get("http_port", 9502)
         hs_port = pub_cfg.get("https_port", 9503)
         adm_port = pub_cfg.get("admin_port", 9500)
@@ -160,7 +160,7 @@ def parse_blueprint_env_and_metadata(bp_file, b_num):
         c_name = ide_cfg.get("container_name", "web-ide-dev")
         p_cfg = ide_cfg.get("ports", {})
         h_port = p_cfg.get("http_port", 8090)
-        hs_port = p_cfg.get("https_port", 8449)
+        hs_port = p_cfg.get("https_port", 8450)
         ci_port = p_cfg.get("cicd_ui_port", 8091)
         p_str = f"{h_port} (HTTP)"
         if hs_port: p_str += f", {hs_port} (HTTPS)"
@@ -368,6 +368,16 @@ def parse_blueprint_env_and_metadata(bp_file, b_num):
         })
 
     if des_p and des_p.upper() != "NONE":
+        d_cfg = load_yaml_profile(des_p)
+        des_port = None
+        for p in d_cfg.get("network", {}).get("ports", []):
+            if p.get("container_port") == 6080 or "novnc" in str(p.get("description", "")).lower():
+                des_port = str(p.get("host_port"))
+                break
+            elif not des_port and p.get("host_port"):
+                des_port = str(p.get("host_port"))
+        if not des_port:
+            des_port = str(d_cfg.get("http_port") or d_cfg.get("port") or "6083")
         all_users.append({
             "db": "publisher-designer",
             "username": "designer",
@@ -376,7 +386,7 @@ def parse_blueprint_env_and_metadata(bp_file, b_num):
             "scope": "desktop",
             "wallet_alias": "",
             "color": "#f472b6",
-            "login_url": "http://localhost:6083/vnc.html"
+            "login_url": f"http://localhost:{des_port}/vnc.html"
         })
 
 

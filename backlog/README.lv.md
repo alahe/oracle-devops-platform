@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📋 Oracle DevOps platform — Izstrādes un uzdevumu Žurnāls (backlog)
+# 📋 Oracle DevOps platform — izstrādes un uzdevumu žurnāls (backlog)
 
 Šis direktorijs satur platformas modulāro **uzdevumu žurnāla (Backlog) sistēmu**, kur arhitektūras uzlabojumi, funkcijas un drošības komponenti tiek dokumentēti Markdown failos.
 

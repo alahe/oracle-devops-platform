@@ -37,6 +37,12 @@ Testide käivitamiseks puhtalt lehelt (automaatse `reset-all.sh -y` ja verifitse
 
 # 5. Kaugpaigalduse Multi-Cloud testid:
 ./tests/test-remote-multicloud.sh --dry-run
+
+# 6. Arhitektuursete Blueprintide ja profiilide terviklikkuse audit:
+./tests/unit/test-blueprint-profiles-integrity.sh
+
+# 7. Repositooriumi statistika ja koodibaasi mõõdikute raport:
+./tests/report-repo-stats.sh
 ```
 
 ---

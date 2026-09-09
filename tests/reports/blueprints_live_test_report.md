@@ -1,6 +1,6 @@
 # 🧪 Master Blueprint Live Testing Summary Report
 
-- **Date:** 2026-09-07 18:44:54
+- **Date:** 2026-09-08 15:24:02
 - **Total Tested:** 3
 - **Passed:** 3 (✅)
 - **Failed:** 0 (❌)
@@ -14,6 +14,6 @@
 
 | BP # | Blueprint Name | Expected Containers | Duration | Status | Details / Fail Reason |
 | :---: | :--- | :--- | :---: | :---: | :--- |
-| **5** | `5-standalone-publisher` | `db-publisher app-publisher` | 0s | ✅ PASS | All assertions verified |
+| **5** | `5-standalone-publisher` | `db-publisher app-publisher` | 1s | ✅ PASS | All assertions verified |
 | **6** | `6-standalone-forms` | `db-forms app-forms` | 0s | ✅ PASS | All assertions verified |
-| **7** | `7-consolidated-forms-publisher` | `db-publisher app-forms app-publisher` | 1s | ✅ PASS | All assertions verified |
+| **7** | `7-consolidated-forms-publisher` | `db-publisher app-forms app-publisher` | 0s | ✅ PASS | All assertions verified |

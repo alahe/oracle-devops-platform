@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🩹 Oracle-Päivitysten Hakemisto (`patches/`)
+# 🩹 Oracle-päivitysten hakemisto (`patches/`)
 
 Tämä hakemisto säilytetään taaksepäin yhteensopivuuden ja yleisten päivitysten vuoksi. Tuotekohtaiset päivitykset sijaitsevat omissa alihakemistoissaan:
 

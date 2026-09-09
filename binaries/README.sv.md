@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Lokala programvarupaket och Binär cache (`binaries/`)
+# 📦 Lokala programvarupaket och binär cache (`binaries/`)
 
 Denna katalog fungerar som lokal cache för offlineinstallationer och företags Artifactory-speglingar (ZIP, RPM, JAR, VSIX, SQL).
 

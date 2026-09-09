@@ -9,7 +9,25 @@ This skill guides creating, restoring, and managing **Golden Snapshots** for zer
 
 ---
 
-## 1. Golden Snapshot Architecture
+## 1. 🎯 When to Use & Negative Routing
+
+### Positive Triggers (Activate Immediately):
+- Reverting database, APEX, ORDS, and credentials to a clean state in ~15 seconds: `./scripts/snapshots/restore-golden-snapshots.sh`
+- Creating a snapshot before major migration, schema update, or testing: `./scripts/snapshots/create-golden-snapshots.sh --tag <name>`
+- Managing snapshots from Dev Hub Tab 8 or CLI (`clean-golden-snapshots.sh`)
+- Discarding corrupted state without doing a 5-8 minute cold rebuild
+
+### Negative Routing (Redirect to Specialized Skills):
+| If the task is primarily about... | DO NOT handle here. Route immediately to: |
+|:---|:---|
+| Cold rebuild from zero (`reset-all.sh` + `setup-all.sh`) | `setup_orchestration` |
+| Exporting SQLcl Liquibase changelogs or schema DDLs | `sqlcl_project` |
+| Rotating SEPS wallet passwords directly in running DB | `wallet_security_rotation` |
+| Container health status or FastStart images | `oracle_containers` |
+
+---
+
+## 2. Golden Snapshot Architecture
 
 A Golden Snapshot captures the atomic state of:
 1. **Database Volume:** Persistent database storage (`oradata` block-level directory).
@@ -104,3 +122,15 @@ graph LR
 - Restoring a Golden Snapshot preserves network port allocations.
 - SEPS Wallet credentials automatically match the restored database passwords.
 - No need to re-run full `setup-all.sh` from scratch.
+
+---
+
+## 5. 🩺 Diagnostic Signatures & 1-Line Remedies
+
+| Symptom / Error | Root Cause | 1-Line Remedy |
+|:---|:---|:---|
+| Restore fails with `snapshot not found` | No baseline snapshot created yet for this blueprint | Run `./scripts/snapshots/create-golden-snapshots.sh --force` after healthy setup. |
+| Container won't start after restore | File ownership/permission mismatch on `oradata` | Ensure rootless Podman user matches container UID (54321) or run `podman unshare chown -R 54321:54321 oradata/`. |
+| Snapshot age check skips creation | Existing snapshot is <= 30 days old | Use `--force` flag to force snapshot replacement: `./scripts/snapshots/create-golden-snapshots.sh --force`. |
+| Corrupted database blocks after snapshot | Snapshot taken without pausing container or checkpoint | Run `ALTER SYSTEM CHECKPOINT;` before creating snapshot archive. |
+

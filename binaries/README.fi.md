@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Paikalliset ohjelmistopaketit ja Binaarivälimuisti (`binaries/`)
+# 📦 Paikalliset ohjelmistopaketit ja binaarivälimuisti (`binaries/`)
 
 Tämä hakemisto toimii paikallisena välimuistina offline-asennuksille ja yrityksen Artifactory-peileille (ZIP, RPM, JAR, VSIX, SQL).
 

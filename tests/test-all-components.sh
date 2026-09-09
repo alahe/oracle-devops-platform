@@ -62,7 +62,13 @@ echo -e "  └─ 11. Mitmekeelsus & i18n Sünkronisatsioon (Rule 9: EN/ET/FI/SV
 echo -e "  └─ 12. Platvormiülene failinimede teisaldatavus (Rule 13: Windows/macOS/Linux)..."
 "$SCRIPT_DIR/unit/test-filename-portability.sh" >/dev/null
 
-echo -e "${GREEN}✅ FAAS 1 Edukas: Kõik 12 mooduli integratsioonitesti läbiti puhtalt!${NC}"
+echo -e "  └─ 13. Dev-Hub dokumentatsiooni lingid & keelevahetaja (Rule 9: 6 keelt)..."
+"$SCRIPT_DIR/unit/test-devhub-doc-links.sh" >/dev/null
+
+echo -e "  └─ 14. Pealkirjade suurtähestusreeglid (EN Title Case / ET,FI,SV,LV,LT Sentence Case)..."
+"$SCRIPT_DIR/unit/test-title-capitalization-rules.sh" >/dev/null
+
+echo -e "${GREEN}✅ FAAS 1 Edukas: Kõik 14 mooduli integratsiooni- ja audittesti läbiti puhtalt!${NC}"
 
 
 

@@ -59,7 +59,7 @@ In restricted, air-gapped, or corporate enterprise environments, the platform ro
 
 ```mermaid
 graph TD
-    Root["🏢 Artifactory: {ARTIFACTORY_URL}/{REPO}/products/"]
+    Root["🏢 Artifactory:<br/>{ARTIFACTORY_URL}/{REPO}/products/"]
     
     subgraph Products["Product Catalog"]
         APEX["📦 apex/"]
@@ -106,19 +106,19 @@ graph TD
 
 ```mermaid
 flowchart TD
-    Start([Launch: setup-all.sh / install-apex.sh / apply-patch.sh]) --> Step1{1. Valid local file in cache?}
+    Start([Launch: setup-all.sh / install-apex.sh / apply-patch.sh]) --> Step1{"1. Valid local file<br/>in cache?"}
     
-    Step1 -->|Yes, valid| FastLocal["⚡ Use local cache (binaries/ or golden-snapshots/)"]
-    Step1 -->|No / Missing / Outdated| Step2{2. Is ARTIFACTORY_URL configured?}
+    Step1 -->|Yes, valid| FastLocal["⚡ Use local cache<br/>(binaries/ or golden-snapshots/)"]
+    Step1 -->|No / Missing / Outdated| Step2{"2. Is ARTIFACTORY_URL<br/>configured?"}
     
-    Step2 -->|No| FallbackPublic["🌐 Download from official public OTN / Clean build"]
-    Step2 -->|Yes| StepAuth["Resolve JIT token: Azure Key Vault or SEPS Wallet"]
+    Step2 -->|No| FallbackPublic["🌐 Download from official<br/>public OTN / Clean build"]
+    Step2 -->|Yes| StepAuth["Resolve JIT token:<br/>Azure Key Vault or SEPS Wallet"]
     
     StepAuth --> FetchMeta["HTTP GET: Fetch ONLY .meta.json (< 1 KB)"]
-    FetchMeta --> CheckHTTP{Found in catalog (200 OK)?}
+    FetchMeta --> CheckHTTP{"Found in catalog (200 OK)?"}
     
     CheckHTTP -->|404 / Missing| FallbackPublic
-    CheckHTTP -->|200 OK| ValidateMeta{verify_snapshot_version_match}
+    CheckHTTP -->|200 OK| ValidateMeta{"verify_snapshot_<br/>version_match:<br/>Check metadata"}
     
     ValidateMeta -->|Mismatch: Versions differ| LogMismatch["⚠️ Log Warning: VERSION MISMATCH IN ARTIFACTORY"]
     LogMismatch --> FallbackPublic
@@ -131,7 +131,7 @@ flowchart TD
     FallbackPublic --> ExecuteClean["🔄 Execute clean build & compile"]
     
     ExecuteFast --> Done([✅ Environment ready & healthy])
-    ExecuteClean --> CheckAutoPublish{ARTIFACTORY_AUTO_PUBLISH=true or --publish?}
+    ExecuteClean --> CheckAutoPublish{"ARTIFACTORY_AUTO_<br/>PUBLISH=true<br/>or --publish?"}
     
     CheckAutoPublish -->|Yes| AutoUpload["Publish new artifact + .meta.json to Artifactory"]
     CheckAutoPublish -->|No| Done

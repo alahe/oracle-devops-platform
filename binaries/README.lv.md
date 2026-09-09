@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Lokālo Programmatūras Pakešu Un Bināro failu Kešatmiņa (`binaries/`)
+# 📦 Lokālo programmatūras pakešu un bināro failu kešatmiņa (`binaries/`)
 
 Šis direktorijs kalpo kā lokālā kešatmiņa bezsaistes instalācijām un uzņēmuma Artifactory spoguļiem (ZIP, RPM, JAR, VSIX, SQL).
 

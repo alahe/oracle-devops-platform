@@ -9,7 +9,25 @@ This skill provides guidelines for configuring and registering Oracle database c
 
 ---
 
-## 1. Architecture & Mechanism
+## 1. 🎯 When to Use & Negative Routing
+
+### Positive Triggers (Activate Immediately):
+- Registering or syncing database connections in VS Code Oracle SQL Developer (`register-connections.sh`)
+- Managing OS Keychain credentials and `~/.dbtools/connections/` tree
+- Resolving `DBTU-03001: Invalid connection` or corrupted `folders.json`
+- Configuring VS Code Integrated Terminal profiles for SQLcl
+
+### Negative Routing (Redirect to Specialized Skills):
+| If the task is primarily about... | DO NOT handle here. Route immediately to: |
+|:---|:---|
+| SQLcl project commands, Liquibase pipelines, or AST changelogs | `sqlcl_project` |
+| SEPS Wallet storage, `cwallet.sso`, or password rotation | `wallet_security_rotation` |
+| Browser-based Web IDE (Blueprint 8) container | `blueprints_and_topology` |
+| Database container health or container logs | `oracle_containers` |
+
+---
+
+## 2. Architecture & Mechanism
 
 Modern VS Code Oracle SQL Developer extensions manage connections via embedded SQLcl:
 *   **Disk Path:** `~/.dbtools/connections/<GUID>/dbtools.properties`
@@ -164,3 +182,15 @@ set sqlprompt "@|bold,green _USER|@@@|bold,cyan _CONNECT_IDENTIFIER|@@|bold,mage
 2. **Environment Isolation:** Run `unset JAVA_HOME` before SQLcl invocation.
 3. **Binary Password Fallback:** Guard `mkstore` output against binary bytes (`[[ "$PWD_VAL" == *"?"* ]]`).
 4. **Multi-Shell Registration:** Configure `TNS_ADMIN` and `alias sql` across `~/.zshrc`, `~/.zshenv`, `~/.bashrc`, `~/.bash_profile`.
+
+---
+
+## 7. 🩺 Diagnostic Signatures & 1-Line Remedies
+
+| Symptom / Error | Root Cause | 1-Line Remedy |
+|:---|:---|:---|
+| `DBTU-03001: Invalid connection definition` | Missing GUID, unencrypted plaintext password, or bad port in `.properties` | Re-run `./scripts/register-connections.sh` to cleanly overwrite connection metadata. |
+| VS Code prompts for password on every connect | Password not stored in OS Keychain during registration | Ensure `-savepwd -replace` flags are passed during `connect -save` in SQLcl. |
+| Connection folder missing in VS Code tree | `folders.json` contains orphan GUIDs or syntax error | Run `scripts/register-connections.sh` to sanitize `~/.dbtools/connection_folders/folders.json`. |
+| SQLcl launch fails in VS Code terminal | Java version conflict (Java 11/17 vs 21+) | Run `unset JAVA_HOME` before launching SQLcl from terminal. |
+

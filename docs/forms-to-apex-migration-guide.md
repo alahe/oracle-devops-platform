@@ -10,14 +10,14 @@ Still running Oracle Forms & Reports in 2026? The primary catalyst driving globa
 
 ```mermaid
 graph TD
-  subgraph Legacy Oracle Forms Stack
+  subgraph LegacyForms ["Legacy Oracle Forms Stack"]
     LF1[Oracle WebLogic Server] --- LF2[Forms Services 12c/14c]
     LF2 --- LF3[Repository Creation Utility RCU]
     LF3 --- LF4[Heavy VM / Infrastructure Overhead]
     LF4 --- LF5[Java Runtime / Web Start Client]
   end
 
-  subgraph Modern Oracle APEX Stack
+  subgraph ModernApex ["Modern Oracle APEX Stack"]
     AP1[Oracle Database 23ai / Free DB]
     AP2[Native APEX Engine In-Database]
     AP3[Oracle REST Data Services ORDS]
@@ -60,15 +60,15 @@ In today’s Generative AI era, there are two fundamentally different ways to bu
 
 ```mermaid
 graph TD
-  subgraph Option 1: Direct Generation (Imperative Fragility)
-    D1[LLM Prompt] --> D2[LLM writes 10,000s of lines of raw code<br/>React, Next.js, Node, Custom Auth, Hand-rolled State]
-    D2 --> D3[Massive hallucination risk, missing CSRF,<br/>N+1 queries, unmaintainable PR diffs]
+  subgraph Option1 ["Option 1: Direct Generation<br/>(Imperative Fragility)"]
+    D1["LLM Prompt"] --> D2["LLM writes 10,000s of lines of raw code<br/>React, Next.js, Node,<br/>Custom Auth, Hand-rolled State"]
+    D2 --> D3["Massive hallucination risk, missing CSRF,<br/>N+1 queries, unmaintainable PR diffs"]
   end
 
-  subgraph Option 2: Indirect Generation (Intent-Driven Abstraction)
-    I1[LLM Prompt] --> I2[LLM writes 10 lines of APEXlang DSL<br/>Specifies high-level INTENT: Grid, Form, Facets]
-    I2 --> I3[Battle-tested Implementation Engine<br/>Oracle APEX + Database Kernel]
-    I3 --> I4[100x Higher Correctness, 1000x Higher Readability,<br/>Guaranteed Session State, Auth & Concurrency]
+  subgraph Option2 ["Option 2: Indirect Generation<br/>(Intent-Driven Abstraction)"]
+    I1["LLM Prompt"] --> I2["LLM writes 10 lines of APEXlang DSL<br/>Specifies high-level INTENT: Grid, Form, Facets"]
+    I2 --> I3["Battle-tested Implementation Engine<br/>Oracle APEX + Database Kernel"]
+    I3 --> I4["100x Higher Correctness,<br/>1000x Higher Readability,<br/>Guaranteed Session State, Auth & Concurrency"]
   end
 ```
 
@@ -101,16 +101,16 @@ Most developer security articles warning against the risks of "vibe coding" diag
 
 ```mermaid
 graph TD
-  subgraph Traditional Vibe-Coding (Governed Runtime / Post-Hoc Friction)
+  subgraph TradVibe ["Traditional Vibe-Coding<br/>(Governed Runtime / Friction)"]
     T1[LLM Emits Arbitrary Code] --> T2[Security Flaws & Broken Auth Injected]
     T2 --> T3[High-Friction Scanners, Code Reviews & SAST]
     T3 --> T4[Risk of Production Leaks & Bypasses]
   end
 
-  subgraph APEX + APEXlang (Governed Input / Guardrail at Generation)
+  subgraph ApexLang ["APEX + APEXlang<br/>(Governed Input / Guardrail)"]
     A1[LLM Emits Declarative APEXlang DSL] --> A2[Versioned EBNF Grammar Guardrail]
-    A2 --> A3[Parse-Time AST Validation: Invalid Constructs Fail Immediately]
-    A3 --> A4[Database Kernel Security: Automatic Binds, Zero Injection, Unbypassable RLS]
+    A2 --> A3[Parse-Time AST Validation:<br/>Invalid Constructs Fail Immediately]
+    A3 --> A4[Database Kernel Security:<br/>Auto Binds, Zero Injection, RLS]
   end
 ```
 
@@ -153,7 +153,7 @@ A common modern trap when modernizing legacy systems (Forms/Reports) is jumping 
 
 ```mermaid
 graph TD
-  subgraph The Distributed Microservices Trap
+  subgraph DistTrap ["The Distributed Microservices Trap"]
     M1[100+ Repos & Fragmented CI/CD]
     M2[Network Latency on Every Internal Hop]
     M3[Distributed Transactions & Saga Complexity]
@@ -163,9 +163,9 @@ graph TD
     M3 --- M4
   end
 
-  subgraph The In-Database Modular Monolith (Oracle APEX)
+  subgraph Monolith ["The In-Database Modular Monolith (Oracle APEX)"]
     A1[Single Deployable Unit & Instant Setup]
-    A2[In-Memory SQL/PLSQL Execution: Zero Network Latency]
+    A2[In-Memory SQL/PLSQL Execution:<br/>Zero Network Latency]
     A3[Native ACID Transactions & Zero Data Drift]
     A4[Instant REST APIs via ORDS AutoREST on Demand]
     A1 --- A2

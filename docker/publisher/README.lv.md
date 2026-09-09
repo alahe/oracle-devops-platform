@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📑 Analytics Publisher konteinera Attēla Būvēšana (`docker/publisher/`)
+# 📑 Analytics Publisher konteinera attēla būvēšana (`docker/publisher/`)
 
 - **Skripti:** `build-publisher-image.sh`, `build-publisher-prebuilt-image.sh`
 - **Rezultāts:** `localhost/oracle-publisher:latest`

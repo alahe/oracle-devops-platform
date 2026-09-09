@@ -92,3 +92,11 @@ To rotate passwords across Database, Podman Secrets, and SEPS Wallet seamlessly:
 > **APEX Session Isolation (`INTERNAL` vs Workspace):**
 > When testing both APEX Admin (`INTERNAL`) and APEX Builder (`<WORKSPACE>`) simultaneously on `localhost:8448`, open one in a regular tab and the other in an **Incognito / Private Window** (`Cmd+Shift+N`) to prevent browser session cookie collisions (`Your session has ended`).
 
+---
+
+## ❓ Frequently Asked Questions & Official Downloads
+
+- Need help with passwords, SEPS Wallet, or SSL warnings? See [Platform Frequently Asked Questions (FAQ)](faq.md).
+- Looking for official client tools, SQLcl, or VS Code extensions? See [Official Oracle Resources & Container Images](oracle-resources-and-downloads.md).
+
+

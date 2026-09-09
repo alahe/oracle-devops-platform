@@ -9,7 +9,28 @@ This skill provides guidelines for running official Oracle database containers (
 
 ---
 
-## 1. Oracle 23ai Free DB Resource Limits & Invariants
+## 1. 🎯 When to Use & Negative Routing
+
+### Positive Triggers (Activate Immediately):
+- Running or tuning Oracle Database Free (23ai) containers (`container-registry.oracle.com/database/free:latest`)
+- Managing container memory, process limits (`ALTER SYSTEM SET processes=300`), or PDB open state
+- AI Vector Search (`VECTOR(512, FLOAT32)`), Cosine distance queries, or JSON Relational Duality Views
+- In-container unzipping (`podman cp` + unpack in `/tmp`) to bypass Windows/Mac antivirus I/O bottlenecks
+- Direct multitenant PDB connection and serial recompilation (`recomp_serial`)
+
+### Negative Routing (Redirect to Specialized Skills):
+| If the task is primarily about... | DO NOT handle here. Route immediately to: |
+|:---|:---|
+| Multi-blueprint topology or port numbers (1531-1534) | `blueprints_and_topology` |
+| Full lifecycle setup (`setup-all.sh`, `reset-all.sh`) | `setup_orchestration` |
+| SEPS Wallet credentials or passwordless connect | `wallet_security_rotation` |
+| Instant ~15s snapshot backup & restore | `golden_snapshots_dr` |
+| Forms 14c container and noVNC builder | `oracle_forms_devops` |
+| Analytics Publisher container and OPatch | `oracle_publisher` |
+
+---
+
+## 2. Oracle 23ai Free DB Resource Limits & Invariants
 
 Oracle Database Free (23ai) operates under strict built-in limits:
 - **User Data Storage:** Max 12 GB.
@@ -75,10 +96,12 @@ FROM customers c WITH INSERT UPDATE DELETE;
 ## 5. Multitenant PDB Context & Clock Skew Resilience (Multi-DB Invariants)
 
 ### 5.1 Multitenant PDB Direct Connection Rule (`CDB$ROOT` Drop Prevention)
-When executing complex administrative scripts (APEX engine install, ORDS metadata setup, patching) targeted at a Pluggable Database (`FREEPDB1`), **never rely on `sqlplus / as sysdba` followed by `ALTER SESSION SET CONTAINER`**. Internal `CONNECT` commands inside Oracle vendor scripts drop back to `CDB$ROOT`.
-- **Mandatory Pattern:** Always connect directly using the explicit PDB service:
+When executing complex administrative scripts (APEX engine install, ORDS metadata setup, patching) targeted at a Pluggable Database (`FREEPDB1`), **never rely on `sql / as sysdba` followed by `ALTER SESSION SET CONTAINER`**. Internal `CONNECT` commands inside Oracle vendor scripts drop back to `CDB$ROOT`.
+- **Mandatory Pattern:** Always connect directly using the explicit PDB service via SQLcl (Rule 6):
   ```bash
-  sqlplus "sys/${SYS_PASSWORD}@localhost:1521/${DB_SERVICE} as sysdba" @script.sql
+  sql -s "sys/${SYS_PASSWORD}@localhost:${DB_PORT}/${DB_SERVICE} as sysdba" @script.sql
+  # Or inside container:
+  /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql -s "sys/${SYS_PASSWORD}@localhost:1521/${DB_SERVICE} as sysdba" @script.sql
   ```
 
 ### 5.3 Tablespace Pre-allocation Invariant (Preventing I/O Lock Freezes & ORA-03114)
@@ -110,3 +133,16 @@ podman run --rm -i \
   container-registry.oracle.com/database/sqlcl:latest \
   APEX_PROXY_SCHEMA/password@localhost:1532/FREEPDB1
 ```
+
+---
+
+## 7. 🩺 Diagnostic Signatures & 1-Line Remedies
+
+| Symptom / Error | Root Cause | 1-Line Remedy |
+|:---|:---|:---|
+| `ORA-00018` / `ORA-00020` | Exceeded session/process limit under concurrent workload | Run `ALTER SYSTEM SET processes=300 SCOPE=SPFILE;` and restart container. |
+| `ORA-01109: database not open` | Pluggable database did not open automatically | Run `ALTER PLUGGABLE DATABASE FREEPDB1 OPEN; ALTER PLUGGABLE DATABASE FREEPDB1 SAVE STATE;`. |
+| `ORA-03114: not connected to ORACLE` | Datafile autoextend I/O flush timeout | Pre-allocate datafiles (`sysaux01.dbf` to 2048M) before running heavy scripts. |
+| `ORA-00609: could not attach connection` | Parallel recompilation worker TCP timeout | Use `sys.utl_recomp.recomp_serial` instead of `recomp_parallel`. |
+| Container status `unhealthy` | Oracle listener or healthcheck probe timed out | Inspect logs: `podman logs <container_id> --tail 50` to check database alert.log. |
+

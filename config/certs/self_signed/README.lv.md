@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# ⚠️ Pašparakstīts Sertifikāts (Variants 4 rezerves Režīms)
+# ⚠️ Pašparakstīts sertifikāts (variants 4 rezerves režīms)
 
 Šajā direktorijā atrodas dinamiski ģenerēts pašparakstīts sertifikāts (`self_signed.crt` un `self_signed.key`).
 

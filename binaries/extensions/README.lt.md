@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🧩 VS code Plėtinių talpykla (`binaries/extensions/`)
+# 🧩 VS Code plėtinių talpykla (`binaries/extensions/`)
 
 Šis katalogas veikia kaip **1 lygio autonominė talpykla** VS Code `.vsix` plėtinių paketams.
 

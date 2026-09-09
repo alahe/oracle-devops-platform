@@ -37,6 +37,12 @@ Testien suorittaminen puhtaalta pöydältä (automaattisella `reset-all.sh -y` -
 
 # 5. Monipilvitestit:
 ./tests/test-remote-multicloud.sh --dry-run
+
+# 6. Arkkitehtuurikuvien ja profiilien eheyden tarkistus:
+./tests/unit/test-blueprint-profiles-integrity.sh
+
+# 7. Tietovaraston tilastot ja koodikannan mittarit:
+./tests/report-repo-stats.sh
 ```
 
 ---

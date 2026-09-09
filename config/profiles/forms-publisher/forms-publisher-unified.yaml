@@ -1,7 +1,7 @@
 # ==============================================================================
 # Unified Oracle Forms 14c & Analytics Publisher 2025 FMW Container Profile
 # Runs both Forms Servlet/Builder and Analytics Publisher in a single WebLogic domain.
-# Saves ~2.5 GB RAM by sharing the db-publisher RCU database.
+# Saves ~2.5 GB RAM by sharing the db-forms-publisher RCU database.
 # ==============================================================================
 profile:
   id: forms-publisher-unified
@@ -22,7 +22,7 @@ forms:
   vnc_port: 6085
   admin_port: 7005
   admin_username: weblogic
-  target_database: "db-publisher"
+  target_database: "db-forms-publisher"
   rcu_prefix: "FORMS"
   memory_args: "-Xms1536m -Xmx3072m -XX:MetaspaceSize=512m -XX:MaxMetaspaceSize=1024m"
 
@@ -37,7 +37,7 @@ publisher:
   https_port: 9506
   admin_port: 7005
   admin_username: weblogic
-  target_database: "db-publisher"
+  target_database: "db-forms-publisher"
   rcu_prefix: "OAS"
   configure_biee: false
   configure_bip: true

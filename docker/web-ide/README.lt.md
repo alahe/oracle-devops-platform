@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 💻 Web IDE konteinerio atvaizdo Kūrimas (`docker/web-ide/`)
+# 💻 Web IDE konteinerio atvaizdo kūrimas (`docker/web-ide/`)
 
 - **Scenarijus:** `build-web-ide-image.sh`
 - **Dockerfile:** `Dockerfile`

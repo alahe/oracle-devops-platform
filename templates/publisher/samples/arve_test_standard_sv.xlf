@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.1" xmlns="urn:oasis:names:tc:xliff:document:1.1">
+  <file original="arve_test_standard.rtf" source-language="et" target-language="sv-SE" datatype="rtf">
+    <header/>
+    <body>
+      <trans-unit id="ARVE_NR">
+        <source>ARVE NR:</source>
+        <target>FAKTURANR:</target>
+      </trans-unit>
+      <trans-unit id="Kuupäev">
+        <source>Kuupäev:</source>
+        <target>Datum:</target>
+      </trans-unit>
+      <trans-unit id="Maksetähtaeg">
+        <source>Maksetähtaeg:</source>
+        <target>Förfallodatum:</target>
+      </trans-unit>
+      <trans-unit id="Tingimus">
+        <source>Tingimus:</source>
+        <target>Villkor:</target>
+      </trans-unit>
+      <trans-unit id="Viitenumber">
+        <source>Viitenumber:</source>
+        <target>Referensnummer:</target>
+      </trans-unit>
+      <trans-unit id="Tellimuse_nr">
+        <source>Tellimuse nr:</source>
+        <target>Ordernummer:</target>
+      </trans-unit>
+      <trans-unit id="TELLIJA___MAKSJA">
+        <source>TELLIJA / MAKSJA:</source>
+        <target>BESTÄLLARE / BETALARE:</target>
+      </trans-unit>
+      <trans-unit id="Nimi">
+        <source>Nimi:</source>
+        <target>Namn:</target>
+      </trans-unit>
+      <trans-unit id="Registrikood">
+        <source>Registrikood:</source>
+        <target>Org.nr:</target>
+      </trans-unit>
+      <trans-unit id="KMKR_nr">
+        <source>KMKR nr:</source>
+        <target>Momsnr:</target>
+      </trans-unit>
+      <trans-unit id="Aadress">
+        <source>Aadress:</source>
+        <target>Adress:</target>
+      </trans-unit>
+      <trans-unit id="Kontaktisik">
+        <source>Kontaktisik:</source>
+        <target>Kontaktperson:</target>
+      </trans-unit>
+      <trans-unit id="Nr">
+        <source>Nr</source>
+        <target>Nr</target>
+      </trans-unit>
+      <trans-unit id="Kood">
+        <source>Kood</source>
+        <target>Kod</target>
+      </trans-unit>
+      <trans-unit id="Kirjeldus___Teenus">
+        <source>Kirjeldus / Teenus</source>
+        <target>Beskrivning / Tjänst</target>
+      </trans-unit>
+      <trans-unit id="Kogus">
+        <source>Kogus</source>
+        <target>Antal</target>
+      </trans-unit>
+      <trans-unit id="Ühik">
+        <source>Ühik</source>
+        <target>Enhet</target>
+      </trans-unit>
+      <trans-unit id="Hind">
+        <source>Hind</source>
+        <target>Pris</target>
+      </trans-unit>
+      <trans-unit id="KM_%">
+        <source>KM %</source>
+        <target>Moms %</target>
+      </trans-unit>
+      <trans-unit id="Summa_(EUR)">
+        <source>Summa (EUR)</source>
+        <target>Belopp (EUR)</target>
+      </trans-unit>
+      <trans-unit id="Vahesumma">
+        <source>Vahesumma:</source>
+        <target>Delsumma:</target>
+      </trans-unit>
+      <trans-unit id="Soodustus_kokku">
+        <source>Soodustus kokku:</source>
+        <target>Total rabatt:</target>
+      </trans-unit>
+      <trans-unit id="Käibemaks">
+        <source>Käibemaks</source>
+        <target>Moms</target>
+      </trans-unit>
+      <trans-unit id="KOKKU_TASUDA">
+        <source>KOKKU TASUDA:</source>
+        <target>ATT BETALA:</target>
+      </trans-unit>
+      <trans-unit id="Summa_sõnadega">
+        <source>Summa sõnadega:</source>
+        <target>Belopp med ord:</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

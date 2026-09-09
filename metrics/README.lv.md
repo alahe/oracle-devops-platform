@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📊 Veiktspējas Un etalonu Rādītāju direktorijs (`metrics/`)
+# 📊 Veiktspējas un etalonu rādītāju direktorijs (`metrics/`)
 
 Šajā direktorijā tiek glabāti un Git versiju kontrolēti instalēšanas posmu un ilguma mērījumi (1. noteikums).
 

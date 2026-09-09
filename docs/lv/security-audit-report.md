@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../security-audit-report.md) | [ 🇪🇪 Eesti ](../et/security-audit-report.md) | [ 🇫🇮 Suomi ](../fi/security-audit-report.md) | [ 🇸🇪 Svenska ](../sv/security-audit-report.md) | [ 🇱🇻 Latviešu ](security-audit-report.md) | [ 🇱🇹 Lietuvių ](../lt/security-audit-report.md)
 
-# 🛡️ Uzņēmuma Drošības Audita Ziņojums & Hardening Ceļvedis
+# 🛡️ Uzņēmuma drošības audita ziņojums & hardening-ceļvedis
 
 Šajā dokumentā apkopota visaptveroša **Oracle DevOps Platform** un **Oracle APEX lietojumprogrammu dzinēja** drošības audita metodika, atklātie rezultāti, novēršanas pasākumi un atbilstība finanšu nozares prasībām.
 

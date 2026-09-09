@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Techniniai Įgyvendinimo planai (`backlog/implementation_plans/`)
+# 📐 Techniniai įgyvendinimo planai (`backlog/implementation_plans/`)
 
 Šiame kataloge saugomi išsamūs techniniai įgyvendinimo planai ir architektūriniai sprendimai.
 

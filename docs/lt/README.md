@@ -35,19 +35,23 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 ```mermaid
 flowchart TD
     Start(["🚀 Kūrėjas Pradeda"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
-    Clone --> ChooseBP{"2. Pasirinkti Architektūros Planą"}
+    Clone --> ChooseBP{"2. Pasirinkti<br/>architektūros planą"}
     
-    ChooseBP -->|Numatytasis 2-DB Paketas| BP21["./scripts/setup-all.sh -b 21 --lang lt"]
-    ChooseBP -->|Forms + Publisher + IDE| BP31["./scripts/setup-all.sh -b 31 --lang lt"]
-    ChooseBP -->|Peržiūra / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 21 --dry-run"]
+    ChooseBP -->|Kanoninis Numatytasis| BP0["./scripts/setup-all.sh (BP 0)"]
+    ChooseBP -->|Verslo ALISE DB| BP1["./scripts/setup-all.sh -b 1"]
+    ChooseBP -->|Forms + Publisher| BP7["./scripts/setup-all.sh -b 7"]
+    ChooseBP -->|Atskira Web-IDE| BP8["./scripts/setup-all.sh -b 8"]
+    ChooseBP -->|Peržiūra / Dry-Run| BPDry["./scripts/setup-all.sh -b 1 --dry-run"]
     
-    BP21 --> DevHub["3. Atidaryti DevOps Valdymo Centrą<br/>🌐 http://localhost:8088/"]
-    BP31 --> DevHub
+    BP0 --> DevHub["3. Atidaryti DevOps Valdymo Centrą<br/>🌐 http://localhost:8088/"]
+    BP1 --> DevHub
+    BP7 --> DevHub
+    BP8 --> DevHub
     BPDry --> ChooseBP
     
-    DevHub --> PwdSpikker["4. Slaptažodžių Špargalka (SEPS Wallet)<br/>./scripts/get-password.sh DB_PROXY_DEV -c"]
+    DevHub --> PwdSpikker["4. Slaptažodžių Špargalka (SEPS Wallet)<br/>./scripts/get-password.sh DB_ALISE_DEV -c"]
     
-    PwdSpikker --> DevWork["5. Pradėti Kūrimą!"]
+    DevHub --> DevWork["5. Pradėti Kūrimą!"]
     DevWork --> WorkIDE["💻 Web IDE & SQL Developer (:8090)"]
     DevWork --> WorkAPEX["🌟 APEX Builder & SSO Šliuzas (:8088)"]
     DevWork --> WorkForms["📐 Forms 14c noVNC Builder (:6082)"]
@@ -56,19 +60,51 @@ flowchart TD
 
 ---
 
-## ⚡ Setup-all 10-ties faziu gyvavimo ciklo architektūra
+## 🏗️ Architektūros Modeliai (12 Kanoninių Modulinių Blokų)
+
+Oracle Free DB in Prod organizuoja savo architektūrą į **12 kanoninių modulinių architektūros modelių (0 .. 11)**, suskirstytų į 4 įmonės lygmenis:
 
 ```mermaid
-flowchart LR
-    P1["1. Atvaizdų Atsisiuntimas"] --> P2["2. ORDS Atsisiuntimas"]
-    P2 --> P3["3. APEX Paketai"]
-    P3 --> P4["4. Konteinerių Paleidimas"]
-    P4 --> P5["5. DB Būklės Laukimas"]
-    P5 --> P6["6. APEX Įdiegimas"]
-    P6 --> P7["7. Schemos & SEPS Init"]
-    P7 --> P8["8. APEX Programų Diegimas"]
-    P8 --> P9["9. Middleware & Paslaugos"]
-    P9 --> P10["10. Auksinė Momentinė Kopija (~15s DR)"]
+flowchart TD
+    subgraph Default ["⭐ KANONINIS SISTEMOS NUMATYTASIS"]
+        BP0["BP 0: Numatytasis Proxy DB & ORDS<br/>db-proxy (:1532) + app-ords (:8088/8448)"]
+    end
+
+    subgraph Tier1 ["1 EILUTĖ: PAGRINDINĖ ARCHITEKTŪRA (1–7)"]
+        subgraph DatabaseStacks ["🗄️ 1 GRUPĖ: DUOMENŲ BAZIŲ RINKINIAI (1–4)"]
+            direction TB
+            BP1["BP 1: Atskira ALISE DB (:1533)"]
+            BP2["BP 2: Atskira Proxy DB (:1537)"]
+            BP3["BP 3: Atskira Gvenzl Bendruomenės DB (:1535)"]
+            BP4["BP 4: Atskira Autonomous DB Cloud (:1536)"]
+        end
+
+        subgraph Middleware ["🏢 2 GRUPĖ: ĮMONĖS VIDURINIO<br/>SLUOKSNIO ĮRANGA (5–7)"]
+            direction TB
+            BP5["BP 5: Atskiras Analytics<br/>Publisher (:1531, :9502)"]
+            BP6["BP 6: Atskira Oracle<br/>Forms 14c (:1534, :9001, :6082)"]
+            BP7["BP 7: Konsoliduota Forms +<br/>Publisher (:1538, :9005, :9505)"]
+        end
+    end
+
+    subgraph Tier2 ["2 EILUTĖ: KŪRĖJŲ IR KRAŠTINIAI ŠLIUZAI (8–11)"]
+        subgraph DeveloperStudio ["💻 3 GRUPĖ: KŪRĖJO STUDIJA (8–9)"]
+            direction TB
+            BP8["BP 8: Atskira Web-IDE (:8090)<br/>⚠️ Testuojama ir tobulinama"]
+            BP9["BP 9: Publisher Designer (:6083)<br/>⚠️ Testuojama ir tobulinama"]
+        end
+
+        subgraph RemoteGateways ["🌐 4 GRUPĖ: NUOTOLINIAI IR<br/>KRAŠTINIAI ŠLIUZAI (10–11)"]
+            direction TB
+            BP10["BP 10: Nuotolinis ORDS Šliuzas (:8088/8448)<br/>⚠️ Testuojama ir tobulinama"]
+            BP11["BP 11: Nuotolinis Publisher (:9502)<br/>⚠️ Testuojama ir tobulinama"]
+        end
+    end
+
+    BP0 --> BP1
+    BP0 --> BP5
+    BP1 --> BP8
+    BP5 --> BP10
 ```
 
 ---
@@ -139,58 +175,6 @@ sql /@DB_PROXY_DEV
 
 ---
 
-## 📋 11 Kuratų architektūros planų (Blueprints)
-
-```mermaid
-graph TD
-  subgraph Serija 1-9: Core DB & APEX SSO Šliuzas
-    BP3["🌟 BP 3 (NUMATYTASIS): 2 Sluoksnių Gamybos Paketas<br/>db-proxy + db-alise + app-ords (Prievadai 1532, 1533, 8088)"]
-    BP7["BP 7: Kelių Tiekėjų Hibridas<br/>Oficiali Oracle 23ai DB + Gerald Venzl DB + ORDS"]
-  end
-
-  subgraph Serija 10-19: Analytics Publisher
-    BP13["BP 13: Viskas-Viename Publisher DB<br/>Viena 23ai DB (RCU + Duomenys) + Publisher + ORDS"]
-    BP11["BP 11: Izoliuota Publisher Įmonė<br/>3 izoliuotos DB + Publisher + ORDS"]
-  end
-
-  subgraph Serija 20-29: Oracle Forms 14c & Modernizavimas
-    BP22["BP 22: Minimalus Forms Hibridas<br/>Kombinuota Forms/Proxy DB + ALISE DB + Forms 14c + ORDS"]
-    BP21["BP 21: Pilnas Forms Įmonės Paketas<br/>Forms RCU DB + Pasirinktinė DB + Proxy DB + Forms 14c + ORDS"]
-  end
-
-  subgraph Serija 30-39: Kūrėjo Darbo Vietos & Web IDE
-    BP34["🌟 BP 34: Standartinis 2 Sluoksnių DB + Web IDE<br/>db-proxy + db-alise + app-ords + web-ide-dev (Prievadas 8090)"]
-    BP31["BP 31: Debesų Autonomous DB + Web IDE<br/>ADB Emuliatorius + VS Code Web IDE"]
-  end
-
-  subgraph Serija 40-49: Ultimate Enterprise Rinkiniai
-    BP41["🌟 BP 41: Ultimate Viskas-Viename Įmonė + Web IDE<br/>Forms + Publisher + APEX SSO + Web IDE ant 1 DB"]
-    BP42["BP 42: Visiškai Izoliuota Debesų Laboratorija<br/>8 izoliuoti konteineriai, 4 atskiros duomenų bazės"]
-    BP43["BP 43: 2-DB Hibridas Įmonė + Web IDE<br/>Proxy DB + Bendra Middleware RCU DB"]
-  end
-```
-
-### 🚀 Planų diegimas ir valdymas (`./scripts/deploy-blueprint.sh`)
-
-```bash
-# 1. Patikrinti aktyvų planą ir paslaugų būklę:
-./scripts/deploy-blueprint.sh --status --lang lt
-
-# 2. Įdiegti Blueprint 3 (NUMATYTASIS 2 Sluoksnių Gamybos Paketas):
-./scripts/deploy-blueprint.sh -b 3 --lang lt
-
-# 3. Įdiegti Blueprint 41 (Ultimate Viskas-Viename Įmonė):
-./scripts/deploy-blueprint.sh -b 41 --lang lt
-
-# 4. Simuliuoti diegimą be pakeitimų (Dry-Run):
-./scripts/deploy-blueprint.sh -b 34 --dry-run
-
-# 5. Parodyti 11 planų lentelę konsolėje:
-./scripts/deploy-blueprint.sh --list --lang lt
-```
-
----
-
 ## ⚡ Pagreitintas ~15s atkūrimas & automatizuota versijų patikra
 
 Oracle Free DB in Prod apima **išmanų kelių lygių Golden Snapshot ir Skip variklį** (`scripts/internal/snapshot-resolver.sh`), kuris sutrumpina antrą paleidimo laiką nuo **~6–12 minučių iki ~15 sekundžių**:
@@ -248,7 +232,7 @@ Oracle Free DB in Prod apima **išmanų kelių lygių Golden Snapshot ir Skip va
 
 ## 🧭 Oracle APEX DevHub programa ir APEXlang CI/CD
 
-Be atskiro HTML Dev Hub (`docs/dev-hub.html`), platformoje yra verslo klasės **Oracle APEX programa (Programa 101: DevHub)**, sukurta deklaratyviai naudojant [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) kataloge [`applications/devhub/`](../../applications/devhub/):
+Be atskiro HTML Dev Hub (`docs/dev-hub.html`), platformoje yra verslo klasės **Oracle APEX programa (Programa 101: DevHub)**, sukurta deklaratyviai naudojant [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) kataloge [`applications/`](../../applications/README.lt.md):
 
 - **Nulinio Pėdsako Dokumentacija Duomenų Bazėje:** Dokumentacija niekada nedubliuojama ir nesaugoma duomenų bazės lentelėse kaip CLOB laukai. Vietinis REST dokumentacijos tiltas (`scripts/internal/dev-hub-bridge.py` 8089 prievade) srautiniu būdu perduoda lokalizuotą Markdown tiesiai iš Git failų į APEX, kur jis atvaizduojamas naudojant `APEX_MARKDOWN.TO_HTML`.
 - **Interaktyvus Pristatymas ir Apžvalga (7 Puslapis):** Apima 8 skaidrių interaktyvų pristatymą, kuriame pristatoma platformos vizija, programuotojų problemos, rolių nauda, 11 architektūros planų, Zero-Trust SEPS Wallet sauga, ~15s Golden Snapshot atkūrimas bei atsakymai į architekto ir buvusio DBA klausimus.

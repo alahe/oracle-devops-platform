@@ -70,3 +70,33 @@ config/certs/
 *   **SQLcl ja JDBC:** Oracle Database toetab nativselt Azure AD OAuth2 tokeneid ja globaalseid rolle.
 *   **ORDS ja API-d:** ORDS toetab Bearer JWT tokeneid ja proxy-kasutajaid.
 *   **APEX Social Sign-In:** Kasutab OpenID Connect autentimist koos Just-In-Time kasutajate provisjoneerimisega.
+
+---
+
+## 5. Analytics Publisheri turvalisus ja rollide maatriks
+
+Oracle Analytics Publisher kasutab kahefaasilist ettevõttetaseme turvamudelit:
+
+### Faas 1: Lokaalne Zero-Trust SEPS Wallet (Vaikimisi aktiivne)
+Kõik mandaadid asuvad turvaliselt krüpteeritud Oracle SEPS Auto-Login Walletis (`cwallet.sso`). Paroole ei salvestata kettale lihttekstina.
+
+| Roll / Konto | WebLogic Turvagrupp | SEPS Wallet Alias | Õigused ja vastutusala |
+| :--- | :--- | :--- | :--- |
+| `bip_developer` | `XMLP_DEVELOPER`, `XMLP_TEMPLATE_DESIGNER` | `PUBLISHER_DEVELOPER` | Šabloonide, XLIFF tõlgete ja andmemudelite loomine kaustas `/Custom/` |
+| `bip_user` | `XMLP_SCHEDULER`, `XMLP_ANALYZER` | `PUBLISHER_USER` | Aruannete käivitamine, ajastamine, ajaloo vaatamine ja REST API tarbimine |
+| `bip_admin` | `XMLP_ADMIN` | `PUBLISHER_ADMIN` | BIP kataloogi haldamine (isoleeritud WebLogic halduskonsoolist) |
+
+Saladuste halduse ja rotatsiooni käsud:
+```bash
+./scripts/get-password.sh PUBLISHER_DEVELOPER
+./scripts/rotate-password.sh publisher dev     # Roteerib arendaja parooli
+./scripts/rotate-password.sh publisher user    # Roteerib tavakasutaja parooli
+./scripts/rotate-password.sh publisher admin   # Roteerib administraatori parooli
+./scripts/rotate-password.sh publisher all     # Roteerib kõik Publisheri paroolid
+```
+
+### Faas 2: Ettevõtte Pilveidentiteet ja M2M (Valmisolek / Standby)
+- **Interaktiivsed veebikasutajad:** SAML 2.0 Web SSO koos Azure Entra ID / Okta / PingFederate toega.
+- **REST API / CI/CD töövood:** OAuth2 M2M Bearer tokenid (`client_credentials` grant) vastendatuna virtuaalsetesse AppRole rollidesse (`BIP_DEVELOPER`, `BIP_INTEGRATION`).
+- Aktiveeritav vajadusel koodimuudatusteta faili `config/profiles/publisher/publisher-standard.yaml` ja skripti `./scripts/internal/configure-publisher-sso.sh` kaudu.
+

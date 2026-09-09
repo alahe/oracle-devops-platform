@@ -2,21 +2,47 @@
 # ==============================================================================
 # CLI Fast-Renderer: Test Render Publisher RTF Template + XML Data -> PDF
 # Runs inside the app-publisher-designer container or local LibreOffice/Java
+# Supports multi-language translation via XLIFF (--locale <et|en|fi|sv|lv|lt>)
 # ==============================================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-TPL="${1:-$WORKSPACE_DIR/templates/publisher/samples/arve_eesti_standard.rtf}"
-DATA="${2:-$WORKSPACE_DIR/templates/publisher/samples/arve_sample_data.xml}"
-OUT="${3:-$WORKSPACE_DIR/templates/publisher/samples/valmis_arve.pdf}"
+LOCALE="et"
+POSITIONAL_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --locale|-l)
+      LOCALE="$2"
+      shift 2
+      ;;
+    --locale=*)
+      LOCALE="${1#*=}"
+      shift 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1")
+      shift 1
+      ;;
+  esac
+done
+
+TPL_INPUT="${POSITIONAL_ARGS[0]:-$WORKSPACE_DIR/templates/publisher/samples/arve_test_standard.rtf}"
+DATA_INPUT="${POSITIONAL_ARGS[1]:-$WORKSPACE_DIR/templates/publisher/samples/arve_test_andmed.xml}"
+OUT_INPUT="${POSITIONAL_ARGS[2]:-$WORKSPACE_DIR/templates/publisher/samples/valmis_arve_${LOCALE}.pdf}"
+
+TPL="$(python3 -c "import os, sys; print(os.path.abspath(sys.argv[1]))" "$TPL_INPUT")"
+DATA="$(python3 -c "import os, sys; print(os.path.abspath(sys.argv[1]))" "$DATA_INPUT")"
+OUT="$(python3 -c "import os, sys; print(os.path.abspath(sys.argv[1]))" "$OUT_INPUT")"
 
 echo "================================================================================"
-echo "⚡ Testing Pixel-Perfect Template Rendering..."
+echo "⚡ Testing Pixel-Perfect Template Rendering (Locale: $LOCALE)..."
 echo "   Template: $TPL"
 echo "   Data:     $DATA"
 echo "   Output:   $OUT"
+echo "   Locale:   $LOCALE"
 echo "================================================================================"
 
 if [ ! -f "$TPL" ]; then
@@ -38,13 +64,21 @@ if podman ps --format '{{.Names}}' | grep -q '^app-publisher-designer$'; then
   podman exec -i app-publisher-designer /u01/oracle/bin/render-template.sh \
     "/u01/templates/$REL_TPL" \
     "/u01/templates/$REL_DATA" \
-    "/u01/templates/$REL_OUT"
+    "/u01/templates/$REL_OUT" \
+    --locale "$LOCALE"
 else
   # Local fast fallback rendering
   echo "📄 Running local fallback rendering..."
   TMP_DIR="$(mktemp -d)"
-  libreoffice --headless --convert-to pdf "$TPL" --outdir "$TMP_DIR" 2>/dev/null || true
-  BASE="$(basename "$TPL" .rtf)"
+  POPULATED_RTF="$TMP_DIR/populated_template.rtf"
+  PREPROCESSOR="$WORKSPACE_DIR/docker/publisher-designer/xdo-preprocessor.py"
+  if [ -f "$PREPROCESSOR" ]; then
+    python3 "$PREPROCESSOR" "$DATA" "$TPL" "$POPULATED_RTF" --locale "$LOCALE" 2>/dev/null || cp "$TPL" "$POPULATED_RTF"
+  else
+    cp "$TPL" "$POPULATED_RTF"
+  fi
+  libreoffice --headless --convert-to pdf "$POPULATED_RTF" --outdir "$TMP_DIR" 2>/dev/null || true
+  BASE="$(basename "$POPULATED_RTF" .rtf)"
   if [ -f "$TMP_DIR/${BASE}.pdf" ]; then
     cp "$TMP_DIR/${BASE}.pdf" "$OUT"
     rm -rf "$TMP_DIR"
@@ -52,7 +86,7 @@ else
   else
     echo "ℹ️ Launching app-publisher-designer container to perform authentic render..."
     "$SCRIPT_DIR/start-designer.sh"
-    "$0" "$TPL" "$DATA" "$OUT"
+    "$0" "$TPL" "$DATA" "$OUT" --locale "$LOCALE"
     exit 0
   fi
 fi

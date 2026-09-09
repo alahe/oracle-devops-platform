@@ -12,9 +12,15 @@ container:
   hostname: "publisher-designer-dev"
   build_local: true
   build_context: "./docker/publisher-designer"
-  memory_limit: "1536m"
+  memory_limit: "2048m"
   cpu_limit: "2.0"
   restart_policy: "unless-stopped"
+  healthcheck:
+    test: ["CMD-SHELL", "curl -f http://localhost:6080/vnc.html || exit 1"]
+    interval: "10s"
+    timeout: "5s"
+    retries: 3
+    start_period: "15s"
 
 network:
   mode: "bridge"
@@ -33,13 +39,33 @@ volumes:
     container_path: "/u01/templates"
     mode: "z"
     description: "Git-versioned Publisher RTF templates and sample XML data"
+  - host_path: "./binaries/publisher"
+    container_path: "/u01/binaries"
+    mode: "z"
+    description: "Local Microsoft Office and Oracle BI Publisher Desktop installers"
   - host_path: "./install_logs"
     container_path: "/u01/logs"
     mode: "z"
     description: "Audit and rendering log files"
+  - host_path: "publisher_designer_wine"
+    container_path: "/u01/oracle/.wine"
+    mode: "z"
+    description: "Persistent Wine prefix preserving installed Word and Oracle plugins"
 
 environment:
   DISPLAY: ":1"
   VNC_PORT: "5900"
   NOVNC_PORT: "6080"
+  WINEARCH: "win32"
   LANG: "en_US.UTF-8"
+
+# Accessibility & Compliance Configuration (PDF/UA-1, WCAG 2.1 AA, Section 508)
+accessibility:
+  enabled: true
+  standard: "PDF/UA-1" # Options: PDF/UA-1, WCAG_2_1_AA, NONE
+  strict_validation: true
+  min_contrast_ratio: 4.5
+  enforce_table_headers: true
+  enforce_alt_text: true
+  generate_acr_report: true
+

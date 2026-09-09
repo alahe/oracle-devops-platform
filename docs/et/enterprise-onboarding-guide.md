@@ -110,3 +110,51 @@ Kontrollige ühenduvust sise-Artifactory ja proksiga:
 Ettevõtte seadistused ja kiirkäsud on integreeritud Developer Hubi veebiliidesesse ([`docs/dev-hub.html`](../dev-hub.html)):
 - Ava vahekaart **Tööriistad & Skriptid**.
 - Vali kaart **Ettevõtte seadistus ja Artifactory peeglid**, et kopeerida terminalikäsud või käivitada olekukontroll.
+
+---
+
+## 7. Ettevõtte Dokumendimallide Brändimine ja Ligipääsetavus (PDF/UA-1 & WCAG 2.1 AA)
+
+Ettevõtte uute süsteemide liidestamisel peavad väljastatavad äridokumendid (arved, saatelehed, finantsaruanded) vastama ettevõtte ametlikule stiiliraamatule ning kohustuslikele ligipääsetavuse seadustele (**Euroopa Ligipääsetavuse Akt / EN 301 549, USA Section 508, PDF/UA-1 ISO 14289-1**). Nõuete eiramine toob kaasa trahviohu ja riigihangetelt diskvalifitseerimise.
+
+### 1. Tsentraalne Pildihoidla ja Logo Halidus (Single Source of Assets)
+Vältimaks arendaja töökoha failiteede (nt `C:\logo.png`) kõvakodeerimist või rasterpiltide duplitseerimist kümnetesse RTF mallidesse:
+1. **Hosti Failihoidla:** Paiguta ettevõtte ametlik kõrgresolutsiooniline logo kausta:
+   ```text
+   templates/publisher/common/images/company_logo.png
+   ```
+2. **Konteineri Töötee:** Kujunduskonteiner monteerib selle automaatselt asukohta `/u01/common/images/company_logo.png`.
+3. **Dünaamiline Viitamine Mallis:** Lisa Microsoft Wordis või LibreOffice Writeris kohahoidja pilt, vali paremklõpsuga **Omadused / Kirjeldus / Veeb** ning sisesta Oracle XDO dünaamiline URL:
+   ```text
+   url:{concat($IMAGE_DIR, '/company_logo.png')}
+   ```
+   Määra alternatiivtekstiks (Alt Text) ametlik kirjeldus: `Ettevõtte ametlik logo`.
+4. **Automaatne Serverite Sünkroniseerimine:** Käivitades `./scripts/publisher/deploy-publisher-reports.sh`, kopeeritakse kausta `common/images/` sisu automaatselt reaalsetesse testi- ja toodanguserveri Publisheri kataloogidesse.
+
+### 2. Ligipääsetav Näidismall (`accessible_starter_template.rtf`)
+Platvorm pakub standardiseeritud ja seadustele vastavat alusmalli asukohas:
+[`templates/publisher/samples/accessible_starter_template.rtf`](../../templates/publisher/samples/accessible_starter_template.rtf)
+
+Malli omadused:
+- **`\trhdr` Tabeli Päiserea Kordus:** Tagab, et mitmelehelistes tabelites loeb ekraanilugeja veergude päiseid igal lehel ilma konteksti kaotamata.
+- **Summary-First Finantsplokk:** Arve põhiandmed (kogusumma, maksetähtaeg, IBAN) on toodud kohe dokumendi ülaosas esile.
+- **Range WCAG AA Värvikontrast:** Tumesinine (`#0A3663`) ja tumehall (`#222222`), mis saavutavad valgel taustal **7.1:1 kontrastsuse** (ületades nõutud 4.5:1 normi).
+- **Sisse-ehitatud PDF/UA-1 Struktuuripuud:** Semantilised pealkirjad (`Heading 1`, `Heading 2`), tabelimärgised (`/S/Table`, `/S/TR`, `/S/TH`, `/S/TD`) ning dokumendi metaandmed.
+
+### 3. Automaatne Ligipääsetavuse Audit ja Ekraanilugeja Simulaator
+Enne mallide toodangusse viimist kontrolli vastavust CLI tööriistadega:
+
+```bash
+# 1. Kontrolli RTF malli reeglite vastavust ja saa täpsed samm-sammult parandusjuhised:
+./scripts/publisher/validate-rtf-accessibility.sh templates/publisher/samples/accessible_starter_template.rtf
+
+# 2. Valideeri genereeritud PDF ja kuula simuleeritud ekraanilugeja kõnetranskriptsiooni:
+./scripts/publisher/validate-pdf-accessibility.sh build/accessible_starter_template_et.pdf
+```
+
+### 4. Nulltolerantsiga CI/CD Kvaliteedivärav
+Automaattestide käivitamine kontrollib ligipääsetavust igal koodimuudatusel:
+```bash
+./tests/integration/test-publisher-accessibility-suite.sh
+```
+Testikomplekt kompileerib standardarved, 35-realised mitmelehelised koondtabelid ning finantsaruanded, nõudes enne toodangusse lubamist **100% vastavusskoori**.

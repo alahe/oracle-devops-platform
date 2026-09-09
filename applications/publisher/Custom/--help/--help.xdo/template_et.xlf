@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.0">
+  <file source-language="en-US" target-language="et-EE" datatype="plaintext" original="template.rtf">
+    <header/>
+    <body>
+      <trans-unit id="DOC_TITLE">
+        <source>Report Document</source>
+        <target>--help</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

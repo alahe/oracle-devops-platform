@@ -76,6 +76,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     -u|--update)
       ACTION="update"
+      INCREMENTAL=true
+      export UPDATE_MODE=true
+      export INCREMENTAL_MODE=true
       shift
       ;;
     -r|--replace)
@@ -250,6 +253,7 @@ msg_print "BP_DEPLOY_TARGET" "$TARGET_BP_NUM" "$TARGET_BP_NAME"
 echo ""
 
 START_TIME=$(date +%s)
+export SELECTED_BLUEPRINT="$TARGET_BP_NUM"
 LOG_FILE="$WORKSPACE_DIR/install_logs/deploy_blueprint_${TARGET_BP_NUM}_$(date +"%Y%m%d_%H%M%S").log"
 mkdir -p "$(dirname "$LOG_FILE")"
 ln -sf "$LOG_FILE" "$WORKSPACE_DIR/install_logs/deploy_bp_${TARGET_BP_NUM}_latest.log" 2>/dev/null || true
@@ -295,6 +299,8 @@ fi
 SETUP_ARGS=("-b" "$TARGET_BP_NUM")
 if [ "$FORCE" = true ]; then
   SETUP_ARGS+=("-y")
+  export FORCE=true
+  export FORCE_DEPLOY=true
 fi
 if [ -n "${CLI_LANG:-}" ]; then
   SETUP_ARGS+=("--lang" "$CLI_LANG")
@@ -314,8 +320,10 @@ fi
 if [ "$ACTION" = "replace" ]; then
   SETUP_ARGS+=("--replace")
 fi
-if [ "${INCREMENTAL:-false}" = "true" ]; then
+if [ "${INCREMENTAL:-false}" = "true" ] || [ "$ACTION" = "update" ]; then
   SETUP_ARGS+=("--incremental")
+  export INCREMENTAL_MODE=true
+  export UPDATE_MODE=true
 fi
 
 "$WORKSPACE_DIR/scripts/setup-all.sh" "${SETUP_ARGS[@]}" 2>&1 | tee -a "$LOG_FILE"

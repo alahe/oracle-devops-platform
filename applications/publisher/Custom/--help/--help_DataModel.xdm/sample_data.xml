@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DATA>
+  <HEADER>
+    <COMPANY_NAME>Eesti Ettevõte OÜ</COMPANY_NAME>
+    <REG_CODE>12345678</REG_CODE>
+    <VAT_NUMBER>EE101234567</VAT_NUMBER>
+    <REPORT_TITLE>--help</REPORT_TITLE>
+    <DOCUMENT_NUM>DOC-2026-001</DOCUMENT_NUM>
+    <DOCUMENT_DATE>2026-09-09</DOCUMENT_DATE>
+    <AUTHOR>Arendaja</AUTHOR>
+  </HEADER>
+  <ROWS>
+    <ROW>
+      <ROW_NUM>1</ROW_NUM>
+      <ITEM_CODE>ITEM-01</ITEM_CODE>
+      <ITEM_NAME>Näidistoode või teenus</ITEM_NAME>
+      <QTY>10</QTY>
+      <TOTAL>100.00</TOTAL>
+    </ROW>
+  </ROWS>
+  <TOTALS>
+    <GRAND_TOTAL>100.00</GRAND_TOTAL>
+  </TOTALS>
+</DATA>

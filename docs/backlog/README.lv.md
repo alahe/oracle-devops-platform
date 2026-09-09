@@ -1,4 +1,4 @@
-# Finanšu Uzņēmuma Sadalītās Arhitektūras Backlog (Jira Epics & Lietotāju Stāsti)
+# Finanšu uzņēmuma sadalītās arhitektūras backlog (Jira epics & lietotāju stāsti)
 
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 

@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🏢 Företagets Interna pki-certifikat (corporate PKI)
+# 🏢 Företagets interna PKI-certifikat (corporate PKI)
 
 I denna katalog lagras eller synkroniseras certifikat från organisationens interna PKI-infrastruktur:
 * `corp_cert.crt` — Företagets servercertifikat

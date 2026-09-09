@@ -9,7 +9,26 @@ This skill defines the architectural rules for `scripts/setup-all.sh` and `scrip
 
 ---
 
-## 1. Orchestration Layer Boundaries
+## 1. 🎯 When to Use & Negative Routing
+
+### Positive Triggers (Activate Immediately):
+- Running cold installations: `./scripts/setup-all.sh` or resetting environment: `./scripts/reset-all.sh`
+- Adding a new setup step, installer, or lifecycle script in `scripts/` or `scripts/internal/`
+- Dual-stream progress logging, `trap` cleanup, and step timing in `metrics/`
+- Blueprint parameter forwarding (`-b <N>`, `--lang <LANG>`, `--clean`, `--dry-run`)
+
+### Negative Routing (Redirect to Specialized Skills):
+| If the task is primarily about... | DO NOT handle here. Route immediately to: |
+|:---|:---|
+| Rapid ~15s recovery from existing snapshot | `golden_snapshots_dr` |
+| Database container internals, memory limits, or Vector Search | `oracle_containers` |
+| Blueprint definitions, port mappings, or topology resolution | `blueprints_and_topology` |
+| Password storage, `get-password.sh`, or SEPS Wallet generation | `wallet_security_rotation` |
+| Simulating CI/CD pipelines, Liquibase validation, or testing | `testing_and_ci_framework` |
+
+---
+
+## 2. Orchestration Layer Boundaries
 
 `setup-all.sh` is strictly an **orchestrator**:
 - **Responsibilities:** CLI parsing (`-b <N>`, `--lang <LANG>`), user confirmation, step delegation to `scripts/internal/*.sh`, duration tracking (`metrics/`), and logging (`install_logs/`).
@@ -110,4 +129,17 @@ Before introducing a new step in `setup-all.sh`:
    - **Central Gateway Hot-Reload:** If central ORDS (`app-ords` from `env0`) is running, setting up any database (e.g. `db-alise`) automatically registers `pool.xml` in `/etc/ords/config/databases/<pool_name>/` and reloads the central container.
    - **Oracle Cloud ADB (`db-adb.yaml`):** Managed cloud ORDS schemas must not be overridden (`install_in_db: false`). When `verify_version_match: true`, version parity between central ORDS and cloud ADB is validated.
    - **No ORDS Server Guidance:** When neither local nor central ORDS is active, scripts display clear yellow guidance (`ORDS_NOT_CONFIGURED_STATUS` / `ORDS_NOT_CONFIGURED_HINT`).
+
+---
+
+## 7. 🩺 Diagnostic Signatures & 1-Line Remedies
+
+| Symptom / Error | Root Cause | 1-Line Remedy |
+|:---|:---|:---|
+| `.setup_in_progress` prevents new setup | Previous setup was aborted abruptly (SIGKILL) | Verify no background setup is running with `pgrep -f setup-all`, then remove `.setup_in_progress`. |
+| APEX installation times out or hangs | Datafile resizing freeze or insufficient container RAM | Pre-allocate tablespaces or check logs in `install_logs/apex_install_*.log`. |
+| `reset-all.sh` fails to remove containers | Orphaned container lock or permission issue | Run `podman rm -f $(podman ps -aq)` and retry `./scripts/reset-all.sh -y`. |
+| Database healthy check loops forever | Container started but Oracle listener or PDB is slow | Inspect container logs: `podman logs -f <container_name>` to see cold init progress. |
+| SEPS Wallet fails to create aliases | Missing `mkstore` or Podman secret tmpfs issue | Check Java/SQLcl paths and inspect `install_logs/create_wallet_*.log`. |
+
 

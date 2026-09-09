@@ -1,4 +1,4 @@
-# Finansiell Distribuerad Arkitektur Backlog (Jira Epics & Användarberättelser)
+# Finansiell distribuerad arkitektur backlog (Jira epics & användarberättelser)
 
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 

@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](publisher-setup.md) | [ 🇪🇪 Eesti ](et/publisher-setup.md) | [ 🇸🇪 Svenska ](sv/README.md) | [ 🇱🇻 Latviešu ](lv/README.md) | [ 🇱🇹 Lietuvių ](lt/README.md)
 
-# Oracle Analytics Publisher (Pixel Perfect) Paigaldus- ja Kasutusjuhend
+# Oracle Analytics Publisher (Pixel-Perfect) Integration & Setup Guide
 
 See juhend kirjeldab **Oracle Analytics Publisheri (Pixel Perfect / BI Publisher)** paigaldamist, arhitektuuri, andmeallikate automaatset sidumist ja aruannete haldust blueprintide **Seeria 10–19 ja 40** raames.
 

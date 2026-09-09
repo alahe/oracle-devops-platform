@@ -15,7 +15,14 @@ METRICS_DIR="$WORKSPACE_DIR/metrics"
 mkdir -p "$LOG_DIR" "$METRICS_DIR"
 
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_FILE="$LOG_DIR/web_ide_init_${TIMESTAMP}.log"
+BP_TAG=""
+if [ -n "${SELECTED_BLUEPRINT:-}" ]; then
+  BP_TAG="bp_${SELECTED_BLUEPRINT}_"
+elif [ -n "${ACTIVE_BLUEPRINT:-}" ]; then
+  BP_TAG="bp_${ACTIVE_BLUEPRINT}_"
+fi
+LOG_FILE="$LOG_DIR/web_ide_init_${BP_TAG}${TIMESTAMP}.log"
+[ -n "${BP_TAG}" ] && ln -sf "$LOG_FILE" "$LOG_DIR/web_ide_init_${BP_TAG}latest.log" 2>/dev/null || true
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 START_TIME=$(date +%s)
@@ -49,7 +56,24 @@ if [ -d "$TNS_DIR" ]; then
   echo "✅ SEPS Wallet synchronized successfully to Web IDE container!"
 fi
 
-# 2. Register VS Code SQL Developer Connections inside Web IDE
+# 2. Ensure Java 21 and architecture symlinks exist for Oracle SQL Developer extension
+if ! podman exec -i "$WEB_IDE_CONTAINER" which java >/dev/null 2>&1; then
+  echo "☕ Installing OpenJDK 21 for Oracle SQL Developer..."
+  podman exec -u 0 -i "$WEB_IDE_CONTAINER" apt-get update >/dev/null 2>&1 || true
+  podman exec -u 0 -i "$WEB_IDE_CONTAINER" apt-get install -y --no-install-recommends openjdk-21-jdk-headless >/dev/null 2>&1 || true
+fi
+podman exec -u 0 -i "$WEB_IDE_CONTAINER" bash -c '
+  for j in /usr/lib/jvm/java-21-openjdk-*; do
+    if [ -d "$j" ]; then
+      ln -sf "$j" /usr/lib/jvm/default-java 2>/dev/null || true
+      ln -sf "$j" /usr/lib/jvm/java-21-openjdk-amd64 2>/dev/null || true
+      ln -sf "$j" /usr/lib/jvm/java-21-openjdk-arm64 2>/dev/null || true
+      break
+    fi
+  done
+' 2>/dev/null || true
+
+# 3. Register VS Code SQL Developer Connections inside Web IDE
 echo "🔌 Registering SQL Developer connections in Web IDE..."
 "$SCRIPT_DIR/register-connections.sh" >/dev/null 2>&1 || true
 

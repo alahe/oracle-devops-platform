@@ -332,109 +332,101 @@ def get_live_modules(running_containers):
         "forms-publisher": ("app-forms" in rc) and (("app-publisher" in rc) or ("oracle-publisher-dev" in rc))
     }
 
-def find_latest_log_for_blueprint(workspace_dir=None, bp_num=0):
+def find_all_logs_for_blueprint(workspace_dir=None, bp_num=0):
     """
-    Intelligently discovers the most recent installation, restore, or deployment
-    log file for a given blueprint in install_logs/.
-    Supports explicit naming (*_bp_<N>_*.log, *blueprint_<N>*.log) as well as
-    heuristics matching blueprint-specific containers and configuration files.
+    Discovers all historical and active installation, restore, or deployment
+    log files for a given blueprint in install_logs/.
+    Returns a list of log file metadata dicts, sorted newest first.
     """
     import glob
     ws = workspace_dir or WORKSPACE_DIR
     logs_dir = os.path.join(ws, "install_logs")
     if not os.path.isdir(logs_dir):
-        return None
+        return []
 
     b_num = int(bp_num) if str(bp_num).isdigit() else 0
 
-    # 1. Exact pattern matches in install_logs/
-    patterns = [
-        f"*_bp_{b_num}_*.log",
-        f"*bp_{b_num}_*.log",
-        f"*_bp_{b_num}.log",
-        f"*bp_{b_num}.log",
-        f"*_bp_{b_num}_latest.log",
-        f"*blueprint_{b_num}_*.log",
-        f"*blueprint_{b_num}.log",
-        f"*blueprint_{b_num}_latest.log",
-        f"deploy_blueprint_{b_num}_*.log",
-        f"setup_bp_{b_num}_*.log",
-        f"restore_bp_{b_num}_*.log",
-        f"snapshot_create_bp_{b_num}_*.log"
-    ]
+    # Strict blueprint regex pattern:
+    # Matches: setup_bp_5_..., deploy_blueprint_5_..., restore_bp_5_..., test_bp_5_..., publisher_engine_install_bp_5_..., etc.
+    # Disallows: devhub_browser_blueprints_..., test_all_components_..., or other blueprints (bp_0, bp_1, etc.)
+    bp_regex = re.compile(rf'(?:^|[_\-.])(?:bp|blueprint)[_\-]?0*{b_num}(?:[_\-.]|$)', re.IGNORECASE)
 
+    # Negative guardrail: ignore global test suites that aren't specific blueprint executions
+    ignore_prefixes = (
+        "devhub_browser_", "test_all_components", "ci_local", "test_filename_portability",
+        "test_devhub_", "test_title_", "pre_commit_check", "security_audit_", "test_pre_commit"
+    )
+
+    valid_logs = [f for f in glob.glob(os.path.join(logs_dir, "*.log")) if os.path.isfile(f)]
     candidates = []
-    for pat in patterns:
-        for fpath in glob.glob(os.path.join(logs_dir, pat)):
-            if os.path.isfile(fpath):
-                candidates.append(fpath)
 
-    # 2. Heuristic container & content matching if no directly named log exists
-    if not candidates:
-        bp_signatures = {
-            0: ["db-proxy", "oracle-free-db-in-prod_proxy_oradata", ".env.0-default-proxy-ords", "Blueprint #0"],
-            1: ["db-alise", "oracle-free-db-in-prod_alise_oradata", ".env.1-standalone-alise-db", "Blueprint #1"],
-            2: ["db-proxy-standalone", ".env.2-standalone-proxy-db", "Blueprint #2"],
-            3: ["db-gvenzl", ".env.3-standalone-gvenzl-db", "Blueprint #3"],
-            4: ["db-adb", ".env.4-standalone-autonomous-db", "Blueprint #4"],
-            5: ["oracle-publisher-dev", "app-publisher", ".env.5-standalone-publisher", "Blueprint #5"],
-            6: ["app-forms", ".env.6-standalone-forms", "Blueprint #6"],
-            7: ["app-forms-publisher", ".env.7-consolidated-forms-publisher", "Blueprint #7"],
-            8: ["web-ide-dev", ".env.8-standalone-web-ide", "Blueprint #8"],
-            9: ["publisher-designer", "app-publisher-designer", ".env.9-standalone-publisher-designer", "Blueprint #9"]
-        }
-        sigs = bp_signatures.get(b_num, [])
+    for lf in valid_logs:
+        bname = os.path.basename(lf)
+        if bname.startswith(ignore_prefixes):
+            continue
+        if bp_regex.search(bname):
+            candidates.append(lf)
 
-        valid_logs = [f for f in glob.glob(os.path.join(logs_dir, "*.log")) if os.path.isfile(f)]
-        all_logs = sorted(valid_logs, key=lambda p: os.path.getmtime(p) if os.path.exists(p) else 0, reverse=True)
-        for lf in all_logs:
-            bname = os.path.basename(lf)
-            other_bp_match = re.search(r'bp_([0-9]+)|blueprint_([0-9]+)', bname)
-            if other_bp_match:
-                matched_num = int(other_bp_match.group(1) or other_bp_match.group(2))
-                if matched_num != b_num:
-                    continue
+    valid_candidates = list(set([c for c in candidates if os.path.isfile(c)]))
+    valid_candidates.sort(key=os.path.getmtime, reverse=True)
 
-            try:
-                with open(lf, "r", encoding="utf-8", errors="ignore") as f:
-                    content_head = "".join([f.readline() for _ in range(100)])
-                if any(sig in content_head for sig in sigs):
-                    candidates.append(lf)
-                    break
-            except Exception:
-                pass
+    result = []
+    for fpath in valid_candidates:
+        fname = os.path.basename(fpath)
+        size_b = os.path.getsize(fpath)
+        if size_b < 1024:
+            size_str = f"{size_b} B"
+        elif size_b < 1024 * 1024:
+            size_str = f"{size_b / 1024:.1f} KB"
+        else:
+            size_str = f"{size_b / (1024 * 1024):.1f} MB"
+        mtime_dt = datetime.fromtimestamp(os.path.getmtime(fpath))
+        mtime_str = mtime_dt.strftime("%Y-%m-%d %H:%M:%S")
 
-    if not candidates:
+        category = "devops"
+        lower_name = fname.lower()
+        if "setup" in lower_name:
+            category = "setup"
+        elif "deploy" in lower_name:
+            category = "setup"
+        elif "restore" in lower_name or "snapshot" in lower_name:
+            category = "snapshot"
+        elif "reset" in lower_name:
+            category = "devops"
+        elif "test" in lower_name:
+            category = "test"
+        elif "publisher" in lower_name or "forms" in lower_name or "web_ide" in lower_name or "sqlcl" in lower_name:
+            category = "devops"
+        else:
+            category = "general"
+
+        result.append({
+            "file": fname,
+            "filename": fname,
+            "relative_path": f"install_logs/{fname}",
+            "full_path": os.path.abspath(fpath),
+            "size_bytes": size_b,
+            "size_human": size_str,
+            "mtime": mtime_str,
+            "timestamp": os.path.getmtime(fpath),
+            "category": category
+        })
+    return result
+
+def find_latest_log_for_blueprint(workspace_dir=None, bp_num=0):
+    """
+    Intelligently discovers the most recent installation, restore, or deployment
+    log file for a given blueprint in install_logs/.
+    """
+    logs = find_all_logs_for_blueprint(workspace_dir, bp_num)
+    if not logs:
         return None
-
-    valid_candidates = [c for c in set(candidates) if os.path.isfile(c)]
-    if not valid_candidates:
-        return None
-
-    best_log = sorted(valid_candidates, key=os.path.getmtime, reverse=True)[0]
-    fname = os.path.basename(best_log)
-    size_b = os.path.getsize(best_log)
-    
-    if size_b < 1024:
-        size_str = f"{size_b} B"
-    elif size_b < 1024 * 1024:
-        size_str = f"{size_b / 1024:.1f} KB"
-    else:
-        size_str = f"{size_b / (1024 * 1024):.1f} MB"
-
-    mtime_dt = datetime.fromtimestamp(os.path.getmtime(best_log))
-    mtime_str = mtime_dt.strftime("%Y-%m-%d %H:%M:%S")
-
+    latest = logs[0]
     return {
         "status": "ok",
         "ok": True,
         "found": True,
-        "blueprint": b_num,
-        "file": fname,
-        "relative_path": f"install_logs/{fname}",
-        "full_path": os.path.abspath(best_log),
-        "size_bytes": size_b,
-        "size_human": size_str,
-        "mtime": mtime_str
+        "blueprint": int(bp_num) if str(bp_num).isdigit() else 0,
+        **latest
     }
 

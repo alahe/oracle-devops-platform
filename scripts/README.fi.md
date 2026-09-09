@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🛠️ Cli-komentosarjat ja Kehittäjätyökalujen Käsikirja
+# 🛠️ CLI-komentosarjat ja kehittäjätyökalujen käsikirja
 
 Tämä opas tarjoaa kattavan dokumentaation kaikille projektin elinkaari-, diagnostiikka-, hallinta- ja kehittäjäskripteille.
 

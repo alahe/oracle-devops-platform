@@ -17,7 +17,14 @@ START_FORMS_TOTAL=$(date +%s)
 LOG_DIR="$WORKSPACE_DIR/install_logs"
 mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_FILE="$LOG_DIR/forms_engine_install_${TIMESTAMP}.log"
+BP_TAG=""
+if [ -n "${SELECTED_BLUEPRINT:-}" ]; then
+  BP_TAG="bp_${SELECTED_BLUEPRINT}_"
+elif [ -n "${ACTIVE_BLUEPRINT:-}" ]; then
+  BP_TAG="bp_${ACTIVE_BLUEPRINT}_"
+fi
+LOG_FILE="$LOG_DIR/forms_engine_install_${BP_TAG}${TIMESTAMP}.log"
+[ -n "${BP_TAG}" ] && ln -sf "$LOG_FILE" "$LOG_DIR/forms_engine_install_${BP_TAG}latest.log" 2>/dev/null || true
 
 if [ "${MASTER_SETUP:-false}" != "true" ]; then
   exec > >(tee -a "$LOG_FILE") 2>&1

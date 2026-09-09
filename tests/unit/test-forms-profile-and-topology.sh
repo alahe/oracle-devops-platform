@@ -22,6 +22,19 @@ if [ "$PROFILE_DB_PORT" != "1534" ]; then
   exit 1
 fi
 
+echo "🧪 Test: Loading db-forms-publisher-oracle YAML profile..."
+load_db_profile "db-forms-publisher-oracle"
+
+if [ "$PROFILE_CONTAINER_NAME" != "db-forms-publisher" ]; then
+  echo "❌ Error: Expected container db-forms-publisher, got $PROFILE_CONTAINER_NAME"
+  exit 1
+fi
+
+if [ "$PROFILE_DB_PORT" != "1538" ]; then
+  echo "❌ Error: Expected port 1538, got $PROFILE_DB_PORT"
+  exit 1
+fi
+
 for bp in 6 7; do
   bp_file=$(find "$WORKSPACE_DIR/config/blueprints" -name ".env.${bp}-*" -o -name ".env.${bp}" | head -n 1)
   if [ -n "$bp_file" ] && [ -f "$bp_file" ]; then

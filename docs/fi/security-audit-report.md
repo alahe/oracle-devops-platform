@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../security-audit-report.md) | [ 🇪🇪 Eesti ](../et/security-audit-report.md) | [ 🇫🇮 Suomi ](security-audit-report.md) | [ 🇸🇪 Svenska ](../sv/security-audit-report.md) | [ 🇱🇻 Latviešu ](../lv/security-audit-report.md) | [ 🇱🇹 Lietuvių ](../lt/security-audit-report.md)
 
-# 🛡️ Yritystason Tietoturva-auditin Raportti & Hardening-Opas
+# 🛡️ Yritystason tietoturva-auditin raportti & hardening-opas
 
 Tämä asiakirja esittää **Oracle DevOps -alustan** ja **Oracle APEX -sovellusmoottorin** kattavan tietoturva-auditoinnin menetelmät, havainnot, korjaustoimenpiteet ja vaatimustenmukaisuuden finanssialan standardeihin nähden.
 

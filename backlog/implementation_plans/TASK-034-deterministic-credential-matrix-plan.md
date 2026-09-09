@@ -26,16 +26,16 @@ Kehtestame range 3-kihilise reeglistiku ja standardse mustri:
 
 ```mermaid
 graph TD
-    A[Aktiivne Andmebaasi Instants $TARGET_DB] --> B[Konteineri Lühinimi $C_SHORT nt: proxy, alise, publisher]
+    A[Aktiivne Andmebaasi Instants $TARGET_DB] --> B[Konteineri Lühinimi $C_SHORT<br/>nt: proxy, alise, publisher]
     B --> C[Podman Secret: ${C_SHORT}_db_sys_password]
     B --> D[Oracle SEPS Wallet: DB_${C_UPPER}_SYS]
     B --> E[Konteineri sees: /run/secrets/oracle_pwd]
     
-    F[Keskne Credential Helper: get_db_secret $TARGET_DB $ROLE] --> G{Kust päritakse?}
+    F[Keskne Credential Helper:<br/>get_db_secret $TARGET_DB $ROLE] --> G{Kust päritakse?}
     G -->|1. Konteinerist| E
     G -->|2. Podman Secretist| C
     G -->|3. Walletist| D
-    G -->|Kui puudub| H[❌ Selge ja kohene viga FAIL-FAST, ilma teiste DB-de poole pöördumata]
+    G -->|Kui puudub| H[❌ Selge ja kohene viga<br/>FAIL-FAST ilma teiste baasideta]
 ```
 
 ### 2.2. Profiilipõhine Siht-Andmebaasi Resolutsioon (Service-to-Database Mapping)
@@ -44,9 +44,9 @@ Platvorm toetab kõiki 3 peamist ettevõtte arhitektuurimudelit:
 
 ```mermaid
 graph TD
-    subgraph Stsenaarium C: Eraldi Proxy DB + Ühine Infra DB Forms/Publisherile
-        PROXY_DB[db-proxy: Port 1532<br/>APEX 26.1 + ORDS]
-        INFRA_DB[db-publisher: Port 1531<br/>Forms RCU WLS_* + Publisher RCU OAS_*]
+    subgraph ScenarioC ["Stsenaarium C: Eraldi Proxy DB +<br/>Ühine Infra DB Forms/Publisherile"]
+        PROXY_DB["db-proxy: Port 1532<br/>APEX 26.1 + ORDS"]
+        INFRA_DB["db-publisher: Port 1531<br/>Forms RCU WLS_* + Publisher RCU OAS_*"]
         
         APEX_APP[APEX Builder & Apps] --> PROXY_DB
         ORDS_SVC[ORDS Pools] --> PROXY_DB

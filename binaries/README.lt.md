@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📦 Vietinių Programinės Įrangos paketų ir dvejetainių talpykla (`binaries/`)
+# 📦 Vietinių programinės įrangos paketų ir dvejetainių talpykla (`binaries/`)
 
 Šis katalogas naudojamas kaip vietinė talpykla diegimams be interneto ir įmonės Artifactory veidrodžiams (ZIP, RPM, JAR, VSIX, SQL).
 

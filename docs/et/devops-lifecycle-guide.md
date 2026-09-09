@@ -13,43 +13,43 @@ See juhend kirjeldab platvormi **3-tasemelise katastroofitaaste ja kiirpaigaldus
 
 ```mermaid
 flowchart TD
-    Start([🚀 Käivitus:<br/>setup-all.sh / deploy-blueprint.sh]) --> CheckLocal{1. Kas lokaalne<br/>Golden Snapshot<br/>on olemas ja<br/>versioon klapib?}
+    Start([🚀 Käivitus:<br/>setup-all.sh / deploy-blueprint.sh]) --> CheckLocal{"1. Kas lokaalne<br/>Golden Snapshot<br/>on olemas ja<br/>versioon klapib?"}
 
     %% DETAILNE VERSIOONIKONTROLLI SELGITUS
-    subgraph VerifyLogic ["🔍 KUIDAS SAMM 1 VERSIOONE VÕRDLEB (.meta.json leping)"]
+    subgraph VerifyLogic ["🔍 KUIDAS SAMM 1 VERSIOONE<br/>VÕRDLEB (.meta.json leping)"]
         LookDisk["1. Otsi golden-snapshots/<br/>bp_X_latest.tar.gz või profile_*.tar.gz"]
         ReadMeta["2. Loe kõrvalasuvast .meta.json failist<br/>(apex_version, db_image, blueprint_id)"]
-        Compare["3. verify_snapshot_version_match:<br/>Võrdle nõutud .env/YAML vs hetktõmmise versiooni"]
+        Compare["3. verify_snapshot_<br/>version_match:<br/>Võrdle nõutud .env/YAML vs hetktõmmise versiooni"]
         LookDisk --> ReadMeta --> Compare
     end
 
     CheckLocal -.->|Kontrollib| VerifyLogic
 
     %% SOE TAASTAMINE (FASTPATH)
-    CheckLocal -->|KLAPIB: .meta.json kehtiv<br/>(nt 26.1 == 26.1)| FastPath["⚡ SOE KIIRTAASTAMINE (WARM)<br/>• restore-golden-snapshots.sh (~15s)<br/>• Taastab oradata volume täpse seisu<br/>• Jätab APEX/RCU kompileerimise vahele"]
+    CheckLocal -->|JAH: .meta.json kehtiv<br/>versioonid ühtivad| FastPath["⚡ SOE KIIRTAASTAMINE (WARM)<br/>• restore-golden-snapshots.sh (~15s)<br/>• Taastab oradata volume täpse seisu<br/>• Jätab APEX/RCU kompileerimise vahele"]
     
     FastPath --> StartContainers["🚀 Käivita konteinerid<br/>(start-containers.sh)<br/>Kasutab valmis Images<br/>(DB 23ai, ORDS, Web IDE)"]
     
     StartContainers --> HealthCheck["🔍 Tervisekontroll<br/>• check-urls.sh (HTTP 200)<br/>• check-wallet.sh (SEPS)"]
 
     %% KÜLM TEE JA ARTIFACTORY KONTROLL
-    CheckLocal -->|ERINEB või PUUDUB<br/>(nt Siht 26.1 != Tõmmis 24.2)| CheckArtifactory{2. Kas ettevõtte<br/>Artifactorys on<br/>sobiv Snapshot<br/>olemas?}
+    CheckLocal -->|EI: Erineb või puudub<br/>vajalik uus ehitus| CheckArtifactory{"2. Kas ettevõtte<br/>Artifactorys on<br/>sobiv Snapshot<br/>olemas?"}
     
     CheckArtifactory -->|JAH: Kaug-.meta.json klapib| DownloadArt["⬇️ Lae Snapshot LAN kiirusel<br/>(artifactory-client.sh)"]
     DownloadArt --> FastPath
 
-    CheckArtifactory -->|EI: Tuleb luua| ColdBuild["❄️ KÜLM EHITUS NULLIST (COLD)<br/>1. Tõmba Image (Oracle Free 23ai)<br/>2. Lae alla binaries/ (apex, ords)<br/>3. Käivita tühi DB konteiner<br/>4. Kompileeri APEX & skeemid (~5-12m)"]
+    CheckArtifactory -->|EI: Tuleb luua| ColdBuild["❄️ KÜLM EHITUS NULLIST (COLD)<br/>• Tõmba DB 23ai & binaries/<br/>• Käivita tühi DB konteiner<br/>• Kompileeri APEX & skeemid (~5-12m)"]
     
     ColdBuild --> CreateSnap["💾 LOO UUS GOLDEN SNAPSHOT<br/>• create-golden-snapshots.sh<br/>• Salvestab bp_X_latest.tar.gz<br/>• Kirjutab .meta.json lepingu"]
     
-    CreateSnap --> CheckAutoPublish{3. Kas publitseerida<br/>Artifactorysse?<br/>(--publish või<br/>AUTO_PUBLISH=true)}
+    CreateSnap --> CheckAutoPublish{"3. Kas publitseerida<br/>Artifactorysse?<br/>valikuline parameeter"}
     
     CheckAutoPublish -->|JAH| PublishArt["⬆️ Publitseeri tootekataloogi<br/>(publish-to-artifactory.sh)"]
     CheckAutoPublish -->|EI| HealthCheck
     PublishArt --> HealthCheck
 
     %% GRANULAARNE VARUNDUSKIHT (BACKUPS)
-    subgraph BackupsLayer ["💾 GRANULAARNE VARUNDUS (BACKUPS) — Igapäevatöö & Säilitus"]
+    subgraph BackupsLayer ["💾 GRANULAARNE VARUNDUS (BACKUPS)<br/>— Igapäevatöö & Säilitus"]
         DevWork["👨‍💻 Arendaja teeb tööd<br/>(APEX rakendused, Forms, Publisher)"]
         DevWork --> RunBackup["📦 Käivita varundus:<br/>• backup-publisher-catalog.sh<br/>• SEPS Walleti varukoopia"]
         RunBackup --> SaveBackup["📂 Salvesta faili:<br/>backups/publisher_catalog_*.tar.gz"]

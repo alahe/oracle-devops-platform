@@ -65,3 +65,33 @@ config/certs/
 - **Databasnivå SSO:** Oracle 23ai stöder inbyggt Azure AD OAuth2-tokens och globala roller.
 - **ORDS & REST API:** ORDS validerar inkommande Bearer JWT-tokens mot Azure AD:s publika nycklar.
 - **APEX-Applikationer SSO:** Applikationer använder Social Sign-In (OpenID Connect) med automatisk användarregistrering.
+
+---
+
+## 5. Säkerhet och Rollmatris för Analytics Publisher
+
+Oracle Analytics Publisher tillämpar en tvåfasad säkerhetsmodell på företagsnivå:
+
+### Fas 1: Lokal Zero-Trust SEPS Wallet (Aktiv som Standard)
+Alla autentiseringsuppgifter förvaras säkert i Oracle SEPS Auto-Login Wallet (`cwallet.sso`). Lösenord skrivs aldrig till disk i klartext.
+
+| Roll / Konto | WebLogic Säkerhetsgrupp | SEPS Wallet Alias | Behörigheter och Ansvarsområde |
+| :--- | :--- | :--- | :--- |
+| `bip_developer` | `XMLP_DEVELOPER`, `XMLP_TEMPLATE_DESIGNER` | `PUBLISHER_DEVELOPER` | Skapande av mallar, XLIFF-översättningar och datamodeller i `/Custom/` |
+| `bip_user` | `XMLP_SCHEDULER`, `XMLP_ANALYZER` | `PUBLISHER_USER` | Körning av rapporter, schemaläggning, visning av historik och REST API-klienter |
+| `bip_admin` | `XMLP_ADMIN` | `PUBLISHER_ADMIN` | Administration av BIP-katalog (isolerad från WebLogic-konsolen) |
+
+Kommandon för hantering och rotation av lösenord:
+```bash
+./scripts/get-password.sh PUBLISHER_DEVELOPER
+./scripts/rotate-password.sh publisher dev     # Roterar utvecklarens lösenord
+./scripts/rotate-password.sh publisher user    # Roterar användarens lösenord
+./scripts/rotate-password.sh publisher admin   # Roterar administratörens lösenord
+./scripts/rotate-password.sh publisher all     # Roterar alla Publisher-lösenord
+```
+
+### Fas 2: Företagsidentitet i Molnet och M2M (Standby-arkitektur)
+- **Interaktiva webbanvändare:** SAML 2.0 Web SSO med Azure Entra ID / Okta / PingFederate.
+- **REST API / CI/CD-pipelines:** OAuth2 M2M Bearer-tokens (`client_credentials` grant) kopplade till virtuella AppRoles (`BIP_DEVELOPER`, `BIP_INTEGRATION`).
+- Kan aktiveras vid behov utan kodändringar via `config/profiles/publisher/publisher-standard.yaml` och `./scripts/internal/configure-publisher-sso.sh`.
+

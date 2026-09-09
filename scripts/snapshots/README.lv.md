@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📸 Datu Bāzes Momentuzņēmumu (golden snapshots) Pārvaldības skripti (`scripts/snapshots/`)
+# 📸 Datu bāzes momentuzņēmumu (golden snapshots) pārvaldības skripti (`scripts/snapshots/`)
 
 Šis direktorijs nodrošina skriptus saspiestu rezerves kopiju (Golden Snapshots) izveidei, atjaunošanai un pārvaldībai no datubāzes sējumiem ātrai ~15s atkopšanai.
 

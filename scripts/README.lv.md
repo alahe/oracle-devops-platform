@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🛠️ CLI Skriptu un Izstrādātāja Rīku Rokasgrāmata
+# 🛠️ CLI skriptu un izstrādātāja rīku rokasgrāmata
 
 Šī rokasgrāmata sniedz visaptverošu dokumentāciju visiem vides dzīves cikla, diagnostikas, administratīvajiem un izstrādātāju skriptiem projektā.
 

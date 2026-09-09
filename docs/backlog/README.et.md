@@ -1,4 +1,4 @@
-# Finantsettevõtte Hajusarhitektuuri Backlog (Jira Eepikud & Kasutajalood)
+# Finantsettevõtte hajusarhitektuuri backlog (Jira eepikud & kasutajalood)
 
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 

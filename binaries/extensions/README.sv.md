@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🧩 VS code Tilläggscache (`binaries/extensions/`)
+# 🧩 VS Code -tilläggscache (`binaries/extensions/`)
 
 Denna katalog fungerar som **Nivå 1 offline-cache** för VS Code `.vsix`-tillägg.
 

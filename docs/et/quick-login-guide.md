@@ -92,3 +92,11 @@ Paroolide turvaliseks vahetamiseks andmebaasis, Podman Secrets hoidlas ja Wallet
 > **APEX Sessioonide Isoleerimine (`INTERNAL` vs Tööruum):**
 > Kui testite samaaegselt APEX Admini (`INTERNAL`) ja APEX Builderit (`<WORKSPACE>`) aadressil `localhost:8448`, avage üks neist tavalises vahelehes ja teine **Incognito / Private aknas** (`Cmd+Shift+N`), et vältida brauseri sessiooniküpsiste segunemist ja veateadet *"Your session has ended"*.
 
+---
+
+## ❓ Korduma Kippuvad Küsimused & Ametlikud Allalaadimised
+
+- Vajad abi paroolide, SEPS Walleti või SSL sertifikaatidega? Vaata [Platvormi Korduma Kippuvad Küsimused (KKK)](faq.md).
+- Otsid ametlikke klienditööriistu, SQLcl või VS Code laiendust? Vaata [Ametlikud Oracle Ressursid ja Konteineritõmmised](oracle-resources-and-downloads.md).
+
+

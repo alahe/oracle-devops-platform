@@ -1,0 +1,58 @@
+# Copyright (c) 2026 Oracle DevOps Platform
+# Oracle Analytics Publisher Designer — Native Windows Workstation Profile (Variant A)
+# Runs virtualized Windows desktop inside container (KVM acceleration) with HTML5 web viewer on port 6083
+
+version: "1.0"
+profile: "publisher-designer-windows"
+description: "Oracle Analytics Publisher Desktop & MS Word Native Windows Workstation (noVNC / Web-RDP Port 6083)"
+
+container:
+  name: "app-publisher-designer"
+  image: "docker.io/dockur/windows:latest"
+  hostname: "publisher-designer-win"
+  memory_limit: "4096m"
+  cpu_limit: "2.0"
+  restart_policy: "unless-stopped"
+
+network:
+  mode: "bridge"
+  ports:
+    - host_port: 6083
+      container_port: 8006
+      protocol: "tcp"
+      description: "HTML5 Web Browser Desktop Interface (noVNC / Web-RDP)"
+    - host_port: 3389
+      container_port: 3389
+      protocol: "tcp"
+      description: "Direct Windows Remote Desktop Protocol (RDP)"
+
+volumes:
+  - host_path: "./templates/publisher"
+    container_path: "/shared"
+    mode: "z"
+    description: "Git-versioned Publisher RTF templates mapped as Windows network drive"
+  - host_path: "./binaries/publisher"
+    container_path: "/oem"
+    mode: "z"
+    description: "Local Office and Oracle BI Publisher Desktop installers for automated OEM installation"
+  - host_path: "publisher_designer_win_storage"
+    container_path: "/storage"
+    mode: "z"
+    description: "Persistent virtual disk storing Windows OS and installed Word"
+
+environment:
+  VERSION: "11"
+  RAM_SIZE: "4G"
+  CPU_CORES: "2"
+  DISK_SIZE: "32G"
+
+# Accessibility & Compliance Configuration (PDF/UA-1, WCAG 2.1 AA, Section 508)
+accessibility:
+  enabled: true
+  standard: "PDF/UA-1" # Options: PDF/UA-1, WCAG_2_1_AA, NONE
+  strict_validation: true
+  min_contrast_ratio: 4.5
+  enforce_table_headers: true
+  enforce_alt_text: true
+  generate_acr_report: true
+

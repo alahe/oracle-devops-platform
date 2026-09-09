@@ -3,6 +3,7 @@ Oracle DevOps Platform - Developer Hub Topology & Architecture
 Generates dynamic Mermaid architecture diagrams and loads YAML profiles.
 """
 import os
+import re
 import yaml
 
 WORKSPACE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
@@ -34,6 +35,54 @@ def load_yaml_profile(pname):
             return data
     except Exception:
         return {"profile": {"id": pname}, "_rel_path": rel_p}
+
+def get_all_profiles_metadata(ws=None, include_content=True):
+    ws = ws or WORKSPACE_DIR
+    profiles_dir = os.path.join(ws, "config/profiles")
+    results = []
+    if os.path.isdir(profiles_dir):
+        for root, _, files in os.walk(profiles_dir):
+            for f in sorted(files):
+                if f.endswith(".yaml"):
+                    full_p = os.path.join(root, f)
+                    rel_p = os.path.relpath(full_p, ws)
+                    cat = os.path.basename(os.path.dirname(full_p))
+                    port = None
+                    desc = ""
+                    image = ""
+                    memory = ""
+                    cnt = ""
+                    try:
+                        with open(full_p, "r", encoding="utf-8", errors="ignore") as yf:
+                            cnt = yf.read()
+                        m_p = re.search(r"(?:db_port|http_port|host_port|port):\s*([0-9]+)", cnt)
+                        if m_p:
+                            port = int(m_p.group(1))
+                        m_d = re.search(r"^\s*description:\s*[\"']?([^\"'\n\r]+)", cnt, re.MULTILINE)
+                        if m_d:
+                            desc = m_d.group(1).strip()
+                        m_i = re.search(r"^\s*(?:container_image|image):\s*[\"']?([^\"'\n\r]+)", cnt, re.MULTILINE)
+                        if m_i:
+                            image = m_i.group(1).strip()
+                        m_m = re.search(r"^\s*memory_limit:\s*[\"']?([^\"'\n\r]+)", cnt, re.MULTILINE)
+                        if m_m:
+                            memory = m_m.group(1).strip()
+                    except Exception:
+                        pass
+                    item = {
+                        "name": f,
+                        "category": cat,
+                        "rel_path": rel_p,
+                        "port": port,
+                        "description": desc,
+                        "image": image,
+                        "memory": memory
+                    }
+                    if include_content:
+                        item["content"] = cnt
+                    results.append(item)
+    results.sort(key=lambda x: (x["category"], x["name"]))
+    return results
 
 def generate_active_blueprint_mermaid(bp_num, active_dbs, env_v, lang="en"):
     L = {

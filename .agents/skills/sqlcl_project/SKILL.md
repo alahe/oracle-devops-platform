@@ -9,7 +9,26 @@ This skill guides using Oracle SQLcl `project` commands (SQLcl 23.x/26.x), the *
 
 ---
 
-## 1. Project Directory Structure
+## 1. 🎯 When to Use & Negative Routing
+
+### Positive Triggers (Activate Immediately):
+- Running SQLcl project lifecycle: `project init`, `project export`, `project stage`, `project deploy`
+- Managing Liquibase declarative changelogs and schema delta migrations
+- Configuring or invoking the SQLcl Model Context Protocol (MCP) server (`sql -mcp`)
+- Enforcing Rule 6 (exclusive SQLcl usage contract; prohibition of legacy `sqlplus`)
+- Configuring terminal aesthetics via `login.sql` (`ansiconsole`, colored prompts)
+
+### Negative Routing (Redirect to Specialized Skills):
+| If the task is primarily about... | DO NOT handle here. Route immediately to: |
+|:---|:---|
+| Registering connections in VS Code Oracle SQL Developer extension | `vscode_sql_developer` |
+| Authoring APEX declarative `.apx` DSL applications | `apexlang_app_generation` |
+| Managing SEPS wallet credentials or `cwallet.sso` | `wallet_security_rotation` |
+| Simulating local GitHub Actions CI run | `testing_and_ci_framework` |
+
+---
+
+## 2. Project Directory Structure
 
 ```text
 project_root/
@@ -162,4 +181,16 @@ To guarantee consistent behavior across local containers, remote hosts, and clou
 3. **Mandatory Script Safety Invariants:**
    - Always include `WHENEVER SQLERROR EXIT FAILURE ROLLBACK;` at the beginning of scripted SQL files.
    - Never pipe SQL outputs to `/dev/null 2>&1`; always tee or redirect to `$WORKSPACE_DIR/install_logs/*.log` to preserve failure diagnostics and prevent silent errors.
+
+---
+
+## 9. 🩺 Diagnostic Signatures & 1-Line Remedies
+
+| Symptom / Error | Root Cause | 1-Line Remedy |
+|:---|:---|:---|
+| `Liquibase Validation Failed: Validation Failed: 1 changes have validation failures` | Changeset modified after execution without runOnChange | Add `runOnChange:true` to changeset or run `lb clear-checksums` in DEV. |
+| SQLcl launch fails with `UnsupportedClassVersionError` | Local `JAVA_HOME` pointing to Java 11/17 instead of Java 21+ | Run `unset JAVA_HOME` before invoking SQLcl; allow wrapper to use bundled JRE. |
+| MCP server (`sql -mcp`) fails to connect | Missing wallet alias or restriction level violation | Check wallet connection via `./scripts/check-wallet.sh` and set `SQLCL_RESTRICTION_LEVEL=1`. |
+| Script hangs during SQL execution | Uncommitted transaction holding lock or missing semicolon | Verify SQL terminates with `;` or `/` and check locks via `V$LOCKED_OBJECT`. |
+
 

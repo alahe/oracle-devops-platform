@@ -37,6 +37,12 @@ För att köra tester från en ren startpunkt (med automatisk `reset-all.sh -y`)
 
 # 5. Multi-molntester:
 ./tests/test-remote-multicloud.sh --dry-run
+
+# 6. Integritetsgranskning av arkitekturritningar och profiler:
+./tests/unit/test-blueprint-profiles-integrity.sh
+
+# 7. Rapport för kodbasstatistik och repository-mått:
+./tests/report-repo-stats.sh
 ```
 
 ---

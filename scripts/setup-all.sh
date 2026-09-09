@@ -48,6 +48,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -y|--force|--yes|-y*|--y*|-Y|--YES)
       export FORCE=true
+      export FORCE_DEPLOY=true
       shift
       ;;
     -l|--list|-lb|--list-blueprints|--list-scenarios)
@@ -832,7 +833,7 @@ if [ "$IS_LOCAL" = "true" ]; then
           target_ports+=("${ORDS_PORT:-8088}" "${ORDS_SSL_PORT:-8448}")
           ;;
         web-ide-dev)
-          target_ports+=("${WEB_IDE_HTTP_PORT:-8090}" "${WEB_IDE_HTTPS_PORT:-8449}" "${CICD_WEB_UI_PORT:-8091}")
+          target_ports+=("${WEB_IDE_HTTP_PORT:-8090}" "${WEB_IDE_HTTPS_PORT:-8450}" "${CICD_WEB_UI_PORT:-8091}")
           ;;
         app-publisher-designer)
           target_ports+=("${PUBLISHER_DESIGNER_HTTP_PORT:-6083}" "${PUBLISHER_DESIGNER_VNC_PORT:-5903}")

@@ -1,5 +1,65 @@
 [
   {
+    "id": "run_20260908_234048",
+    "timestamp": "2026-09-08 23:40:48",
+    "suite": "security_audit",
+    "target": "security_audit",
+    "duration_sec": 1.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_security_audit_20260908_234047.log"
+  },
+  {
+    "id": "run_20260908_210947",
+    "timestamp": "2026-09-08 21:09:47",
+    "suite": "mermaid",
+    "target": "mermaid",
+    "duration_sec": 30.0,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_mermaid_20260908_210917.log"
+  },
+  {
+    "id": "run_20260908_192514",
+    "timestamp": "2026-09-08 19:25:14",
+    "suite": "security_audit",
+    "target": "security_audit",
+    "duration_sec": 1.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_security_audit_20260908_192512.log"
+  },
+  {
+    "id": "run_20260908_142312",
+    "timestamp": "2026-09-08 14:23:12",
+    "suite": "ci_sim",
+    "target": "ci_sim",
+    "duration_sec": 4.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_ci_sim_20260908_142308.log"
+  },
+  {
+    "id": "run_20260908_142209",
+    "timestamp": "2026-09-08 14:22:09",
+    "suite": "offline_ci",
+    "target": "offline_ci",
+    "duration_sec": 7.4,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_offline_ci_20260908_142202.log"
+  },
+  {
+    "id": "run_20260908_081323",
+    "timestamp": "2026-09-08 08:13:23",
+    "suite": "unit",
+    "target": "unit",
+    "duration_sec": 293.2,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_unit_20260908_080830.log"
+  },
+  {
     "id": "run_20260908_002333",
     "timestamp": "2026-09-08 00:23:33",
     "suite": "apex",

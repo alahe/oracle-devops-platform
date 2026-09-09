@@ -10,33 +10,41 @@ flowchart TD
         BP0["BP 0: Oletus Proxy DB & ORDS<br/>db-proxy (:1532) + app-ords (:8088/8448)"]
     end
 
-    subgraph DatabaseStacks ["🗄️ RYHMÄ 1: TIETOKANTAPINOT (1–4)"]
-        BP1["BP 1: Erillinen ALISE DB (:1533)"]
-        BP2["BP 2: Erillinen Proxy DB (:1537)"]
-        BP3["BP 3: Erillinen Gvenzl Yhteisö-DB (:1535)"]
-        BP4["BP 4: Erillinen Autonomous DB Cloud (:1536)"]
+    subgraph Tier1 ["RIVI 1: PÄÄARKKITEHTUURI (1–7)"]
+        subgraph DatabaseStacks ["🗄️ RYHMÄ 1: TIETOKANTAPINOT (1–4)"]
+            direction TB
+            BP1["BP 1: Erillinen ALISE DB (:1533)"]
+            BP2["BP 2: Erillinen Proxy DB (:1537)"]
+            BP3["BP 3: Erillinen Gvenzl Yhteisö-DB (:1535)"]
+            BP4["BP 4: Erillinen Autonomous DB Cloud (:1536)"]
+        end
+
+        subgraph Middleware ["🏢 RYHMÄ 2: YRITYSTASON VÄLIOHJELMISTO (5–7)"]
+            direction TB
+            BP5["BP 5: Erillinen Analytics<br/>Publisher (:1531, :9502)"]
+            BP6["BP 6: Erillinen Oracle<br/>Forms 14c (:1534, :9001, :6082)"]
+            BP7["BP 7: Yhdistetty Forms +<br/>Publisher (:1538, :9005, :9505)"]
+        end
     end
 
-    subgraph Middleware ["🏢 RYHMÄ 2: YRITYSTASON VÄLIOHJELMISTO (5–7)"]
-        BP5["BP 5: Erillinen Analytics Publisher (:1531, :9502)"]
-        BP6["BP 6: Erillinen Oracle Forms 14c (:1534, :9001, :6082)"]
-        BP7["BP 7: Yhdistetty Forms + Publisher FMW (:1531, :9001, :9502)"]
+    subgraph Tier2 ["RIVI 2: KEHITYS JA ETÄYHDYSKÄYTÄVÄT (8–11)"]
+        subgraph DeveloperStudio ["💻 RYHMÄ 3: KEHITTÄJÄSTUDIO (8–9)"]
+            direction TB
+            BP8["BP 8: Erillinen Verkko-IDE (:8090)"]
+            BP9["BP 9: Publisher Designer (:6083)"]
+        end
+
+        subgraph RemoteGateways ["🌐 RYHMÄ 4: ETÄ- JA REUNAYHDYSKÄYTÄVÄT (10–11)"]
+            direction TB
+            BP10["BP 10: Etä-ORDS-yhdyskäytävä (:8088/8448)<br/>⚠️ Testauksessa ja kehitteillä"]
+            BP11["BP 11: Etä-Publisher (:9502/9503)<br/>⚠️ Testauksessa ja kehitteillä"]
+        end
     end
 
-    subgraph DeveloperStudio ["💻 RYHMÄ 3: KEHITTÄJÄSTUDIO (8–9)"]
-        BP8["BP 8: Erillinen Verkko-IDE (:8090)<br/>⚠️ Testauksessa ja kehitteillä"]
-        BP9["BP 9: Publisher Designer (:6083)<br/>⚠️ Testauksessa ja kehitteillä"]
-    end
-
-    subgraph RemoteGateways ["🌐 RYHMÄ 4: ETÄ- JA REUNAYHDYSKÄYTÄVÄT (10–11)"]
-        BP10["BP 10: Etä-ORDS-yhdyskäytävä (:8088/8448)<br/>⚠️ Testauksessa ja kehitteillä"]
-        BP11["BP 11: Etä-Publisher (:9502/9503)<br/>⚠️ Testauksessa ja kehitteillä"]
-    end
-
-    Default --> DatabaseStacks
-    Default --> Middleware
-    Default --> DeveloperStudio
-    Default --> RemoteGateways
+    BP0 --> BP1
+    BP0 --> BP5
+    BP1 --> BP8
+    BP5 --> BP10
 ```
 
 ---
@@ -77,8 +85,8 @@ flowchart TD
 | **5** | [`.env.5-standalone-publisher`](.env.5-standalone-publisher) | `db-publisher-oracle.yaml` (:1531) | `publisher-standard.yaml` (:9502) | `db-publisher`, `app-publisher` | Erillinen Analytics Publisher 2025 ja oma RCU-tietokanta. |
 | **6** | [`.env.6-standalone-forms`](.env.6-standalone-forms) | `db-forms-oracle.yaml` (:1534) | `forms-standard.yaml` (:9001, :6082) | `db-forms`, `app-forms` | Erillinen Oracle Forms 14c ja HTML5 noVNC Forms Builder. |
 | **7** | [`.env.7-consolidated-forms-publisher`](.env.7-consolidated-forms-publisher) | `db-publisher-oracle.yaml` (:1531) | `forms-publisher-unified.yaml` (:9001/9502/6082) | `db-publisher`, `app-forms-publisher` | Yhdistetty WebLogic-säilö, joka ajaa sekä Forms 14c:tä että Publisheria. |
-| **8** | [`.env.8-standalone-web-ide`](.env.8-standalone-web-ide) | - *(Zero DB)* | `web-ide-standard.yaml` (:8090/8449/8091) | `web-ide-dev` | **⚠️ Testauksessa ja kehitteillä:** VS Code -palvelin ja SQL Developer toimivat. Artifactory-peilikonfiguraatio kehityksessä. |
-| **9** | [`.env.9-standalone-publisher-designer`](.env.9-standalone-publisher-designer) | - *(Zero DB)* | `publisher-designer-standard.yaml` (:6083 noVNC) | `app-publisher-designer` | **⚠️ Testauksessa ja kehitteillä:** noVNC-työpöytäsäilö käynnistyy. MS Word ja BIP Template Builder -integraatio työn alla. |
+| **8** | [`.env.8-standalone-web-ide`](.env.8-standalone-web-ide) | - *(Zero DB)* | `web-ide-standard.yaml` (:8090/8450/8091) | `web-ide-dev` | Erillinen kehittäjän Web-IDE-työasema: VS Code -palvelin, SQLcl ja esikonfiguroidut työkalut. |
+| **9** | [`.env.9-standalone-publisher-designer`](.env.9-standalone-publisher-designer) | - *(Zero DB)* | `publisher-designer-standard.yaml` (:6083 noVNC) | `app-publisher-designer` | HTML5 noVNC -työpöytäsäilö MS Word- ja BIP Template Builder RTF -malleille (`setup-word-designer.sh`). |
 | **10** | [`.env.10-remote-ords`](.env.10-remote-ords) | `MAIN_DB_PROFILE=NONE` | `ords-standalone.yaml` (:8088/8448) | `app-ords` | **⚠️ Testauksessa ja kehitteillä:** Reunatason ORDS käynnistyy. Reititys pilvi-ADB:hen kehitteillä. |
 | **11** | [`.env.11-remote-publisher`](.env.11-remote-publisher) | `MAIN_DB_PROFILE=NONE` | `publisher-standard.yaml` (:9502/9503) | `app-publisher` | **⚠️ Testauksessa ja kehitteillä:** Publisher käynnistyy. Raportointi etätietokantoihin kehitteillä. |
 

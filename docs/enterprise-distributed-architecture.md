@@ -28,12 +28,12 @@ flowchart TB
     end
 
     subgraph Ingress ["Network & Ingress Layer"]
-        F5_VIP["Enterprise Load Balancer / VIP (F5 BIG-IP / HAProxy)<br/>- TLS Termination & Re-encryption<br/>- Real-time Health Checks<br/>- Active/Standby Route Control"]
+        F5_VIP["Enterprise Load Balancer / VIP<br/>F5 BIG-IP / HAProxy (TLS / mTLS)<br/>Health Checks & Route Control"]
     end
 
     subgraph Tier1 ["TIER 1: ORDS + APEX App Server (Host 1)"]
         direction TB
-        ORDS_SRV["Oracle REST Data Services (ORDS)<br/>Port: 8448 (TLS) / 8088 (Plain)<br/>- APEX Static Asset Images (/i/)<br/>- Multi-Pool Route Dispatcher"]
+        ORDS_SRV["Oracle REST Data Services (ORDS)<br/>Port: 8448 (TLS) / 8088 (Plain)<br/>APEX Assets (/i/) & Multi-Pool"]
         POOL_PROXY["Pool 1: 'proxy'<br/>URL: /ords/r/proxy/*<br/>Target: Host 3 (Proxy DB)"]
         POOL_BIZ["Pool 2: 'business'<br/>URL: /ords/business/*<br/>Target: Existing Business DB"]
         ORDS_SRV --> POOL_PROXY
@@ -42,7 +42,7 @@ flowchart TB
 
     subgraph Tier2 ["TIER 2: Analytics Publisher Server (Host 2)"]
         direction TB
-        PUB_SRV["Oracle Analytics Publisher 12c/14c<br/>Port: 9502 (TLS) / 9500 (Plain)<br/>- Pixel-Perfect Document Engine<br/>- Batch Delivery (Email, SFTP)"]
+        PUB_SRV["Oracle Analytics Publisher 12c/14c<br/>Port: 9502 (TLS) / 9500 (Plain)<br/>Pixel-Perfect & Batch Delivery"]
         PUB_RCU_CONN["RCU Metadata Connection<br/>JDBC: Host 4 (Publisher DB)"]
         PUB_BIZ_CONN["Business Data Source Connection<br/>JDBC: Existing Business DB"]
         PUB_SRV --> PUB_RCU_CONN
@@ -51,16 +51,16 @@ flowchart TB
 
     subgraph Tier3 ["TIER 3: PROXY DB Server (Host 3)"]
         direction TB
-        DB_PROXY["Oracle 23ai Free DB Container<br/>Listener Port: 1533 (or 1521)<br/>- APEX 26.1 Core Engine<br/>- DevHub Portal (DEVHUB schema)<br/>- SEPS Auto-Login Wallet (cwallet.sso)"]
+        DB_PROXY["Oracle 23ai Free DB Container<br/>Port: 1533 (or 1521)<br/>APEX 26.1 Core & DEVHUB Portal"]
     end
 
     subgraph Tier4 ["TIER 4: Publisher DB Server (Host 4)"]
         direction TB
-        DB_PUB["Oracle 23ai Free DB Container<br/>Listener Port: 1532 (or 1521)<br/>- WebLogic RCU Repository Schemas<br/>  (DEV_MDS, DEV_WLS, DEV_BIPLATFORM)<br/>- Catalog & Template Storage"]
+        DB_PUB["Oracle 23ai Free DB Container<br/>Port: 1532 (or 1521)<br/>WebLogic RCU & BIP Catalog"]
     end
 
     subgraph ExternalDB ["Existing Enterprise Infrastructure"]
-        BIZ_DB[("EXISTING BUSINESS DATABASE<br/>Oracle Enterprise / RAC / Exadata<br/>TNS: BIZDB.CORP / Port: 1521 or 2484<br/>- Core Financial Records & Schemas<br/>- Secured with mTLS & SEPS Wallet")]
+        BIZ_DB[("EXISTING BUSINESS DATABASE<br/>Enterprise / RAC / Exadata<br/>Port: 1521 / TCPS mTLS")]
     end
 
     Browser --> F5_VIP

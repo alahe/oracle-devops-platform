@@ -1,107 +1,116 @@
-# Paigaldusprotsessi voodiagramm ja arhitektuursed sammud (setup-all.sh)
+[ 🇬🇧 English ](setup-all-workflow.md) | [ 🇪🇪 Eesti ](et/setup-all-workflow.md) | [ 🇫🇮 Suomi ](fi/setup-all-workflow.md) | [ 🇸🇪 Svenska ](sv/setup-all-workflow.md) | [ 🇱🇻 Latviešu ](lv/setup-all-workflow.md) | [ 🇱🇹 Lietuvių ](lt/setup-all-workflow.md)
 
-See dokument kirjeldab projekti peamise ülesseadistamise skripti `./scripts/setup-all.sh` täielikku elutsüklit, otsustuskohti ja optimeerimise loogikat.
+# Setup Process Flowchart and Architectural Steps (setup-all.sh)
+
+This document describes the complete lifecycle, decision points, and optimization logic of the primary provisioning script `./scripts/setup-all.sh`.
 
 ---
 
-## 📊 Voodiagramm (Flowchart)
+## 📊 Process Flowchart
 
 > [!TIP]
-> Kui sinu Markdowni vaatur ei toeta graafilist Mermaid joonist otse, saad vaadata salvestatud pilti siit:
-> ![Paigaldusprotsessi voodiagramm](images/setup-all-workflow.png)
+> If your Markdown viewer does not render Mermaid diagrams directly, view the pre-rendered diagram here:
+> ![Setup process flowchart](images/setup-all-workflow.png)
 
 ```mermaid
 flowchart TD
-    Start([Käivitus: setup-all.sh]) --> LoadConfig[1. Laadi seaded failist .env]
-    LoadConfig --> CheckArgs{Kontrolli käsurea argumente}
+    Start([Launch: setup-all.sh]) --> LoadConfig[1. Load settings from .env]
+    LoadConfig --> CheckArgs{"Check CLI<br/>arguments"}
     
-    CheckArgs -->|--force / -y| NonInteractive[Automaatne režiim: Jäta kinnitused vahele]
-    CheckArgs -->|Tavaline| Interactive[Küsi kinnitust ja kettaruumi kontrolli]
+    CheckArgs -->|--force / -y| NonInteractive[Automated Mode:<br/>Skip prompts]
+    CheckArgs -->|Default| Interactive[Request confirmation &<br/>check disk space]
     
     NonInteractive --> CheckSQLcl
     Interactive --> CheckSQLcl
     
-    CheckSQLcl{Kas kohalik SQLcl ja Java on olemas?}
-    CheckSQLcl -->|Jah| LocalSQLcl[Eelista kohalikku run_sqlcl wrapperit]
-    CheckSQLcl -->|Ei| EphemeralSQLcl["Fallback: Kasuta ajutist SQLcl konteinerit (SQLCL_CONTAINER_IMAGE)"]
+    CheckSQLcl{"Is local SQLcl<br/>and Java present?"}
+    CheckSQLcl -->|Yes| LocalSQLcl[Prefer local<br/>run_sqlcl wrapper]
+    CheckSQLcl -->|No| EphemeralSQLcl["Fallback: Use ephemeral<br/>SQLcl container (SQLCL_CONTAINER_IMAGE)"]
     
-    LocalSQLcl --> Step1[Samm 1: Kontrolli/laadi pildid Podman-isse]
+    LocalSQLcl --> Step1[Step 1: Verify & pull container images]
     EphemeralSQLcl --> Step1
     
-    Step1 --> Step2{Kas ORDS zip on juba olemas?}
-    Step2 -->|Jah| SkipORDSDownload[Jäta ORDS allalaadimine vahele]
-    Step2 -->|Ei| DownloadORDS[Laadi ORDS zip .env failis toodud lingilt]
+    Step1 --> Step2{"Is ORDS zip<br/>already cached?"}
+    Step2 -->|Yes| SkipORDSDownload[Skip ORDS download]
+    Step2 -->|No| DownloadORDS[Download ORDS zip from .env URL]
     
-    DownloadORDS --> Step3{Kas APEX zip on muutunud või puudu?}
+    DownloadORDS --> Step3{"Has APEX zip<br/>changed or missing?"}
     SkipORDSDownload --> Step3
     
-    Step3 -->|Ei| SkipAPEXUnzip[Jäta lahtipakkimine vahele markerfaili alusel]
-    Step3 -->|Jah| UnzipAPEX[Paki APEX zip lahti kausta apex/]
+    Step3 -->|No| SkipAPEXUnzip[Skip unzip based on marker file]
+    Step3 -->|Yes| UnzipAPEX[Unpack APEX zip to apex/ folder]
     
-    UnzipAPEX --> Step4["Samm 4: Genereeri Podman Secrets (/run/secrets/) ja käivita compose"]
+    UnzipAPEX --> Step4["Step 4: Generate Podman Secrets<br/>(/run/secrets/) & start compose"]
     SkipAPEXUnzip --> Step4
     
-    Step4 --> WaitDB{Oota, kuni db-apex-proxy on healthy}
-    WaitDB --> Step45["Samm 4.5: Registreeri tunnused Oracle SEPS Walletisse (ewallet.p12 / cwallet.sso)"]
+    Step4 --> WaitDB{"Wait until db-apex-proxy<br/>is healthy"}
+    WaitDB --> Step45["Step 4.5: Register credentials in<br/>Oracle SEPS Wallet (cwallet.sso)"]
     
-    Step5[Samm 5: Oota ORDS käivitumist]
+    Step5[Step 5: Wait for ORDS startup]
     Step45 --> Step5
     
-    Step5 --> Step6{Kontrolli: Kas APEX on andmebaasis juba olemas?}
-    Step6 -->|Jah, sama versioon| SkipAPEXInstall[Jäta APEX mootori paigaldus vahele]
-    Step6 -->|Ei või vana| InstallAPEX["Paigalda APEX (optimeerimiseks zip kopeeritakse ja pakitakse lahti konteineris)"]
+    Step5 --> Step6{"Check: Is APEX<br/>already in DB?"}
+    Step6 -->|Yes, same version| SkipAPEXInstall[Skip APEX engine installation]
+    Step6 -->|No or outdated| InstallAPEX["Install APEX (zip transferred<br/>& unpacked inside container)"]
     
-    InstallAPEX --> CheckPatch{Kas APEX Patch on juba paigaldatud?}
+    InstallAPEX --> CheckPatch{"Is APEX patch<br/>already applied?"}
     SkipAPEXInstall --> CheckPatch
     
-    CheckPatch -->|Jah| SkipPatch[Jäta Patch vahele]
-    CheckPatch -->|Ei, leitud zip| ApplyPatch[Paigalda Patch catpatch.sql abil ja uuenda ORDS pildid volume-is]
+    CheckPatch -->|Yes| SkipPatch[Skip patch]
+    CheckPatch -->|No, zip found| ApplyPatch[Apply patch via catpatch.sql<br/>& update ORDS images volume]
     
-    ApplyPatch --> Step7[Samm 7: Algseadista skeemid ja käivita Liquibase migratsioonid]
+    ApplyPatch --> Step7[Step 7: Initialize schemas &<br/>execute Liquibase migrations]
     SkipPatch --> Step7
     
-    Step7 --> Step8{Kas --no-monitor-app on määratud?}
-    Step8 -->|Jah| SkipApps[Jäta rakenduste paigaldus vahele]
-    Step8 -->|Ei, leitud failid| DeployApps[Paigalda valmispakitud APEX rakendused]
+    Step7 --> Step8{"Is --no-monitor-app<br/>specified?"}
+    Step8 -->|Yes| SkipApps[Skip application deployment]
+    Step8 -->|No, files found| DeployApps[Deploy pre-bundled APEX applications]
     
-    DeployApps --> CreateTestUsers["Loo testkasutajad: TEST_DEV (ORDS.ENABLE_SCHEMA + ADB rollid) & TEST_WEB_USER"]
+    DeployApps --> CreateTestUsers["Create test users: TEST_DEV<br/>(ORDS.ENABLE_SCHEMA) & TEST_WEB_USER"]
     SkipApps --> CreateTestUsers
     
-    CreateTestUsers --> TrustCert{Tuvasta OS sertifikaadi usaldamiseks}
+    CreateTestUsers --> TrustCert{"Detect OS for<br/>certificate trust"}
     
     TrustCert -->|macOS| TrustMac["Sudo keychain: security add-trusted-cert"]
-    TrustCert -->|Windows / Git Bash| TrustWin["Kasutaja hoidla: certutil -user -store Root"]
-    TrustCert -->|WSL| TrustWSL["WSL/Windows: certutil.exe (wslpath kaudu)"]
-    TrustCert -->|--force / Muu OS| SkipTrust[Jäta sertifikaadi lisamine vahele]
+    TrustCert -->|Windows / Git Bash| TrustWin["User store: certutil -user -store Root"]
+    TrustCert -->|WSL| TrustWSL["WSL/Windows: certutil.exe (via wslpath)"]
+    TrustCert -->|--force / Other OS| SkipTrust[Skip local certificate registration]
     
-    TrustMac --> SaveMetrics[Salvesta setup kestus metrics/setup_benchmarks.json]
+    TrustMac --> SaveMetrics[Save setup duration to<br/>metrics/setup_benchmarks.json]
     TrustWin --> SaveMetrics
     TrustWSL --> SaveMetrics
     SkipTrust --> SaveMetrics
     
-    SaveMetrics --> End([Lõpp: Keskkond valmis, paroolid krüpteeritud Oracle SEPS Walletis])
+    SaveMetrics --> End([Done: Environment ready, credentials encrypted in Oracle SEPS Wallet])
 ```
 
 ---
 
-## 💡 Süsteemi arhitektuursed põhimõtted ja sammud:
+## 💡 Architectural Principles and Operational Steps:
 
-1.  **Turvaline paroolihaldus (Podman Secrets Bootstrap -> Oracle SEPS Wallet Runtime):**
-    *   **Esmakordne käivitus (Bootstrap):** Konteinerite esmasel püstitamisel genereerib `generate-passwords.sh` unikaalsed suure entroopiaga paroolid mälupõhisesse **Podman Secrets** hoidlasse (`/run/secrets/`). Koodifailides ja skriptides puuduvad igasugused kõvakodeeritud vaikeparoolid (*zero hardcoded fallback passwords*).
-    *   **Püsiv säilitamine ja ühendused (Runtime):** Sammu 4.5 käigus registreerib `create-wallet.sh` kõik tunnused (`ADMIN`, `DB_APEX_PROXY_SYS`, `DB_TEST_DEV`, `TEST_WEB_USER`) krüpteeritud **Oracle SEPS Walletisse** (`ewallet.p12` / `cwallet.sso`). Arendajad ja utiliidid loevad paroole ja teevad ühendusi otse Walletist (`./scripts/get-password.sh <ALIAS>`).
-2.  **Automaatne ORDS & SQL Developer Web aktiveerimine (`TEST_DEV`):**
-    *   `TEST_DEV` kasutaja loomisel rakendatakse automaatselt Oracle ADB arendaja rollid (`CONSOLE_DEVELOPER`, `DWROLE`, `RESOURCE`, `DB_DEVELOPER_ROLE`) ja aktiveeritakse ORDS REST / Database Actions liides (`ORDS.ENABLE_SCHEMA` teekonnaga `test_dev`).
-    *   `TEST_DEV` kasutajaga saab koheselt sisse logida otse aadressil `https://localhost:8443/ords/test_dev/_sdw/`.
-3.  **Intelligentne SQLcl Fallback (ajutine CLI-konteiner):**
-    Skript kontrollib automaatselt kohaliku Java ja SQLcl olemasolu ning ühenduvust. Kui need puuduvad või neil puuduvad krüptograafia ja Walletite tarbeks PKI provideri `.jar` failid, lülitub skript automaatselt ümber **ajutise SQLcl konteineri** (`SQLCL_CONTAINER_IMAGE`) kasutamisele `--rm` võtmega. See tagab sujuva paigalduse ka lukustatud või puhtates arendusmasinates.
-4.  **Täielik idempotentsus (Idempotent Setup):**
-    *   **APEX mootor:** Enne paigalduse alustamist teeb skript andmebaasi päringu. Kui APEX (versioon 26.1.2) on andmebaasi juba paigaldatud, jäetakse paigaldus täielikult vahele (säästab ~5 minutit).
-    *   **APEX Patch:** Päritakse andmebaasist viimase paigaldatud patchi registrit. Kui bundle patch on juba rakendatud, jäetakse catpatch.sql käivitamine vahele.
-    *   **ORDS:** Kui andmebaasis on ORDS schema juba algseadistatud ja ühenduse andmed klapivad, ei tehta korduspaigaldust.
-5.  **Microsoft Defenderi ja I/O optimeerimine:**
-    Kui andmebaas jookseb kohalikus Podman/Docker konteineris, siis APEX-i tarkvarapaketti (mis koosneb tuhandetest väikestest failidest) ei pakita lahti host-masina kettale (kus viirusetõrje seda skaneeriks ja protsessi aeglustaks). Selle asemel kopeeritakse üks tihendatud `.zip` fail otse konteinerisse, pakitakse lahti sealises kiirfailisüsteemis (`/tmp/`) & teostab SQL installi otse konteineri seest.
-6.  **Automaatne sertifikaatide usaldamine operatsioonisüsteemides:**
-    Lokaalne HTTPS (ADB: `8443`, Standard DB: `8448`) põhineb isesekreeritud juursertifikaadil (`Local Dev Root CA`). Skript tuvastab operatsioonisüsteemi ja usaldab selle automaatselt:
-    *   **macOS:** Kasutatakse `security add-trusted-cert` lisamaks see süsteemsesse võtmehoidjasse (küsitakse sudo parooli).
-    *   **Windows (Git Bash):** Kasutatakse Windowsi `certutil` käsku sertifikaadi usaldamiseks aktiivse kasutaja hoidlasse (ei nõua administraatori õigusi).
-    *   **WSL:** WSL-is käivitatakse `certutil.exe` Windowsi poolel, lahendades sertifikaadi asukoha tee läbi `wslpath -w` utiliidi.
+1. **Secure Credential Store (Podman Secrets Bootstrap -> Oracle SEPS Wallet Runtime):**
+   * **First-run Bootstrap:** During initial container startup, `generate-passwords.sh` generates unique high-entropy passwords into an in-memory **Podman Secrets** store (`/run/secrets/`). The codebase contains zero hardcoded fallback passwords.
+   * **Persistence and Connections (Runtime):** During Step 4.5, `create-wallet.sh` registers all credentials (`ADMIN`, `DB_APEX_PROXY_SYS`, `DB_TEST_DEV`, `TEST_WEB_USER`) into an encrypted **Oracle SEPS Wallet** (`ewallet.p12` / `cwallet.sso`). Developers and CLI tools extract passwords dynamically (`./scripts/get-password.sh <ALIAS>`).
+2. **Automated ORDS & SQL Developer Web Activation (`TEST_DEV`):**
+   * Provisioning `TEST_DEV` applies Oracle ADB developer roles (`CONSOLE_DEVELOPER`, `DWROLE`, `RESOURCE`, `DB_DEVELOPER_ROLE`) and activates ORDS REST / Database Actions (`ORDS.ENABLE_SCHEMA` mapped to path `test_dev`).
+   * Developers can immediately log in to Database Actions at `https://localhost:8443/ords/test_dev/_sdw/`.
+3. **Intelligent SQLcl Fallback (Ephemeral CLI Container):**
+   The script checks for local Java and SQLcl binaries. If missing or lacking required PKI provider `.jar` files for Oracle Wallets, the script automatically routes execution through an **ephemeral SQLcl container** (`SQLCL_CONTAINER_IMAGE`) with `--rm`. This ensures reliable provisioning on zero-trust or locked-down developer workstations.
+4. **Complete Idempotency:**
+   * **APEX Engine:** Before initiating setup, the script queries the database dictionary. If APEX (matching target version 26.1.2) is already installed, the installation is skipped (saving ~5 minutes).
+   * **APEX Patch:** The patch registry is inspected. If the bundle patch is already applied, running `catpatch.sql` is skipped.
+   * **ORDS:** If the ORDS schema is already initialized with matching connection parameters, re-initialization is avoided.
+5. **Anti-Virus & Microsoft Defender I/O Optimization:**
+   When running the database in a local container, large software packages (such as APEX containing tens of thousands of files) are never unpacked onto the host disk where antivirus real-time inspection causes massive I/O bottlenecks. A single `.zip` archive is copied into the container filesystem (`/tmp/`) and unzipped internally.
+6. **Cross-Platform SSL Certificate Trust:**
+   Local HTTPS services (ADB: `8443`, Standard DB: `8448`) utilize a self-signed root certificate (`Local Dev Root CA`). The provisioning pipeline detects the host OS and trusts the certificate automatically:
+   * **macOS:** Invokes `security add-trusted-cert` into the System Keychain (requests sudo password).
+   * **Windows (Git Bash):** Invokes Windows `certutil` to import into the CurrentUser Root store (requires zero administrator privileges).
+   * **WSL:** Executes `certutil.exe` on the Windows host, converting paths dynamically via `wslpath -w`.
+
+---
+
+## ❓ Related FAQ & Official Resources
+
+- Troubleshooting steps, OOM handling, port collisions, and Golden Snapshot recovery: [Platform FAQ](faq.md).
+- Official Oracle Container Registry images and download guides: [Oracle Resources and Downloads](oracle-resources-and-downloads.md).

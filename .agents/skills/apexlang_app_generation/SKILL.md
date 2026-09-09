@@ -14,7 +14,25 @@ This skill guides generating production-ready Oracle APEX applications, pages, s
 
 ---
 
-## 1. The Modern APEX Vibe-Coding Architecture
+## 1. 🎯 When to Use & Negative Routing
+
+### Positive Triggers (Activate Immediately):
+- Drafting or modifying APEX declarative DSL files (`application.apx`, `pages/*.apx`, `shared-components/*.apx`)
+- Generating APEX forms, interactive grids, cards, master-detail regions, or modal dialogs
+- Formatting and linting APEXlang files (`apexctl.mjs apexlang validate`)
+- Deploying `.apx` applications to target PDBs via `./scripts/internal/deploy-apex-apps.sh`
+
+### Negative Routing (Redirect to Specialized Skills):
+| If the task is primarily about... | DO NOT handle here. Route immediately to: |
+|:---|:---|
+| Low-level APEXlang compiler package internals, catalogs, or AST contracts | `apexlang` (Official Oracle skill) |
+| APEX developer user provisioning, Azure Entra ID SSO, or `APEX_LANG` | `apex_dev` |
+| Exporting classic SQLcl split files or Liquibase project releases | `sqlcl_project` |
+| Migrating legacy Oracle Forms 14c `.fmb` files to APEX | `oracle_forms_devops` |
+
+---
+
+## 2. The Modern APEX Vibe-Coding Architecture
 
 ```text
 VS Code (Host Environment)
@@ -209,3 +227,15 @@ node .agents/skills/apexlang/tools/apexctl.mjs apexlang validate --app-path appl
 # 2. Deploy compiled APEX application to target database:
 ./scripts/internal/deploy-apex-apps.sh
 ```
+
+---
+
+## 7. 🩺 Diagnostic Signatures & 1-Line Remedies
+
+| Symptom / Error | Root Cause | 1-Line Remedy |
+|:---|:---|:---|
+| `EBNF_PARSER_ERROR` on `.apx` validate | Invalid keyword, unclosed braces, or illegal property | Run `node .agents/skills/apexlang/tools/apexctl.mjs apexlang validate --app-path <dir>` to see line number. |
+| APEX import fails with `Schema not REST-enabled` | Workspace parsing schema missing ORDS enablement | Run `ORDS.ENABLE_SCHEMA(p_schema => 'SCHEMA_NAME');` as DBA. |
+| `LIVE_RUNTIME_VALIDATION_REQUIRED_001` | App requires live database check but DB is offline | Start target DB container or verify connection alias with `./scripts/check-wallet.sh`. |
+| Missing shared breadcrumb or navbar error | Child page references nonexistent parent in `appearance` | Verify entry exists in `shared-components/breadcrumbs.apx` or `navigation-menu.apx`. |
+

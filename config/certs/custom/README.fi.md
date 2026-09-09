@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🛠️ Manuaalisesti Lisätyt sertifikaatit (custom certificate drop-in)
+# 🛠️ Manuaalisesti lisätyt sertifikaatit (custom certificate drop-in)
 
 Kehittäjä tai ylläpitäjä voi kopioida tähän hakemistoon olemassa olevan SSL/TLS-sertifikaatin ja yksityisen avaimen, joita järjestelmä käyttää ensisijaisena prioriteettina (**Vaihe 0**).
 

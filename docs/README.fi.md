@@ -35,3 +35,5 @@ Tämä hakemisto sisältää Oracle DevOps -alustan tekniset määritykset, asen
 | 📦 **APEX-sovellusten jakelu** | [apex-apps-deployment.md](apex-apps-deployment.md) | APEX-sovellusten automaattinen tuonti hakemistosta `binaries/apex_apps/`. |
 | 🌐 **Erillinen ORDS-palvelin** | [standalone-ords.md](standalone-ords.md) | Erillisen Oracle REST Data Services -palvelimen asennus Linux-koneeseen ilman Docker-konttia. |
 | 🚀 **Asennustyönkulun arkkitehtuuri** | [setup-all-workflow.md](setup-all-workflow.md) | Täydellinen vuokaavio, idempotenssi ja Defender-optimoinnit. |
+| ❓ **Alustan UKK (Kaikki kysymykset)** | [fi/faq.md](fi/faq.md) | Keskitetty tietopankki aloittelijoille, arkkitehtuurille ja vianmääritykselle. |
+| 🏛️ **Oracle-resurssit ja lataukset** | [fi/oracle-resources-and-downloads.md](fi/oracle-resources-and-downloads.md) | Viralliset Oracle Container Registry (OCR) -kuvat, tuotelataukset ja portaalit. |

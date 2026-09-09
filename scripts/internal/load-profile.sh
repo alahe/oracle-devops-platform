@@ -745,7 +745,7 @@ load_web_ide_profile() {
 
   local raw_https
   raw_https=$(parse_yaml_key "$profile_file" "https_port")
-  export WEB_IDE_HTTPS_PORT="${WEB_IDE_HTTPS_PORT:-${raw_https:-8449}}"
+  export WEB_IDE_HTTPS_PORT="${WEB_IDE_HTTPS_PORT:-${raw_https:-8450}}"
 
   local raw_cicd
   raw_cicd=$(parse_yaml_key "$profile_file" "cicd_ui_port")

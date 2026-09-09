@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🧩 VS code -laajennusten Välimuisti (`binaries/extensions/`)
+# 🧩 VS Code -laajennusten välimuisti (`binaries/extensions/`)
 
 Tämä hakemisto toimii **tason 1 offline-välimuistina** VS Coden `.vsix`-laajennuspaketeille.
 

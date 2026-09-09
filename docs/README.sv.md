@@ -35,3 +35,5 @@ Denna katalog innehåller tekniska specifikationer, installationsguider och arki
 | 📦 **APEX applikationsdistribution** | [apex-apps-deployment.md](apex-apps-deployment.md) | Automatisk import av paketerade APEX-appar från `binaries/apex_apps/`. |
 | 🌐 **Fristående ORDS-server** | [standalone-ords.md](standalone-ords.md) | Installation av fristående Oracle REST Data Services på Linux utanför Docker. |
 | 🚀 **Installationsflödets arkitektur** | [setup-all-workflow.md](setup-all-workflow.md) | Komplett flödesdiagram, idempotens och Defender-optimeringar. |
+| ❓ **Plattformens FAQ (Alla frågor)** | [sv/faq.md](sv/faq.md) | Central kunskapsbas för nybörjare, arkitektur och felsökning. |
+| 🏛️ **Oracle-resurser & nedladdningar** | [sv/oracle-resources-and-downloads.md](sv/oracle-resources-and-downloads.md) | Officiella Oracle Container Registry (OCR) avbildningar, nedladdningar och portaler. |

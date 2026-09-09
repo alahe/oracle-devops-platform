@@ -24,7 +24,7 @@ flowchart TD
   
   HOST_REG --> CHECK_WEBIDE{"❓ Onko Web IDE<br/>(web-ide-dev)<br/>käynnissä?"}
   
-  CHECK_WEBIDE -->|"✅ KYLLÄ / Käynnissä"| WEBIDE_REG["🌐 5. Rekisteröi Web-IDE:ssä<br/>- Säilön SQLcl batch<br/>- /config/.dbtools/conns<br/>- /config/.sqldev/conns.json<br/>- Oikeudet chown abc"]
+  CHECK_WEBIDE -->|"✅ KYLLÄ / Käynnissä"| WEBIDE_REG["🌐 5. Rekisteröi Web-IDE:ssä<br/>• Säilön SQLcl batch<br/>• /config/.dbtools & .sqldev<br/>• Oikeuksien korjaus (chown)"]
   
   CHECK_WEBIDE -->|"❌ EI / Poissa"| SANITIZE["🧹 6. Siivoa folders.json<br/>(Poista orvot GUID:t<br/>Estä DBTU-03001)"]
   

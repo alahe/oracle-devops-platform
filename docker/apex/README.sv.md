@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🚀 Bygge av Förkonfigurerad APEX containeravbildning (`docker/apex/`)
+# 🚀 Bygge av förkonfigurerad APEX-containeravbildning (`docker/apex/`)
 
 - **Skript:** `build-apex-prebuilt-image.sh`
 - **Resultat:** `localhost/oracle-free-apex:latest`

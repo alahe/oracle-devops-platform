@@ -35,19 +35,23 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 ```mermaid
 flowchart TD
     Start(["🚀 Kehittäjä Aloittaa"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
-    Clone --> ChooseBP{"2. Valitse Arkkitehtuurisuunnitelma"}
+    Clone --> ChooseBP{"2. Valitse arkkitehtuuri-<br/>suunnitelma"}
     
-    ChooseBP -->|Oletus 2-DB Pino| BP21["./scripts/setup-all.sh -b 21 --lang fi"]
-    ChooseBP -->|Forms + Publisher + IDE| BP31["./scripts/setup-all.sh -b 31 --lang fi"]
-    ChooseBP -->|Esikatselu / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 21 --dry-run"]
+    ChooseBP -->|Kanoninen Oletus| BP0["./scripts/setup-all.sh (BP 0)"]
+    ChooseBP -->|Liiketoiminta ALISE DB| BP1["./scripts/setup-all.sh -b 1"]
+    ChooseBP -->|Forms + Publisher| BP7["./scripts/setup-all.sh -b 7"]
+    ChooseBP -->|Erillinen Verkko-IDE| BP8["./scripts/setup-all.sh -b 8"]
+    ChooseBP -->|Esikatselu / Dry-Run| BPDry["./scripts/setup-all.sh -b 1 --dry-run"]
     
-    BP21 --> DevHub["3. Avaa DevOps-Komentokeskus<br/>🌐 http://localhost:8088/"]
-    BP31 --> DevHub
+    BP0 --> DevHub["3. Avaa DevOps-Komentokeskus<br/>🌐 http://localhost:8088/"]
+    BP1 --> DevHub
+    BP7 --> DevHub
+    BP8 --> DevHub
     BPDry --> ChooseBP
     
-    DevHub --> PwdSpikker["4. Salasanaopas (SEPS Wallet)<br/>./scripts/get-password.sh DB_PROXY_DEV -c"]
+    DevHub --> PwdSpikker["4. Salasanaopas (SEPS Wallet)<br/>./scripts/get-password.sh DB_ALISE_DEV -c"]
     
-    PwdSpikker --> DevWork["5. Aloita Kehitystyö!"]
+    DevHub --> DevWork["5. Aloita Kehitystyö!"]
     DevWork --> WorkIDE["💻 Web IDE & SQL Developer (:8090)"]
     DevWork --> WorkAPEX["🌟 APEX Builder & SSO -Yhdyskäytävä (:8088)"]
     DevWork --> WorkForms["📐 Forms 14c noVNC Builder (:6082)"]
@@ -56,19 +60,51 @@ flowchart TD
 
 ---
 
-## ⚡ Setup-all 10-vaiheinen elinkaariarkkitehtuuri
+## 🏗️ Arkkitehtuurimallit (12 Kanonista Modulaarista Rakennuspalikkaa)
+
+Oracle Free DB in Prod jakaa arkkitehtuurinsa **12 kanoniseen modulaariseen arkkitehtuurimalliin (0 .. 11)**, jotka on ryhmitelty 4 erilliseen yritystason kerrokseen:
 
 ```mermaid
-flowchart LR
-    P1["1. Konttikuvien Lataus"] --> P2["2. ORDS Lataus"]
-    P2 --> P3["3. APEX Paketit"]
-    P3 --> P4["4. Konttien Käynnistys"]
-    P4 --> P5["5. DB Terveyden Odotus"]
-    P5 --> P6["6. APEX Asennus"]
-    P6 --> P7["7. Skeemat & SEPS Init"]
-    P7 --> P8["8. APEX Sovellusten Julkaisu"]
-    P8 --> P9["9. Middleware & Palvelut"]
-    P9 --> P10["10. Kultainen Tilannevedos (~15s DR)"]
+flowchart TD
+    subgraph Default ["⭐ KANONINEN JÄRJESTELMÄN OLETUS"]
+        BP0["BP 0: Oletus Proxy DB & ORDS<br/>db-proxy (:1532) + app-ords (:8088/8448)"]
+    end
+
+    subgraph Tier1 ["RIVI 1: PÄÄARKKITEHTUURI (1–7)"]
+        subgraph DatabaseStacks ["🗄️ RYHMÄ 1: TIETOKANTAPINOT (1–4)"]
+            direction TB
+            BP1["BP 1: Erillinen ALISE DB (:1533)"]
+            BP2["BP 2: Erillinen Proxy DB (:1537)"]
+            BP3["BP 3: Erillinen Gvenzl Yhteisö-DB (:1535)"]
+            BP4["BP 4: Erillinen Autonomous DB Cloud (:1536)"]
+        end
+
+        subgraph Middleware ["🏢 RYHMÄ 2: YRITYSTASON VÄLIOHJELMISTO (5–7)"]
+            direction TB
+            BP5["BP 5: Erillinen Analytics<br/>Publisher (:1531, :9502)"]
+            BP6["BP 6: Erillinen Oracle<br/>Forms 14c (:1534, :9001, :6082)"]
+            BP7["BP 7: Yhdistetty Forms +<br/>Publisher (:1538, :9005, :9505)"]
+        end
+    end
+
+    subgraph Tier2 ["RIVI 2: KEHITYS JA ETÄYHDYSKÄYTÄVÄT (8–11)"]
+        subgraph DeveloperStudio ["💻 RYHMÄ 3: KEHITTÄJÄSTUDIO (8–9)"]
+            direction TB
+            BP8["BP 8: Erillinen Verkko-IDE (:8090)<br/>⚠️ Testauksessa ja kehitteillä"]
+            BP9["BP 9: Publisher Designer (:6083)<br/>⚠️ Testauksessa ja kehitteillä"]
+        end
+
+        subgraph RemoteGateways ["🌐 RYHMÄ 4: ETÄ- JA REUNAYHDYSKÄYTÄVÄT (10–11)"]
+            direction TB
+            BP10["BP 10: Etä-ORDS-yhdyskäytävä (:8088/8448)<br/>⚠️ Testauksessa ja kehitteillä"]
+            BP11["BP 11: Etä-Publisher (:9502/9503)<br/>⚠️ Testauksessa ja kehitteillä"]
+        end
+    end
+
+    BP0 --> BP1
+    BP0 --> BP5
+    BP1 --> BP8
+    BP5 --> BP10
 ```
 
 ---
@@ -139,58 +175,6 @@ Tässä arkkitehtuurissa **Oracle APEX 26.1** on sijoitettu ensisijaisesti seura
 
 ---
 
-## 📋 11 Kuratoitua arkkitehtuurisuunnitelmaa (Blueprints)
-
-```mermaid
-graph TD
-  subgraph Sarja 1-9: Core DB & APEX SSO -Yhdyskäytävä
-    BP3["🌟 BP 3 (OLETUS): 2-Kerroksinen Tuotantopino<br/>db-proxy + db-alise + app-ords (Portit 1532, 1533, 8088)"]
-    BP7["BP 7: Monitoimittaja Hybridi<br/>Virallinen Oracle 23ai DB + Gerald Venzl DB + ORDS"]
-  end
-
-  subgraph Sarja 10-19: Analytics Publisher
-    BP13["BP 13: Kaikki-Yhdessä Publisher DB<br/>Yksi 23ai DB (RCU + Data) + Publisher + ORDS"]
-    BP11["BP 11: Eristetty Publisher Yritys<br/>3 erillistä DB:tä + Publisher + ORDS"]
-  end
-
-  subgraph Sarja 20-29: Oracle Forms 14c & Modernisointi
-    BP22["BP 22: Minimaalinen Forms Hybridi<br/>Yhdistetty Forms/Proxy DB + ALISE DB + Forms 14c + ORDS"]
-    BP21["BP 21: Täysi Forms Yrityspino<br/>Forms RCU DB + Custom DB + Proxy DB + Forms 14c + ORDS"]
-  end
-
-  subgraph Sarja 30-39: Kehitystyöasemat & Web IDE
-    BP34["🌟 BP 34: Standardi 2-Kerroksinen DB + Web IDE<br/>db-proxy + db-alise + app-ords + web-ide-dev (Portti 8090)"]
-    BP31["BP 31: Pilvi Autonomous DB + Web IDE<br/>ADB-emulaattori + VS Code Web IDE"]
-  end
-
-  subgraph Sarja 40-49: Ultimate Enterprise -Kokonaisuudet
-    BP41["🌟 BP 41: Ultimate Kaikki-Yhdessä Yritys + Web IDE<br/>Forms + Publisher + APEX SSO + Web IDE 1 DB:llä"]
-    BP42["BP 42: Täysin Eristetty Pilvilaboratorio<br/>8 eristettyä konttia, 4 erillistä tietokantaa"]
-    BP43["BP 43: 2-DB Hybridi Yritys + Web IDE<br/>Proxy DB + Jaettu Middleware RCU DB"]
-  end
-```
-
-### 🚀 Blueprintien käyttöönotto ja hallinta (`./scripts/deploy-blueprint.sh`)
-
-```bash
-# 1. Tarkista aktiivinen blueprint ja palveluiden tila:
-./scripts/deploy-blueprint.sh --status --lang fi
-
-# 2. Ota käyttöön Blueprint 3 (OLETUS 2-Kerroksinen Tuotantopino):
-./scripts/deploy-blueprint.sh -b 3 --lang fi
-
-# 3. Ota käyttöön Blueprint 41 (Ultimate Kaikki-Yhdessä Yritys):
-./scripts/deploy-blueprint.sh -b 41 --lang fi
-
-# 4. Simuloi käyttöönottoa ilman muutoksia (Dry-Run):
-./scripts/deploy-blueprint.sh -b 34 --dry-run
-
-# 5. Näytä 11 blueprintin taulukko päätteessä:
-./scripts/deploy-blueprint.sh --list --lang fi
-```
-
----
-
 ## ⚡ Nopeutettu ~15s palautus & automaattinen versiotarkistus
 
 Oracle Free DB in Prod sisältää **älykkään monikerroksisen Golden Snapshot- ja Skip-moottorin** (`scripts/internal/snapshot-resolver.sh`), joka lyhentää toisen käynnistyskerran keston **~6–12 minuutista vain ~15 sekuntiin**:
@@ -248,7 +232,7 @@ Oracle Free DB in Prod sisältää **älykkään monikerroksisen Golden Snapshot
 
 ## 🧭 Oracle APEX DevHub -sovellus ja APEXlang CI/CD
 
-Erillisen HTML Dev Hubin (`docs/dev-hub.html`) lisäksi alusta sisältää yritystason **Oracle APEX -sovelluksen (Sovellus 101: DevHub)**, joka on luotu deklaratiivisesti [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) -kielellä kansioon [`applications/devhub/`](../../applications/devhub/):
+Erillisen HTML Dev Hubin (`docs/dev-hub.html`) lisäksi alusta sisältää yritystason **Oracle APEX -sovelluksen (Sovellus 101: DevHub)**, joka on luotu deklaratiivisesti [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) -kielellä kansioon [`applications/`](../../applications/README.fi.md):
 
 - **Nollajalanjälkidokumentaatio Tietokannassa:** Dokumentaatiota ei koskaan monisteta tai tallenneta tietokantaan CLOB-kenttinä. Kevyt paikallinen REST-dokumentaatiosilta (`scripts/internal/dev-hub-bridge.py` portissa 8089) suoratoistaa lokalisoidun Markdownin suoraan Git-tiedostoista APEXiin, jossa se muunnetaan natiivisti `APEX_MARKDOWN.TO_HTML` -funktiolla.
 - **Interaktiivinen Esittely ja Yleiskatsaus (Sivu 7):** Sisältää 8 dian interaktiivisen esityksen, joka kattaa alustan vision, kehittäjien kipupisteet, roolikohtaiset hyödyt, 11 arkkitehtuurimallia, Zero-Trust SEPS Wallet -tietoturvan, ~15s Golden Snapshot -palautuksen ja vastaukset kriittisen arkkitehdin / entisen DBA:n kysymyksiin.

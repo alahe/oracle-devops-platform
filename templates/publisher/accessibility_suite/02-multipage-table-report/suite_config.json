@@ -1,0 +1,12 @@
+{
+  "id": "02-multipage-table-report",
+  "title": "Multi-Page Accessible Inventory Audit Report",
+  "title_et": "Mitmeleheküljeline Ligipääsetav Varade Aruanne (PDF/UA-1)",
+  "standard": "PDF/UA-1 / WCAG 2.1 AA",
+  "locale": "et",
+  "expected_pages": 2,
+  "expected_tables": 1,
+  "require_repeat_header": true,
+  "require_alt_text": true,
+  "summary_first": true
+}

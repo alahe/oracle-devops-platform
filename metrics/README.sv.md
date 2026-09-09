@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📊 Katalog för Prestandamätningar (`metrics/`)
+# 📊 Katalog för prestandamätningar (`metrics/`)
 
 I denna katalog lagras och versionshanteras installationsstegens tidsmätningar (Regel 1).
 

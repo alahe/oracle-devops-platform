@@ -10,7 +10,7 @@ publisher:
   mode: container
   version: "2025"
   container_image: localhost/oracle/analyticsserver:2025
-  container_name: oracle-publisher-dev
+  container_name: app-publisher
   hostname: publisher-dev
   http_port: 9502
   https_port: 9503
@@ -21,3 +21,42 @@ publisher:
   configure_biee: false
   configure_bip: true
   memory_args: "-Xms1024m -Xmx2048m -XX:MetaspaceSize=512m -XX:MaxMetaspaceSize=1024m"
+
+  # User definitions for Oracle Analytics Publisher (Phase 1)
+  users:
+    - username: bip_developer
+      wallet_alias: PUBLISHER_DEVELOPER
+      roles: ["XMLP_DEVELOPER", "XMLP_TEMPLATE_DESIGNER"]
+      description: "Template and data model author / developer (/Custom)"
+    - username: bip_user
+      wallet_alias: PUBLISHER_USER
+      roles: ["XMLP_SCHEDULER", "XMLP_ANALYZER"]
+      description: "Standard user: run, view, modify, and delete printout job history"
+    - username: bip_admin
+      wallet_alias: PUBLISHER_ADMIN
+      roles: ["XMLP_ADMIN"]
+      is_weblogic_admin: false
+      description: "Publisher administrator without WebLogic domain console access"
+
+  # Security & Identity Provider Configuration (Phase 2 - Standby / Dormant by default)
+  security:
+    auth_mode: local_wallet        # Default: local_wallet. Options: azure_entra_sso, oauth2_jwt, hybrid
+    
+    # 1. Human SSO (Azure Entra ID SAML 2.0 / OIDC)
+    sso:
+      enabled: false               # Feature flag: disabled by default
+      provider: azure_entra_id     # Providers: azure_entra_id, oci_iam, keycloak
+      tenant_id: "${AZURE_TENANT_ID:-}"
+      client_id: "${AZURE_CLIENT_ID:-}"
+      role_mappings:
+        "SG-Publisher-Developers": "XMLP_DEVELOPER"
+        "SG-Publisher-Users": "XMLP_SCHEDULER"
+        "SG-Publisher-Admins": "XMLP_ADMIN"
+
+    # 2. Machine-to-Machine (M2M) Multi-Cloud REST API (AWS, GCP, Azure, OCI, CI/CD)
+    oauth2_m2m:
+      enabled: false               # Feature flag: disabled by default
+      issuer_uri: "https://login.microsoftonline.com/${AZURE_TENANT_ID:-common}/v2.0"
+      jwks_uri: "https://login.microsoftonline.com/${AZURE_TENANT_ID:-common}/discovery/v2.0/keys"
+      audience: "api://oracle-publisher"
+      allowed_roles: ["XMLP_DEVELOPER", "XMLP_ADMIN", "XMLP_SCHEDULER"]

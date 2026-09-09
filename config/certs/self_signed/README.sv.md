@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# ⚠️ Tillfälligt Självsignerat Certifikat (alternativ 4 fallback)
+# ⚠️ Tillfälligt självsignerat certifikat (alternativ 4 fallback)
 
 Denna katalog innehåller ett dynamiskt genererat självsignerat certifikat (`self_signed.crt` och `self_signed.key`).
 

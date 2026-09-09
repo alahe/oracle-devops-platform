@@ -145,8 +145,23 @@ if command -v podman >/dev/null 2>&1; then
 fi
 
 # Safety Buffer Check (< 2048 MB free RAM guard)
-MIN_SAFE_RAM_MB=${MIN_SAFE_RAM_MB:-2048}
-if [ "$AVAIL_RAM_MB" -lt "$MIN_SAFE_RAM_MB" ] && [ "${FORCE_DEPLOY:-false}" != "true" ] && [ "${SKIP_RAM_CHECK:-false}" != "true" ] && [ "${IS_TEST_MODE:-false}" != "true" ]; then
+# If running in update/restart/incremental mode OR if containers are already running,
+# memory is already allocated and will be reused/reclaimed during restart.
+RUNNING_CONTAINERS_COUNT=0
+if command -v podman >/dev/null 2>&1; then
+  RUNNING_CONTAINERS_COUNT=$(podman ps -q 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+elif command -v docker >/dev/null 2>&1; then
+  RUNNING_CONTAINERS_COUNT=$(docker ps -q 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+fi
+
+if [ "${INCREMENTAL_MODE:-false}" = "true" ] || [ "${UPDATE_MODE:-false}" = "true" ] || [ "${ACTION:-}" = "update" ] || [ "$RUNNING_CONTAINERS_COUNT" -gt 0 ]; then
+  MIN_SAFE_RAM_MB=${MIN_SAFE_RAM_MB:-256}
+  echo -e "   ├─ Memory Strategy: Active container reuse (${RUNNING_CONTAINERS_COUNT} running, buffer relaxed to ${MIN_SAFE_RAM_MB} MB)"
+else
+  MIN_SAFE_RAM_MB=${MIN_SAFE_RAM_MB:-2048}
+fi
+
+if [ "$AVAIL_RAM_MB" -lt "$MIN_SAFE_RAM_MB" ] && [ "${FORCE:-false}" != "true" ] && [ "${FORCE_DEPLOY:-false}" != "true" ] && [ "${SKIP_RAM_CHECK:-false}" != "true" ] && [ "${IS_TEST_MODE:-false}" != "true" ]; then
   echo -e "\n${RED}==================================================================${NC}"
   msg_print "RES_INSUFFICIENT_RAM" "$AVAIL_RAM_MB" "$MIN_SAFE_RAM_MB"
   echo -e "${YELLOW}💡 Recommendation: Close unused containers or apps, or bypass with: --force${NC}"

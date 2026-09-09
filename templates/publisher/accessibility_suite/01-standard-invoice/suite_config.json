@@ -1,0 +1,12 @@
+{
+  "id": "01-standard-invoice",
+  "title": "Standard Accessible Electronic Invoice",
+  "title_et": "Standardne Ligipääsetav E-Arve (PDF/UA-1)",
+  "standard": "PDF/UA-1 / WCAG 2.1 AA",
+  "locale": "et",
+  "expected_pages": 1,
+  "expected_tables": 1,
+  "require_repeat_header": true,
+  "require_alt_text": true,
+  "summary_first": true
+}

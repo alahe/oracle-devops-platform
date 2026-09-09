@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Oracle Forms 14c Darbības skripti (`scripts/forms/`)
+# 📐 Oracle Forms 14c darbības skripti (`scripts/forms/`)
 
 Šis direktorijs nodrošina rīkus Oracle Forms 14c izpildlaika vides, komandrindas kompilēšanas, WebLogic domēna diagnostikas un lietotņu ieviešanas pārvaldībai.
 

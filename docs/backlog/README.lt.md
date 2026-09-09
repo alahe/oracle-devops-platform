@@ -1,4 +1,4 @@
-# Finansų Įmonės Paskirstytos Architektūros Backlog (Jira Epikai & Naudotojų Istorijos)
+# Finansų įmonės paskirstytos architektūros backlog (Jira epikai & naudotojų istorijos)
 
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 

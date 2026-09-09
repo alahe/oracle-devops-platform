@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ========================================================================== -->
+<!-- Oracle Analytics Publisher Sample Data for Invoice_Report                  -->
+<!-- Used for offline rendering, headless tests, and CI/CD quality gates        -->
+<!-- ========================================================================== -->
+<INVOICE_DATA>
+  <SELLER>
+    <COMPANY_NAME>Eesti Pilveplatvorm OÜ</COMPANY_NAME>
+    <REG_CODE>12345678</REG_CODE>
+    <VAT_NUMBER>EE101234567</VAT_NUMBER>
+    <ADDRESS>Lõõtsa tn 8a, 11415 Tallinn, Harjumaa, Eesti</ADDRESS>
+    <EMAIL>arved@pilveplatvorm.ee</EMAIL>
+    <PHONE>+372 600 1234</PHONE>
+    <WEBSITE>https://pilveplatvorm.ee</WEBSITE>
+    <BANK_NAME>LHV Pank AS</BANK_NAME>
+    <IBAN>EE667700771001234567</IBAN>
+    <SWIFT_BIC>LHVBEE22</SWIFT_BIC>
+  </SELLER>
+
+  <BUYER>
+    <COMPANY_NAME>Nordic Innovation AS</COMPANY_NAME>
+    <REG_CODE>87654321</REG_CODE>
+    <VAT_NUMBER>EE109876543</VAT_NUMBER>
+    <ADDRESS>Narva mnt 5, 10117 Tallinn, Eesti</ADDRESS>
+    <CONTACT_PERSON>Jaan Tamm</CONTACT_PERSON>
+    <EMAIL>raamatupidamine@nordic-innovation.ee</EMAIL>
+  </BUYER>
+
+  <INVOICE_METADATA>
+    <INVOICE_NUM>EE-2026-9042</INVOICE_NUM>
+    <INVOICE_DATE>2026-09-08</INVOICE_DATE>
+    <DUE_DATE>2026-09-22</DUE_DATE>
+    <PAYMENT_TERMS>14 päeva</PAYMENT_TERMS>
+    <CURRENCY>EUR</CURRENCY>
+    <PAYMENT_REFERENCE>202690428</PAYMENT_REFERENCE>
+    <ORDER_NUMBER>ORD-8812</ORDER_NUMBER>
+  </INVOICE_METADATA>
+
+  <LINES>
+    <LINE>
+      <LINE_NUM>1</LINE_NUM>
+      <ITEM_CODE>DEV-23AI-01</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Konteinerite DevOps Platvormi Konsultatsioon</ITEM_NAME>
+      <QTY>16.00</QTY>
+      <UNIT>h</UNIT>
+      <UNIT_PRICE>95.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>1520.00</LINE_TOTAL>
+    </LINE>
+    <LINE>
+      <LINE_NUM>2</LINE_NUM>
+      <ITEM_CODE>APX-LANG-02</ITEM_CODE>
+      <ITEM_NAME>Oracle APEX 24.1 ja APEXlang DSL Automaatika Seadistus</ITEM_NAME>
+      <QTY>8.00</QTY>
+      <UNIT>h</UNIT>
+      <UNIT_PRICE>110.00</UNIT_PRICE>
+      <DISCOUNT_PCT>10</DISCOUNT_PCT>
+      <LINE_TOTAL>792.00</LINE_TOTAL>
+    </LINE>
+    <LINE>
+      <LINE_NUM>3</LINE_NUM>
+      <ITEM_CODE>PUB-UA-03</ITEM_CODE>
+      <ITEM_NAME>Analytics Publisher PDF/UA-1 Ligipääsetavuse Kujundus ja Audit</ITEM_NAME>
+      <QTY>6.00</QTY>
+      <UNIT>h</UNIT>
+      <UNIT_PRICE>120.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>720.00</LINE_TOTAL>
+    </LINE>
+  </LINES>
+
+  <TOTALS>
+    <SUBTOTAL>3032.00</SUBTOTAL>
+    <DISCOUNT_TOTAL>88.00</DISCOUNT_TOTAL>
+    <VAT_RATE>22%</VAT_RATE>
+    <VAT_AMOUNT>667.04</VAT_AMOUNT>
+    <GRAND_TOTAL>3699.04</GRAND_TOTAL>
+    <TOTAL_IN_WORDS>Kolm tuhat kuussada üheksakümmend üheksa eurot ja neli senti</TOTAL_IN_WORDS>
+  </TOTALS>
+
+  <FOOTER>
+    <PAYMENT_NOTICE>Palume arve tasumisel märkida maksekorraldusele kindlasti viitenumber 202690428.</PAYMENT_NOTICE>
+    <LATE_FEE_NOTICE>Tähtajaks tasumata arvetelt arvestatakse viivist 0.15% päevas.</LATE_FEE_NOTICE>
+    <THANK_YOU_MESSAGE>Täname meeldiva ja professionaalse koostöö eest!</THANK_YOU_MESSAGE>
+  </FOOTER>
+</INVOICE_DATA>

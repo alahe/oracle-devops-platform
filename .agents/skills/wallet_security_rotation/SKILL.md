@@ -9,7 +9,28 @@ This skill guides working with **Oracle Secure External Password Store (SEPS)** 
 
 ---
 
-## 1. SEPS Wallet Configuration Architecture
+## 1. 🎯 When to Use & Negative Routing
+
+### Positive Triggers (Activate Immediately):
+- Reading credentials dynamically in memory: `./scripts/get-password.sh <ALIAS>`
+- Passwordless SQLcl connections: `./scripts/sqlcl.sh /@ALIAS`
+- Zero-downtime automated password rotation: `./scripts/rotate-password.sh <db> <user>`
+- Validating wallet connections: `./scripts/check-wallet.sh`
+- Provisioning or inspecting SEPS wallet credentials via `mkstore`
+- Enforcing Rule 5 (strictly zero plaintext passwords on disk)
+
+### Negative Routing (Redirect to Specialized Skills):
+| If the task is primarily about... | DO NOT handle here. Route immediately to: |
+|:---|:---|
+| Adding database user roles or schemas in YAML | `blueprints_and_topology` (under `users:` section) |
+| Running full database setup or resetting secrets | `setup_orchestration` |
+| Connecting VS Code Oracle SQL Developer extension | `vscode_sql_developer` |
+| Database container health or container restart | `oracle_containers` |
+| Disaster recovery or restoring wallet from snapshot | `golden_snapshots_dr` |
+
+---
+
+## 2. SEPS Wallet Configuration Architecture
 
 The SEPS Wallet enables passwordless database authentication (`sql /@ALIAS`) with strong encryption:
 
@@ -141,3 +162,16 @@ if [[ "$WALLET_PWD" == *"?"* ]] || [ -z "$WALLET_PWD" ]; then
   SECRET_VAL=$(podman secret inspect --showsecret "${SECRET_NAME}" 2>/dev/null || true)
 fi
 ```
+
+---
+
+## 6. 🩺 Diagnostic Signatures & 1-Line Remedies
+
+| Symptom / Error | Root Cause | 1-Line Remedy |
+|:---|:---|:---|
+| `ORA-01017: invalid username/password` | Password rotated in DB but wallet has old entry | Run `./scripts/rotate-password.sh <db> <user>` or re-sync with `mkstore -modifyCredential`. |
+| `ORA-28759: failure to open file` | `TNS_ADMIN` not pointing to `config/tns_admin/` or `cwallet.sso` missing | Export `TNS_ADMIN="$(pwd)/config/tns_admin"` and verify `ls -l config/tns_admin/cwallet.sso`. |
+| `ORA-12154: TNS:could not resolve service` | Requested alias not declared in `tnsnames.ora` | Run `./scripts/check-wallet.sh` to list all valid TNS aliases and wallet mappings. |
+| Corrupted `?` characters in password | `mkstore` encoding mismatch on UTF-8 terminal | Use `./scripts/get-password.sh <alias>` which includes automated fallback to Podman secret tmpfs. |
+| `chmod: cannot change permissions on /mnt/c` | Running wallet on Windows NTFS host mount | Move workspace inside native WSL2 (`~/oracle-free-db-in-prod`) per Rule 14. |
+

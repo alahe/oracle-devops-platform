@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔒 SSL/TLS sertifikatų ir Pasitikėjimo valdymo modulis (zero-admin / non-root)
+# 🔒 SSL/TLS sertifikatų ir pasitikėjimo valdymo modulis (zero-admin / non-root)
 
 Šis modulis valdo saugius HTTPS ir TCPS ryšius, sertifikatų parinkimą ir automatinį pasitikėjimo diegimą macOS ir Windows aplinkose be administratoriaus (`root` / `sudo`) teisių.
 

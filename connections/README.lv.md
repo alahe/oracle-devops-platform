@@ -24,7 +24,7 @@ flowchart TD
   
   HOST_REG --> CHECK_WEBIDE{"❓ Vai Web IDE<br/>(web-ide-dev)<br/>konteiners darbojas?"}
   
-  CHECK_WEBIDE -->|"✅ JĀ / Darbojas"| WEBIDE_REG["🌐 5. Reģistrēt Web IDE<br/>- Konteinera SQLcl batch<br/>- /config/.dbtools/conns<br/>- /config/.sqldev/conns.json<br/>- Tiesības chown abc"]
+  CHECK_WEBIDE -->|"✅ JĀ / Darbojas"| WEBIDE_REG["🌐 5. Reģistrēt Web IDE<br/>• Konteinera SQLcl batch<br/>• /config/.dbtools & .sqldev<br/>• Tiesību labojums (chown)"]
   
   CHECK_WEBIDE -->|"❌ NĒ / Nav"| SANITIZE["🧹 6. Notīrīt folders.json<br/>(Dzēst bāreņu GUID<br/>Novērst DBTU-03001)"]
   

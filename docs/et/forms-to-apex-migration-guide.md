@@ -10,14 +10,14 @@ Kasutad 2026. aastal endiselt Oracle Forms & Reports süsteeme? Peamine põhjus,
 
 ```mermaid
 graph TD
-  subgraph Pärandvarana Oracle Forms Stack
+  subgraph LegacyForms ["Pärandvarana Oracle Forms Stack"]
     LF1[Oracle WebLogic Server] --- LF2[Forms Services 12c/14c]
     LF2 --- LF3[Repository Creation Utility RCU]
     LF3 --- LF4[Kulukas ja Raske Virtuaalmasinate Taristu]
     LF4 --- LF5[Java Runtime / Web Start Klienditarkvara]
   end
 
-  subgraph Kaasaegne Oracle APEX Stack
+  subgraph ModernApex ["Kaasaegne Oracle APEX Stack"]
     AP1[Oracle Database 23ai / Free DB]
     AP2[Natiivne APEX Mootor Andmebaasis]
     AP3[Oracle REST Data Services ORDS]
@@ -60,15 +60,15 @@ Tänases generatiivse tehisintellekti (GenAI) maailmas on LLM-ide abil rakendust
 
 ```mermaid
 graph TD
-  subgraph Valik 1: Otsene Genereerimine (Direct Generation - Habras Kood)
-    D1[LLM Päring / Prompt] --> D2[LLM kirjutab 10 000 rida toorkoodi<br/>React, Next.js, Node, Käsitsi Kirjutatud Sessioonihaldus]
-    D2 --> D3[Kõrge vigade ja hallutsinatsioonide oht, puuduvad CSRF/bind muutujad,<br/>N+1 päringud, loetamatu koodiülevaade]
+  subgraph Option1 ["Valik 1: Otsene Genereerimine<br/>(Imperatiivne Habras Kood)"]
+    D1["LLM Päring / Prompt"] --> D2["LLM kirjutab 10 000 rida toorkoodi<br/>React, Next.js, Node,<br/>Käsitsi Sessioonihaldus"]
+    D2 --> D3["Kõrge vigade/hallutsinatsioonide oht,<br/>puuduvad CSRF/bind muutujad,<br/>N+1 päringud, loetamatu koodiülevaade"]
   end
 
-  subgraph Valik 2: Kaudne Genereerimine (Indirect Generation - Intentsioonimootor)
-    I1[LLM Päring / Prompt] --> I2[LLM kirjutab 10 rida APEXlang DSL koodi<br/>Määrab kõrgetasemelise INTENTSIOONI: Grid, Vorm, Filtrid]
-    I2 --> I3[Lahingutes testitud Täitmismootor (Implementation Engine)<br/>Oracle APEX + Andmebaasi Tuum]
-    I3 --> I4[100x Suurem Korrektsus, 1000x Parem Loetavus,<br/>Garanteeritud Sessioonihaldus, Autentimine ja Transaktsioonid]
+  subgraph Option2 ["Valik 2: Kaudne Genereerimine<br/>(Intentsioonimootor)"]
+    I1["LLM Päring / Prompt"] --> I2["LLM kirjutab 10 rida APEXlang DSL koodi<br/>Määrab kõrgetasemelise<br/>INTENTSIOONI: Grid, Vorm, Filtrid"]
+    I2 --> I3["Lahingutes testitud<br/>Täitmismootor (Impl Engine)<br/>Oracle APEX + Andmebaasi Tuum"]
+    I3 --> I4["100x Suurem Korrektsus,<br/>1000x Parem Loetavus,<br/>Garanteeritud Sessioonihaldus,<br/>Autentimine ja Transaktsioonid"]
   end
 ```
 
@@ -101,16 +101,16 @@ Enamik AI koodikirjutamise (vibe-coding) riske lahkavaid artikleid jõuab samale
 
 ```mermaid
 graph TD
-  subgraph Traditsiooniline Vibe-Coding (Juhitud Käitusaeg / Tagantjärele Kontroll)
+  subgraph TradVibe ["Traditsiooniline Vibe-Coding<br/>(Juhitud Käitusaeg)"]
     T1[LLM Genereerib Suvalist Toorkoodi] --> T2[Kood Sisaldab Turvaauke ja SQL-Süstimist]
-    T2 --> T3[Aeglane ja Kallis Tagantjärele Koodiülevaatus & Skännerid]
+    T2 --> T3[Aeglane ja Kallis Tagantjärele<br/>Koodiülevaatus & Skännerid]
     T3 --> T4[Vigade Jõudmine Toodangusse]
   end
 
-  subgraph APEX + APEXlang (Juhitud Sisend / Kaitsepiire Enne Genereerimist)
+  subgraph ApexLang ["APEX + APEXlang<br/>(Juhitud Sisend / Kaitsepiire)"]
     A1[LLM Genereerib Deklaratiivset APEXlang DSL-i] --> A2[Versioonitud EBNF Grammatika Kaitsepiire]
-    A2 --> A3[Parsimise-Aegne Valideerimine: Vigased Konstruktsioonid Kukuvad Kohe Läbi]
-    A3 --> A4[Andmebaasi Tuuma Turvalisus: Automaatsed Sidusmuutujad, Null Süstimist, Möödapääsmatu RLS]
+    A2 --> A3[Parsimise-Aegne Valideerimine:<br/>Vigased Konstruktsioonid Kukuvad Läbi]
+    A3 --> A4[Andmebaasi Tuuma Turvalisus:<br/>Automaatsed Binds, Null Süstimist, RLS]
   end
 ```
 
@@ -153,20 +153,20 @@ Pärandvarasüsteemide (Forms/Reports) moderniseerimisel langevad paljud organis
 
 ```mermaid
 graph TD
-  subgraph Hajutatud Mikroteenuste Lõks
+  subgraph DistTrap ["Hajutatud Mikroteenuste Lõks"]
     M1[100+ Repot ja Killustatud CI/CD]
     M2[Võrgu Latentsus Igal Sisesel API Kutsel]
     M3[Hajutatud Transaktsioonid ja Saga Keerukus]
-    M4[Andmete Sünkroonist Väljumine ja Lõplik Konsistentsus]
+    M4[Andmete Sünkroonist Väljumine<br/>ja Lõplik Konsistentsus]
     M1 --- M2
     M2 --- M3
     M3 --- M4
   end
 
-  subgraph Andmebaasisisene Modulaarne Monoliit (Oracle APEX)
+  subgraph Monolith ["Andmebaasisisene Modulaarne<br/>Monoliit (Oracle APEX)"]
     A1[Ühtne Juurutatav Tervik ja Hetkeline Setup]
-    A2[Mälusisene SQL/PLSQL Käivitus: Null Võrgulatentsust]
-    A3[Natiivsed ACID Transaktsioonid ja Null Andmete Triivi]
+    A2[Mälusisene SQL/PLSQL Käivitus:<br/>Null Võrgulatentsust]
+    A3[Natiivsed ACID Transaktsioonid<br/>ja Null Andmete Triivi]
     A4[Vajadusel Hetkeline REST API läbi ORDS AutoRESTi]
     A1 --- A2
     A2 --- A3
@@ -200,7 +200,7 @@ graph TD
   F[Oracle Forms Pärandrakendus<br/>300+ Ekraani, 20 Aastat Ärireegleid PL/SQL-is]
   
   F -->|Eesmärk: Kiirus, Madal Risk & TCO| APEX[1. Otsene Üleminek Oracle APEX-ile<br/>100% PL/SQL Taaskasutus, Null Vahetarkvara]
-  F -->|Eesmärk: Järkjärguline Üleminek 24 Kuu Jooksul| HYBRID[2. Hübriidmigratsioon: Strangler Fig Muster<br/>Kriitilised Moodulid APEX-is, Forms Toetab Kõrval]
+  F -->|Eesmärk: Järkjärguline Üleminek 24 Kuu Jooksul| HYBRID[2. Hübriidmigratsioon: Strangler Fig Muster<br/>Kriitilised Moodulid APEX-is,<br/>Forms Toetab Kõrval]
   F -->|Eesmärk: Avalik B2C E-Pood| NEXT[3. Next.js Kasutajaliides + ORDS REST API<br/>Eraldatud UI Kiht koos Vahekihi Halduskuluga]
 ```
 

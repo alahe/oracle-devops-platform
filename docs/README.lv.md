@@ -35,3 +35,5 @@
 | 📦 **APEX lietotņu izvietošana** | [apex-apps-deployment.md](apex-apps-deployment.md) | Automatizēta APEX lietotņu importēšana no `binaries/apex_apps/`. |
 | 🌐 **Savrups ORDS serveris** | [standalone-ords.md](standalone-ords.md) | Savrupa Oracle REST Data Services servera izvietošana Linux vidē ārpus Docker. |
 | 🚀 **Uzstādīšanas plūsmas arhitektūra** | [setup-all-workflow.md](setup-all-workflow.md) | Pilna blokshēma, idempotence un Defender optimizācija. |
+| ❓ **Platformas BUJ (Visi jautājumi)** | [lv/faq.md](lv/faq.md) | Vienota zināšanu bāze iesācējiem, arhitektūrai un problēmu novēršanai. |
+| 🏛️ **Oracle resursi un lejupielādes** | [lv/oracle-resources-and-downloads.md](lv/oracle-resources-and-downloads.md) | Oficiālie Oracle Container Registry (OCR) attēli, lejupielādes un portāli. |

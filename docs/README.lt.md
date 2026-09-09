@@ -35,3 +35,5 @@
 | 📦 **APEX programų diegimas** | [apex-apps-deployment.md](apex-apps-deployment.md) | Automatizuotas APEX programų importavimas iš `binaries/apex_apps/`. |
 | 🌐 **Atskiras ORDS mazgas** | [standalone-ords.md](standalone-ords.md) | Atskiro Oracle REST Data Services serverio diegimas Linux aplinkoje be Docker konteinerio. |
 | 🚀 **Diegimo eigos architektūra** | [setup-all-workflow.md](setup-all-workflow.md) | Išsami blokschemų seka, idempotentumas ir Defender optimizavimai. |
+| ❓ **Platformos DUK (Visi klausimai)** | [lt/faq.md](lt/faq.md) | Vieninga žinių bazė pradedantiesiems, architektūrai ir trikčių šalinimui. |
+| 🏛️ **Oracle ištekliai ir atsisiuntimai** | [lt/oracle-resources-and-downloads.md](lt/oracle-resources-and-downloads.md) | Oficialūs Oracle Container Registry (OCR) atvaizdai, atsisiuntimai ir portalai. |

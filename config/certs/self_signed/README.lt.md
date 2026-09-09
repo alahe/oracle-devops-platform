@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# ⚠️ Savarankiškai Pasirašytas Sertifikatas (variantas 4 atsarginis Režimas)
+# ⚠️ Savarankiškai pasirašytas sertifikatas (variantas 4 atsarginis režimas)
 
 Šiame kataloge yra dinamiškai sugeneruotas savarankiškai pasirašytas sertifikatas (`self_signed.crt` ir `self_signed.key`).
 

@@ -60,12 +60,12 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    CheckLocal{1. Check Local Folder: apex/, ords/, patches/}
-    CheckLocal -->|FOUND| UseLocal[Use local manual ZIP file immediately - 0 network calls]
-    CheckLocal -->|NOT FOUND| CheckEnvURL{2. Check .env Override: APEX_DOWNLOAD_URL}
+    CheckLocal{"1. Check local folder:<br/>apex/, ords/, patches/"}
+    CheckLocal -->|FOUND| UseLocal["⚡ Use local manual ZIP file<br/>immediately (0 network calls)"]
+    CheckLocal -->|NOT FOUND| CheckEnvURL{"2. Check .env override:<br/>APEX_DOWNLOAD_URL"}
     
-    CheckEnvURL -->|ENV URL FOUND| DownloadEnv[Download from Enterprise Artifactory URL in .env]
-    CheckEnvURL -->|NOT FOUND| DownloadProfile[3. Download from Profile Default URL in config/profiles/*.yaml]
+    CheckEnvURL -->|ENV URL FOUND| DownloadEnv["⬇️ Download from Enterprise<br/>Artifactory URL in .env"]
+    CheckEnvURL -->|NOT FOUND| DownloadProfile["🌐 Download from Profile Default URL<br/>in config/profiles/*.yaml"]
 ```
 
 ---

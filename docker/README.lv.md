@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🐳 Konteineru Būvēšanas veidnes (`docker/`)
+# 🐳 Konteineru būvēšanas veidnes (`docker/`)
 
 Šis direktorijs satur būvēšanas skriptus, Dockerfile failus un izpildlaika konfigurācijas pielāgotiem konteineru attēliem.
 

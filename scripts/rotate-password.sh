@@ -234,11 +234,69 @@ rotate_all_credentials() {
   echo -e "\n🌐 Middleware services:"
   rotate_ords_listener_password "$(gen_strong_password)"
 
+  if [ "${PUBLISHER_ENABLED:-false}" = "true" ] || (command -v podman >/dev/null 2>&1 && podman container exists app-publisher 2>/dev/null); then
+    echo -e "\n📊 Analytics Publisher services:"
+    rotate_publisher_password "all" "$(gen_strong_password)"
+  fi
+
   echo "=================================================================="
   echo "✅ ALL SECRETS SUCCESSFULLY ROTATED AND SYNCHRONIZED"
   echo "=================================================================="
   if [ -x "$SCRIPT_DIR/get-password.sh" ]; then
     "$SCRIPT_DIR/get-password.sh"
+  fi
+}
+
+rotate_publisher_password() {
+  local role="$1"
+  local new_pwd="${2:-$(gen_strong_password)}"
+
+  local roles_to_rotate=()
+  case "$role" in
+    dev|developer) roles_to_rotate=("developer") ;;
+    user) roles_to_rotate=("user") ;;
+    admin) roles_to_rotate=("admin") ;;
+    all) roles_to_rotate=("developer" "user" "admin") ;;
+    *)
+      echo "❌ Unknown publisher role: '$role'. Allowed: dev, user, admin, all." >&2
+      return 1
+      ;;
+  esac
+
+  for r in "${roles_to_rotate[@]}"; do
+    local uname="bip_${r}"
+    local sec_key="publisher_${r}_password"
+    local r_upper=$(echo "$r" | tr '[:lower:]' '[:upper:]')
+    local alias_key="PUBLISHER_${r_upper}"
+    echo "🔄 Rotating password for Oracle Analytics Publisher: [${uname}] (Alias: ${alias_key})..."
+    
+    local pwd_val="$new_pwd"
+    [ "${#roles_to_rotate[@]}" -gt 1 ] && pwd_val="$(gen_strong_password)"
+    store_secret "$sec_key" "$pwd_val"
+
+    if command -v podman >/dev/null 2>&1 && podman container exists app-publisher 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' app-publisher 2>/dev/null)" = "running" ]; then
+      local admin_pwd=$(podman secret inspect --showsecret publisher_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || echo "AdminPassword123!")
+      podman exec -i app-publisher bash -c "cat << 'PYWLST' > /tmp/rotate_pwd.py
+import sys
+try:
+    connect('weblogic', '$admin_pwd', 't3://localhost:9500')
+    cd('/SecurityConfiguration/bi/Realms/myrealm/AuthenticationProviders/DefaultAuthenticator')
+    if cmo.userExists('$uname'):
+        cmo.resetUserPassword('$uname', '$pwd_val')
+        print('SUCCESS')
+    disconnect()
+except Exception, e:
+    print('ERROR: ' + str(e))
+PYWLST
+/u01/oracle/oracle_common/common/bin/wlst.sh /tmp/rotate_pwd.py >/dev/null 2>&1 || true
+rm -f /tmp/rotate_pwd.py
+" 2>/dev/null || true
+    fi
+    echo "✅ Password rotated for ${uname}."
+  done
+
+  if [ -x "$SCRIPT_DIR/internal/create-wallet.sh" ]; then
+    "$SCRIPT_DIR/internal/create-wallet.sh" >/dev/null 2>&1 || true
   fi
 }
 
@@ -248,11 +306,13 @@ ROLE="${2:-}"
 
 if [ -z "$TARGET" ]; then
   echo "Usage: $0 <TARGET_DB_OR_SERVICE> [ROLE]"
+  echo "       $0 publisher [dev|user|admin|all]"
   echo "       $0 all"
   echo ""
   echo "Examples:"
   echo "  $0 db-proxy dev"
   echo "  $0 db-proxy sys"
+  echo "  $0 publisher dev"
   echo "  $0 ords_listener"
   echo "  $0 all"
   exit 1
@@ -265,6 +325,9 @@ case "$TARGET" in
   ords_listener|ords)
     rotate_ords_listener_password "$(gen_strong_password)"
     ;;
+  publisher|bip)
+    rotate_publisher_password "${ROLE:-all}" "$(gen_strong_password)"
+    ;;
   *)
     if [ -z "$ROLE" ]; then
       echo "❌ Please specify role (e.g. 'dev', 'sys', 'viewer', 'app'): $0 $TARGET dev"
@@ -273,3 +336,4 @@ case "$TARGET" in
     rotate_db_user_password "$TARGET" "$ROLE" "$(gen_strong_password)"
     ;;
 esac
+

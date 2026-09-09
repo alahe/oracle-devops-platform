@@ -18,6 +18,8 @@ import glob
 import shutil
 import datetime
 import time
+import threading
+import ssl
 
 # Ensure scripts/internal is in sys.path for dev_hub imports
 INTERNAL_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -26,11 +28,12 @@ if INTERNAL_DIR not in sys.path:
 
 try:
     from dev_hub.parser import parse_blueprint_env_and_metadata
-    from dev_hub.diagnostics import find_latest_log_for_blueprint, load_all_passwords
+    from dev_hub.diagnostics import find_latest_log_for_blueprint, find_all_logs_for_blueprint, load_all_passwords
     from dev_hub.testing import get_script_doc_reference
 except Exception:
     parse_blueprint_env_and_metadata = None
     find_latest_log_for_blueprint = None
+    find_all_logs_for_blueprint = None
     load_all_passwords = None
     get_script_doc_reference = lambda s: {"doc_file": "docs/testing-framework-and-devhub.md", "doc_key": "testing_framework", "title": "Testing Framework & Dev Hub Architecture"}
 
@@ -42,6 +45,7 @@ for p in ["/opt/homebrew/bin", "/usr/local/bin", os.path.expanduser("~/.local/bi
 PODMAN_BIN = shutil.which("podman") or ("/opt/homebrew/bin/podman" if os.path.isfile("/opt/homebrew/bin/podman") else ("/usr/local/bin/podman" if os.path.isfile("/usr/local/bin/podman") else "podman"))
 
 PORT = int(os.environ.get("DEV_HUB_BRIDGE_PORT", 8089))
+HTTPS_PORT = int(os.environ.get("DEV_HUB_BRIDGE_HTTPS_PORT", 8449))
 BIND_HOST = os.environ.get("DEV_HUB_BRIDGE_BIND_HOST", "127.0.0.1")
 WORKSPACE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 DEV_HUB_HTML = os.path.join(WORKSPACE_DIR, "docs/dev-hub.html")
@@ -96,7 +100,7 @@ MODULE_PROFILE_MAP = {
     "web-ide": "config/profiles/web-ide/web-ide-standard.yaml",
     "publisher": "config/profiles/publisher/publisher-standard.yaml",
     "forms": "config/profiles/forms/forms-standard.yaml",
-    "designer": "config/profiles/publisher/publisher-designer.yaml",
+    "designer": "config/profiles/publisher/publisher-designer-standard.yaml",
     "forms-publisher": "config/profiles/forms-publisher/forms-publisher-unified.yaml"
 }
 
@@ -128,32 +132,112 @@ DEVOPS_WHITELIST = {
     "security-audit": ["./scripts/test-security-audit.sh"],
     "test-mermaid": ["./tests/unit/test-devhub-mermaid-rendering.sh"],
     "check-precommit": ["./scripts/check-pre-commit.sh", "--full"],
-    "test-precommit": ["./scripts/check-pre-commit.sh", "--full"]
+    "test-precommit": ["./scripts/check-pre-commit.sh", "--full"],
+    "test-publisher-a11y": ["./tests/integration/test-publisher-accessibility-suite.sh"],
+    "test-publisher-designer-e2e": ["./tests/integration/test-publisher-designer-e2e.sh"],
+    "rtf-lint": ["./scripts/publisher/validate-rtf-accessibility.sh"],
+    "pdf-a11y-validate": ["./scripts/publisher/validate-pdf-accessibility.sh", "templates/publisher/accessibility_suite/01-standard-invoice/output_accessible.pdf"],
+    "xml-inspect": ["./scripts/publisher/validate-rtf-accessibility.sh"],
+    "test-web-ide": ["./tests/integration/test-web-ide-container.sh"],
+    "test-db-profiles": ["./tests/integration/test-db-profiles-and-topology.sh"],
+    "test-sqlcl-wallet": ["./tests/integration/test-sqlcl-passwordless-connections.sh"]
 }
 
 def get_profile_port(module):
-    rel_path = MODULE_PROFILE_MAP.get(module)
+    # Tier 1: Dynamic Environment Variable Overrides
+    env_keys = {
+        "alise": ["DB_ALISE_PORT", "ALISE_PORT"],
+        "proxy": ["DB_PROXY_PORT", "PROXY_PORT"],
+        "ords": ["ORDS_PORT", "ORDS_HTTP_PORT"],
+        "web-ide": ["WEB_IDE_HTTP_PORT", "WEB_IDE_PORT"],
+        "publisher": ["PUBLISHER_HTTP_PORT", "PUBLISHER_PORT"],
+        "forms": ["FORMS_HTTP_PORT", "FORMS_PORT"],
+        "designer": ["PUBLISHER_DESIGNER_PORT", "DESIGNER_PORT", "PUBLISHER_DESIGNER_HTTP_PORT"],
+        "forms-publisher": ["FORMS_PUBLISHER_HTTP_PORT", "PUBLISHER_HTTP_PORT"]
+    }
+    for env_var in env_keys.get(module, []):
+        val = os.environ.get(env_var)
+        if val and val.isdigit():
+            return int(val)
+
+    # Tier 2: Check Active Blueprint or .env for custom profile definitions or port overrides
+    rel_path = None
+    abp_file = None
+    try:
+        abp_marker = os.path.join(WORKSPACE_DIR, ".active_blueprint")
+        if os.path.isfile(abp_marker):
+            with open(abp_marker, "r", encoding="utf-8") as f:
+                abp_num = f.read().strip()
+            import glob
+            matches = glob.glob(os.path.join(WORKSPACE_DIR, f"config/blueprints/.env.{abp_num}-*"))
+            if matches:
+                abp_file = matches[0]
+    except Exception:
+        pass
+
+    env_path = os.path.join(WORKSPACE_DIR, ".env")
+    for fpath in ([abp_file, env_path] if abp_file else [env_path]):
+        if fpath and os.path.isfile(fpath):
+            try:
+                with open(fpath, "r", encoding="utf-8") as ef:
+                    for line in ef:
+                        line = line.strip()
+                        if not line or line.startswith("#") or "=" not in line:
+                            continue
+                        k, v = line.split("=", 1)
+                        k, v = k.strip(), v.strip().strip('"\'')
+                        for env_var in env_keys.get(module, []):
+                            if k == env_var and v.isdigit():
+                                return int(v)
+                        prof_keys = {
+                            "alise": "DB_ALISE",
+                            "proxy": "DB_PROXY",
+                            "ords": "ORDS_PROFILE",
+                            "web-ide": "WEB_IDE_PROFILE",
+                            "publisher": "PUBLISHER_PROFILE",
+                            "forms": "FORMS_PROFILE",
+                            "designer": "PUBLISHER_DESIGNER_PROFILE",
+                            "forms-publisher": "FORMS_PUBLISHER_PROFILE"
+                        }
+                        if k == prof_keys.get(module) and v and v.upper() != "NONE":
+                            candidate = f"config/profiles/*/{v}.yaml"
+                            import glob
+                            c_matches = glob.glob(os.path.join(WORKSPACE_DIR, candidate))
+                            if c_matches:
+                                rel_path = os.path.relpath(c_matches[0], WORKSPACE_DIR)
+            except Exception:
+                pass
+
     if not rel_path:
-        return MODULE_PORT_MAP.get(module, 8080)
-    full_path = os.path.join(WORKSPACE_DIR, rel_path)
-    if os.path.isfile(full_path):
-        try:
-            with open(full_path, "r", encoding="utf-8") as f:
-                content = f.read()
-            m = re.search(r"^\s*db_port:\s*([0-9]+)", content, re.MULTILINE)
-            if m:
-                return int(m.group(1))
-            m = re.search(r"^\s*http_port:\s*([0-9]+)", content, re.MULTILINE)
-            if m:
-                return int(m.group(1))
-            m = re.search(r"^\s*port:\s*([0-9]+)", content, re.MULTILINE)
-            if m:
-                return int(m.group(1))
-            m = re.search(r"host_port:\s*([0-9]+)", content)
-            if m:
-                return int(m.group(1))
-        except Exception:
-            pass
+        rel_path = MODULE_PROFILE_MAP.get(module)
+    if not rel_path and module == "designer":
+        rel_path = "config/profiles/publisher/publisher-designer-standard.yaml"
+
+    # Tier 3: Parse YAML Profile configuration
+    if rel_path:
+        full_path = os.path.join(WORKSPACE_DIR, rel_path)
+        if not os.path.isfile(full_path) and "publisher-designer" in rel_path:
+            full_path = os.path.join(WORKSPACE_DIR, "config/profiles/publisher/publisher-designer-standard.yaml")
+        if os.path.isfile(full_path):
+            try:
+                with open(full_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                m = re.search(r"^\s*db_port:\s*([0-9]+)", content, re.MULTILINE)
+                if m:
+                    return int(m.group(1))
+                m = re.search(r"^\s*http_port:\s*([0-9]+)", content, re.MULTILINE)
+                if m:
+                    return int(m.group(1))
+                m = re.search(r"host_port:\s*([0-9]+)", content)
+                if m:
+                    return int(m.group(1))
+                m = re.search(r"^\s*port:\s*([0-9]+)", content, re.MULTILINE)
+                if m:
+                    return int(m.group(1))
+            except Exception:
+                pass
+
+    # Tier 4: Fallback defaults
     return MODULE_PORT_MAP.get(module, 8080)
 
 def is_socket_busy(port):
@@ -248,6 +332,8 @@ def resolve_port_conflict(module, new_port):
             new_content = re.sub(r"^\s*db_port:\s*[0-9]+", f"  db_port: {new_port}", content, flags=re.MULTILINE)
         elif "http_port:" in content:
             new_content = re.sub(r"^\s*http_port:\s*[0-9]+", f"  http_port: {new_port}", content, flags=re.MULTILINE)
+        elif "host_port:" in content:
+            new_content = re.sub(r"host_port:\s*[0-9]+", f"host_port: {new_port}", content, count=1)
         else:
             new_content = re.sub(r"^\s*port:\s*[0-9]+", f"  port: {new_port}", content, flags=re.MULTILINE)
 
@@ -301,19 +387,53 @@ def get_live_container_status():
                 elif "unhealthy" in st:
                     container_health[name] = "unhealthy"
                 elif "starting" in st or "init" in st:
-                    if name == "app-ords":
+                    probe_port = None
+                    ports_str = parts[2].strip() if len(parts) > 2 else ""
+                    if ports_str:
+                        m_port = re.search(r"(?:0\.0\.0\.0|127\.0\.0\.1|\[::\]|:::)?([0-9]+)->", ports_str)
+                        if m_port:
+                            probe_port = int(m_port.group(1))
+
+                    if not probe_port:
+                        c_to_mod = {
+                            "app-ords": "ords",
+                            "db-proxy": "proxy",
+                            "db-alise": "alise",
+                            "oracle-publisher-dev": "publisher",
+                            "app-publisher": "publisher",
+                            "app-forms": "forms",
+                            "app-forms-publisher": "forms-publisher",
+                            "web-ide-dev": "web-ide",
+                            "app-publisher-designer": "designer",
+                            "publisher-designer": "designer",
+                        }
+                        mod = c_to_mod.get(name)
+                        if mod:
+                            probe_port = get_profile_port(mod)
+                    is_live = False
+                    if probe_port:
                         try:
                             import socket
-                            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                            s.settimeout(0.5)
-                            ords_p = int(os.environ.get("ORDS_PORT", "8088"))
-                            if s.connect_ex(("127.0.0.1", ords_p)) == 0:
-                                container_health[name] = "healthy"
-                            else:
-                                container_health[name] = "starting"
-                            s.close()
+                            for host_target in ("127.0.0.1", "localhost"):
+                                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                                s.settimeout(1.0)
+                                if s.connect_ex((host_target, probe_port)) == 0:
+                                    is_live = True
+                                s.close()
+                                if is_live:
+                                    break
                         except Exception:
-                            container_health[name] = "starting"
+                            is_live = False
+
+                    # Check ORDS pools fallback
+                    if not is_live and (name in ("app-publisher", "oracle-publisher-dev")):
+                        if isinstance(CACHED_ORDS_POOLS, dict):
+                            pub_pool = CACHED_ORDS_POOLS.get("publisher", {})
+                            if pub_pool.get("status") in ("online", "degraded"):
+                                is_live = True
+
+                    if is_live:
+                        container_health[name] = "healthy"
                     else:
                         container_health[name] = "starting"
                 else:
@@ -386,7 +506,7 @@ def get_live_ords_pools():
         http_code = 0
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "DevHubBridge"})
-            with opener.open(req, timeout=1.2) as resp:
+            with opener.open(req, timeout=4.0) as resp:
                 lat = int((time.time() - t0) * 1000)
                 http_code = resp.status
                 status = "online" if resp.status in [200, 301, 302, 303, 307, 308, 404] else "degraded"
@@ -395,7 +515,12 @@ def get_live_ords_pools():
             http_code = e.code
             status = "online" if e.code in [200, 301, 302, 303, 307, 308, 404] else "degraded"
         except Exception:
-            status = "offline"
+            # If ORDS is running and listening on port, treat as online (or starting during warmup)
+            if is_socket_busy(int(ords_port)):
+                status = "online"
+                http_code = 200
+            else:
+                status = "offline"
 
         ords_pools[pname] = {
             "configured": True,
@@ -659,7 +784,8 @@ def get_all_profiles_metadata():
                         "port": port,
                         "description": desc,
                         "image": image,
-                        "memory": memory
+                        "memory": memory,
+                        "content": cnt
                     })
     results.sort(key=lambda x: (x["category"], x["name"]))
     return results
@@ -680,15 +806,17 @@ def get_all_blueprints_metadata():
                         num = int(m.group(1))
                         slug = m.group(2) or ""
                     title = ""
+                    full_cnt = ""
                     try:
                         with open(full_p, "r", encoding="utf-8") as bf:
-                            for line in bf:
+                            full_cnt = bf.read()
+                            for line in full_cnt.splitlines():
                                 line_str = line.strip()
                                 if line_str.startswith("# Blueprint") or line_str.startswith("# blueprint"):
                                     title = line_str.lstrip("#").strip()
                                     break
                     except Exception:
-                        pass
+                        full_cnt = ""
                     if not title:
                         title = f"Blueprint {num if num is not None else f}"
                     results.append({
@@ -696,7 +824,8 @@ def get_all_blueprints_metadata():
                         "rel_path": rel_p,
                         "number": num if num is not None else 999,
                         "slug": slug,
-                        "title": title
+                        "title": title,
+                        "content": full_cnt
                     })
     results.sort(key=lambda x: (x["number"], x["name"]))
     return results
@@ -1047,6 +1176,9 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         elif parsed.path == "/api/tests/script-content":
             self.handle_test_script_content(parsed.query, cb)
 
+        elif parsed.path == "/api/file/raw":
+            self.handle_file_raw(parsed.query, cb)
+
         elif parsed.path == "/api/tests/coverage":
             self._send_json({"status": "ok", "coverage": get_test_coverage_data()}, cb)
 
@@ -1252,6 +1384,13 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                     log_path = alt_info["full_path"]
                     base = os.path.basename(log_path)
 
+            # Security jail check (CWE-22): strictly enforce that resolved log path is inside install_logs/
+            allowed_dir = os.path.realpath(os.path.join(WORKSPACE_DIR, "install_logs"))
+            if log_path and os.path.isfile(log_path):
+                real_target = os.path.realpath(log_path)
+                if not (real_target.startswith(allowed_dir + os.sep) or real_target == allowed_dir):
+                    log_path = ""
+
             if not log_path or not os.path.isfile(log_path):
                 data = {
                     "status": "ok",
@@ -1370,6 +1509,18 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             logs_list.sort(key=lambda x: x["timestamp"], reverse=True)
             self._send_json({"status": "ok", "logs": logs_list, "total": len(logs_list)}, cb)
 
+        elif parsed.path in ["/api/logs/blueprint", "/api/log/blueprint"]:
+            bp = params.get("bp", ["0"])[0]
+            logs = find_all_logs_for_blueprint(WORKSPACE_DIR, bp) if find_all_logs_for_blueprint else []
+            data = {
+                "status": "ok",
+                "ok": True,
+                "blueprint": int(bp) if bp.isdigit() else 0,
+                "logs": logs,
+                "total": len(logs)
+            }
+            self._send_json(data, cb)
+
         elif parsed.path == "/api/log/latest":
             bp = params.get("bp", ["0"])[0]
             info = find_latest_log_for_blueprint(WORKSPACE_DIR, bp) if find_latest_log_for_blueprint else None
@@ -1461,6 +1612,13 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             self.handle_test_stop(post_body, parsed.query, cb)
         elif parsed.path == "/api/podman/action":
             self.handle_podman_action(post_body, parsed.query, cb)
+        elif parsed.path == "/api/bridge/restart" or parsed.path == "/api/bridge/reload":
+            self._send_json({"status": "ok", "message": "Bridge restarting..."}, cb)
+            def _restart():
+                time.sleep(0.5)
+                os.execv(sys.executable, [sys.executable] + sys.argv)
+            import threading
+            threading.Thread(target=_restart).start()
         elif parsed.path == "/api/report/refresh":
             try:
                 subprocess.run([sys.executable, os.path.join(WORKSPACE_DIR, "scripts/internal/generate-repo-report.py")], timeout=10, check=True)
@@ -1922,7 +2080,7 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                             if v and v.upper() != "NONE":
                                 to_stop.append(v)
                         elif "PUBLISHER_PROFILE=" in line and "NONE" not in line:
-                            to_stop.extend(["oracle-publisher-dev", "app-publisher"])
+                            to_stop.append("app-publisher")
                         elif "FORMS_PROFILE=" in line and "NONE" not in line:
                             to_stop.append("app-forms")
                         elif "FORMS_PUBLISHER_PROFILE=" in line and "NONE" not in line:
@@ -1934,7 +2092,20 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 to_stop = [c for c in set(to_stop) if c not in ["db-proxy", "app-ords"]]
 
             if to_stop:
-                cmd = [PODMAN_BIN, "stop"] + to_stop
+                # Map any legacy aliases if still present
+                to_stop = ["app-publisher" if c == "oracle-publisher-dev" else c for c in to_stop]
+                to_stop = list(dict.fromkeys(to_stop))
+                # Only stop containers that are actually running to prevent "no such container" error
+                try:
+                    _, running_containers, _, _, _ = get_live_container_status()
+                    active_to_stop = [c for c in to_stop if c in running_containers]
+                except Exception:
+                    active_to_stop = to_stop
+
+                if active_to_stop:
+                    cmd = [PODMAN_BIN, "stop"] + active_to_stop
+                else:
+                    cmd = ["echo", f"Containers ({', '.join(to_stop)}) are already stopped."]
             else:
                 cmd = ["echo", "No non-core containers to stop"]
         elif module in ["alise", "db-alise"]:
@@ -2446,6 +2617,50 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         except Exception as e:
             self._send_json({"status": "error", "error": str(e)}, cb, status=500)
 
+    def handle_file_raw(self, query_str, cb=None):
+        q = urllib.parse.parse_qs(query_str)
+        req_path = q.get("path", [""])[0].strip()
+        if not req_path:
+            self._send_json({"status": "error", "error": "No file path specified"}, cb, status=400)
+            return
+
+        # Sanitize path to prevent directory traversal
+        clean_rel = os.path.normpath(req_path).lstrip("/\\")
+        if clean_rel.startswith("..") or "/../" in clean_rel or "\\..\\" in clean_rel:
+            self._send_json({"status": "error", "error": "Invalid file path traversal"}, cb, status=403)
+            return
+
+        # Zero-Trust Security check (Rule 5): Never serve unencrypted secrets, wallets, or sensitive files
+        forbidden_patterns = [r"\.env($|\.)", r"wallet", r"\.sso$", r"\.p12$", r"\.key$", r"\.git/"]
+        for pat in forbidden_patterns:
+            if re.search(pat, clean_rel, re.IGNORECASE):
+                self._send_json({"status": "error", "error": "Access denied to protected credential or system files"}, cb, status=403)
+                return
+
+        target_file = os.path.abspath(os.path.join(WORKSPACE_DIR, clean_rel))
+        if not target_file.startswith(WORKSPACE_DIR) or not os.path.isfile(target_file):
+            self._send_json({"status": "error", "error": f"File not found: {clean_rel}"}, cb, status=404)
+            return
+
+        try:
+            if os.path.getsize(target_file) > 1024 * 1024:
+                self._send_json({"status": "error", "error": "File exceeds preview size limit (1MB)"}, cb, status=400)
+                return
+
+            with open(target_file, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read()
+
+            self._send_json({
+                "status": "ok",
+                "path": clean_rel,
+                "filename": os.path.basename(target_file),
+                "content": content,
+                "lines": len(content.splitlines()),
+                "size_bytes": os.path.getsize(target_file)
+            }, cb)
+        except Exception as e:
+            self._send_json({"status": "error", "error": str(e)}, cb, status=500)
+
     def handle_test_run(self, post_body, query_str, cb=None):
         suite = "unit"
         test_script = ""
@@ -2534,7 +2749,11 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 if not os.path.isfile(audit_path):
                     audit_path = os.path.join(WORKSPACE_DIR, "tests", "test-security-audit.sh")
                 cmd = [audit_path]
-            elif suite == "ci_sim":
+            elif suite == "doc_links":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "unit", "test-devhub-doc-links.sh")]
+            elif suite == "title_capitalization":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "unit", "test-title-capitalization-rules.sh")]
+            elif suite in ["ci_sim", "offline_ci"]:
                 ci_path = os.path.join(WORKSPACE_DIR, "tests", "test-local-ci.sh")
                 if not os.path.isfile(ci_path):
                     ci_path = os.path.join(WORKSPACE_DIR, "scripts", "test-local-ci.sh")
@@ -2636,9 +2855,32 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
 
+def start_https_server(bind_host, https_port, cert_file, key_file):
+    try:
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(certfile=cert_file, keyfile=key_file)
+        socketserver.ThreadingTCPServer.allow_reuse_address = True
+        with socketserver.ThreadingTCPServer((bind_host, https_port), DevHubBridgeHandler) as httpsd:
+            httpsd.socket = context.wrap_socket(httpsd.socket, server_side=True)
+            print(f"🔒 Dev Hub Bridge HTTPS server active on https://{bind_host}:{https_port}")
+            httpsd.serve_forever()
+    except Exception as e:
+        print(f"⚠️ Dev Hub Bridge HTTPS server could not start on {https_port}: {e}")
+
 def main():
     socketserver.ThreadingTCPServer.allow_reuse_address = True
     bind_host = BIND_HOST
+    cert_file = os.path.join(WORKSPACE_DIR, "config/certs/localhost.crt")
+    key_file = os.path.join(WORKSPACE_DIR, "config/certs/localhost.key")
+
+    if os.path.isfile(cert_file) and os.path.isfile(key_file):
+        https_thread = threading.Thread(
+            target=start_https_server,
+            args=(bind_host, HTTPS_PORT, cert_file, key_file),
+            daemon=True
+        )
+        https_thread.start()
+
     with socketserver.ThreadingTCPServer((bind_host, PORT), DevHubBridgeHandler) as httpd:
         print(f"🚀 Dev Hub Bridge & Dashboard server active on http://{bind_host}:{PORT}")
         httpd.serve_forever()

@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     ca-certificates \
     jq \
+    && (for j in /usr/lib/jvm/java-21-openjdk-*; do [ -d "$j" ] && ln -sf "$j" /usr/lib/jvm/default-java && ln -sf "$j" /usr/lib/jvm/java-21-openjdk-amd64 && ln -sf "$j" /usr/lib/jvm/java-21-openjdk-arm64 && break; done) \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Install GitHub CLI (gh)
@@ -49,7 +50,7 @@ RUN mkdir -p /opt/sqlcl && \
 
 # 5. Pre-configure default VS Code settings for Oracle SQL Developer, Antigravity, Python & GitHub Actions
 RUN mkdir -p /config/data/User /config/.local/share/code-server/User /root/.local/share/code-server/User /config/extensions && \
-    SETTINGS_JSON='{"oracle.sql.developer.tnsAdmin":"/config/.oracle/tns_admin","oracle.sql.developer.javaPath":"/usr/lib/jvm/java-21-openjdk-amd64","python.defaultInterpreterPath":"/usr/bin/python3","python.testing.pytestEnabled":true,"files.associations":{"*.sql":"oracle-sql","*.pls":"oracle-plsql","*.pks":"oracle-plsql","*.pkb":"oracle-plsql"},"workbench.editorAssociations":{"*.sql":"oracle.sql-developer.editor","*.pls":"oracle.sql-developer.editor"},"redhat.telemetry.enabled":false,"workbench.colorTheme":"Default Dark Modern","workbench.startupEditor":"none"}' && \
+    SETTINGS_JSON='{"oracle.sql.developer.tnsAdmin":"/config/.oracle/tns_admin","oracle.sql.developer.javaPath":"/usr/lib/jvm/default-java","python.defaultInterpreterPath":"/usr/bin/python3","python.testing.pytestEnabled":true,"files.associations":{"*.sql":"oracle-sql","*.pls":"oracle-plsql","*.pks":"oracle-plsql","*.pkb":"oracle-plsql"},"workbench.editorAssociations":{"*.sql":"oracle.sql-developer.editor","*.pls":"oracle.sql-developer.editor"},"redhat.telemetry.enabled":false,"workbench.colorTheme":"Default Dark Modern","workbench.startupEditor":"none"}' && \
     echo "$SETTINGS_JSON" > /config/data/User/settings.json && \
     echo "$SETTINGS_JSON" > /config/.local/share/code-server/User/settings.json && \
     echo "$SETTINGS_JSON" > /root/.local/share/code-server/User/settings.json

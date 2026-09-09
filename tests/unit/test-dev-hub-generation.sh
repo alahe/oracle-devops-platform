@@ -20,7 +20,7 @@ if [ ! -f "$TMP_OUT" ]; then
 fi
 
 # Verify required tabs and sections
-for expected in "tab-services" "tab-presentation" "tab-blueprints" "tab-snapshots" "tab-forms-pub" "tab-apexlang" "tab-docs" "tab-devops" "tab-benchmarks"; do
+for expected in "tab-services" "tab-podman" "tab-presentation" "tab-snapshots" "tab-forms-pub" "tab-apexlang" "tab-docs" "tab-devops" "tab-testing" "tab-benchmarks"; do
   if ! grep -q "$expected" "$TMP_OUT"; then
     echo "❌ Missing expected tab ID in HTML: $expected"
     rm -f "$TMP_OUT"
@@ -37,8 +37,8 @@ for lang in "en:" "et:" "fi:" "sv:" "lv:" "lt:"; do
   fi
 done
 
-# Verify Mermaid diagrams
-if ! grep -q "class=\"mermaid\"" "$TMP_OUT"; then
+# Verify Mermaid diagrams engine and modal container
+if ! grep -q "mermaid.min.js" "$TMP_OUT" || ! grep -q "bp-modal-mermaid" "$TMP_OUT"; then
   echo "❌ Missing Mermaid diagram blocks in HTML"
   rm -f "$TMP_OUT"
   exit 1

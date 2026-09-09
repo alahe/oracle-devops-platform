@@ -21,7 +21,7 @@ flowchart TD
     end
 
     subgraph ExternalORDS ["Väline / Olemasolev ORDS Server"]
-        ORDSApp["ORDS Rakendusserver (https://ords.company.local/ords/)"]
+        ORDSApp["ORDS Rakendusserver<br/>(https://ords.company.local/ords/)"]
         PoolConfig["publisher_db.xml Pool configuration
         db.hostname: localhost / db.port: 1533
         db.servicename: FREEPDB1"]

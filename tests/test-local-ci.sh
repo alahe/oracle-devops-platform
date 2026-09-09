@@ -52,7 +52,37 @@ if [ -f "$WORKSPACE_DIR/tests/unit/test-filename-portability.sh" ]; then
   bash "$WORKSPACE_DIR/tests/unit/test-filename-portability.sh"
 fi
 
-# 0.1 Audit Windows dry-run compatibility if requested
+# 0.1 Audit architecture blueprints and profiles integrity (Rule 11)
+if [ -f "$WORKSPACE_DIR/tests/unit/test-blueprint-profiles-integrity.sh" ]; then
+  bash "$WORKSPACE_DIR/tests/unit/test-blueprint-profiles-integrity.sh"
+fi
+
+# 0.2 Audit Oracle BI Publisher RTF template and Copilot integration
+if [ -f "$WORKSPACE_DIR/tests/unit/test-publisher-rtf-template.sh" ]; then
+  bash "$WORKSPACE_DIR/tests/unit/test-publisher-rtf-template.sh"
+fi
+
+# 0.3 Audit Oracle BI Publisher Designer E2E container workflow
+if [ -f "$WORKSPACE_DIR/tests/integration/test-publisher-designer-e2e.sh" ]; then
+  bash "$WORKSPACE_DIR/tests/integration/test-publisher-designer-e2e.sh"
+fi
+
+# 0.4 Audit Oracle BI Publisher 6-Language (Nordic-Baltic) i18n support
+if [ -f "$WORKSPACE_DIR/tests/integration/test-publisher-multilingual.sh" ]; then
+  bash "$WORKSPACE_DIR/tests/integration/test-publisher-multilingual.sh"
+fi
+
+# 0.5 Audit Oracle Analytics Publisher PDF/UA-1 & Section 508 accessibility suite
+if [ -f "$WORKSPACE_DIR/tests/integration/test-publisher-accessibility-suite.sh" ]; then
+  bash "$WORKSPACE_DIR/tests/integration/test-publisher-accessibility-suite.sh"
+fi
+
+# 0.6 Audit Publisher GitOps scaffolding and deployment (create-report.sh & deploy-template.sh)
+if [ -f "$WORKSPACE_DIR/tests/unit/test-publisher-deploy-template.sh" ]; then
+  bash "$WORKSPACE_DIR/tests/unit/test-publisher-deploy-template.sh"
+fi
+
+# 0.3 Audit Windows dry-run compatibility if requested
 if [ "$RUN_WIN_DRYRUN" = true ] && [ -f "$SCRIPT_DIR/test-windows-dryrun.sh" ]; then
   bash "$SCRIPT_DIR/test-windows-dryrun.sh"
 fi

@@ -28,12 +28,12 @@ flowchart TB
     end
 
     subgraph Ingress ["Võrgu & Koormusjaotuse Kiht"]
-        F5_VIP["Ettevõtte Koormusjagaja / VIP (F5 BIG-IP / HAProxy)<br/>- TLS Termineerimine & Ümberkrüpteerimine<br/>- Reaalajas Tervisekontrollid<br/>- Active/Standby Ruutinguhaldus"]
+        F5_VIP["Ettevõtte Koormusjagaja / VIP<br/>F5 BIG-IP / HAProxy (TLS / mTLS)<br/>Tervisekontrollid & Ruutimine"]
     end
 
     subgraph Tier1 ["KIHT 1: ORDS + APEX App Server (Host 1)"]
         direction TB
-        ORDS_SRV["Oracle REST Data Services (ORDS)<br/>Port: 8448 (TLS) / 8088 (Plain)<br/>- APEX Staatilised Pildid (/i/)<br/>- Multi-Pool Ruutimise Haldur"]
+        ORDS_SRV["Oracle REST Data Services (ORDS)<br/>Port: 8448 (TLS) / 8088 (Plain)<br/>APEX Pildid (/i/) & Multi-Pool"]
         POOL_PROXY["Bassein 1: 'proxy'<br/>URL: /ords/r/proxy/*<br/>Siht: Host 3 (Proxy DB)"]
         POOL_BIZ["Bassein 2: 'business'<br/>URL: /ords/business/*<br/>Siht: Olemasolev Äri-DB"]
         ORDS_SRV --> POOL_PROXY
@@ -42,7 +42,7 @@ flowchart TB
 
     subgraph Tier2 ["KIHT 2: Analytics Publisher Server (Host 2)"]
         direction TB
-        PUB_SRV["Oracle Analytics Publisher 12c/14c<br/>Port: 9502 (TLS) / 9500 (Plain)<br/>- Pixel-Perfect Aruannete Mootor<br/>- Pakktarned (E-post, SFTP)"]
+        PUB_SRV["Oracle Analytics Publisher 12c/14c<br/>Port: 9502 (TLS) / 9500 (Plain)<br/>Pixel-Perfect & Pakktarned"]
         PUB_RCU_CONN["RCU Metadata Ühendus<br/>JDBC: Host 4 (Publisher DB)"]
         PUB_BIZ_CONN["Äriandmete Andmeallika Ühendus<br/>JDBC: Olemasolev Äri-DB"]
         PUB_SRV --> PUB_RCU_CONN
@@ -51,16 +51,16 @@ flowchart TB
 
     subgraph Tier3 ["KIHT 3: PROXY DB Server (Host 3)"]
         direction TB
-        DB_PROXY["Oracle 23ai Free DB Konteiner<br/>Listener Port: 1533 (või 1521)<br/>- APEX 26.1 Core Mootor<br/>- DevHub Portaal (DEVHUB skeem)<br/>- SEPS Auto-Login Wallet (cwallet.sso)"]
+        DB_PROXY["Oracle 23ai Free DB Konteiner<br/>Port: 1533 (või 1521)<br/>APEX 26.1 & DEVHUB Portaal"]
     end
 
     subgraph Tier4 ["KIHT 4: Publisher DB Server (Host 4)"]
         direction TB
-        DB_PUB["Oracle 23ai Free DB Konteiner<br/>Listener Port: 1532 (või 1521)<br/>- WebLogic RCU Hoidla Skeemid<br/>  (DEV_MDS, DEV_WLS, DEV_BIPLATFORM)<br/>- Aruannete Kataloog & Mallid"]
+        DB_PUB["Oracle 23ai Free DB Konteiner<br/>Port: 1532 (või 1521)<br/>WebLogic RCU & BIP Kataloog"]
     end
 
     subgraph ExternalDB ["Olemasolev Ettevõtte Taristu"]
-        BIZ_DB[("OLEMASOLEV ÄRIANDMEBAAS<br/>Oracle Enterprise / RAC / Exadata<br/>TNS: BIZDB.CORP / Port: 1521 või 2484<br/>- Finantstuuma Andmed & Skeemid<br/>- Turvatud mTLS & SEPS Walletiga")]
+        BIZ_DB[("OLEMASOLEV ÄRIANDMEBAAS<br/>Enterprise / RAC / Exadata<br/>Port: 1521 / TCPS mTLS")]
     end
 
     Browser --> F5_VIP

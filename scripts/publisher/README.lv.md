@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📑 Analytics Publisher Darbības skripti (`scripts/publisher/`)
+# 📑 Analytics Publisher darbības skripti (`scripts/publisher/`)
 
 Šis direktorijs nodrošina rīkus Oracle Analytics Publisher (Pixel Perfect atskaišu dzinēja), tā WebLogic domēna, atskaišu kataloga dublēšanas un ieviešanas pārvaldībai.
 

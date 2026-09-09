@@ -5,34 +5,147 @@
  * ============================================================================== */
 
 
-function switchTab(tabId) {
+// Navigation History & Browser Back / In-App Back State Management
+let gNavHistory = [];
+let gCurrentNavState = { tab: 'tab-services', docIdx: 0, skillId: null, timestamp: Date.now() };
+let gIsNavigatingHistory = false;
+
+function updateBackBtnVisibility() {
+  const btn = document.getElementById('nav-back-btn');
+  if (!btn) return;
+  btn.style.display = (gNavHistory.length > 0) ? 'inline-flex' : 'none';
+}
+
+function recordNavigationState(newState, updateUrl = true) {
+  if (gIsNavigatingHistory) return;
+  if (!newState || !newState.tab) return;
+  
+  if (gCurrentNavState && 
+      gCurrentNavState.tab === newState.tab && 
+      gCurrentNavState.docIdx === newState.docIdx &&
+      gCurrentNavState.skillId === newState.skillId &&
+      gCurrentNavState.anchor === newState.anchor) {
+    return;
+  }
+  
+  if (gCurrentNavState) {
+    gNavHistory.push(Object.assign({}, gCurrentNavState));
+    if (gNavHistory.length > 50) gNavHistory.shift();
+  }
+  
+  gCurrentNavState = Object.assign({}, newState, { timestamp: Date.now() });
+  updateBackBtnVisibility();
+  
+  if (updateUrl && window.history && window.history.pushState) {
+    let hash = `#${newState.tab}`;
+    if (newState.tab === 'tab-docs' && typeof newState.docIdx === 'number' && typeof DOCS_DATA !== 'undefined' && DOCS_DATA[newState.docIdx]) {
+      hash += `?doc=${encodeURIComponent(DOCS_DATA[newState.docIdx].id || DOCS_DATA[newState.docIdx].rel)}`;
+      if (newState.anchor) hash += `#${encodeURIComponent(newState.anchor)}`;
+    } else if (newState.tab === 'tab-skills' && newState.skillId) {
+      hash += `?skill=${encodeURIComponent(newState.skillId)}`;
+    }
+    try {
+      window.history.pushState(gCurrentNavState, '', hash);
+    } catch (e) {}
+  }
+}
+
+function navigateBack() {
+  if (gNavHistory.length > 0) {
+    const prevState = gNavHistory.pop();
+    applyNavState(prevState);
+    updateBackBtnVisibility();
+  } else if (window.history && window.history.length > 1) {
+    window.history.back();
+  }
+}
+
+function applyNavState(state) {
+  if (!state || !state.tab) return;
+  gIsNavigatingHistory = true;
+  try {
+    switchTab(state.tab, true);
+    if (state.tab === 'tab-docs' && typeof state.docIdx === 'number') {
+      loadDocContent(state.docIdx, null, true);
+      if (state.anchor) {
+        setTimeout(() => {
+          const el = document.getElementById(state.anchor) || document.querySelector(`[name="${state.anchor}"]`);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+      }
+    } else if (state.tab === 'tab-skills' && state.skillId && typeof selectSkillInReader === 'function') {
+      selectSkillInReader(state.skillId);
+    }
+    gCurrentNavState = Object.assign({}, state);
+  } finally {
+    gIsNavigatingHistory = false;
+  }
+}
+
+function initNavigationHistory() {
+  window.addEventListener('popstate', (event) => {
+    if (event.state) {
+      applyNavState(event.state);
+    } else {
+      const hashParam = (window.location.hash || '').replace(/^#/, '');
+      const cleanHash = hashParam.split('?')[0].split('&')[0];
+      if (cleanHash) {
+        switchTab(cleanHash, true);
+      } else {
+        switchTab('tab-services', true);
+      }
+    }
+    updateBackBtnVisibility();
+  });
+}
+
+function switchTab(tabId, skipHistory = false) {
+  let cleanId = (tabId || '').split('?')[0].split('&')[0].split('#')[0].trim();
+  if (cleanId && !cleanId.startsWith('tab-')) {
+    cleanId = `tab-${cleanId}`;
+  }
+  let activeContent = cleanId ? document.getElementById(cleanId) : null;
+  if (!activeContent) {
+    cleanId = 'tab-services';
+    activeContent = document.getElementById(cleanId);
+  }
+
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-  
-  if (window.event && window.event.currentTarget && window.event.currentTarget.classList.contains('tab-btn')) {
-    window.event.currentTarget.classList.add('active');
+
+  let matchingBtn = document.querySelector(`.tab-btn[onclick*="${cleanId}"]`);
+  if (!matchingBtn && window.event && window.event.currentTarget && window.event.currentTarget.classList.contains('tab-btn')) {
+    matchingBtn = window.event.currentTarget;
   }
-  const matchingBtn = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+  if (!matchingBtn) {
+    matchingBtn = document.querySelector('.tab-btn[onclick*="tab-services"]');
+  }
   if (matchingBtn) {
     matchingBtn.classList.add('active');
   }
-  const activeContent = document.getElementById(tabId);
+
   if (activeContent) {
     activeContent.classList.add('active');
-    if (tabId === 'tab-docs') {
+    if (cleanId === 'tab-docs') {
       renderDocsNav(currentSelectedDocIdx);
-    } else if (tabId === 'tab-benchmarks') {
+    } else if (cleanId === 'tab-benchmarks') {
       loadBenchmarksData();
-    } else if (tabId === 'tab-snapshots') {
+    } else if (cleanId === 'tab-snapshots') {
       loadSnapshotsTable();
-    } else if (tabId === 'tab-podman') {
+    } else if (cleanId === 'tab-podman') {
       loadPodmanResources();
-    } else if (tabId === 'tab-testing') {
+    } else if (cleanId === 'tab-testing') {
       initTestingTab();
-    } else if (tabId === 'tab-devops') {
+    } else if (cleanId === 'tab-skills') {
+      initSkillsTab();
+    } else if (cleanId === 'tab-devops') {
       filterDevOpsCards();
       loadRepoStatistics();
     }
+  }
+
+  if (!skipHistory) {
+    recordNavigationState({ tab: cleanId, docIdx: (cleanId === 'tab-docs' ? currentSelectedDocIdx : null) });
   }
 }
 
@@ -42,9 +155,31 @@ function switchPersona(persona) {
     window.event.currentTarget.classList.add('active');
   }
   if (persona === 'developer') switchTab('tab-services');
-  else if (persona === 'security') switchTab('tab-blueprints');
+  else if (persona === 'security') switchToCockpitSection('blueprints');
   else if (persona === 'devops') switchTab('tab-devops');
   else if (persona === 'publisher') switchTab('tab-services');
+}
+
+function switchToCockpitSection(section) {
+  switchTab('tab-services');
+  setTimeout(() => {
+    if (section === 'blueprints') {
+      const el = document.querySelector('.bp-filters') || document.getElementById('cockpit-cards-grid');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (section === 'services') {
+      const el = document.getElementById('cockpit-cards-grid') || document.querySelector('.section-title');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (section === 'wallet') {
+      const el = document.querySelector('.wallet-matrix-container');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const drawer = document.getElementById('wallet-matrix-drawer');
+        if (drawer && (drawer.style.opacity === '0' || drawer.style.maxHeight === '0px')) {
+          toggleWalletMatrix();
+        }
+      }
+    }
+  }, 120);
 }
 
 let gMermaidInitialized = false;
@@ -57,6 +192,7 @@ function initMermaidGlobal() {
     try {
       mermaid.initialize({
         startOnLoad: false,
+        suppressErrorRendering: true,
         theme: 'dark',
         securityLevel: 'loose',
         fontFamily: 'ui-sans-serif, system-ui, -apple-system, sans-serif',
@@ -73,7 +209,8 @@ function initMermaidGlobal() {
         flowchart: {
           useMaxWidth: true,
           htmlLabels: true,
-          curve: 'basis'
+          curve: 'basis',
+          padding: 12
         }
       });
       gMermaidInitialized = true;
@@ -81,6 +218,16 @@ function initMermaidGlobal() {
       console.warn('Mermaid initialize warning:', e);
     }
   }
+}
+initMermaidGlobal();
+
+function cleanupStrayMermaidElements() {
+  // Mermaid automatically appends error diagrams to document.body when render() fails
+  document.querySelectorAll('body > svg[id^="svg-"], body > [id^="dsvg-"], body > [id^="dmermaid"], body > [id^="d-svg-"], body > svg[id^="bp-modal-svg-"], body > [id^="dbp-modal-svg-"], body > div[id^="d"], body > svg.error-icon, body > svg[aria-roledescription="error"]').forEach(el => {
+    if (el.parentNode === document.body) {
+      el.remove();
+    }
+  });
 }
 
 async function renderMermaidInContainer(container) {
@@ -143,14 +290,22 @@ async function renderMermaidInContainer(container) {
       continue;
     }
 
+    const svgId = 'svg-' + uniqueId;
     try {
-      const svgId = 'svg-' + uniqueId;
       const res = await mermaid.render(svgId, rawCode);
       if (targetEl) {
         targetEl.innerHTML = res.svg || res;
       }
     } catch (err) {
       console.warn('Mermaid render warning:', err);
+      // Clean up any stray error SVG elements Mermaid may have injected into document.body
+      const straySvg = document.getElementById(svgId) || document.getElementById('d' + svgId);
+      if (straySvg && straySvg.parentNode) {
+        straySvg.parentNode.removeChild(straySvg);
+      }
+      cleanupStrayMermaidElements();
+      setTimeout(cleanupStrayMermaidElements, 50);
+
       if (targetEl) {
         targetEl.innerHTML = `
           <div style="color:#f87171; padding:14px; font-size:0.82rem; background:#450a0a; border-radius:6px; border:1px solid #991b1b; width:100%; text-align:left;">
@@ -262,6 +417,60 @@ function openBlueprintMermaidZoom() {
   modal.style.display = 'flex';
 }
 
+function toggleBlueprintWorkflowMermaidCode(btn) {
+  const rawEl = document.getElementById('bp-modal-workflow-mermaid-raw');
+  const container = document.getElementById('bp-modal-workflow-mermaid');
+  if (!rawEl || !container) return;
+  const isHidden = rawEl.style.display === 'none';
+  rawEl.style.display = isHidden ? 'block' : 'none';
+  container.style.display = isHidden ? 'none' : 'block';
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'] || {};
+  if (btn) {
+    btn.innerHTML = isHidden ? `🖼️ <span>${escapeHtml(dict.mermaid_toggle_diagram || 'Kuva diagramm')}</span>` : `👁️ <span>${escapeHtml(dict.mermaid_toggle_code || 'Kuva kood')}</span>`;
+  }
+}
+
+function copyBlueprintWorkflowMermaidCode(btn) {
+  const b = BLUEPRINTS_DATA.find(item => item.num === activeBpModalNum);
+  if (!b) return;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  let diagCode = '';
+  if (b.workflow_diagram && typeof b.workflow_diagram === 'object') {
+    diagCode = b.workflow_diagram[currentLang] || b.workflow_diagram['en'] || '';
+  } else if (typeof b.workflow_diagram === 'string') {
+    diagCode = b.workflow_diagram;
+  }
+  diagCode = diagCode.replace(/\\n/g, '\n');
+  if (!diagCode) return;
+  navigator.clipboard.writeText(diagCode).then(() => {
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'] || {};
+    const orig = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.innerHTML = `✅ <span>${escapeHtml(dict.mermaid_copied || 'Kopeeritud!')}</span>`;
+      setTimeout(() => { btn.innerHTML = orig; }, 1800);
+    }
+  });
+}
+
+function openBlueprintWorkflowMermaidZoom() {
+  const mermaidContainer = document.getElementById('bp-modal-workflow-mermaid');
+  const modal = document.getElementById('mermaid-zoom-modal');
+  const zoomContent = document.getElementById('mermaid-zoom-content');
+  if (!mermaidContainer || !modal || !zoomContent) return;
+  const b = BLUEPRINTS_DATA.find(item => item.num === activeBpModalNum);
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  let diagCode = '';
+  if (b.workflow_diagram && typeof b.workflow_diagram === 'object') {
+    diagCode = b.workflow_diagram[currentLang] || b.workflow_diagram['en'] || '';
+  } else if (typeof b.workflow_diagram === 'string') {
+    diagCode = b.workflow_diagram;
+  }
+  gZoomedMermaidSource = diagCode.replace(/\\n/g, '\n');
+  zoomContent.innerHTML = mermaidContainer.innerHTML;
+  modal.style.display = 'flex';
+}
+
 function renderMermaidDiagrams(lang) {
   initMermaidGlobal();
 }
@@ -273,8 +482,6 @@ function setLanguage(lang) {
   document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
   const activeBtn = document.getElementById('btn-' + lang);
   if (activeBtn) activeBtn.classList.add('active');
-  const deckActiveBtn = document.getElementById('deck-btn-' + lang);
-  if (deckActiveBtn) deckActiveBtn.classList.add('active');
   
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
@@ -350,6 +557,11 @@ function setLanguage(lang) {
   if (typeof renderRepoStatisticsUI === 'function' && gRepoStatsData) {
     renderRepoStatisticsUI(gRepoStatsData);
   }
+  const searchModal = document.getElementById('global-search-modal-backdrop');
+  if (searchModal && searchModal.style.display === 'flex') {
+    const searchInput = document.getElementById('global-search-input');
+    handleGlobalSearchInput(searchInput ? searchInput.value : '');
+  }
 }
 
 function applyPillState(pill, state, lang, matchedCount, totalCount) {
@@ -369,7 +581,9 @@ function applyPillState(pill, state, lang, matchedCount, totalCount) {
   } else if (state === 'partial') {
     pill.classList.add('status-partial');
     const tmpl = (I18N_DICT[lang] && I18N_DICT[lang]['status_partial']) || 'Partial (%s)';
-    if (textEl) textEl.textContent = tmpl.replace('%s', `${matchedCount || 1}/${totalCount || 2}`);
+    const ratioStr = `${matchedCount || 1}/${totalCount || 2}`;
+    if (textEl) textEl.textContent = tmpl.includes('%s') ? tmpl.replace('%s', ratioStr) : `${tmpl} (${ratioStr})`;
+    pill.setAttribute('title', `${ratioStr} containers active`);
   } else if (state === 'offline' || state === 'down') {
     pill.classList.add('status-offline');
     if (textEl) textEl.textContent = (I18N_DICT[lang] && I18N_DICT[lang]['status_offline']) || 'Offline';
@@ -520,7 +734,7 @@ async function pollBridgeStatus(manual = false) {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2000);
-    const poolsParam = (gOrdsAutoSync || manual || !LIVE_ORDS_POOLS || Object.keys(LIVE_ORDS_POOLS).length === 0) ? '?include_ords_pools=1' : '?include_ords_pools=0';
+    const poolsParam = '?include_ords_pools=1';
     const resp = await fetch(`${BRIDGE_URL}/api/status${poolsParam}`, { signal: controller.signal, mode: 'cors' });
     clearTimeout(timeoutId);
     if (resp.ok) {
@@ -541,11 +755,12 @@ async function pollBridgeStatus(manual = false) {
       if (data.system_resources) {
         LIVE_SYSTEM_RESOURCES = data.system_resources;
       }
-      if (data.ords_pools && (gOrdsAutoSync || manual || !LIVE_ORDS_POOLS || Object.keys(LIVE_ORDS_POOLS).length === 0)) {
+      if (data.ords_pools && Object.keys(data.ords_pools).length > 0) {
         LIVE_ORDS_POOLS = data.ords_pools;
       }
       if (connBadge) {
-        connBadge.innerHTML = '🟢 Bridge :8089 Online';
+        const bridgePortStr = (typeof BRIDGE_URL !== 'undefined' && BRIDGE_URL) ? BRIDGE_URL.replace(/https?:\/\/[^\/:]+/, '') : ':8089';
+        connBadge.innerHTML = `🟢 Bridge ${bridgePortStr} Online`;
         connBadge.style.color = '#4ade80';
         connBadge.style.background = 'rgba(34, 197, 94, 0.15)';
       }
@@ -558,7 +773,8 @@ async function pollBridgeStatus(manual = false) {
     }
   } catch (e) {
     if (connBadge) {
-      connBadge.innerHTML = '⚪ Bridge Offline (:8089)';
+      const bridgePortStr = (typeof BRIDGE_URL !== 'undefined' && BRIDGE_URL) ? BRIDGE_URL.replace(/https?:\/\/[^\/:]+/, '') : ':8089';
+      connBadge.innerHTML = `⚪ Bridge Offline (${bridgePortStr})`;
       connBadge.style.color = '#94a3b8';
       connBadge.style.background = 'rgba(148, 163, 184, 0.1)';
     }
@@ -667,6 +883,9 @@ function updateWalletStatusUI() {
       cell.innerHTML = `<span class="badge badge-danger" style="font-size:0.75rem; padding:3px 8px; background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.4);">🔴 <span data-i18n="status_offline">${dict.status_offline || 'Maas'}</span></span>`;
     }
   });
+  if (typeof applyWalletFilters === 'function' && gWalletSelectedDb === 'active') {
+    applyWalletFilters();
+  }
 }
 
 function getBlueprintState(card) {
@@ -695,7 +914,9 @@ function getBlueprintState(card) {
     } else if (req.startsWith('ords/')) {
       const poolName = req.substring(5);
       const poolData = (typeof LIVE_ORDS_POOLS === 'object' && LIVE_ORDS_POOLS) ? LIVE_ORDS_POOLS[poolName] : null;
-      if (poolData ? (poolData.status === 'online' || poolData.status === 'degraded') : runningList.includes('app-ords')) {
+      if (poolData && (poolData.status === 'online' || poolData.status === 'degraded')) {
+        isRunning = true;
+      } else if (runningList.includes('app-ords')) {
         isRunning = true;
       }
     } else if (req === 'app-publisher' && runningList.includes('oracle-publisher-dev')) {
@@ -759,6 +980,46 @@ function getBlueprintState(card) {
       containerStates
     };
   }
+  if (bNum === 5 && !runningList.includes('app-publisher') && !runningList.includes('oracle-publisher-dev')) {
+    return {
+      state: 'offline',
+      matchedCount: 0,
+      totalCount: requiredContainers.length,
+      containerStates
+    };
+  }
+  if (bNum === 6 && !runningList.includes('app-forms')) {
+    return {
+      state: 'offline',
+      matchedCount: 0,
+      totalCount: requiredContainers.length,
+      containerStates
+    };
+  }
+  if (bNum === 7 && !runningList.includes('app-forms-publisher')) {
+    return {
+      state: 'offline',
+      matchedCount: 0,
+      totalCount: requiredContainers.length,
+      containerStates
+    };
+  }
+  if (bNum === 8 && !runningList.includes('web-ide-dev')) {
+    return {
+      state: 'offline',
+      matchedCount: 0,
+      totalCount: requiredContainers.length,
+      containerStates
+    };
+  }
+  if (bNum === 9 && !runningList.includes('app-publisher-designer') && !runningList.includes('publisher-designer')) {
+    return {
+      state: 'offline',
+      matchedCount: 0,
+      totalCount: requiredContainers.length,
+      containerStates
+    };
+  }
 
   // 🛡️ ARCHITECTURAL GUARDRAIL (Rule 12 & Invariant 3.7):
   // Check if setup is actively executing in background for this blueprint
@@ -778,6 +1039,13 @@ function getBlueprintState(card) {
       const poolData = (typeof LIVE_ORDS_POOLS === 'object' && LIVE_ORDS_POOLS) ? LIVE_ORDS_POOLS[poolName] : null;
       if (poolData && poolData.status === 'starting') return true;
       return false;
+    }
+    // If ORDS pool publisher is online or degraded, app-publisher is operational
+    if ((req === 'app-publisher' || req === 'oracle-publisher-dev') && typeof LIVE_ORDS_POOLS === 'object' && LIVE_ORDS_POOLS) {
+      const pubPool = LIVE_ORDS_POOLS['publisher'];
+      if (pubPool && (pubPool.status === 'online' || pubPool.status === 'degraded')) {
+        return false;
+      }
     }
     return typeof LIVE_CONTAINER_HEALTH === 'object' && LIVE_CONTAINER_HEALTH[req] === 'starting';
   });
@@ -820,7 +1088,7 @@ function updateCardState(card, bpStateInfo, currentLang) {
     containerStates = bpStateInfo.containerStates || {};
   }
 
-  const pill = card.querySelector('.status-pill');
+  const pill = card.querySelector('.status-pill[data-status-url]') || card.querySelector('.status-pill');
   if (pill) {
     applyPillState(pill, state, currentLang, matchedCount, totalCount);
   }
@@ -862,13 +1130,16 @@ function updateCardState(card, bpStateInfo, currentLang) {
 
   let mainSlot = actionFlex.querySelector('.btn-action-main, .core-protected-badge');
   if (mainSlot) {
+    const isOnlineOrPartial = (state === 'online' || state === 'partial');
+    const targetKey = isOnlineOrPartial ? 'btn_manage_ops_active' : 'btn_manage_ops_offline';
+    const targetTxt = (dict && dict[targetKey]) || (isOnlineOrPartial ? '⚙️ Haldus & Taastamine' : '⚡ Käivita & Juhi');
+    const btnCls = isOnlineOrPartial ? 'btn-secondary' : 'btn-primary';
+
     if (!mainSlot.classList.contains('btn-action-main')) {
-      mainSlot.outerHTML = `<button type="button" class="btn btn-primary btn-action-main btn-service-switch" onclick="openBlueprintModal(${bNum}, 'ops')"><span>⚡</span> <span data-i18n="btn_manage_ops">${dict.btn_manage_ops || 'Käivitused & Haldus'}</span></button>`;
+      mainSlot.outerHTML = `<button type="button" class="btn ${btnCls} btn-action-main btn-service-switch" onclick="openBlueprintModal(${bNum}, 'ops')"><span data-i18n="${targetKey}">${targetTxt}</span></button>`;
     } else {
-      const labelSpan = mainSlot.querySelector('[data-i18n="btn_manage_ops"]');
-      if (labelSpan) {
-        labelSpan.textContent = dict.btn_manage_ops || 'Käivitused & Haldus';
-      }
+      mainSlot.className = `btn ${btnCls} btn-action-main btn-service-switch`;
+      mainSlot.innerHTML = `<span data-i18n="${targetKey}">${targetTxt}</span>`;
     }
   }
 }
@@ -969,7 +1240,8 @@ function renderOrdsGatewayStrip() {
   let html = `<span style="font-size:0.75rem; color:#94a3b8; margin-right:4px;">${dict.ords_pools_label || 'Active Pools:'}</span>`;
   poolKeys.forEach(pname => {
     const p = pools[pname];
-    const isOnline = p && p.status === 'online';
+    const isOrdsUp = isContainerRunning('app-ords');
+    const isOnline = p ? (p.status === 'online' || (p.status !== 'offline' && isOrdsUp) || (pname === 'proxy' && isOrdsUp && isContainerRunning('db-proxy'))) : isOrdsUp;
     const isStarting = p && p.status === 'starting';
     let pillCls = 'pool-offline';
     let dot = '🔴';
@@ -1004,8 +1276,8 @@ async function syncOrdsPools(manual = false) {
     clearTimeout(timeoutId);
     if (resp.ok) {
       const data = await resp.json();
-      if (data.pools) {
-        LIVE_ORDS_POOLS = data.pools;
+      if (data.ords_pools || data.pools) {
+        LIVE_ORDS_POOLS = data.ords_pools || data.pools;
       }
       renderOrdsGatewayStrip();
       checkServiceHealth();
@@ -1175,25 +1447,43 @@ function closeProfileModal(event) {
   }
 }
 
+let CURRENT_PROFILE_PATH = '';
+
 async function fetchAndRenderProfilesList() {
   const container = document.getElementById('profile-list-container');
   if (!container) return;
+
+  // 1. Immediately render pre-embedded profiles from window.PROFILES_DATA
+  if (Array.isArray(window.PROFILES_DATA) && window.PROFILES_DATA.length > 0) {
+    CACHED_PROFILES = window.PROFILES_DATA;
+    renderProfilesSidebar(CACHED_PROFILES);
+    if (!CURRENT_PROFILE_PATH) {
+      loadProfileToEditor(CACHED_PROFILES[0].rel_path);
+    } else {
+      loadProfileToEditor(CURRENT_PROFILE_PATH);
+    }
+  }
+
+  // 2. Refresh from bridge if available
   try {
     const resp = await fetch(`${BRIDGE_URL}/api/profiles`, { mode: 'cors' });
     if (resp.ok) {
       const data = await resp.json();
-      CACHED_PROFILES = data.profiles || data;
-      renderProfilesSidebar(CACHED_PROFILES);
-      if (CACHED_PROFILES.length > 0 && !CURRENT_PROFILE_PATH) {
-        loadProfileToEditor(CACHED_PROFILES[0].rel_path);
-      } else if (CURRENT_PROFILE_PATH) {
-        loadProfileToEditor(CURRENT_PROFILE_PATH);
+      const profs = data.profiles || data;
+      if (Array.isArray(profs) && profs.length > 0) {
+        CACHED_PROFILES = profs;
+        renderProfilesSidebar(CACHED_PROFILES);
+        if (!CURRENT_PROFILE_PATH) {
+          loadProfileToEditor(CACHED_PROFILES[0].rel_path);
+        }
       }
-    } else {
+    } else if (!CACHED_PROFILES || CACHED_PROFILES.length === 0) {
       container.innerHTML = `<span style="color: #f87171; font-size: 0.8rem;">Bridge API viga: HTTP ${resp.status}</span>`;
     }
   } catch (e) {
-    container.innerHTML = `<span style="color: #f87171; font-size: 0.8rem;">Bridge offline (:8089). Käivitage dev-hub-bridge.py</span>`;
+    if (!CACHED_PROFILES || CACHED_PROFILES.length === 0) {
+      container.innerHTML = `<span style="color: #f87171; font-size: 0.8rem;">Bridge offline (${BRIDGE_URL}). Käivitage dev-hub-bridge.py</span>`;
+    }
   }
 }
 
@@ -1313,16 +1603,27 @@ async function loadProfileToEditor(relPath) {
     `;
   }
 
+  // Pre-load content immediately from embedded profile object
+  if (profObj && profObj.content !== undefined) {
+    if (ta) ta.value = profObj.content;
+    if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
+  }
+
   try {
     const resp = await fetch(`${BRIDGE_URL}/api/profile?path=${encodeURIComponent(relPath)}`, { mode: 'cors' });
     if (resp.ok) {
       const data = await resp.json();
       if (ta) ta.value = (data.content !== undefined) ? data.content : JSON.stringify(data, null, 2);
-    } else {
+      if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
+    } else if (!ta || !ta.value) {
       if (ta) ta.value = `# Failed to load file: HTTP ${resp.status}`;
     }
   } catch (e) {
-    if (ta) ta.value = `# Bridge viga: ${e.message}`;
+    if (ta && ta.value) {
+      if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim (Staatiline / Bridge offline): <code>${relPath}</code></span>`;
+    } else {
+      if (ta) ta.value = `# Bridge viga: ${e.message}`;
+    }
   }
 }
 
@@ -1368,7 +1669,7 @@ async function saveProfileFromEditor() {
       if (msgEl) msgEl.innerHTML = `<span style="color: #f87171;">❌ Viga: ${resData.error || 'Salvestamine ebaõnnestus'}</span>`;
     }
   } catch (e) {
-    if (msgEl) msgEl.innerHTML = `<span style="color: #f87171;">❌ Bridge viga: ${e.message}</span>`;
+    if (msgEl) msgEl.innerHTML = `<span style="color: #f87171;">❌ Salvestamiseks on vaja aktiivset Dev Hub Bridge'i (${BRIDGE_URL}): ${e.message}</span>`;
   } finally {
     if (btnSave) btnSave.disabled = false;
   }
@@ -1377,7 +1678,15 @@ async function saveProfileFromEditor() {
 // ==========================================
 // 2. BLUEPRINTS MANAGER (Split Layout: List / View / Edit / Clone)
 // ==========================================
-let CACHED_BLUEPRINTS = [];
+let CACHED_BLUEPRINTS = (typeof BLUEPRINTS_DATA !== 'undefined' && Array.isArray(BLUEPRINTS_DATA))
+  ? BLUEPRINTS_DATA.map(b => ({
+      rel_path: b.rel_path || `config/blueprints/${b.file}`,
+      name: b.name || b.file,
+      number: b.num,
+      title: (b.titles && (b.titles.et || b.titles.en)) ? (b.titles.et || b.titles.en) : (b.name || b.file),
+      content: b.content || ''
+    }))
+  : [];
 let CURRENT_BP_PATH = '';
 
 async function openBlueprintManager() {
@@ -1401,22 +1710,37 @@ function closeBlueprintManagerModal(event) {
 async function fetchAndRenderBlueprintsList() {
   const container = document.getElementById('bp-list-container');
   if (!container) return;
+
+  // 1. Immediately render pre-embedded blueprints
+  if (CACHED_BLUEPRINTS.length > 0) {
+    renderBlueprintsSidebar(CACHED_BLUEPRINTS);
+    if (!CURRENT_BP_PATH) {
+      loadBlueprintToView(CACHED_BLUEPRINTS[0].rel_path);
+    } else {
+      loadBlueprintToView(CURRENT_BP_PATH);
+    }
+  }
+
+  // 2. Refresh from bridge if available
   try {
     const resp = await fetch(`${BRIDGE_URL}/api/blueprints`, { mode: 'cors' });
     if (resp.ok) {
       const data = await resp.json();
-      CACHED_BLUEPRINTS = data.blueprints || [];
-      renderBlueprintsSidebar(CACHED_BLUEPRINTS);
-      if (CACHED_BLUEPRINTS.length > 0 && !CURRENT_BP_PATH) {
-        loadBlueprintToView(CACHED_BLUEPRINTS[0].rel_path);
-      } else if (CURRENT_BP_PATH) {
-        loadBlueprintToView(CURRENT_BP_PATH);
+      const bps = data.blueprints || [];
+      if (bps.length > 0) {
+        CACHED_BLUEPRINTS = bps;
+        renderBlueprintsSidebar(CACHED_BLUEPRINTS);
+        if (!CURRENT_BP_PATH) {
+          loadBlueprintToView(CACHED_BLUEPRINTS[0].rel_path);
+        }
       }
-    } else {
+    } else if (CACHED_BLUEPRINTS.length === 0) {
       container.innerHTML = `<span style="color: #f87171; font-size: 0.8rem;">Bridge API viga: HTTP ${resp.status}</span>`;
     }
   } catch (e) {
-    container.innerHTML = `<span style="color: #f87171; font-size: 0.8rem;">Bridge offline (:8089). Käivitage dev-hub-bridge.py</span>`;
+    if (CACHED_BLUEPRINTS.length === 0) {
+      container.innerHTML = `<span style="color: #f87171; font-size: 0.8rem;">Bridge offline (${BRIDGE_URL}). Käivitage dev-hub-bridge.py</span>`;
+    }
   }
 }
 
@@ -1462,11 +1786,10 @@ async function loadBlueprintToView(relPath) {
     btnSave.style.display = 'none';
     btnSave.disabled = true;
   }
-  if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
 
   renderBlueprintsSidebar(CACHED_BLUEPRINTS);
 
-  const bpObj = CACHED_BLUEPRINTS.find(b => b.rel_path === relPath);
+  const bpObj = CACHED_BLUEPRINTS.find(b => b.rel_path === relPath || b.file === relPath || b.name === relPath);
   if (badgesEl && bpObj) {
     badgesEl.innerHTML = `
       <span class="bp-tag" style="color: #38bdf8;">🏷️ ${bpObj.title || bpObj.name}</span>
@@ -1474,16 +1797,27 @@ async function loadBlueprintToView(relPath) {
     `;
   }
 
+  // Pre-load content immediately from embedded blueprint object
+  if (bpObj && bpObj.content) {
+    if (ta) ta.value = bpObj.content;
+    if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
+  }
+
   try {
     const resp = await fetch(`${BRIDGE_URL}/api/blueprint?path=${encodeURIComponent(relPath)}`, { mode: 'cors' });
     if (resp.ok) {
       const data = await resp.json();
       if (ta) ta.value = data.content || '';
-    } else {
+      if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
+    } else if (!ta || !ta.value) {
       if (ta) ta.value = `# Failed to load file: HTTP ${resp.status}`;
     }
   } catch (e) {
-    if (ta) ta.value = `# Bridge viga: ${e.message}`;
+    if (ta && ta.value) {
+      if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim (Staatiline / Bridge offline): <code>${relPath}</code></span>`;
+    } else {
+      if (ta) ta.value = `# Bridge viga: ${e.message}`;
+    }
   }
 }
 
@@ -1702,7 +2036,7 @@ function isBlueprintActiveOrRunning(b) {
   const runningList = Array.isArray(LIVE_RUNNING_CONTAINERS) ? LIVE_RUNNING_CONTAINERS : [];
   if (b.num === 0) {
     const pData = (typeof LIVE_ORDS_POOLS === 'object' && LIVE_ORDS_POOLS) ? LIVE_ORDS_POOLS['proxy'] : null;
-    const ordsUp = pData ? (pData.status === 'online') : runningList.includes('app-ords');
+    const ordsUp = (pData && (pData.status === 'online' || pData.status === 'degraded')) || runningList.includes('app-ords');
     return runningList.includes('db-proxy') && ordsUp;
   }
   if (b.num === 1 && !runningList.includes('db-alise')) return false;
@@ -1717,7 +2051,7 @@ function isBlueprintActiveOrRunning(b) {
     else if (cn && cn.startsWith('ords/')) {
       const pName = cn.substring(5);
       const pData = (typeof LIVE_ORDS_POOLS === 'object' && LIVE_ORDS_POOLS) ? LIVE_ORDS_POOLS[pName] : null;
-      if (pData ? (pData.status === 'online' || pData.status === 'degraded') : runningList.includes('app-ords')) matched++;
+      if ((pData && (pData.status === 'online' || pData.status === 'degraded')) || runningList.includes('app-ords')) matched++;
     }
     else if (cn === 'app-publisher' && runningList.includes('oracle-publisher-dev')) matched++;
     else if (cn === 'oracle-publisher-dev' && runningList.includes('app-publisher')) matched++;
@@ -1729,7 +2063,7 @@ function isBlueprintActiveOrRunning(b) {
 
 function switchBlueprintModalTab(tabName) {
   activeBpModalTab = tabName || 'arch';
-  ['arch', 'users', 'ops', 'diag'].forEach(t => {
+  ['arch', 'guides', 'users', 'ops', 'diag', 'logs'].forEach(t => {
     const btn = document.getElementById(`tab-btn-bp-${t}`);
     const pane = document.getElementById(`bp-modal-tab-${t}`);
     if (btn) btn.classList.toggle('active', t === activeBpModalTab);
@@ -1744,8 +2078,12 @@ function switchBlueprintModalTab(tabName) {
     if (mermaidContainer && mermaidContainer.getAttribute('data-rendered-bp') !== String(activeBpModalNum)) {
       renderBlueprintMermaid(activeBpModalNum);
     }
+  } else if (activeBpModalTab === 'guides') {
+    renderBlueprintGuidesTab(activeBpModalNum);
   } else if (activeBpModalTab === 'diag') {
     renderBlueprintDiagTab(activeBpModalNum);
+  } else if (activeBpModalTab === 'logs') {
+    renderBlueprintLogsTab(activeBpModalNum);
   }
 }
 
@@ -1779,15 +2117,140 @@ async function renderBlueprintMermaid(bNum) {
     return;
   }
 
+  const svgId = 'bp-modal-svg-' + b.num + '-' + Math.floor(Math.random() * 100000);
   try {
-    const svgId = 'bp-modal-svg-' + b.num + '-' + Math.floor(Math.random() * 100000);
     const res = await mermaid.render(svgId, diagCode);
     mermaidContainer.innerHTML = res.svg || res;
   } catch (err) {
     console.error('Mermaid modal render error:', err);
+    const straySvg = document.getElementById(svgId) || document.getElementById('d' + svgId);
+    if (straySvg && straySvg.parentNode) {
+      straySvg.parentNode.removeChild(straySvg);
+    }
+    cleanupStrayMermaidElements();
+    setTimeout(cleanupStrayMermaidElements, 50);
+
     mermaidContainer.innerHTML = `<div style="color:#f87171; padding:12px; font-size:0.82rem; background:#450a0a; border-radius:6px; border:1px solid #991b1b;">⚠️ Diagrammi renderdamise hoiatus: ${escapeHtml(err.message || 'Süntaksiviga')}</div>`;
     if (rawEl) rawEl.style.display = 'block';
   }
+}
+
+function renderBlueprintGuidesTab(bNum) {
+  const b = BLUEPRINTS_DATA.find(item => item.num === bNum);
+  if (!b) return;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  // 1. Render Quickstart Steps
+  const stepsContainer = document.getElementById('bp-modal-quickstart-steps');
+  if (stepsContainer) {
+    const rawSteps = (b.quickstart && (b.quickstart[currentLang] || b.quickstart['en'])) || [];
+    if (!rawSteps.length) {
+      stepsContainer.innerHTML = `<div style="color:#94a3b8; font-size:0.85rem; padding:8px;">${dict.no_quickstart || 'Juhend pole saadaval.'}</div>`;
+    } else {
+      stepsContainer.innerHTML = rawSteps.map(s => {
+        let actionBtn = '';
+        if (s.url) {
+          actionBtn = `<a href="${s.url}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary" style="padding:3px 8px; font-size:0.75rem; text-decoration:none;">${s.btn_text || 'Ava ↗️'}</a>`;
+        } else if (s.action === 'setup') {
+          actionBtn = `<button class="btn btn-sm btn-primary" style="padding:3px 8px; font-size:0.75rem;" onclick="triggerBlueprintActionModal(${b.num}, 'setup')">${s.btn_text || dict.modal_act_deploy_btn || 'Käivita'}</button>`;
+        } else if (s.action === 'tab-diag') {
+          actionBtn = `<button class="btn btn-sm btn-secondary" style="padding:3px 8px; font-size:0.75rem;" onclick="switchBlueprintModalTab('diag')">${s.btn_text || 'Testid 🧪'}</button>`;
+        } else if (s.action === 'tab-arch') {
+          actionBtn = `<button class="btn btn-sm btn-secondary" style="padding:3px 8px; font-size:0.75rem;" onclick="switchBlueprintModalTab('arch')">${s.btn_text || 'Arhitektuur 📐'}</button>`;
+        } else if (s.action === 'docs') {
+          actionBtn = `<button class="btn btn-sm btn-secondary" style="padding:3px 8px; font-size:0.75rem;" onclick="openBlueprintDocFull()">${s.btn_text || dict.modal_btn_open_full_guide_text || 'Loe juhendit 📖'}</button>`;
+        }
+        return `
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px;">
+            <div style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 700; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; flex-shrink: 0; margin-top: 2px;">
+              ${s.step}
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                <strong style="color: #f8fafc; font-size: 0.9rem;">${s.title}</strong>
+                ${actionBtn}
+              </div>
+              <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.45; margin-top: 4px;">${s.desc}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 2. Render Workflow Mermaid Diagram
+  renderBlueprintWorkflowMermaid(bNum);
+}
+
+async function renderBlueprintWorkflowMermaid(bNum) {
+  initMermaidGlobal();
+  const b = BLUEPRINTS_DATA.find(item => item.num === bNum);
+  if (!b) return;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const mermaidContainer = document.getElementById('bp-modal-workflow-mermaid');
+  const rawEl = document.getElementById('bp-modal-workflow-mermaid-raw');
+  if (!mermaidContainer) return;
+
+  mermaidContainer.removeAttribute('data-processed');
+  mermaidContainer.setAttribute('data-rendered-bp', String(bNum));
+  mermaidContainer.innerHTML = '<div style="color:#94a3b8; font-size:0.85rem; padding:10px;">⏳ Renderin töövoo skeemi...</div>';
+
+  let rawDiagram = '';
+  if (b.workflow_diagram && typeof b.workflow_diagram === 'object') {
+    rawDiagram = b.workflow_diagram[currentLang] || b.workflow_diagram['en'] || '';
+  } else if (typeof b.workflow_diagram === 'string') {
+    rawDiagram = b.workflow_diagram;
+  }
+  const diagCode = (rawDiagram || '').replace(/\\n/g, '\n');
+
+  if (rawEl) {
+    rawEl.textContent = diagCode;
+    rawEl.style.display = 'none';
+  }
+
+  if (!diagCode) {
+    mermaidContainer.innerHTML = '<span style="color:#64748b; font-size:0.85rem;">Töövoo diagramm pole saadaval.</span>';
+    return;
+  }
+
+  if (typeof mermaid === 'undefined') {
+    mermaidContainer.innerHTML = '<div style="color:#f59e0b; padding:12px; font-size:0.82rem; background:#451a03; border-radius:6px; border:1px solid #78350f;">⚠️ Mermaid teek ei ole kättesaadav. Lähtekood on vaadatav nupust "Kuva kood".</div>';
+    if (rawEl) rawEl.style.display = 'block';
+    return;
+  }
+
+  const svgId = 'bp-modal-wf-svg-' + b.num + '-' + Math.floor(Math.random() * 100000);
+  try {
+    const res = await mermaid.render(svgId, diagCode);
+    mermaidContainer.innerHTML = res.svg || res;
+  } catch (err) {
+    console.error('Mermaid workflow render error:', err);
+    const straySvg = document.getElementById(svgId) || document.getElementById('d' + svgId);
+    if (straySvg && straySvg.parentNode) {
+      straySvg.parentNode.removeChild(straySvg);
+    }
+    cleanupStrayMermaidElements();
+    setTimeout(cleanupStrayMermaidElements, 50);
+    mermaidContainer.innerHTML = `<div style="color:#f87171; padding:8px; font-size:0.8rem;">Diagrammi viga: ${escapeHtml(err.message || 'Süntaksiviga')}</div>`;
+    if (rawEl) rawEl.style.display = 'block';
+  }
+}
+
+function openBlueprintDocNewTab() {
+  const b = BLUEPRINTS_DATA.find(item => item.num === activeBpModalNum);
+  const guideId = (b && b.guide_id) ? b.guide_id : 'readme';
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const baseHref = window.location.href.split('#')[0].split('?')[0];
+  const targetUrl = `${baseHref}?tab=docs&doc=${encodeURIComponent(guideId)}&lang=${encodeURIComponent(currentLang)}#tab-docs`;
+  window.open(targetUrl, '_blank', 'noopener,noreferrer');
+}
+
+function openBlueprintDocFull() {
+  const b = BLUEPRINTS_DATA.find(item => item.num === activeBpModalNum);
+  const guideId = (b && b.guide_id) ? b.guide_id : 'readme';
+  closeBlueprintModal();
+  navigateToDoc(guideId);
 }
 
 async function triggerBlueprintActionModal(bNum, action) {
@@ -1798,7 +2261,11 @@ async function triggerBlueprintActionModal(bNum, action) {
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
 
-  switchBlueprintModalTab('ops');
+  if (action === 'dry-run' || action === 'dryrun') {
+    switchBlueprintModalTab('diag');
+  } else {
+    switchBlueprintModalTab('ops');
+  }
 
   const b = BLUEPRINTS_DATA.find(item => item.num === bNum);
   const cnames = (b && b.container_names) ? b.container_names : [];
@@ -1850,8 +2317,9 @@ async function triggerBlueprintActionModal(bNum, action) {
     cmdStr = `podman stop ${stopTarget}`;
   }
 
-  const progress = startTerminalProgress('modal-ops-console', action, title, cmdStr);
-  document.getElementById('modal-ops-console')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  const consoleId = (action === 'dry-run' || action === 'dryrun') ? 'modal-diag-console' : 'modal-ops-console';
+  const progress = startTerminalProgress(consoleId, action, title, cmdStr);
+  document.getElementById(consoleId)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
   // 🛡️ ARCHITECTURAL GUARDRAIL (Rule 12 & Invariant 3.6 - DO NOT REVERT TO SYNC FETCH!)
   // RATIONALE: Cold setup and database builds take 4-7 minutes.
@@ -1906,7 +2374,7 @@ async function triggerBlueprintActionModal(bNum, action) {
               if (Array.isArray(statusData.log_tail) && statusData.log_tail.length > 0) {
                 const outEl = document.getElementById('modal-ops-console-output');
                 if (outEl) {
-                  outEl.textContent = statusData.log_tail.join('\n');
+                  outEl.innerHTML = formatTerminalLogText(statusData.log_tail.join('\n'), { showTime: true, showColors: true });
                   outEl.scrollTop = outEl.scrollHeight;
                 }
               }
@@ -1948,7 +2416,7 @@ async function triggerBlueprintActionModal(bNum, action) {
       setTimeout(checkServiceHealth, 1500);
       setTimeout(() => {
         if (activeBpModalNum === bNum) {
-          openBlueprintModal(bNum, 'ops');
+          openBlueprintModal(bNum, (action === 'dry-run' || action === 'dryrun') ? 'diag' : 'ops');
         }
       }, 2000);
     } else {
@@ -2054,7 +2522,7 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
   if (targetDesc) {
     targetDesc.innerHTML = isUp
       ? `🟢 Pinu on aktiivne ja töökorras. RAM kasutus: <b>${b.ram}</b>.`
-      : `⚪ Pinu on hetkel seisatud. Käivitamiseks kasuta allolevaid kaarte või terminali.`;
+      : `⚪ Pinu on hetkel seisatud. Saad selle käivitada paralleelselt olemasolevate kõrvale (lisandub ~<b>${b.ram}</b>). Teisi andmebaase maha ei võeta!`;
   }
   if (containerBadgesEl) {
     const cnames = b.container_names || [];
@@ -2080,11 +2548,68 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
         </thead>
         <tbody>
     `;
+    const runningList = Array.isArray(LIVE_RUNNING_CONTAINERS) ? LIVE_RUNNING_CONTAINERS : [];
     (b.components || []).forEach(c => {
+      const isAlive = runningList.includes(c.name) ||
+                      (c.name === 'app-publisher' && runningList.includes('oracle-publisher-dev')) ||
+                      (c.name === 'oracle-publisher-dev' && runningList.includes('app-publisher')) ||
+                      (['publisher-designer', 'app-publisher-designer'].includes(c.name) && runningList.some(x => ['publisher-designer', 'app-publisher-designer'].includes(x))) ||
+                      (['forms-designer', 'app-forms'].includes(c.name) && runningList.some(x => ['forms-designer', 'app-forms'].includes(x)));
+
+      const statusBadge = isAlive
+        ? `<span class="badge" style="background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); font-size:0.7rem; padding:2px 6px; margin-left:6px;">🟢 ${dict.status_online || 'Töötab'}</span>`
+        : `<span class="badge" style="background:rgba(248,113,113,0.15); color:#f87171; border:1px solid rgba(248,113,113,0.3); font-size:0.7rem; padding:2px 6px; margin-left:6px;">🔴 ${dict.status_stopped || 'Peatatud'}</span>`;
+
+      let formattedPorts = '';
+      if (!c.host_ports || c.host_ports === '-' || c.host_ports.toLowerCase() === 'none') {
+        formattedPorts = '<span style="color:#64748b; font-size:0.75rem;">—</span>';
+      } else {
+        const portParts = c.host_ports.split(',').map(p => p.trim());
+        formattedPorts = portParts.map(pStr => {
+          if (pStr.includes('6083')) {
+            return isAlive
+              ? `<a href="http://localhost:6083/vnc.html" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava noVNC töölaud (port 6083)">${pStr} ↗️</a>`
+              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+          } else if (pStr.includes('8448')) {
+            return isAlive
+              ? `<a href="https://localhost:8448/ords/" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava ORDS HTTPS portaal">${pStr} ↗️</a>`
+              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+          } else if (pStr.includes('8088')) {
+            return isAlive
+              ? `<a href="http://localhost:8088/ords/" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava ORDS HTTP portaal">${pStr} ↗️</a>`
+              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+          } else if (pStr.includes('8090')) {
+            return isAlive
+              ? `<a href="http://localhost:8090/" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava Web-IDE (port 8090)">${pStr} ↗️</a>`
+              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+          } else if (pStr.includes('9502')) {
+            return isAlive
+              ? `<a href="http://localhost:9502/xmlpserver" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava Analytics Publisher">${pStr} ↗️</a>`
+              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+          } else if (pStr.includes('9001')) {
+            return isAlive
+              ? `<a href="http://localhost:9001/forms/frmservlet" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava Forms Runtime">${pStr} ↗️</a>`
+              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+          } else if (pStr.includes('6082')) {
+            return isAlive
+              ? `<a href="http://localhost:6082/vnc.html" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava Forms Builder noVNC">${pStr} ↗️</a>`
+              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+          } else {
+            return `<code style="color:#22c55e; font-weight:600;">${pStr}</code>`;
+          }
+        }).join(', ');
+      }
+
       compHtml += `
         <tr>
-          <td><strong style="color: var(--primary); font-family: ui-monospace, monospace;">${c.name}</strong><br/><span style="font-size:0.75rem; color:#94a3b8;">${c.type}</span></td>
-          <td><code style="color: #22c55e; font-weight: 600;">${c.host_ports}</code></td>
+          <td>
+            <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+              <strong style="color: var(--primary); font-family: ui-monospace, monospace;">${c.name}</strong>
+              ${statusBadge}
+            </div>
+            <span style="font-size:0.75rem; color:#94a3b8;">${c.type}</span>
+          </td>
+          <td>${formattedPorts}</td>
           <td style="font-size: 0.85rem; color: #cbd5e1;">${c.desc}</td>
         </tr>
       `;
@@ -2178,13 +2703,21 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
     userContainer.innerHTML = userHtml;
   }
 
-  // 4. Render Hardware & Resource Requirements
+  // 4. Render Hardware & Resource Requirements (Clean 4-Card Grid)
   const resContainer = document.getElementById('bp-modal-resources');
   if (resContainer) {
+    const userCount = (b.users || []).length;
+    let accLabel = dict.meta_accounts || 'Accounts';
+    if (userCount === 1) {
+      accLabel = dict.account_singular || (currentLang === 'et' ? 'konto' : 'Account');
+    } else {
+      accLabel = dict.account_plural || (currentLang === 'et' ? 'kontot' : 'Accounts');
+    }
+
     resContainer.innerHTML = `
       <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px;">
         <div style="font-size:0.75rem; color:#94a3b8;">${dict.modal_config_file || 'Konfiguratsioonifail'}</div>
-        <div style="font-size:0.95rem; font-weight:700; color:#38bdf8; font-family:ui-monospace,monospace; margin-top:4px;">${b.file}</div>
+        <div style="font-size:0.95rem; font-weight:700; color:#38bdf8; font-family:ui-monospace,monospace; margin-top:4px; word-break:break-all;">${b.file}</div>
       </div>
       <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px;">
         <div style="font-size:0.75rem; color:#94a3b8;">${dict.metric_ram || 'Mälu (RAM)'}</div>
@@ -2192,15 +2725,11 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
       </div>
       <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px;">
         <div style="font-size:0.75rem; color:#94a3b8;">${dict.th_container || 'Konteinereid'}</div>
-        <div style="font-size:1.2rem; font-weight:700; color:#4ade80; margin-top:2px;">${b.containers}</div>
+        <div style="font-size:1.2rem; font-weight:700; color:#4ade80; margin-top:2px; word-break:break-all;">${b.containers}</div>
       </div>
       <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px;">
         <div style="font-size:0.75rem; color:#94a3b8;">${dict.metric_accounts || 'Kasutajakontosid'}</div>
-        <div style="font-size:1.2rem; font-weight:700; color:#c084fc; margin-top:2px;">${(b.users || []).length} ${dict.meta_accounts || 'Accounts'}</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px;">
-        <div style="font-size:0.75rem; color:#94a3b8;">${dict.metric_ports || 'Võrgupordid'}</div>
-        <div style="font-size:1.2rem; font-weight:700; color:#fbbf24; margin-top:2px;">${(b.container_ports || []).length} ${dict.metric_ports || 'Ports'}</div>
+        <div style="font-size:1.2rem; font-weight:700; color:#c084fc; margin-top:2px;">${userCount} ${accLabel}</div>
       </div>
     `;
   }
@@ -2262,89 +2791,33 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
     const toStop = cnames.filter(c => !['db-proxy', 'app-ords'].includes(c) && !c.startsWith('ords/'));
     const stopTarget = toStop.length > 0 ? toStop.join(' ') : (cnames.join(' ') || `blueprint-${b.num}`);
 
-    let cardsHtml = '';
-
-    // Card 1: Activate (setup-all.sh)
+    // Card 1: Activate / Add Stack (setup-all.sh)
     const isOnline = isBlueprintActiveOrRunning(b);
-    cardsHtml += `
+    const cardActivate = `
       <div style="background: rgba(56, 189, 248, 0.04); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
         <div>
           <div style="font-weight: 700; color: #38bdf8; font-size: 0.92rem; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
-            <span>${dict.modal_act_activate_title || dict.modal_act_deploy_title || '⚡ Activate'}</span>
+            <span>${dict.modal_act_activate_title || dict.modal_act_deploy_title || '⚡ Käivita / Lisa Virn'}</span>
             ${isOnline ? `<span class="badge badge-success" style="font-size: 0.72rem; padding: 2px 6px;">🟢 ${dict.status_online || 'Aktiivne'}</span>` : ''}
           </div>
-          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${isOnline ? (dict.modal_act_already_active_hint || 'Konteiner(id) on juba aktiivsed ja töötavad. Probleemide korral kasuta: Taaskäivita & Uuenda.') : (dict.modal_act_activate_desc || dict.modal_act_deploy_desc || 'Runs full setup, provisions required containers, and brings services online.')}</p>
+          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${isOnline ? (dict.modal_act_already_active_hint || 'Konteiner(id) on juba aktiivsed ja töötavad. Probleemide korral kasuta: Taaskäivita & Uuenda.') : (dict.modal_act_activate_desc || dict.modal_act_deploy_desc || 'Käivitab vajalikud konteinerid paralleelselt olemasolevate kõrvale ilma vanu sulgemata.')}</p>
           <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
             <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
             ./scripts/setup-all.sh -b ${b.num} -y --lang ${currentLang}
           </div>
         </div>
         <button class="btn btn-primary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px;" onclick="triggerBlueprintActionModal(${b.num}, 'setup')">
-          <span>⚡</span> <span>${dict.modal_act_activate_btn || dict.modal_act_deploy_btn || 'Activate'}</span>
+          <span>⚡</span> <span>${dict.modal_act_activate_btn || dict.modal_act_deploy_btn || 'Käivita / Lisa Virn'}</span>
         </button>
       </div>
     `;
 
-    // Card 2: Configuration Preview (Dry-Run)
-    cardsHtml += `
-      <div style="background: rgba(168, 85, 247, 0.04); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
-        <div>
-          <div style="font-weight: 700; color: #c084fc; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_act_dryrun_title || '🔍 Configuration Preview (Dry-Run)'}</div>
-          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_act_dryrun_desc || 'Pre-evaluates configuration, port bindings, and profile parameters without deploying containers.'}</p>
-          <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
-            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-            ./scripts/deploy-blueprint.sh -b ${b.num} --dry-run
-          </div>
-        </div>
-        <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; color: #c084fc; border-color: rgba(168,85,247,0.5);" onclick="triggerBlueprintActionModal(${b.num}, 'dry-run')">
-          <span>🔍</span> <span>${dict.modal_act_dryrun_btn || 'Preview (Dry-Run)'}</span>
-        </button>
-      </div>
-    `;
-
-    // Card 3: Rapid Restore from Golden Snapshot (DB Only)
-    if (hasDb) {
-      cardsHtml += `
-        <div style="background: rgba(34, 197, 94, 0.04); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
-          <div>
-            <div style="font-weight: 700; color: #4ade80; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_dr_variant_a_title || '⚡ Rapid Restore (~15–45s)'}</div>
-            <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_dr_variant_a_desc || 'Rolls back uncommitted changes to clean baseline without full reinstall.'}</p>
-            <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
-              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-              ./scripts/snapshots/restore-golden-snapshots.sh -b ${b.num} --force
-            </div>
-          </div>
-          <button class="btn btn-primary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; background: #16a34a; border-color: #22c55e;" onclick="triggerRestoreSnapshot(null, ${b.num}, this)">
-            <span>⚡</span> <span>${dict.modal_dr_variant_a_btn || 'Restore Golden Snapshot'}</span>
-          </button>
-        </div>
-      `;
-
-      const primaryDb = (b.components || []).find(c => (c.type && (c.type.toLowerCase().includes('database') || c.type.toLowerCase().includes('pdb'))) || (c.name && c.name.startsWith('db-')));
-      const dbTargetName = primaryDb ? primaryDb.name : 'db-proxy';
-      cardsHtml += `
-        <div style="background: rgba(245, 158, 11, 0.04); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
-          <div>
-            <div style="font-weight: 700; color: #fbbf24; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_act_rotate_title || '🔄 Zero-Downtime Credential Rotation'}</div>
-            <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_act_rotate_desc || 'Rotates user passwords across Database, Podman Secrets, and SEPS Wallet for this blueprint.'}</p>
-            <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
-              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-              ./scripts/rotate-password.sh ${dbTargetName} dev
-            </div>
-          </div>
-          <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; color: #fbbf24; border-color: rgba(245,158,11,0.5);" onclick="triggerRotateUserPassword(${b.num}, '${dbTargetName}', 'dev', this)">
-            <span>🔄</span> <span>${dict.modal_act_rotate_btn || 'Rotate DEV Password'}</span>
-          </button>
-        </div>
-      `;
-    }
-
-    // Card: Restart & Update
-    cardsHtml += `
+    // Card 2: Restart & Update
+    const cardRestart = `
       <div id="bp-card-restart-box" style="background: rgba(251, 191, 36, 0.04); border: 1px solid rgba(251, 191, 36, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease;">
         <div>
           <div style="font-weight: 700; color: #fbbf24; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_act_restart_title || '🔄 Taaskäivita & Uuenda'}</div>
-          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_act_restart_desc || 'Restarts running containers and reapplies configuration updates.'}</p>
+          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_act_restart_desc || 'Taaskäivitab selle pinu konteinerid ja rakendab uued seadistused ilma andmekaota.'}</p>
           <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
             <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
             ./scripts/deploy-blueprint.sh -b ${b.num} -u --lang ${currentLang}
@@ -2356,30 +2829,13 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
       </div>
     `;
 
-    // Card 4: Deep Reset & Cold Rebuild
-    cardsHtml += `
-      <div style="background: rgba(239, 68, 68, 0.04); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
-        <div>
-          <div style="font-weight: 700; color: #f87171; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_dr_variant_b_title || '⚠️ Deep Reset & Rebuild (~4–8 min)'}</div>
-          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_dr_variant_b_desc || 'Wipes volumes and performs complete cold rebuild from scratch.'}</p>
-          <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
-            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-            ./scripts/reset-all.sh -y &amp;&amp; ./scripts/setup-all.sh -b ${b.num} -y --lang ${currentLang}
-          </div>
-        </div>
-        <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; border-color: rgba(239,68,68,0.5); color: #f87171;" onclick="triggerDeepReset(${b.num}, this)">
-          <span>⚠️</span> <span>${dict.modal_dr_variant_b_btn || 'Deep Reset (Cold Rebuild)'}</span>
-        </button>
-      </div>
-    `;
-
-    // Card 5: Stop Services
+    // Card 3: Stop Services
     const isCoreProtected = b.num === 0;
-    cardsHtml += `
+    const cardStop = `
       <div style="background: rgba(148, 163, 184, 0.04); border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
         <div>
-          <div style="font-weight: 700; color: #cbd5e1; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_act_stop_title || '⏹️ Stop Services'}</div>
-          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_act_stop_desc || 'Gracefully stops active containers for this blueprint and releases system memory.'}</p>
+          <div style="font-weight: 700; color: #cbd5e1; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_act_stop_title || '⏹️ Peata See Pinu'}</div>
+          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_act_stop_desc || 'Peatab ainult selle blueprinti konteinerid ja vabastab hosti mälu. Teised andmebaasid jäävad tööle.'}</p>
           <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
             <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
             podman stop ${stopTarget}
@@ -2391,32 +2847,123 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
           </button>
         ` : `
           <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; border-color: rgba(239,68,68,0.5); color: #f87171;" onclick="triggerBlueprintActionModal(${b.num}, 'stop')">
-            <span>⏹️</span> <span>${dict.modal_act_stop_btn || 'Stop Services'}</span>
+            <span>⏹️</span> <span>${dict.modal_act_stop_btn || 'Peata See Pinu'}</span>
           </button>
         `}
       </div>
     `;
 
-    // Card 6: Save Current State / Custom Snapshot (DB Only)
+    // Zone 2 Cards: Disaster Recovery
+    let cardRapidRestore = '';
+    let cardRotate = '';
+    let cardCustomSnap = '';
     if (hasDb) {
-      cardsHtml += `
+      cardRapidRestore = `
+        <div style="background: rgba(34, 197, 94, 0.04); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="font-weight: 700; color: #4ade80; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_dr_variant_a_title || '⚡ Rapid Restore (~15–45s)'}</div>
+            <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_dr_variant_a_desc || 'Taastab andmebaasi puhtasse baasseisu Golden Snapshotist ilma täisrebuildita.'}</p>
+            <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+              ./scripts/snapshots/restore-golden-snapshots.sh -b ${b.num} --force
+            </div>
+          </div>
+          <button class="btn btn-primary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; background: #16a34a; border-color: #22c55e;" onclick="triggerRestoreSnapshot(null, ${b.num}, this)">
+            <span>⚡</span> <span>${dict.modal_dr_variant_a_btn || 'Taasta Golden Snapshot'}</span>
+          </button>
+        </div>
+      `;
+
+      const primaryDb = (b.components || []).find(c => (c.type && (c.type.toLowerCase().includes('database') || c.type.toLowerCase().includes('pdb'))) || (c.name && c.name.startsWith('db-')));
+      const dbTargetName = primaryDb ? primaryDb.name : 'db-proxy';
+      cardRotate = `
+        <div style="background: rgba(245, 158, 11, 0.04); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="font-weight: 700; color: #fbbf24; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_act_rotate_title || '🔄 Paroolide Null-Seisakuga Rotatsioon'}</div>
+            <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_act_rotate_desc || 'Genereerib uue parooli ja uuendab selle andmebaasis, Podmani saladustes ja SEPS Walletis.'}</p>
+            <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
+              <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+              ./scripts/rotate-password.sh ${dbTargetName} dev
+            </div>
+          </div>
+          <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; color: #fbbf24; border-color: rgba(245,158,11,0.5);" onclick="triggerRotateUserPassword(${b.num}, '${dbTargetName}', 'dev', this)">
+            <span>🔄</span> <span>${dict.modal_act_rotate_btn || 'Roteeri DEV parool'}</span>
+          </button>
+        </div>
+      `;
+
+      cardCustomSnap = `
         <div style="background: rgba(56, 189, 248, 0.04); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
           <div>
-            <div style="font-weight: 700; color: #38bdf8; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_dr_custom_title || '📸 Save Current State'}</div>
-            <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_dr_custom_desc || 'Save your sample data or work-in-progress as a named snapshot.'}</p>
+            <div style="font-weight: 700; color: #38bdf8; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_dr_custom_title || '📸 Salvesta Hetkeseis (Snapshot)'}</div>
+            <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_dr_custom_desc || 'Salvestab jooksvad testandmed ja skeemi uue nimega kohalikuks snapshotiks.'}</p>
             <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
-              <input type="text" id="modal-snap-tag-${b.num}" placeholder="${dict.modal_dr_custom_placeholder || 'Tag / Name'}" style="width: 100%; padding: 6px 10px; font-size: 0.8rem; background: #030712; border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; outline: none; font-family: ui-monospace, monospace;" />
-              <input type="text" id="modal-snap-desc-${b.num}" placeholder="${dict.snap_placeholder_desc || 'Optional description...'}" style="width: 100%; padding: 6px 10px; font-size: 0.8rem; background: #030712; border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; outline: none;" />
+              <input type="text" id="modal-snap-tag-${b.num}" placeholder="${dict.modal_dr_custom_placeholder || 'Tag / Nimi'}" style="width: 100%; padding: 6px 10px; font-size: 0.8rem; background: #030712; border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; outline: none; font-family: ui-monospace, monospace;" />
+              <input type="text" id="modal-snap-desc-${b.num}" placeholder="${dict.snap_placeholder_desc || 'Valikuline kirjeldus...'}" style="width: 100%; padding: 6px 10px; font-size: 0.8rem; background: #030712; border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; outline: none;" />
             </div>
           </div>
           <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; border-color: rgba(56,189,248,0.5); color: #38bdf8;" onclick="triggerCreateCustomSnapshotModal(${b.num}, this)">
-            <span>📸</span> <span>${dict.modal_dr_custom_btn || 'Create Snapshot'}</span>
+            <span>📸</span> <span>${dict.modal_dr_custom_btn || 'Loo Snapshot'}</span>
           </button>
         </div>
       `;
     }
 
-    actionsGrid.innerHTML = cardsHtml;
+    // Zone 3 Card: Deep Reset
+    const cardDeepReset = `
+      <div style="background: rgba(239, 68, 68, 0.04); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-weight: 700; color: #f87171; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_dr_variant_b_title || '⚠️ Külm Taasehitus Nullist (~4–8 min)'}</div>
+          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_dr_variant_b_desc || 'Kustutab andmemahud ja ehitab kogu pinu uuesti nullist (kasuta ainult tõsise rikke korral).'}</p>
+          <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            ./scripts/reset-all.sh -y &amp;&amp; ./scripts/setup-all.sh -b ${b.num} -y --lang ${currentLang}
+          </div>
+        </div>
+        <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; border-color: rgba(239,68,68,0.5); color: #f87171;" onclick="triggerDeepReset(${b.num}, this)">
+          <span>⚠️</span> <span>${dict.modal_dr_variant_b_btn || 'Külm Taasehitus (Deep Reset)'}</span>
+        </button>
+      </div>
+    `;
+
+    const zone1Html = `
+      <div style="grid-column: 1 / -1; margin-top: 4px; margin-bottom: 4px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.1rem;">🟢</span>
+          <strong style="font-size: 0.92rem; color: #38bdf8;" data-i18n="modal_zone_lifecycle">${dict.modal_zone_lifecycle || 'Igapäevane Elutsükkel & Käivitused (Lifecycle)'}</strong>
+        </div>
+        <span style="font-size: 0.75rem; color: #94a3b8;" data-i18n="modal_zone_lifecycle_sub">${dict.modal_zone_lifecycle_sub || 'Käivita lisavirn, taaskäivita või peata ilma teisi baase sulgemata'}</span>
+      </div>
+      ${cardActivate}
+      ${cardRestart}
+      ${cardStop}
+    `;
+
+    const zone2Html = hasDb ? `
+      <div style="grid-column: 1 / -1; margin-top: 18px; margin-bottom: 4px; border-bottom: 1px solid rgba(34, 197, 94, 0.25); padding-bottom: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.1rem;">🛡️</span>
+          <strong style="font-size: 0.92rem; color: #4ade80;" data-i18n="modal_zone_dr">${dict.modal_zone_dr || 'Kiirtaastus & Turvalisus (Disaster Recovery & Security)'}</strong>
+        </div>
+        <span style="font-size: 0.75rem; color: #94a3b8;" data-i18n="modal_zone_dr_sub">${dict.modal_zone_dr_sub || 'Taasta puhas algseis ~15s Golden Snapshotist või roteeri paroolid'}</span>
+      </div>
+      ${cardRapidRestore}
+      ${cardRotate}
+      ${cardCustomSnap}
+    ` : '';
+
+    const zone3Html = `
+      <div style="grid-column: 1 / -1; margin-top: 18px; margin-bottom: 4px; border-bottom: 1px solid rgba(239, 68, 68, 0.25); padding-bottom: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.1rem;">⚠️</span>
+          <strong style="font-size: 0.92rem; color: #f87171;" data-i18n="modal_zone_danger">${dict.modal_zone_danger || 'Ohutsoon: Külm Taasehitus (Danger Zone: Cold Rebuild)'}</strong>
+        </div>
+        <span style="font-size: 0.75rem; color: #94a3b8;" data-i18n="modal_zone_danger_sub">${dict.modal_zone_danger_sub || 'Kustutab andmemahud ja ehitab pinu uuesti nullist (~4–8 min)'}</span>
+      </div>
+      ${cardDeepReset}
+    `;
+
+    actionsGrid.innerHTML = zone1Html + zone2Html + zone3Html;
   }
 
   // Switch to requested initial tab
@@ -2428,14 +2975,88 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
   document.body.style.overflow = 'hidden';
 }
 
-function renderBlueprintDiagTab(bNum) {
-  const grid = document.getElementById('bp-modal-diag-grid');
-  if (!grid) return;
+function copyCommandSnippet(cmdStr, btn) {
+  copyTextToClipboard(cmdStr);
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  if (btn) {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span>✅</span>';
+    setTimeout(() => { btn.innerHTML = orig; }, 1800);
+  }
+  if (typeof showToast === 'function') {
+    showToast(`📋 ${dict.toast_cmd_copied || 'Kopeerisin käsu:'} ${cmdStr}`);
+  }
+}
 
+function renderBlueprintDiagTab(bNum) {
+  const b = BLUEPRINTS_DATA.find(item => item.num === bNum);
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
 
+  // 1. Tier 1: Blueprint-Specific Test Suites
+  const specSec = document.getElementById('bp-modal-sec-specific-tests');
+  const specGrid = document.getElementById('bp-modal-specific-tests-grid');
+  const bpTests = (b && Array.isArray(b.tests)) ? b.tests : [];
+
+  if (specSec && specGrid) {
+    if (bpTests.length === 0) {
+      specSec.style.display = 'none';
+    } else {
+      specSec.style.display = 'block';
+      specGrid.innerHTML = bpTests.map(t => {
+        const title = (t.title && (t.title[currentLang] || t.title['en'])) || t.key;
+        const desc = (t.desc && (t.desc[currentLang] || t.desc['en'])) || '';
+        const icon = t.icon || '🧪';
+        const color = t.color || '#38bdf8';
+        const safeKey = t.key.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const statusBadgeId = `test-status-badge-${safeKey}`;
+
+        return `
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 8px;">
+                <div style="font-weight: 700; color: ${color}; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">
+                  <span>${title}</span>
+                </div>
+                <span id="${statusBadgeId}" class="badge" style="background: rgba(148, 163, 184, 0.12); color: #94a3b8; font-size: 0.72rem; padding: 2px 6px;">⚪ ${dict.test_status_pending || 'Ootel'}</span>
+              </div>
+              <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${desc}</p>
+              <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
+                <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                ${t.cmd}
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-primary" style="flex: 1; font-size: 0.82rem; padding: 6px 10px;" onclick="runDiagCommand('${t.key}', '${t.cmd}', this, '${statusBadgeId}')">
+                <span>▶️</span> <span>${dict.btn_run_now || 'Käivita kohe'}</span>
+              </button>
+              <button class="btn btn-secondary" style="font-size: 0.82rem; padding: 6px 10px;" onclick="copyCommandSnippet('${t.cmd}', this)" title="${dict.btn_copy_cmd || 'Kopeeri CLI käsk'}">
+                <span>📋</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 2. Tier 2: General Platform Diagnostics
+  const grid = document.getElementById('bp-modal-diag-grid');
+  if (!grid) return;
+
   const diagItems = [
+    {
+      key: 'dry-run',
+      title: dict.modal_act_dryrun_title || '🔍 Configuration Preview (Dry-Run)',
+      desc: dict.modal_act_dryrun_desc || 'Pre-evaluates configuration, port bindings, and profile parameters without starting containers.',
+      cmd: `./scripts/deploy-blueprint.sh -b ${bNum} --dry-run`,
+      color: '#c084fc',
+      btnText: dict.modal_act_dryrun_btn || 'Preview (Dry-Run)',
+      btnIcon: '🔍',
+      btnClass: 'btn-secondary',
+      btnStyle: 'color: #c084fc; border-color: rgba(168,85,247,0.5);'
+    },
     {
       key: 'blueprint-info',
       title: dict.diag_bp_info_title || 'Blueprint Architecture & Validation Info',
@@ -2487,26 +3108,52 @@ function renderBlueprintDiagTab(bNum) {
     }
   ];
 
-  grid.innerHTML = diagItems.map(item => `
+  grid.innerHTML = diagItems.map(item => {
+    const rawBtnText = item.btnText || dict.btn_run_now || 'Käivita kohe';
+    const cleanBtnText = rawBtnText.replace(/^[🔍▶️⚡🔄⏹️🛡️⏱️📄]\s*/, '');
+    const btnIcon = item.btnIcon || '▶️';
+    const btnClass = item.btnClass ? `btn ${item.btnClass}` : 'btn btn-primary';
+    const btnStyle = item.btnStyle || '';
+    const safeKey = item.key.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const statusBadgeId = `diag-status-badge-${safeKey}`;
+
+    return `
     <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
       <div>
-        <div style="font-weight: 700; color: ${item.color}; font-size: 0.92rem; margin-bottom: 6px;">${item.title}</div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 8px;">
+          <div style="font-weight: 700; color: ${item.color}; font-size: 0.92rem;">${item.title}</div>
+          <span id="${statusBadgeId}" class="badge" style="background: rgba(148, 163, 184, 0.12); color: #94a3b8; font-size: 0.72rem; padding: 2px 6px;">⚪ ${dict.test_status_pending || 'Ootel'}</span>
+        </div>
         <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${item.desc}</p>
         <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
           <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
           ${item.cmd}
         </div>
       </div>
-      <button class="btn btn-primary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px;" onclick="runDiagCommand('${item.key}', '${item.cmd}', this)">
-        <span>▶️</span> <span>${dict.btn_run_now || 'Käivita kohe'}</span>
-      </button>
+      <div style="display: flex; gap: 8px;">
+        <button class="${btnClass}" style="flex: 1; font-size: 0.82rem; padding: 6px 10px; ${btnStyle}" onclick="runDiagCommand('${item.key}', '${item.cmd}', this, '${statusBadgeId}')">
+          <span>${btnIcon}</span> <span>${cleanBtnText}</span>
+        </button>
+        <button class="btn btn-secondary" style="font-size: 0.82rem; padding: 6px 10px;" onclick="copyCommandSnippet('${item.cmd}', this)" title="${dict.btn_copy_cmd || 'Kopeeri CLI käsk'}">
+          <span>📋</span>
+        </button>
+      </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
-async function runDiagCommand(cmdKey, cmdStr, btn) {
+async function runDiagCommand(cmdKey, cmdStr, btn, statusBadgeId) {
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  const statusBadge = statusBadgeId ? document.getElementById(statusBadgeId) : null;
+  if (statusBadge) {
+    statusBadge.className = 'badge';
+    statusBadge.style.background = 'rgba(56, 189, 248, 0.15)';
+    statusBadge.style.color = '#38bdf8';
+    statusBadge.innerHTML = '⏳ ' + (dict.btn_running || 'Töötab...');
+  }
 
   const progress = startTerminalProgress('modal-diag-console', 'diag', `⚡ ${cmdKey}`, cmdStr);
   document.getElementById('modal-diag-console')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -2526,6 +3173,13 @@ async function runDiagCommand(cmdKey, cmdStr, btn) {
         body: JSON.stringify({ module: activeBpModalNum, action: 'info' }),
         mode: 'cors'
       });
+    } else if (cmdKey === 'dry-run' || cmdKey === 'dryrun') {
+      resp = await fetch(`${BRIDGE_URL}/api/toggle?module=${activeBpModalNum}&action=dry-run&lang=${currentLang}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ module: activeBpModalNum, action: 'dry-run', lang: currentLang }),
+        mode: 'cors'
+      });
     } else {
       resp = await fetch(`${BRIDGE_URL}/api/devops/run`, {
         method: 'POST',
@@ -2541,18 +3195,42 @@ async function runDiagCommand(cmdKey, cmdStr, btn) {
       btn.innerHTML = origBtnText;
     }
 
-    const isSuccess = resp.ok && (data.ok || data.status === 'ok') && data.exit_code === 0;
+    const isSuccess = resp.ok && (data.ok || data.status === 'ok') && (data.exit_code === 0 || data.exit_code === undefined);
+    if (statusBadge) {
+      if (isSuccess) {
+        statusBadge.style.background = 'rgba(34, 197, 94, 0.15)';
+        statusBadge.style.color = '#4ade80';
+        statusBadge.innerHTML = '✅ ' + (dict.test_status_passed || 'Läbitud');
+      } else {
+        statusBadge.style.background = 'rgba(248, 113, 113, 0.15)';
+        statusBadge.style.color = '#f87171';
+        statusBadge.innerHTML = '❌ ' + (dict.test_status_failed || 'Viga');
+      }
+    }
+
     if (progress) {
       progress.finish(isSuccess, data);
+    }
+    if (cmdKey === 'dry-run' || cmdKey === 'dryrun') {
+      showToast(dict.ops_success_dryrun || `✅ Blueprint #${activeBpModalNum} konfiguratsiooni eelvaade valmis!`);
     }
   } catch (err) {
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = origBtnText;
     }
+    if (statusBadge) {
+      statusBadge.style.background = 'rgba(248, 113, 113, 0.15)';
+      statusBadge.style.color = '#f87171';
+      statusBadge.innerHTML = '❌ ' + (dict.test_status_failed || 'Viga');
+    }
     console.error('Error running diag command:', err);
     if (progress) {
       progress.finish(false, { error: err.message, output: `Ühenduse viga dev-hub-bridge serveriga:\n${err.message}\n\nKäivita terminalis:\n${cmdStr}` });
+    }
+    copyTextToClipboard(cmdStr);
+    if (typeof showToast === 'function') {
+      showToast(`📋 ${dict.toast_cmd_copied || 'Kopeerisin käsu:'} ${cmdStr}`);
     }
   }
 }
@@ -2569,6 +3247,292 @@ function closeBlueprintModal(e) {
 function copyActiveLogPath(path, btn) {
   if (!path) return;
   copyTextToClipboard(path);
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  if (btn) {
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<span>✅</span> <span>${dict.toast_path_copied || 'Kopeeritud!'}</span>`;
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  }
+  if (typeof showToast === 'function') {
+    showToast(`📋 ${dict.toast_path_copied || 'Logifaili tee kopeeritud lõikelauale!'}`);
+  }
+}
+
+let gBpLogsList = [];
+let gBpLogsCategory = 'all';
+let gBpLogsSearchQuery = '';
+let gBpCurrentSelectedLogFile = null;
+
+function filterBpLogsCategory(cat) {
+  gBpLogsCategory = cat;
+  ['all', 'setup', 'test', 'snapshot', 'devops'].forEach(c => {
+    const btn = document.getElementById(`btn-bp-log-cat-${c}`);
+    if (btn) {
+      if (c === cat) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+  renderBlueprintLogsListAndActive();
+}
+
+function filterBpLogsSearch(query) {
+  gBpLogsSearchQuery = (query || '').toLowerCase().trim();
+  renderBlueprintLogsListAndActive();
+}
+
+async function renderBlueprintLogsTab(bpNum, forceRefresh) {
+  const b = BLUEPRINTS_DATA.find(item => item.num === bpNum);
+  if (!b) return;
+
+  // 1. Gather initial logs from b.all_logs or b.latest_log_info
+  let logs = (b && Array.isArray(b.all_logs) && b.all_logs.length > 0) ? [...b.all_logs] : [];
+  if (logs.length === 0 && b && (b.latest_log_info || b.latest_log)) {
+    const lInfo = b.latest_log_info || { file: b.latest_log, relative_path: 'install_logs/' + b.latest_log, size_human: 'Log', mtime: '', category: 'setup' };
+    logs.push(lInfo);
+  }
+
+  // 2. Fetch live updated list from Bridge if available
+  try {
+    const resp = await fetch(`${BRIDGE_URL}/api/logs/blueprint?bp=${bpNum}`, { method: 'GET', mode: 'cors' });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && data.ok && Array.isArray(data.logs) && data.logs.length > 0) {
+        logs = data.logs;
+        b.all_logs = logs;
+      }
+    }
+  } catch (e) {
+    // Bridge offline; keep pre-embedded logs
+  }
+
+  gBpLogsList = logs;
+  if (!gBpCurrentSelectedLogFile || !gBpLogsList.some(l => (l.file || l.filename) === gBpCurrentSelectedLogFile)) {
+    gBpCurrentSelectedLogFile = gBpLogsList.length > 0 ? (gBpLogsList[0].file || gBpLogsList[0].filename) : null;
+  }
+
+  renderBlueprintLogsListAndActive();
+}
+
+function renderBlueprintLogsListAndActive() {
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  const countEl = document.getElementById('bp-modal-logs-count');
+  const listEl = document.getElementById('bp-modal-logs-items-list');
+  const titleEl = document.getElementById('bp-log-view-title');
+  const badgeEl = document.getElementById('bp-modal-logs-active-badge');
+  const metaEl = document.getElementById('bp-log-view-meta');
+  const preEl = document.getElementById('bp-modal-logs-viewer-pre');
+
+  if (!listEl) return;
+
+  // Filter by category
+  let filtered = [...gBpLogsList];
+  if (gBpLogsCategory !== 'all') {
+    filtered = filtered.filter(l => {
+      const cat = (l.category || '').toLowerCase();
+      if (gBpLogsCategory === 'setup') return cat === 'setup' || cat === 'deploy';
+      if (gBpLogsCategory === 'test') return cat === 'test';
+      if (gBpLogsCategory === 'snapshot') return cat === 'snapshot' || cat === 'restore';
+      if (gBpLogsCategory === 'devops') return cat === 'devops' || cat === 'reset';
+      return true;
+    });
+  }
+
+  // Filter by search query
+  if (gBpLogsSearchQuery) {
+    filtered = filtered.filter(l => {
+      const fname = (l.file || l.filename || '').toLowerCase();
+      const cat = (l.category || '').toLowerCase();
+      return fname.includes(gBpLogsSearchQuery) || cat.includes(gBpLogsSearchQuery);
+    });
+  }
+
+  if (countEl) countEl.textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `
+      <div style="text-align: center; padding: 28px 12px; color: #64748b;">
+        <div style="font-size: 1.6rem; margin-bottom: 6px;">📄</div>
+        <div style="font-size: 0.85rem; color: #cbd5e1;" data-i18n="no_bp_logs_found">
+          ${dict.no_bp_logs_found || 'Selle filtriga ei leitud ühtegi logifaili.'}
+        </div>
+      </div>`;
+    if (titleEl) titleEl.textContent = dict.logs_no_file_selected || 'Vali logifail';
+    if (badgeEl) badgeEl.innerHTML = '';
+    if (metaEl) metaEl.textContent = '';
+    if (preEl) preEl.textContent = dict.logs_select_hint || 'Vali vasakult nimekirjast logifail selle sisu kuvamiseks.';
+    return;
+  }
+
+  // Ensure current selected file is valid in filtered list
+  if (!gBpCurrentSelectedLogFile || !filtered.some(l => (l.file || l.filename) === gBpCurrentSelectedLogFile)) {
+    gBpCurrentSelectedLogFile = filtered[0].file || filtered[0].filename;
+  }
+
+  const activeLogObj = filtered.find(l => (l.file || l.filename) === gBpCurrentSelectedLogFile) || filtered[0];
+
+  // Render log items in list pane
+  listEl.innerHTML = filtered.map(l => {
+    const fname = l.file || l.filename;
+    const isSel = (fname === gBpCurrentSelectedLogFile);
+    const cat = (l.category || 'general').toLowerCase();
+    const sizeStr = l.size_human || (l.size_bytes ? ((l.size_bytes / 1024).toFixed(1) + ' KB') : '0 KB');
+    const timeStr = l.mtime || (l.timestamp ? new Date(l.timestamp * 1000).toLocaleString() : '');
+
+    let catBadge = '';
+    if (cat === 'setup' || cat === 'deploy') {
+      catBadge = `<span class="badge badge-success" style="font-size:0.68rem; padding: 1px 6px;">${dict.logs_cat_setup || 'Paigaldus'}</span>`;
+    } else if (cat === 'test') {
+      catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; background:rgba(168,85,247,0.2); color:#c084fc; border:1px solid rgba(168,85,247,0.4);">${dict.logs_cat_test || 'Testimine'}</span>`;
+    } else if (cat === 'snapshot' || cat === 'restore') {
+      catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.4);">${dict.logs_cat_snapshot || 'Snapshot'}</span>`;
+    } else if (cat === 'devops' || cat === 'reset') {
+      catBadge = `<span class="badge badge-primary" style="font-size:0.68rem; padding: 1px 6px;">${dict.logs_cat_devops || 'DevOps'}</span>`;
+    } else {
+      catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; color:#94a3b8; background:rgba(255,255,255,0.08);">${dict.logs_cat_general || 'Üldine'}</span>`;
+    }
+
+    return `
+      <div class="log-item ${isSel ? 'active' : ''}" onclick="selectBpLogFile('${escapeHtml(fname)}')">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <div style="display: flex; gap: 5px; align-items: center;">
+            ${catBadge}
+          </div>
+          <span style="font-size: 0.72rem; color: #94a3b8; font-family: ui-monospace, monospace;">${sizeStr}</span>
+        </div>
+        <div style="font-family: ui-monospace, monospace; font-size: 0.76rem; color: ${isSel ? '#38bdf8' : '#e2e8f0'}; word-break: break-all; line-height: 1.35; font-weight: ${isSel ? '600' : '400'};">
+          ${escapeHtml(fname)}
+        </div>
+        <div style="font-size: 0.68rem; color: #64748b; margin-top: 4px; font-family: ui-monospace, monospace;">
+          ${escapeHtml(timeStr)}
+        </div>
+      </div>`;
+  }).join('');
+
+  // Update right pane header
+  if (titleEl && activeLogObj) {
+    titleEl.textContent = activeLogObj.file || activeLogObj.filename;
+  }
+  if (badgeEl && activeLogObj) {
+    const cat = (activeLogObj.category || 'general').toLowerCase();
+    let catClass = 'badge-primary';
+    let catText = dict.logs_cat_general || 'Üldine';
+    if (cat === 'setup' || cat === 'deploy') { catClass = 'badge-success'; catText = dict.logs_cat_setup || 'Paigaldus'; }
+    else if (cat === 'test') { catClass = 'badge'; catText = dict.logs_cat_test || 'Testimine'; }
+    else if (cat === 'snapshot' || cat === 'restore') { catClass = 'badge-warning'; catText = dict.logs_cat_snapshot || 'Snapshot'; }
+    else if (cat === 'devops' || cat === 'reset') { catClass = 'badge-primary'; catText = dict.logs_cat_devops || 'DevOps'; }
+    badgeEl.className = `badge ${catClass}`;
+    badgeEl.textContent = catText.toUpperCase();
+  }
+  if (metaEl && activeLogObj) {
+    const sizeStr = activeLogObj.size_human || (activeLogObj.size_bytes ? ((activeLogObj.size_bytes / 1024).toFixed(1) + ' KB') : '0 KB');
+    const timeStr = activeLogObj.mtime || (activeLogObj.timestamp ? new Date(activeLogObj.timestamp * 1000).toLocaleString() : '');
+    metaEl.textContent = `(${sizeStr} | ${timeStr})`;
+  }
+
+  // Load content
+  if (activeLogObj) {
+    loadBpLogContent(activeLogObj.file || activeLogObj.filename);
+  }
+}
+
+function selectBpLogFile(fileName) {
+  gBpCurrentSelectedLogFile = fileName;
+  renderBlueprintLogsListAndActive();
+}
+
+async function loadBpLogContent(fileName) {
+  const viewerPre = document.getElementById('bp-modal-logs-viewer-pre');
+  if (!viewerPre) return;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  viewerPre.textContent = `⏳ ${dict.log_loading || 'Laadin logi sisu...'}`;
+  try {
+    const resp = await fetch(`${BRIDGE_URL}/api/log/read?file=${encodeURIComponent(fileName)}`, { method: 'GET', mode: 'cors' });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && data.found && data.content) {
+        viewerPre.textContent = data.content;
+        viewerPre.scrollTop = viewerPre.scrollHeight;
+        return;
+      }
+    }
+    viewerPre.textContent = `(Logifail "${fileName}" sisu ei õnnestunud serverist laadida.)\n\nKäsitsi vaatamine terminalis:\ncat install_logs/${fileName}`;
+  } catch (err) {
+    viewerPre.textContent = `(Ühenduse viga dev-hub-bridge serveriga)\n\nLogifaili vaatamine terminalis:\ncat install_logs/${fileName}`;
+  }
+}
+
+async function refreshBlueprintLogsTab(bpNum, btn) {
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  const orig = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span>⏳</span> <span>${dict.btn_running || 'Värskendan...'}</span>`;
+  }
+  await renderBlueprintLogsTab(bpNum, true);
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+  }
+  if (typeof showToast === 'function') {
+    showToast(`🔄 ${dict.toast_logs_refreshed || 'Blueprinti logid värskendatud!'}`);
+  }
+}
+
+function copyCurrentBpLogText(btn) {
+  const pre = document.getElementById('bp-modal-logs-viewer-pre');
+  if (pre && pre.textContent) {
+    copyTextToClipboard(pre.textContent);
+    const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+    if (btn) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<span>✅</span> <span>${dict.toast_log_copied || 'Kopeeritud!'}</span>`;
+      setTimeout(() => { btn.innerHTML = orig; }, 2000);
+    }
+    if (typeof showToast === 'function') {
+      showToast(`📋 ${dict.toast_log_copied || 'Logi sisu kopeeritud lõikelauale!'}`);
+    }
+  }
+}
+
+function downloadCurrentBpLogText() {
+  const pre = document.getElementById('bp-modal-logs-viewer-pre');
+  const filename = gBpCurrentSelectedLogFile || 'blueprint_log.txt';
+  if (!pre || !pre.textContent) return;
+  const blob = new Blob([pre.textContent], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  if (typeof showToast === 'function') {
+    showToast(`💾 ${dict.toast_download_started || 'Allalaadimine alustatud:'} ${filename}`);
+  }
+}
+
+function openCurrentBlueprintLogInViewer() {
+  if (!gBpCurrentSelectedLogFile) return;
+  const f = gBpCurrentSelectedLogFile;
+  const p = `install_logs/${f}`;
+  if (typeof openLogViewerModal === 'function') {
+    openLogViewerModal(f, p);
+  }
+}
+
+function copyCurrentBlueprintLogPath(btn) {
+  if (!gBpCurrentSelectedLogFile) return;
+  const fullPath = `install_logs/${gBpCurrentSelectedLogFile}`;
+  copyTextToClipboard(fullPath);
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
   if (btn) {
@@ -2664,10 +3628,22 @@ async function loadBlueprintLog(logFile, btn) {
   previewBox.setAttribute('data-loaded-file', logFile);
   if (btn) btn.innerHTML = `<span>✕</span> <span>${dict.btn_hide_log || 'Peida logi'}</span>`;
   try {
-    const resp = await fetch(`${BRIDGE_URL}/api/log/read?file=${encodeURIComponent(logFile)}`, {
-      method: 'GET',
-      mode: 'cors'
-    });
+    let resp = null;
+    try {
+      resp = await fetch(`${BRIDGE_URL}/api/log/read?file=${encodeURIComponent(logFile)}`, {
+        method: 'GET',
+        mode: 'cors'
+      });
+    } catch (primaryErr) {
+      if (typeof BRIDGE_URL_ALT !== 'undefined' && BRIDGE_URL_ALT && BRIDGE_URL_ALT !== BRIDGE_URL) {
+        resp = await fetch(`${BRIDGE_URL_ALT}/api/log/read?file=${encodeURIComponent(logFile)}`, {
+          method: 'GET',
+          mode: 'cors'
+        });
+      } else {
+        throw primaryErr;
+      }
+    }
     if (!resp.ok) {
       if (resp.status === 404) {
         previewBox.innerHTML = `<span style="color:#94a3b8;">${dict.log_not_found || 'ℹ️ Logifaili pole veel loodud või eelnev paigalduslogi puudub.'}</span>`;
@@ -2691,33 +3667,232 @@ async function loadBlueprintLog(logFile, btn) {
   }
 }
 
-async function toggleActiveTerminalLog(containerId) {
-  const viewer = document.getElementById(`${containerId}-full-log-viewer`);
-  const pathEl = document.getElementById(`${containerId}-log-path`);
-  const toggleBtn = document.getElementById(`${containerId}-log-toggle-btn`);
-  if (!viewer || !pathEl) return;
+let currentLogModalFile = '';
+let currentLogModalFullPath = '';
+let currentLogModalRawText = '';
+let isLogModalTimeEnabled = true;
+let isLogModalColorEnabled = true;
+let logModalFilterQuery = '';
+
+// ==========================================================================
+// Terminal ANSI Syntax Highlighting & Clock Timestamp Engine
+// ==========================================================================
+
+function maskLogSecrets(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/(token=)[^&"'\s]+/gi, '$1***MASKED***')
+    .replace(/(ACCESS_TOKEN=)[^"'\s]+/gi, '$1***MASKED***')
+    .replace(/(Bearer\s+)[^"'\s]+/gi, '$1***MASKED***')
+    .replace(/(Authorization:\s*[A-Za-z0-9_]+\s+)[^"'\s]+/gi, '$1***MASKED***')
+    .replace(/(ARTIFACTORY_TOKEN=)[^"'\s]+/gi, '$1***MASKED***')
+    .replace(/(GITHUB_TOKEN=)[^"'\s]+/gi, '$1***MASKED***')
+    .replace(/(password=)[^&"'\s]+/gi, '$1***MASKED***');
+}
+
+function stripAnsiCodes(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/\x1b\[[0-9;]*[a-zA-Z]/g, '')
+    .replace(/\x1b\([a-zA-Z0-9]/g, '')
+    .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '')
+    .replace(/\[[0-9]+(?:;[0-9]+)*m/g, '')
+    .replace(/'[0-9]+(?:;[0-9]+)*m/g, '')
+    .replace(/\r/g, '');
+}
+
+function parseAnsiColorsToHtml(rawText) {
+  if (!rawText) return '';
+  let text = escapeHtml(rawText);
+
+  const pattern = /(?:\x1b\[|\[)([0-9]+(?:;[0-9]+)*)m/g;
+  let openSpanCount = 0;
+
+  text = text.replace(pattern, (match, codes) => {
+    let result = '';
+    const parts = codes.split(';');
+    for (let i = 0; i < parts.length; i++) {
+      const c = parts[i];
+      if (c === '0') {
+        while (openSpanCount > 0) {
+          result += '</span>';
+          openSpanCount--;
+        }
+      } else if (c === '1') {
+        result += '<span class="terminal-bold">';
+        openSpanCount++;
+      } else if (c === '2') {
+        result += '<span class="terminal-dim">';
+        openSpanCount++;
+      } else if (c === '31' || c === '91') {
+        result += '<span class="terminal-red">';
+        openSpanCount++;
+      } else if (c === '32' || c === '92') {
+        result += '<span class="terminal-green">';
+        openSpanCount++;
+      } else if (c === '33' || c === '93') {
+        result += '<span class="terminal-yellow">';
+        openSpanCount++;
+      } else if (c === '36' || c === '96') {
+        result += '<span class="terminal-cyan">';
+        openSpanCount++;
+      } else if (c === '38' && parts[i + 1] === '5' && parts[i + 2] === '208') {
+        result += '<span class="terminal-orange">';
+        openSpanCount++;
+        i += 2;
+      }
+    }
+    return result;
+  });
+
+  while (openSpanCount > 0) {
+    text += '</span>';
+    openSpanCount--;
+  }
+
+  // Cleanup any leftover broken artifacts like '1;36m
+  text = text.replace(/'[0-9]+(?:;[0-9]+)*m/g, '');
+  return text;
+}
+
+function formatTerminalLogLine(rawLine, opts) {
+  const showTime = !opts || opts.showTime !== false;
+  const showColors = !opts || opts.showColors !== false;
+
+  if (!rawLine || !rawLine.trim()) {
+    return '<span class="terminal-line">&nbsp;</span>';
+  }
+
+  const clean = stripAnsiCodes(rawLine).trim();
+  const isSeparator = /^[-=~*#]{4,}$/.test(clean);
+  const isTree = /^[├└│─\s]+/.test(clean) && (clean.includes('├──') || clean.includes('└──'));
+
+  let timeStr = '';
+  let content = rawLine;
+
+  const isoMatch = content.match(/^\[?([0-2][0-9]:[0-5][0-9]:[0-5][0-9])\]?\s*/);
+  const relMatch = content.match(/^\[([0-9]{2}:[0-9]{2})\]\s*/);
+
+  if (isoMatch) {
+    timeStr = isoMatch[1];
+    content = content.slice(isoMatch[0].length);
+  } else if (relMatch) {
+    timeStr = (opts && opts.defaultTime) || new Date().toLocaleTimeString('et-EE', { hour12: false });
+    content = content.slice(relMatch[0].length);
+  } else if (!isSeparator && !isTree && showTime && opts && opts.defaultTime) {
+    timeStr = opts.defaultTime;
+  }
+
+  content = maskLogSecrets(content);
+  const formattedContent = showColors ? parseAnsiColorsToHtml(content) : escapeHtml(stripAnsiCodes(content));
+
+  let timeHtml = '';
+  if (showTime) {
+    timeHtml = timeStr 
+      ? `<span class="terminal-time">${timeStr}</span>` 
+      : `<span class="terminal-time">&nbsp;</span>`;
+  }
+
+  return `<span class="terminal-line">${timeHtml}${formattedContent}</span>`;
+}
+
+function formatTerminalLogText(rawText, options) {
+  if (typeof rawText !== 'string' || !rawText) return '';
+  const opts = options || {};
+  const showTime = opts.showTime !== false;
+  const showColors = opts.showColors !== false;
+  const filter = (opts.filter || '').toLowerCase();
+
+  const lines = rawText.split('\n');
+  const renderedLines = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    if (filter) {
+      const cleanLine = stripAnsiCodes(rawLine).toLowerCase();
+      if (!cleanLine.includes(filter)) continue;
+    }
+    renderedLines.push(formatTerminalLogLine(rawLine, { showTime, showColors }));
+  }
+
+  return renderedLines.join('');
+}
+
+function renderLogModalContent() {
+  const contentEl = document.getElementById('log-viewer-modal-content');
+  if (!contentEl) return;
+  if (!currentLogModalRawText) {
+    const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+    contentEl.innerHTML = `<span class="terminal-dim">(${dict.log_empty || 'Logi on tühi'})</span>`;
+    return;
+  }
+  contentEl.classList.toggle('terminal-plain', !isLogModalColorEnabled);
+  contentEl.innerHTML = formatTerminalLogText(currentLogModalRawText, {
+    showTime: isLogModalTimeEnabled,
+    showColors: isLogModalColorEnabled,
+    filter: logModalFilterQuery
+  });
+}
+
+function toggleLogModalTimestamps(btn) {
+  isLogModalTimeEnabled = !isLogModalTimeEnabled;
+  if (btn) btn.classList.toggle('active', isLogModalTimeEnabled);
+  renderLogModalContent();
+}
+
+function toggleLogModalColors(btn) {
+  isLogModalColorEnabled = !isLogModalColorEnabled;
+  if (btn) btn.classList.toggle('active', isLogModalColorEnabled);
+  renderLogModalContent();
+}
+
+function filterLogModalContent() {
+  const input = document.getElementById('log-viewer-filter-input');
+  logModalFilterQuery = input ? input.value.trim().toLowerCase() : '';
+  renderLogModalContent();
+}
+
+async function openLogViewerModal(logFile, logFullPath) {
+  const modal = document.getElementById('log-viewer-modal-backdrop');
+  const fnameEl = document.getElementById('log-viewer-modal-filename');
+  const pathEl = document.getElementById('log-viewer-modal-path');
+  const contentEl = document.getElementById('log-viewer-modal-content');
+  if (!modal || !contentEl) return;
+
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
 
-  if (viewer.style.display !== 'none') {
-    viewer.style.display = 'none';
-    if (toggleBtn) toggleBtn.innerHTML = `<span>👁️</span> <span>${dict.btn_open_log || 'Ava logi'}</span>`;
-    return;
-  }
+  currentLogModalFile = logFile || '';
+  currentLogModalFullPath = logFullPath || ('install_logs/' + logFile);
 
-  const logFile = pathEl.getAttribute('data-log-file') || pathEl.textContent.trim().replace(/^install_logs\//, '');
-  viewer.style.display = 'block';
-  viewer.innerHTML = `⏳ ${dict.log_loading || 'Laadin logi sisu...'}`;
-  if (toggleBtn) toggleBtn.innerHTML = `<span>✕</span> <span>${dict.btn_hide_log || 'Peida logi'}</span>`;
+  const cleanName = (logFile || '').replace(/^install_logs\//, '');
+  if (fnameEl) fnameEl.textContent = cleanName ? `install_logs/${cleanName}` : 'install_logs/setup.log';
+  if (pathEl) pathEl.textContent = currentLogModalFullPath;
+  contentEl.innerHTML = `<span class="terminal-dim">${dict.log_loading || '⏳ Laadin logi sisu...'}</span>`;
+
+  modal.style.display = 'flex';
 
   try {
-    const resp = await fetch(`${BRIDGE_URL}/api/log/read?file=${encodeURIComponent(logFile)}`, {
-      method: 'GET',
-      mode: 'cors'
-    });
+    let resp = null;
+    try {
+      resp = await fetch(`${BRIDGE_URL}/api/log/read?file=${encodeURIComponent(cleanName)}`, {
+        method: 'GET',
+        mode: 'cors'
+      });
+    } catch (primaryErr) {
+      if (typeof BRIDGE_URL_ALT !== 'undefined' && BRIDGE_URL_ALT && BRIDGE_URL_ALT !== BRIDGE_URL) {
+        resp = await fetch(`${BRIDGE_URL_ALT}/api/log/read?file=${encodeURIComponent(cleanName)}`, {
+          method: 'GET',
+          mode: 'cors'
+        });
+      } else {
+        throw primaryErr;
+      }
+    }
     if (!resp.ok) {
       if (resp.status === 404) {
-        viewer.innerHTML = `<span style="color:#94a3b8;">${dict.log_not_found || 'ℹ️ Logifaili pole veel loodud või eelnev paigalduslogi puudub.'}</span>`;
+        contentEl.innerHTML = `<span class="terminal-dim">${dict.log_not_found || 'ℹ️ Logifaili pole veel loodud või eelnev paigalduslogi puudub.'}</span>`;
         return;
       }
       throw new Error(`HTTP ${resp.status}`);
@@ -2725,16 +3900,70 @@ async function toggleActiveTerminalLog(containerId) {
     const data = await resp.json();
     if (data.ok || data.status === 'ok') {
       if (data.found === false) {
-        viewer.innerHTML = `<span style="color:#94a3b8;">${dict.log_not_found || 'ℹ️ Logifaili pole veel loodud või eelnev paigalduslogi puudub.'}</span>`;
+        contentEl.innerHTML = `<span class="terminal-dim">${dict.log_not_found || 'ℹ️ Logifaili pole veel loodud või eelnev paigalduslogi puudub.'}</span>`;
         return;
       }
-      viewer.textContent = data.content || `(${dict.log_empty || 'Logi on tühi'})`;
-      viewer.scrollTop = viewer.scrollHeight;
+      currentLogModalRawText = data.content || '';
+      renderLogModalContent();
+      contentEl.scrollTop = 0;
     } else {
-      viewer.innerHTML = `<span style="color:#f87171;">Viga: ${data.error || 'Logi ei õnnestunud lugeda'}</span>`;
+      contentEl.innerHTML = `<span class="terminal-red">Viga: ${escapeHtml(data.error || 'Logi ei õnnestunud lugeda')}</span>`;
     }
   } catch (err) {
-    viewer.innerHTML = `<span style="color:#f87171;">Viga logi pärimisel: ${err.message}</span>`;
+    contentEl.innerHTML = `<span class="terminal-red">Viga logi pärimisel: ${escapeHtml(err.message)}</span><br/><span style="font-size:0.75rem; color:#94a3b8; display:block; margin-top:6px;">ℹ️ Kontrollige, et Dev Hub Bridge taustaprotsess töötab: <code>python3 scripts/internal/dev-hub-bridge.py</code></span>`;
+  }
+}
+
+function closeLogViewerModal(event) {
+  if (event && event.target && event.target.closest('.modal-content') && !event.target.classList.contains('modal-close-btn')) {
+    return;
+  }
+  const modal = document.getElementById('log-viewer-modal-backdrop');
+  if (modal) modal.style.display = 'none';
+}
+
+function refreshLogViewerModal(btn) {
+  if (!currentLogModalFile) return;
+  const orig = btn ? btn.innerHTML : '';
+  if (btn) btn.innerHTML = `<span>⏳</span>`;
+  openLogViewerModal(currentLogModalFile, currentLogModalFullPath).finally(() => {
+    if (btn) btn.innerHTML = orig;
+  });
+}
+
+function copyLogModalContent(btn) {
+  if (!currentLogModalRawText) return;
+  const cleanText = stripAnsiCodes(currentLogModalRawText);
+  navigator.clipboard.writeText(cleanText).then(() => {
+    const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+    showToast(dict.log_clean_copied || 'Puhas logi kopeeritud lõikelauale!');
+    if (btn) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<span>✅</span> <span>${dict.btn_copied || 'Kopeeritud!'}</span>`;
+      setTimeout(() => { btn.innerHTML = orig; }, 1500);
+    }
+  }).catch(() => {
+    showToast('Kopeerimine ebaõnnestus.');
+  });
+}
+
+function toggleActiveTerminalLog(containerId) {
+  const pathEl = document.getElementById(`${containerId}-log-path`);
+  if (!pathEl) return;
+  const logFile = pathEl.getAttribute('data-log-file') || pathEl.textContent.trim().replace(/^install_logs\//, '');
+  const fullPath = pathEl.getAttribute('data-full-path') || pathEl.textContent.trim();
+  openLogViewerModal(logFile, fullPath);
+}
+
+function scrollTerminalToBottom(containerId) {
+  if (typeof window[`scrollTerminalToBottom_${containerId}`] === 'function') {
+    window[`scrollTerminalToBottom_${containerId}`]();
+  } else {
+    const el = document.getElementById(`${containerId}-output`);
+    if (el) el.scrollTop = el.scrollHeight;
+    const btn = document.getElementById(`${containerId}-scroll-btn`);
+    if (btn) btn.style.display = 'none';
   }
 }
 
@@ -2779,7 +4008,7 @@ async function runDevOpsCommand(cmdKey, btn) {
             <button onclick="this.closest('.devops-console').style.display='none'" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:0.85rem;" title="Sulge">✕</button>
           </div>
         </div>
-        <pre class="console-body" style="margin:0; font-size:0.75rem; color:#cbd5e1; white-space:pre-wrap; max-height:220px; overflow-y:auto;">${data.output || '(Käsk lõpetas ilma väljundita)'}</pre>
+        <pre class="console-body" style="margin:0; font-size:0.75rem; color:#cbd5e1; white-space:pre-wrap; max-height:220px; overflow-y:auto;">${formatTerminalLogText(data.output || '(Käsk lõpetas ilma väljundita)', { showTime: true, showColors: true })}</pre>
       `;
     } else {
       consoleBox.innerHTML = `
@@ -2819,7 +4048,7 @@ function filterDevOpsCards() {
   const emptyEl = document.getElementById('devops-empty-state');
   const gridEl = document.getElementById('devops-cards-grid');
 
-  const q = (searchInput ? searchInput.value : '').toLowerCase().trim();
+  const q = ((searchInput && searchInput.value) || '').toLowerCase().trim();
   if (clearBtn) {
     clearBtn.style.display = q ? 'inline-block' : 'none';
   }
@@ -3047,6 +4276,26 @@ function renderRepoStatisticsUI(stats) {
   }
 }
 
+function toggleTelemetryRibbon() {
+  const body = document.getElementById('telemetry-ribbon-body');
+  const label = document.getElementById('telemetry-toggle-label');
+  if (!body) return;
+  const isOpen = body.classList.toggle('open');
+  if (label) {
+    label.innerText = isOpen ? 'Peida mõõdikud ▲' : 'Kuva mõõdikud ▼';
+  }
+}
+
+function toggleFaqItem(faqId) {
+  const body = document.getElementById(`${faqId}-body`);
+  const caret = document.getElementById(`${faqId}-caret`);
+  if (!body) return;
+  const isOpen = body.classList.toggle('open');
+  if (caret) {
+    caret.textContent = isOpen ? '▲' : '▼';
+  }
+}
+
 function toggleRepoStatsDetails() {
   const drawer = document.getElementById('stats-details-drawer');
   const caret = document.getElementById('stats-details-caret');
@@ -3138,12 +4387,30 @@ document.addEventListener('keydown', (e) => {
     if (typeof closeGlossaryModal === 'function') {
       closeGlossaryModal();
     }
+    if (typeof closeFaqModal === 'function') {
+      closeFaqModal();
+    }
+    if (typeof closeOracleResourcesModal === 'function') {
+      closeOracleResourcesModal();
+    }
+    if (typeof closeSkillModal === 'function') {
+      closeSkillModal();
+    }
   } else if ((e.key === '?' || e.key === 'g' || e.key === 'G') && !e.ctrlKey && !e.metaKey && !e.altKey) {
     const activeEl = document.activeElement;
     const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
     if (!isInput && typeof openGlossaryModal === 'function') {
       e.preventDefault();
       openGlossaryModal();
+    }
+  } else if ((e.key === 's' || e.key === 'S') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const activeEl = document.activeElement;
+    const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+    if (!isInput) {
+      e.preventDefault();
+      switchTab('tab-skills');
+      const sInput = document.getElementById('skills-search-input');
+      if (sInput) setTimeout(() => sInput.focus(), 60);
     }
   }
 });
@@ -3223,14 +4490,16 @@ function renderDocsNav(selectedIdx) {
       return;
     }
 
+    const shortName = doc.rel.split('/').pop().replace(/\.md$/, '');
     const btn = document.createElement('button');
     btn.className = 'docs-nav-item' + (idx === currentSelectedDocIdx ? ' active' : '');
     btn.setAttribute('data-doc-idx', idx);
     const title = (doc.titles && doc.titles[currentLang]) || (doc.titles && doc.titles['en']) || doc.rel;
-    const shortName = doc.rel.replace('docs/', '').replace('.md', '');
     btn.innerHTML = `
-      <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">${escapeHtml(title)}</span>
-      <span style="font-size: 0.72rem; opacity: 0.6; font-family: ui-monospace, monospace; margin-left: 6px;">${escapeHtml(shortName)}</span>
+      <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; text-align: left; min-width: 0;">
+        <span class="docs-item-title" style="font-weight: 500; font-size: 0.84rem; line-height: 1.35; word-break: break-word;">${escapeHtml(title)}</span>
+        <span class="docs-item-file" style="font-size: 0.7rem; color: #64748b; font-family: ui-monospace, monospace;">${escapeHtml(shortName)}.md</span>
+      </div>
     `;
     btn.onclick = () => loadDocContent(idx, btn);
     sidebar.appendChild(btn);
@@ -3397,10 +4666,157 @@ function generateDocToc(bodyEl) {
   tocBox.style.display = 'block';
 }
 
-function loadDocContent(idx, activeBtn) {
+function interceptDocBodyLinks(bodyEl) {
+  if (!bodyEl) return;
+  bodyEl.querySelectorAll('a').forEach(a => {
+    const href = a.getAttribute('href');
+    if (!href) return;
+
+    // 1. External links (http://, https://, //, mailto:)
+    if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//') || href.startsWith('mailto:')) {
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener noreferrer');
+      return;
+    }
+
+    // 2. Same-page hash anchors (#...)
+    if (href.startsWith('#')) {
+      a.onclick = (e) => {
+        e.preventDefault();
+        const targetId = href.substring(1);
+        const el = document.getElementById(targetId) || document.querySelector(`[name="${targetId}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      return;
+    }
+
+    // 3. UNIVERSAL INTERNAL LINK INTERCEPTION (Guarantees zero leaking 404s)
+    a.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const linkText = (a.textContent || '').trim();
+
+      // Detect language switcher target
+      let targetLang = null;
+      if (linkText.includes('English') || linkText.includes('🇬🇧') || href.endsWith('README.md') || href === 'README.md') {
+        targetLang = 'en';
+      } else if (linkText.includes('Eesti') || linkText.includes('🇪🇪') || href.includes('/et/') || href.includes('.et.md') || href.startsWith('et/')) {
+        targetLang = 'et';
+      } else if (linkText.includes('Suomi') || linkText.includes('🇫🇮') || href.includes('/fi/') || href.includes('.fi.md') || href.startsWith('fi/')) {
+        targetLang = 'fi';
+      } else if (linkText.includes('Svenska') || linkText.includes('🇸🇪') || href.includes('/sv/') || href.includes('.sv.md') || href.startsWith('sv/')) {
+        targetLang = 'sv';
+      } else if (linkText.includes('Latviešu') || linkText.includes('🇱🇻') || href.includes('/lv/') || href.includes('.lv.md') || href.startsWith('lv/')) {
+        targetLang = 'lv';
+      } else if (linkText.includes('Lietuvių') || linkText.includes('🇱🇹') || href.includes('/lt/') || href.includes('.lt.md') || href.startsWith('lt/')) {
+        targetLang = 'lt';
+      }
+
+      // Check if this link is part of the language switcher header:
+      // (parent container contains flags/languages, or link text is a language name, or href points to language variant of same/readme file)
+      const isHeaderSwitcher = (
+        (a.parentElement && (a.parentElement.textContent.includes('English') || a.parentElement.textContent.includes('Eesti') || a.parentElement.textContent.includes('Suomi'))) ||
+        /^(🇬🇧|🇪🇪|🇫🇮|🇸🇪|🇱🇻|🇱🇹|English|Eesti|Suomi|Svenska|Latviešu|Lietuvių)$/i.test(linkText) ||
+        linkText.includes('English') || linkText.includes('Eesti') || linkText.includes('Suomi') || 
+        linkText.includes('Svenska') || linkText.includes('Latviešu') || linkText.includes('Lietuvių') ||
+        /\.(et|fi|sv|lv|lt)\.md$/i.test(href) ||
+        /^(et|fi|sv|lv|lt)\//i.test(href)
+      );
+
+      if (targetLang && isHeaderSwitcher) {
+        setLanguage(targetLang);
+        loadDocContent(currentSelectedDocIdx);
+        const docBox = document.getElementById('tab-docs');
+        if (docBox) docBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
+      // 4. Relative markdown links to other documentation guides:
+      if (href.endsWith('.md') || href.includes('.md#') || !href.includes('.')) {
+        const parts = href.split('#');
+        const filePart = parts[0].replace(/^(\.\.\/)+/g, '').replace(/^\.\//g, '');
+        const anchorPart = parts[1] || null;
+        const targetBase = filePart.split('/').pop().replace(/\.md$/, '').replace(/\.(en|et|fi|sv|lv|lt)$/, '');
+
+        // Alias mapping for old or alternative doc links
+        const aliasMap = {
+          'github-actions-cicd': 'devops-lifecycle',
+          'publisher-guide': 'publisher-setup',
+          'turvalisus': 'security',
+          'blueprints': 'blueprints-matrix',
+          'architecture-blueprints': 'blueprints-matrix',
+          'faq': 'faq',
+          'glossary': 'glossary',
+          'resources': 'oracle-resources',
+          'oracle-resources': 'oracle-resources',
+          'topology': 'db-topology',
+          'db-profiles-and-topology': 'db-topology',
+          'forms-setup': 'forms-setup',
+          'forms-to-apex': 'forms-to-apex',
+          'forms-to-apex-migration-guide': 'forms-to-apex',
+          'web-ide': 'web-ide',
+          'web-ide-artifactory': 'web-ide',
+          'apex-deploy': 'apex-deploy',
+          'apex-apps-deployment': 'apex-deploy',
+          'setup-workflow': 'setup-workflow',
+          'setup-all-workflow': 'setup-workflow',
+          'future-plans': 'future-plans'
+        };
+        const resolvedBase = aliasMap[targetBase] || targetBase;
+
+        const targetIdx = (typeof DOCS_DATA !== 'undefined' && DOCS_DATA) ? DOCS_DATA.findIndex(d => {
+          if (!d || !d.rel) return false;
+          const dBase = d.rel.split('/').pop().replace(/\.md$/, '');
+          return dBase === resolvedBase || dBase === targetBase ||
+                 d.id === resolvedBase || d.id === targetBase ||
+                 d.rel.endsWith(filePart) || filePart.endsWith(d.rel);
+        }) : -1;
+
+        if (targetIdx !== -1) {
+          if (targetLang) setLanguage(targetLang);
+          loadDocContent(targetIdx);
+          if (anchorPart) {
+            setTimeout(() => {
+              const el = document.getElementById(anchorPart);
+              if (el) el.scrollIntoView({ behavior: 'smooth' });
+            }, 150);
+          } else {
+            const docBox = document.getElementById('tab-docs');
+            if (docBox) docBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+          return;
+        }
+      }
+
+      // 5. Script or Source File Links (.sh, .sql, .py, .json, .yaml, .yml, .cmd, .env)
+      if (/\.(sh|sql|py|json|yaml|yml|cmd|env)$/i.test(href)) {
+        const cleanScriptPath = href.replace(/^(\.\.\/)+/, '').replace(/^\.\//, '');
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(cleanScriptPath);
+        }
+        showToast(`📋 Faili viide kopeeritud: <code>${cleanScriptPath}</code>`);
+        return;
+      }
+
+      // 6. Fallback for other repository files (backlog, connections, tests):
+      const cleanPath = href.replace(/^(\.\.\/)+/, '').replace(/^\.\//, '');
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(cleanPath);
+      }
+      showToast(`📄 Dokumendi viide kopeeritud: <code>${cleanPath}</code>`);
+    };
+  });
+}
+
+function loadDocContent(idx, activeBtn, skipHistory = false) {
   currentSelectedDocIdx = idx;
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  
+  if (!skipHistory) {
+    recordNavigationState({ tab: 'tab-docs', docIdx: idx });
+  }
   
   if (activeBtn) {
     document.querySelectorAll('.docs-nav-item').forEach(b => b.classList.remove('active'));
@@ -3421,8 +4837,8 @@ function loadDocContent(idx, activeBtn) {
   if (!doc) return;
 
   const title = (doc.titles && doc.titles[currentLang]) || (doc.titles && doc.titles['en']) || doc.rel;
-  const text = (doc.contents && (doc.contents[currentLang] || doc.contents['en'])) || '';
-  const wordCount = text ? text.split(/\s+/).length : 0;
+  const rawText = (doc.contents && (doc.contents[currentLang] || doc.contents['en'])) || '';
+  const wordCount = rawText ? rawText.split(/\s+/).length : 0;
   const readMin = Math.max(1, Math.ceil(wordCount / 200));
 
   if (headerEl) {
@@ -3446,14 +4862,56 @@ function loadDocContent(idx, activeBtn) {
     `;
   }
 
+  // Deduplicate top language switcher line in Dev Hub reader (keeps Markdown clean on screen)
+  let text = rawText.replace(/^[ \t]*\[\s*🇬🇧\s*English\s*\].*?\n+/m, '');
+  text = text.replace(/^[ \t]*\[\s*🇬🇧\s*\].*?\n+/m, '');
+
+  // 💡 Smart Interactive Banners for duplicated tools
+  let smartBannerHtml = '';
+  if (doc.rel === 'docs/glossary.md') {
+    smartBannerHtml = `
+      <div class="doc-smart-banner">
+        <div class="banner-text"><span>📖</span> <span>${dict.doc_smart_banner_glossary || 'Interactive Glossary available'}</span></div>
+        <button type="button" class="banner-action-btn" onclick="openGlossaryModal()"><span>⚡</span> ${dict.nav_glossary || 'Sõnastik'} ( ? )</button>
+      </div>`;
+  } else if (doc.rel === 'config/blueprints/README.md') {
+    smartBannerHtml = `
+      <div class="doc-smart-banner">
+        <div class="banner-text"><span>📋</span> <span>${dict.doc_smart_banner_blueprints || '12 Blueprints live in Cockpit'}</span></div>
+        <button type="button" class="banner-action-btn" onclick="switchTab('tab-services')"><span>🚀</span> ${dict.tab_cockpit || 'Juhtpaneel'}</button>
+      </div>`;
+  } else if (doc.rel === 'docs/oracle-resources-and-downloads.md') {
+    smartBannerHtml = `
+      <div class="doc-smart-banner">
+        <div class="banner-text"><span>🏛️</span> <span>${dict.doc_smart_banner_resources || 'Oracle Resources modal'}</span></div>
+        <button type="button" class="banner-action-btn" onclick="openOracleResourcesModal('all','')"><span>⚡</span> ${dict.btn_open_oracle_resources || 'Oracle ressursid'}</button>
+      </div>`;
+  } else if (doc.rel === 'docs/getting-started-from-scratch.md' || doc.rel === 'docs/quick-login-guide.md') {
+    smartBannerHtml = `
+      <div class="doc-smart-banner">
+        <div class="banner-text"><span>🚀</span> <span>${dict.doc_smart_banner_onboarding || 'Interactive Onboarding Wizard'}</span></div>
+        <button type="button" class="banner-action-btn" onclick="switchTab('tab-onboarding')"><span>🚀</span> ${dict.tab_onboarding || 'Alustamine'}</button>
+      </div>`;
+  }
+
+  const isFaq = (doc.rel === 'docs/faq.md');
+  const faqToolbarHtml = isFaq ? renderFaqDocToolbar(dict, currentLang) : '';
+
   if (text) {
+    let parsedHtml = '';
     if (typeof marked !== 'undefined') {
-      bodyEl.innerHTML = marked.parse(text);
+      parsedHtml = marked.parse(text);
     } else {
-      bodyEl.innerHTML = `<pre style="white-space:pre-wrap; font-family:inherit; color:#e2e8f0;">${escapeHtml(text)}</pre>`;
+      parsedHtml = `<pre style="white-space:pre-wrap; font-family:inherit; color:#e2e8f0;">${escapeHtml(text)}</pre>`;
     }
+    bodyEl.innerHTML = smartBannerHtml + faqToolbarHtml + parsedHtml;
     generateDocToc(bodyEl);
     renderMermaidInContainer(bodyEl);
+    interceptDocBodyLinks(bodyEl);
+    polishDocRenderedBody(bodyEl, doc, dict, currentLang);
+    if (isFaq) {
+      filterFaqDoc('all', '');
+    }
   } else {
     bodyEl.innerHTML = `
       <div style="background: #1e293b; padding: 24px; border-radius: 8px; border: 1px solid var(--border);">
@@ -3463,6 +4921,226 @@ function loadDocContent(idx, activeBtn) {
       </div>
     `;
   }
+}
+
+let gFaqDocActiveCat = 'all';
+let gFaqDocSearchTerm = '';
+
+function renderFaqDocToolbar(dict, currentLang) {
+  const categories = [
+    { id: 'all', label: (I18N_DICT[currentLang] && I18N_DICT[currentLang].track_all) || 'Kõik' },
+    { id: 'beginner', label: '🧠 ' + ((I18N_DICT[currentLang] && I18N_DICT[currentLang].ob_cat_beginner) || 'Alustaja ja põhitõed') },
+    { id: 'architect', label: '☁️ ' + ((I18N_DICT[currentLang] && I18N_DICT[currentLang].ob_cat_arch) || 'Arhitektuur ja pilv') },
+    { id: 'dba_security', label: '🔐 ' + ((I18N_DICT[currentLang] && I18N_DICT[currentLang].ob_cat_dba) || 'DBA ja turvalisus') },
+    { id: 'troubleshooting', label: '🛠️ ' + ((I18N_DICT[currentLang] && I18N_DICT[currentLang].ob_cat_trouble) || 'Tõrkeotsing ja taastamine') }
+  ];
+
+  let catBtns = '';
+  categories.forEach(c => {
+    const activeCls = gFaqDocActiveCat === c.id ? 'active' : '';
+    catBtns += `<button type="button" class="faq-cat-pill ${activeCls}" onclick="filterFaqDoc('${c.id}', null)">${c.label}</button>`;
+  });
+
+  return `
+    <div class="faq-toolbar" id="faq-interactive-toolbar">
+      <div class="faq-search-row">
+        <span class="faq-search-icon">🔍</span>
+        <input type="text" id="faq-doc-search-input" class="faq-search-input" placeholder="${dict.faq_search_placeholder_doc || 'Filtreeri küsimusi, vastuseid või käske...'}" oninput="filterFaqDoc(null, this.value)">
+        <button type="button" id="faq-doc-search-clear" class="faq-search-clear" onclick="clearFaqDocSearch()">✕</button>
+      </div>
+      <div class="faq-controls-row">
+        <div class="faq-cat-group">
+          ${catBtns}
+        </div>
+        <div class="faq-actions-group">
+          <span class="faq-counter-badge" id="faq-doc-counter"></span>
+          <button type="button" class="faq-toggle-btn" onclick="toggleAllFaqDoc(true)">${dict.faq_btn_expand_all || '▾ Ava kõik'}</button>
+          <button type="button" class="faq-toggle-btn" onclick="toggleAllFaqDoc(false)">${dict.faq_btn_collapse_all || '▴ Sulge kõik'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function filterFaqDoc(catId, searchTerm) {
+  if (catId !== null && catId !== undefined) {
+    gFaqDocActiveCat = catId;
+    document.querySelectorAll('.faq-cat-pill').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(`'${catId}'`));
+    });
+  }
+  if (searchTerm !== null && searchTerm !== undefined) {
+    gFaqDocSearchTerm = searchTerm;
+  }
+
+  const term = (gFaqDocSearchTerm || '').toLowerCase().trim();
+  const clearBtn = document.getElementById('faq-doc-search-clear');
+  if (clearBtn) clearBtn.style.display = term ? 'block' : 'none';
+
+  const items = document.querySelectorAll('details.faq-item');
+  let matchedCount = 0;
+
+  items.forEach(item => {
+    const cat = item.getAttribute('data-cat') || '';
+    const text = (item.innerText || item.textContent || '').toLowerCase();
+
+    const matchesCat = (gFaqDocActiveCat === 'all' || cat === gFaqDocActiveCat);
+    const matchesTerm = (!term || text.includes(term));
+
+    if (matchesCat && matchesTerm) {
+      item.style.display = '';
+      matchedCount++;
+      if (term) {
+        item.open = true;
+      }
+    } else {
+      item.style.display = 'none';
+    }
+  });
+
+  const counterEl = document.getElementById('faq-doc-counter');
+  if (counterEl) {
+    const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+    const tmpl = dict.faq_showing_results || 'Näidatakse %s / %t küsimust';
+    counterEl.textContent = tmpl.replace('%s', matchedCount).replace('%t', items.length);
+  }
+}
+
+function clearFaqDocSearch() {
+  const input = document.getElementById('faq-doc-search-input');
+  if (input) input.value = '';
+  filterFaqDoc(null, '');
+}
+
+function toggleAllFaqDoc(expand) {
+  document.querySelectorAll('details.faq-item').forEach(item => {
+    if (item.style.display !== 'none') {
+      item.open = expand;
+    }
+  });
+}
+
+function polishDocRenderedBody(bodyEl, doc, dict, currentLang) {
+  if (!bodyEl) return;
+
+  // 1. GitHub Alert Callouts: [!NOTE], [!IMPORTANT], [!WARNING], [!TIP], [!CAUTION]
+  bodyEl.querySelectorAll('blockquote').forEach(bq => {
+    const rawHtml = bq.innerHTML.trim();
+    const alertTypes = [
+      { tag: '[!NOTE]', cls: 'doc-alert-note', icon: 'ℹ️', title: 'NOTE' },
+      { tag: '[!IMPORTANT]', cls: 'doc-alert-important', icon: '🟣', title: 'IMPORTANT' },
+      { tag: '[!WARNING]', cls: 'doc-alert-warning', icon: '⚠️', title: 'WARNING' },
+      { tag: '[!TIP]', cls: 'doc-alert-tip', icon: '💡', title: 'TIP' },
+      { tag: '[!CAUTION]', cls: 'doc-alert-caution', icon: '🛑', title: 'CAUTION' }
+    ];
+
+    for (const a of alertTypes) {
+      if (rawHtml.includes(a.tag)) {
+        bq.className = `doc-alert ${a.cls}`;
+        let newContent = rawHtml.replace(a.tag, '').trim();
+        newContent = newContent.replace(/^<p>\s*<\/p>/, '').replace(/^<p>\s*/, '<p>');
+        bq.innerHTML = `
+          <div class="doc-alert-title"><span>${a.icon}</span> <span>${a.title}</span></div>
+          <div class="doc-alert-content">${newContent}</div>
+        `;
+        break;
+      }
+    }
+  });
+
+  // 2. Wrap all <pre> code blocks with 1-click Copy button
+  bodyEl.querySelectorAll('pre').forEach(pre => {
+    if (pre.parentElement && pre.parentElement.classList.contains('doc-code-wrapper')) return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'doc-code-wrapper';
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(pre);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.className = 'doc-code-copy-btn';
+    copyBtn.innerHTML = `<span>📋</span> ${dict.doc_copy_code || 'Copy'}`;
+    copyBtn.onclick = () => {
+      const codeText = pre.innerText || pre.textContent || '';
+      navigator.clipboard.writeText(codeText.trim()).then(() => {
+        copyBtn.innerHTML = `<span>✅</span> ${dict.doc_code_copied || 'Copied!'}`;
+        copyBtn.style.borderColor = '#10b981';
+        copyBtn.style.color = '#10b981';
+        showToast(dict.faq_cmd_copied || 'Käsk kopeeritud!');
+        setTimeout(() => {
+          copyBtn.innerHTML = `<span>📋</span> ${dict.doc_copy_code || 'Copy'}`;
+          copyBtn.style.borderColor = '';
+          copyBtn.style.color = '';
+        }, 2000);
+      });
+    };
+    wrapper.appendChild(copyBtn);
+  });
+
+  // 3. Responsive Table Wrappers
+  bodyEl.querySelectorAll('table').forEach(tbl => {
+    if (tbl.parentElement && tbl.parentElement.classList.contains('doc-table-wrapper')) return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'doc-table-wrapper';
+    tbl.parentNode.insertBefore(wrapper, tbl);
+    wrapper.appendChild(tbl);
+  });
+
+  // 4. FAQ Deep Link Anchors
+  bodyEl.querySelectorAll('details.faq-item').forEach(item => {
+    const summary = item.querySelector('summary');
+    if (!summary || summary.querySelector('.faq-link-anchor')) return;
+    const anchorBtn = document.createElement('a');
+    anchorBtn.className = 'faq-link-anchor';
+    anchorBtn.href = 'javascript:void(0)';
+    anchorBtn.title = dict.faq_copy_link || 'Copy direct link';
+    anchorBtn.innerHTML = '🔗';
+    anchorBtn.onclick = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const url = `${window.location.origin}${window.location.pathname}#${item.id}`;
+      navigator.clipboard.writeText(url).then(() => {
+        showToast(dict.faq_link_copied || 'Otselink kopeeritud!');
+      });
+    };
+    const tag = summary.querySelector('.faq-cat-tag');
+    if (tag) {
+      summary.insertBefore(anchorBtn, tag);
+    } else {
+      summary.appendChild(anchorBtn);
+    }
+  });
+
+  // 5. Setup Floating Back-to-Top Button
+  let topBtn = document.getElementById('doc-back-to-top-btn');
+  if (!topBtn) {
+    topBtn = document.createElement('button');
+    topBtn.id = 'doc-back-to-top-btn';
+    topBtn.type = 'button';
+    topBtn.className = 'doc-back-to-top';
+    topBtn.innerHTML = `<span>⬆️</span> <span>${dict.doc_back_to_top || 'Üles'}</span>`;
+    topBtn.onclick = () => {
+      const scrollParent = document.getElementById('docs-markdown-view') || window;
+      if (scrollParent.scrollTo) {
+        scrollParent.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    document.body.appendChild(topBtn);
+  }
+
+  const scrollContainer = document.getElementById('docs-markdown-view') || window;
+  const onScrollHandler = () => {
+    const scrollTop = (scrollContainer.scrollTop !== undefined && scrollContainer.scrollTop > 0) ? scrollContainer.scrollTop : window.scrollY;
+    if (scrollTop > 300) {
+      topBtn.style.display = 'flex';
+    } else {
+      topBtn.style.display = 'none';
+    }
+  };
+  scrollContainer.onscroll = onScrollHandler;
+  window.onscroll = onScrollHandler;
 }
 
 function copyDocMarkdown(idx, btn) {
@@ -3678,6 +5356,26 @@ function filterLogsSearch(q) {
   renderLogsExplorerView();
 }
 
+function switchLogsSubTab(subTab) {
+  const explorerView = document.getElementById('logs-subtab-explorer-view');
+  const benchmarksView = document.getElementById('logs-subtab-benchmarks-view');
+  const btnExplorer = document.getElementById('logs-subtab-btn-explorer');
+  const btnBenchmarks = document.getElementById('logs-subtab-btn-benchmarks');
+
+  if (subTab === 'benchmarks') {
+    if (explorerView) explorerView.style.display = 'none';
+    if (benchmarksView) benchmarksView.style.display = 'block';
+    if (btnExplorer) btnExplorer.classList.remove('active');
+    if (btnBenchmarks) btnBenchmarks.classList.add('active');
+  } else {
+    if (explorerView) explorerView.style.display = 'block';
+    if (benchmarksView) benchmarksView.style.display = 'none';
+    if (btnExplorer) btnExplorer.classList.add('active');
+    if (btnBenchmarks) btnBenchmarks.classList.remove('active');
+    renderLogsExplorerView();
+  }
+}
+
 function renderLogsExplorerView() {
   const logsContainer = document.getElementById('benchmarks-logs-container');
   if (!logsContainer) return;
@@ -3703,36 +5401,38 @@ function renderLogsExplorerView() {
     gCurrentSelectedLogFile = filtered[0].filename;
   }
 
-  let tableRows = '';
+  let listItems = '';
   if (filtered.length === 0) {
-    tableRows = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-dim);" data-i18n="logs_no_logs_found">${dict.logs_no_logs_found || 'Ühtegi logifaili ei leitud valitud filtritega.'}</td></tr>`;
+    listItems = `<div style="text-align:center; padding:24px; color:var(--text-dim);" data-i18n="logs_no_logs_found">${dict.logs_no_logs_found || 'Ühtegi logifaili ei leitud valitud filtritega.'}</div>`;
   } else {
-    tableRows = filtered.map(l => {
+    listItems = filtered.map(l => {
       const isSelected = l.filename === gCurrentSelectedLogFile;
-      const rowStyle = isSelected ? 'background: rgba(56, 189, 248, 0.12); font-weight: 600;' : 'cursor: pointer;';
       const sizeKb = (l.size_bytes ? (l.size_bytes / 1024).toFixed(1) : '0') + ' KB';
-      const bpLabel = (l.blueprint !== null && l.blueprint !== undefined) ? `<span class="badge badge-primary" style="font-size:0.72rem;">BP #${l.blueprint}</span>` : '<span style="color:#64748b;">—</span>';
+      const bpLabel = (l.blueprint !== null && l.blueprint !== undefined) ? `<span class="badge badge-primary" style="font-size:0.68rem; padding: 1px 6px;">BP #${l.blueprint}</span>` : '';
 
       let catBadge = '';
-      if (l.category === 'setup') catBadge = `<span class="badge badge-success" style="font-size:0.7rem;">${dict.logs_cat_setup || 'Paigaldus'}</span>`;
-      else if (l.category === 'test') catBadge = `<span class="badge" style="font-size:0.7rem; background:rgba(168,85,247,0.2); color:#c084fc; border:1px solid rgba(168,85,247,0.4);">${dict.logs_cat_test || 'Testimine'}</span>`;
-      else if (l.category === 'snapshot') catBadge = `<span class="badge" style="font-size:0.7rem; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.4);">${dict.logs_cat_snapshot || 'Snapshot'}</span>`;
-      else if (l.category === 'devops') catBadge = `<span class="badge badge-primary" style="font-size:0.7rem;">${dict.logs_cat_devops || 'DevOps'}</span>`;
-      else catBadge = `<span class="badge" style="font-size:0.7rem; color:#94a3b8;">Üldine</span>`;
+      if (l.category === 'setup') catBadge = `<span class="badge badge-success" style="font-size:0.68rem; padding: 1px 6px;">${dict.logs_cat_setup || 'Paigaldus'}</span>`;
+      else if (l.category === 'test') catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; background:rgba(168,85,247,0.2); color:#c084fc; border:1px solid rgba(168,85,247,0.4);">${dict.logs_cat_test || 'Testimine'}</span>`;
+      else if (l.category === 'snapshot') catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.4);">${dict.logs_cat_snapshot || 'Snapshot'}</span>`;
+      else if (l.category === 'devops') catBadge = `<span class="badge badge-primary" style="font-size:0.68rem; padding: 1px 6px;">${dict.logs_cat_devops || 'DevOps'}</span>`;
+      else catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; color:#94a3b8;">Üldine</span>`;
 
       return `
-        <tr style="${rowStyle}" onclick="selectLogFile('${escapeHtml(l.filename)}')">
-          <td style="font-family: ui-monospace, monospace; font-size:0.78rem; color:#cbd5e1; white-space:nowrap;">${escapeHtml(l.timestamp || l.mtime || '-')}</td>
-          <td>${catBadge}</td>
-          <td>${bpLabel}</td>
-          <td style="font-family: ui-monospace, monospace; font-size:0.8rem; color:#38bdf8;">${escapeHtml(l.filename)}</td>
-          <td style="font-size:0.78rem; color:#94a3b8; text-align:right;">${sizeKb}</td>
-          <td style="text-align:right;">
-            <button class="btn btn-sm ${isSelected ? 'btn-primary' : 'btn-secondary'}" style="padding:2px 8px; font-size:0.72rem;">
-              ${isSelected ? '👁️ Vaatan' : 'Ava'}
-            </button>
-          </td>
-        </tr>
+        <div class="log-item ${isSelected ? 'active' : ''}" onclick="selectLogFile('${escapeHtml(l.filename)}')">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <div style="display: flex; gap: 5px; align-items: center;">
+              ${catBadge}
+              ${bpLabel}
+            </div>
+            <span style="font-size: 0.72rem; color: #94a3b8; font-family: ui-monospace, monospace;">${sizeKb}</span>
+          </div>
+          <div style="font-family: ui-monospace, monospace; font-size: 0.78rem; color: ${isSelected ? '#38bdf8' : '#e2e8f0'}; word-break: break-all; line-height: 1.35;">
+            ${escapeHtml(l.filename)}
+          </div>
+          <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px; font-family: ui-monospace, monospace;">
+            ${escapeHtml(l.timestamp || l.mtime || '-')}
+          </div>
+        </div>
       `;
     }).join('');
   }
@@ -3740,26 +5440,16 @@ function renderLogsExplorerView() {
   const selectedLogObj = filtered.find(l => l.filename === gCurrentSelectedLogFile) || (filtered.length > 0 ? filtered[0] : null);
 
   logsContainer.innerHTML = `
-    <div style="display: grid; grid-template-columns: 1fr; gap: 16px;">
-      <div class="table-responsive" style="max-height: 260px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;">
-        <table>
-          <thead>
-            <tr>
-              <th data-i18n="logs_th_timestamp" style="width: 22%;">${dict.logs_th_timestamp || 'Ajatempel'}</th>
-              <th data-i18n="logs_th_category" style="width: 14%;">${dict.logs_th_category || 'Kategooria'}</th>
-              <th data-i18n="logs_th_blueprint" style="width: 12%;">${dict.logs_th_blueprint || 'Blueprint'}</th>
-              <th data-i18n="logs_th_file" style="width: 32%;">${dict.logs_th_file || 'Logifail'}</th>
-              <th data-i18n="logs_th_size" style="width: 10%; text-align:right;">${dict.logs_th_size || 'Suurus'}</th>
-              <th data-i18n="logs_th_action" style="width: 10%; text-align:right;">${dict.logs_th_action || 'Tegevus'}</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
-        </table>
+    <div class="logs-split-container">
+      <div class="logs-list-pane">
+        <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; padding: 4px 6px; margin-bottom: 4px; display: flex; justify-content: space-between;">
+          <span>Logifailid (${filtered.length})</span>
+          <span>Suurus</span>
+        </div>
+        ${listItems}
       </div>
 
-      <div id="logs-viewer-panel" style="background: #030712; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; position: relative;">
+      <div class="logs-viewer-pane">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
           <div style="font-size: 0.82rem; color: #94a3b8; font-family: ui-monospace, monospace;">
             📄 <strong id="log-view-title" style="color: #f8fafc;">${selectedLogObj ? escapeHtml(selectedLogObj.filename) : 'Vali logifail'}</strong>
@@ -3776,7 +5466,7 @@ function renderLogsExplorerView() {
             </button>
           </div>
         </div>
-        <pre id="current-log-pre" style="color: #38bdf8; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; line-height: 1.5; max-height: 420px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; margin: 0;">${selectedLogObj && selectedLogObj.content ? escapeHtml(selectedLogObj.content) : 'Laadin logi sisu...'}</pre>
+        <pre id="current-log-pre" style="flex: 1; min-height: 0; color: #38bdf8; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; line-height: 1.5; overflow-y: auto; white-space: pre-wrap; word-break: break-all; margin: 0;">${selectedLogObj && selectedLogObj.content ? escapeHtml(selectedLogObj.content) : 'Laadin logi sisu...'}</pre>
       </div>
     </div>
   `;
@@ -3902,20 +5592,90 @@ function updateSpeakerNotes(lang) {
   }
 }
 
+const ROLE_TRACKS = {
+  'all': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+  'exec': [1, 2, 3],
+  'dev': [1, 4, 11, 13],
+  'devops': [1, 5, 8, 13],
+  'dba': [1, 6, 9, 10]
+};
+let gActiveSlideTrack = 'all';
+
+function filterSlideTrack(track) {
+  if (!ROLE_TRACKS[track]) track = 'all';
+  gActiveSlideTrack = track;
+
+  ['all', 'exec', 'dev', 'devops', 'dba'].forEach(t => {
+    const btn = document.getElementById(`track-btn-${t}`);
+    if (btn) btn.classList.toggle('active', t === track);
+    const modalBtn = document.getElementById(`modal-track-btn-${t}`);
+    if (modalBtn) modalBtn.classList.toggle('active', t === track);
+  });
+
+  renderSlideNavButtons();
+
+  const allowed = ROLE_TRACKS[track];
+  const currentNum = currentSlideIdx + 1;
+  if (!allowed.includes(currentNum)) {
+    goToSlide(allowed[0] - 1);
+  } else {
+    updateSlideView();
+  }
+
+  // If fullscreen cinema modal is open, sync modal view immediately
+  const backdrop = document.getElementById('slide-modal-backdrop');
+  if (backdrop && backdrop.style.display !== 'none') {
+    syncModalSlide();
+  }
+}
+
+function renderSlideNavButtons() {
+  const container = document.getElementById('top-slide-numbers');
+  if (!container) return;
+  const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+  container.innerHTML = allowed.map(sNum => {
+    const isActive = (sNum === (currentSlideIdx + 1));
+    return `<button class="slide-num-btn ${isActive ? 'active' : ''}" onclick="goToSlide(${sNum - 1})" title="Slaid ${sNum}">${sNum}</button>`;
+  }).join('');
+}
+
+function selectDocById(docId) {
+  if (!Array.isArray(DOCS_DATA)) return;
+  const target = (docId || '').toLowerCase().trim();
+  const idx = DOCS_DATA.findIndex(d => {
+    if (!d || !d.rel) return false;
+    const relLower = d.rel.toLowerCase();
+    const base = relLower.split('/').pop().replace(/\.md$/, '');
+    const idLower = (d.id || '').toLowerCase();
+    return idLower === target || base === target || relLower.includes(target);
+  });
+  if (idx !== -1) {
+    loadDocContent(idx);
+    setTimeout(() => {
+      const targetBtn = document.querySelector(`.docs-nav-item[data-doc-idx="${idx}"]`);
+      if (targetBtn) {
+        document.querySelectorAll('.docs-nav-item').forEach(b => b.classList.remove('active'));
+        targetBtn.classList.add('active');
+        if (typeof targetBtn.scrollIntoView === 'function') {
+          targetBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 50);
+  }
+}
+
+function openDocModal(docId) {
+  navigateToDoc(docId);
+}
+
 function renderSlideDeck(lang) {
   if (!SLIDES_CONTENT) return;
   if (!lang || !I18N_DICT[lang]) lang = localStorage.getItem('dev_hub_lang') || 'en';
   
-  // Render top number buttons
-  const topNumsContainer = document.getElementById('top-slide-numbers');
-  if (topNumsContainer) {
-    let topBtnsHtml = '';
-    for (let i = 1; i <= totalSlides; i++) {
-      const activeClass = (i === currentSlideIdx + 1) ? 'active' : '';
-      topBtnsHtml += `<button class="slide-num-btn ${activeClass}" id="top-btn-slide-${i}" onclick="goToSlide(${i - 1})">${i}</button>`;
-    }
-    topNumsContainer.innerHTML = topBtnsHtml;
-  }
+  // Render top number buttons based on active track
+  renderSlideNavButtons();
+
   // Update cinema mode button labels
   const cinemaLabels = {
     'et': '🖥️ Esitlusrežiim',
@@ -3957,119 +5717,102 @@ function renderSlideDeck(lang) {
     const tText = getSlideI18n(sData.title, lang);
     const lText = getSlideI18n(sData.lead, lang);
 
-    // Stepper Process Timeline or Comparison
     let diagramHtml = '';
     if (sData.comparison_diagram) {
       const cd = sData.comparison_diagram;
-      const defaultCompTitle = (lang === 'et') ? 'Taastamise ja töökindluse võrdlus' :
-                               (lang === 'fi') ? 'Palautumisen ja häiriönsietokyvyn vertailu' :
-                               (lang === 'sv') ? 'Jämförelse av återställning och driftsäkerhet' :
-                               (lang === 'lv') ? 'Atjaunošanas un noturības salīdzinājums' :
-                               (lang === 'lt') ? 'Atkūrimo ir atsparumo palyginimas' :
-                               'Recovery & Resilience Comparison';
+      const defaultCompTitle = (lang === 'et') ? 'Protsessi Võrdlus' : (lang === 'fi') ? 'Prosessivertailu' : (lang === 'sv') ? 'Processjämförelse' : (lang === 'lv') ? 'Procesa Salīdzinājums' : (lang === 'lt') ? 'Proceso Palyginimas' : 'Process Comparison';
       const cdTitle = getSlideI18n(cd.title, lang, defaultCompTitle);
       const badLabel = getSlideI18n(cd.bad && cd.bad.label, lang, 'TRADITIONAL');
       const goodLabel = getSlideI18n(cd.good && cd.good.label, lang, 'ORACLE DEVOPS PLATFORM');
       
-      const renderStepperSteps = (steps) => {
-        if (!steps || !Array.isArray(steps)) return '';
-        return steps.map((st, idx) => {
-          const num = idx + 1;
+      let badNodesHtml = '';
+      if (cd.bad && cd.bad.nodes) {
+        cd.bad.nodes.forEach(st => {
           const stTitle = getSlideI18n(st.title, lang);
           const stSub = getSlideI18n(st.sub, lang);
-          return `
-            <div class="stepper-step">
-              <div class="stepper-circle-wrap">
-                <div class="stepper-num">${num}</div>
-                <div class="stepper-line"></div>
-              </div>
-              <div class="stepper-body">
-                <div class="stepper-title">${stTitle}</div>
-                <div class="stepper-sub">${stSub}</div>
-              </div>
-            </div>
-          `;
-        }).join('');
-      };
+          badNodesHtml += `
+            <div class="slide-flow-step slide-step-bad">
+              <span class="slide-flow-step-icon">${st.icon || '⚠️'}</span>
+              <div class="slide-flow-step-title">${stTitle}</div>
+              <div class="slide-flow-step-sub">${stSub}</div>
+            </div>`;
+        });
+      }
 
-      const badNodes = (cd.bad && (cd.bad.nodes || cd.bad.steps)) || [];
-      const goodNodes = (cd.good && (cd.good.nodes || cd.good.steps)) || [];
+      let goodNodesHtml = '';
+      if (cd.good && cd.good.nodes) {
+        cd.good.nodes.forEach(st => {
+          const stTitle = getSlideI18n(st.title, lang);
+          const stSub = getSlideI18n(st.sub, lang);
+          goodNodesHtml += `
+            <div class="slide-flow-step slide-step-good">
+              <span class="slide-flow-step-icon">${st.icon || '✅'}</span>
+              <div class="slide-flow-step-title">${stTitle}</div>
+              <div class="slide-flow-step-sub">${stSub}</div>
+            </div>`;
+        });
+      }
 
       diagramHtml = `
-        <div class="stepper-card">
-          <div class="stepper-header">
-            <span class="stepper-header-icon">⚖️</span>
-            <span class="stepper-header-title">${cdTitle}</span>
-          </div>
-          <div class="comparison-stepper-list">
-            <div class="comparison-stepper-row bad">
-              <span class="comparison-track-label">${badLabel}</span>
-              <div class="stepper-timeline">${renderStepperSteps(badNodes)}</div>
+        <div class="slide-diagram-box">
+          <div class="slide-diagram-title">${cdTitle}</div>
+          <div class="slide-comparison-wrapper">
+            <div class="slide-flow-col slide-flow-bad">
+              <div class="slide-col-header slide-col-header-bad">${badLabel}</div>
+              <div class="slide-flow-row">${badNodesHtml}</div>
             </div>
-            <div class="comparison-stepper-row good">
-              <span class="comparison-track-label">${goodLabel}</span>
-              <div class="stepper-timeline">${renderStepperSteps(goodNodes)}</div>
+            <div class="slide-flow-col slide-flow-good">
+              <div class="slide-col-header slide-col-header-good">${goodLabel}</div>
+              <div class="slide-flow-row">${goodNodesHtml}</div>
             </div>
           </div>
-        </div>
-      `;
-    } else if (sData.diagram && (sData.diagram.steps || sData.diagram.nodes)) {
+        </div>`;
+    } else if (sData.diagram) {
       const d = sData.diagram;
-      const dTitle = getSlideI18n(d.title, lang, 'Protsessietapid');
-      const steps = d.steps || d.nodes || [];
-      const stepsHtml = steps.map((st, idx) => {
-        const num = idx + 1;
-        const stTitle = getSlideI18n(st.title, lang);
-        const stSub = getSlideI18n(st.sub, lang);
-        return `
-          <div class="stepper-step">
-            <div class="stepper-circle-wrap">
-              <div class="stepper-num">${num}</div>
-              <div class="stepper-line"></div>
-            </div>
-            <div class="stepper-body">
-              <div class="stepper-title">${stTitle}</div>
-              <div class="stepper-sub">${stSub}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
+      const dTitle = getSlideI18n(d.label || d.title, lang, 'Protsessietapid');
+      let stepsHtml = '';
+      if (d.steps) {
+        d.steps.forEach(st => {
+          const stTitle = getSlideI18n(st.title, lang);
+          const stSub = getSlideI18n(st.sub, lang);
+          stepsHtml += `
+            <div class="slide-flow-step">
+              <span class="slide-flow-step-icon">${st.icon || '⚡'}</span>
+              <div class="slide-flow-step-title">${stTitle}</div>
+              <div class="slide-flow-step-sub">${stSub}</div>
+            </div>`;
+        });
+      }
       diagramHtml = `
-        <div class="stepper-card">
-          <div class="stepper-header">
-            <span class="stepper-header-icon">⏱️</span>
-            <span class="stepper-header-title">${dTitle}</span>
-          </div>
-          <div class="stepper-timeline">
-            ${stepsHtml}
-          </div>
-        </div>
-      `;
+        <div class="slide-diagram-box">
+          <div class="slide-diagram-title">${dTitle}</div>
+          <div class="slide-flow-row">${stepsHtml}</div>
+        </div>`;
     }
 
-    // Cards
     let cardsHtml = '';
-    const numCards = sData.cards ? sData.cards.length : 0;
-    const gridClass = (numCards === 3) ? 'slide-grid-3' : (numCards === 2) ? 'slide-grid-2' : (numCards === 4) ? 'slide-grid-4' : 'slide-grid';
+    if (sData.cards && sData.cards.length > 0) {
+      let cList = '';
+      const copyLabel = (lang === 'et') ? 'Kopeeri' : (lang === 'fi') ? 'Kopioi' : (lang === 'sv') ? 'Kopiera' : (lang === 'lv') ? 'Kopēt' : (lang === 'lt') ? 'Kopijuoti' : 'Copy';
+      const numCards = sData.cards.length;
+      const gridClass = (numCards === 3) ? 'slide-grid-3' : (numCards === 2) ? 'slide-grid-2' : (numCards === 4) ? 'slide-grid-4' : (numCards === 5) ? 'slide-grid-5' : 'slide-grid';
 
-    cardsHtml += `<div class="${gridClass}">`;
-    if (sData.cards) {
       sData.cards.forEach(c => {
         const cTitle = getSlideI18n(c.title, lang);
         const cDesc = getSlideI18n(c.desc, lang);
         const iconHtml = c.icon ? `<span class="slide-card-icon-wrap">${c.icon}</span>` : '';
         const kpiHtml = c.kpi ? `<span class="slide-kpi-badge">${c.kpi}</span>` : '';
-        let cmdHtml = '';
+        
+        let codeBoxHtml = '';
         if (c.command) {
-          const copyLabel = (lang === 'et') ? '📋 Kopeeri' : (lang === 'fi') ? '📋 Kopioi' : (lang === 'sv') ? '📋 Kopiera' : (lang === 'lv') ? '📋 Kopēt' : (lang === 'lt') ? '📋 Kopijuoti' : '📋 Copy';
-          cmdHtml = `
+          codeBoxHtml = `
             <div class="slide-code-box">
               <code>${c.command}</code>
               <button class="slide-copy-btn" onclick="copySlideCode(this, '${c.command}')">${copyLabel}</button>
             </div>`;
         }
-        cardsHtml += `
+
+        cList += `
           <div class="slide-card">
             <div class="slide-card-top-row">
               ${iconHtml}
@@ -4077,24 +5820,45 @@ function renderSlideDeck(lang) {
             </div>
             <h4 class="slide-card-title">${cTitle}</h4>
             <p class="slide-card-desc">${cDesc}</p>
-            ${cmdHtml}
+            ${codeBoxHtml}
           </div>`;
       });
+      cardsHtml = `<div class="${gridClass}">${cList}</div>`;
     }
-    cardsHtml += `</div>`;
+    // Slide 12 actions (Open FAQ Center & Oracle Resources)
+    let slide12ActionsHtml = '';
+    if (sNum === 12) {
+      const faqBtnLabel = (I18N_DICT[lang] && I18N_DICT[lang].btn_open_full_faq) || 'Open FAQ Center (All Questions) →';
+      const resBtnLabel = (I18N_DICT[lang] && I18N_DICT[lang].btn_open_oracle_resources) || 'Official Oracle Resources & Images →';
+      slide12ActionsHtml = `
+        <div style="margin-top: 18px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="openFaqModal()" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; padding: 8px 18px; font-size: 0.88rem;">
+            <span>❓</span> <span>${faqBtnLabel}</span>
+          </button>
+          <button class="btn btn-secondary" onclick="openOracleResourcesModal()" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; padding: 8px 18px; font-size: 0.88rem;">
+            <span>🏛️</span> <span>${resBtnLabel}</span>
+          </button>
+        </div>`;
+    }
 
     // Slide 12 official Oracle resources pills
     let oracleLinksHtml = '';
-    if (sData.oracle_links && sData.oracle_links.length > 0) {
-      const oracleLabel = (lang === 'et') ? '🌐 Ametlikud Oracle dokumentatsiooni veebilingid:' : (lang === 'fi') ? '🌐 Viralliset Oracle-dokumentaatiolinkit:' : (lang === 'sv') ? '🌐 Officiella Oracle-dokumentationslänkar:' : (lang === 'lv') ? '🌐 Oficiālās Oracle dokumentācijas saites:' : (lang === 'lt') ? '🌐 Oficialios Oracle dokumentacijos nuorodos:' : '🌐 Official Oracle Documentation Resources:';
-      oracleLinksHtml += `
-        <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed rgba(255,255,255,0.1);">
-          <div style="font-size: 0.82rem; font-weight: 700; color: #f87171; margin-bottom: 8px;">${oracleLabel}</div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">`;
-      sData.oracle_links.forEach(l => {
-        oracleLinksHtml += `<a href="${l.url}" target="_blank" rel="noopener noreferrer" class="oracle-link-pill">🔗 ${l.title} ↗</a>`;
-      });
-      oracleLinksHtml += `</div></div>`;
+    if (sNum === 12 && sData.oracle_resources) {
+      const res = sData.oracle_resources;
+      const resTitle = getSlideI18n(res.title, lang);
+      let rLinks = '';
+      if (res.links) {
+        res.links.forEach(rl => {
+          const lTitle = getSlideI18n(rl.title, lang);
+          const icon = rl.icon || '🔗';
+          rLinks += `<a href="${rl.url}" target="_blank" rel="noopener noreferrer" class="slide-resource-pill"><span>${icon}</span> ${lTitle} ↗</a>`;
+        });
+      }
+      oracleLinksHtml = `
+        <div class="slide-resources-container">
+          <div class="slide-resources-title">${resTitle}</div>
+          <div class="slide-resources-grid">${rLinks}</div>
+        </div>`;
     }
 
     slideEl.innerHTML = `
@@ -4103,6 +5867,7 @@ function renderSlideDeck(lang) {
       <p class="slide-lead">${lText}</p>
       ${diagramHtml}
       ${cardsHtml}
+      ${slide12ActionsHtml}
       ${oracleLinksHtml}`;
   }
 
@@ -4122,7 +5887,10 @@ function updateSlideView() {
   if (counter) {
     const lang = localStorage.getItem('dev_hub_lang') || 'en';
     const label = (lang === 'et') ? 'Slaid' : (lang === 'fi') ? 'Dia' : (lang === 'sv') ? 'Bild' : (lang === 'lv') ? 'Slaids' : (lang === 'lt') ? 'Skaidrė' : 'Slide';
-    counter.textContent = `${label} ${currentSlideIdx + 1} / ${totalSlides}`;
+    const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+    const trackPos = allowed.indexOf(currentSlideIdx + 1) + 1;
+    const trackTotal = allowed.length;
+    counter.textContent = `${label} ${currentSlideIdx + 1} / ${totalSlides} (${trackPos}/${trackTotal})`;
   }
   
   // Update bottom dots
@@ -4136,14 +5904,7 @@ function updateSlideView() {
   }
 
   // Update top number buttons
-  const topNumsContainer = document.getElementById('top-slide-numbers');
-  if (topNumsContainer) {
-    const numBtns = topNumsContainer.getElementsByClassName('slide-num-btn');
-    for (let i = 0; i < numBtns.length; i++) {
-      if (i === currentSlideIdx) numBtns[i].classList.add('active');
-      else numBtns[i].classList.remove('active');
-    }
-  }
+  renderSlideNavButtons();
 
   // Update speaker notes
   const lang = localStorage.getItem('dev_hub_lang') || 'en';
@@ -4151,12 +5912,28 @@ function updateSlideView() {
 }
 
 function nextSlide() {
-  currentSlideIdx = (currentSlideIdx + 1) % totalSlides;
+  const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+  const currentNum = currentSlideIdx + 1;
+  const currPos = allowed.indexOf(currentNum);
+  if (currPos === -1) {
+    currentSlideIdx = allowed[0] - 1;
+  } else {
+    const nextPos = (currPos + 1) % allowed.length;
+    currentSlideIdx = allowed[nextPos] - 1;
+  }
   updateSlideView();
 }
 
 function prevSlide() {
-  currentSlideIdx = (currentSlideIdx - 1 + totalSlides) % totalSlides;
+  const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+  const currentNum = currentSlideIdx + 1;
+  const currPos = allowed.indexOf(currentNum);
+  if (currPos === -1) {
+    currentSlideIdx = allowed[0] - 1;
+  } else {
+    const prevPos = (currPos - 1 + allowed.length) % allowed.length;
+    currentSlideIdx = allowed[prevPos] - 1;
+  }
   updateSlideView();
 }
 
@@ -4220,6 +5997,11 @@ function openSlideModal() {
   syncModalSlide();
   window.addEventListener('keydown', handleModalKeyDown);
   handleModalMouseMove();
+  if (!document.fullscreenElement && backdrop.requestFullscreen) {
+    backdrop.requestFullscreen().catch(err => {
+      console.warn('Fullscreen request denied or not allowed:', err);
+    });
+  }
 }
 
 function closeSlideModal() {
@@ -4229,6 +6011,9 @@ function closeSlideModal() {
   document.body.style.overflow = '';
   window.removeEventListener('keydown', handleModalKeyDown);
   clearTimeout(modalIdleTimer);
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(err => console.warn(err));
+  }
   updateSlideView();
 }
 
@@ -4239,21 +6024,37 @@ function syncModalSlide() {
     modalContent.innerHTML = activeSlide.innerHTML;
   }
   
+  // Sync modal track buttons active state
+  ['all', 'exec', 'dev', 'devops', 'dba'].forEach(t => {
+    const modalBtn = document.getElementById(`modal-track-btn-${t}`);
+    if (modalBtn) modalBtn.classList.toggle('active', t === gActiveSlideTrack);
+  });
+
+  const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+  const currentNum = currentSlideIdx + 1;
+  const currPos = allowed.indexOf(currentNum);
+  const displayPos = (currPos !== -1) ? (currPos + 1) : 1;
+
   // Update modal slide counter
   const modalCounter = document.getElementById('modal-slide-counter');
   if (modalCounter) {
     const lang = localStorage.getItem('dev_hub_lang') || 'en';
     const label = (lang === 'et') ? 'Slaid' : (lang === 'fi') ? 'Dia' : (lang === 'sv') ? 'Bild' : (lang === 'lv') ? 'Slaids' : (lang === 'lt') ? 'Skaidrė' : 'Slide';
-    modalCounter.textContent = `${label} ${currentSlideIdx + 1} / ${totalSlides}`;
+    if (gActiveSlideTrack !== 'all') {
+      modalCounter.textContent = `${label} ${displayPos} / ${allowed.length} (${label} ${currentNum})`;
+    } else {
+      modalCounter.textContent = `${label} ${currentNum} / ${totalSlides}`;
+    }
   }
 
-  // Update modal bottom dots
+  // Update modal bottom dots based on active track
   const modalDotsContainer = document.getElementById('modal-slide-dots');
   if (modalDotsContainer) {
     let dotsHtml = '';
-    for (let i = 0; i < totalSlides; i++) {
-      const activeClass = (i === currentSlideIdx) ? 'active' : '';
-      dotsHtml += `<span class="slide-dot ${activeClass}" onclick="modalGoToSlide(${i})"></span>`;
+    for (let i = 0; i < allowed.length; i++) {
+      const sNum = allowed[i];
+      const activeClass = (sNum === currentNum) ? 'active' : '';
+      dotsHtml += `<span class="slide-dot ${activeClass}" onclick="modalGoToSlide(${sNum - 1})" title="Slaid ${sNum}"></span>`;
     }
     modalDotsContainer.innerHTML = dotsHtml;
   }
@@ -4263,12 +6064,28 @@ function syncModalSlide() {
 }
 
 function modalNextSlide() {
-  currentSlideIdx = (currentSlideIdx + 1) % totalSlides;
+  const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+  const currentNum = currentSlideIdx + 1;
+  const currPos = allowed.indexOf(currentNum);
+  if (currPos === -1) {
+    currentSlideIdx = allowed[0] - 1;
+  } else {
+    const nextPos = (currPos + 1) % allowed.length;
+    currentSlideIdx = allowed[nextPos] - 1;
+  }
   syncModalSlide();
 }
 
 function modalPrevSlide() {
-  currentSlideIdx = (currentSlideIdx - 1 + totalSlides) % totalSlides;
+  const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+  const currentNum = currentSlideIdx + 1;
+  const currPos = allowed.indexOf(currentNum);
+  if (currPos === -1) {
+    currentSlideIdx = allowed[0] - 1;
+  } else {
+    const prevPos = (currPos - 1 + allowed.length) % allowed.length;
+    currentSlideIdx = allowed[prevPos] - 1;
+  }
   syncModalSlide();
 }
 
@@ -4292,8 +6109,33 @@ function toggleModalFullscreen() {
 }
 
 function navigateToDoc(docId) {
+  if (typeof filterDocsCategory === 'function') {
+    gDocsSelectedCategory = 'all';
+    document.querySelectorAll('[id^="btn-docs-cat-"]').forEach(b => {
+      b.classList.toggle('active', b.id === 'btn-docs-cat-all');
+    });
+  }
+  let targetIdx = -1;
+  if (Array.isArray(DOCS_DATA)) {
+    const target = (docId || '').toLowerCase().trim();
+    targetIdx = DOCS_DATA.findIndex(d => {
+      if (!d || !d.rel) return false;
+      const relLower = d.rel.toLowerCase();
+      const base = relLower.split('/').pop().replace(/\.md$/, '');
+      const idLower = (d.id || '').toLowerCase();
+      return idLower === target || base === target || relLower.includes(target);
+    });
+  }
+  if (targetIdx !== -1) {
+    currentSelectedDocIdx = targetIdx;
+  }
   switchTab('tab-docs');
-  if (typeof selectDocById === 'function') {
+  if (targetIdx !== -1) {
+    loadDocContent(targetIdx);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 50);
+  } else if (typeof selectDocById === 'function') {
     selectDocById(docId);
   }
 }
@@ -4596,6 +6438,97 @@ function copyText(txt, btn) {
   });
 }
 
+let gWalletSelectedDb = 'all';
+let gWalletSearchQuery = '';
+
+function updateWalletRowsCounter(visibleCount, totalCount) {
+  const counterEl = document.getElementById('wallet-count-val');
+  if (!counterEl) return;
+  const rows = document.querySelectorAll('#wallet-matrix-drawer tbody tr');
+  const total = (totalCount !== undefined) ? totalCount : rows.length;
+  const visible = (visibleCount !== undefined) ? visibleCount : Array.from(rows).filter(r => r.style.display !== 'none').length;
+  const lang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[lang] || I18N_DICT['en'];
+  const tmpl = dict.wallet_showing_count || 'Showing: {count} accounts';
+  counterEl.textContent = tmpl.replace('{count}', `${visible} / ${total}`);
+}
+
+function handleWalletSearch(query) {
+  gWalletSearchQuery = (query || '').trim().toLowerCase();
+  const clearBtn = document.getElementById('wallet-search-clear');
+  if (clearBtn) {
+    clearBtn.style.display = gWalletSearchQuery ? 'block' : 'none';
+  }
+  applyWalletFilters();
+}
+
+function clearWalletSearch() {
+  const inp = document.getElementById('wallet-search-input');
+  if (inp) inp.value = '';
+  handleWalletSearch('');
+}
+
+function filterWalletByDb(dbName, btnEl) {
+  gWalletSelectedDb = dbName || 'all';
+  const buttons = document.querySelectorAll('.wallet-db-filter-btn');
+  buttons.forEach(b => {
+    if (b === btnEl || b.getAttribute('data-db') === gWalletSelectedDb) {
+      b.classList.add('active');
+      b.classList.remove('btn-secondary');
+      b.classList.add('btn-primary');
+    } else {
+      b.classList.remove('active');
+      b.classList.remove('btn-primary');
+      b.classList.add('btn-secondary');
+    }
+  });
+  applyWalletFilters();
+}
+
+function applyWalletFilters() {
+  const rows = document.querySelectorAll('#wallet-matrix-drawer tbody tr');
+  if (!rows || rows.length === 0) return;
+  
+  const tokens = gWalletSearchQuery.split(/\s+/).filter(Boolean);
+  let visibleCount = 0;
+
+  rows.forEach(row => {
+    const cname = row.getAttribute('data-cname') || '';
+    let dbMatch = false;
+
+    if (gWalletSelectedDb === 'all') {
+      dbMatch = true;
+    } else if (gWalletSelectedDb === 'active') {
+      dbMatch = isContainerRunning(cname);
+    } else if (gWalletSelectedDb === 'middleware') {
+      dbMatch = ['app-publisher', 'app-forms', 'web-ide', 'publisher-designer'].includes(cname);
+    } else if (gWalletSelectedDb === 'db-proxy') {
+      dbMatch = (cname === 'db-proxy' || cname === 'db-proxy-standalone' || cname === 'db-proxy-remote');
+    } else {
+      dbMatch = (cname === gWalletSelectedDb);
+    }
+
+    if (!dbMatch) {
+      row.style.display = 'none';
+      return;
+    }
+
+    if (tokens.length > 0) {
+      const text = row.innerText.toLowerCase();
+      const allTokensFound = tokens.every(tok => text.includes(tok));
+      if (!allTokensFound) {
+        row.style.display = 'none';
+        return;
+      }
+    }
+
+    row.style.display = '';
+    visibleCount++;
+  });
+
+  updateWalletRowsCounter(visibleCount, rows.length);
+}
+
 function toggleWalletMatrix(forceOpen) {
   const drawer = document.getElementById('wallet-matrix-drawer');
   const label = document.getElementById('wallet-toggle-label');
@@ -4603,20 +6536,23 @@ function toggleWalletMatrix(forceOpen) {
   if (!drawer) return;
   
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
-  const isOpen = (forceOpen !== undefined) ? !forceOpen : (drawer.style.maxHeight !== '0px' && drawer.style.maxHeight !== '');
+  const isOpen = (forceOpen !== undefined) ? !forceOpen : (drawer.classList.contains('is-open'));
   
   if (isOpen) {
     drawer.style.maxHeight = '0px';
     drawer.style.opacity = '0';
+    drawer.classList.remove('is-open');
     if (icon) icon.textContent = '➕';
     if (label) label.textContent = (I18N_DICT[currentLang] && I18N_DICT[currentLang]['toggle_show_matrix']) || 'Show Matrix';
     localStorage.setItem('dev_hub_wallet_open', 'false');
   } else {
-    drawer.style.maxHeight = '2500px';
+    drawer.style.maxHeight = 'none';
     drawer.style.opacity = '1';
+    drawer.classList.add('is-open');
     if (icon) icon.textContent = '➖';
     if (label) label.textContent = (I18N_DICT[currentLang] && I18N_DICT[currentLang]['toggle_hide_matrix']) || 'Hide Matrix';
     localStorage.setItem('dev_hub_wallet_open', 'true');
+    applyWalletFilters();
   }
 }
 
@@ -5217,29 +7153,36 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
         </div>
       </div>
 
-      <!-- Live Monospace Terminal Log Box -->
-      <div style="font-size: 0.74rem; color: #64748b; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
-        <span>💻 ${dict.snap_output_title || 'Terminali väljund ja logi'}</span>
-        <span style="font-family: ui-monospace, monospace; color: #94a3b8;">$ ${cmdStr}</span>
+      <!-- Live Monospace Terminal Log Box (Full Width) -->
+      <div class="terminal-column-pane" id="${containerId}-output-pane" style="position: relative;">
+        <div class="terminal-column-header">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span>💻</span>
+            <strong style="color: #cbd5e1;">${dict.snap_output_title || 'Terminali väljund ja logi'}</strong>
+          </div>
+          <span style="font-family: ui-monospace, monospace; color: #64748b; font-size: 0.72rem;">$ ${cmdStr}</span>
+        </div>
+        <pre id="${containerId}-output" class="terminal-column-content" style="min-height: 280px; height: 280px; max-height: 280px; box-sizing: border-box;"></pre>
+        <button id="${containerId}-scroll-btn" type="button" class="terminal-scroll-pill" style="display: none;" onclick="scrollTerminalToBottom('${containerId}')">
+          <span>⬇️</span> <span>${dict.btn_scroll_bottom || 'Hüppa viimasele reale'}</span>
+        </button>
       </div>
-      <pre id="${containerId}-output" style="margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; font-size: 0.76rem; color: #cbd5e1; background: #000; border: 1px solid #1e293b; border-radius: 6px; padding: 10px; max-height: 170px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.45;"></pre>
 
-      <!-- Active Log File Bar -->
-      <div id="${containerId}-log-bar" style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center; background: rgba(15,23,42,0.8); border: 1px solid #1e293b; border-radius: 6px; padding: 6px 10px; font-size: 0.76rem; flex-wrap: wrap; gap: 6px;">
+      <!-- Active Log File Bar with Full Modal Expander -->
+      <div id="${containerId}-log-bar" style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center; background: rgba(15,23,42,0.8); border: 1px solid #1e293b; border-radius: 6px; padding: 6px 12px; font-size: 0.76rem; flex-wrap: wrap; gap: 6px;">
         <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
           <span style="color: #94a3b8; font-size: 0.74rem; white-space: nowrap;">📄 ${dict.label_active_log || 'Aktiivne logifail'}:</span>
-          <span id="${containerId}-log-path" data-log-file="${initialLogName}" style="color: #38bdf8; font-family: ui-monospace, monospace; font-size: 0.76rem; text-decoration: underline; cursor: pointer; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" onclick="toggleActiveTerminalLog('${containerId}')" title="${dict.tip_click_open_log || 'Klõpsa logi avamiseks'}">${initialLogRel}</span>
+          <span id="${containerId}-log-path" data-log-file="${initialLogName}" style="color: #38bdf8; font-family: ui-monospace, monospace; font-size: 0.76rem; text-decoration: underline; cursor: pointer; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" onclick="toggleActiveTerminalLog('${containerId}')" title="${dict.tip_click_open_log || 'Klõpsa logi avamiseks eraldi aknas'}">${initialLogRel}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 6px;">
-          <button type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.72rem;" onclick="copyActiveLogPath(document.getElementById('${containerId}-log-path').getAttribute('data-full-path') || document.getElementById('${containerId}-log-path').textContent, this)" title="${dict.btn_copy_path || 'Kopeeri tee'}">
+          <button type="button" class="btn btn-secondary" style="padding: 3px 9px; font-size: 0.72rem;" onclick="copyActiveLogPath(document.getElementById('${containerId}-log-path')?.getAttribute('data-full-path') || document.getElementById('${containerId}-log-path')?.textContent || '', this)" title="${dict.btn_copy_path || 'Kopeeri tee'}">
             <span>📋</span> <span>${dict.btn_copy_path || 'Kopeeri tee'}</span>
           </button>
-          <button id="${containerId}-log-toggle-btn" type="button" class="btn btn-secondary" style="padding: 2px 8px; font-size: 0.72rem;" onclick="toggleActiveTerminalLog('${containerId}')">
-            <span>👁️</span> <span>${dict.btn_open_log || 'Ava logi'}</span>
+          <button id="${containerId}-log-toggle-btn" type="button" class="btn btn-primary" style="padding: 3px 10px; font-size: 0.72rem;" onclick="toggleActiveTerminalLog('${containerId}')">
+            <span>🔍</span> <span>${dict.btn_open_modal_log || dict.btn_open_log || 'Ava täielik logi'}</span>
           </button>
         </div>
       </div>
-      <div id="${containerId}-full-log-viewer" style="display: none; margin-top: 6px; background: #030712; border: 1px solid #334155; border-radius: 6px; padding: 10px; font-family: ui-monospace, monospace; font-size: 0.74rem; color: #cbd5e1; max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;"></div>
 
       <!-- Completed Result Notification Box -->
       <div id="${containerId}-result" style="display: none; margin-top: 12px; background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px; padding: 12px;"></div>
@@ -5252,30 +7195,58 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
   const barEl = document.getElementById(`${containerId}-bar`);
   const outEl = document.getElementById(`${containerId}-output`);
   const resEl = document.getElementById(`${containerId}-result`);
+  const scrollBtn = document.getElementById(`${containerId}-scroll-btn`);
 
   let seconds = 0;
   const logLines = [];
+  let isUserScrolledUp = false;
+
+  if (outEl) {
+    outEl.addEventListener('scroll', () => {
+      const distanceFromBottom = outEl.scrollHeight - outEl.scrollTop - outEl.clientHeight;
+      if (distanceFromBottom > 30) {
+        isUserScrolledUp = true;
+        if (scrollBtn) scrollBtn.style.display = 'flex';
+      } else {
+        isUserScrolledUp = false;
+        if (scrollBtn) scrollBtn.style.display = 'none';
+      }
+    });
+  }
+
+  window[`scrollTerminalToBottom_${containerId}`] = () => {
+    isUserScrolledUp = false;
+    if (outEl) {
+      outEl.scrollTop = outEl.scrollHeight;
+    }
+    if (scrollBtn) scrollBtn.style.display = 'none';
+  };
 
   function appendLog(line) {
     logLines.push(line);
     if (outEl) {
-      outEl.textContent = logLines.join('\n');
-      outEl.scrollTop = outEl.scrollHeight;
+      outEl.innerHTML = formatTerminalLogText(logLines.join('\n'), { showTime: true, showColors: true });
+      if (!isUserScrolledUp) {
+        outEl.scrollTop = outEl.scrollHeight;
+      }
     }
   }
 
-  appendLog(`[00:00] Käivitan: ${cmdStr}`);
+  const startClockTime = new Date().toLocaleTimeString('et-EE', { hour12: false });
+  appendLog(`[${startClockTime}] Käivitan: ${cmdStr}`);
 
   function updateUI() {
     const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
     const ss = String(seconds % 60).padStart(2, '0');
     if (timerEl) timerEl.textContent = `⏱️ ${mm}:${ss}`;
 
+    const nowTime = new Date().toLocaleTimeString('et-EE', { hour12: false });
+
     if (opType === 'create') {
-      if (seconds === 2) appendLog(`[${mm}:${ss}] Kontrollin andmebaasi seisu ja teostan CHECKPOINT...`);
-      if (seconds === 6) appendLog(`[${mm}:${ss}] SGA puhvrid kettale kirjutatud. Alustan oradata tihendamist tar.gz arhiivi...`);
-      if (seconds === 16) appendLog(`[${mm}:${ss}] Tihendamine käib: ~500 MB töödeldud...`);
-      if (seconds === 30) appendLog(`[${mm}:${ss}] Tihendamine lõpusirgel: pakin metaandmeid (.meta.json)...`);
+      if (seconds === 2) appendLog(`[${nowTime}] Kontrollin andmebaasi seisu ja teostan CHECKPOINT...`);
+      if (seconds === 6) appendLog(`[${nowTime}] SGA puhvrid kettale kirjutatud. Alustan oradata tihendamist tar.gz arhiivi...`);
+      if (seconds === 16) appendLog(`[${nowTime}] Tihendamine käib: ~500 MB töödeldud...`);
+      if (seconds === 30) appendLog(`[${nowTime}] Tihendamine lõpusirgel: pakin metaandmeid (.meta.json)...`);
 
       if (seconds < 8) {
         if (phaseEl) phaseEl.textContent = dict.snap_phase_checkpoint || '1/3: Oracle DB SGA puhvrite tühjendamine (CHECKPOINT)...';
@@ -5294,9 +7265,9 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
         if (barEl) barEl.style.width = `${p}%`;
       }
     } else if (opType === 'restore') {
-      if (seconds === 2) appendLog(`[${mm}:${ss}] Peatan ajutiselt aktiivsed konteinerid andmekonsistentsi tagamiseks...`);
-      if (seconds === 6) appendLog(`[${mm}:${ss}] Eemaldan vana oradata mahu ja paki lahti kuldse hetktõmmise...`);
-      if (seconds === 16) appendLog(`[${mm}:${ss}] Käivitan konteinerid ja kontrollin SEPS Wallet ühendusi...`);
+      if (seconds === 2) appendLog(`[${nowTime}] Peatan ajutiselt aktiivsed konteinerid andmekonsistentsi tagamiseks...`);
+      if (seconds === 6) appendLog(`[${nowTime}] Eemaldan vana oradata mahu ja paki lahti kuldse hetktõmmise...`);
+      if (seconds === 16) appendLog(`[${nowTime}] Käivitan konteinerid ja kontrollin SEPS Wallet ühendusi...`);
 
       if (seconds < 6) {
         if (phaseEl) phaseEl.textContent = dict.snap_phase_stop || '1/3: Konteinerite peatamine...';
@@ -5315,10 +7286,10 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
         if (barEl) barEl.style.width = `${p}%`;
       }
     } else if (opType === 'reset_deep') {
-      if (seconds === 2) appendLog(`[${mm}:${ss}] Alustan süvapuhastust (reset-all.sh)...`);
-      if (seconds === 25) appendLog(`[${mm}:${ss}] Puhastus lõpetatud. Alustan täispaigaldust nullist (setup-all.sh)...`);
-      if (seconds === 90) appendLog(`[${mm}:${ss}] Ootan Oracle DB tervislikku seisundit ja käivitan teenuseid...`);
-      if (seconds === 240) appendLog(`[${mm}:${ss}] DB tervislik. Teostan skeemide, kasutajate ja SEPS rahakoti seadistuse...`);
+      if (seconds === 2) appendLog(`[${nowTime}] Alustan süvapuhastust (reset-all.sh)...`);
+      if (seconds === 25) appendLog(`[${nowTime}] Puhastus lõpetatud. Alustan täispaigaldust nullist (setup-all.sh)...`);
+      if (seconds === 90) appendLog(`[${nowTime}] Ootan Oracle DB tervislikku seisundit ja käivitan teenuseid...`);
+      if (seconds === 240) appendLog(`[${nowTime}] DB tervislik. Teostan skeemide, kasutajate ja SEPS rahakoti seadistuse...`);
 
       if (seconds < 25) {
         if (phaseEl) phaseEl.textContent = dict.snap_phase_deep_1 || '1/3: Konteinerite, mahtude ja sertifikaatide täispuhastus (reset-all)...';
@@ -5337,11 +7308,11 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
         if (barEl) barEl.style.width = `${p}%`;
       }
     } else if (opType === 'setup' || opType === 'activate') {
-      if (seconds === 2) appendLog(`[${mm}:${ss}] Alustan arhitektuuri paigaldust ja seadistust (setup-all.sh)...`);
-      if (seconds === 20) appendLog(`[${mm}:${ss}] Konteinerid käivitatud. Ootan andmebaasi tervislikku olekut...`);
-      if (seconds === 90) appendLog(`[${mm}:${ss}] Andmebaasi tervisekontroll käib: initsialiseerin PDB ja andmeruume...`);
-      if (seconds === 180) appendLog(`[${mm}:${ss}] Seadistan profiili kasutajaid, skeeme, õigusi ja SEPS rahakotti...`);
-      if (seconds === 300) appendLog(`[${mm}:${ss}] Seadistan ORDS basseine ja kontrollin veebiteenuste valmidust...`);
+      if (seconds === 2) appendLog(`[${nowTime}] Alustan arhitektuuri paigaldust ja seadistust (setup-all.sh)...`);
+      if (seconds === 20) appendLog(`[${nowTime}] Konteinerid käivitatud. Ootan andmebaasi tervislikku olekut...`);
+      if (seconds === 90) appendLog(`[${nowTime}] Andmebaasi tervisekontroll käib: initsialiseerin PDB ja andmeruume...`);
+      if (seconds === 180) appendLog(`[${nowTime}] Seadistan profiili kasutajaid, skeeme, õigusi ja SEPS rahakotti...`);
+      if (seconds === 300) appendLog(`[${nowTime}] Seadistan ORDS basseine ja kontrollin veebiteenuste valmidust...`);
 
       if (seconds < 25) {
         if (phaseEl) phaseEl.textContent = dict.ops_phase_setup_1 || '1/4: Konteinerite käivitamine ja võrgu seadistus...';
@@ -5365,10 +7336,10 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
         if (barEl) barEl.style.width = `${p}%`;
       }
     } else if (opType === 'switch' || opType === 'start' || opType === 'deploy') {
-      if (seconds === 2) appendLog(`[${mm}:${ss}] Kontrollin konfiguratsiooni ja võrgupordi ressursse...`);
-      if (seconds === 6) appendLog(`[${mm}:${ss}] Käivitan valitud arhitektuuri konteinereid ja teenuseid...`);
-      if (seconds === 14) appendLog(`[${mm}:${ss}] Ootan tervislikku olekut ja uuendan SEPS Wallet aliaseid...`);
-      if (seconds === 24) appendLog(`[${mm}:${ss}] Kontrollin ORDS ja APEX portaalide valmidust...`);
+      if (seconds === 2) appendLog(`[${nowTime}] Kontrollin konfiguratsiooni ja võrgupordi ressursse...`);
+      if (seconds === 6) appendLog(`[${nowTime}] Käivitan valitud arhitektuuri konteinereid ja teenuseid...`);
+      if (seconds === 14) appendLog(`[${nowTime}] Ootan tervislikku olekut ja uuendan SEPS Wallet aliaseid...`);
+      if (seconds === 24) appendLog(`[${nowTime}] Kontrollin ORDS ja APEX portaalide valmidust...`);
       if (seconds < 6) {
         if (phaseEl) phaseEl.textContent = dict.ops_phase_deploy_1 || '1/3: Konfiguratsiooni kontroll ja ettevalmistus...';
         const p = Math.min(30, seconds * 5);
@@ -5386,8 +7357,8 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
         if (barEl) barEl.style.width = `${p}%`;
       }
     } else if (opType === 'stop') {
-      if (seconds === 1) appendLog(`[${mm}:${ss}] Peatan arhitektuuri teenuseid ja vabastan mälu (0 MB RAM)...`);
-      if (seconds === 3) appendLog(`[${mm}:${ss}] Ootan konteinerite ohutut seiskumist ja võrguportide vabastamist...`);
+      if (seconds === 1) appendLog(`[${nowTime}] Peatan arhitektuuri teenuseid ja vabastan mälu (0 MB RAM)...`);
+      if (seconds === 3) appendLog(`[${nowTime}] Ootan konteinerite ohutut seiskumist ja võrguportide vabastamist...`);
       if (seconds < 4) {
         if (phaseEl) phaseEl.textContent = dict.ops_phase_stop_1 || '1/2: Konteinerite ohutu peatamine...';
         const p = Math.min(60, seconds * 20);
@@ -5400,10 +7371,10 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
         if (barEl) barEl.style.width = `${p}%`;
       }
     } else if (opType === 'restart') {
-      if (seconds === 2) appendLog(`[${mm}:${ss}] Taaskäivitan arhitektuuri teenuseid ja kontrollin konfiguratsiooni...`);
-      if (seconds === 6) appendLog(`[${mm}:${ss}] Kontrollin konteinerite tervislikku seisundit ja võrguporte...`);
-      if (seconds === 12) appendLog(`[${mm}:${ss}] Kinnitan SEPS Wallet ja ORDS ühenduste toimimist...`);
-      if (seconds === 22) appendLog(`[${mm}:${ss}] Viimistlen taaskäivituse olekut ja teenuste valmidust...`);
+      if (seconds === 2) appendLog(`[${nowTime}] Taaskäivitan arhitektuuri teenuseid ja kontrollin konfiguratsiooni...`);
+      if (seconds === 6) appendLog(`[${nowTime}] Kontrollin konteinerite tervislikku seisundit ja võrguporte...`);
+      if (seconds === 12) appendLog(`[${nowTime}] Kinnitan SEPS Wallet ja ORDS ühenduste toimimist...`);
+      if (seconds === 22) appendLog(`[${nowTime}] Viimistlen taaskäivituse olekut ja teenuste valmidust...`);
       if (seconds < 6) {
         if (phaseEl) phaseEl.textContent = dict.ops_phase_restart_1 || '1/3: Teenuste ja konteinerite taaskäivitamine...';
         const p = Math.min(35, seconds * 6);
@@ -5421,8 +7392,8 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
         if (barEl) barEl.style.width = `${p}%`;
       }
     } else if (opType === 'diag') {
-      if (seconds === 1) appendLog(`[${mm}:${ss}] Käivitan testimise ja diagnostika skripti...`);
-      if (seconds === 4) appendLog(`[${mm}:${ss}] Ootan vastust ja analüüsin tulemusi...`);
+      if (seconds === 1) appendLog(`[${nowTime}] Käivitan testimise ja diagnostika skripti...`);
+      if (seconds === 4) appendLog(`[${nowTime}] Ootan vastust ja analüüsin tulemusi...`);
       if (phaseEl) phaseEl.textContent = 'Diagnostikakäsu käivitamine ja analüüs...';
       const p = Math.min(95, 20 + Math.floor(seconds * 15));
       if (pctEl) pctEl.textContent = `${p}%`;
@@ -5441,15 +7412,25 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
     pollCounter++;
     if (pollCounter % 2 === 0 && initialLogName) {
       try {
-        const resp = await fetch(`${BRIDGE_URL}/api/log/read?file=${encodeURIComponent(initialLogName)}`);
-        if (resp.ok) {
+        let resp = null;
+        try {
+          resp = await fetch(`${BRIDGE_URL}/api/log/read?file=${encodeURIComponent(initialLogName)}`);
+        } catch (fetchErr) {
+          if (typeof BRIDGE_URL_ALT !== 'undefined' && BRIDGE_URL_ALT && BRIDGE_URL_ALT !== BRIDGE_URL) {
+            resp = await fetch(`${BRIDGE_URL_ALT}/api/log/read?file=${encodeURIComponent(initialLogName)}`);
+          }
+        }
+        if (resp && resp.ok) {
           const d = await resp.json();
-          if (d.content && d.content.trim()) {
+          // 🛡️ Guardrail: Never overwrite live streaming output if log file was not found yet
+          if (d && (d.ok || d.status === 'ok') && d.found !== false && d.content && d.content.trim()) {
             const rawLines = d.content.trim().split('\n');
-            const recent = rawLines.slice(-25).join('\n');
+            const recent = rawLines.slice(-35).join('\n');
             if (outEl && recent) {
-              outEl.textContent = recent;
-              outEl.scrollTop = outEl.scrollHeight;
+              outEl.innerHTML = formatTerminalLogText(recent, { showTime: true, showColors: true });
+              if (!isUserScrolledUp) {
+                outEl.scrollTop = outEl.scrollHeight;
+              }
             }
           }
         }
@@ -5471,7 +7452,8 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
       }
 
       if (data && data.output) {
-        appendLog(`\n--- [${mm}:${ss}] Täielik skripti väljund: ---\n` + data.output);
+        const finishTime = new Date().toLocaleTimeString('et-EE', { hour12: false });
+        appendLog(`\n--- [${finishTime}] Täielik skripti väljund: ---\n` + data.output);
       }
 
       if (data && (data.log_file || data.log_relative_path)) {
@@ -5481,6 +7463,10 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
           logPathEl.textContent = rel;
           logPathEl.setAttribute('data-log-file', data.log_file);
           if (data.log_full_path) logPathEl.setAttribute('data-full-path', data.log_full_path);
+        }
+        const splitLogLabel = document.getElementById(`${containerId}-split-log-label`);
+        if (splitLogLabel) {
+          splitLogLabel.textContent = data.log_relative_path || ('install_logs/' + data.log_file);
         }
       }
       if (typeof activeBpModalNum === 'number') {
@@ -6231,7 +8217,7 @@ function filterTestingSuites() {
   const emptyEl = document.getElementById('testing-empty-state');
   const gridEl = document.getElementById('testing-suites-grid');
 
-  const q = (searchInput ? searchInput.value : '').toLowerCase().trim();
+  const q = ((searchInput && searchInput.value) || '').toLowerCase().trim();
   if (clearBtn) {
     clearBtn.style.display = q ? 'inline-block' : 'none';
   }
@@ -6511,7 +8497,7 @@ function runViewedScript() {
 function openDocFromTestModal() {
   if (!currentViewedDocRel) return;
   closeSuiteTestsModal();
-  switchTab('docs');
+  switchTab('tab-docs');
   const targetRel = currentViewedDocRel.replace(/^\//, '');
   const targetBasename = targetRel.split('/').pop();
   if (Array.isArray(DOCS_DATA)) {
@@ -6592,6 +8578,63 @@ function runSecurityAuditFromMenu() {
   }, 100);
 }
 
+function openFaqFromMenu() {
+  const btn = document.getElementById('enterprise-dropdown-btn');
+  const menu = document.getElementById('enterprise-dropdown-menu');
+  if (menu) menu.classList.remove('show');
+  if (btn) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  if (typeof openFaqModal === 'function') {
+    openFaqModal();
+  }
+}
+
+function openOracleResourcesFromMenu() {
+  const btn = document.getElementById('enterprise-dropdown-btn');
+  const menu = document.getElementById('enterprise-dropdown-menu');
+  if (menu) menu.classList.remove('show');
+  if (btn) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  if (typeof openOracleResourcesModal === 'function') {
+    openOracleResourcesModal();
+  }
+}
+
+function openGlossaryFromMenu() {
+  const btn = document.getElementById('enterprise-dropdown-btn');
+  const menu = document.getElementById('enterprise-dropdown-menu');
+  if (menu) menu.classList.remove('show');
+  if (btn) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  if (typeof openGlossaryModal === 'function') {
+    openGlossaryModal();
+  }
+}
+
+function runLocalCiFromMenu() {
+  const btn = document.getElementById('enterprise-dropdown-btn');
+  const menu = document.getElementById('enterprise-dropdown-menu');
+  if (menu) menu.classList.remove('show');
+  if (btn) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  switchTab('tab-testing');
+  setTimeout(() => {
+    runTestSuite('ci_sim');
+    const term = document.getElementById('testing-terminal-output');
+    if (term) {
+      term.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, 100);
+}
+
 document.addEventListener('click', function(event) {
   const menu = document.getElementById('enterprise-dropdown-menu');
   const btn = document.getElementById('enterprise-dropdown-btn');
@@ -6663,6 +8706,11 @@ function runTestSuite(suiteKey, scriptName) {
   }
   if (stopBtn) stopBtn.style.display = 'inline-flex';
   if (dlBtn) dlBtn.style.display = 'none';
+
+  const termSection = document.getElementById('testing-terminal-section');
+  if (termSection) {
+    termSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 
   testTimerSeconds = 0;
   if (timerEl) timerEl.innerText = '00:00:00';
@@ -7104,9 +9152,41 @@ document.addEventListener('DOMContentLoaded', () => {
     initTestingTab();
   }
 
-  // Initialize DevOps filter counter
-  filterDevOpsCards();
-  loadRepoStatistics();
+  // URL parameters and hash routing (e.g. #tab-docs, #tab-testing, ?tab=docs&doc=readme&lang=lt)
+  const urlParams = new URLSearchParams(window.location.search);
+  const hashParam = (window.location.hash || '').replace(/^#/, '');
+  const rawTab = urlParams.get('tab');
+  const cleanHash = hashParam.split('?')[0];
+  let targetTab = null;
+  if (rawTab) {
+    targetTab = rawTab.startsWith('tab-') ? rawTab : `tab-${rawTab}`;
+  } else if (cleanHash) {
+    targetTab = cleanHash.startsWith('tab-') ? cleanHash : (cleanHash === 'docs' ? 'tab-docs' : (cleanHash === 'testing' ? 'tab-testing' : (cleanHash === 'services' ? 'tab-services' : null)));
+  }
+  const targetLang = urlParams.get('lang');
+  if (targetLang && ['en', 'et', 'fi', 'sv', 'lv', 'lt'].includes(targetLang)) {
+    setLanguage(targetLang);
+  }
+  if (targetTab) {
+    switchTab(targetTab, true);
+  } else {
+    const activeTabs = document.querySelectorAll('.tab-content.active');
+    if (activeTabs.length === 0) {
+      switchTab('tab-services', true);
+    }
+  }
+  let targetDoc = urlParams.get('doc');
+  if (!targetDoc && window.location.hash.includes('?doc=')) {
+    targetDoc = decodeURIComponent(window.location.hash.split('?doc=')[1].split('&')[0].split('#')[0]);
+  }
+  if (targetDoc && typeof DOCS_DATA !== 'undefined') {
+    setTimeout(() => navigateToDoc(targetDoc), 120);
+  }
+
+  // Initialize Navigation History (Browser Back & In-App Back)
+  initNavigationHistory();
+  // Initialize Global Spotlight Omnisearch
+  initGlobalSearchInput();
 });
 
 /* ==============================================================================
@@ -7131,8 +9211,8 @@ function openGlossaryModal(initialSearch) {
       gGlossarySearchTerm = initialSearch.toLowerCase().trim();
     }
     setTimeout(() => {
-      searchInput.focus();
-      if (initialSearch) searchInput.select();
+      if (typeof searchInput.focus === 'function') searchInput.focus();
+      if (initialSearch && typeof searchInput.select === 'function') searchInput.select();
     }, 50);
   }
 
@@ -7368,3 +9448,1535 @@ function handleGlossaryLinkClick(url) {
     switchTab('tab-docs');
   }
 }
+
+/* ==============================================================================
+ * Central FAQ Modal & Oracle Resources Modal Controller
+ * ============================================================================== */
+
+let gActiveFaqCategory = 'all';
+let gFaqSearchTerm = '';
+
+function openFaqModal(initialCategory, initialSearch) {
+  const modal = document.getElementById('faq-modal-backdrop');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  if (initialCategory) {
+    gActiveFaqCategory = initialCategory;
+  }
+  const searchInput = document.getElementById('faq-search-input');
+  if (searchInput) {
+    if (typeof initialSearch === 'string') {
+      searchInput.value = initialSearch;
+      gFaqSearchTerm = initialSearch.toLowerCase().trim();
+    }
+    setTimeout(() => {
+      if (typeof searchInput.focus === 'function') searchInput.focus();
+      if (initialSearch && typeof searchInput.select === 'function') searchInput.select();
+    }, 50);
+  }
+  renderFaqModal();
+}
+
+function closeFaqModal(event) {
+  if (event && event.target && event.target.closest && event.target.closest('.faq-modal-content') && event.target !== event.currentTarget) {
+    return;
+  }
+  const modal = document.getElementById('faq-modal-backdrop');
+  if (!modal) return;
+  modal.style.display = 'none';
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function selectFaqCategory(catId) {
+  gActiveFaqCategory = catId;
+  renderFaqModal();
+}
+
+function filterFaqCards() {
+  const input = document.getElementById('faq-search-input');
+  if (input) {
+    gFaqSearchTerm = input.value;
+  }
+  renderFaqModal();
+}
+
+function clearFaqSearch() {
+  const input = document.getElementById('faq-search-input');
+  if (input) {
+    input.value = '';
+    gFaqSearchTerm = '';
+  }
+  renderFaqModal();
+}
+
+function renderFaqModal() {
+  const catalog = window.FAQ_DATA || [];
+  const categories = window.FAQ_CATEGORIES || [];
+  const container = document.getElementById('faq-cards-container');
+  const catBar = document.getElementById('faq-categories-bar');
+  const counterEl = document.getElementById('faq-counter');
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+
+  if (!container || !catBar) return;
+
+  // Render category buttons
+  let catHtml = '';
+  categories.forEach(cat => {
+    const cLabel = (cat.labels && (cat.labels[currentLang] || cat.labels.en)) || cat.id;
+    const isActive = gActiveFaqCategory === cat.id ? 'active' : '';
+    catHtml += `<button class="faq-cat-btn ${isActive}" onclick="selectFaqCategory('${cat.id}')">${cLabel}</button>`;
+  });
+  catBar.innerHTML = catHtml;
+
+  const term = (gFaqSearchTerm || '').toLowerCase().trim();
+  const clearBtn = document.getElementById('faq-clear-search');
+  if (clearBtn) clearBtn.style.display = term ? 'block' : 'none';
+
+  const filtered = catalog.filter(item => {
+    if (gActiveFaqCategory !== 'all' && item.category !== gActiveFaqCategory) {
+      return false;
+    }
+    if (!term) return true;
+
+    const q = ((item.question && (item.question[currentLang] || item.question.en)) || '').toLowerCase();
+    const a = ((item.answer && (item.answer[currentLang] || item.answer.en)) || '').toLowerCase();
+    const c = (item.code_snippet || '').toLowerCase();
+    const cat = (item.category || '').toLowerCase();
+    const id = (item.id || '').toLowerCase();
+    const idSpaced = id.replace(/-/g, ' ');
+
+    return q.includes(term) || a.includes(term) || c.includes(term) || cat.includes(term) || id.includes(term) || idSpaced.includes(term);
+  });
+
+  if (counterEl) {
+    const suffix = (I18N_DICT[currentLang] && I18N_DICT[currentLang].faq_counter_suffix) || 'questions';
+    counterEl.textContent = `${filtered.length} / ${catalog.length} ${suffix}`;
+  }
+
+  if (filtered.length === 0) {
+    const noResultsTitle = (I18N_DICT[currentLang] && I18N_DICT[currentLang].faq_no_results) || 'No questions found';
+    container.innerHTML = `
+      <div style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
+        <div style="font-size: 2.5rem; margin-bottom: 12px;">🔍</div>
+        <div style="font-size: 1.05rem; font-weight: 600; color: #e2e8f0; margin-bottom: 6px;">${noResultsTitle}</div>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+  filtered.forEach(item => {
+    const qText = (item.question && (item.question[currentLang] || item.question.en)) || '';
+    const aText = (item.answer && (item.answer[currentLang] || item.answer.en)) || '';
+    const icon = item.icon || '❓';
+    
+    // Find category label
+    const catObj = categories.find(c => c.id === item.category);
+    const catLabel = (catObj && catObj.labels && (catObj.labels[currentLang] || catObj.labels.en)) || item.category;
+
+    let codeHtml = '';
+    if (item.code_snippet) {
+      codeHtml = `
+        <div class="code-box" style="margin: 10px 0 0 0; font-size: 0.8rem;">
+          <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          ${item.code_snippet.replace(/\n/g, '<br/>')}
+        </div>`;
+    }
+
+    let linksHtml = '';
+    if (item.links && item.links.length > 0) {
+      const linkPills = item.links.map(l => {
+        return `<a href="javascript:void(0)" onclick="handleGlossaryLinkClick('${l.url}')" style="font-size: 0.76rem; color: #38bdf8; text-decoration: none; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); padding: 2px 8px; border-radius: 4px;">📖 ${l.label}</a>`;
+      }).join(' ');
+      linksHtml = `<div class="faq-card-links">${linkPills}</div>`;
+    }
+
+    html += `
+      <div class="faq-card">
+        <div class="faq-card-header">
+          <div class="faq-card-title">
+            <span>${icon}</span>
+            <span>${qText}</span>
+          </div>
+          <span class="faq-category-pill">${catLabel}</span>
+        </div>
+        <p class="faq-card-answer">${aText}</p>
+        ${codeHtml}
+        ${linksHtml}
+      </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+let gActiveOracleResCategory = 'all';
+let gOracleResSearchTerm = '';
+
+function openOracleResourcesModal(initialCategory, initialSearch) {
+  const modal = document.getElementById('oracle-resources-modal-backdrop');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  if (initialCategory) {
+    gActiveOracleResCategory = initialCategory;
+  }
+  const searchInput = document.getElementById('oracle-resources-search-input');
+  if (searchInput) {
+    if (typeof initialSearch === 'string') {
+      searchInput.value = initialSearch;
+      gOracleResSearchTerm = initialSearch.toLowerCase().trim();
+    }
+    setTimeout(() => {
+      if (typeof searchInput.focus === 'function') searchInput.focus();
+      if (initialSearch && typeof searchInput.select === 'function') searchInput.select();
+    }, 50);
+  }
+  renderOracleResourcesModal();
+}
+
+function closeOracleResourcesModal(event) {
+  if (event && event.target && event.target.closest && event.target.closest('.oracle-resources-modal-content') && event.target !== event.currentTarget) {
+    return;
+  }
+  const modal = document.getElementById('oracle-resources-modal-backdrop');
+  if (!modal) return;
+  modal.style.display = 'none';
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function selectOracleResourcesCategory(catId) {
+  gActiveOracleResCategory = catId;
+  renderOracleResourcesModal();
+}
+
+function filterOracleResourcesCards() {
+  const input = document.getElementById('oracle-resources-search-input');
+  if (input) {
+    gOracleResSearchTerm = input.value;
+  }
+  renderOracleResourcesModal();
+}
+
+function clearOracleResourcesSearch() {
+  const input = document.getElementById('oracle-resources-search-input');
+  if (input) {
+    input.value = '';
+    gOracleResSearchTerm = '';
+  }
+  renderOracleResourcesModal();
+}
+
+function renderOracleResourcesModal() {
+  const catalog = window.ORACLE_RESOURCES_DATA || [];
+  const categories = window.ORACLE_RESOURCE_CATEGORIES || [];
+  const container = document.getElementById('oracle-resources-cards-container');
+  const catBar = document.getElementById('oracle-resources-categories-bar');
+  const counterEl = document.getElementById('oracle-resources-counter');
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+
+  if (!container || !catBar) return;
+
+  // Render category buttons
+  let catHtml = '';
+  categories.forEach(cat => {
+    const cLabel = (cat.labels && (cat.labels[currentLang] || cat.labels.en)) || cat.id;
+    const isActive = gActiveOracleResCategory === cat.id ? 'active' : '';
+    catHtml += `<button class="oracle-res-cat-btn ${isActive}" onclick="selectOracleResourcesCategory('${cat.id}')">${cLabel}</button>`;
+  });
+  catBar.innerHTML = catHtml;
+
+  const term = (gOracleResSearchTerm || '').toLowerCase().trim();
+  const clearBtn = document.getElementById('oracle-resources-clear-search');
+  if (clearBtn) clearBtn.style.display = term ? 'block' : 'none';
+
+  const filtered = catalog.filter(item => {
+    if (gActiveOracleResCategory !== 'all' && item.category !== gActiveOracleResCategory) {
+      return false;
+    }
+    if (!term) return true;
+
+    const n = (item.name || '').toLowerCase();
+    const d = ((item.desc && (item.desc[currentLang] || item.desc.en)) || '').toLowerCase();
+    const u = ((item.use_case && (item.use_case[currentLang] || item.use_case.en)) || '').toLowerCase();
+    const c = (item.pull_cmd || '').toLowerCase();
+    const b = (item.badge || '').toLowerCase();
+
+    return n.includes(term) || d.includes(term) || u.includes(term) || c.includes(term) || b.includes(term);
+  });
+
+  if (counterEl) {
+    const suffix = (I18N_DICT[currentLang] && I18N_DICT[currentLang].resources_counter_suffix) || 'resources';
+    counterEl.textContent = `${filtered.length} / ${catalog.length} ${suffix}`;
+  }
+
+  if (filtered.length === 0) {
+    const noResultsTitle = (I18N_DICT[currentLang] && I18N_DICT[currentLang].resources_no_results) || 'No resources found';
+    container.innerHTML = `
+      <div style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
+        <div style="font-size: 2.5rem; margin-bottom: 12px;">🏛️</div>
+        <div style="font-size: 1.05rem; font-weight: 600; color: #e2e8f0; margin-bottom: 6px;">${noResultsTitle}</div>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+  filtered.forEach(item => {
+    const dText = (item.desc && (item.desc[currentLang] || item.desc.en)) || '';
+    const uText = (item.use_case && (item.use_case[currentLang] || item.use_case.en)) || '';
+    const badgeClass = item.category === 'downloads' ? 'oracle-resource-badge-download' : (item.category === 'portals' ? 'oracle-resource-badge-portal' : '');
+
+    let cmdHtml = '';
+    if (item.pull_cmd) {
+      cmdHtml = `
+        <div class="code-box" style="margin: 8px 0 0 0; font-size: 0.8rem;">
+          <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          ${item.pull_cmd.replace(/\n/g, '<br/>')}
+        </div>`;
+    }
+
+    const officialLinkLabel = (currentLang === 'et') ? 'Ametlik Oracle Link ↗' : ((currentLang === 'fi') ? 'Virallinen Oracle-linkki ↗' : ((currentLang === 'sv') ? 'Officiell Oracle-länk ↗' : ((currentLang === 'lv') ? 'Oficiālā Oracle saite ↗' : ((currentLang === 'lt') ? 'Oficiali Oracle nuoroda ↗' : 'Official Oracle Link ↗'))));
+
+    html += `
+      <div class="oracle-resource-card">
+        <div class="oracle-resource-header">
+          <h4 class="oracle-resource-title">
+            <span>${item.name}</span>
+          </h4>
+          <span class="oracle-resource-badge ${badgeClass}">${item.badge}</span>
+        </div>
+        <p class="oracle-resource-desc">${dText}</p>
+        <div class="oracle-resource-use"><strong>🎯 Roll:</strong> ${uText}</div>
+        ${cmdHtml}
+        <div class="oracle-resource-actions">
+          <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-size: 0.8rem; padding: 5px 12px; text-decoration: none;">
+            <span>🔗</span> <span>${officialLinkLabel}</span>
+          </a>
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+/* ==============================================================================
+ * AI SKILLS & ARCHITECTURE INTELLIGENCE ENGINE (skills)
+ * ============================================================================== */
+
+let gActiveSkillsView = 'cards';
+let gActiveSkillsTier = 'all';
+let gSkillsSearchQuery = '';
+let gCurrentActiveSkill = null;
+let gCurrentActiveSkillId = 'repo_codebase_navigator';
+let gSkillsMermaidRendered = false;
+
+function openSkillsFromMenu() {
+  const dd = document.getElementById('docs-dropdown');
+  if (dd) dd.classList.remove('open');
+  switchTab('tab-skills');
+}
+
+function initSkillsTab() {
+  renderSkillsCards();
+  renderSkillsReaderSidebar();
+  renderSkillsTasksMatrix();
+  if (gActiveSkillsView === 'reader') {
+    renderSkillsReaderContent(gCurrentActiveSkillId || 'repo_codebase_navigator');
+  } else if (gActiveSkillsView === 'graph' && !gSkillsMermaidRendered) {
+    renderSkillsRelationshipGraph();
+  }
+}
+
+function switchSkillsView(viewName) {
+  gActiveSkillsView = viewName;
+  document.querySelectorAll('.skills-view-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById(`skills-view-btn-${viewName}`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const readerPane = document.getElementById('skills-view-reader-pane');
+  const cardsPane = document.getElementById('skills-view-cards-pane');
+  const graphPane = document.getElementById('skills-view-graph-pane');
+  const tasksPane = document.getElementById('skills-view-tasks-pane');
+
+  if (readerPane) readerPane.style.display = (viewName === 'reader') ? 'block' : 'none';
+  if (cardsPane) cardsPane.style.display = (viewName === 'cards') ? 'block' : 'none';
+  if (graphPane) graphPane.style.display = (viewName === 'graph') ? 'block' : 'none';
+  if (tasksPane) tasksPane.style.display = (viewName === 'tasks') ? 'block' : 'none';
+
+  if (viewName === 'reader') {
+    renderSkillsReaderSidebar();
+    renderSkillsReaderContent(gCurrentActiveSkillId || 'repo_codebase_navigator');
+  } else if (viewName === 'graph') {
+    renderSkillsRelationshipGraph();
+  }
+}
+
+function filterSkillsTier(tier) {
+  gActiveSkillsTier = tier;
+  document.querySelectorAll('#skills-tier-pills .skills-tier-pill').forEach(pill => {
+    pill.classList.remove('active');
+    if (String(pill.getAttribute('data-tier')) === String(tier)) {
+      pill.classList.add('active');
+    }
+  });
+  renderSkillsCards();
+  renderSkillsReaderSidebar();
+}
+
+function handleSkillsSearch(val) {
+  gSkillsSearchQuery = (val || '').toLowerCase().trim();
+  const clearBtn = document.getElementById('skills-search-clear');
+  if (clearBtn) clearBtn.style.display = gSkillsSearchQuery ? 'block' : 'none';
+  renderSkillsCards();
+  renderSkillsReaderSidebar();
+  renderSkillsTasksMatrix();
+}
+
+function renderFormattedSkillMarkdown(rawMd) {
+  if (!rawMd) return '<p style="color: #64748b; font-style: italic;">Sisu puudub.</p>';
+  let md = rawMd.replace(/^---[\s\S]*?\n---\s*\n?/, '').trim();
+
+  if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
+    let html = marked.parse(md);
+    html = html.replace(/<blockquote>\s*<p>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(<br\s*\/?>)?/gi, (m, p1) => {
+      const alertType = p1.toLowerCase();
+      return `<blockquote class="markdown-alert markdown-alert-${alertType}"><p class="markdown-alert-title">${p1}</p><p>`;
+    });
+    return html;
+  } else {
+    return `<pre style="white-space: pre-wrap; font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">${escapeHtml(md)}</pre>`;
+  }
+}
+
+function selectSkillInReader(skillId) {
+  gCurrentActiveSkillId = skillId;
+  switchSkillsView('reader');
+  renderSkillsReaderSidebar();
+  renderSkillsReaderContent(skillId);
+  const contentEl = document.getElementById('skills-reader-header');
+  if (contentEl) {
+    contentEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function renderSkillsReaderSidebar() {
+  const container = document.getElementById('skills-reader-nav-list');
+  if (!container) return;
+
+  const catalog = window.SKILLS_DATA || [];
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const q = gSkillsSearchQuery;
+
+  const filtered = catalog.filter(skill => {
+    if (gActiveSkillsTier !== 'all' && Number(skill.tier) !== Number(gActiveSkillsTier)) {
+      return false;
+    }
+    if (!q) return true;
+    const name = (skill.name || '').toLowerCase();
+    const title = (skill.title || '').toLowerCase();
+    const titleEt = (skill.title_et || '').toLowerCase();
+    const desc = (skill.description || '').toLowerCase();
+    const triggers = (skill.triggers || []).join(' ').toLowerCase();
+    return name.includes(q) || title.includes(q) || titleEt.includes(q) || desc.includes(q) || triggers.includes(q);
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="font-size: 0.8rem; color: #64748b; padding: 12px 6px;">Sobivaid oskusi ei leitud</div>`;
+    return;
+  }
+
+  let html = '';
+  filtered.forEach(skill => {
+    const isActive = (skill.id === gCurrentActiveSkillId);
+    const displayTitle = (currentLang === 'et' && skill.title_et) ? skill.title_et : skill.title;
+    html += `
+      <button class="skills-reader-nav-item ${isActive ? 'active' : ''}" onclick="selectSkillInReader('${escapeHtml(skill.id)}')">
+        <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+          <span style="font-size: 1.1rem; flex-shrink: 0;">${skill.icon}</span>
+          <div style="min-width: 0; text-align: left;">
+            <div style="font-size: 0.84rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(displayTitle)}</div>
+            <div style="font-size: 0.72rem; color: #64748b; font-family: monospace;">${escapeHtml(skill.id)}</div>
+          </div>
+        </div>
+        <span style="font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; font-weight: 600; flex-shrink: 0; color: ${skill.tier_color}; background: ${skill.tier_bg}; border: 1px solid ${skill.tier_border};">
+          T${skill.tier}
+        </span>
+      </button>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function renderSkillsReaderContent(skillId) {
+  const catalog = window.SKILLS_DATA || [];
+  const skill = catalog.find(s => s.id === skillId) || catalog[0];
+  if (!skill) return;
+
+  gCurrentActiveSkillId = skill.id;
+  gCurrentActiveSkill = skill;
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = (typeof I18N_DICT !== 'undefined' && I18N_DICT[currentLang]) ? I18N_DICT[currentLang] : (window.I18N_DICT ? window.I18N_DICT['en'] : {});
+
+  const headerEl = document.getElementById('skills-reader-header');
+  const relationsEl = document.getElementById('skills-reader-relations-bar');
+  const triggersEl = document.getElementById('skills-reader-triggers-bar');
+  const bodyEl = document.getElementById('skills-reader-markdown-body');
+
+  const displayTitle = (currentLang === 'et' && skill.title_et) ? skill.title_et : skill.title;
+  const tierName = (currentLang === 'et' && skill.tier_name_et) ? skill.tier_name_et : skill.tier_name;
+  const copyPathLabel = dict.skills_btn_copy_path || 'Kopeeri tee';
+  const openModalLabel = dict.skills_btn_modal || 'Hüpikaken';
+
+  if (headerEl) {
+    headerEl.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+        <span style="font-size: 2rem;">${skill.icon}</span>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <h3 style="margin: 0; font-size: 1.2rem; color: #f8fafc; font-weight: 700;">${escapeHtml(displayTitle)}</h3>
+            <span class="skill-tier-badge" style="color: ${skill.tier_color}; background: ${skill.tier_bg}; border: 1px solid ${skill.tier_border}; font-size: 0.75rem;">
+              Tier ${skill.tier}: ${escapeHtml(tierName)}
+            </span>
+          </div>
+          <div style="font-size: 0.78rem; color: #94a3b8; font-family: monospace; margin-top: 4px;">
+            ${escapeHtml(skill.rel_path)}
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button class="btn btn-sm btn-secondary" onclick="copySkillPathDirect('${escapeHtml(skill.rel_path)}')">
+          <span>📋</span> <span>${copyPathLabel}</span>
+        </button>
+        <button class="btn btn-sm btn-secondary" onclick="openSkillDetail('${escapeHtml(skill.id)}')">
+          <span>⤢</span> <span>${openModalLabel}</span>
+        </button>
+      </div>`;
+  }
+
+  // Relations Bar
+  if (relationsEl) {
+    let relsHtml = `<div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; width: 100%;">`;
+    const depLabel = dict.skills_depends_on || '⬆️ Eeltingimused / Sõltub';
+    if (skill.dependencies && skill.dependencies.length > 0) {
+      relsHtml += `<div class="skill-rel-group">
+        <span class="skill-rel-label">${depLabel}:</span>
+        <div class="skill-rel-chips">` +
+        skill.dependencies.map(depId => {
+          const target = catalog.find(s => s.id === depId);
+          const icon = target ? target.icon : '📦';
+          return `<button class="skill-rel-chip-btn dep" onclick="selectSkillInReader('${depId}')">${icon} ${depId}</button>`;
+        }).join('') + `</div></div>`;
+    } else {
+      relsHtml += `<div class="skill-rel-group">
+        <span class="skill-rel-label">${depLabel}:</span>
+        <span style="font-size: 0.78rem; color: #64748b;">${dict.skills_none_root || 'Puuduvad (Tuumik/Root)'}</span>
+      </div>`;
+    }
+
+    const usedLabel = dict.skills_used_by || '⬇️ Kasutavad oskused';
+    if (skill.used_by && skill.used_by.length > 0) {
+      relsHtml += `<div class="skill-rel-group">
+        <span class="skill-rel-label">${usedLabel}:</span>
+        <div class="skill-rel-chips">` +
+        skill.used_by.map(usedId => {
+          const target = catalog.find(s => s.id === usedId);
+          const icon = target ? target.icon : '📦';
+          return `<button class="skill-rel-chip-btn used" onclick="selectSkillInReader('${usedId}')">${icon} ${usedId}</button>`;
+        }).join('') + `</div></div>`;
+    }
+
+    const relLabel = dict.skills_related || '🔄 Seotud oskused';
+    if (skill.related && skill.related.length > 0) {
+      relsHtml += `<div class="skill-rel-group">
+        <span class="skill-rel-label">${relLabel}:</span>
+        <div class="skill-rel-chips">` +
+        skill.related.map(relId => {
+          const target = catalog.find(s => s.id === relId);
+          const icon = target ? target.icon : '📦';
+          return `<button class="skill-rel-chip-btn rel" onclick="selectSkillInReader('${relId}')">${icon} ${relId}</button>`;
+        }).join('') + `</div></div>`;
+    }
+
+    relsHtml += `</div>`;
+    relationsEl.innerHTML = relsHtml;
+  }
+
+  // Triggers Bar
+  if (triggersEl) {
+    let trHtml = `<span style="font-size: 0.76rem; font-weight: 600; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.05em;">🤖 ${dict.skills_prompt_triggers || 'AI Agendi Päästikud'}:</span>`;
+    if (skill.triggers && skill.triggers.length > 0) {
+      trHtml += skill.triggers.map(tr => `<span class="skill-trigger-pill">#${escapeHtml(tr)}</span>`).join(' ');
+    } else {
+      trHtml += `<span style="font-size: 0.76rem; color: #64748b;">Automaatne semantiline tuvastus</span>`;
+    }
+    triggersEl.innerHTML = trHtml;
+  }
+
+  // Markdown Body
+  if (bodyEl) {
+    bodyEl.innerHTML = renderFormattedSkillMarkdown(skill.markdown);
+  }
+}
+
+function clearSkillsSearch() {
+  const inp = document.getElementById('skills-search-input');
+  if (inp) {
+    inp.value = '';
+    handleSkillsSearch('');
+    inp.focus();
+  }
+}
+
+function renderSkillsCards() {
+  const container = document.getElementById('skills-cards-grid');
+  if (!container) return;
+
+  const catalog = window.SKILLS_DATA || [];
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = (typeof I18N_DICT !== 'undefined' && I18N_DICT[currentLang]) ? I18N_DICT[currentLang] : (window.I18N_DICT ? window.I18N_DICT['en'] : {});
+
+  const q = gSkillsSearchQuery;
+  const filtered = catalog.filter(skill => {
+    if (gActiveSkillsTier !== 'all' && Number(skill.tier) !== Number(gActiveSkillsTier)) {
+      return false;
+    }
+    if (!q) return true;
+
+    const name = (skill.name || '').toLowerCase();
+    const title = (skill.title || '').toLowerCase();
+    const titleEt = (skill.title_et || '').toLowerCase();
+    const desc = (skill.description || '').toLowerCase();
+    const triggers = (skill.triggers || []).join(' ').toLowerCase();
+    const markdown = (skill.markdown || '').toLowerCase();
+
+    return name.includes(q) || title.includes(q) || titleEt.includes(q) || desc.includes(q) || triggers.includes(q) || markdown.includes(q);
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 48px 16px; background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border); border-radius: 12px; color: var(--text-muted);">
+        <div style="font-size: 2.2rem; margin-bottom: 8px;">🔍</div>
+        <div style="font-size: 1.05rem; font-weight: 600; color: #f8fafc; margin-bottom: 4px;">${dict.skills_no_results || 'Ühtegi sobivat oskust ei leitud'}</div>
+        <div style="font-size: 0.82rem; color: #64748b;">"${escapeHtml(q)}"</div>
+        <button class="btn btn-secondary btn-sm" onclick="clearSkillsSearch()" style="margin-top: 14px;">↺ ${dict.btn_reset_filters || 'Lähtesta otsing'}</button>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+  filtered.forEach(skill => {
+    const displayTitle = (currentLang === 'et' && skill.title_et) ? skill.title_et : skill.title;
+    const tierName = (currentLang === 'et' && skill.tier_name_et) ? skill.tier_name_et : skill.tier_name;
+
+    // Trigger pills
+    let triggersHtml = '';
+    if (skill.triggers && skill.triggers.length > 0) {
+      triggersHtml = `<div class="skill-card-triggers">` +
+        skill.triggers.slice(0, 5).map(tr => `<span class="skill-trigger-pill">#${escapeHtml(tr)}</span>`).join('') +
+        `</div>`;
+    }
+
+    // Related skills pills
+    let relatedHtml = '';
+    if (skill.related && skill.related.length > 0) {
+      const relLabel = dict.skills_related || 'Seotud';
+      relatedHtml = `<div class="skill-card-related">
+        <span class="skill-related-label">${relLabel}:</span>` +
+        skill.related.slice(0, 4).map(relId => {
+          const target = catalog.find(s => s.id === relId);
+          const icon = target ? target.icon : '📦';
+          return `<button class="skill-related-btn" onclick="openSkillDetail('${relId}')" title="${relId}">${icon} ${relId}</button>`;
+        }).join('') +
+        `</div>`;
+    }
+
+    const readBtnLabel = dict.skills_btn_read_guide || 'Ava täielik juhend';
+    const copyPathLabel = dict.skills_btn_copy_path || 'Kopeeri tee';
+
+    html += `
+      <div class="skill-card" data-skill-id="${escapeHtml(skill.id)}" onclick="selectSkillInReader('${escapeHtml(skill.id)}')">
+        <div class="skill-card-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="skill-card-icon">${skill.icon}</span>
+            <div>
+              <h4 class="skill-card-title">${escapeHtml(displayTitle)}</h4>
+              <span class="skill-card-file">${escapeHtml(skill.id)}</span>
+            </div>
+          </div>
+          <span class="skill-tier-badge" style="color: ${skill.tier_color}; background: ${skill.tier_bg}; border: 1px solid ${skill.tier_border};">
+            Tier ${skill.tier}
+          </span>
+        </div>
+
+        <p class="skill-card-desc">${escapeHtml(skill.description)}</p>
+
+        ${triggersHtml}
+        ${relatedHtml}
+
+        <div class="skill-card-footer" onclick="event.stopPropagation()">
+          <button class="btn btn-sm btn-primary" onclick="selectSkillInReader('${escapeHtml(skill.id)}')">
+            <span>📖</span> <span>${readBtnLabel}</span>
+          </button>
+          <button class="btn btn-sm btn-secondary" onclick="openSkillDetail('${escapeHtml(skill.id)}')">
+            <span>⤢</span> <span>${dict.skills_btn_modal || 'Hüpikaken'}</span>
+          </button>
+          <button class="btn btn-sm btn-secondary" onclick="copySkillPathDirect('${escapeHtml(skill.rel_path)}')" title="${skill.rel_path}">
+            <span>📋</span> <span>${copyPathLabel}</span>
+          </button>
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+async function renderSkillsRelationshipGraph(force) {
+  if (gSkillsMermaidRendered && !force) return;
+  const container = document.getElementById('skills-mermaid-container');
+  if (!container) return;
+
+  const mermaidCode = window.SKILLS_MERMAID || '';
+  if (!mermaidCode) {
+    container.innerHTML = `<p style="color: var(--text-muted); padding: 24px;">Diagrammi kood puudub.</p>`;
+    return;
+  }
+
+  if (typeof mermaid === 'undefined') {
+    container.innerHTML = `<p style="color: var(--text-muted); padding: 24px;">Mermaid teek laeb...</p>`;
+    return;
+  }
+
+  try {
+    container.innerHTML = `<div style="padding: 40px; color: #94a3b8;">Renderdan Mermaid graafikut...</div>`;
+    const svgId = `skills-graph-svg-${Math.floor(Math.random() * 100000)}`;
+    const renderRes = await mermaid.render(svgId, mermaidCode);
+    container.innerHTML = renderRes.svg;
+    gSkillsMermaidRendered = true;
+  } catch (err) {
+    console.error('Mermaid render error:', err);
+    container.innerHTML = `
+      <div style="padding: 24px; color: #f87171; background: rgba(239, 68, 68, 0.1); border-radius: 8px; font-size: 0.85rem;">
+        <strong>Mermaid viga:</strong> ${escapeHtml(err.message || String(err))}
+      </div>`;
+  }
+}
+
+function renderSkillsTasksMatrix() {
+  const container = document.getElementById('skills-tasks-table-container');
+  if (!container) return;
+
+  const tasks = window.SKILLS_TASKS_DATA || [];
+  const catalog = window.SKILLS_DATA || [];
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = (typeof I18N_DICT !== 'undefined' && I18N_DICT[currentLang]) ? I18N_DICT[currentLang] : (window.I18N_DICT ? window.I18N_DICT['en'] : {});
+
+  const q = gSkillsSearchQuery;
+  const filtered = tasks.filter(t => {
+    if (!q) return true;
+    const taskText = ((t.task && (t.task[currentLang] || t.task.en)) || '').toLowerCase();
+    const prim = (t.primary_skill || '').toLowerCase();
+    const sec = (t.secondary_skills || []).join(' ').toLowerCase();
+    const hint = (t.cli_hint || '').toLowerCase();
+    return taskText.includes(q) || prim.includes(q) || sec.includes(q) || hint.includes(q);
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 32px; color: var(--text-muted);">
+        <div style="font-size: 1.8rem; margin-bottom: 6px;">🔍</div>
+        <div style="font-size: 0.95rem; color: #e2e8f0;">${dict.skills_no_tasks_found || 'Ülesandeid ei leitud'}</div>
+      </div>`;
+    return;
+  }
+
+  let html = `
+    <table class="skills-tasks-table">
+      <thead>
+        <tr>
+          <th style="width: 38%;">${dict.skills_th_task || 'Arendusülesanne'}</th>
+          <th style="width: 24%;">${dict.skills_th_primary_skill || 'Peamine Skill (Tier)'}</th>
+          <th style="width: 20%;">${dict.skills_th_secondary_skills || 'Seotud Oskused'}</th>
+          <th style="width: 18%;">${dict.skills_th_cli || 'CLI / Teekond'}</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  filtered.forEach(t => {
+    const taskDesc = (t.task && (t.task[currentLang] || t.task.en)) || '';
+    const primSkill = catalog.find(s => s.id === t.primary_skill);
+    const primIcon = primSkill ? primSkill.icon : '📦';
+    const primTitle = primSkill ? ((currentLang === 'et' && primSkill.title_et) ? primSkill.title_et : primSkill.title) : t.primary_skill;
+    const primTier = primSkill ? primSkill.tier : 1;
+
+    let secHtml = '';
+    if (t.secondary_skills && t.secondary_skills.length > 0) {
+      secHtml = t.secondary_skills.map(sId => {
+        const secSkill = catalog.find(s => s.id === sId);
+        const secIcon = secSkill ? secSkill.icon : '📦';
+        return `<button class="skill-task-chip" onclick="openSkillDetail('${sId}')" title="${sId}">${secIcon} ${sId}</button>`;
+      }).join(' ');
+    } else {
+      secHtml = '<span style="color: #64748b;">—</span>';
+    }
+
+    const cleanCli = escapeHtml(t.cli_hint || '');
+    html += `
+      <tr>
+        <td style="font-weight: 500; color: #f1f5f9;">
+          ${escapeHtml(taskDesc)}
+        </td>
+        <td>
+          <button class="skill-task-chip primary-chip" onclick="openSkillDetail('${t.primary_skill}')" title="${escapeHtml(primTitle)}">
+            <span>${primIcon}</span>
+            <span>${escapeHtml(t.primary_skill)}</span>
+            <span class="chip-tier-tag">T${primTier}</span>
+          </button>
+        </td>
+        <td>
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">${secHtml}</div>
+        </td>
+        <td>
+          <div class="skill-task-cli-box">
+            <code>${cleanCli}</code>
+            <button class="btn btn-xs btn-secondary" onclick="copyTaskCli(this, '${escapeHtml(t.cli_hint || '')}')" title="Kopeeri">📋</button>
+          </div>
+        </td>
+      </tr>`;
+  });
+
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+function openSkillDetail(skillId) {
+  const catalog = window.SKILLS_DATA || [];
+  const skill = catalog.find(s => s.id === skillId);
+  if (!skill) return;
+
+  gCurrentActiveSkill = skill;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = (typeof I18N_DICT !== 'undefined' && I18N_DICT[currentLang]) ? I18N_DICT[currentLang] : (window.I18N_DICT ? window.I18N_DICT['en'] : {});
+
+  const modal = document.getElementById('skill-modal-backdrop');
+  if (!modal) return;
+
+  const iconEl = document.getElementById('skill-modal-icon');
+  const titleEl = document.getElementById('skill-modal-title');
+  const tierBadgeEl = document.getElementById('skill-modal-tier-badge');
+  const pathEl = document.getElementById('skill-modal-path');
+  const relationsBar = document.getElementById('skill-modal-relations-bar');
+  const triggersBar = document.getElementById('skill-modal-triggers-bar');
+  const markdownBody = document.getElementById('skill-modal-markdown-body');
+
+  const displayTitle = (currentLang === 'et' && skill.title_et) ? skill.title_et : skill.title;
+  const tierName = (currentLang === 'et' && skill.tier_name_et) ? skill.tier_name_et : skill.tier_name;
+
+  if (iconEl) iconEl.textContent = skill.icon || '📦';
+  if (titleEl) titleEl.textContent = displayTitle;
+  if (pathEl) pathEl.textContent = skill.rel_path;
+  if (tierBadgeEl) {
+    tierBadgeEl.textContent = `Tier ${skill.tier}: ${tierName}`;
+    tierBadgeEl.style.color = skill.tier_color;
+    tierBadgeEl.style.backgroundColor = skill.tier_bg;
+    tierBadgeEl.style.border = `1px solid ${skill.tier_border}`;
+  }
+
+  // Build relationship chips
+  if (relationsBar) {
+    let relsHtml = `<div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; width: 100%;">`;
+
+    // Dependencies (Depends on)
+    const depLabel = dict.skills_depends_on || '⬆️ Eeltingimused / Sõltub';
+    if (skill.dependencies && skill.dependencies.length > 0) {
+      relsHtml += `<div class="skill-rel-group">
+        <span class="skill-rel-label">${depLabel}:</span>
+        <div class="skill-rel-chips">` +
+        skill.dependencies.map(depId => {
+          const target = catalog.find(s => s.id === depId);
+          const icon = target ? target.icon : '📦';
+          return `<button class="skill-rel-chip-btn dep" onclick="openSkillDetail('${depId}')">${icon} ${depId}</button>`;
+        }).join('') + `</div></div>`;
+    } else {
+      relsHtml += `<div class="skill-rel-group">
+        <span class="skill-rel-label">${depLabel}:</span>
+        <span style="font-size: 0.78rem; color: #64748b;">${dict.skills_none_root || 'Puuduvad (Tuumik/Root)'}</span>
+      </div>`;
+    }
+
+    // Used by
+    const usedLabel = dict.skills_used_by || '⬇️ Kasutavad oskused';
+    if (skill.used_by && skill.used_by.length > 0) {
+      relsHtml += `<div class="skill-rel-group">
+        <span class="skill-rel-label">${usedLabel}:</span>
+        <div class="skill-rel-chips">` +
+        skill.used_by.map(usedId => {
+          const target = catalog.find(s => s.id === usedId);
+          const icon = target ? target.icon : '📦';
+          return `<button class="skill-rel-chip-btn used" onclick="openSkillDetail('${usedId}')">${icon} ${usedId}</button>`;
+        }).join('') + `</div></div>`;
+    }
+
+    // Related
+    const relLabel = dict.skills_related || '🔄 Seotud oskused';
+    if (skill.related && skill.related.length > 0) {
+      relsHtml += `<div class="skill-rel-group">
+        <span class="skill-rel-label">${relLabel}:</span>
+        <div class="skill-rel-chips">` +
+        skill.related.map(relId => {
+          const target = catalog.find(s => s.id === relId);
+          const icon = target ? target.icon : '📦';
+          return `<button class="skill-rel-chip-btn rel" onclick="openSkillDetail('${relId}')">${icon} ${relId}</button>`;
+        }).join('') + `</div></div>`;
+    }
+
+    relsHtml += `</div>`;
+    relationsBar.innerHTML = relsHtml;
+  }
+
+  // Build triggers pill bar
+  if (triggersBar) {
+    let trHtml = `<span style="font-size: 0.76rem; font-weight: 600; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.05em;">🤖 ${dict.skills_prompt_triggers || 'AI Agendi Päästikud'}:</span>`;
+    if (skill.triggers && skill.triggers.length > 0) {
+      trHtml += skill.triggers.map(tr => `<span class="skill-trigger-pill">#${escapeHtml(tr)}</span>`).join(' ');
+    } else {
+      trHtml += `<span style="font-size: 0.76rem; color: #64748b;">Automaatne semantiline tuvastus</span>`;
+    }
+    triggersBar.innerHTML = trHtml;
+  }
+
+  // Render Markdown content
+  if (markdownBody) {
+    markdownBody.innerHTML = renderFormattedSkillMarkdown(skill.markdown);
+  }
+
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSkillModal(event) {
+  if (event && event.target && event.target.closest && event.target.closest('.skill-modal-content') && event.target !== event.currentTarget) {
+    return;
+  }
+  const modal = document.getElementById('skill-modal-backdrop');
+  if (!modal) return;
+  modal.style.display = 'none';
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function copySkillPath() {
+  if (gCurrentActiveSkill && gCurrentActiveSkill.rel_path) {
+    copySkillPathDirect(gCurrentActiveSkill.rel_path);
+  }
+}
+
+function copySkillPathDirect(pathStr) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(pathStr).then(() => {
+      showToast(`Kopeeritud: ${pathStr}`);
+    }).catch(() => {
+      showToast(`Kopeeritud: ${pathStr}`);
+    });
+  } else {
+    showToast(`Kopeeritud: ${pathStr}`);
+  }
+}
+
+function copyTaskCli(btn, cliText) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(cliText).then(() => {
+      showToast(`Kopeeritud käsk: ${cliText}`);
+    }).catch(() => {
+      showToast(`Kopeeritud: ${cliText}`);
+    });
+  } else {
+    showToast(`Kopeeritud käsk: ${cliText}`);
+  }
+}
+
+/* ==============================================================================
+ * UNIVERSAL OMNISEARCH, CODE PREVIEW & KEYBOARD NAVIGATION ENGINE
+ * ============================================================================== */
+
+let gSearchActiveCategory = 'all';
+let gSearchSelectedIndex = -1;
+let gCurrentSearchResults = [];
+const RECENT_SEARCHES_KEY = 'devhub_recent_searches';
+let gCurrentPreviewFile = { path: '', content: '' };
+
+function initGlobalSearchInput() {
+  const input = document.getElementById('global-search-input');
+  if (input) {
+    input.addEventListener('input', (e) => {
+      handleGlobalSearchInput(e.target.value);
+    });
+  }
+}
+
+function openGlobalSearchModal(defaultQuery = '') {
+  const modal = document.getElementById('global-search-modal-backdrop');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  const input = document.getElementById('global-search-input');
+  if (input) {
+    if (defaultQuery) input.value = defaultQuery;
+    setTimeout(() => {
+      input.focus();
+      if (defaultQuery) input.select();
+    }, 50);
+  }
+  updateGlobalSearchCategories();
+  if (input && input.value) {
+    handleGlobalSearchInput(input.value);
+  } else {
+    renderRecentSearches();
+    filterGlobalSearchResults('');
+  }
+}
+
+function closeGlobalSearchModal(event) {
+  if (event && event.target && event.target.id !== 'global-search-modal-backdrop' && !event.target.classList.contains('global-search-esc-badge')) {
+    return;
+  }
+  const modal = document.getElementById('global-search-modal-backdrop');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  gSearchSelectedIndex = -1;
+}
+
+function clearGlobalSearch() {
+  const input = document.getElementById('global-search-input');
+  if (input) {
+    input.value = '';
+    input.focus();
+    handleGlobalSearchInput('');
+  }
+}
+
+function setGlobalSearchCategory(cat) {
+  gSearchActiveCategory = cat;
+  document.querySelectorAll('.search-cat-pill').forEach(pill => {
+    if (pill.getAttribute('data-cat') === cat) {
+      pill.classList.add('active');
+    } else {
+      pill.classList.remove('active');
+    }
+  });
+  const input = document.getElementById('global-search-input');
+  handleGlobalSearchInput(input ? input.value : '');
+}
+
+function updateGlobalSearchCategories() {
+  const index = window.GLOBAL_SEARCH_INDEX || [];
+  const counts = { all: index.length, docs: 0, scripts: 0, blueprints: 0, profiles: 0, tests: 0, glossary: 0, skills: 0 };
+  index.forEach(item => {
+    const cat = item.category;
+    if (counts[cat] !== undefined) counts[cat]++;
+    else if (cat === 'faq') counts.glossary++;
+    else if (cat === 'resources') counts.docs++;
+  });
+  Object.keys(counts).forEach(k => {
+    const el = document.getElementById(`count-${k}`);
+    if (el) el.textContent = counts[k];
+  });
+}
+
+function getRecentSearches() {
+  try {
+    const raw = localStorage.getItem(RECENT_SEARCHES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function addRecentSearch(item) {
+  try {
+    let list = getRecentSearches();
+    list = list.filter(r => r.path !== item.path && r.title !== item.title);
+    list.unshift({
+      title: item.title,
+      titles: item.titles,
+      summaries: item.summaries,
+      path: item.path,
+      category: item.category,
+      target: item.target
+    });
+    if (list.length > 10) list = list.slice(0, 10);
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(list));
+  } catch (e) {}
+}
+
+function clearRecentSearches() {
+  try {
+    localStorage.removeItem(RECENT_SEARCHES_KEY);
+  } catch (e) {}
+  renderRecentSearches();
+}
+
+function renderRecentSearches() {
+  const container = document.getElementById('global-search-recent-section');
+  const listEl = document.getElementById('global-search-recent-list');
+  if (!container || !listEl) return;
+  const recent = getRecentSearches();
+  if (!recent || recent.length === 0) {
+    container.style.display = 'none';
+    listEl.innerHTML = '';
+    return;
+  }
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  container.style.display = 'block';
+  listEl.innerHTML = recent.map((r) => {
+    const rTitle = (r.titles && (r.titles[currentLang] || r.titles['en'])) || r.title || '';
+    return `
+      <div class="recent-search-tag" onclick='navigateToSearchResult(${JSON.stringify(r).replace(/'/g, "&#39;")})' title="${escapeHtml(r.path)}">
+        <span>${getCategoryIcon(r.category)}</span>
+        <span>${escapeHtml(rTitle)}</span>
+        <span style="font-family: monospace; font-size: 0.68rem; color: #64748b;">${escapeHtml((r.path || '').split('/').pop())}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function getCategoryIcon(cat) {
+  switch (cat) {
+    case 'docs': return '📚';
+    case 'scripts': return '⚡';
+    case 'blueprints': return '📋';
+    case 'profiles': return '⚙️';
+    case 'tests': return '🧪';
+    case 'glossary': return '📖';
+    case 'faq': return '❓';
+    case 'skills': return '🧠';
+    case 'resources': return '🏛️';
+    default: return '📄';
+  }
+}
+
+function handleGlobalSearchInput(query) {
+  const clearBtn = document.getElementById('global-search-clear-btn');
+  const recentSec = document.getElementById('global-search-recent-section');
+  const qClean = (query || '').trim().toLowerCase();
+  
+  if (clearBtn) clearBtn.style.display = qClean ? 'block' : 'none';
+  if (recentSec) recentSec.style.display = qClean ? 'none' : (getRecentSearches().length > 0 ? 'block' : 'none');
+
+  filterGlobalSearchResults(qClean);
+}
+
+function filterGlobalSearchResults(query = '') {
+  const index = window.GLOBAL_SEARCH_INDEX || [];
+  const resultsContainer = document.getElementById('global-search-results-container');
+  const counterEl = document.getElementById('global-search-counter');
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  if (!resultsContainer) return;
+
+  let filtered = index;
+  if (gSearchActiveCategory !== 'all') {
+    filtered = filtered.filter(item => {
+      if (gSearchActiveCategory === 'glossary') {
+        return item.category === 'glossary' || item.category === 'faq';
+      }
+      return item.category === gSearchActiveCategory;
+    });
+  }
+
+  if (query) {
+    const qTokens = query.split(/\s+/).filter(Boolean);
+    filtered = filtered.filter(item => {
+      const activeTitle = (item.titles && item.titles[currentLang] ? item.titles[currentLang] : (item.title || '')).toLowerCase();
+      const enTitle = (item.titles && item.titles['en'] ? item.titles['en'] : (item.title || '')).toLowerCase();
+      const pathStr = (item.path || '').toLowerCase();
+      const activeSummary = (item.summaries && item.summaries[currentLang] ? item.summaries[currentLang] : (item.summary || '')).toLowerCase();
+      const enSummary = (item.summaries && item.summaries['en'] ? item.summaries['en'] : (item.summary || '')).toLowerCase();
+      const kwStr = (item.keywords || '').toLowerCase();
+      return qTokens.every(tok => 
+        activeTitle.includes(tok) || 
+        enTitle.includes(tok) || 
+        pathStr.includes(tok) || 
+        activeSummary.includes(tok) || 
+        enSummary.includes(tok) || 
+        kwStr.includes(tok)
+      );
+    });
+
+    filtered.sort((a, b) => {
+      const aTitle = (a.titles && (a.titles[currentLang] || a.titles['en'])) || a.title || '';
+      const bTitle = (b.titles && (b.titles[currentLang] || b.titles['en'])) || b.title || '';
+      const aLower = aTitle.toLowerCase();
+      const bLower = bTitle.toLowerCase();
+
+      const aStarts = aLower.startsWith(query) ? 1 : 0;
+      const bStarts = bLower.startsWith(query) ? 1 : 0;
+      if (aStarts !== bStarts) return bStarts - aStarts;
+
+      const aInTitle = aLower.includes(query) ? 1 : 0;
+      const bInTitle = bLower.includes(query) ? 1 : 0;
+      if (aInTitle !== bInTitle) return bInTitle - aInTitle;
+
+      const aPath = (a.path || '').toLowerCase();
+      const bPath = (b.path || '').toLowerCase();
+      const aInPath = aPath.includes(query) ? 1 : 0;
+      const bInPath = bPath.includes(query) ? 1 : 0;
+      return bInPath - aInPath;
+    });
+  }
+
+  gCurrentSearchResults = filtered.slice(0, 100);
+  gSearchSelectedIndex = gCurrentSearchResults.length > 0 ? 0 : -1;
+
+  if (counterEl) {
+    const countText = (dict.search_results_count || '%s tulemust').replace('%s', filtered.length);
+    counterEl.textContent = countText;
+  }
+
+  if (gCurrentSearchResults.length === 0) {
+    resultsContainer.innerHTML = `
+      <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+        <div style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.6;">🔍</div>
+        <div style="font-size: 0.95rem; font-weight: 600; color: #cbd5e1;">${escapeHtml(dict.search_no_results || 'Repositooriumist ei leitud ühtegi vastet')}</div>
+        <div style="font-size: 0.8rem; margin-top: 6px;">Päring: <code style="color: #38bdf8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">${escapeHtml(query)}</code></div>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  gCurrentSearchResults.forEach((item, idx) => {
+    const isSelected = (idx === gSearchSelectedIndex);
+    const cat = item.category || 'docs';
+    const icon = getCategoryIcon(cat);
+    const rawTitle = (item.titles && (item.titles[currentLang] || item.titles['en'])) || item.title || '';
+    const rawSummary = (item.summaries && (item.summaries[currentLang] || item.summaries['en'])) || item.summary || '';
+    const highlightedTitle = highlightSearchText(rawTitle, query);
+    const highlightedSummary = highlightSearchText(rawSummary, query);
+
+    html += `
+      <div class="search-result-item ${isSelected ? 'selected' : ''}" data-index="${idx}" onclick="selectAndNavigateSearch(${idx})">
+        <span class="search-result-icon">${icon}</span>
+        <div class="search-result-body">
+          <div class="search-result-top">
+            <span class="search-result-title">${highlightedTitle}</span>
+            <span class="search-result-badge badge-${cat}">${escapeHtml(cat)}</span>
+          </div>
+          <div class="search-result-summary">${highlightedSummary}</div>
+          <div class="search-result-meta">
+            <span class="search-path-badge" title="${escapeHtml(item.path)}">${escapeHtml(item.path)}</span>
+            <button class="search-path-copy-btn" onclick="copyFilePath('${escapeHtml(item.path)}', event)" title="Kopeeri failitee">
+              <span>📋</span> <span data-i18n="btn_copy_file_path">${escapeHtml(dict.btn_copy_file_path || 'Kopeeri tee')}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  resultsContainer.innerHTML = html;
+}
+
+function highlightSearchText(text, query) {
+  if (!text) return '';
+  if (!query) return escapeHtml(text);
+  const qTokens = query.split(/\s+/).filter(Boolean);
+  let safeText = escapeHtml(text);
+  qTokens.forEach(tok => {
+    const reg = new RegExp(`(${escapeRegExp(tok)})`, 'gi');
+    safeText = safeText.replace(reg, '<span class="search-highlight">$1</span>');
+  });
+  return safeText;
+}
+
+function selectAndNavigateSearch(idx) {
+  const item = gCurrentSearchResults[idx];
+  if (item) navigateToSearchResult(item);
+}
+
+function copyFilePath(path, event) {
+  if (event && event.stopPropagation) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  if (!path) return;
+  const cleanPath = path.split('#')[0];
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(cleanPath).then(() => {
+      notifyPathCopied(cleanPath);
+    }).catch(() => {
+      fallbackCopyText(cleanPath);
+      notifyPathCopied(cleanPath);
+    });
+  } else {
+    fallbackCopyText(cleanPath);
+    notifyPathCopied(cleanPath);
+  }
+}
+
+function fallbackCopyText(text) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  } catch (e) {}
+}
+
+function notifyPathCopied(cleanPath) {
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  const tMsg = (dict.toast_path_copied || 'Tee kopeeritud: %s').replace('%s', `<code style="color:#38bdf8; font-weight:700;">${escapeHtml(cleanPath)}</code>`);
+  showToast(`📋 ${tMsg}`);
+}
+
+function navigateToSearchResult(item) {
+  if (!item) return;
+  addRecentSearch(item);
+  closeGlobalSearchModal();
+
+  const target = item.target || {};
+  const action = target.action;
+
+  if (action === 'navigate_doc') {
+    switchTab('tab-docs');
+    if (typeof target.docIdx === 'number') {
+      loadDocContent(target.docIdx);
+      if (target.anchor) {
+        setTimeout(() => {
+          const el = document.getElementById(target.anchor) || document.querySelector(`[name="${target.anchor}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            el.style.transition = 'background 0.5s ease';
+            el.style.backgroundColor = 'rgba(56, 189, 248, 0.2)';
+            setTimeout(() => { el.style.backgroundColor = ''; }, 2000);
+          }
+        }, 250);
+      }
+    }
+  } else if (action === 'navigate_tab') {
+    switchTab(target.tabId);
+    if (target.bpNum !== undefined) {
+      switchToCockpitSection('blueprints');
+      setTimeout(() => {
+        const bpCard = document.querySelector(`.bp-card[data-bp-num="${target.bpNum}"]`) || document.getElementById(`bp-card-${target.bpNum}`);
+        if (bpCard) {
+          bpCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          bpCard.style.transition = 'box-shadow 0.4s ease, border-color 0.4s ease';
+          bpCard.style.borderColor = '#38bdf8';
+          bpCard.style.boxShadow = '0 0 20px rgba(56, 189, 248, 0.4)';
+          setTimeout(() => { bpCard.style.boxShadow = ''; bpCard.style.borderColor = ''; }, 2500);
+        }
+      }, 200);
+    } else if (target.suiteName) {
+      setTimeout(() => {
+        const searchBox = document.getElementById('testing-search-input') || document.getElementById('test-suite-search');
+        if (searchBox) {
+          searchBox.value = target.suiteName;
+          if (typeof filterTestSuites === 'function') filterTestSuites();
+        }
+      }, 150);
+    } else if (target.skillId && typeof selectSkillInReader === 'function') {
+      selectSkillInReader(target.skillId);
+    }
+  } else if (action === 'open_glossary') {
+    openGlossaryModal();
+    if (target.term) {
+      setTimeout(() => {
+        const searchInp = document.getElementById('glossary-search-input');
+        if (searchInp) {
+          searchInp.value = target.term;
+          if (typeof filterGlossaryCards === 'function') filterGlossaryCards();
+        }
+      }, 100);
+    }
+  } else if (action === 'open_faq') {
+    gActiveFaqCategory = 'all';
+    openFaqModal();
+    if (target.faqId) {
+      setTimeout(() => {
+        const faqInp = document.getElementById('faq-search-input');
+        if (faqInp) {
+          faqInp.value = target.faqId.replace(/^faq-/, '').replace(/-/g, ' ');
+          if (typeof filterFaqCards === 'function') filterFaqCards();
+        }
+      }, 100);
+    }
+  } else if (action === 'view_preview') {
+    openCodePreview(target.path || item.path, target.title || item.title, target.fileType);
+  } else if (action === 'open_url') {
+    if (target.url) window.open(target.url, '_blank');
+  }
+}
+
+// Code Preview Modal
+function openCodePreview(relPath, title, fileType = 'text') {
+  const modal = document.getElementById('code-preview-modal-backdrop');
+  const titleEl = document.getElementById('code-preview-title');
+  const pathEl = document.getElementById('code-preview-path');
+  const codeEl = document.getElementById('code-preview-code');
+  const badgeEl = document.getElementById('code-preview-badge');
+
+  if (!modal || !codeEl) return;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  gCurrentPreviewFile = { path: relPath, content: '' };
+  if (titleEl) titleEl.textContent = title || relPath.split('/').pop();
+  if (pathEl) pathEl.textContent = relPath;
+  if (badgeEl) badgeEl.textContent = (fileType || 'file').toUpperCase();
+  codeEl.textContent = 'Laadimine...';
+
+  // 1. Check if profile content is cached locally in window.PROFILES_DATA
+  if (window.PROFILES_DATA && Array.isArray(window.PROFILES_DATA)) {
+    const prof = window.PROFILES_DATA.find(p => p.rel_path === relPath || p.name === relPath);
+    if (prof && prof.content) {
+      gCurrentPreviewFile.content = prof.content;
+      codeEl.textContent = prof.content;
+      return;
+    }
+  }
+
+  // 2. Fetch raw file from Bridge API /api/file/raw?path=
+  fetch(`${BRIDGE_URL}/api/file/raw?path=${encodeURIComponent(relPath)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'ok' && data.content) {
+        gCurrentPreviewFile.content = data.content;
+        codeEl.textContent = data.content;
+      } else {
+        showPreviewOfflineFallback(relPath, codeEl);
+      }
+    })
+    .catch(() => {
+      showPreviewOfflineFallback(relPath, codeEl);
+    });
+}
+
+function showPreviewOfflineFallback(relPath, codeEl) {
+  const fallback = `# ${relPath}\n\n# Faili sisu otsevaatamiseks käivita Dev Hub bridge server:\n# ./scripts/internal/dev-hub-bridge.py\n\n# Või ava fail lokaalselt redaktoris:\n# code ${relPath}`;
+  gCurrentPreviewFile.content = fallback;
+  codeEl.textContent = fallback;
+}
+
+function closeCodePreviewModal(event) {
+  if (event && event.target && event.target.id !== 'code-preview-modal-backdrop' && !event.target.classList.contains('modal-close-btn')) {
+    return;
+  }
+  const modal = document.getElementById('code-preview-modal-backdrop');
+  if (modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+function copyCurrentPreviewPath() {
+  if (gCurrentPreviewFile && gCurrentPreviewFile.path) {
+    copyFilePath(gCurrentPreviewFile.path);
+  }
+}
+
+function copyCurrentPreviewContent() {
+  if (gCurrentPreviewFile && gCurrentPreviewFile.content) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(gCurrentPreviewFile.content);
+    } else {
+      fallbackCopyText(gCurrentPreviewFile.content);
+    }
+    const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+    showToast(dict.toast_content_copied || 'Faili sisu kopeeritud lõikelauale!');
+  }
+}
+
+function updateSelectedSearchResult() {
+  const container = document.getElementById('global-search-results-container');
+  if (!container) return;
+  const items = container.querySelectorAll('.search-result-item');
+  items.forEach((item, idx) => {
+    if (idx === gSearchSelectedIndex) {
+      item.classList.add('selected');
+      item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    } else {
+      item.classList.remove('selected');
+    }
+  });
+}
+
+// Global Keyboard Shortcuts for Spotlight Omnisearch
+window.addEventListener('keydown', (e) => {
+  const searchModal = document.getElementById('global-search-modal-backdrop');
+  const isSearchOpen = searchModal && searchModal.style.display === 'flex';
+
+  // Open shortcut: ⌘K or Ctrl+K
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    if (isSearchOpen) closeGlobalSearchModal();
+    else openGlobalSearchModal();
+    return;
+  }
+
+  // Open shortcut: '/' when outside of inputs
+  const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+  const isInput = (activeTag === 'input' || activeTag === 'textarea' || (document.activeElement && document.activeElement.isContentEditable));
+
+  if (e.key === '/' && !isInput && !isSearchOpen) {
+    e.preventDefault();
+    openGlobalSearchModal();
+    return;
+  }
+
+  // Navigation while Omnisearch modal is open
+  if (isSearchOpen) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeGlobalSearchModal();
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (gCurrentSearchResults.length > 0) {
+        gSearchSelectedIndex = (gSearchSelectedIndex + 1) % gCurrentSearchResults.length;
+        updateSelectedSearchResult();
+      }
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (gCurrentSearchResults.length > 0) {
+        gSearchSelectedIndex = (gSearchSelectedIndex - 1 + gCurrentSearchResults.length) % gCurrentSearchResults.length;
+        updateSelectedSearchResult();
+      }
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (gSearchSelectedIndex >= 0 && gSearchSelectedIndex < gCurrentSearchResults.length) {
+        navigateToSearchResult(gCurrentSearchResults[gSearchSelectedIndex]);
+      }
+      return;
+    }
+  }
+
+  // Code preview modal Esc
+  const codeModal = document.getElementById('code-preview-modal-backdrop');
+  if (codeModal && codeModal.style.display === 'flex' && e.key === 'Escape') {
+    closeCodePreviewModal();
+  }
+});
+
+

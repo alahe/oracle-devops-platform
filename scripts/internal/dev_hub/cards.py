@@ -25,7 +25,7 @@ def is_container_online(cn, running_containers):
     return False
 
 
-def render_service_cards(bp_list, active_bp_num, running_containers_initial, all_dbs_for_services, ide_profile, designer_profile):
+def render_service_cards(bp_list, active_bp_num, running_containers_initial, all_dbs_for_services, ide_profile=None, designer_profile=None, pub_profile=None, forms_profile=None):
     cards = []
     proxy_db = next((d for d in all_dbs_for_services if d.get("c_name") == "db-proxy"), None)
     proxy_port = proxy_db.get("port", "1532") if proxy_db else "1532"
@@ -38,19 +38,27 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
     alise_port = alise_db.get("port", "1533") if alise_db else "1533"
     alise_ws = alise_db.get("workspace", "ALISE_WORKSPACE") if alise_db else "ALISE_WORKSPACE"
 
-    ide_cfg = load_yaml_profile(ide_profile) if ide_profile != "NONE" else load_yaml_profile("web-ide-standard")
-    ide_port = ide_cfg.get("web_ide", {}).get("ports", {}).get("http_port", "8090")
+    ide_cfg = load_yaml_profile(ide_profile) if ide_profile and ide_profile != "NONE" else load_yaml_profile("web-ide-standard")
+    ide_port = str(ide_cfg.get("web_ide", {}).get("ports", {}).get("http_port") or ide_cfg.get("http_port") or ide_cfg.get("port") or "8090")
 
-    designer_cfg = load_yaml_profile(designer_profile) if designer_profile != "NONE" else load_yaml_profile("publisher-designer")
-    designer_port = designer_cfg.get("port", "6083")
+    designer_cfg = load_yaml_profile(designer_profile) if designer_profile and designer_profile != "NONE" else (load_yaml_profile("publisher-designer-standard") or load_yaml_profile("publisher-designer"))
+    designer_port = None
+    for p in designer_cfg.get("network", {}).get("ports", []):
+        if p.get("container_port") == 6080 or "novnc" in str(p.get("description", "")).lower():
+            designer_port = str(p.get("host_port"))
+            break
+        elif not designer_port and p.get("host_port"):
+            designer_port = str(p.get("host_port"))
+    if not designer_port:
+        designer_port = str(designer_cfg.get("http_port") or designer_cfg.get("port") or "6083")
 
-    pub_cfg = load_yaml_profile("publisher-standard")
-    pub_port = pub_cfg.get("publisher", {}).get("http_port", "9502")
+    pub_cfg = load_yaml_profile(pub_profile) if pub_profile and pub_profile != "NONE" else load_yaml_profile("publisher-standard")
+    pub_port = str(pub_cfg.get("publisher", {}).get("http_port") or pub_cfg.get("http_port") or pub_cfg.get("port") or "9502")
 
-    forms_cfg = load_yaml_profile("forms-standard")
-    forms_runtime_port = forms_cfg.get("forms", {}).get("http_port", "9001")
-    forms_vnc_port = forms_cfg.get("forms", {}).get("vnc_port", "6082")
-    forms_wls_port = forms_cfg.get("forms", {}).get("admin_port", "7001")
+    forms_cfg = load_yaml_profile(forms_profile) if forms_profile and forms_profile != "NONE" else load_yaml_profile("forms-standard")
+    forms_runtime_port = str(forms_cfg.get("forms", {}).get("http_port") or forms_cfg.get("http_port") or "9001")
+    forms_vnc_port = str(forms_cfg.get("forms", {}).get("vnc_port") or forms_cfg.get("vnc_port") or "6082")
+    forms_wls_port = str(forms_cfg.get("forms", {}).get("admin_port") or forms_cfg.get("admin_port") or "7001")
 
     for b in bp_list:
         b_num = b["num"]
@@ -100,6 +108,26 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
             elif b_num == 4 and not is_container_online("db-adb", running_containers_initial) and b_num != active_bp_num:
                 is_up = False
                 is_partial = False
+            elif b_num == 5 and not is_container_online("app-publisher", running_containers_initial) and not is_container_online("oracle-publisher-dev", running_containers_initial):
+                is_up = False
+                is_partial = False
+            elif b_num == 6 and not is_container_online("app-forms", running_containers_initial):
+                is_up = False
+                is_partial = False
+            elif b_num == 7 and not is_container_online("app-forms-publisher", running_containers_initial):
+                is_up = False
+                is_partial = False
+            elif b_num == 8 and not is_container_online("web-ide-dev", running_containers_initial):
+                is_up = False
+                is_partial = False
+            elif b_num == 9 and not is_container_online("app-publisher-designer", running_containers_initial) and not is_container_online("publisher-designer", running_containers_initial):
+                is_up = False
+                is_partial = False
+            elif b_num == 11:
+                has_local_db = any(d in running_containers_initial for d in ["db-proxy", "db-alise", "db-proxy-standalone", "db-publisher", "db-forms", "db-gvenzl", "db-adb", "db-forms-publisher"])
+                if has_local_db and b_num != active_bp_num:
+                    is_up = False
+                    is_partial = False
         else:
             is_up = False
             is_partial = False
@@ -187,7 +215,9 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
             ep_links.append('<a href="https://localhost:8448/ords/proxy_standalone/dba_admin/sign-in?username=DBA_ADMIN&r=_sdw" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/proxy_standalone/dba_admin/sign-in?username=DBA_ADMIN&r=_sdw\', \'DB_PROXY_STANDALONE_DBA_ADMIN\', \'DBA_ADMIN\', event)" data-i18n-title="tip_db_actions_wait" title="Database Actions (warmup ~1 min)">📊 DB Actions (DBA_ADMIN) ↗</a>')
             ep_links.append('<a href="https://localhost:8448/ords/proxy_standalone/" target="_blank" class="btn-endpoint" title="SSO REST Gateway">🌐 ORDS (proxy_standalone) ↗</a>')
         elif b_num == 5:
-            ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'DB_PUBLISHER_SYS\', \'Administrator\', event)" style="border-color:rgba(251,146,60,0.5); color:#fb923c;">📑 Open Analytics Publisher (BIP) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_DEVELOPER\', \'bip_developer\', event)" style="border-color:rgba(56,189,248,0.5); color:#38bdf8;">🎨 Developer Portal (bip_developer) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_USER\', \'bip_user\', event)" style="border-color:rgba(74,222,128,0.5); color:#4ade80;">👤 User Portal (bip_user) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_ADMIN\', \'bip_admin\', event)" style="border-color:rgba(251,146,60,0.5); color:#fb923c;">📑 Admin Portal (bip_admin) ↗</a>')
             ep_links.append(f'<a href="http://localhost:{pub_port}/console" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/console\', \'DB_PUBLISHER_SYS\', \'weblogic\', event)" style="color:#fbbf24;">⚙️ WebLogic Admin Console ↗</a>')
         elif b_num == 6:
             ep_links.append(f'<a href="http://localhost:{forms_runtime_port}/forms/frmservlet?form=test.fmx" target="_blank" class="btn-endpoint" style="color:#4ade80;">🟢 Forms Test Form ↗</a>')
@@ -209,17 +239,25 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
             ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'DB_PUBLISHER_SYS\', \'Administrator\', event)" style="color:#fb923c;">📑 Open Analytics Publisher (BIP) ↗</a>')
             ep_links.append(f'<a href="http://localhost:{pub_port}/console" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/console\', \'DB_PUBLISHER_SYS\', \'weblogic\', event)" style="color:#fbbf24;">⚙️ WebLogic Admin Console ↗</a>')
 
-        # Actions: Single Unified Action Button ("⚡ Käivitused & Haldus") + Icon Copy Button
+        # Actions: State-sensitive Action Button ("⚙️ Haldus & Taastamine" vs "⚡ Käivita & Juhi") + Icon Copy Button
         copy_tip = "tip_copy_stop_cmd" if is_up and b_num > 0 else "tip_copy_deploy_cmd"
         copy_title = "Kopeeri peatamiskäsk" if is_up and b_num > 0 else "Kopeeri juurutamiskäsk"
-        action_main_html = f'<button type="button" class="btn btn-primary btn-action-main btn-service-switch" onclick="openBlueprintModal({b_num}, \'ops\')"><span>⚡</span> <span data-i18n="btn_manage_ops">Käivitused & Haldus</span></button>'
+        if is_up:
+            btn_label_key = "btn_manage_ops_active"
+            btn_label_txt = "⚙️ Haldus & Taastamine"
+            btn_cls = "btn-secondary"
+        else:
+            btn_label_key = "btn_manage_ops_offline"
+            btn_label_txt = "⚡ Käivita & Juhi"
+            btn_cls = "btn-primary"
+        action_main_html = f'<button type="button" class="btn {btn_cls} btn-action-main btn-service-switch" onclick="openBlueprintModal({b_num}, \'ops\')"><span data-i18n="{btn_label_key}">{btn_label_txt}</span></button>'
         action_btns_html = f"""
             {action_main_html}
             <button type="button" class="btn btn-secondary btn-icon btn-bp-copy" onclick="handleCopyBpCmd({b_num}, this)" data-i18n-title="{copy_tip}" title="{copy_title}"><span>📋</span></button>
         """
         testing_badge_html = ""
-        if b.get("testing", False) or b_num in [8, 9, 10, 11]:
-            testing_badge_html = '<span class="status-pill" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); font-size: 0.74rem; font-weight: 600;" title="Konteiner käivitub, kuid funktsionaalsus on aktiivsel testimisel ja täiustamisel"><span class="status-dot" style="background:#f59e0b;"></span><span class="status-text" data-i18n="badge_testing_refinement">⚠️ Testimisel / Täiustamisel</span></span>'
+        if b.get("testing", False) or b_num in [10, 11]:
+            testing_badge_html = '<span class="badge-testing-pill" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); font-size: 0.72rem; font-weight: 600;" title="Konteiner käivitub, kuid funktsionaalsus on aktiivsel testimisel ja täiustamisel"><span class="badge-dot" style="width:6px; height:6px; border-radius:50%; background:#f59e0b;"></span><span data-i18n="badge_testing_refinement">⚠️ Testimisel / Täiustamisel</span></span>'
 
         card_html = f"""            <!-- Blueprint #{b_num}: {t_en} -->
                 <div class=\"card {card_cls}\" data-container=\"{primary_c}\" data-cnames=\"{cnames_str}\" data-bp=\"{b_num}\" data-cat=\"{b_cat}\" style=\"border-color: {theme['border']};\">
@@ -275,8 +313,18 @@ def get_user_desc_key(u_name, u_role, u_alias):
     return "desc_u_generic"
 
 
-def render_wallet_table_rows(all_dbs_for_services, passwords_map=None, pub_profile="publisher-standard", forms_profile="forms-standard", forms_wls_port="7001", pub_port="9502", running_containers=None):
-    passwords_map = passwords_map or {}
+def render_wallet_table_rows(all_dbs_for_services, passwords_map=None, pub_profile="publisher-standard", forms_profile="forms-standard", forms_wls_port=None, pub_port=None, running_containers=None):
+    if passwords_map is None:
+        passwords_map = {}
+
+    if not pub_port:
+        pub_cfg = load_yaml_profile(pub_profile) if pub_profile and pub_profile != "NONE" else {}
+        pub_port = str(pub_cfg.get("publisher", {}).get("http_port") or pub_cfg.get("http_port") or pub_cfg.get("port") or "9502")
+
+    if not forms_wls_port:
+        forms_cfg = load_yaml_profile(forms_profile) if forms_profile and forms_profile != "NONE" else {}
+        forms_wls_port = str(forms_cfg.get("forms", {}).get("admin_port") or forms_cfg.get("admin_port") or "7001")
+
     table_rows = []
     for db_info in all_dbs_for_services:
         c_name = db_info["c_name"]
@@ -368,17 +416,59 @@ def render_wallet_table_rows(all_dbs_for_services, passwords_map=None, pub_profi
         is_pub_up = is_container_online("app-publisher", running_containers)
         pub_status_badge = '<span class="badge badge-success" style="font-size:0.75rem; padding:3px 8px;">🟢 <span data-i18n="status_online">Töös</span></span>' if is_pub_up else '<span class="badge badge-danger" style="font-size:0.75rem; padding:3px 8px; background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.4);">🔴 <span data-i18n="status_offline">Maas</span></span>'
         table_rows.append(f"""                    <tr id=\"row-{pub_alias}\" data-cname=\"app-publisher\">
-                            <td><strong>📑 Analytics Publisher Admin</strong><br/><span style=\"font-size:0.75rem; color:#64748b;\">app-publisher (Port {pub_port})</span></td>
+                            <td><strong>👑 WebLogic Admin (Publisher)</strong><br/><span style=\"font-size:0.75rem; color:#64748b;\">app-publisher (Port {pub_port})</span></td>
                             <td class=\"wallet-status-cell\" data-cname=\"app-publisher\">{pub_status_badge}</td>
                             <td>
                                 <span style=\"background:rgba(251,146,60,0.18); color:#fb923c; padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.95rem; cursor:pointer; display:inline-block; margin-bottom:2px;\" onclick=\"copyUsername('weblogic', this)\" data-i18n-title=\"tip_copy_user\" title=\"Click to copy username\">weblogic</span><br/>
-                                <span style=\"font-size:0.75rem; color:#94a3b8;\">Publisher Superuser</span>
+                                <span style=\"font-size:0.75rem; color:#94a3b8;\">Domain Administrator</span>
                             </td>
                             <td><span style=\"background:rgba(251,146,60,0.15); color:#fb923c; padding:3px 8px; border-radius:4px; font-weight:600; font-size:0.85rem;\">WLS_ADMIN</span></td>
                             <td><code style=\"color:#22c55e; cursor:pointer;\" onclick=\"copyBadge(this, '{pub_alias}')\" title=\"Click to copy alias\">{pub_alias}</code></td>
                             <td>
                                 <button class=\"btn btn-sm btn-primary\" style=\"padding: 4px 8px; font-size: 0.75rem; margin-right: 4px;\" onclick=\"openServiceWithCredentials('{pub_url}', '{pub_alias}', 'weblogic', event)\" data-i18n-title=\"tip_open_service\" title=\"Opens portal & copies password to clipboard\"><span>🚀</span> <span data-i18n=\"btn_launch_copy\">Launch & Copy</span></button>
                                 <button class=\"copy-btn\" style=\"position:static; padding: 4px 8px; font-size: 0.75rem;\" onclick=\"handleCopyPassword('{pub_alias}', this)\" data-i18n-title=\"tip_copy_pwd\" title=\"Copy password to clipboard\">📋 <span data-i18n=\"btn_copy_pwd\">Password</span></button>
+                            </td>
+                        </tr>
+                        <tr id=\"row-PUBLISHER_DEVELOPER\" data-cname=\"app-publisher\">
+                            <td><strong>🎨 Publisher Developer</strong><br/><span style=\"font-size:0.75rem; color:#64748b;\">app-publisher (/Custom Templates)</span></td>
+                            <td class=\"wallet-status-cell\" data-cname=\"app-publisher\">{pub_status_badge}</td>
+                            <td>
+                                <span style=\"background:rgba(56,189,248,0.18); color:#38bdf8; padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.95rem; cursor:pointer; display:inline-block; margin-bottom:2px;\" onclick=\"copyUsername('bip_developer', this)\" data-i18n-title=\"tip_copy_user\" title=\"Click to copy username\">bip_developer</span><br/>
+                                <span style=\"font-size:0.75rem; color:#94a3b8;\">Template & Data Model Author</span>
+                            </td>
+                            <td><span style=\"background:rgba(56,189,248,0.15); color:#38bdf8; padding:3px 8px; border-radius:4px; font-weight:600; font-size:0.85rem;\">XMLP_DEVELOPER</span></td>
+                            <td><code style=\"color:#22c55e; cursor:pointer;\" onclick=\"copyBadge(this, 'PUBLISHER_DEVELOPER')\" title=\"Click to copy alias\">PUBLISHER_DEVELOPER</code></td>
+                            <td>
+                                <button class=\"btn btn-sm btn-primary\" style=\"padding: 4px 8px; font-size: 0.75rem; margin-right: 4px;\" onclick=\"openServiceWithCredentials('{pub_url}', 'PUBLISHER_DEVELOPER', 'bip_developer', event)\" data-i18n-title=\"tip_open_service\" title=\"Opens portal & copies password to clipboard\"><span>🚀</span> <span data-i18n=\"btn_launch_copy\">Launch & Copy</span></button>
+                                <button class=\"copy-btn\" style=\"position:static; padding: 4px 8px; font-size: 0.75rem;\" onclick=\"handleCopyPassword('PUBLISHER_DEVELOPER', this)\" data-i18n-title=\"tip_copy_pwd\" title=\"Copy password to clipboard\">📋 <span data-i18n=\"btn_copy_pwd\">Password</span></button>
+                            </td>
+                        </tr>
+                        <tr id=\"row-PUBLISHER_USER\" data-cname=\"app-publisher\">
+                            <td><strong>📑 Publisher User (Operator)</strong><br/><span style=\"font-size:0.75rem; color:#64748b;\">app-publisher (Job History)</span></td>
+                            <td class=\"wallet-status-cell\" data-cname=\"app-publisher\">{pub_status_badge}</td>
+                            <td>
+                                <span style=\"background:rgba(74,222,128,0.18); color:#4ade80; padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.95rem; cursor:pointer; display:inline-block; margin-bottom:2px;\" onclick=\"copyUsername('bip_user', this)\" data-i18n-title=\"tip_copy_user\" title=\"Click to copy username\">bip_user</span><br/>
+                                <span style=\"font-size:0.75rem; color:#94a3b8;\">Printout Runner & History</span>
+                            </td>
+                            <td><span style=\"background:rgba(74,222,128,0.15); color:#4ade80; padding:3px 8px; border-radius:4px; font-weight:600; font-size:0.85rem;\">XMLP_SCHEDULER</span></td>
+                            <td><code style=\"color:#22c55e; cursor:pointer;\" onclick=\"copyBadge(this, 'PUBLISHER_USER')\" title=\"Click to copy alias\">PUBLISHER_USER</code></td>
+                            <td>
+                                <button class=\"btn btn-sm btn-primary\" style=\"padding: 4px 8px; font-size: 0.75rem; margin-right: 4px;\" onclick=\"openServiceWithCredentials('{pub_url}', 'PUBLISHER_USER', 'bip_user', event)\" data-i18n-title=\"tip_open_service\" title=\"Opens portal & copies password to clipboard\"><span>🚀</span> <span data-i18n=\"btn_launch_copy\">Launch & Copy</span></button>
+                                <button class=\"copy-btn\" style=\"position:static; padding: 4px 8px; font-size: 0.75rem;\" onclick=\"handleCopyPassword('PUBLISHER_USER', this)\" data-i18n-title=\"tip_copy_pwd\" title=\"Copy password to clipboard\">📋 <span data-i18n=\"btn_copy_pwd\">Password</span></button>
+                            </td>
+                        </tr>
+                        <tr id=\"row-PUBLISHER_ADMIN\" data-cname=\"app-publisher\">
+                            <td><strong>⚙️ Publisher Catalog Admin</strong><br/><span style=\"font-size:0.75rem; color:#64748b;\">app-publisher (Catalog Admin)</span></td>
+                            <td class=\"wallet-status-cell\" data-cname=\"app-publisher\">{pub_status_badge}</td>
+                            <td>
+                                <span style=\"background:rgba(251,146,60,0.18); color:#fb923c; padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.95rem; cursor:pointer; display:inline-block; margin-bottom:2px;\" onclick=\"copyUsername('bip_admin', this)\" data-i18n-title=\"tip_copy_user\" title=\"Click to copy username\">bip_admin</span><br/>
+                                <span style=\"font-size:0.75rem; color:#94a3b8;\">Publisher Administrator</span>
+                            </td>
+                            <td><span style=\"background:rgba(244,63,94,0.15); color:#f43f5e; padding:3px 8px; border-radius:4px; font-weight:600; font-size:0.85rem;\">XMLP_ADMIN</span></td>
+                            <td><code style=\"color:#22c55e; cursor:pointer;\" onclick=\"copyBadge(this, 'PUBLISHER_ADMIN')\" title=\"Click to copy alias\">PUBLISHER_ADMIN</code></td>
+                            <td>
+                                <button class=\"btn btn-sm btn-primary\" style=\"padding: 4px 8px; font-size: 0.75rem; margin-right: 4px;\" onclick=\"openServiceWithCredentials('{pub_url}', 'PUBLISHER_ADMIN', 'bip_admin', event)\" data-i18n-title=\"tip_open_service\" title=\"Opens portal & copies password to clipboard\"><span>🚀</span> <span data-i18n=\"btn_launch_copy\">Launch & Copy</span></button>
+                                <button class=\"copy-btn\" style=\"position:static; padding: 4px 8px; font-size: 0.75rem;\" onclick=\"handleCopyPassword('PUBLISHER_ADMIN', this)\" data-i18n-title=\"tip_copy_pwd\" title=\"Copy password to clipboard\">📋 <span data-i18n=\"btn_copy_pwd\">Password</span></button>
                             </td>
                         </tr>""")
 

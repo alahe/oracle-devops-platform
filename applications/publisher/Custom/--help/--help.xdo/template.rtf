@@ -1,0 +1,43 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Segoe UI;}{\f1\fnil\fcharset0 Arial;}}
+{\colortbl ;\red15\green41\blue66;\red51\green65\blue85;\red6\green95\blue70;\red248\green250\blue252;\red203\green213\blue225;}
+{\stylesheet{\s1\b\fs30\cf1 Heading 1;}{\s2\b\fs22\cf1 Heading 2;}}
+{\*\generator Oracle DevOps Platform - Accessible Publisher Template Studio 2026;}
+\viewkind4\uc1 
+
+{\*\picprop{\sp{\sn wzDescription}{\sv Ettevõtte logo}}{\sp{\sn wzName}{\sv url:{concat($IMAGE_DIR, '/company_logo.png')}}}}
+\pard\sa150\sl276\slmult1\b\fs32\cf1 <?HEADER/COMPANY_NAME?>\b0\fs18\cf2\par
+\pard\sa60\sl220\slmult1\fs18 Registrikood: \b <?HEADER/REG_CODE?>\b0  | KMKR nr: \b <?HEADER/VAT_NUMBER?>\b0\par
+\pard\sa150\sl240\slmult1\cf5\hr\par
+
+\pard\sa150\sl276\slmult1\b\fs28\cf1 <?HEADER/REPORT_TITLE?>: <?HEADER/DOCUMENT_NUM?>\b0\fs18\cf2\par
+\pard\sa100\sl240\slmult1 Kuupäev: \b <?HEADER/DOCUMENT_DATE?>\b0  | Koostaja: \b <?HEADER/AUTHOR?>\b0\par
+
+\trowd\trhdr\trgaph108\trleft-108\trbrdrt\brdrs\brdrw10\brdrcf1\trbrdrb\brdrs\brdrw15\brdrcf1
+\clvertalt\clcbpat4\cellx800
+\clvertalt\clcbpat4\cellx3000
+\clvertalt\clcbpat4\cellx6500
+\clvertalt\clcbpat4\cellx8000
+\clvertalt\clcbpat4\cellx9600
+\pard\intbl\qc\b\fs16\cf1 Nr\cell
+\pard\intbl\ql\b\fs16\cf1 Kood\cell
+\pard\intbl\ql\b\fs16\cf1 Kirjeldus / Nimetus\cell
+\pard\intbl\qr\b\fs16\cf1 Kogus\cell
+\pard\intbl\qr\b\fs16\cf1 Summa (EUR)\cell
+\row
+
+\trowd\trgaph108\trleft-108
+\clvertalt\cellx800
+\clvertalt\cellx3000
+\clvertalt\cellx6500
+\clvertalt\cellx8000
+\clvertalt\cellx9600
+\pard\intbl\qc\fs16 <?for-each:ROWS/ROW?><?ROW_NUM?>\cell
+\pard\intbl\ql\fs16 <?ITEM_CODE?>\cell
+\pard\intbl\ql\fs16 <?ITEM_NAME?>\cell
+\pard\intbl\qr\fs16 <?QTY?>\cell
+\pard\intbl\qr\fs16 <?format-number(TOTAL, '#,##0.00')?><?end for-each?>\cell
+\row
+
+\pard\sa100\sl240\slmult1\par
+\pard\qr\sa100\sl240\slmult1\b\fs22\cf1 KOKKU: <?TOTALS/GRAND_TOTAL?> EUR\b0\par
+}

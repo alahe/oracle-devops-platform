@@ -43,7 +43,7 @@ scripts\certs\trust-local-cert.cmd
 ```mermaid
 flowchart TD
     Start(["🚀 Developer Starts"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
-    Clone --> ChooseBP{"2. Select Architecture Blueprint"}
+    Clone --> ChooseBP{"2. Select Architecture<br/>Blueprint"}
     
     ChooseBP -->|Canonical Default| BP0["./scripts/setup-all.sh (BP 0)"]
     ChooseBP -->|Business ALISE DB| BP1["./scripts/setup-all.sh -b 1"]
@@ -78,33 +78,41 @@ flowchart TD
         BP0["BP 0: Default Proxy DB & ORDS<br/>db-proxy (:1532) + app-ords (:8088/8448)"]
     end
 
-    subgraph DatabaseStacks ["🗄️ GROUP 1: DATABASE STACKS (1–4)"]
-        BP1["BP 1: Standalone ALISE DB (:1533)"]
-        BP2["BP 2: Standalone Proxy DB (:1537)"]
-        BP3["BP 3: Standalone Gvenzl Community DB (:1535)"]
-        BP4["BP 4: Standalone Autonomous DB Cloud (:1536)"]
+    subgraph Tier1 ["ROW 1: CORE ARCHITECTURE (1–7)"]
+        subgraph DatabaseStacks ["🗄️ GROUP 1: DATABASE STACKS (1–4)"]
+            direction TB
+            BP1["BP 1: Standalone ALISE DB (:1533)"]
+            BP2["BP 2: Standalone Proxy DB (:1537)"]
+            BP3["BP 3: Standalone Gvenzl DB (:1535)"]
+            BP4["BP 4: Standalone ADB Cloud (:1536)"]
+        end
+
+        subgraph Middleware ["🏢 GROUP 2: ENTERPRISE MIDDLEWARE (5–7)"]
+            direction TB
+            BP5["BP 5: Standalone Analytics<br/>Publisher (:1531, :9502)"]
+            BP6["BP 6: Standalone Oracle<br/>Forms 14c (:1534, :9001, :6082)"]
+            BP7["BP 7: Consolidated Forms +<br/>Publisher (:1538, :9005, :9505)"]
+        end
     end
 
-    subgraph Middleware ["🏢 GROUP 2: ENTERPRISE MIDDLEWARE (5–7)"]
-        BP5["BP 5: Standalone Analytics Publisher (:1531, :9502)"]
-        BP6["BP 6: Standalone Oracle Forms 14c (:1534, :9001, :6082)"]
-        BP7["BP 7: Consolidated Forms + Publisher FMW (:1531, :9001, :9502)"]
+    subgraph Tier2 ["ROW 2: DEVELOPER & REMOTE EDGE (8–11)"]
+        subgraph DeveloperStudio ["💻 GROUP 3: DEVELOPER STUDIO (8–9)"]
+            direction TB
+            BP8["BP 8: Standalone Web-IDE (:8090)"]
+            BP9["BP 9: Publisher Designer (:6083)"]
+        end
+
+        subgraph RemoteGateways ["🌐 GROUP 4: REMOTE GATEWAYS (10–11)"]
+            direction TB
+            BP10["BP 10: Remote ORDS Gateway (:8088/8448)<br/>⚠️ Testing & Refinement"]
+            BP11["BP 11: Remote Publisher (:9502)<br/>⚠️ Testing & Refinement"]
+        end
     end
 
-    subgraph DeveloperStudio ["💻 GROUP 3: DEVELOPER STUDIO (8–9)"]
-        BP8["BP 8: Standalone Web-IDE (:8090)<br/>⚠️ Testing & Refinement"]
-        BP9["BP 9: Publisher Designer (:6083)<br/>⚠️ Testing & Refinement"]
-    end
-
-    subgraph RemoteGateways ["🌐 GROUP 4: REMOTE & EDGE GATEWAYS (10–11)"]
-        BP10["BP 10: Remote ORDS Gateway (:8088/8448)<br/>⚠️ Testing & Refinement"]
-        BP11["BP 11: Remote Publisher (:9502/9503)<br/>⚠️ Testing & Refinement"]
-    end
-
-    Default --> DatabaseStacks
-    Default --> Middleware
-    Default --> DeveloperStudio
-    Default --> RemoteGateways
+    BP0 --> BP1
+    BP0 --> BP5
+    BP1 --> BP8
+    BP5 --> BP10
 ```
 
 ---

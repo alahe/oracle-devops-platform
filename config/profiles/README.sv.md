@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🗄️ Matris för Tjänste- och databasprofiler (`config/profiles/`)
+# 🗄️ Matris för tjänste- och databasprofiler (`config/profiles/`)
 
 Denna katalog innehåller domänisolerade YAML-profiler som används av plattformens **Dynamiska Profilhanterare** (`load-profile.sh`, `apply-profile-users.sh`, `create-wallet.sh`, `register-connections.sh`).
 

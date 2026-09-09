@@ -17,7 +17,7 @@ SCRIPT_DOC_PATTERNS = [
         "doc_key": "glossary",
         "title": "Architecture Glossary & Acronyms"
     }),
-    (r"^test-(devhub-mermaid-rendering|devhub-search-and-filters|devhub-testing-tab|dev-hub-generation|i18n-translations|filename-portability|multilingual-support|live-platform|pre-commit.*)\.sh$", {
+    (r"^(test|report)-(repo-stats|devhub-mermaid-rendering|devhub-search-and-filters|devhub-testing-tab|dev-hub-generation|i18n-translations|filename-portability|multilingual-support|live-platform|pre-commit.*|devhub-doc-links|title-capitalization.*)\.sh$", {
         "doc_file": "docs/testing-framework-and-devhub.md",
         "doc_key": "testing_framework",
         "title": "Testing Framework & Dev Hub Architecture"
@@ -27,7 +27,7 @@ SCRIPT_DOC_PATTERNS = [
         "doc_key": "devhub_browser_testing",
         "title": "DevHub Browser Blueprints E2E Testing Plan"
     }),
-    (r"^test-(all-blueprints.*|blueprints.*|cli-blueprint-params|script-deploy-blueprint|script-test-all-blueprints.*)\.sh$", {
+    (r"^test-(all-blueprints.*|blueprints.*|blueprint-profiles-integrity|cli-blueprint-params|script-deploy-blueprint|script-test-all-blueprints.*)\.sh$", {
         "doc_file": "docs/incremental-blueprints-test-plan.md",
         "doc_key": "incremental_blueprints_testing",
         "title": "Incremental Blueprints Testing Plan"
@@ -273,6 +273,26 @@ def get_test_suites_catalog(ws):
             "tests": ["test-security-audit.sh"],
             "cmd": "./scripts/test-security-audit.sh"
         },
+        "doc_links": {
+            "key": "doc_links",
+            "category": "compliance",
+            "title": "Dev Hub Documentation Links & Language Switchers",
+            "desc": "Universal audit of internal relative links, 6-language switcher parity, and SPA route interception to prevent 404s",
+            "icon": "🔗",
+            "count": 1,
+            "tests": ["test-devhub-doc-links.sh"],
+            "cmd": "./tests/unit/test-devhub-doc-links.sh"
+        },
+        "title_capitalization": {
+            "key": "title_capitalization",
+            "category": "compliance",
+            "title": "Language Title Capitalization Rules",
+            "desc": "Validates English Title Case (Rule 9 canonical) and Sentence case across ET, FI, SV, LV, LT in Dev Hub and Markdown docs",
+            "icon": "🔤",
+            "count": 1,
+            "tests": ["test-title-capitalization-rules.sh"],
+            "cmd": "./tests/unit/test-title-capitalization-rules.sh"
+        },
         "ci_sim": {
             "key": "ci_sim",
             "category": "ci",
@@ -292,6 +312,16 @@ def get_test_suites_catalog(ws):
             "count": 1,
             "tests": ["generate-test-coverage-report.sh"],
             "cmd": "./tests/generate-test-coverage-report.sh"
+        },
+        "repo_stats": {
+            "key": "repo_stats",
+            "category": "ci",
+            "title": "Repository Statistics & Architecture Metrics",
+            "desc": "Calculates LOC breakdown, test distribution, blueprints, profiles, and 6-language i18n parity",
+            "icon": "📈",
+            "count": 1,
+            "tests": ["report-repo-stats.sh"],
+            "cmd": "./tests/report-repo-stats.sh"
         }
     }
 

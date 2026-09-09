@@ -10,33 +10,41 @@ flowchart TD
         BP0["BP 0: Numatytasis Proxy DB & ORDS<br/>db-proxy (:1532) + app-ords (:8088/8448)"]
     end
 
-    subgraph DatabaseStacks ["🗄️ 1 GRUPĖ: DUOMENŲ BAZIŲ STEKAI (1–4)"]
-        BP1["BP 1: Atskira ALISE DB (:1533)"]
-        BP2["BP 2: Atskira Proxy DB (:1537)"]
-        BP3["BP 3: Atskira Gvenzl Bendruomenės DB (:1535)"]
-        BP4["BP 4: Atskira Autonomous DB Cloud (:1536)"]
+    subgraph Tier1 ["1 EILUTĖ: PAGRINDINĖ ARCHITEKTŪRA (1–7)"]
+        subgraph DatabaseStacks ["🗄️ 1 GRUPĖ: DUOMENŲ BAZIŲ STEKAI (1–4)"]
+            direction TB
+            BP1["BP 1: Atskira ALISE DB (:1533)"]
+            BP2["BP 2: Atskira Proxy DB (:1537)"]
+            BP3["BP 3: Atskira Gvenzl Bendruomenės DB (:1535)"]
+            BP4["BP 4: Atskira Autonomous DB Cloud (:1536)"]
+        end
+
+        subgraph Middleware ["🏢 2 GRUPĖ: ĮMONĖS<br/>VIDURINIOJI ĮRANGA (5–7)"]
+            direction TB
+            BP5["BP 5: Atskiras Analytics<br/>Publisher (:1531, :9502)"]
+            BP6["BP 6: Atskira Oracle<br/>Forms 14c (:1534, :9001, :6082)"]
+            BP7["BP 7: Suvienyta Forms +<br/>Publisher (:1538, :9005, :9505)"]
+        end
     end
 
-    subgraph Middleware ["🏢 2 GRUPĖ: ĮMONĖS VIDURINIOJI ĮRANGA (5–7)"]
-        BP5["BP 5: Atskiras Analytics Publisher (:1531, :9502)"]
-        BP6["BP 6: Atskira Oracle Forms 14c (:1534, :9001, :6082)"]
-        BP7["BP 7: Suvienyta Forms + Publisher FMW (:1531, :9001, :9502)"]
+    subgraph Tier2 ["2 EILUTĖ: KŪRIMAS IR KRAŠTINIAI TINKLAI (8–11)"]
+        subgraph DeveloperStudio ["💻 3 GRUPĖ: KŪRĖJO STUDIJA (8–9)"]
+            direction TB
+            BP8["BP 8: Atskira Web IDE (:8090)"]
+            BP9["BP 9: Publisher Designer (:6083)"]
+        end
+
+        subgraph RemoteGateways ["🌐 4 GRUPĖ: NUOTOLINIAI IR<br/>KRAŠTINIAI TINKLAI (10–11)"]
+            direction TB
+            BP10["BP 10: Nuotolinis ORDS<br/>tinklų sietuvas (:8088/8448)<br/>⚠️ Testuojama ir tobulinama"]
+            BP11["BP 11: Nuotolinis Publisher (:9502/9503)<br/>⚠️ Testuojama ir tobulinama"]
+        end
     end
 
-    subgraph DeveloperStudio ["💻 3 GRUPĖ: KŪRĖJO STUDIJA (8–9)"]
-        BP8["BP 8: Atskira Web IDE (:8090)<br/>⚠️ Testuojama ir tobulinama"]
-        BP9["BP 9: Publisher Designer (:6083)<br/>⚠️ Testuojama ir tobulinama"]
-    end
-
-    subgraph RemoteGateways ["🌐 4 GRUPĖ: NUOTOLINIAI IR KRAŠTINIAI TINKLAI (10–11)"]
-        BP10["BP 10: Nuotolinis ORDS tinklų sietuvas (:8088/8448)<br/>⚠️ Testuojama ir tobulinama"]
-        BP11["BP 11: Nuotolinis Publisher (:9502/9503)<br/>⚠️ Testuojama ir tobulinama"]
-    end
-
-    Default --> DatabaseStacks
-    Default --> Middleware
-    Default --> DeveloperStudio
-    Default --> RemoteGateways
+    BP0 --> BP1
+    BP0 --> BP5
+    BP1 --> BP8
+    BP5 --> BP10
 ```
 
 ---
@@ -77,8 +85,8 @@ flowchart TD
 | **5** | [`.env.5-standalone-publisher`](.env.5-standalone-publisher) | `db-publisher-oracle.yaml` (:1531) | `publisher-standard.yaml` (:9502) | `db-publisher`, `app-publisher` | Atskiras Analytics Publisher 2025 ir speciali RCU saugyklos DB. |
 | **6** | [`.env.6-standalone-forms`](.env.6-standalone-forms) | `db-forms-oracle.yaml` (:1534) | `forms-standard.yaml` (:9001, :6082) | `db-forms`, `app-forms` | Atskira Oracle Forms 14c ir HTML5 noVNC Forms Builder. |
 | **7** | [`.env.7-consolidated-forms-publisher`](.env.7-consolidated-forms-publisher) | `db-publisher-oracle.yaml` (:1531) | `forms-publisher-unified.yaml` (:9001/9502/6082) | `db-publisher`, `app-forms-publisher` | Vieningas WebLogic konteineris, vykdantis ir Forms 14c, ir Publisher. |
-| **8** | [`.env.8-standalone-web-ide`](.env.8-standalone-web-ide) | - *(Zero DB)* | `web-ide-standard.yaml` (:8090/8449/8091) | `web-ide-dev` | **⚠️ Testuojama ir tobulinama:** VS Code serveris ir SQL Developer veikia. Artifactory veidrodžio konfigūracija kuriama. |
-| **9** | [`.env.9-standalone-publisher-designer`](.env.9-standalone-publisher-designer) | - *(Zero DB)* | `publisher-designer-standard.yaml` (:6083 noVNC) | `app-publisher-designer` | **⚠️ Testuojama ir tobulinama:** noVNC darbalaukio konteineris pasileidžia. MS Word ir BIP Add-in integracija vyksta. |
+| **8** | [`.env.8-standalone-web-ide`](.env.8-standalone-web-ide) | - *(Zero DB)* | `web-ide-standard.yaml` (:8090/8450/8091) | `web-ide-dev` | Atskira kūrėjo Web IDE darbo vieta: VS Code serveris, SQLcl ir iš anksto sukonfigūruoti įrankiai. |
+| **9** | [`.env.9-standalone-publisher-designer`](.env.9-standalone-publisher-designer) | - *(Zero DB)* | `publisher-designer-standard.yaml` (:6083 noVNC) | `app-publisher-designer` | noVNC darbalaukio konteineris MS Word & BIP Template Builder RTF šablonams (`setup-word-designer.sh`). |
 | **10** | [`.env.10-remote-ords`](.env.10-remote-ords) | `MAIN_DB_PROFILE=NONE` | `ords-standalone.yaml` (:8088/8448) | `app-ords` | **⚠️ Testuojama ir tobulinama:** Atskiras ORDS konteineris pasileidžia. Nuotolinis maršrutizavimas į debesį kuriamas. |
 | **11** | [`.env.11-remote-publisher`](.env.11-remote-publisher) | `MAIN_DB_PROFILE=NONE` | `publisher-standard.yaml` (:9502/9503) | `app-publisher` | **⚠️ Testuojama ir tobulinama:** Publisher pasileidžia. Ataskaitų teikimas prieš išorines duomenų bazes kuriamas. |
 

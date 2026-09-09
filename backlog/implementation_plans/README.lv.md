@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Tehniskie Īstenošanas Plāni (`backlog/implementation_plans/`)
+# 📐 Tehniskie īstenošanas plāni (`backlog/implementation_plans/`)
 
 Šajā direktorijā tiek glabāti detalizēti tehniskās īstenošanas plāni un arhitektūras lēmumi.
 

@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../security-audit-report.md) | [ 🇪🇪 Eesti ](../et/security-audit-report.md) | [ 🇫🇮 Suomi ](../fi/security-audit-report.md) | [ 🇸🇪 Svenska ](security-audit-report.md) | [ 🇱🇻 Latviešu ](../lv/security-audit-report.md) | [ 🇱🇹 Lietuvių ](../lt/security-audit-report.md)
 
-# 🛡️ Företagsklassad Säkerhetsrevisionsrapport & Hardening-Guide
+# 🛡️ Företagsklassad säkerhetsrevisionsrapport & hardening-guide
 
 Detta dokument presenterar den övergripande säkerhetsrevisionsmetodiken, granskningsresultat, åtgärder och efterlevnad för **Oracle DevOps Platform** och **Oracle APEX applikationsmotor**.
 

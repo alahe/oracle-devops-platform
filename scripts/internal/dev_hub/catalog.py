@@ -10,17 +10,39 @@ DOC_SPECS = [
         "rel": "README.md",
         "titles": {
             "en": "📖 Quick Start & Platform Overview",
-            "et": "📖 Kiiralustus ja Platvormi Ülevaade",
-            "sv": "📖 Snabbstart & Plattformöversikt",
-            "lv": "📖 Ātrā Darba Sākšana & Pārskats",
-            "lt": "📖 Greitas Pradžiamokslis ir Apžvalga"
+            "et": "📖 Kiiralustus ja platvormi ülevaade",
+            "fi": "📖 Pika-aloitus ja alustan yleiskatsaus",
+            "sv": "📖 Snabbstart & plattformöversikt",
+            "lv": "📖 Ātrā darba sākšana & pārskats",
+            "lt": "📖 Greitas pradžiamokslis ir apžvalga"
         },
         "files": {
             "en": "README.md",
             "et": "docs/et/README.md",
+            "fi": "docs/fi/README.md",
             "sv": "docs/sv/README.md",
             "lv": "docs/lv/README.md",
             "lt": "docs/lt/README.md"
+        }
+    },
+    {
+        "id": "getting-started",
+        "rel": "docs/getting-started-from-scratch.md",
+        "titles": {
+            "en": "🚀 Zero-to-Hero Quickstart (From Scratch)",
+            "et": "🚀 Kiirstardi juhend (nullist alustamine)",
+            "fi": "🚀 Pikaopas (alusta alkaen)",
+            "sv": "🚀 Snabbstart (från grunden)",
+            "lv": "🚀 Ātrā sākšana (no nulles)",
+            "lt": "🚀 Greita pradžia (nuo nulio)"
+        },
+        "files": {
+            "en": "docs/getting-started-from-scratch.md",
+            "et": "docs/et/getting-started-from-scratch.md",
+            "fi": "docs/getting-started-from-scratch.md",
+            "sv": "docs/getting-started-from-scratch.md",
+            "lv": "docs/getting-started-from-scratch.md",
+            "lt": "docs/getting-started-from-scratch.md"
         }
     },
     {
@@ -28,11 +50,11 @@ DOC_SPECS = [
         "rel": "docs/quick-login-guide.md",
         "titles": {
             "en": "🚀 Quick Login & Clipboard Guide",
-            "et": "🚀 Kiirjuhend Sisselogimiseks",
-            "fi": "🚀 Pikaopas Kirjautumiseen",
-            "sv": "🚀 Snabbguide för Inloggning",
-            "lv": "🚀 Ātrās Pieteikšanās Rokasgrāmata",
-            "lt": "🚀 Greito Prisijungimo Gidas"
+            "et": "🚀 Kiirjuhend sisselogimiseks",
+            "fi": "🚀 Pikaopas kirjautumiseen",
+            "sv": "🚀 Snabbguide för inloggning",
+            "lv": "🚀 Ātrās pieteikšanās rokasgrāmata",
+            "lt": "🚀 Greito prisijungimo gidas"
         },
         "files": {
             "en": "docs/quick-login-guide.md",
@@ -48,11 +70,11 @@ DOC_SPECS = [
         "rel": "docs/testing-framework-and-devhub.md",
         "titles": {
             "en": "🧪 Automated Testing Framework & Dev Hub",
-            "et": "🧪 Automaattestimise Raamistik & Dev Hub",
+            "et": "🧪 Automaattestimise raamistik & Dev Hub",
             "fi": "🧪 Automaattitestauskehys & Dev Hub",
-            "sv": "🧪 Automatiserat Testramverk & Dev Hub",
-            "lv": "🧪 Automatizētās Testēšanas Ietvars & Dev Hub",
-            "lt": "🧪 Automatizuoto Testavimo Sistema & Dev Hub"
+            "sv": "🧪 Automatiserat testramverk & Dev Hub",
+            "lv": "🧪 Automatizētās testēšanas ietvars & Dev Hub",
+            "lt": "🧪 Automatizuoto testavimo sistema & Dev Hub"
         },
         "files": {
             "en": "docs/testing-framework-and-devhub.md",
@@ -68,11 +90,11 @@ DOC_SPECS = [
         "rel": "docs/db-profiles-and-topology.md",
         "titles": {
             "en": "🏗️ Database Profiles & Topology",
-            "et": "🏗️ Andmebaasi Profiilid ja Topoloogia",
-            "fi": "🏗️ Tietokantaprofiilit ja Topologia",
-            "sv": "🏗️ Databasprofiler och Topologi",
-            "lv": "🏗️ Datubāzu Profili un Topoloģija",
-            "lt": "🏗️ Duomenų Bazių Profiliai ir Topologija"
+            "et": "🏗️ Andmebaasi profiilid ja topoloogia",
+            "fi": "🏗️ Tietokantaprofiilit ja topologia",
+            "sv": "🏗️ Databasprofiler och topologi",
+            "lv": "🏗️ Datubāzu profili un topoloģija",
+            "lt": "🏗️ Duomenų bazių profiliai ir topologija"
         },
         "files": {
             "en": "docs/db-profiles-and-topology.md",
@@ -88,11 +110,11 @@ DOC_SPECS = [
         "rel": "docs/forms-setup.md",
         "titles": {
             "en": "📄 Oracle Forms 14c & Modernization",
-            "et": "📄 Oracle Forms 14c ja Moderniseerimine",
-            "fi": "📄 Oracle Forms 14c & Modernisointi",
-            "sv": "📄 Oracle Forms 14c & Modernisering",
-            "lv": "📄 Oracle Forms 14c un Modernizācija",
-            "lt": "📄 Oracle Forms 14c ir Modernizavimas"
+            "et": "📄 Oracle Forms 14c ja moderniseerimine",
+            "fi": "📄 Oracle Forms 14c & modernisointi",
+            "sv": "📄 Oracle Forms 14c & modernisering",
+            "lv": "📄 Oracle Forms 14c un modernizācija",
+            "lt": "📄 Oracle Forms 14c ir modernizavimas"
         },
         "files": {
             "en": "docs/forms-setup.md",
@@ -108,11 +130,11 @@ DOC_SPECS = [
         "rel": "docs/publisher-setup.md",
         "titles": {
             "en": "📊 Analytics Publisher (Pixel-Perfect)",
-            "et": "📊 Analytics Publisher Aruandlus",
-            "fi": "📊 Analytics Publisher Raportointi",
-            "sv": "📊 Analytics Publisher Rapportering",
-            "lv": "📊 Analytics Publisher Atskaites",
-            "lt": "📊 Analytics Publisher Ataskaitos"
+            "et": "📊 Analytics Publisher aruandlus",
+            "fi": "📊 Analytics Publisher raportointi",
+            "sv": "📊 Analytics Publisher rapportering",
+            "lv": "📊 Analytics Publisher atskaites",
+            "lt": "📊 Analytics Publisher ataskaitos"
         },
         "files": {
             "en": "docs/publisher-setup.md",
@@ -124,8 +146,28 @@ DOC_SPECS = [
         }
     },
     {
+        "id": "publisher-template-builder",
+        "rel": "docs/publisher-template-builder-guide.md",
+        "titles": {
+            "en": "🎨 Publisher Template Builder & Accessibility Guide",
+            "et": "🎨 Publisher malli kujundaja ja ligipääsetavuse juhend",
+            "fi": "🎨 Publisher-mallinrakentaja & saavutettavuusopas",
+            "sv": "🎨 Publisher mallbyggare & tillgänglighetsguide",
+            "lv": "🎨 Publisher veidņu veidotājs & piekļūstamības rokasgrāmata",
+            "lt": "🎨 Publisher šablonų kūrėjas ir prieinamumo gidas"
+        },
+        "files": {
+            "en": "docs/publisher-template-builder-guide.md",
+            "et": "docs/et/publisher-template-builder-guide.md",
+            "fi": "docs/fi/publisher-template-builder-guide.md",
+            "sv": "docs/sv/publisher-template-builder-guide.md",
+            "lv": "docs/lv/publisher-template-builder-guide.md",
+            "lt": "docs/lt/publisher-template-builder-guide.md"
+        }
+    },
+    {
         "id": "security",
-        "rel": "docs/turvalisus.md",
+        "rel": "docs/security.md",
         "titles": {
             "en": "🔐 Security, TLS & SEPS Wallet",
             "et": "🔐 Turvalisus, TLS ja SEPS Wallet",
@@ -135,12 +177,12 @@ DOC_SPECS = [
             "lt": "🔐 Saugumas, TLS ir SEPS Wallet"
         },
         "files": {
-            "en": "docs/turvalisus.md",
-            "et": "docs/turvalisus.md",
-            "fi": "docs/turvalisus.md",
-            "sv": "docs/turvalisus.md",
-            "lv": "docs/turvalisus.md",
-            "lt": "docs/turvalisus.md"
+            "en": "docs/security.md",
+            "et": "docs/et/security.md",
+            "fi": "docs/fi/security.md",
+            "sv": "docs/sv/security.md",
+            "lv": "docs/lv/security.md",
+            "lt": "docs/lt/security.md"
         }
     },
     {
@@ -148,7 +190,7 @@ DOC_SPECS = [
         "rel": "docs/web-ide-artifactory.md",
         "titles": {
             "en": "💻 Web IDE & Artifactory Setup",
-            "et": "💻 Web IDE ja Artifactory Seadistus",
+            "et": "💻 Web IDE ja Artifactory seadistus",
             "fi": "💻 Web IDE & Artifactory -asennus",
             "sv": "💻 Web IDE och Artifactory",
             "lv": "💻 Web IDE un Artifactory",
@@ -158,8 +200,8 @@ DOC_SPECS = [
             "en": "docs/web-ide-artifactory.md",
             "et": "docs/et/web-ide-artifactory.md",
             "fi": "docs/fi/web-ide-artifactory.md",
-            "sv": "docs/web-ide-artifactory.md",
-            "lv": "docs/web-ide-artifactory.md",
+            "sv": "docs/sv/web-ide-artifactory.md",
+            "lv": "docs/lv/web-ide-artifactory.md",
             "lt": "docs/lt/web-ide-artifactory.md"
         }
     },
@@ -168,19 +210,19 @@ DOC_SPECS = [
         "rel": "docs/apex-apps-deployment.md",
         "titles": {
             "en": "📦 APEX Application CI/CD Deployment",
-            "et": "📦 APEX Rakenduste CI/CD Tarne",
+            "et": "📦 APEX rakenduste CI/CD tarne",
             "fi": "📦 APEX-sovellusten CI/CD -julkaisu",
-            "sv": "📦 APEX Applikation CI/CD Deployment",
-            "lv": "📦 APEX Lietotņu CI/CD Piegāde",
-            "lt": "📦 APEX Programų CI/CD Diegimas"
+            "sv": "📦 APEX applikation CI/CD deployment",
+            "lv": "📦 APEX lietotņu CI/CD piegāde",
+            "lt": "📦 APEX programų CI/CD diegimas"
         },
         "files": {
             "en": "docs/apex-apps-deployment.md",
-            "et": "docs/apex-apps-deployment.md",
-            "fi": "docs/apex-apps-deployment.md",
-            "sv": "docs/apex-apps-deployment.md",
-            "lv": "docs/apex-apps-deployment.md",
-            "lt": "docs/apex-apps-deployment.md"
+            "et": "docs/et/apex-apps-deployment.md",
+            "fi": "docs/fi/apex-apps-deployment.md",
+            "sv": "docs/sv/apex-apps-deployment.md",
+            "lv": "docs/lv/apex-apps-deployment.md",
+            "lt": "docs/lt/apex-apps-deployment.md"
         }
     },
     {
@@ -188,19 +230,19 @@ DOC_SPECS = [
         "rel": "docs/setup-all-workflow.md",
         "titles": {
             "en": "⚡ Setup-All Architecture & Metrics",
-            "et": "⚡ Setup-All Arhitektuur ja Mõõdikud",
-            "fi": "⚡ Setup-All Arkkitehtuuri ja Mittarit",
-            "sv": "⚡ Setup-All Arkitektur och Mätvärden",
-            "lv": "⚡ Setup-All Arhitektūra un Metrika",
-            "lt": "⚡ Setup-All Architektūra ir Metrika"
+            "et": "⚡ Setup-All arhitektuur ja mõõdikud",
+            "fi": "⚡ Setup-All arkkitehtuuri ja mittarit",
+            "sv": "⚡ Setup-All arkitektur och mätvärden",
+            "lv": "⚡ Setup-All arhitektūra un metrika",
+            "lt": "⚡ Setup-All architektūra ir metrika"
         },
         "files": {
             "en": "docs/setup-all-workflow.md",
-            "et": "docs/setup-all-workflow.md",
-            "fi": "docs/setup-all-workflow.md",
-            "sv": "docs/setup-all-workflow.md",
-            "lv": "docs/setup-all-workflow.md",
-            "lt": "docs/setup-all-workflow.md"
+            "et": "docs/et/setup-all-workflow.md",
+            "fi": "docs/fi/setup-all-workflow.md",
+            "sv": "docs/sv/setup-all-workflow.md",
+            "lv": "docs/lv/setup-all-workflow.md",
+            "lt": "docs/lt/setup-all-workflow.md"
         }
     },
     {
@@ -208,19 +250,19 @@ DOC_SPECS = [
         "rel": "docs/future-plans.md",
         "titles": {
             "en": "🚀 Future Architecture Roadmap",
-            "et": "🚀 Tuleviku Arhitektuurne Teekaart",
-            "fi": "🚀 Tulevaisuuden Arkkitehtuurin Tie-kartta",
-            "sv": "🚀 Framtida Arkitektur Färdplan",
-            "lv": "🚀 Nākotnes Arhitektūras Ceļvedis",
-            "lt": "🚀 Ateities Architektūros Gairės"
+            "et": "🚀 Tuleviku arhitektuurne teekaart",
+            "fi": "🚀 Tulevaisuuden arkkitehtuurin tiekartta",
+            "sv": "🚀 Framtida arkitektur färdplan",
+            "lv": "🚀 Nākotnes arhitektūras ceļvedis",
+            "lt": "🚀 Ateities architektūros gairės"
         },
         "files": {
             "en": "docs/future-plans.md",
-            "et": "docs/future-plans.md",
-            "fi": "docs/future-plans.md",
-            "sv": "docs/future-plans.md",
-            "lv": "docs/future-plans.md",
-            "lt": "docs/future-plans.md"
+            "et": "docs/et/future-plans.md",
+            "fi": "docs/fi/future-plans.md",
+            "sv": "docs/sv/future-plans.md",
+            "lv": "docs/lv/future-plans.md",
+            "lt": "docs/lt/future-plans.md"
         }
     },
     {
@@ -228,11 +270,11 @@ DOC_SPECS = [
         "rel": "docs/forms-to-apex-migration-guide.md",
         "titles": {
             "en": "🚀 Forms-to-APEX Modernization Guide",
-            "et": "🚀 Forms -> APEX Moderniseerimise Juhend",
-            "fi": "🚀 Forms -> APEX Modernisointiopas",
-            "sv": "🚀 Forms -> APEX Moderniseringsguide",
-            "lv": "🚀 Forms -> APEX Modernizācijas Rokasgrāmata",
-            "lt": "🚀 Forms -> APEX Modernizavimo Vadovas"
+            "et": "🚀 Forms -> APEX moderniseerimise juhend",
+            "fi": "🚀 Forms -> APEX modernisointiopas",
+            "sv": "🚀 Forms -> APEX moderniseringsguide",
+            "lv": "🚀 Forms -> APEX modernizācijas rokasgrāmata",
+            "lt": "🚀 Forms -> APEX modernizavimo vadovas"
         },
         "files": {
             "en": "docs/forms-to-apex-migration-guide.md",
@@ -248,19 +290,19 @@ DOC_SPECS = [
         "rel": "config/blueprints/README.md",
         "titles": {
             "en": "📋 Architecture Blueprints Matrix",
-            "et": "📋 Arhitektuursete Kavandite Maatriks",
-            "fi": "📋 Arkkitehtuurin Blueprint-Matriisi",
-            "sv": "📋 Arkitektur Blueprints Matris",
-            "lv": "📋 Arhitektūras Plānu Matrica",
-            "lt": "📋 Architektūros Planų Matrica"
+            "et": "📋 Arhitektuursete kavandite maatriks",
+            "fi": "📋 Arkkitehtuurin blueprint-matriisi",
+            "sv": "📋 Arkitektur blueprints matris",
+            "lv": "📋 Arhitektūras plānu matrica",
+            "lt": "📋 Architektūros planų matrica"
         },
         "files": {
             "en": "config/blueprints/README.md",
             "et": "config/blueprints/README.et.md",
             "fi": "config/blueprints/README.fi.md",
-            "sv": "config/blueprints/README.md",
-            "lv": "config/blueprints/README.md",
-            "lt": "config/blueprints/README.md"
+            "sv": "config/blueprints/README.sv.md",
+            "lv": "config/blueprints/README.lv.md",
+            "lt": "config/blueprints/README.lt.md"
         }
     },
     {
@@ -268,11 +310,11 @@ DOC_SPECS = [
         "rel": "docs/devops-lifecycle-guide.md",
         "titles": {
             "en": "🔄 3-Tier Lifecycle (Images, Snapshots, Backups)",
-            "et": "🔄 3-Tasemeline Elutsükkel (Pildid, Hetktõmmised, Varukoopiad)",
-            "fi": "🔄 3-Tasoinen Elinkaari (Kuvat, Tilannekuvat, Varmuuskopiot)",
-            "sv": "🔄 3-Nivåers Livscykel (Avbilder, Ögonblicksbilder, Säkerhetskopior)",
-            "lv": "🔄 3 Līmeņu Dzīvescikls (Attēli, Momentuzņēmumi, Dublējumi)",
-            "lt": "🔄 3 Lygmenų Gyvavimo Ciklas (Atvaizdai, Momentinės Kopijos, Atsarginės Kopijos)"
+            "et": "🔄 3-tasemeline elutsükkel (pildid, hetktõmmised, varukoopiad)",
+            "fi": "🔄 3-tasoinen elinkaari (kuvat, tilannekuvat, varmuuskopiot)",
+            "sv": "🔄 3-nivåers livscykel (avbilder, ögonblicksbilder, säkerhetskopior)",
+            "lv": "🔄 3 līmeņu dzīvescikls (attēli, momentuzņēmumi, dublējumi)",
+            "lt": "🔄 3 lygmenų gyvavimo ciklas (atvaizdai, momentinės kopijos, atsarginės kopijos)"
         },
         "files": {
             "en": "docs/devops-lifecycle-guide.md",
@@ -288,11 +330,11 @@ DOC_SPECS = [
         "rel": "docs/database-image-switching-guide.md",
         "titles": {
             "en": "🔄 Database Image Switching & Multi-Vendor Guide",
-            "et": "🔄 Andmebaasi Konteineripiltide Vahetamine & Tarnijad",
-            "fi": "🔄 Tietokantakonttikuvien Vaihto ja Monitoimittajaopas",
-            "sv": "🔄 Byte av Databascontaineravbilder och Flerleverantörsguide",
-            "lv": "🔄 Datubāzes Konteineru Attēlu Pārslēgšanas Ceļvedis",
-            "lt": "🔄 Duomenų Bazės Konteinerių Paveikslėlių Keitimo Vadovas"
+            "et": "🔄 Andmebaasi konteineripiltide vahetamine & tarnijad",
+            "fi": "🔄 Tietokantakonttikuvien vaihto ja monitoimittajaopas",
+            "sv": "🔄 Byte av databascontaineravbilder och flerleverantörsguide",
+            "lv": "🔄 Datubāzes konteineru attēlu pārslēgšanas ceļvedis",
+            "lt": "🔄 Duomenų bazės konteinerių paveikslėlių keitimo vadovas"
         },
         "files": {
             "en": "docs/database-image-switching-guide.md",
@@ -300,6 +342,7 @@ DOC_SPECS = [
             "fi": "docs/fi/database-image-switching-guide.md",
             "sv": "docs/sv/database-image-switching-guide.md",
             "lv": "docs/lv/database-image-switching-guide.md",
+            "lt": "docs/lt/database-image-switching-guide.md"
         }
     },
     {
@@ -307,11 +350,11 @@ DOC_SPECS = [
         "rel": "docs/security-audit-report.md",
         "titles": {
             "en": "🛡️ Enterprise Security Audit & Hardening Report",
-            "et": "🛡️ Ettevõtteklassi Turvaauditi Aruanne & Hardening",
-            "fi": "🛡️ Yritystason Tietoturva-auditin Raportti",
-            "sv": "🛡️ Företagsklassad Säkerhetsrevisionsrapport",
-            "lv": "🛡️ Uzņēmuma Drošības Audita Ziņojums",
-            "lt": "🛡️ Įmonių Saugumo Audito Ataskaita"
+            "et": "🛡️ Ettevõtteklassi turvaauditi aruanne & hardening",
+            "fi": "🛡️ Yritystason tietoturva-auditin raportti",
+            "sv": "🛡️ Företagsklassad säkerhetsrevisionsrapport",
+            "lv": "🛡️ Uzņēmuma drošības audita ziņojums",
+            "lt": "🛡️ Įmonių saugumo audito ataskaita"
         },
         "files": {
             "en": "docs/security-audit-report.md",
@@ -327,11 +370,11 @@ DOC_SPECS = [
         "rel": "docs/enterprise-distributed-architecture.md",
         "titles": {
             "en": "🏛️ Enterprise Distributed 4-Host Architecture & HA",
-            "et": "🏛️ Ettevõtteklassi Hajutatud 4-Serveriline Arhitektuur",
-            "fi": "🏛️ Yritystason Hajautettu 4-Palvelimen Arkkitehtuuri",
-            "sv": "🏛️ Företagsklassad Distribuerad 4-Server Arkitektur",
-            "lv": "🏛️ Sadalītā 4 Resursdatoru Arhitektūra & HA",
-            "lt": "🏛️ Įmonių Paskirstyta 4 Mazgų Architektūra & HA"
+            "et": "🏛️ Ettevõtteklassi hajutatud 4-serveriline arhitektuur",
+            "fi": "🏛️ Yritystason hajautettu 4-palvelimen arkkitehtuuri",
+            "sv": "🏛️ Företagsklassad distribuerad 4-server arkitektur",
+            "lv": "🏛️ Sadalītā 4 resursdatoru arhitektūra & HA",
+            "lt": "🏛️ Įmonių paskirstyta 4 mazgų architektūra & HA"
         },
         "files": {
             "en": "docs/enterprise-distributed-architecture.md",
@@ -341,169 +384,6 @@ DOC_SPECS = [
             "lv": "docs/lv/enterprise-distributed-architecture.md",
             "lt": "docs/lt/enterprise-distributed-architecture.md"
         }
-    },
-    {
-        "id": "enterprise-backlog",
-        "rel": "docs/backlog/README.md",
-        "titles": {
-            "en": "📋 Financial Enterprise Jira Backlog (11 Stories, 62 SP)",
-            "et": "📋 Finantsettevõtte Jira Backlog (11 lugu, 62 SP)",
-            "fi": "📋 Rahoitusalan Jira Backlog (11 tarinaa, 62 SP)",
-            "sv": "📋 Finansiell Jira Backlog (11 berättelser, 62 SP)",
-            "lv": "📋 Finanšu Jira Backlog (11 stāsti, 62 SP)",
-            "lt": "📋 Finansų Jira Backlog (11 istorijų, 62 SP)"
-        },
-        "files": {
-            "en": "docs/backlog/README.md",
-            "et": "docs/backlog/README.md",
-            "fi": "docs/backlog/README.md",
-            "sv": "docs/backlog/README.md",
-            "lv": "docs/backlog/README.md",
-            "lt": "docs/backlog/README.md"
-        }
-    },
-    {
-        "id": "fin-001",
-        "rel": "docs/backlog/FIN-001-multi-host-inventory-and-profile-engine.md",
-        "titles": {
-            "en": "🚀 FIN-001: Multi-Host Inventory & Profiles (5 SP)",
-            "et": "🚀 FIN-001: Multi-Host Inventar & Profiilid (5 SP)",
-            "fi": "🚀 FIN-001: Multi-Host Inventaari & Profiilit (5 SP)",
-            "sv": "🚀 FIN-001: Multi-Host Inventarie & Profiler (5 SP)",
-            "lv": "🚀 FIN-001: Multi-Host Inventārs & Profili (5 SP)",
-            "lt": "🚀 FIN-001: Multi-Host Inventorius & Profiliai (5 SP)"
-        },
-        "files": { "en": "docs/backlog/FIN-001-multi-host-inventory-and-profile-engine.md" }
-    },
-    {
-        "id": "fin-002",
-        "rel": "docs/backlog/FIN-002-proxy-db-remote-container-deployment.md",
-        "titles": {
-            "en": "📦 FIN-002: Dedicated PROXY DB Server (5 SP)",
-            "et": "📦 FIN-002: Dedicated PROXY DB Server 3 (5 SP)",
-            "fi": "📦 FIN-002: Dedikoitu PROXY DB Palvelin 3 (5 SP)",
-            "sv": "📦 FIN-002: Dedikerad PROXY DB Server 3 (5 SP)",
-            "lv": "📦 FIN-002: Dedicēta PROXY DB Serveris 3 (5 SP)",
-            "lt": "📦 FIN-002: Dedikuota PROXY DB Mazgas 3 (5 SP)"
-        },
-        "files": { "en": "docs/backlog/FIN-002-proxy-db-remote-container-deployment.md" }
-    },
-    {
-        "id": "fin-003",
-        "rel": "docs/backlog/FIN-003-publisher-db-remote-container-deployment.md",
-        "titles": {
-            "en": "📦 FIN-003: Dedicated Publisher DB Server (5 SP)",
-            "et": "📦 FIN-003: Dedicated Publisher DB Server 4 (5 SP)",
-            "fi": "📦 FIN-003: Dedikoitu Publisher DB Palvelin 4 (5 SP)",
-            "sv": "📦 FIN-003: Dedikerad Publisher DB Server 4 (5 SP)",
-            "lv": "📦 FIN-003: Dedicēta Publisher DB Serveris 4 (5 SP)",
-            "lt": "📦 FIN-003: Dedikuota Publisher DB Mazgas 4 (5 SP)"
-        },
-        "files": { "en": "docs/backlog/FIN-003-publisher-db-remote-container-deployment.md" }
-    },
-    {
-        "id": "fin-004",
-        "rel": "docs/backlog/FIN-004-standalone-ords-apex-server-deployment.md",
-        "titles": {
-            "en": "🌐 FIN-004: Standalone ORDS + APEX Server (8 SP)",
-            "et": "🌐 FIN-004: Eraldiseisev ORDS + APEX Server 1 (8 SP)",
-            "fi": "🌐 FIN-004: Erillinen ORDS + APEX Palvelin 1 (8 SP)",
-            "sv": "🌐 FIN-004: Fristående ORDS + APEX Server 1 (8 SP)",
-            "lv": "🌐 FIN-004: Savrups ORDS + APEX Serveris 1 (8 SP)",
-            "lt": "🌐 FIN-004: Atskiras ORDS + APEX Mazgas 1 (8 SP)"
-        },
-        "files": { "en": "docs/backlog/FIN-004-standalone-ords-apex-server-deployment.md" }
-    },
-    {
-        "id": "fin-005",
-        "rel": "docs/backlog/FIN-005-standalone-analytics-publisher-server-deployment.md",
-        "titles": {
-            "en": "📑 FIN-005: Standalone Analytics Publisher Server (8 SP)",
-            "et": "📑 FIN-005: Eraldiseisev Analytics Publisher Server 2 (8 SP)",
-            "fi": "📑 FIN-005: Erillinen Analytics Publisher Palvelin 2 (8 SP)",
-            "sv": "📑 FIN-005: Fristående Analytics Publisher Server 2 (8 SP)",
-            "lv": "📑 FIN-005: Savrups Analytics Publisher Serveris 2 (8 SP)",
-            "lt": "📑 FIN-005: Atskiras Analytics Publisher Mazgas 2 (8 SP)"
-        },
-        "files": { "en": "docs/backlog/FIN-005-standalone-analytics-publisher-server-deployment.md" }
-    },
-    {
-        "id": "fin-006",
-        "rel": "docs/backlog/FIN-006-ords-multi-pool-business-db-wiring.md",
-        "titles": {
-            "en": "🔗 FIN-006: ORDS Multi-Pool to Core Business DB (5 SP)",
-            "et": "🔗 FIN-006: ORDS Multi-Pool Äriandmebaasile (5 SP)",
-            "fi": "🔗 FIN-006: ORDS Multi-Pool Liiketoiminta-DB:lle (5 SP)",
-            "sv": "🔗 FIN-006: ORDS Multi-Pool till Verksamhets-DB (5 SP)",
-            "lv": "🔗 FIN-006: ORDS Multi-Pool Biznesa DB (5 SP)",
-            "lt": "🔗 FIN-006: ORDS Multi-Pool Verslo DB (5 SP)"
-        },
-        "files": { "en": "docs/backlog/FIN-006-ords-multi-pool-business-db-wiring.md" }
-    },
-    {
-        "id": "fin-007",
-        "rel": "docs/backlog/FIN-007-publisher-jdbc-business-db-connection.md",
-        "titles": {
-            "en": "📊 FIN-007: Publisher JDBC Link to Business DB (3 SP)",
-            "et": "📊 FIN-007: Publisher JDBC Ühendus Äriandmebaasiga (3 SP)",
-            "fi": "📊 FIN-007: Publisher JDBC Yhteys Liiketoiminta-DB:hen (3 SP)",
-            "sv": "📊 FIN-007: Publisher JDBC Länk till Verksamhets-DB (3 SP)",
-            "lv": "📊 FIN-007: Publisher JDBC Savienojums ar Biznesa DB (3 SP)",
-            "lt": "📊 FIN-007: Publisher JDBC Ryšys su Verslo DB (3 SP)"
-        },
-        "files": { "en": "docs/backlog/FIN-007-publisher-jdbc-business-db-connection.md" }
-    },
-    {
-        "id": "fin-008",
-        "rel": "docs/backlog/FIN-008-prod-active-standby-sync-and-failover.md",
-        "titles": {
-            "en": "🛡️ FIN-008: PROD Active/Standby Sync & Failover (8 SP)",
-            "et": "🛡️ FIN-008: PROD Active/Standby Sünkro & Failover (8 SP)",
-            "fi": "🛡️ FIN-008: PROD Active/Standby Synkronointi & Failover (8 SP)",
-            "sv": "🛡️ FIN-008: PROD Active/Standby Synk & Failover (8 SP)",
-            "lv": "🛡️ FIN-008: PROD Active/Standby Sinhro & Failover (8 SP)",
-            "lt": "🛡️ FIN-008: PROD Active/Standby Sinchronizacija & Failover (8 SP)"
-        },
-        "files": { "en": "docs/backlog/FIN-008-prod-active-standby-sync-and-failover.md" }
-    },
-    {
-        "id": "fin-009",
-        "rel": "docs/backlog/FIN-009-zero-trust-wallet-and-tls-distribution.md",
-        "titles": {
-            "en": "🔐 FIN-009: Zero-Trust SEPS Wallet & TLS Distribution (5 SP)",
-            "et": "🔐 FIN-009: Zero-Trust SEPS Wallet & TLS Jaotamine (5 SP)",
-            "fi": "🔐 FIN-009: Zero-Trust SEPS Wallet & TLS Jakelu (5 SP)",
-            "sv": "🔐 FIN-009: Zero-Trust SEPS Wallet & TLS Distribution (5 SP)",
-            "lv": "🔐 FIN-009: Zero-Trust SEPS Wallet & TLS Izplatīšana (5 SP)",
-            "lt": "🔐 FIN-009: Zero-Trust SEPS Wallet & TLS Paskirstymas (5 SP)"
-        },
-        "files": { "en": "docs/backlog/FIN-009-zero-trust-wallet-and-tls-distribution.md" }
-    },
-    {
-        "id": "fin-010",
-        "rel": "docs/backlog/FIN-010-dev-test-prod-ci-cd-promotion-pipeline.md",
-        "titles": {
-            "en": "🔄 FIN-010: Multi-Env Promotion CI/CD Pipeline (5 SP)",
-            "et": "🔄 FIN-010: Mitme Keskkonna Tarnetoru CI/CD (5 SP)",
-            "fi": "🔄 FIN-010: Moniympäristöinen CI/CD-Jakeluputki (5 SP)",
-            "sv": "🔄 FIN-010: Multi-Miljö CI/CD Distributionspipeline (5 SP)",
-            "lv": "🔄 FIN-010: Vairāku Vižu Pārcelšanas CI/CD Cauruļvads (5 SP)",
-            "lt": "🔄 FIN-010: Daugelio Aplinkų CI/CD Pristatymo Konvejeris (5 SP)"
-        },
-        "files": { "en": "docs/backlog/FIN-010-dev-test-prod-ci-cd-promotion-pipeline.md" }
-    },
-    {
-        "id": "fin-011",
-        "rel": "docs/backlog/FIN-011-e2e-health-check-and-disaster-recovery-testing.md",
-        "titles": {
-            "en": "🧪 FIN-011: E2E Health Check & DR Test Suite (5 SP)",
-            "et": "🧪 FIN-011: E2E Tervisekontrollid & DR Testid (5 SP)",
-            "fi": "🧪 FIN-011: E2E Terveystarkastukset ja DR-Testit (5 SP)",
-            "sv": "🧪 FIN-011: E2E Hälsokontroller & DR-Tester (5 SP)",
-            "lv": "🧪 FIN-011: E2E Veselības Pārbaudes & DR Testi (5 SP)",
-            "lt": "🧪 FIN-011: E2E Būsenos Patikrinimai & DR Testai (5 SP)"
-        },
-        "files": { "en": "docs/backlog/FIN-011-e2e-health-check-and-disaster-recovery-testing.md" }
     },
     {
         "id": "glossary",
@@ -524,6 +404,46 @@ DOC_SPECS = [
             "lv": "docs/lv/glossary.md",
             "lt": "docs/lt/glossary.md"
         }
+    },
+    {
+        "id": "faq",
+        "rel": "docs/faq.md",
+        "titles": {
+            "en": "❓ Frequently Asked Questions (FAQ)",
+            "et": "❓ Korduma kippuvad küsimused (KKK)",
+            "fi": "❓ Usein kysytyt kysymykset (UKK)",
+            "sv": "❓ Vanliga frågor och svar (FAQ)",
+            "lv": "❓ Biežāk uzdotie jautājumi (BUJ)",
+            "lt": "❓ Dažniausiai užduodami klausimai (DUK)"
+        },
+        "files": {
+            "en": "docs/faq.md",
+            "et": "docs/et/faq.md",
+            "fi": "docs/fi/faq.md",
+            "sv": "docs/sv/faq.md",
+            "lv": "docs/lv/faq.md",
+            "lt": "docs/lt/faq.md"
+        }
+    },
+    {
+        "id": "oracle-resources",
+        "rel": "docs/oracle-resources-and-downloads.md",
+        "titles": {
+            "en": "🏛️ Oracle Resources & Container Images",
+            "et": "🏛️ Oracle ressursid ja konteineritõmmised",
+            "fi": "🏛️ Oracle-resurssit ja konttikuvat",
+            "sv": "🏛️ Oracle-resurser och containeravbildningar",
+            "lv": "🏛️ Oracle resursi un konteineru attēli",
+            "lt": "🏛️ Oracle ištekliai ir konteinerių atvaizdai"
+        },
+        "files": {
+            "en": "docs/oracle-resources-and-downloads.md",
+            "et": "docs/et/oracle-resources-and-downloads.md",
+            "fi": "docs/fi/oracle-resources-and-downloads.md",
+            "sv": "docs/sv/oracle-resources-and-downloads.md",
+            "lv": "docs/lv/oracle-resources-and-downloads.md",
+            "lt": "docs/lt/oracle-resources-and-downloads.md"
+        }
     }
 ]
 
@@ -533,20 +453,20 @@ BP_CATALOG = {
     0: {
         "cat": "core", "ram": "2-3 GB", "conts": "db-proxy, ords/proxy",
         "en": ("Default Proxy DB & ORDS Gateway", "Canonical system default: dedicated Proxy DB 23ai Free on port 1532 with ORDS REST gateway on port 8448/8088."),
-        "et": ("Vaikimisi Proxy DB & ORDS Lüüs", "Süsteemi kanooniline vaikekonfiguratsioon: pühendatud Proxy DB 23ai Free pordil 1532 ja ORDS lüüs pordil 8448/8088."),
-        "fi": ("Oletus-Proxy DB & ORDS -Yhdyskäytävä", "Järjestelmän oletusarkkitehtuuri: Proxy DB 23ai Free portissa 1532 ja ORDS portissa 8448/8088."),
-        "sv": ("Standard Proxy DB & ORDS Gateway", "Systemets standardkonfiguration: dedikerad Proxy DB 23ai Free på port 1532 med ORDS på port 8448/8088."),
-        "lv": ("Noklusējuma Proxy DB & ORDS Vārteja", "Sistēmas noklusējuma arhitektūra: Proxy DB 23ai Free portā 1532 un ORDS portā 8448/8088."),
-        "lt": ("Numatytoji Proxy DB & ORDS Šliuzas", "Sistemos numatytoji architektūra: Proxy DB 23ai Free prievade 1532 ir ORDS prievade 8448/8088.")
+        "et": ("Vaikimisi Proxy DB & ORDS lüüs", "Süsteemi kanooniline vaikekonfiguratsioon: pühendatud Proxy DB 23ai Free pordil 1532 ja ORDS lüüs pordil 8448/8088."),
+        "fi": ("Oletus-Proxy DB & ORDS -yhdyskäytävä", "Järjestelmän oletusarkkitehtuuri: Proxy DB 23ai Free portissa 1532 ja ORDS portissa 8448/8088."),
+        "sv": ("Standard Proxy DB & ORDS gateway", "Systemets standardkonfiguration: dedikerad Proxy DB 23ai Free på port 1532 med ORDS på port 8448/8088."),
+        "lv": ("Noklusējuma Proxy DB & ORDS vārteja", "Sistēmas noklusējuma arhitektūra: Proxy DB 23ai Free portā 1532 un ORDS portā 8448/8088."),
+        "lt": ("Numatytoji Proxy DB & ORDS šliuzas", "Sistemos numatytoji architektūra: Proxy DB 23ai Free prievade 1532 ir ORDS prievade 8448/8088.")
     },
     1: {
         "cat": "database", "ram": "2-3 GB", "conts": "db-alise, ords/alise",
         "en": ("Standalone ALISE Business Database", "Dedicated custom application database holding business schemas, PL/SQL code, DDL/DML, and internal APEX/ORDS on port 1533."),
-        "et": ("Eraldiseisev ALISE Äriandmebaas", "Äriandmete, kohandatud skeemide, PL/SQL koodi ja DDL/DML andmebaas pordil 1533 koos sisemise APEX & ORDS toega."),
-        "fi": ("Erillinen ALISE-Liiketoimintatietokanta", "Erillinen sovellustietokanta liiketoimintaskeemoille ja PL/SQL-koodille portissa 1533 sisäisellä APEX/ORDS:lla."),
-        "sv": ("Fristående ALISE Affärsdatabas", "Dedikerad applikationsdatabas för affärsscheman och PL/SQL-kod på port 1533 med intern APEX/ORDS."),
-        "lv": ("Atsevišķa ALISE Biznesa Datubāze", "Pielāgota lietojumprogrammu datubāze biznesa shēmām un PL/SQL kodam portā 1533 ar iekšējo APEX/ORDS."),
-        "lt": ("Atskira ALISE Verslo Duomenų Bazė", "Skirta taikomoji duomenų bazė verslo schemoms ir PL/SQL kodui prievade 1533 su vidiniu APEX/ORDS.")
+        "et": ("Eraldiseisev ALISE äriandmebaas", "Äriandmete, kohandatud skeemide, PL/SQL koodi ja DDL/DML andmebaas pordil 1533 koos sisemise APEX & ORDS toega."),
+        "fi": ("Erillinen ALISE-liiketoimintatietokanta", "Erillinen sovellustietokanta liiketoimintaskeemoille ja PL/SQL-koodille portissa 1533 sisäisellä APEX/ORDS:lla."),
+        "sv": ("Fristående ALISE affärsdatabas", "Dedikerad applikationsdatabas för affärsscheman och PL/SQL-kod på port 1533 med intern APEX/ORDS."),
+        "lv": ("Atsevišķa ALISE biznesa datubāze", "Pielāgota lietojumprogrammu datubāze biznesa shēmām un PL/SQL kodam portā 1533 ar iekšējo APEX/ORDS."),
+        "lt": ("Atskira ALISE verslo duomenų bazė", "Skirta taikomoji duomenų bazė verslo schemoms ir PL/SQL kodui prievade 1533 su vidiniu APEX/ORDS.")
     },
     2: {
         "cat": "database", "ram": "2-3 GB", "conts": "db-proxy-standalone, ords/proxy_standalone",
@@ -560,20 +480,20 @@ BP_CATALOG = {
     3: {
         "cat": "database", "ram": "2-3 GB", "conts": "db-gvenzl, ords/gvenzl",
         "en": ("Standalone Community Vendor DB (gvenzl)", "Standalone APEX & ORDS database on Docker Hub community container image (gvenzl/oracle-free) on port 1535 for performance and patch benchmarking."),
-        "et": ("Alternatiivne Kogukonna Baas (gvenzl)", "APEX ja ORDS andmebaas Docker Hubi kogukonnapildi (gvenzl/oracle-free) baasil pordil 1535 kiiruse ja turvapaikade võrdlemiseks."),
-        "fi": ("Vaihtoehtoinen Yhteisötietokanta (gvenzl)", "APEX- ja ORDS-tietokanta Docker Hubin yhteisökuvalla (gvenzl/oracle-free) portissa 1535 suorituskyvyn vertailuun."),
-        "sv": ("Alternativ Community-databas (gvenzl)", "Fristående APEX & ORDS-databas på Docker Hub community-avbild (gvenzl/oracle-free) på port 1535 för prestandajämförelse."),
-        "lv": ("Alternatīva Kopienas Datubāze (gvenzl)", "Atsevišķa APEX un ORDS datubāze uz Docker Hub kopienas attēla (gvenzl/oracle-free) portā 1535 veiktspējas salīdzināšanai."),
-        "lt": ("Alternatyvi Bendruomenės DB (gvenzl)", "Atskira APEX ir ORDS duomenų bazė Docker Hub bendruomenės atvaizde (gvenzl/oracle-free) prievade 1535 našumo palyginimui.")
+        "et": ("Alternatiivne kogukonna baas (gvenzl)", "APEX ja ORDS andmebaas Docker Hubi kogukonnapildi (gvenzl/oracle-free) baasil pordil 1535 kiiruse ja turvapaikade võrdlemiseks."),
+        "fi": ("Vaihtoehtoinen yhteisötietokanta (gvenzl)", "APEX- ja ORDS-tietokanta Docker Hubin yhteisökuvalla (gvenzl/oracle-free) portissa 1535 suorituskyvyn vertailuun."),
+        "sv": ("Alternativ community-databas (gvenzl)", "Fristående APEX & ORDS-databas på Docker Hub community-avbild (gvenzl/oracle-free) på port 1535 för prestandajämförelse."),
+        "lv": ("Alternatīva kopienas datubāze (gvenzl)", "Atsevišķa APEX un ORDS datubāze uz Docker Hub kopienas attēla (gvenzl/oracle-free) portā 1535 veiktspējas salīdzināšanai."),
+        "lt": ("Alternatyvi bendruomenės DB (gvenzl)", "Atskira APEX ir ORDS duomenų bazė Docker Hub bendruomenės atvaizde (gvenzl/oracle-free) prievade 1535 našumo palyginimui.")
     },
     4: {
         "cat": "database", "ram": "1-2 GB", "conts": "db-adb, ords/adb",
         "en": ("Oracle Autonomous Database Cloud (ADB)", "Autonomous Database Cloud connectivity on simulated port 1536 leveraging encrypted mTLS SEPS client wallets."),
-        "et": ("Autonoomne Pilvebaas (Oracle ADB)", "Oracle Autonomous Database pilveühendus pordil 1536 krüpteeritud mTLS kliendi SEPS Walletiga."),
-        "fi": ("Autonominen Pilvitietokanta (Oracle ADB)", "Oracle Autonomous Database -pilviyhteys portissa 1536 salatulla mTLS SEPS Walletilla."),
-        "sv": ("Autonom Molndatabas (Oracle ADB)", "Oracle Autonomous Database molnanslutning på port 1536 med krypterad mTLS SEPS Wallet."),
-        "lv": ("Autonoma Mākoņdatubāze (Oracle ADB)", "Oracle Autonomous Database mākoņa savienojums portā 1536 ar šifrētu mTLS SEPS maku."),
-        "lt": ("Autonominė Debesų DB (Oracle ADB)", "Oracle Autonomous Database debesų ryšys prievade 1536 su šifruota mTLS SEPS pinigine.")
+        "et": ("Autonoomne pilvebaas (Oracle ADB)", "Oracle Autonomous Database pilveühendus pordil 1536 krüpteeritud mTLS kliendi SEPS Walletiga."),
+        "fi": ("Autonominen pilvitietokanta (Oracle ADB)", "Oracle Autonomous Database -pilviyhteys portissa 1536 salatulla mTLS SEPS Walletilla."),
+        "sv": ("Autonom molndatabas (Oracle ADB)", "Oracle Autonomous Database molnanslutning på port 1536 med krypterad mTLS SEPS Wallet."),
+        "lv": ("Autonoma mākoņdatubāze (Oracle ADB)", "Oracle Autonomous Database mākoņa savienojums portā 1536 ar šifrētu mTLS SEPS maku."),
+        "lt": ("Autonominė debesų DB (Oracle ADB)", "Oracle Autonomous Database debesų ryšys prievade 1536 su šifruota mTLS SEPS pinigine.")
     },
     5: {
         "cat": "middleware", "ram": "3-5 GB", "conts": "db-publisher, app-publisher",
@@ -594,51 +514,67 @@ BP_CATALOG = {
         "lt": ("Atskirasis Oracle Forms 14c", "Oracle Forms 14c WebLogic vykdymo aplinka (prievadas 9001) ir HTML5 noVNC Forms Builder (prievadas 6082) su Forms RCU duomenų baze prievade 1534.")
     },
     7: {
-        "cat": "middleware", "ram": "4-5 GB", "conts": "db-publisher, app-forms-publisher",
-        "en": ("Consolidated Forms 14c + Publisher FMW", "Forms 14c and Analytics Publisher combined inside a unified WebLogic domain with shared 23ai DB (db-publisher :1531), saving ~2.5 GB RAM."),
-        "et": ("Konsolideeritud Forms + Publisher FMW", "Forms 14c ja Analytics Publisher ühendatud ühte WebLogic domeeni koos ühise 23ai andmebaasiga (db-publisher :1531), säästes ~2.5 GB RAM-i."),
-        "fi": ("Yhdistetty Forms + Publisher FMW", "Forms 14c ja Analytics Publisher yhdistettynä yhteen WebLogic-toimialueeseen yhteisellä 23ai-tietokannalla (:1531) (~2.5 GB RAM-säästö)."),
-        "sv": ("Konsoliderad Forms + Publisher FMW", "Forms 14c och Analytics Publisher samlat i en gemensam WebLogic-domän med delad 23ai DB (:1531) (sparar ~2.5 GB RAM)."),
-        "lv": ("Konsolidēts Forms + Publisher FMW", "Forms 14c un Analytics Publisher apvienoti vienā WebLogic domēnā ar kopēju 23ai DB (:1531) (ietaupa ~2.5 GB RAM)."),
-        "lt": ("Konsoliduotas Forms + Publisher FMW", "Forms 14c ir Analytics Publisher sujungti į bendrą WebLogic domeną su bendra 23ai DB (:1531) (sutaupo ~2.5 GB RAM).")
+        "cat": "middleware", "ram": "4-5 GB", "conts": "db-forms-publisher, app-forms-publisher",
+        "en": ("Consolidated Forms 14c + Publisher FMW", "Forms 14c and Analytics Publisher combined inside a unified WebLogic domain with shared 23ai DB (db-forms-publisher :1538), saving ~2.5 GB RAM."),
+        "et": ("Konsolideeritud Forms + Publisher FMW", "Forms 14c ja Analytics Publisher ühendatud ühte WebLogic domeeni koos ühise 23ai andmebaasiga (db-forms-publisher :1538), säästes ~2.5 GB RAM-i."),
+        "fi": ("Yhdistetty Forms + Publisher FMW", "Forms 14c ja Analytics Publisher yhdistettynä yhteen WebLogic-toimialueeseen yhteisellä 23ai-tietokannalla (db-forms-publisher :1538) (~2.5 GB RAM-säästö)."),
+        "sv": ("Konsoliderad Forms + Publisher FMW", "Forms 14c och Analytics Publisher samlat i en gemensam WebLogic-domän med delad 23ai DB (db-forms-publisher :1538) (sparar ~2.5 GB RAM)."),
+        "lv": ("Konsolidēts Forms + Publisher FMW", "Forms 14c un Analytics Publisher apvienoti vienā WebLogic domēnā ar kopēju 23ai DB (db-forms-publisher :1538) (ietaupa ~2.5 GB RAM)."),
+        "lt": ("Konsoliduotas Forms + Publisher FMW", "Forms 14c ir Analytics Publisher sujungti į bendrą WebLogic domeną su bendra 23ai DB (db-forms-publisher :1538) (sutaupo ~2.5 GB RAM).")
     },
     8: {
-        "cat": "developer", "ram": "1-2 GB", "conts": "web-ide-dev", "testing": True,
-        "en": ("Standalone Web-IDE Workstation (Testing / In Progress)", "VS Code server & Oracle SQL Developer for VS Code are fully functional on port 8090. Note: In testing & refinement — corporate Artifactory mirror integration has unresolved issues currently being addressed."),
-        "et": ("Iseseisev Web-IDE Arendustöökoht (Testimisel / Täiustamisel)", "VS Code veebiserver ja Oracle SQL Developer laiendus töötavad pordil 8090. Märkus: Testimisel ja täiustamisel — ettevõtte Artifactory peegli konfiguratsiooniga on probleeme, mida lahendatakse tulevikus."),
-        "fi": ("Erillinen Web-IDE Kehitystyöasema (Testauksessa / Kehitteillä)", "VS Code -verkkopalvelin ja Oracle SQL Developer -laajennus toimivat portissa 8090. Huomautus: Testauksessa ja kehitteillä — yrityksen Artifactory-peilikonfiguraatiossa on ratkaisemattomia asioita."),
-        "sv": ("Fristående Web-IDE Arbetsstation (Under testning / Utveckling)", "VS Code webbserver och Oracle SQL Developer-tillägget fungerar på port 8090. Obs: Under testning och utveckling — företagets Artifactory-spegelkonfiguration har olösta problem som åtgärdas."),
-        "lv": ("Atsevišķa Web-IDE Izstrādes Darbstacija (Testēšanā / Izstrādē)", "VS Code tīmekļa serveris un Oracle SQL Developer paplašinājums darbojas portā 8090. Piezīme: Testēšanā un izstrādē — uzņēmuma Artifactory spoguļa konfigurācijā ir neatrisinātas problēmas."),
-        "lt": ("Atskira Web-IDE Kūrimo Darbo Vieta (Testuojama / Tobulinama)", "VS Code žiniatinklio serveris ir Oracle SQL Developer plėtinys veikia prievade 8090. Pastaba: Testuojama ir tobulinama — įmonės Artifactory veidrodžio konfigūracijoje yra neišspręstų problemų.")
+        "cat": "developer", "ram": "1-2 GB", "conts": "web-ide-dev", "testing": False,
+        "en": ("Standalone Web-IDE Workstation", "VS Code server & Oracle SQL Developer for VS Code are fully functional on port 8090."),
+        "et": ("Iseseisev Web-IDE arendustöökoht", "VS Code veebiserver ja Oracle SQL Developer laiendus töötavad pordil 8090."),
+        "fi": ("Erillinen Web-IDE -kehitystyöasema", "VS Code -verkkopalvelin ja Oracle SQL Developer -laajennus toimivat portissa 8090."),
+        "sv": ("Fristående Web-IDE arbetsstation", "VS Code webbserver och Oracle SQL Developer-tillägget fungerar på port 8090."),
+        "lv": ("Atsevišķa Web-IDE izstrādes darbstacija", "VS Code tīmekļa serveris un Oracle SQL Developer paplašinājums darbojas portā 8090."),
+        "lt": ("Atskira Web-IDE kūrimo darbo vieta", "VS Code žiniatinklio serveris ir Oracle SQL Developer plėtinys veikia prievade 8090.")
     },
     9: {
-        "cat": "developer", "ram": "1-2 GB", "conts": "app-publisher-designer", "testing": True,
-        "en": ("Standalone Publisher Desktop Designer (Testing / In Progress)", "HTML5 noVNC desktop container boots on port 6083. Note: In testing & refinement — Microsoft Word & BIP Template Builder Add-in integration is under active development and enhancement."),
-        "et": ("Publisher Töölaua Kujundaja (Testimisel / Täiustamisel)", "HTML5 noVNC töölaua konteiner käivitub pordil 6083. Märkus: Testimisel ja täiustamisel — Microsoft Wordi ja BIP Template Builder lisandmooduli integratsioon on aktiivses arenduses ja täiustamisel."),
-        "fi": ("Publisher Työpöytäsuunnittelija (Testauksessa / Kehitteillä)", "HTML5 noVNC -työpöytäkontti käynnistyy portissa 6083. Huomautus: Testauksessa ja kehitteillä — Microsoft Word- ja BIP Template Builder -integraatio on aktiivisessa kehityksessä."),
-        "sv": ("Publisher Desktop Designer (Under testning / Utveckling)", "HTML5 noVNC-skrivbordsbehållare startar på port 6083. Obs: Under testning och utveckling — integrering av Microsoft Word och BIP Template Builder är under aktiv utveckling."),
-        "lv": ("Publisher Darbvirsmas Veidotājs (Testēšanā / Izstrādē)", "HTML5 noVNC darbvirsmas konteiners startējas portā 6083. Piezīme: Testēšanā un izstrādē — Microsoft Word un BIP Template Builder integrācija tiek aktīvi pilnveidota."),
-        "lt": ("Publisher Darbalaukio Kūrėjas (Testuojama / Tobulinama)", "HTML5 noVNC darbalaukio konteineris pasileidžia prievade 6083. Pastaba: Testuojama ir tobulinama — Microsoft Word ir BIP Template Builder integracija yra tobulinama.")
+        "cat": "developer", "ram": "1-2 GB", "conts": "app-publisher-designer", "testing": False,
+        "en": ("Standalone Publisher Template Designer", "HTML5 noVNC desktop container on port 6083 with LibreOffice Writer 3-Pane Studio (Primary SSoT), Evince live PDF viewer & XML Field Inspector. Optional: MS Word & BIP Add-In via Wine."),
+        "et": ("Publisher malli kujundaja", "HTML5 noVNC töölaua konteiner pordil 6083: LibreOffice Writer 3-aknaga stuudio (esmane SSoT), Evince live PDF vaatur ja XML inspektor. Valikuline: MS Word ja BIP lisandmoodul Wine'i kaudu."),
+        "fi": ("Publisher-mallisuunnittelija", "HTML5 noVNC -työpöytäkontti portissa 6083: LibreOffice Writer 3-ikkunainen studio (ensisijainen SSoT), Evince live PDF -katselin ja XML-kenttäinspektori. Valinnainen: MS Word Wine-tilassa."),
+        "sv": ("Publisher mallbyggare", "HTML5 noVNC-skrivbordsbehållare på port 6083: LibreOffice Writer 3-Pane Studio (primär SSoT), Evince live PDF-läsare och XML-inspektör. Valfritt: MS Word & BIP via Wine."),
+        "lv": ("Publisher veidņu veidotājs", "HTML5 noVNC darbvirsmas konteiners portā 6083: LibreOffice Writer 3 logu studija (primārais SSoT), Evince live PDF skatītājs un XML lauku inspektors. Neobligāti: MS Word caur Wine."),
+        "lt": ("Publisher šablonų kūrėjas", "HTML5 noVNC darbalaukio konteineris prievade 6083: LibreOffice Writer 3 langų studija (pirminis SSoT), Evince live PDF peržiūra ir XML inspektorius. Pasirinktinai: MS Word per Wine.")
     },
     10: {
         "cat": "gateway", "ram": "1 GB", "conts": "app-ords", "testing": True,
         "en": ("Remote ORDS Gateway & Edge Proxy (Testing / In Progress)", "Standalone ORDS HTTP/HTTPS gateway container boots on port 8088/8448. Note: In testing & refinement — edge proxy routing and live connectivity to remote cloud/enterprise databases is under active development."),
-        "et": ("Kaughaldus ORDS Lüüs & Edge Proxy (Testimisel / Täiustamisel)", "Iseseisev ORDS HTTP/HTTPS konteiner käivitub pordil 8088/8448. Märkus: Testimisel ja täiustamisel — väline lüüs ja ühendus kauge pilve- või serveriandmebaasidega on aktiivses arenduses ja kontrollimisel."),
-        "fi": ("Etä-ORDS-Yhdyskäytävä & Edge Proxy (Testauksessa / Kehitteillä)", "Erillinen ORDS HTTP/HTTPS -kontti käynnistyy portissa 8088/8448. Huomautus: Testauksessa ja kehitteillä — yhdyskäytävän reititys etätietokantoihin on aktiivisessa kehityksessä."),
-        "sv": ("Fjärr-ORDS Gateway & Edge Proxy (Under testning / Utveckling)", "Fristående ORDS HTTP/HTTPS-behållare startar på port 8088/8448. Obs: Under testning och utveckling — gateway-dirigering mot fjärr- och molndatabaser är under aktiv utveckling."),
-        "lv": ("Attālā ORDS Vārteja & Edge Proxy (Testēšanā / Izstrādē)", "Atsevišķs ORDS HTTP/HTTPS konteiners startējas portā 8088/8448. Piezīme: Testēšanā un izstrādē — vārtejas maršrutēšana uz attālajām datubāzēm tiek aktīvi pilnveidota."),
-        "lt": ("Nuotolinis ORDS Šliuzas & Edge Proxy (Testuojama / Tobulinama)", "Atskiras ORDS HTTP/HTTPS konteineris pasileidžia prievade 8088/8448. Pastaba: Testuojama ir tobulinama — šliuzo maršrutizavimas į nuotolines duomenų bazes yra tobulinamas.")
+        "et": ("Kaughaldus ORDS lüüs & edge proxy (testimisel / täiustamisel)", "Iseseisev ORDS HTTP/HTTPS konteiner käivitub pordil 8088/8448. Märkus: Testimisel ja täiustamisel — väline lüüs ja ühendus kauge pilve- või serveriandmebaasidega on aktiivses arenduses ja kontrollimisel."),
+        "fi": ("Etä-ORDS-yhdyskäytävä & edge proxy (testauksessa / kehitteillä)", "Erillinen ORDS HTTP/HTTPS -kontti käynnistyy portissa 8088/8448. Huomautus: Testauksessa ja kehitteillä — yhdyskäytävän reititys etätietokantoihin on aktiivisessa kehityksessä."),
+        "sv": ("Fjärr-ORDS gateway & edge proxy (under testning / utveckling)", "Fristående ORDS HTTP/HTTPS-behållare startar på port 8088/8448. Obs: Under testning och utveckling — gateway-dirigering mot fjärr- och molndatabaser är under aktiv utveckling."),
+        "lv": ("Attālā ORDS vārteja & edge proxy (testēšanā / izstrādē)", "Atsevišķs ORDS HTTP/HTTPS konteiners startējas portā 8088/8448. Piezīme: Testēšanā un izstrādē — vārtejas maršrutēšana uz attālajām datubāzēm tiek aktīvi pilnveidota."),
+        "lt": ("Nuotolinis ORDS šliuzas & edge proxy (testuojama / tobulinama)", "Atskiras ORDS HTTP/HTTPS konteineris pasileidžia prievade 8088/8448. Pastaba: Testuojama ir tobulinama — šliuzo maršrutizavimas į nuotolines duomenų bazes yra tobulinamas.")
     },
     11: {
         "cat": "gateway", "ram": "3-4 GB", "conts": "app-publisher", "testing": True,
         "en": ("Remote Analytics Publisher Server (Testing / In Progress)", "Analytics Publisher container boots on port 9502. Note: In testing & refinement — document report generation against remote enterprise databases without local DB is under active development."),
-        "et": ("Kaughaldus Analytics Publisher Server (Testimisel / Täiustamisel)", "Analytics Publisher konteiner käivitub pordil 9502. Märkus: Testimisel ja täiustamisel — aruannete genereerimine kaugete ettevõtte andmebaaside vastu ilma kohaliku baasita on aktiivses arenduses ja kontrollimisel."),
-        "fi": ("Etä-Analytics Publisher -Palvelin (Testauksessa / Kehitteillä)", "Analytics Publisher -kontti käynnistyy portissa 9502. Huomautus: Testauksessa ja kehitteillä — raporttien generointi etätietokantoja vasten ilman paikallista DB:tä on kehitteillä."),
-        "sv": ("Fjärr-Analytics Publisher Server (Under testning / Utveckling)", "Analytics Publisher-behållaren startar på port 9502. Obs: Under testning och utveckling — rapportgenerering mot fjärrdatabaser utan lokal databas är under aktiv utveckling."),
-        "lv": ("Attālais Analytics Publisher Serveris (Testēšanā / Izstrādē)", "Analytics Publisher konteiners startējas portā 9502. Piezīme: Testēšanā un izstrādē — atskaišu ģenerēšana attālām datubāzēm bez lokālas DB tiek aktīvi pilnveidota."),
-        "lt": ("Nuotolinis Analytics Publisher Serveris (Testuojama / Tobulinama)", "Analytics Publisher konteineris pasileidžia prievade 9502. Pastaba: Testuojama ir tobulinama — ataskaitų generavimas nuotolinėms duomenų bazėms be vietinės DB yra tobulinamas.")
+        "et": ("Kaughaldus Analytics Publisher server (testimisel / täiustamisel)", "Analytics Publisher konteiner käivitub pordil 9502. Märkus: Testimisel ja täiustamisel — aruannete genereerimine kaugete ettevõtte andmebaaside vastu ilma kohaliku baasita on aktiivses arenduses ja kontrollimisel."),
+        "fi": ("Etä-Analytics Publisher -palvelin (testauksessa / kehitteillä)", "Analytics Publisher -kontti käynnistyy portissa 9502. Huomautus: Testauksessa ja kehitteillä — raporttien generointi etätietokantoja vasten ilman paikallista DB:tä on kehitteillä."),
+        "sv": ("Fjärr-Analytics Publisher server (under testning / utveckling)", "Analytics Publisher-behållaren startar på port 9502. Obs: Under testning och utveckling — rapportgenerering mot fjärrdatabaser utan lokal databas är under aktiv utveckling."),
+        "lv": ("Attālais Analytics Publisher serveris (testēšanā / izstrādē)", "Analytics Publisher konteiners startējas portā 9502. Piezīme: Testēšanā un izstrādē — atskaišu ģenerēšana attālām datubāzēm bez lokālas DB tiek aktīvi pilnveidota."),
+        "lt": ("Nuotolinis Analytics Publisher serveris (testuojama / tobulinama)", "Analytics Publisher konteineris pasileidžia prievade 9502. Pastaba: Testuojama ir tobulinama — ataskaitų generavimas nuotolinėms duomenų bazėms be vietinės DB yra tobulinamas.")
     }
 }
+
+try:
+    from .bp_metadata import BP_EXT_METADATA
+except (ImportError, ValueError):
+    try:
+        from dev_hub.bp_metadata import BP_EXT_METADATA
+    except (ImportError, ValueError):
+        import sys, os
+        _cur_dir = os.path.dirname(os.path.abspath(__file__))
+        if _cur_dir not in sys.path:
+            sys.path.insert(0, _cur_dir)
+        from bp_metadata import BP_EXT_METADATA
+
+for _bnum, _ext in BP_EXT_METADATA.items():
+    if _bnum in BP_CATALOG:
+        BP_CATALOG[_bnum].update(_ext)
 
 # Helper to load a YAML profile from any subfolder and return dict + rel_path
 
@@ -814,12 +750,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                                              'lv': '❌ VECO LAIKU PIEEJA (LĒNA UN NESTABILA)',
                                                              'lt': '❌ TRADICINIS METODAS (LĖTAS IR NESTABILUS)'},
                                                 'nodes': [   {   'icon': '🎫',
-                                                                 'title': {   'en': 'Ticket to DBA',
-                                                                              'et': 'Pilet DBA-le',
-                                                                              'fi': 'Lippu DBA:lle',
-                                                                              'sv': 'Ärende till DBA',
-                                                                              'lv': 'Pieteikums DBA',
-                                                                              'lt': 'Užklausa DBA'},
+                                                                 'title': {   'en': 'Ticket to Service Provider',
+                                                                              'et': 'Pilet teenuse pakkujale',
+                                                                              'fi': 'Palvelupyyntö toimittajalle',
+                                                                              'sv': 'Ärende till tjänsteleverantör',
+                                                                              'lv': 'Pieteikums pakalpojumu sniedzējam',
+                                                                              'lt': 'Užklausa paslaugų teikėjui'},
                                                                  'sub': {   'en': 'Waiting queue',
                                                                             'et': 'Ootejärjekord',
                                                                             'fi': 'Jonotus',
@@ -827,12 +763,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                                                             'lv': 'Gaidīšanas rinda',
                                                                             'lt': 'Laukimo eilė'}},
                                                              {   'icon': '⏳',
-                                                                 'title': {   'en': 'Wait 3–5 Days',
-                                                                              'et': 'Oota 3–5 päeva',
-                                                                              'fi': 'Odota 3–5 pv',
-                                                                              'sv': 'Vänta 3–5 dagar',
-                                                                              'lv': 'Gaidi 3–5 dienas',
-                                                                              'lt': 'Laukite 3–5 d.'},
+                                                                 'title': {   'en': 'Wait Hours – Days',
+                                                                              'et': 'Oota tunde – päevi',
+                                                                              'fi': 'Odota tunteja – päiviä',
+                                                                              'sv': 'Vänta timmar – dagar',
+                                                                              'lv': 'Gaidi stundas – dienas',
+                                                                              'lt': 'Laukite valandas – dienas'},
                                                                  'sub': {   'en': 'Blocked sprints',
                                                                             'et': 'Sprintid seisavad',
                                                                             'fi': 'Kehitys jumissa',
@@ -864,7 +800,20 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                                                             'fi': 'Korkeat kulut',
                                                                             'sv': 'Höga kostnader',
                                                                             'lv': 'Lieli zaudējumi',
-                                                                            'lt': 'Didelės išlaidos'}}]},
+                                                                            'lt': 'Didelės išlaidos'}},
+                                                              {   'icon': '🤖',
+                                                                  'title': {   'en': 'AI &amp; Agents Blocked',
+                                                                               'et': 'AI ja agendid blokeeritud',
+                                                                               'fi': 'Tekoäly ja agentit estetty',
+                                                                               'sv': 'AI och agenter blockerade',
+                                                                               'lv': 'AI un aģenti bloķēti',
+                                                                               'lt': 'AI ir agentai blokuojami'},
+                                                                  'sub': {   'en': 'No test sandbox',
+                                                                             'et': 'Puudub testliivakast',
+                                                                             'fi': 'Ei testiympäristöä',
+                                                                             'sv': 'Ingen testmiljö',
+                                                                             'lv': 'Nav testa smilškastes',
+                                                                             'lt': 'Nėra testų bazės'}}]},
                                      'good': {   'label': {   'en': '✅ ORACLE DEVOPS PLATFORM (INSTANT & AUTONOMOUS)',
                                                               'et': '✅ UUS PLATVORM (KOHENE JA AUTONOOMNE)',
                                                               'fi': '✅ UUSI ALUSTA (VÄLITÖN JA AUTONOMINEN)',
@@ -922,7 +871,20 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                                                              'fi': 'Ilman lippuja',
                                                                              'sv': 'Inga ärenden',
                                                                              'lv': 'Bez pieteikumiem',
-                                                                             'lt': 'Be bilietų'}}]}},
+                                                                             'lt': 'Be bilietų'}},
+                                                              {   'icon': '🤖',
+                                                                  'title': {   'en': 'VS Code &amp; AI Sandbox',
+                                                                               'et': 'VS Code ja AI liivakast',
+                                                                               'fi': 'VS Code ja tekoäly-sandbox',
+                                                                               'sv': 'VS Code &amp; AI Sandbox',
+                                                                               'lv': 'VS Code un AI smilškaste',
+                                                                               'lt': 'VS Code ir AI smėliadėžė'},
+                                                                  'sub': {   'en': 'Automated agent tests',
+                                                                             'et': 'Automaattestid agentidele',
+                                                                             'fi': 'Automaattitestaus agenteille',
+                                                                             'sv': 'Automatiserad agenttestning',
+                                                                             'lv': 'Automatizēti aģentu testi',
+                                                                             'lt': 'Automatiniai agentų testai'}}]}},
            'cards': [   {   'icon': '💥',
                             'kpi': '-85% SEISAKUID',
                             'title': {   'en': 'Fragile Shared Dev Databases',
@@ -1002,7 +964,21 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                         'lv': 'Nevar izvēlēties versijas bez ilgām gaidīšanas rindām IT pieteikumu '
                                               'sistēmās.',
                                         'lt': 'Negalima laisvai pasirinkti versijų be ilgų laukimo eilių bilietų '
-                                              'sistemose.'}}],
+                                              'sistemose.'}},
+                         {   'icon': '🤖',
+                             'kpi': '100% ISOLATSIOON',
+                             'title': {   'en': 'Isolated Sandbox for VS Code, AI &amp; Autonomous Agents',
+                                          'et': 'VS Code, AI ja Agentide Isoleeritud Sandbox',
+                                          'fi': 'Eristetty Sandbox VS Code-, Tekoäly- ja Agenttitestaukseen',
+                                          'sv': 'Isolerad Sandbox för VS Code, AI &amp; Autonoma Agenter',
+                                          'lv': 'Izolēta smilškaste VS Code, AI un autonomiem aģentiem',
+                                          'lt': 'Izoliuota smėliadėžė VS Code, AI ir autonominiams agentams'},
+                             'desc': {   'en': 'AI coding agents (Claude, Cursor, Copilot, Devin) and automated test suites require a private, clean Oracle DB. The platform provisions an isolated local sandbox with ~15s rollback, enabling autonomous agents to run SQLcl migrations and tests without touching shared databases.',
+                                         'et': 'AI koodiassistentidel (Claude, Cursor, Copilot, Devin) ja autonoomsetel agentidel puudub ligipääs puhtale Oracle baasile. Platvorm tagab eraldatud lokaalse liivakasti ja ~15s kiirtaaste, võimaldades agentidel käivitada SQLcl migratsioone ja automaatteste teisi segamata.',
+                                         'fi': 'Tekoälyavustajat (Claude, Cursor, Copilot, Devin) ja autonomiset agentit tarvitsevat puhtaan Oracle-kannan. Alusta tarjoaa eristetyn paikallisen hiekkalaatikon ja ~15s palautuksen, jotta agentit voivat ajaa SQLcl-migraatioita ja testejä häiritsemättä muita.',
+                                         'sv': 'AI-assistenter (Claude, Cursor, Copilot, Devin) och autonoma agenter behöver en ren Oracle-databas. Plattformen tillhandahåller en isolerad lokal sandlåda och ~15s återställning så att agenter kan köra SQLcl-migreringar och automatiserade tester riskfritt.',
+                                         'lv': 'AI asistentiem (Claude, Cursor, Copilot, Devin) un autonomiem aģentiem nepieciešama tīra Oracle datubāze. Platforma nodrošina izolētu lokālu smilškasti un ~15s atjaunošanu, ļaujot aģentiem izpildīt SQLcl migrācijas un testus, netraucējot citus.',
+                                         'lt': 'AI asistentams (Claude, Cursor, Copilot, Devin) ir autonominiams agentams reikalinga švari Oracle duomenų bazė. Platforma suteikia izoliuotą vietinę smėliadėžę su ~15s atstatymu, leidžiančią agentams vykdyti SQLcl migracijas ir testus netrukdant kitiems.'}}],
            'speaker_notes': {   'en': '🎯 Core Takeaway: Bottlenecks in shared environments cost companies thousands of '
                                       'engineering hours every month.<br/>💡 Talking Points: Contrast the pain of '
                                       'shared central instances with personal isolated containers. Mention how a '
@@ -1721,22 +1697,22 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                          'lt': 'Lygmuo 3: Forms 14c Runtime ir Publisher Designer'},
                             'desc': {   'en': '<b>Oracle Forms 14c:</b> Modernized runtime for running existing '
                                               'enterprise forms (excl. builder).<br/><b>Publisher Designer:</b> '
-                                              'Desktop template visual designer in browser (pilot testing).',
+                                              'Desktop template visual designer in browser.',
                                         'et': '<b>Oracle Forms 14c:</b> Moderniseeritud käituskeskkond olemasolevatele '
                                               'vormidele (v.a builder).<br/><b>Publisher Designer:</b> Töölaua '
-                                              'aruandemallide kujundaja veebis (testimisel).',
+                                              'aruandemallide kujundaja veebis.',
                                         'fi': '<b>Oracle Forms 14c:</b> Modernisoitu ajoympäristö olemassa oleville '
                                               'lomakkeille.<br/><b>Publisher Designer:</b> Työpöytäraporttien '
-                                              'visuaalinen suunnittelu selaimessa (testauksessa).',
+                                              'visuaalinen suunnittelu selaimessa.',
                                         'sv': '<b>Oracle Forms 14c:</b> Moderniserad körmiljö för befintliga '
                                               'formulär.<br/><b>Publisher Designer:</b> Visuell mallredigerare direkt '
-                                              'i webbläsaren (pilottest).',
+                                              'i webbläsaren.',
                                         'lv': '<b>Oracle Forms 14c:</b> Modernizēta izpildes vide esošajām formām (bez '
                                               'builder).<br/><b>Publisher Designer:</b> Pārskatu veidņu vizuālais '
-                                              'redaktors pārlūkā (testēšanā).',
+                                              'redaktors pārlūkā.',
                                         'lt': '<b>Oracle Forms 14c:</b> Modernizuota vykdymo aplinka esamoms formoms '
                                               '(be builder).<br/><b>Publisher Designer:</b> Ataskaitų šablonų vizualus '
-                                              'redaktorius naršyklėje (testuojama).'}},
+                                              'redaktorius naršyklėje.'}},
                         {   'icon': '💻',
                             'kpi': 'KIHT 4: TÖÖKOHT',
                             'title': {   'en': 'Tier 4: Web-IDE &amp; Remote DB Gateways',
@@ -1745,10 +1721,10 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                          'sv': 'Nivå 4: Web-IDE &amp; fjärrgateways (OCI)',
                                          'lv': 'Slānis 4: Web-IDE un attālās vārtejas / OCI tilts',
                                          'lt': 'Lygmuo 4: Web-IDE ir nuotoliniai vartai / OCI tiltas'},
-                            'desc': {   'en': '<b>Web-IDE:</b> VS Code, Python, Antigravity AI (testing), local CI '
+                            'desc': {   'en': '<b>Web-IDE:</b> VS Code, Python, Antigravity AI, local CI '
                                               'emulation for locked-down corporate PCs.<br/><b>Remote Gateways:</b> '
                                               'Direct mTLS bridge to OCI Autonomous Database.',
-                                        'et': '<b>Web-IDE:</b> VS Code, Python, Antigravity AI (testimisel) ja CI '
+                                        'et': '<b>Web-IDE:</b> VS Code, Python, Antigravity AI ja CI '
                                               'emulatsioon rangetele töökohapoliitikatele.<br/><b>Kaugväravad:</b> '
                                               'Turvaline mTLS sild OCI Autonomous Database pilve.',
                                         'fi': '<b>Web-IDE:</b> VS Code, Python, Antigravity AI ja CI-emulaatio '

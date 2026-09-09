@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="0; url=/dev-hub#tab-docs">
+    <title>Oracle DevOps Platform — Documentation Portal</title>
+    <style>
+        body {
+            background-color: #0b1120;
+            color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .card {
+            background: #1e293b;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 12px;
+            padding: 32px 40px;
+            max-width: 500px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        h2 { margin: 0 0 12px 0; color: #38bdf8; font-size: 1.4rem; }
+        p { color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin: 0 0 20px 0; }
+        a {
+            display: inline-block;
+            background: #0284c7;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background 0.2s ease;
+        }
+        a:hover { background: #0369a1; }
+    </style>
+    <script>
+        // Smoothly redirect to Dev Hub interactive documentation tab
+        const currentSearch = window.location.search || '';
+        const currentHash = window.location.hash || '';
+        window.location.replace('/dev-hub#tab-docs' + (currentHash ? '-' + currentHash.replace(/^#/, '') : ''));
+    </script>
+</head>
+<body>
+    <div class="card">
+        <h2>📖 Documentation Portal</h2>
+        <p>Redirecting to the interactive Developer Hub Documentation Center with multi-language support, live diagrams, and search...</p>
+        <a href="/dev-hub#tab-docs">Open Dev Hub Documentation ↗</a>
+    </div>
+</body>
+</html>

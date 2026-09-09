@@ -9,7 +9,27 @@ This skill covers best practices for APEX developer management, runtime multi-la
 
 ---
 
-## 1. APEX_LANG Runtime Localization & Translation Engine
+## 1. 🎯 When to Use & Negative Routing
+
+### Positive Triggers (Activate Immediately):
+- Provisioning or managing APEX developer accounts and workspaces (`create-developer.sh`)
+- Multi-language application translation via `APEX_LANG` package (`CREATE_MESSAGE`, `PUBLISH_APPLICATION`)
+- Splitting APEX application exports into Git-versionable files via SQLcl (`apex export -split`)
+- Configuring Azure Entra ID Single Sign-On (SSO) or recovering from SSO lockout (`&fsp_sso_login_override=y`)
+- Enabling ORDS AutoREST for database tables, views, or stored procedures
+
+### Negative Routing (Redirect to Specialized Skills):
+| If the task is primarily about... | DO NOT handle here. Route immediately to: |
+|:---|:---|
+| Generating APEX apps from declarative `.apx` DSL | `apexlang_app_generation` |
+| Low-level APEXlang compiler grammar, rules, or contracts | `apexlang` (Oracle team official skill) |
+| Running Liquibase schema migrations or SQLcl project commands | `sqlcl_project` |
+| Migrating legacy Oracle Forms 14c to APEX | `oracle_forms_devops` |
+| Installing or patching the APEX engine in container | `setup_orchestration` & `oracle_containers` |
+
+---
+
+## 2. APEX_LANG Runtime Localization & Translation Engine
 
 Oracle APEX provides the native `APEX_LANG` PL/SQL package to translate text messages, seed translations, and publish localized application versions:
 

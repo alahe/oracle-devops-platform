@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🌐 ORDS-Yhdyskäytävän Profiilit (`config/profiles/ords/`)
+# 🌐 ORDS-yhdyskäytävän profiilit (`config/profiles/ords/`)
 
 Tämä hakemisto sisältää **ORDS (Oracle REST Data Services)** -profiilit, jotka määrittävät verkkokokoonpanot Rule 11 -sääntöjen mukaisesti.
 

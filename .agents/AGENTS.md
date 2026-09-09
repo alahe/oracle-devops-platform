@@ -152,16 +152,33 @@ The platform supports **6 languages (Nordic-Baltic region: 🇬🇧 EN, 🇪🇪
 Whenever creating or updating Mermaid diagrams (flowcharts, sequence diagrams, state machines, and architecture blueprints in documentation or Dev Hub):
 
 1. **Multi-Line Decision Nodes (Diamonds `{...}`):**
-   - Text inside decision diamonds (`{...}`) **MUST NEVER be written as a single long line**.
+   - Text inside decision diamonds (`{...}`) **MUST NEVER be written as a single long line** (max 25–28 characters per line).
    - Always break questions/conditions into 2–4 concise lines using HTML `<br/>` tags (e.g., `{1. Kas lokaalne<br/>snapshot olemas<br/>ja versioon klapib?}`).
    - This prevents disproportionately wide, stretched diamond shapes that ruin layout readability.
 
 2. **Compact & Balanced Node Proportions:**
    - Keep all process blocks (`[...]`, `(...)`, `[(...)]`) balanced with max 25–35 characters per line, breaking longer sentences across multiple lines with `<br/>`.
 
-3. **High-Contrast Semantic Flow:**
+3. **Responsive Screen Width & Horizontal Node Limits:**
+   - Diagrams must not stretch excessively wide horizontally, which causes browser SVG scaling to shrink text to unreadable, microscopic sizes on standard 13"–16" laptop screens.
+   - Limit horizontal sequences (`direction LR`) to a maximum of **3 to 4 nodes in a single row**.
+   - If a flowchart has 5 or more steps, use **Top-to-Bottom flow (`flowchart TB` or `direction TB`)** or wrap steps into multi-row grid clusters with `subgraph`.
+
+4. **High-Contrast Semantic Flow:**
    - Ensure explicit branch labels on connectors (e.g., `-->|JAH / Kehtiv|` and `-->|EI / Puudub|`).
    - Group related components into clean, labeled `subgraph` blocks.
+
+5. **Subgraph Multi-Tier & 2D Grid Layouts (Preventing Horizontal Sprawl):**
+   - Subgraphs must not be placed in a single horizontal row beyond **2 to 3 subgraphs**.
+   - Multi-node subgraphs with 3 or more nodes must specify internal vertical stacking (`direction TB`) or vertical chaining.
+   - Topologies with 4 or more component groups must be organized into **multi-row tiers (`subgraph Tier1`, `subgraph Tier2`)** or vertical links between tiers to prevent horizontal browser stretch.
+
+6. **Maximum Vertical Node Density & Line Count Limit:**
+   - Boxes (`[...]`, `(...)`, `[(...)]`) **MUST NOT exceed 4 lines of text** (max 3 `<br/>` tags).
+   - Never dump 5+ bulleted specification lines or full descriptions into a single node. Keep node labels concise (system name, port, core function).
+
+7. **CSS Line-Height Containment & Text Isolation:**
+   - Diagram rendering containers must strictly isolate SVG text with `line-height: 1.25 !important;` on `foreignObject div` and `.label` elements to prevent document line-heights (e.g. `1.7`) from vertically overflowing and clipping text at the bottom of node boxes.
 
 ---
 

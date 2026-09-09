@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📊 Našumo Ir etalonų rodiklių katalogas (`metrics/`)
+# 📊 Našumo ir etalonų rodiklių katalogas (`metrics/`)
 
 Šiame kataloge saugomi ir Git valdomi diegimo žingsnių ir trukmės matavimai (1 taisyklė).
 

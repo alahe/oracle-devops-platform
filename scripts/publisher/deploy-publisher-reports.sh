@@ -33,12 +33,19 @@ REPORTS_ARTIFACTORY_URL="${PUBLISHER_REPORTS_ARTIFACTORY_URL:-}"
 REPORTS_GIT_URL="${PUBLISHER_REPORTS_GIT_URL:-}"
 REPORTS_GIT_BRANCH="${PUBLISHER_REPORTS_GIT_BRANCH:-main}"
 LOCAL_CACHE_DIR="$WORKSPACE_DIR/binaries/publisher_reports"
-LOCAL_DEV_DIR="$WORKSPACE_DIR/publisher-reports"
+LOCAL_DEV_DIR="$WORKSPACE_DIR/applications/publisher"
 
 LOG_DIR="$WORKSPACE_DIR/install_logs"
 mkdir -p "$LOG_DIR"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_FILE="$LOG_DIR/publisher_reports_deploy_${TIMESTAMP}.log"
+BP_TAG=""
+if [ -n "${SELECTED_BLUEPRINT:-}" ]; then
+  BP_TAG="bp_${SELECTED_BLUEPRINT}_"
+elif [ -n "${ACTIVE_BLUEPRINT:-}" ]; then
+  BP_TAG="bp_${ACTIVE_BLUEPRINT}_"
+fi
+LOG_FILE="$LOG_DIR/publisher_reports_deploy_${BP_TAG}${TIMESTAMP}.log"
+[ -n "${BP_TAG}" ] && ln -sf "$LOG_FILE" "$LOG_DIR/publisher_reports_deploy_${BP_TAG}latest.log" 2>/dev/null || true
 
 echo "======================================================================" | tee -a "$LOG_FILE"
 echo "🚀 Oracle Analytics Publisher Report & Template Deployment" | tee -a "$LOG_FILE"
@@ -124,6 +131,14 @@ else
     curl -s -u "${ADMIN_USER}:${ADMIN_PWD}" -F "reportPath=/Custom/${rel_path}" -F "file=@${report_file}" "${PUBLISHER_URL}/services/rest/v1/reports" >> "$LOG_FILE" 2>&1 || true
   done
   echo -e "${GREEN}✅ Reports uploaded via Publisher REST API successfully!${NC}" | tee -a "$LOG_FILE"
+fi
+# 3. Synchronize Centralized Corporate Assets (Logos & Shared Images)
+COMMON_IMAGES="$WORKSPACE_DIR/templates/publisher/common/images"
+if [ -d "$COMMON_IMAGES" ] && "${RUNTIME_ENGINE}" ps --format "{{.Names}}" 2>/dev/null | grep -q "^${CONTAINER_NAME}$"; then
+  echo -e "${CYAN}3. Synchronizing centralized image assets (${COMMON_IMAGES})...${NC}" | tee -a "$LOG_FILE"
+  "${RUNTIME_ENGINE}" exec -i "${CONTAINER_NAME}" mkdir -p /u01/common/images >> "$LOG_FILE" 2>&1 || true
+  "${RUNTIME_ENGINE}" cp "${COMMON_IMAGES}/." "${CONTAINER_NAME}:/u01/common/images/" >> "$LOG_FILE" 2>&1 || true
+  echo -e "${GREEN}✅ Centralized corporate logos and images synchronized!${NC}" | tee -a "$LOG_FILE"
 fi
 
 echo "======================================================================" | tee -a "$LOG_FILE"

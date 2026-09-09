@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔒 Lietotāja Līmenī Uzticama Vietējā CA (variants 3)
+# 🔒 Lietotāja līmenī uzticama vietējā CA (variants 3)
 
 Šajā direktorijā atrodas lokāli ģenerēts Root CA sertifikāts (`localCA.pem`) un tā parakstīts servera sertifikāts (`localhost.crt` / `localhost.key`).
 

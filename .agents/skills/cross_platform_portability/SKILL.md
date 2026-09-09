@@ -9,7 +9,25 @@ This skill guides engineering and automation practices to guarantee flawless Git
 
 ---
 
-## 1. Operating System Filesystem Compatibility Matrix
+## 1. 🎯 When to Use & Negative Routing
+
+### Positive Triggers (Activate Immediately):
+- Creating new files, directories, scripts, or documentation paths in the repository
+- Resolving Git clone/checkout errors on Windows (`Invalid argument`, `checkout-index collision`)
+- Running or debugging `./tests/unit/test-filename-portability.sh` (Rule 13)
+- Enforcing LF line endings (`.gitattributes`) and casing discipline
+
+### Negative Routing (Redirect to Specialized Skills):
+| If the task is primarily about... | DO NOT handle here. Route immediately to: |
+|:---|:---|
+| Windows corporate proxy, WSL2 mirrored network, or WDAC policies | `windows_enterprise_devops` |
+| Authoring unit tests or running full CI suites | `testing_and_ci_framework` |
+| Bash/Zsh compatibility and SQLcl binary resolution | `vscode_sql_developer` |
+| Repository directory tree overview | `repo_codebase_navigator` |
+
+---
+
+## 2. Operating System Filesystem Compatibility Matrix
 
 | Restriction Area | Windows (NTFS / FAT) | macOS (APFS) | Linux (ext4 / btrfs) | Platform Standard |
 | :--- | :--- | :--- | :--- | :--- |
@@ -119,3 +137,15 @@ The test suite includes an automated filename portability linter:
   4. Detects Windows DOS reserved device names (`CON`, `PRN`, `AUX`, `NUL`, `COM1-9`, `LPT1-9`).
   5. Flags unescaped whitespace and non-ASCII diacritics in pathnames.
   6. Enforces relative path lengths $< 180$ characters.
+
+---
+
+## 7. 🩺 Diagnostic Signatures & 1-Line Remedies
+
+| Symptom / Error | Root Cause | 1-Line Remedy |
+|:---|:---|:---|
+| `fatal: cannot create directory ... Invalid argument` | Path contains Windows-forbidden char (`:`, `*`, `?`, `<`) | Rename file to standard kebab-case ASCII: `tr '[:upper:]' '[:lower:]'`. |
+| `warning: LF will be replaced by CRLF` | Git `core.autocrlf` converting line endings on Windows | Run `git config --global core.autocrlf input` and verify `.gitattributes`. |
+| `error: unable to create file ... Filename too long` | Path exceeds Windows legacy 260-char `MAX_PATH` | Run `git config --global core.longpaths true` or shorten directory path. |
+| `checkout-index: unable to check out file` | Two files in the same dir differ only by letter casing | Rename one of the colliding files to a distinct name (e.g. `Setup.sh` vs `setup.sh`). |
+| Script execution fails with `^M: bad interpreter` | Shell script has Windows CRLF (`\r\n`) line endings | Convert to Unix LF with `dos2unix <script.sh>` or `sed -i '' 's/\r$//' <script.sh>`. |

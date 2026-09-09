@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../security-audit-report.md) | [ 🇪🇪 Eesti ](../et/security-audit-report.md) | [ 🇫🇮 Suomi ](../fi/security-audit-report.md) | [ 🇸🇪 Svenska ](../sv/security-audit-report.md) | [ 🇱🇻 Latviešu ](../lv/security-audit-report.md) | [ 🇱🇹 Lietuvių ](security-audit-report.md)
 
-# 🛡️ Įmonių Saugumo Audito Ataskaita & Hardening Gairės
+# 🛡️ Įmonių saugumo audito ataskaita & hardening-gairės
 
 Šiame dokumente pateikiama išsami **Oracle DevOps Platform** ir **Oracle APEX programų variklio** saugumo audito metodika, audito išvados, taisymo priemonės ir atitiktis finansų sektoriaus reikalavimams.
 

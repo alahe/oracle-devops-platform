@@ -10,33 +10,41 @@ flowchart TD
         BP0["BP 0: Standard Proxy DB & ORDS<br/>db-proxy (:1532) + app-ords (:8088/8448)"]
     end
 
-    subgraph DatabaseStacks ["🗄️ GRUPP 1: DATABASSTACKAR (1–4)"]
-        BP1["BP 1: Fristående ALISE DB (:1533)"]
-        BP2["BP 2: Fristående Proxy DB (:1537)"]
-        BP3["BP 3: Fristående Gvenzl Community DB (:1535)"]
-        BP4["BP 4: Fristående Autonomous DB Cloud (:1536)"]
+    subgraph Tier1 ["RAD 1: KÄRNARKITEKTUR (1–7)"]
+        subgraph DatabaseStacks ["🗄️ GRUPP 1: DATABASSTACKAR (1–4)"]
+            direction TB
+            BP1["BP 1: Fristående ALISE DB (:1533)"]
+            BP2["BP 2: Fristående Proxy DB (:1537)"]
+            BP3["BP 3: Fristående Gvenzl Community DB (:1535)"]
+            BP4["BP 4: Fristående Autonomous DB Cloud (:1536)"]
+        end
+
+        subgraph Middleware ["🏢 GRUPP 2: ENTERPRISE MIDDLEWARE (5–7)"]
+            direction TB
+            BP5["BP 5: Fristående Analytics<br/>Publisher (:1531, :9502)"]
+            BP6["BP 6: Fristående Oracle<br/>Forms 14c (:1534, :9001, :6082)"]
+            BP7["BP 7: Konsoliderad Forms +<br/>Publisher (:1538, :9005, :9505)"]
+        end
     end
 
-    subgraph Middleware ["🏢 GRUPP 2: ENTERPRISE MIDDLEWARE (5–7)"]
-        BP5["BP 5: Fristående Analytics Publisher (:1531, :9502)"]
-        BP6["BP 6: Fristående Oracle Forms 14c (:1534, :9001, :6082)"]
-        BP7["BP 7: Konsoliderad Forms + Publisher FMW (:1531, :9001, :9502)"]
+    subgraph Tier2 ["RAD 2: UTVECKLING & FJÄRRGATEWAYS (8–11)"]
+        subgraph DeveloperStudio ["💻 GRUPP 3: UTVECKLARSTUDIO (8–9)"]
+            direction TB
+            BP8["BP 8: Fristående Webb-IDE (:8090)"]
+            BP9["BP 9: Publisher Designer (:6083)"]
+        end
+
+        subgraph RemoteGateways ["🌐 GRUPP 4: FJÄRR- & EDGE-GATEWAYS (10–11)"]
+            direction TB
+            BP10["BP 10: Fjärr-ORDS Gateway (:8088/8448)<br/>⚠️ Testning & Förfining"]
+            BP11["BP 11: Fjärr-Publisher (:9502/9503)<br/>⚠️ Testning & Förfining"]
+        end
     end
 
-    subgraph DeveloperStudio ["💻 GRUPP 3: UTVECKLARSTUDIO (8–9)"]
-        BP8["BP 8: Fristående Webb-IDE (:8090)<br/>⚠️ Testning & Förfining"]
-        BP9["BP 9: Publisher Designer (:6083)<br/>⚠️ Testning & Förfining"]
-    end
-
-    subgraph RemoteGateways ["🌐 GRUPP 4: FJÄRR- & EDGE-GATEWAYS (10–11)"]
-        BP10["BP 10: Fjärr-ORDS Gateway (:8088/8448)<br/>⚠️ Testning & Förfining"]
-        BP11["BP 11: Fjärr-Publisher (:9502/9503)<br/>⚠️ Testning & Förfining"]
-    end
-
-    Default --> DatabaseStacks
-    Default --> Middleware
-    Default --> DeveloperStudio
-    Default --> RemoteGateways
+    BP0 --> BP1
+    BP0 --> BP5
+    BP1 --> BP8
+    BP5 --> BP10
 ```
 
 ---
@@ -77,8 +85,8 @@ flowchart TD
 | **5** | [`.env.5-standalone-publisher`](.env.5-standalone-publisher) | `db-publisher-oracle.yaml` (:1531) | `publisher-standard.yaml` (:9502) | `db-publisher`, `app-publisher` | Fristående Analytics Publisher 2025 och dedikerad RCU-databas. |
 | **6** | [`.env.6-standalone-forms`](.env.6-standalone-forms) | `db-forms-oracle.yaml` (:1534) | `forms-standard.yaml` (:9001, :6082) | `db-forms`, `app-forms` | Fristående Oracle Forms 14c och HTML5 noVNC Forms Builder. |
 | **7** | [`.env.7-consolidated-forms-publisher`](.env.7-consolidated-forms-publisher) | `db-publisher-oracle.yaml` (:1531) | `forms-publisher-unified.yaml` (:9001/9502/6082) | `db-publisher`, `app-forms-publisher` | Enhetlig WebLogic-container som kör både Forms 14c och Publisher. |
-| **8** | [`.env.8-standalone-web-ide`](.env.8-standalone-web-ide) | - *(Zero DB)* | `web-ide-standard.yaml` (:8090/8449/8091) | `web-ide-dev` | **⚠️ Testning & Förfining:** VS Code-server och SQL Developer fungerar. Artifactory-spegel under utveckling. |
-| **9** | [`.env.9-standalone-publisher-designer`](.env.9-standalone-publisher-designer) | - *(Zero DB)* | `publisher-designer-standard.yaml` (:6083 noVNC) | `app-publisher-designer` | **⚠️ Testning & Förfining:** noVNC-skrivbordscontainer startar. Word och BIP Add-in integreras. |
+| **8** | [`.env.8-standalone-web-ide`](.env.8-standalone-web-ide) | - *(Zero DB)* | `web-ide-standard.yaml` (:8090/8450/8091) | `web-ide-dev` | Fristående utvecklararbetsstation med VS Code-server, SQLcl och förkonfigurerade verktyg. |
+| **9** | [`.env.9-standalone-publisher-designer`](.env.9-standalone-publisher-designer) | - *(Zero DB)* | `publisher-designer-standard.yaml` (:6083 noVNC) | `app-publisher-designer` | noVNC-skrivbordscontainer för MS Word & BIP Template Builder RTF-mallar (`setup-word-designer.sh`). |
 | **10** | [`.env.10-remote-ords`](.env.10-remote-ords) | `MAIN_DB_PROFILE=NONE` | `ords-standalone.yaml` (:8088/8448) | `app-ords` | **⚠️ Testning & Förfining:** Fristående ORDS startar. Fjärranslutning till moln-ADB under utveckling. |
 | **11** | [`.env.11-remote-publisher`](.env.11-remote-publisher) | `MAIN_DB_PROFILE=NONE` | `publisher-standard.yaml` (:9502/9503) | `app-publisher` | **⚠️ Testning & Förfining:** Publisher startar. Rapportering mot externa databaser under utveckling. |
 

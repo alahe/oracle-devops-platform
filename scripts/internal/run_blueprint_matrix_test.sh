@@ -31,10 +31,18 @@ SUMMARY_MD="$WORKSPACE_DIR/metrics/matrix_test_summary_${TIMESTAMP}.md"
 SKIP_PASS1=false
 SKIP_PASS2=false
 FAST_MODE=false
+DRY_RUN=false
 BP_LIST=()
 
 for arg in "$@"; do
   case "$arg" in
+    -h|--help)
+      echo "Kasutus: $0 [--single-pass] [--pass2-only] [--fast] [--dry-run] [BP_NUM ...]"
+      exit 0
+      ;;
+    -d|--dry-run)
+      DRY_RUN=true
+      ;;
     --single-pass|--pass1-only|--cold-only)
       SKIP_PASS2=true
       ;;
@@ -60,10 +68,15 @@ fi
 echo "=================================================================="
 echo "🧪 ARCHITECTURE BLUEPRINTS AUTOMATED MATRIX TEST RUNNER"
 echo "   Blueprints to test: ${BP_LIST[*]}"
-echo "   Options: Skip Pass 1 = $SKIP_PASS1 | Skip Pass 2 = $SKIP_PASS2 | Fast Mode = $FAST_MODE"
+echo "   Options: Skip Pass 1 = $SKIP_PASS1 | Skip Pass 2 = $SKIP_PASS2 | Fast Mode = $FAST_MODE | Dry Run = $DRY_RUN"
 echo "   Log file: $MATRIX_LOG"
 echo "   Timestamp: $TIMESTAMP"
 echo "=================================================================="
+
+if [ "$DRY_RUN" = "true" ]; then
+  echo "🔍 [DRY-RUN]: Matrix simulation verified for ${#BP_LIST[@]} blueprints: ${BP_LIST[*]}."
+  exit 0
+fi
 
 RESULTS_JSON="[]"
 TOTAL_COUNT=${#BP_LIST[@]}

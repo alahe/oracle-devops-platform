@@ -37,6 +37,12 @@ Norint paleisti testus iš švarios pradinės būsenos (su automatiniu `reset-al
 
 # 5. Kelių debesų testai:
 ./tests/test-remote-multicloud.sh --dry-run
+
+# 6. Architektūros brėžinių ir profilių vientisumo auditas:
+./tests/unit/test-blueprint-profiles-integrity.sh
+
+# 7. Saugyklos statistikos ir kodo bazės metrikos ataskaita:
+./tests/report-repo-stats.sh
 ```
 
 ---

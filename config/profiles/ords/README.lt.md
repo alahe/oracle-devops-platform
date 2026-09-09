@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🌐 ORDS Šliuzo profiliai (`config/profiles/ords/`)
+# 🌐 ORDS šliuzo profiliai (`config/profiles/ords/`)
 
 Šiame kataloge yra aiškūs **ORDS (Oracle REST Data Services)** profiliai pagal 11 taisyklę.
 

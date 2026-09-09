@@ -12,7 +12,7 @@ web_ide:
   marketplace_provider: "microsoft" # microsoft | openvsx | artifactory | custom
   ports:
     http_port: 8090
-    https_port: 8449
+    https_port: 8450
     cicd_ui_port: 8091
   workspace_dir: /workspace
 

@@ -65,3 +65,33 @@ config/certs/
 - **Duomenų Bazės Lygio SSO:** Oracle 23ai palaiko Azure AD OAuth2 žetonus ir visuotines roles.
 - **ORDS & REST API:** ORDS tikrina gaunamus Bearer JWT žetonus pagal Azure AD viešuosius raktus.
 - **APEX Programų SSO:** Programos naudoja Social Sign-In (OpenID Connect) su automatiniu vartotojų registravimu.
+
+---
+
+## 5. Analytics Publisher Saugumo ir Rolų Matrica
+
+Oracle Analytics Publisher taiko dviejų fazių įmonės lygio saugumo modelį:
+
+### 1 Fazė: Vietinė Zero-Trust SEPS Wallet (Numatytoji Aktyvi)
+Visi prisijungimo duomenys saugiai saugomi šifruotoje Oracle SEPS Auto-Login Wallet (`cwallet.sso`). Slaptažodžiai niekada nerašomi į diską atviru tekstu.
+
+| Rolė / Paskyra | WebLogic Saugumo Grupė | SEPS Wallet Alias | Teisės ir Atsakomybės Sritis |
+| :--- | :--- | :--- | :--- |
+| `bip_developer` | `XMLP_DEVELOPER`, `XMLP_TEMPLATE_DESIGNER` | `PUBLISHER_DEVELOPER` | Šablonų, XLIFF vertimų ir duomenų modelių kūrimas aplanke `/Custom/` |
+| `bip_user` | `XMLP_SCHEDULER`, `XMLP_ANALYZER` | `PUBLISHER_USER` | Ataskaitų vykdymas, planavimas, istorijos peržiūra ir REST API vartotojai |
+| `bip_admin` | `XMLP_ADMIN` | `PUBLISHER_ADMIN` | BIP katalogo administravimas (izoliuotas nuo WebLogic konsolės) |
+
+Slaptažodžių valdymo ir rotacijos komandos:
+```bash
+./scripts/get-password.sh PUBLISHER_DEVELOPER
+./scripts/rotate-password.sh publisher dev     # Rotuoja programuotojo slaptažodį
+./scripts/rotate-password.sh publisher user    # Rotuoja vartotojo slaptažodį
+./scripts/rotate-password.sh publisher admin   # Rotuoja administratoriaus slaptažodį
+./scripts/rotate-password.sh publisher all     # Rotuoja visus Publisher slaptažodžius
+```
+
+### 2 Fazė: Įmonės Debesijos Tapatybė ir M2M (Laukimo / Standby Režimas)
+- **Interaktyvūs interneto vartotojai:** SAML 2.0 Web SSO su Azure Entra ID / Okta / PingFederate.
+- **REST API / CI/CD konvejeriai:** OAuth2 M2M Bearer žetonai (`client_credentials` suteikimas), susieti su virtualiomis AppRoles (`BIP_DEVELOPER`, `BIP_INTEGRATION`).
+- Gali būti aktyvuota pagal poreikį be kodo pakeitimų per `config/profiles/publisher/publisher-standard.yaml` ir `./scripts/internal/configure-publisher-sso.sh`.
+

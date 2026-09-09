@@ -13,43 +13,43 @@ This guide explains the architectural purpose, storage locations, and execution 
 
 ```mermaid
 flowchart TD
-    Start([🚀 Launch:<br/>setup-all.sh / deploy-blueprint.sh]) --> CheckLocal{1. Does local<br/>Golden Snapshot<br/>exist and match<br/>target version?}
+    Start([🚀 Launch:<br/>setup-all.sh / deploy-blueprint.sh]) --> CheckLocal{"1. Does local<br/>Golden Snapshot<br/>exist and match<br/>target version?"}
 
     %% DETAILED VERSION VERIFICATION ANNOTATION
-    subgraph VerifyLogic ["🔍 HOW STEP 1 VERIFIES VERSIONS (.meta.json contract)"]
+    subgraph VerifyLogic ["🔍 HOW STEP 1 VERIFIES VERSIONS<br/>(.meta.json contract)"]
         LookDisk["1. Search golden-snapshots/<br/>for bp_X_latest.tar.gz or profile_*.tar.gz"]
         ReadMeta["2. Parse companion .meta.json file<br/>(apex_version, db_image, blueprint_id)"]
-        Compare["3. verify_snapshot_version_match:<br/>Compare target .env/YAML vs snapshot metadata"]
+        Compare["3. verify_snapshot_<br/>version_match:<br/>Compare target .env/YAML vs snapshot metadata"]
         LookDisk --> ReadMeta --> Compare
     end
 
     CheckLocal -.->|Inspects| VerifyLogic
 
     %% WARM RESTORE PATH (FASTPATH)
-    CheckLocal -->|MATCH: .meta.json valid<br/>(e.g. 26.1 == 26.1)| FastPath["⚡ WARM FASTPATH RECOVERY<br/>• restore-golden-snapshots.sh (~15s)<br/>• Restores exact oradata volume state<br/>• Skips APEX/RCU re-compilation"]
+    CheckLocal -->|YES: .meta.json valid<br/>versions match| FastPath["⚡ WARM FASTPATH RECOVERY<br/>• restore-golden-snapshots.sh (~15s)<br/>• Restores exact oradata volume state<br/>• Skips APEX/RCU re-compilation"]
     
     FastPath --> StartContainers["🚀 Start containers<br/>(start-containers.sh)<br/>Uses pre-built Images<br/>(DB 23ai, ORDS, Web IDE)"]
     
     StartContainers --> HealthCheck["🔍 Service Diagnostics<br/>• check-urls.sh (HTTP 200)<br/>• check-wallet.sh (SEPS)"]
 
     %% COLD BUILD & ARTIFACTORY DISCOVERY
-    CheckLocal -->|MISMATCH or MISSING<br/>(e.g. Target 26.1 != Snap 24.2)| CheckArtifactory{2. Does enterprise<br/>Artifactory have<br/>matching snapshot<br/>in catalog?}
+    CheckLocal -->|NO: Mismatch or missing<br/>fresh build required| CheckArtifactory{"2. Does enterprise<br/>Artifactory have<br/>matching snapshot<br/>in catalog?"}
     
     CheckArtifactory -->|YES: Remote .meta.json match| DownloadArt["⬇️ Download Snapshot at LAN speed<br/>(artifactory-client.sh)"]
     DownloadArt --> FastPath
 
-    CheckArtifactory -->|NO: Build required| ColdBuild["❄️ COLD CLEAN BUILD (FROM SCRATCH)<br/>1. Pull Image (Oracle Free 23ai)<br/>2. Download binaries/ (apex, ords)<br/>3. Start fresh empty DB container<br/>4. Compile APEX & schemas (~5-12 min)"]
+    CheckArtifactory -->|NO: Build required| ColdBuild["❄️ COLD CLEAN BUILD (FROM SCRATCH)<br/>• Pull Oracle Free 23ai & binaries/<br/>• Start fresh empty DB container<br/>• Compile APEX & schemas (~5-12 min)"]
     
     ColdBuild --> CreateSnap["💾 GENERATE GOLDEN SNAPSHOT<br/>• create-golden-snapshots.sh<br/>• Saves bp_X_latest.tar.gz<br/>• Writes .meta.json contract"]
     
-    CreateSnap --> CheckAutoPublish{3. Publish snapshot<br/>to Artifactory?<br/>(--publish or<br/>AUTO_PUBLISH=true)}
+    CreateSnap --> CheckAutoPublish{"3. Publish snapshot<br/>to Artifactory?<br/>optional parameter"}
     
     CheckAutoPublish -->|YES| PublishArt["⬆️ Publish to product catalog<br/>(publish-to-artifactory.sh)"]
     CheckAutoPublish -->|NO| HealthCheck
     PublishArt --> HealthCheck
 
     %% GRANULAR BACKUPS LAYER
-    subgraph BackupsLayer ["💾 GRANULAR BACKUPS LAYER — Daily Developer Operations"]
+    subgraph BackupsLayer ["💾 GRANULAR BACKUPS LAYER —<br/>Daily Developer Operations"]
         DevWork["👨‍💻 Developer builds solutions<br/>(APEX apps, Forms, Publisher reports)"]
         DevWork --> RunBackup["📦 Execute backup tool:<br/>• backup-publisher-catalog.sh<br/>• SEPS Wallet backup"]
         RunBackup --> SaveBackup["📂 Persist export to disk:<br/>backups/publisher_catalog_*.tar.gz"]

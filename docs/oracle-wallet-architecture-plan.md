@@ -27,10 +27,10 @@ Wallet töötab samaaegselt nii paroolihoidlana (Credentials Store) kui ka serti
 ```mermaid
 graph TD
     subgraph "Oracle Wallet (config/tns_admin/wallet)"
-        cwallet["Auto-Login: cwallet.sso"] -->|Mitte-interaktiivne sisselogimine| SEPS["Salvestatud kasutajad: sys, apex_proxy_schema, oas_config"]
+        cwallet["Auto-Login: cwallet.sso"] -->|Mitte-interaktiivne sisselogimine| SEPS["Salvestatud kasutajad:<br/>sys, apex_proxy_schema, oas_config"]
         ewallet["Krüpteeritud: ewallet.p12"] -->|Nõuab parooli| Admin["Sertifikaatide / Kasutajate haldus"]
         ewallet --> Truststore["Usaldusväärsed CA-d: localhost ROOT CA"]
-        ewallet --> Identity["Serveri identiteet: localhost.crt & localhost.key"]
+        ewallet --> Identity["Serveri identiteet:<br/>localhost.crt & localhost.key"]
     end
 ```
 

@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# ⚙️ Iekšējo Skriptu direktorijs (`scripts/internal/`)
+# ⚙️ Iekšējo skriptu direktorijs (`scripts/internal/`)
 
 Saskaņā ar **Rule 3 (Directory Layout Rule for Scripts)** šajā direktorijā atrodas automatizācijas dzinēji, profilu parsētāji, datubāzes inicializatori, automātiskie iestatīšanas soļi un SQL faili, ko iekšēji izmanto vides orķestrētājs (`setup-all.sh`).
 

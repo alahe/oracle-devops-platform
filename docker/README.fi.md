@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🐳 Säilöjen Rakennusmallit (`docker/`)
+# 🐳 Säilöjen rakennusmallit (`docker/`)
 
 Tämä hakemisto sisältää säilökuvien rakennuskomennot, Dockerfile-tiedostot ja ajonaikaiset asetukset.
 

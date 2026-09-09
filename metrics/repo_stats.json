@@ -1,0 +1,112 @@
+{
+  "timestamp": "2026-09-08T21:22:37.604674",
+  "total_git_files": 1966,
+  "total_lines_of_code": 250042,
+  "code_breakdown": {
+    "Shell Scripts (.sh, .cmd, .ps1)": {
+      "exts": [
+        ".sh",
+        ".cmd",
+        ".ps1"
+      ],
+      "files": 254,
+      "loc": 40354
+    },
+    "Python (.py)": {
+      "exts": [
+        ".py"
+      ],
+      "files": 21,
+      "loc": 22229
+    },
+    "SQL (.sql)": {
+      "exts": [
+        ".sql"
+      ],
+      "files": 10,
+      "loc": 1451
+    },
+    "APEXlang DSL (.apx)": {
+      "exts": [
+        ".apx"
+      ],
+      "files": 15,
+      "loc": 696
+    },
+    "YAML Profiles & Configs (.yaml, .yml)": {
+      "exts": [
+        ".yaml",
+        ".yml"
+      ],
+      "files": 30,
+      "loc": 1476
+    },
+    "JSON Data & Metrics (.json)": {
+      "exts": [
+        ".json"
+      ],
+      "files": 222,
+      "loc": 20785
+    },
+    "Markdown Documentation (.md)": {
+      "exts": [
+        ".md"
+      ],
+      "files": 1307,
+      "loc": 90388
+    },
+    "Web Frontend (.html, .js, .css)": {
+      "exts": [
+        ".html",
+        ".js",
+        ".mjs",
+        ".css"
+      ],
+      "files": 22,
+      "loc": 72663
+    }
+  },
+  "test_suite": {
+    "unit_tests_count": 102,
+    "unit_tests_loc": 5391,
+    "integration_tests_count": 11,
+    "integration_tests_loc": 783,
+    "suite_tests_count": 19,
+    "suite_tests_loc": 6788,
+    "total_test_scripts": 132,
+    "total_test_loc": 12962,
+    "test_reports_count": 27
+  },
+  "architecture": {
+    "blueprints_count": 12,
+    "db_profiles_count": 11,
+    "middleware_profiles_count": 12,
+    "total_profiles_count": 23
+  },
+  "localization": {
+    "languages": [
+      "en",
+      "et",
+      "fi",
+      "sv",
+      "lv",
+      "lt"
+    ],
+    "markdown_docs_by_lang": {
+      "en": 960,
+      "et": 72,
+      "fi": 71,
+      "sv": 68,
+      "lv": 68,
+      "lt": 68
+    },
+    "devhub_i18n_keys": {
+      "en": 348,
+      "et": 348,
+      "fi": 348,
+      "sv": 348,
+      "lv": 348,
+      "lt": 348
+    }
+  }
+}

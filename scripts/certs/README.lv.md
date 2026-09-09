@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔒 SSL/TLS Sertifikātu un Uzticamības Pārvaldības modulis (zero-admin / non-root)
+# 🔒 SSL/TLS sertifikātu un uzticamības pārvaldības modulis (zero-admin / non-root)
 
 Šis modulis pārvalda drošus HTTPS un TCPS savienojumus, sertifikātu atlasi un automātisku uzticamības instalēšanu macOS un Windows vidēs bez administratora (`root` / `sudo`) tiesībām.
 

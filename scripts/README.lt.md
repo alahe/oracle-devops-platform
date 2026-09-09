@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🛠️ CLI Scenarijų ir Kūrėjo Įrankių Žinynas
+# 🛠️ CLI scenarijų ir kūrėjo įrankių žinynas
 
 Šiame vadove pateikiama išsami visų projekto gyvavimo ciklo, diagnostikos, administravimo ir kūrėjo scenarijų dokumentacija.
 

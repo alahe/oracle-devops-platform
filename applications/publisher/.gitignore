@@ -1,0 +1,5 @@
+# Binary export archives - generated Just-In-Time (JIT) before deploy
+*.xdoz
+*.xdmz
+*.zip
+*.tmp

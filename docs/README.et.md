@@ -10,6 +10,7 @@ See kataloog sisaldab Oracle DevOps platvormi tehnilisi spetsifikatsioone, paiga
 
 | Valdkond | Dokument | Kirjeldus |
 | :--- | :--- | :--- |
+| 🚀 **Kiirstart Nullist (Zero-to-Hero)** | [et/getting-started-from-scratch.md](et/getting-started-from-scratch.md) | Platvormi täielik paigaldus uues macOS, Windows 11 (WSL2) või Linux masinas nullist alustades. |
 | 💻 **Ettevõtte Windows ja WSL2** | [windows-enterprise-setup-guide.md](windows-enterprise-setup-guide.md) | Zero-Admin WSL2 seadistus, 10-astmeline dry-run diagnostika, Hyper-V pordid ja korporatiivne proxy. |
 | 🏢 **Ettevõtte onboarding ja peeglid** | [enterprise-onboarding-guide.md](enterprise-onboarding-guide.md) | Artifactory registripeeglite seadistamine, profiilide automaatne kohandamine ja taastamine. |
 | 🏛️ **Hajutatud 4-serveriline arhitektuur** | [enterprise-distributed-architecture.md](enterprise-distributed-architecture.md) | 4-serveriline toodanguarhitektuur, active/standby failover ja zero-trust turvalisus. |
@@ -35,3 +36,5 @@ See kataloog sisaldab Oracle DevOps platvormi tehnilisi spetsifikatsioone, paiga
 | 📦 **APEX rakenduste tarne** | [apex-apps-deployment.md](apex-apps-deployment.md) | Pakendatud APEX rakenduste automaatne importimine kaustast `binaries/apex_apps/`. |
 | 🌐 **Eraldiseisev ORDS server** | [standalone-ords.md](standalone-ords.md) | Eraldiseisva Oracle REST Data Services serveri paigaldus Linux masinasse väljaspool Dockerit. |
 | 🚀 **Paigaldusvoo arhitektuur** | [setup-all-workflow.md](setup-all-workflow.md) | Täielik voodiagramm, idempotentsus, SQLcl container fallback ja Defenderi optimeeringud. |
+| ❓ **Platvormi KKK (Kõik küsimused)** | [et/faq.md](et/faq.md) | Tsentraalne infobaas alustajatele, arhitektidele, turvalisusele ja tõrkeotsingule. |
+| 🏛️ **Oracle ressursid ja allalaadimised** | [et/oracle-resources-and-downloads.md](et/oracle-resources-and-downloads.md) | Ametlikud Oracle Container Registry (OCR) tõmmised, toodete allalaadimised ja portaalid. |

@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# ⚙️ Sisäisten Komentosarjojen hakemisto (`scripts/internal/`)
+# ⚙️ Sisäisten komentosarjojen hakemisto (`scripts/internal/`)
 
 Säännön **Rule 3 (Directory Layout Rule for Scripts)** mukaisesti tämä hakemisto sisältää automaatiomoottoreita, profiilinjäsentimiä, tietokannan alustajia, automatisoituja asennusvaiheita ja SQL-tiedostoja, joita ympäristön orkestroija (`setup-all.sh`) käyttää sisäisesti.
 

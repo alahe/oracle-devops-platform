@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ========================================================================== -->
+<!-- Oracle Analytics Publisher — Enterprise Arve Testandmed                    -->
+<!-- Kasutamiseks arve_test_standard.rtf malliga ja GitHub Copiloti treenimiseks-->
+<!-- ========================================================================== -->
+<INVOICE_DATA>
+  <SELLER>
+    <COMPANY_NAME>Eesti Pilveplatvorm OÜ</COMPANY_NAME>
+    <REG_CODE>12345678</REG_CODE>
+    <VAT_NUMBER>EE101234567</VAT_NUMBER>
+    <ADDRESS>Lõõtsa tn 8a, 11415 Tallinn, Harjumaa, Eesti</ADDRESS>
+    <EMAIL>arved@pilveplatvorm.ee</EMAIL>
+    <PHONE>+372 600 1234</PHONE>
+    <WEBSITE>https://pilveplatvorm.ee</WEBSITE>
+    <BANK_NAME>LHV Pank AS</BANK_NAME>
+    <IBAN>EE667700771001234567</IBAN>
+    <SWIFT_BIC>LHVBEE22</SWIFT_BIC>
+  </SELLER>
+
+  <BUYER>
+    <COMPANY_NAME>Nordic Innovation AS</COMPANY_NAME>
+    <REG_CODE>87654321</REG_CODE>
+    <VAT_NUMBER>EE109876543</VAT_NUMBER>
+    <ADDRESS>Narva mnt 5, 10117 Tallinn, Eesti</ADDRESS>
+    <CONTACT_PERSON>Jaan Tamm</CONTACT_PERSON>
+    <EMAIL>raamatupidamine@nordic-innovation.ee</EMAIL>
+  </BUYER>
+
+  <INVOICE_METADATA>
+    <INVOICE_NUM>EE-2026-9042</INVOICE_NUM>
+    <INVOICE_DATE>2026-09-08</INVOICE_DATE>
+    <DUE_DATE>2026-09-22</DUE_DATE>
+    <PAYMENT_TERMS>14 päeva</PAYMENT_TERMS>
+    <CURRENCY>EUR</CURRENCY>
+    <PAYMENT_REFERENCE>202690428</PAYMENT_REFERENCE>
+    <ORDER_NUMBER>ORD-8812</ORDER_NUMBER>
+  </INVOICE_METADATA>
+
+  <LINES>
+    <LINE>
+      <LINE_NUM>1</LINE_NUM>
+      <ITEM_CODE>DEV-23AI-01</ITEM_CODE>
+      <ITEM_NAME>Oracle 23ai Konteinerite DevOps Platvormi Konsultatsioon</ITEM_NAME>
+      <QTY>16.00</QTY>
+      <UNIT>h</UNIT>
+      <UNIT_PRICE>95.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>1520.00</LINE_TOTAL>
+    </LINE>
+    <LINE>
+      <LINE_NUM>2</LINE_NUM>
+      <ITEM_CODE>APX-LANG-02</ITEM_CODE>
+      <ITEM_NAME>Oracle APEX 24.1 &amp; APEXlang DSL Automaatika Seadistus</ITEM_NAME>
+      <QTY>8.00</QTY>
+      <UNIT>h</UNIT>
+      <UNIT_PRICE>110.00</UNIT_PRICE>
+      <DISCOUNT_PCT>10</DISCOUNT_PCT>
+      <LINE_TOTAL>792.00</LINE_TOTAL>
+    </LINE>
+    <LINE>
+      <LINE_NUM>3</LINE_NUM>
+      <ITEM_CODE>PUB-DES-03</ITEM_CODE>
+      <ITEM_NAME>Analytics Publisher Pixel-Perfect Mallide Kujundus &amp; VS Code Sild</ITEM_NAME>
+      <QTY>1.00</QTY>
+      <UNIT>tk</UNIT>
+      <UNIT_PRICE>688.00</UNIT_PRICE>
+      <DISCOUNT_PCT>0</DISCOUNT_PCT>
+      <LINE_TOTAL>688.00</LINE_TOTAL>
+    </LINE>
+  </LINES>
+
+  <TOTALS>
+    <SUBTOTAL>3000.00</SUBTOTAL>
+    <DISCOUNT_TOTAL>88.00</DISCOUNT_TOTAL>
+    <VAT_RATE>22%</VAT_RATE>
+    <VAT_AMOUNT>660.00</VAT_AMOUNT>
+    <GRAND_TOTAL>3660.00</GRAND_TOTAL>
+    <TOTAL_IN_WORDS>Kolm tuhat kuussada kuuskümmend eurot ja 00 senti</TOTAL_IN_WORDS>
+  </TOTALS>
+
+  <FOOTER>
+    <PAYMENT_NOTICE>Palume arve tasumisel kindlasti märkida viitenumber: 202690428.</PAYMENT_NOTICE>
+    <LATE_FEE_NOTICE>Maksetähtaja ületamisel arvestatakse viivist 0.1% päevas tasumata summalt.</LATE_FEE_NOTICE>
+    <THANK_YOU_MESSAGE>Täname meeldiva koostöö eest!</THANK_YOU_MESSAGE>
+  </FOOTER>
+</INVOICE_DATA>

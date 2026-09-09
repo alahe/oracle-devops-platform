@@ -31,7 +31,14 @@ METRICS_DIR="$WORKSPACE_DIR/metrics"
 mkdir -p "$LOG_DIR" "$METRICS_DIR"
 
 TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
-LOG_FILE="$LOG_DIR/publisher_engine_install_${TIMESTAMP}.log"
+BP_TAG=""
+if [ -n "${SELECTED_BLUEPRINT:-}" ]; then
+  BP_TAG="bp_${SELECTED_BLUEPRINT}_"
+elif [ -n "${ACTIVE_BLUEPRINT:-}" ]; then
+  BP_TAG="bp_${ACTIVE_BLUEPRINT}_"
+fi
+LOG_FILE="$LOG_DIR/publisher_engine_install_${BP_TAG}${TIMESTAMP}.log"
+[ -n "${BP_TAG}" ] && ln -sf "$LOG_FILE" "$LOG_DIR/publisher_engine_install_${BP_TAG}latest.log" 2>/dev/null || true
 if [ -f "$SCRIPT_DIR/sanitize-logs.sh" ]; then
   source "$SCRIPT_DIR/sanitize-logs.sh"
   exec > >(sanitize_text | tee -a "$LOG_FILE") 2>&1
@@ -267,6 +274,11 @@ if [ "$INSTALL_MODE" = "container" ]; then
     [ "$pub_db_svc" = "none" ] && pub_db_svc="FREEPDB1"
 
     podman run -d --name app-publisher --security-opt=no-new-privileges --network="$NET_NAME" \
+      --health-cmd="curl -k -f -s http://127.0.0.1:9502/xmlpserver/ || exit 1" \
+      --health-interval=15s \
+      --health-timeout=5s \
+      --health-start-period=60s \
+      --health-retries=3 \
       -v oracle-free-db-in-prod_publisher_data:/u01/oracle/user_projects:rw \
       -v "$WORKSPACE_DIR/docker/publisher/dockerfiles/2025/createAndStartDomain.sh:/u01/createAndStartDomain.sh:ro" \
       -e ADMIN_USERNAME=weblogic \

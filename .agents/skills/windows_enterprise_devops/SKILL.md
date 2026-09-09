@@ -9,7 +9,25 @@ This skill guides engineering and automation practices to guarantee that the Ora
 
 ---
 
-## 1. The 8 Enterprise Windows Compatibility Contracts
+## 1. 🎯 When to Use & Negative Routing
+
+### Positive Triggers (Activate Immediately):
+- Running the platform on Windows, WSL2, or corporate laptops (Intune/GPO managed)
+- Troubleshooting corporate proxy MITM certificates, Zscaler, Cisco AnyConnect, or GlobalProtect VPN dropouts
+- Resolving slow disk I/O caused by `/mnt/c/` Plan9 mounts or Defender real-time scanning
+- Configuring zero-local-admin execution or PowerShell Constrained Language Mode (CLM) workarounds
+
+### Negative Routing (Redirect to Specialized Skills):
+| If the task is primarily about... | DO NOT handle here. Route immediately to: |
+|:---|:---|
+| Cross-platform path casing, forbidden chars (`< > : * ?`), or git LF attributes | `cross_platform_portability` |
+| Database container tuning, memory limits, or Vector Search | `oracle_containers` |
+| Local CI simulation or GitHub Actions testing | `testing_and_ci_framework` |
+| SEPS Wallet passwordless connect | `wallet_security_rotation` |
+
+---
+
+## 2. The 8 Enterprise Windows Compatibility Contracts
 
 Every AI agent modifying code, creating scripts, or designing deployment plans must strictly adhere to these **8 mandatory contracts**:
 
@@ -111,3 +129,42 @@ The diagnostic engine validates 10 critical checkpoints:
 8. **VPN DNS Tunneling:** Verifies DNS resolution and `.wslconfig` `dnsTunneling=true`.
 9. **Container Engine:** Checks rootless Podman/Docker availability and daemon responsiveness.
 10. **Zero-Admin Standard:** Verifies execution as standard unprivileged user (UID != 0).
+
+---
+
+## 4. Real-World Corporate Network & PowerShell Hardening (Field Insights)
+
+When running on managed enterprise Windows endpoints (Check Point, Cisco AnyConnect, Zscaler, WDAC, AppLocker), follow these proven workarounds:
+
+### 4.1. Corporate VPN Does Not Extend into WSL2 Network
+- **Symptom:** Internal corporate hostnames resolve in WSL2, but TCP connections time out while working fine in the Windows host browser.
+- **Root Cause:** NDIS-filter-driver-style VPN clients do not forward traffic to WSL2 virtual adapters even in mirrored networking mode.
+- **Solution / Workaround:** When downloading large artifacts (e.g. ADB Free seed PDB in `scripts/adb/start.sh`), pre-fetch the file using `powershell.exe` from inside WSL2 (`powershell.exe -Command "Invoke-WebRequest ..."`). Windows-native HTTP clients transparently leverage host VPN routing and corporate PAC proxies.
+
+### 4.2. NTLM/Kerberos Proxy Authentication
+- **Symptom:** `Invoke-WebRequest -UseDefaultCredentials` returns `407 Proxy Authentication Required`.
+- **Root Cause:** `-UseDefaultCredentials` only authenticates to the target endpoint, not the proxy.
+- **Solution:** Pass `-Proxy '<url>' -ProxyUseDefaultCredentials` explicitly. Supply proxy host lists via `COMPANY_PROXY_HOSTS` in `company-registry.conf`.
+
+### 4.3. PowerShell Constrained Language Mode (CLM)
+Corporate AppLocker / WDAC policies enforce Constrained Language Mode:
+- Avoid `New-Object` with arbitrary .NET types (`System.Security.Cryptography.X509Certificates...`); stick to core cmdlets.
+- Dynamic proxy discovery via `.NET` (`[System.Net.WebRequest]::GetSystemWebProxy()`) is blocked; use explicit proxy URLs.
+- String interpolation with variables followed by `:` (e.g. `"-${Name}: ..."`) requires explicit `${Name}` syntax to avoid `InvalidVariableReferenceWithDrive`.
+
+### 4.4. Headless Local & Self-Signed Certificate Trust
+- `Import-Certificate -CertStoreLocation Cert:\CurrentUser\Root -NonInteractive` fails because Windows mandates an interactive confirmation dialog for new Root CAs.
+- **Working Non-Interactive Fallback:** `certutil -user -addstore TrustedPeople <file>` adds the certificate as an explicitly trusted end-entity certificate in user space without requiring UAC elevation or Root CA prompts.
+
+---
+
+## 5. 🩺 Diagnostic Signatures & 1-Line Remedies
+
+| Symptom / Error | Root Cause | 1-Line Remedy |
+|:---|:---|:---|
+| WSL2 git operations take 30+ minutes | Project cloned under `/mnt/c/...` (Plan9 9P mount) | Move workspace inside native WSL2 ext4: `mv /mnt/c/Users/<you>/repo ~/repo`. |
+| `curl` / `podman pull` fails with `x509: certificate signed by unknown authority` | Corporate proxy MITM inspection intercepting TLS handshakes | Export corporate Root CA from Windows cert store into WSL2 `/usr/local/share/ca-certificates/`. |
+| DNS fails inside WSL2 after connecting to corporate VPN | VPN client breaks default WSL2 virtual switch DNS routing | Add `dnsTunneling=true` and `networkingMode=mirrored` to `%USERPROFILE%\.wslconfig`. |
+| Bash scripts fail with `/bin/bash^M: bad interpreter` | File converted to Windows CRLF line endings | Run `dos2unix <file>` and ensure Git `core.autocrlf = input`. |
+| PowerShell script fails under AppLocker / WDAC | Endpoint enforces Constrained Language Mode (CLM) | Avoid arbitrary `New-Object` .NET classes; use native cmdlets and explicit `${Var}` syntax. |
+

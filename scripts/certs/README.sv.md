@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔒 Modul för SSL/tls-certifikat och Förtroendehantering (zero-admin / non-root)
+# 🔒 Modul för SSL/TLS-certifikat och förtroendehantering (zero-admin / non-root)
 
 Denna modul hanterar säkra HTTPS- och TCPS-anslutningar, certifikatval och automatisk installation av förtroende i macOS- och Windows-miljöer utan administratörsbehörighet (`root` / `sudo`).
 

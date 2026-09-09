@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🌐 Viešasis Domenas ir visuotinė CA (variantas 1)
+# 🌐 Viešasis domenas ir visuotinė CA (variantas 1)
 
 Šiame kataloge saugomi viešojo FQDN domeno (`*.local.imone.lt` ➡️ `127.0.0.1`) ir visuotinai patikimos CA (pvz., Let's Encrypt) pasirašyti sertifikatai:
 * `public_cert.crt` — Viešojo domeno sertifikatas

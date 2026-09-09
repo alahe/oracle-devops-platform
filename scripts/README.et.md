@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🛠️ CLI Skriptide ja Tööriistade kasutusjuhend (command line reference)
+# 🛠️ CLI skriptide ja tööriistade kasutusjuhend (command line reference)
 
 Käesolev fail sisaldab üksikasjalikku juhendit kõigi projekti haldus-, diagnostika- ja arendusskriptide kohta.
 

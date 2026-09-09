@@ -1,64 +1,64 @@
 {
   "metadata": {
-    "generated_at": "2026-09-08T00:11:22.468534",
-    "scan_duration_ms": 188,
+    "generated_at": "2026-09-09T10:34:57.688086",
+    "scan_duration_ms": 453,
     "generator": "scripts/internal/generate-repo-report.py",
     "workspace_root": "/Users/allanlahe/Oracle/oracle-free-db-in-prod"
   },
   "maintainable_core": {
-    "total_files": 496,
-    "total_lines": 71294,
-    "maintainable_sloc": 59960,
-    "test_sloc": 9246,
-    "functional_sloc": 50714,
-    "test_density_percent": 18.2,
-    "avg_sloc_per_file": 120.9
+    "total_files": 524,
+    "total_lines": 86705,
+    "maintainable_sloc": 73375,
+    "test_sloc": 11603,
+    "functional_sloc": 61772,
+    "test_density_percent": 18.8,
+    "avg_sloc_per_file": 140.0
   },
   "gross_repository": {
-    "total_files": 1889,
-    "total_gross_lines": 253187,
-    "generated_and_metrics_files": 1393,
-    "generated_and_metrics_lines": 181893
+    "total_files": 1955,
+    "total_gross_lines": 289712,
+    "generated_and_metrics_files": 1431,
+    "generated_and_metrics_lines": 203007
   },
   "architecture_components": {
     "blueprints_count": 12,
-    "database_profiles_count": 10,
+    "database_profiles_count": 11,
     "cli_user_tools_count": 27,
     "internal_engine_scripts_count": 49,
-    "test_scripts_count": 155
+    "test_scripts_count": 172
   },
   "language_breakdown": {
     "Shell / Bash": {
-      "files": 226,
-      "lines": 35036,
-      "sloc": 27812,
-      "blank": 4171,
-      "comment": 3053,
-      "percent_of_sloc": 46.4
+      "files": 246,
+      "lines": 40355,
+      "sloc": 31888,
+      "blank": 4824,
+      "comment": 3643,
+      "percent_of_sloc": 43.5
     },
     "Web Templates (HTML/JS/CSS)": {
       "files": 5,
-      "lines": 16869,
-      "sloc": 15735,
-      "blank": 1000,
-      "comment": 134,
-      "percent_of_sloc": 26.2
+      "lines": 23777,
+      "sloc": 22128,
+      "blank": 1412,
+      "comment": 237,
+      "percent_of_sloc": 30.2
     },
     "Python": {
-      "files": 13,
-      "lines": 8123,
-      "sloc": 7600,
-      "blank": 429,
-      "comment": 94,
-      "percent_of_sloc": 12.7
+      "files": 16,
+      "lines": 10862,
+      "sloc": 10177,
+      "blank": 561,
+      "comment": 124,
+      "percent_of_sloc": 13.9
     },
     "Markdown Docs": {
-      "files": 179,
-      "lines": 8044,
-      "sloc": 6104,
-      "blank": 1940,
+      "files": 180,
+      "lines": 8160,
+      "sloc": 6204,
+      "blank": 1956,
       "comment": 0,
-      "percent_of_sloc": 10.2
+      "percent_of_sloc": 8.5
     },
     "SQL / PLSQL": {
       "files": 7,
@@ -66,86 +66,86 @@
       "sloc": 1219,
       "blank": 144,
       "comment": 52,
-      "percent_of_sloc": 2.0
+      "percent_of_sloc": 1.7
     },
     "YAML Configuration": {
       "files": 23,
-      "lines": 977,
-      "sloc": 817,
-      "blank": 84,
-      "comment": 76,
-      "percent_of_sloc": 1.4
+      "lines": 1012,
+      "sloc": 849,
+      "blank": 86,
+      "comment": 77,
+      "percent_of_sloc": 1.2
+    },
+    "Other": {
+      "files": 31,
+      "lines": 369,
+      "sloc": 329,
+      "blank": 40,
+      "comment": 0,
+      "percent_of_sloc": 0.4
     },
     "Container / Docker": {
       "files": 5,
-      "lines": 364,
-      "sloc": 257,
+      "lines": 379,
+      "sloc": 271,
       "blank": 56,
-      "comment": 51,
+      "comment": 52,
       "percent_of_sloc": 0.4
-    },
-    "Other": {
-      "files": 30,
-      "lines": 272,
-      "sloc": 245,
-      "blank": 27,
-      "comment": 0,
-      "percent_of_sloc": 0.4
-    },
-    "JSON Data/Specs": {
-      "files": 5,
-      "lines": 88,
-      "sloc": 88,
-      "blank": 0,
-      "comment": 0,
-      "percent_of_sloc": 0.1
     },
     "Windows Scripts": {
-      "files": 3,
-      "lines": 106,
-      "sloc": 83,
-      "blank": 17,
-      "comment": 6,
+      "files": 5,
+      "lines": 282,
+      "sloc": 216,
+      "blank": 43,
+      "comment": 23,
+      "percent_of_sloc": 0.3
+    },
+    "JSON Data/Specs": {
+      "files": 6,
+      "lines": 94,
+      "sloc": 94,
+      "blank": 0,
+      "comment": 0,
       "percent_of_sloc": 0.1
     }
   },
   "top_largest_files": [
     {
       "path": "scripts/internal/dev_hub/assets/app.js",
-      "sloc": 6508,
-      "total_lines": 7370,
+      "sloc": 9413,
+      "total_lines": 10682,
       "language": "Web Templates (HTML/JS/CSS)"
     },
     {
       "path": "scripts/internal/dev_hub/assets/i18n.js",
-      "sloc": 3830,
-      "total_lines": 3839,
+      "sloc": 5035,
+      "total_lines": 5044,
+      "language": "Web Templates (HTML/JS/CSS)"
+    },
+    {
+      "path": "scripts/internal/dev_hub/assets/style.css",
+      "sloc": 4624,
+      "total_lines": 4767,
       "language": "Web Templates (HTML/JS/CSS)"
     },
     {
       "path": "scripts/internal/dev_hub/catalog.py",
-      "sloc": 2842,
-      "total_lines": 2850,
+      "sloc": 2809,
+      "total_lines": 2819,
       "language": "Python"
     },
     {
-      "path": "scripts/internal/dev_hub/assets/style.css",
-      "sloc": 2834,
-      "total_lines": 2898,
+      "path": "scripts/internal/dev_hub/assets/templates/layout.html",
+      "sloc": 2715,
+      "total_lines": 2894,
       "language": "Web Templates (HTML/JS/CSS)"
-    },
-    {
-      "path": "scripts/internal/dev-hub-bridge.py",
-      "sloc": 2400,
-      "total_lines": 2647,
-      "language": "Python"
     }
   ],
   "git": {
-    "total_commits": 78,
-    "last_commit_hash": "92f7b123",
-    "last_commit_date": "2026-09-07T14:18:06+03:00",
-    "last_commit_message": "feat(arch): add financial enterprise distributed architecture, jira backlog, and devhub menu",
+    "total_commits": 79,
+    "last_commit_hash": "0cbc8d0c",
+    "last_commit_date": "2026-09-08T00:44:48+03:00",
+    "last_commit_message": "feat: APEXlang slide expansion, 6-lang glossary with verified links, zero-download link checker, and enterprise windows suite",
     "last_commit_author": "lahe",
     "active_branches": 3,
     "active_tags": 0,
@@ -162,12 +162,12 @@
     ],
     "languages_count": 6,
     "shell_i18n_keys": 0,
-    "devhub_i18n_keys": 710,
-    "total_unique_i18n_keys": 710,
+    "devhub_i18n_keys": 922,
+    "total_unique_i18n_keys": 922,
     "synchronization_status": "100% Synchronized"
   },
   "testing": {
-    "total_test_scripts": 133,
+    "total_test_scripts": 144,
     "historical_test_runs": 0,
     "pass_rate_percent": 100.0,
     "last_test_run": null

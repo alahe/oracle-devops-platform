@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.1" xmlns="urn:oasis:names:tc:xliff:document:1.1">
+  <file original="arve_test_standard.rtf" source-language="et" target-language="lv-LV" datatype="rtf">
+    <header/>
+    <body>
+      <trans-unit id="ARVE_NR">
+        <source>ARVE NR:</source>
+        <target>RĒĶINA NR.:</target>
+      </trans-unit>
+      <trans-unit id="Kuupäev">
+        <source>Kuupäev:</source>
+        <target>Datums:</target>
+      </trans-unit>
+      <trans-unit id="Maksetähtaeg">
+        <source>Maksetähtaeg:</source>
+        <target>Apmaksas termiņš:</target>
+      </trans-unit>
+      <trans-unit id="Tingimus">
+        <source>Tingimus:</source>
+        <target>Nosacījumi:</target>
+      </trans-unit>
+      <trans-unit id="Viitenumber">
+        <source>Viitenumber:</source>
+        <target>Atsauces numurs:</target>
+      </trans-unit>
+      <trans-unit id="Tellimuse_nr">
+        <source>Tellimuse nr:</source>
+        <target>Pasūtījuma nr.:</target>
+      </trans-unit>
+      <trans-unit id="TELLIJA___MAKSJA">
+        <source>TELLIJA / MAKSJA:</source>
+        <target>PIRCĒJS / MAKSĀTĀJS:</target>
+      </trans-unit>
+      <trans-unit id="Nimi">
+        <source>Nimi:</source>
+        <target>Nosaukums:</target>
+      </trans-unit>
+      <trans-unit id="Registrikood">
+        <source>Registrikood:</source>
+        <target>Reģ. Nr.:</target>
+      </trans-unit>
+      <trans-unit id="KMKR_nr">
+        <source>KMKR nr:</source>
+        <target>PVN Nr.:</target>
+      </trans-unit>
+      <trans-unit id="Aadress">
+        <source>Aadress:</source>
+        <target>Adrese:</target>
+      </trans-unit>
+      <trans-unit id="Kontaktisik">
+        <source>Kontaktisik:</source>
+        <target>Kontaktpersona:</target>
+      </trans-unit>
+      <trans-unit id="Nr">
+        <source>Nr</source>
+        <target>Nr.</target>
+      </trans-unit>
+      <trans-unit id="Kood">
+        <source>Kood</source>
+        <target>Kods</target>
+      </trans-unit>
+      <trans-unit id="Kirjeldus___Teenus">
+        <source>Kirjeldus / Teenus</source>
+        <target>Apraksts / Pakalpojums</target>
+      </trans-unit>
+      <trans-unit id="Kogus">
+        <source>Kogus</source>
+        <target>Daudzums</target>
+      </trans-unit>
+      <trans-unit id="Ühik">
+        <source>Ühik</source>
+        <target>Vienība</target>
+      </trans-unit>
+      <trans-unit id="Hind">
+        <source>Hind</source>
+        <target>Cena</target>
+      </trans-unit>
+      <trans-unit id="KM_%">
+        <source>KM %</source>
+        <target>PVN %</target>
+      </trans-unit>
+      <trans-unit id="Summa_(EUR)">
+        <source>Summa (EUR)</source>
+        <target>Kopā (EUR)</target>
+      </trans-unit>
+      <trans-unit id="Vahesumma">
+        <source>Vahesumma:</source>
+        <target>Starpsumma:</target>
+      </trans-unit>
+      <trans-unit id="Soodustus_kokku">
+        <source>Soodustus kokku:</source>
+        <target>Atlaide kopā:</target>
+      </trans-unit>
+      <trans-unit id="Käibemaks">
+        <source>Käibemaks</source>
+        <target>PVN</target>
+      </trans-unit>
+      <trans-unit id="KOKKU_TASUDA">
+        <source>KOKKU TASUDA:</source>
+        <target>KOPĀ APMAKSAI:</target>
+      </trans-unit>
+      <trans-unit id="Summa_sõnadega">
+        <source>Summa sõnadega:</source>
+        <target>Summa vārdos:</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

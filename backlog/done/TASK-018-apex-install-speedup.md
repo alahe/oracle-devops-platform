@@ -17,15 +17,15 @@ Täiesti puhta Oracle 23ai Free DB konteineri peale APEX-i mootori (`@apexins.sq
 
 ```mermaid
 graph TD
-    Start[Paigalduse Algus: setup-all.sh] --> CheckImage{Kas pildil on APEX sisse ehitatud?}
+    Start[Paigalduse Algus: setup-all.sh] --> CheckImage{Kas pildil on APEX<br/>sisse ehitatud?}
     CheckImage -->|Jah: FastStart / Artifactory Image| Instant[⚡ Kiire Tuvastus: 2s ➔ Jätka]
     CheckImage -->|Ei| CheckSnapshot{Kas leidub Golden Snapshot?}
     
     CheckSnapshot -->|Jah: --from-snapshot| SnapRestore[📸 Snapshot Taastus: 30s ➔ Jätka]
-    CheckSnapshot -->|Ei| CheckRuntime{Kas vajatakse Builderit või ainult Runtime?}
+    CheckSnapshot -->|Ei| CheckRuntime{Kas vajatakse Builderit<br/>või ainult Runtime?}
     
     CheckRuntime -->|Ainult Runtime: --apex-runtime| RTInstall[⚡ apxrtins.sql: ~2m]
-    CheckRuntime -->|Full Builder: Nullist paigaldus| TunedInstall[🚀 DB Memory & Parallel Tuning + apexins.sql: 5-7m]
+    CheckRuntime -->|Full Builder: Nullist paigaldus| TunedInstall[🚀 DB Memory & Parallel Tuning<br/>+ apexins.sql: 5-7m]
 ```
 
 ### 🌟 Sammas 1: FastStart & Ettevõtte Sise-Artifactory Konteineripildid (~1–2 min)

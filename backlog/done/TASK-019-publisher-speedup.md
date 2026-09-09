@@ -22,12 +22,12 @@ Vähendada Publisheri käivitusaeg ja Multi-DB paigaldus **alla 1 minuti** (kasu
 
 ```mermaid
 graph TD
-    Start[Publisheri Käivitus: install-publisher.sh] --> CheckImage{Kas pildil on WebLogic BI domeen valmis?}
+    Start[Publisheri Käivitus: install-publisher.sh] --> CheckImage{Kas pildil on WebLogic<br/>BI domeen valmis?}
     CheckImage -->|Jah: Pre-built Domain Image| DirectStart[⚡ Otsene WebLogic Start: ~45s]
-    CheckImage -->|Ei: Nullist domeen| CheckPar{Kas --parallel JA RAM >= 8GB?}
+    CheckImage -->|Ei: Nullist domeen| CheckPar{Kas --parallel JA<br/>RAM >= 8GB?}
     
     CheckPar -->|Jah: Lubatud| ParallelRun[🚀 Paralleelne Initsialiseerimine: ~3m]
-    CheckPar -->|Ei: Vaikimisi| SafeRun[🛡️ Turvaline Järjestikune Initsialiseerimine: 6-8m]
+    CheckPar -->|Ei: Vaikimisi| SafeRun[🛡️ Turvaline Järjestikune<br/>Initsialiseerimine: 6-8m]
 ```
 
 ### 🌟 Sammas 1: Eel-ehitatud WebLogic BI Domeenipilt (`oracle-publisher-domain:2025-db23ai` / ~45s)

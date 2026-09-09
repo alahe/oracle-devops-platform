@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🗄️ Pakalpojumu un Datubāzu profilu matrica (`config/profiles/`)
+# 🗄️ Pakalpojumu un datubāzu profilu matrica (`config/profiles/`)
 
 Šajā direktorijā atrodas izolēti YAML profili, ko izmanto **Dinamiskais Profilu Dzinējs** (`load-profile.sh`, `apply-profile-users.sh`, `create-wallet.sh`, `register-connections.sh`).
 

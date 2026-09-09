@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.0">
+  <file source-language="en-US" target-language="et-EE" datatype="plaintext" original="template.rtf">
+    <header/>
+    <body>
+      <trans-unit id="INVOICE_TITLE">
+        <source>INVOICE</source>
+        <target>ARVE</target>
+      </trans-unit>
+      <trans-unit id="INVOICE_SUMMARY">
+        <source>INVOICE SUMMARY</source>
+        <target>ARVE KOKKUVÕTE</target>
+      </trans-unit>
+      <trans-unit id="BUYER_LABEL">
+        <source>BUYER / PAYER</source>
+        <target>TELLIJA / MAKSJA</target>
+      </trans-unit>
+      <trans-unit id="COL_LINE_NUM">
+        <source>No</source>
+        <target>Nr</target>
+      </trans-unit>
+      <trans-unit id="COL_CODE">
+        <source>Code</source>
+        <target>Kood</target>
+      </trans-unit>
+      <trans-unit id="COL_DESCRIPTION">
+        <source>Description / Service</source>
+        <target>Kirjeldus / Teenus</target>
+      </trans-unit>
+      <trans-unit id="COL_QTY">
+        <source>Qty</source>
+        <target>Kogus</target>
+      </trans-unit>
+      <trans-unit id="COL_UNIT">
+        <source>Unit</source>
+        <target>Ühik</target>
+      </trans-unit>
+      <trans-unit id="COL_PRICE">
+        <source>Price</source>
+        <target>Hind</target>
+      </trans-unit>
+      <trans-unit id="COL_VAT">
+        <source>VAT %</source>
+        <target>KM %</target>
+      </trans-unit>
+      <trans-unit id="COL_TOTAL">
+        <source>Total (EUR)</source>
+        <target>Summa (EUR)</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

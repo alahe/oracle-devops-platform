@@ -65,3 +65,33 @@ config/certs/
 - **Tietokantatason SSO:** Oracle 23ai tukee natiivisti Azure AD OAuth2 -tunnuksia ja globaaleja rooleja.
 - **ORDS & REST API:** ORDS validoi saapuvat Bearer JWT -tunnukset Azure AD:n julkisia avaimia vasten.
 - **APEX-Sovellusten SSO:** Sovellukset käyttävät Social Sign-In -toimintoa (OpenID Connect) automaattisella käyttäjien luonnilla ja ryhmäkartoituksella.
+
+---
+
+## 5. Analytics Publisherin Tietoturva ja Roolimatriisi
+
+Oracle Analytics Publisher hyödyntää kaksivaiheista yritystason tietoturvamallia:
+
+### Vaihe 1: Paikallinen Zero-Trust SEPS Wallet (Oletuksena Aktiivinen)
+Kaikki tunnistetiedot säilytetään suojatussa Oracle SEPS Auto-Login Walletissa (`cwallet.sso`). Salasanoja ei koskaan tallenneta levylle selkokielisenä.
+
+| Rooli / Tili | WebLogic-Turvaryhmä | SEPS Wallet Alias | Oikeudet ja Vastuualueet |
+| :--- | :--- | :--- | :--- |
+| `bip_developer` | `XMLP_DEVELOPER`, `XMLP_TEMPLATE_DESIGNER` | `PUBLISHER_DEVELOPER` | Mallien, XLIFF-käännösten ja tietomallien kehitys `/Custom/`-kansiossa |
+| `bip_user` | `XMLP_SCHEDULER`, `XMLP_ANALYZER` | `PUBLISHER_USER` | Raporttien ajo, ajastus, historian katselu ja REST API -kuluttajat |
+| `bip_admin` | `XMLP_ADMIN` | `PUBLISHER_ADMIN` | BIP-katalogin hallinta (eristetty WebLogic-konsolista) |
+
+Tunnistetietojen hallinta- ja kierrätyskomennot:
+```bash
+./scripts/get-password.sh PUBLISHER_DEVELOPER
+./scripts/rotate-password.sh publisher dev     # Kierrättää kehittäjän salasanan
+./scripts/rotate-password.sh publisher user    # Kierrättää käyttäjän salasanan
+./scripts/rotate-password.sh publisher admin   # Kierrättää ylläpitäjän salasanan
+./scripts/rotate-password.sh publisher all     # Kierrättää kaikki Publisherin salasanat
+```
+
+### Vaihe 2: Yrityspilven Identiteetinhallinta ja M2M (Valmiustila / Standby)
+- **Interaktiiviset Web-käyttäjät:** SAML 2.0 Web SSO (Azure Entra ID / Okta / PingFederate).
+- **REST API / CI/CD -putket:** OAuth2 M2M Bearer -tunnukset (`client_credentials` grant) virtuaalisiin AppRole-rooleihin (`BIP_DEVELOPER`, `BIP_INTEGRATION`).
+- Voidaan aktivoida tarvittaessa ilman koodimuutoksia tiedoston `config/profiles/publisher/publisher-standard.yaml` ja skriptin `./scripts/internal/configure-publisher-sso.sh` avulla.
+

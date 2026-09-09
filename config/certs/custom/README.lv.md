@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🛠️ Pielāgoti SSL/TLS Sertifikāti (custom certificate drop-in)
+# 🛠️ Pielāgoti SSL/TLS sertifikāti (custom certificate drop-in)
 
 Izstrādātāji vai administratori šeit var iekopēt esošu SSL/TLS sertifikātu un privāto atslēgu, ko sistēma automātiski nosaka ar visaugstāko prioritāti (**Solis 0**).
 

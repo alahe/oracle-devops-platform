@@ -65,3 +65,33 @@ config/certs/
 - **Datubāzes Līmeņa SSO:** Oracle 23ai atbalsta Azure AD OAuth2 marķierus un globālās lomas.
 - **ORDS & REST API:** ORDS pārbauda ienākošos Bearer JWT marķierus pret Azure AD publiskajām atslēgām.
 - **APEX Lietotņu SSO:** Lietotnes izmanto Social Sign-In (OpenID Connect) ar automātisku lietotāju reģistrāciju.
+
+---
+
+## 5. Analytics Publisher Drošības un Lomu Matrica
+
+Oracle Analytics Publisher izmanto divu fāžu uzņēmuma līmeņa drošības modeli:
+
+### 1. Fāze: Lokālā Zero-Trust SEPS Wallet (Noklusējuma Aktīvā)
+Visi akreditācijas dati tiek droši glabāti šifrētā Oracle SEPS Auto-Login Wallet (`cwallet.sso`). Paroles nekad netiek rakstītas diskā vienkāršā tekstā.
+
+| Loma / Konts | WebLogic Drošības Grupa | SEPS Wallet Alias | Tiesības un Atbildības Joma |
+| :--- | :--- | :--- | :--- |
+| `bip_developer` | `XMLP_DEVELOPER`, `XMLP_TEMPLATE_DESIGNER` | `PUBLISHER_DEVELOPER` | Veidņu, XLIFF tulkojumu un datu modeļu izstrāde mapē `/Custom/` |
+| `bip_user` | `XMLP_SCHEDULER`, `XMLP_ANALYZER` | `PUBLISHER_USER` | Atskaišu izpilde, plānošana, vēstures skatīšana un REST API klienti |
+| `bip_admin` | `XMLP_ADMIN` | `PUBLISHER_ADMIN` | BIP kataloga administrēšana (izolēta no WebLogic konsoles) |
+
+Paroļu pārvaldības un rotācijas komandas:
+```bash
+./scripts/get-password.sh PUBLISHER_DEVELOPER
+./scripts/rotate-password.sh publisher dev     # Rotē izstrādātāja paroli
+./scripts/rotate-password.sh publisher user    # Rotē lietotāja paroli
+./scripts/rotate-password.sh publisher admin   # Rotē administratora paroli
+./scripts/rotate-password.sh publisher all     # Rotē visas Publisher paroles
+```
+
+### 2. Fāze: Uzņēmuma Mākoņa Identitāte un M2M (Gaidīšanas / Standby Režīms)
+- **Interaktīvie tīmekļa lietotāji:** SAML 2.0 Web SSO ar Azure Entra ID / Okta / PingFederate.
+- **REST API / CI/CD konveijeri:** OAuth2 M2M Bearer marķieri (`client_credentials` piešķiršana) piesaistīti virtuālajām AppRoles (`BIP_DEVELOPER`, `BIP_INTEGRATION`).
+- Var aktivizēt pēc pieprasījuma bez koda izmaiņām, izmantojot `config/profiles/publisher/publisher-standard.yaml` un `./scripts/internal/configure-publisher-sso.sh`.
+

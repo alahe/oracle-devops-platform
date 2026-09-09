@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](forms-setup.md) | [ 🇪🇪 Eesti ](et/forms-setup.md) | [ 🇸🇪 Svenska ](sv/README.md) | [ 🇱🇻 Latviešu ](lv/README.md) | [ 🇱🇹 Lietuvių ](lt/README.md)
 
-# Oracle Forms 14c (14.1.2) Paigaldus-, Arendus- ja Kasutusjuhend
+# Oracle Forms 14c (14.1.2) Installation, Development & Operations Guide
 
 See juhend kirjeldab **Oracle Forms 14c (Fusion Middleware 14.1.2 / Forms Services)** paigaldamist, arhitektuuri, arendaja töövooge, failide edastamist konteinerisse, piltide ja hetktõmmiste haldust ning Forms rakenduste käitamist ja APEX-isse migreerimist.
 

@@ -198,7 +198,7 @@ fi
 # 4. Web IDE URLs
 if is_web_ide_enabled || [ -n "$(podman ps -q --filter name=web-ide-dev 2>/dev/null)" ]; then
   web_ide_h_port="${WEB_IDE_HTTP_PORT:-8090}"
-  web_ide_s_port="${WEB_IDE_HTTPS_PORT:-8449}"
+  web_ide_s_port="${WEB_IDE_HTTPS_PORT:-8450}"
   URLS+=("Web IDE (HTTP)|http://localhost:${web_ide_h_port}|")
   if curl -s -k --connect-timeout 2 --max-time 3 -o /dev/null "https://localhost:${web_ide_s_port}" 2>/dev/null; then
     URLS+=("Web IDE (HTTPS)|https://localhost:${web_ide_s_port}|")

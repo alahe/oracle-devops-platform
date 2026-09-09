@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🌐 ORDS Vārtejas profilu katalogs (`config/profiles/ords/`)
+# 🌐 ORDS vārtejas profilu katalogs (`config/profiles/ords/`)
 
 Šajā direktorijā atrodas **ORDS (Oracle REST Data Services)** profili atbilstoši 11. noteikumam.
 

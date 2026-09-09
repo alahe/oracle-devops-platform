@@ -123,14 +123,14 @@ else
   echo "  ✅ Rule 12 verified in .agents/AGENTS.md."
 fi
 
-# 5. Check .agents/skills/devhub_architecture/SKILL.md for Invariants 3.6 and 3.7
-echo "▶️ [Check 5]: Checking .agents/skills/devhub_architecture/SKILL.md for Invariants 3.6 & 3.7..."
+# 5. Check .agents/skills/devhub_architecture/SKILL.md for Invariants 4.6 (3.6) and 4.7 (3.7)
+echo "▶️ [Check 5]: Checking .agents/skills/devhub_architecture/SKILL.md for Invariants 4.6 & 4.7..."
 SKILL_MD="$WORKSPACE_DIR/.agents/skills/devhub_architecture/SKILL.md"
-if ! grep -q "3\.6 Mandatory Asynchronous Long-Running Task Contract" "$SKILL_MD" || ! grep -q "3\.7 Delayed Active Blueprint & Verified State Contract" "$SKILL_MD"; then
-  echo "❌ Missing Invariant 3.6 or 3.7 in SKILL.md!"
+if ! grep -qE "(3|4)\.6 Mandatory Asynchronous Long-Running Task Contract" "$SKILL_MD" || ! grep -qE "(3|4)\.7 Delayed Active Blueprint & Verified State Contract" "$SKILL_MD"; then
+  echo "❌ Missing Invariant 4.6 or 4.7 in SKILL.md!"
   ERRORS=$((ERRORS + 1))
 else
-  echo "  ✅ Invariants 3.6 and 3.7 verified in SKILL.md."
+  echo "  ✅ Invariants 4.6 and 4.7 verified in SKILL.md."
 fi
 
 echo "=================================================================="

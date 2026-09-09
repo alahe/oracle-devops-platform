@@ -35,19 +35,23 @@ git clone https://github.com/allanlahe/oracle-free-db-in-prod.git && cd oracle-f
 ```mermaid
 flowchart TD
     Start(["🚀 Utvecklaren Börjar"]) --> Clone["1. git clone & cd oracle-free-db-in-prod"]
-    Clone --> ChooseBP{"2. Välj Arkitektur Blueprint"}
+    Clone --> ChooseBP{"2. Välj arkitektur-<br/>blueprint"}
     
-    ChooseBP -->|Standard 2-DB Miljö| BP21["./scripts/setup-all.sh -b 21 --lang sv"]
-    ChooseBP -->|Forms + Publisher + IDE| BP31["./scripts/setup-all.sh -b 31 --lang sv"]
-    ChooseBP -->|Förhandsgranskning / Dry-Run| BPDry["./scripts/deploy-blueprint.sh -b 21 --dry-run"]
+    ChooseBP -->|Kanonisk Standard| BP0["./scripts/setup-all.sh (BP 0)"]
+    ChooseBP -->|Verksamhet ALISE DB| BP1["./scripts/setup-all.sh -b 1"]
+    ChooseBP -->|Forms + Publisher| BP7["./scripts/setup-all.sh -b 7"]
+    ChooseBP -->|Fristående Web-IDE| BP8["./scripts/setup-all.sh -b 8"]
+    ChooseBP -->|Förhandsgranskning / Dry-Run| BPDry["./scripts/setup-all.sh -b 1 --dry-run"]
     
-    BP21 --> DevHub["3. Öppna DevOps Kommandocenter<br/>🌐 http://localhost:8088/"]
-    BP31 --> DevHub
+    BP0 --> DevHub["3. Öppna DevOps Kommandocenter<br/>🌐 http://localhost:8088/"]
+    BP1 --> DevHub
+    BP7 --> DevHub
+    BP8 --> DevHub
     BPDry --> ChooseBP
     
-    DevHub --> PwdSpikker["4. Lösenordslathund (SEPS Wallet)<br/>./scripts/get-password.sh DB_PROXY_DEV -c"]
+    DevHub --> PwdSpikker["4. Lösenordslathund (SEPS Wallet)<br/>./scripts/get-password.sh DB_ALISE_DEV -c"]
     
-    PwdSpikker --> DevWork["5. Börja Utveckla!"]
+    DevHub --> DevWork["5. Börja Utveckla!"]
     DevWork --> WorkIDE["💻 Web IDE & SQL Developer (:8090)"]
     DevWork --> WorkAPEX["🌟 APEX Builder & SSO Gateway (:8088)"]
     DevWork --> WorkForms["📐 Forms 14c noVNC Builder (:6082)"]
@@ -56,19 +60,51 @@ flowchart TD
 
 ---
 
-## ⚡ Setup-all 10-fas livscykelarkitektur
+## 🏗️ Arkitekturmodeller (12 Kanoniska Modulära Byggstenar)
+
+Oracle Free DB in Prod delar in sin arkitektur i **12 kanoniska modulära arkitekturmodeller (0 .. 11)** fördelade på 4 olika företagsnivåer:
 
 ```mermaid
-flowchart LR
-    P1["1. Hämta Avbilder"] --> P2["2. Hämta ORDS"]
-    P2 --> P3["3. APEX Paket"]
-    P3 --> P4["4. Starta Containrar"]
-    P4 --> P5["5. Vänta på DB-Hälsa"]
-    P5 --> P6["6. Installera APEX"]
-    P6 --> P7["7. Scheman & SEPS Init"]
-    P7 --> P8["8. Driftsätt APEX Appar"]
-    P8 --> P9["9. Middleware & Tjänster"]
-    P9 --> P10["10. Gyllene Ögonblicksbild (~15s DR)"]
+flowchart TD
+    subgraph Default ["⭐ KANONISK SYSTEMSTANDARD"]
+        BP0["BP 0: Standard Proxy DB & ORDS<br/>db-proxy (:1532) + app-ords (:8088/8448)"]
+    end
+
+    subgraph Tier1 ["RAD 1: KÄRNARKITEKTUR (1–7)"]
+        subgraph DatabaseStacks ["🗄️ GRUPP 1: DATABASSTACKAR (1–4)"]
+            direction TB
+            BP1["BP 1: Fristående ALISE DB (:1533)"]
+            BP2["BP 2: Fristående Proxy DB (:1537)"]
+            BP3["BP 3: Fristående Gvenzl Community DB (:1535)"]
+            BP4["BP 4: Fristående Autonomous DB Cloud (:1536)"]
+        end
+
+        subgraph Middleware ["🏢 GRUPP 2: ENTERPRISE MIDDLEWARE (5–7)"]
+            direction TB
+            BP5["BP 5: Fristående Analytics<br/>Publisher (:1531, :9502)"]
+            BP6["BP 6: Fristående Oracle<br/>Forms 14c (:1534, :9001, :6082)"]
+            BP7["BP 7: Konsoliderad Forms +<br/>Publisher (:1538, :9005, :9505)"]
+        end
+    end
+
+    subgraph Tier2 ["RAD 2: UTVECKLING & FJÄRRGATEWAYS (8–11)"]
+        subgraph DeveloperStudio ["💻 GRUPP 3: UTVECKLARSTUDIO (8–9)"]
+            direction TB
+            BP8["BP 8: Fristående Web-IDE (:8090)<br/>⚠️ Testning & Förfining"]
+            BP9["BP 9: Publisher Designer (:6083)<br/>⚠️ Testning & Förfining"]
+        end
+
+        subgraph RemoteGateways ["🌐 GRUPP 4: FJÄRR- & EDGE-GATEWAYS (10–11)"]
+            direction TB
+            BP10["BP 10: Fjärr-ORDS Gateway (:8088/8448)<br/>⚠️ Testning & Förfining"]
+            BP11["BP 11: Fjärr-Publisher (:9502/9503)<br/>⚠️ Testning & Förfining"]
+        end
+    end
+
+    BP0 --> BP1
+    BP0 --> BP5
+    BP1 --> BP8
+    BP5 --> BP10
 ```
 
 ---
@@ -139,58 +175,6 @@ I denna arkitektur är **Oracle APEX 26.1** primärt positionerad som:
 
 ---
 
-## 📋 11 Kuraterade arkitektur Blueprints
-
-```mermaid
-graph TD
-  subgraph Serie 1-9: Core DB & APEX SSO Gateway
-    BP3["🌟 BP 3 (STANDARD): 2-Lagers Produktionsmiljö<br/>db-proxy + db-alise + app-ords (Portar 1532, 1533, 8088)"]
-    BP7["BP 7: Flerleverantörs Hybrid<br/>Officiell Oracle 23ai DB + Gerald Venzl DB + ORDS"]
-  end
-
-  subgraph Serie 10-19: Analytics Publisher
-    BP13["BP 13: Allt-i-Ett Publisher DB<br/>En 23ai DB (RCU + Data) + Publisher + ORDS"]
-    BP11["BP 11: Dedikerad Publisher Enterprise<br/>3 isolerade databaser + Publisher + ORDS"]
-  end
-
-  subgraph Serie 20-29: Oracle Forms 14c & Modernisering
-    BP22["BP 22: Minimal Forms Hybrid<br/>Kombinerad Forms/Proxy DB + ALISE DB + Forms 14c + ORDS"]
-    BP21["BP 21: Full Enterprise Forms Miljö<br/>Forms RCU DB + Anpassad DB + Proxy DB + Forms 14c + ORDS"]
-  end
-
-  subgraph Serie 30-39: Utvecklararbetsstationer & Web IDE
-    BP34["🌟 BP 34: Standard 2-Lagers DB + Web IDE<br/>db-proxy + db-alise + app-ords + web-ide-dev (Port 8090)"]
-    BP31["BP 31: Moln Autonomous DB + Web IDE<br/>ADB Emulator + VS Code Web IDE"]
-  end
-
-  subgraph Serie 40-49: Ultimate Enterprise Sviter
-    BP41["🌟 BP 41: Ultimate Allt-i-Ett Enterprise + Web IDE<br/>Forms + Publisher + APEX SSO + Web IDE på 1 DB"]
-    BP42["BP 42: Fullt Isolerat Molnlaboratorium<br/>8 isolerade containrar, 4 dedikerade databaser"]
-    BP43["BP 43: 2-DB Hybrid Enterprise + Web IDE<br/>Proxy DB + Delad Middleware RCU DB"]
-  end
-```
-
-### 🚀 Blueprint driftsättning och hantering (`./scripts/deploy-blueprint.sh`)
-
-```bash
-# 1. Kontrollera aktiv blueprint och tjänstehälsa:
-./scripts/deploy-blueprint.sh --status --lang sv
-
-# 2. Driftsätt Blueprint 3 (STANDARD 2-Lagers Produktionsmiljö):
-./scripts/deploy-blueprint.sh -b 3 --lang sv
-
-# 3. Driftsätt Blueprint 41 (Ultimate Allt-i-Ett Enterprise):
-./scripts/deploy-blueprint.sh -b 41 --lang sv
-
-# 4. Simulera driftsättning utan ändringar (Dry-Run):
-./scripts/deploy-blueprint.sh -b 34 --dry-run
-
-# 5. Visa 11 blueprints i kommandotolken:
-./scripts/deploy-blueprint.sh --list --lang sv
-```
-
----
-
 ## ⚡ Accelererad ~15s återställning & automatisk versionskontroll
 
 Oracle Free DB in Prod innehåller en **intelligent flernivåbaserad Golden Snapshot- och Skip-motor** (`scripts/internal/snapshot-resolver.sh`) som förkortar starttiden vid andra körningen från **~6–12 minuter till ~15 sekunder**:
@@ -248,7 +232,7 @@ Oracle Free DB in Prod innehåller en **intelligent flernivåbaserad Golden Snap
 
 ## 🧭 Oracle APEX DevHub-applikation och APEXlang CI/CD
 
-Förutom den fristående HTML Dev Hub (`docs/dev-hub.html`) innehåller plattformen en **Oracle APEX-applikation (App 101: DevHub)** skapad deklarativt med [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) i katalogen [`applications/devhub/`](../../applications/devhub/):
+Förutom den fristående HTML Dev Hub (`docs/dev-hub.html`) innehåller plattformen en **Oracle APEX-applikation (App 101: DevHub)** skapad deklarativt med [Oracle APEXlang DSL](https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/) i katalogen [`applications/`](../../applications/README.sv.md):
 
 - **Noll-Fotavtryck Dokumentation i Databasen:** Dokumentationen sparas aldrig som CLOB-fält i databasen. En lokal REST-dokumentationsbrygga (`scripts/internal/dev-hub-bridge.py` på port 8089) strömmar lokaliserad Markdown direkt från Git till APEX, där den renderas med `APEX_MARKDOWN.TO_HTML`.
 - **Interaktiv Presentation och Översikt (Sida 7):** Innehåller en interaktiv presentation med 8 bilder som täcker plattformsvisionen, utvecklarnas utmaningar, rollbaserade fördelar, 11 arkitekturmodeller, Zero-Trust SEPS Wallet-säkerhet, ~15s Golden Snapshot-återställning och svar på kritiska frågor från chefsarkitekter och f.d. DBA:er.

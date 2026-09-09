@@ -125,6 +125,9 @@ PYEOF
 
   if [ "${PUBLISHER_ENABLED:-false}" = "true" ] || podman container exists app-publisher 2>/dev/null; then
     printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "Analytics Pub" "weblogic" "PUBLISHER_WEBLOGIC_ADMIN" "http://localhost:9502/xmlpserver"
+    printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "Analytics Pub" "bip_developer" "PUBLISHER_DEVELOPER" "http://localhost:9502/xmlpserver"
+    printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "Analytics Pub" "bip_user" "PUBLISHER_USER" "http://localhost:9502/xmlpserver"
+    printf "│ %-16s │ %-19s │ %-24s │ %-54s │\n" "Analytics Pub" "bip_admin" "PUBLISHER_ADMIN" "http://localhost:9502/xmlpserver"
   fi
 
   if [ "${ENABLE_FORMS:-false}" = "true" ] || podman container exists app-forms 2>/dev/null; then
@@ -179,13 +182,44 @@ case "$ALIAS_UPPER" in
   *) ALIAS_SEARCH="$ALIAS" ;;
 esac
 
-if ! podman container exists "$PROXY_CONTAINER" 2>/dev/null; then
-  msg_err "PWD_CONTAINER_OFFLINE_ERR" "$PROXY_CONTAINER"
-  exit 1
+# Check if alias can be resolved directly (e.g. Publisher or Middleware services)
+case "$ALIAS_UPPER" in
+  "PUBLISHER_DEVELOPER"|"BIP_DEVELOPER")
+    USER_VAL="bip_developer"
+    PWD_VAL=$(podman secret inspect --showsecret publisher_developer_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+    ;;
+  "PUBLISHER_USER"|"BIP_USER")
+    USER_VAL="bip_user"
+    PWD_VAL=$(podman secret inspect --showsecret publisher_user_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+    ;;
+  "PUBLISHER_ADMIN"|"BIP_ADMIN")
+    USER_VAL="bip_admin"
+    PWD_VAL=$(podman secret inspect --showsecret publisher_admin_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+    ;;
+  "PUBLISHER_WEBLOGIC_ADMIN"|"DB_PUBLISHER_SYS")
+    USER_VAL="weblogic"
+    PWD_VAL=$(podman secret inspect --showsecret publisher_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+    ;;
+esac
+
+if [ -z "${PWD_VAL:-}" ]; then
+  case "$ALIAS_UPPER" in
+    "PUBLISHER_"*|"BIP_"*)
+      PWD_VAL="AdminPassword123!"
+      ;;
+  esac
 fi
 
-# Detect whether ADB or Standard wallet is in use
-IS_ADB=false
+if [ -z "${PWD_VAL:-}" ]; then
+  if ! podman container exists "$PROXY_CONTAINER" 2>/dev/null || [ "$(podman inspect --format='{{.State.Status}}' "$PROXY_CONTAINER" 2>/dev/null)" != "running" ]; then
+    msg_err "PWD_CONTAINER_OFFLINE_ERR" "$PROXY_CONTAINER"
+    exit 1
+  fi
+fi
+
+if [ -z "${PWD_VAL:-}" ]; then
+  # Detect whether ADB or Standard wallet is in use
+  IS_ADB=false
 if [ "$APEX_DB_TYPE" = "ADB" ] || [[ "$APEX_DB_IMAGE" == *"adb-free"* ]] || podman exec "$PROXY_CONTAINER" test -d /u01/app/oracle/wallets/tls_wallet 2>/dev/null; then
   IS_ADB=true
 fi
@@ -268,7 +302,24 @@ if [ -z "$PWD_VAL" ] || [[ "$PWD_VAL" == *"?"* ]] || echo "$PWD_VAL" | grep -q '
       [ -n "$target_c_prefix" ] && PWD_VAL=$(podman secret inspect --showsecret "${target_c_prefix}_schema_password" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
       [ -z "$PWD_VAL" ] && PWD_VAL=$(podman secret inspect --showsecret apex_schema_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
       ;;
+    "PUBLISHER_DEVELOPER"|"BIP_DEVELOPER")
+      PWD_VAL=$(podman secret inspect --showsecret publisher_developer_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+      [ -z "$USER_VAL" ] && USER_VAL="bip_developer"
+      ;;
+    "PUBLISHER_USER"|"BIP_USER")
+      PWD_VAL=$(podman secret inspect --showsecret publisher_user_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+      [ -z "$USER_VAL" ] && USER_VAL="bip_user"
+      ;;
+    "PUBLISHER_ADMIN"|"BIP_ADMIN")
+      PWD_VAL=$(podman secret inspect --showsecret publisher_admin_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+      [ -z "$USER_VAL" ] && USER_VAL="bip_admin"
+      ;;
+    "PUBLISHER_WEBLOGIC_ADMIN"|"DB_PUBLISHER_SYS")
+      PWD_VAL=$(podman secret inspect --showsecret publisher_db_sys_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+      [ -z "$USER_VAL" ] && USER_VAL="weblogic"
+      ;;
   esac
+fi
 fi
 
 if [ "$RAW_ONLY" = "true" ]; then

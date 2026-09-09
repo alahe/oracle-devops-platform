@@ -24,7 +24,7 @@ flowchart TD
   
   HOST_REG --> CHECK_WEBIDE{"❓ Is Web IDE<br/>(web-ide-dev)<br/>container running?"}
   
-  CHECK_WEBIDE -->|"✅ YES / Running"| WEBIDE_REG["🌐 5. Register in Web IDE<br/>- Container SQLcl batch<br/>- /config/.dbtools/conns<br/>- /config/.sqldev/conns.json<br/>- Permissions chown abc"]
+  CHECK_WEBIDE -->|"✅ YES / Running"| WEBIDE_REG["🌐 5. Register in Web IDE<br/>• Container SQLcl batch<br/>• /config/.dbtools & .sqldev<br/>• Fix permissions (chown)"]
   
   CHECK_WEBIDE -->|"❌ NO / Absent"| SANITIZE["🧹 6. Sanitize folders.json<br/>(Prune orphaned GUIDs<br/>Prevent DBTU-03001)"]
   

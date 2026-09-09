@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 🔒 Användarbetrodd Lokal CA (alternativ 3)
+# 🔒 Användarbetrodd lokal CA (alternativ 3)
 
 Denna katalog innehåller lokalt genererat Root CA-certifikat (`localCA.pem`) och det servercertifikat som signerats av detta (`localhost.crt` / `localhost.key`).
 

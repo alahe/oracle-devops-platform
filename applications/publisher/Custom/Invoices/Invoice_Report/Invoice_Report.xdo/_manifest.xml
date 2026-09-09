@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report xmlns="http://xmlns.oracle.com/oxp/xmlp" version="1.1" defaultTemplate="template_rtf">
+  <properties>
+    <property name="showControls" value="true"/>
+    <property name="onlineReporting" value="true"/>
+    <property name="openInNewWindow" value="true"/>
+    <property name="autoRun" value="true"/>
+  </properties>
+  <dataModel url="/Custom/Invoices/Invoice_Report/Invoice_DataModel.xdm"/>
+  <templates>
+    <template label="Standard Invoice (Accessible PDF/UA-1)" format="rtf" url="template.rtf" type="rtf" default="true">
+      <properties>
+        <property name="output-type" value="pdf"/>
+      </properties>
+    </template>
+  </templates>
+</report>

@@ -1,54 +1,82 @@
 ---
 name: blueprints_and_topology
-description: Guidelines for managing the 9 canonical architecture blueprints, Core Base protection, dynamic port topology, and idempotent multi-database orchestration.
+description: Guidelines for managing the 12 canonical architecture blueprints, Core Base protection, dynamic port topology, and idempotent multi-database orchestration.
 ---
 
 # Architecture Blueprints & Dynamic Port Topology Engine
 
-This skill guides selecting, resolving, and orchestrating the **9 canonical architecture blueprints** (`config/blueprints/.env.<N>-*`), enforcing Core Base protection, resolving dynamic multi-database port topologies, and guaranteeing zero-database standalone component execution without memory leaks or static fallbacks.
+This skill guides selecting, resolving, and orchestrating the **12 canonical architecture blueprints** (`config/blueprints/.env.<N>-*`), enforcing Core Base protection, resolving dynamic multi-database port topologies, and guaranteeing zero-database standalone component execution without memory leaks or static fallbacks.
 
 ---
 
-## 1. The 9 Modular Building Blocks Architecture
+## 1. 🎯 When to Use & Negative Routing
 
-The platform architecture is structured around **9 pure modular building blocks** that balance maximum resource efficiency (0 MB idle RAM) with enterprise isolation:
+### Positive Triggers (Activate Immediately):
+- Switching architecture stacks (e.g. "Switch to Blueprint 5", "Deploy Forms blueprint")
+- Adding a new database service, PDB, or container port mapping
+- Configuring dynamic compose overrides or resolving port topology
+- Resolving `STATUS_ALREADY_ACTIVE`, `RES_INSUFFICIENT_RAM`, or port collisions
+
+### Negative Routing (Redirect to Specialized Skills):
+| If the task is primarily about... | DO NOT handle here. Route immediately to: |
+|:---|:---|
+| Overall repo structure or finding files | `repo_codebase_navigator` |
+| Database container health, FastStart images, SGA/PGA or tablespaces | `oracle_containers` |
+| Running `setup-all.sh`, `reset-all.sh`, or installer lifecycles | `setup_orchestration` |
+| SEPS Wallet credentials, password generation, or passwordless connect | `wallet_security_rotation` |
+| Rapid ~15s snapshot recovery or creating disaster recovery baselines | `golden_snapshots_dr` |
+| Testing blueprints across matrix or browser UI test suite | `testing_and_ci_framework` |
+| Dev Hub cockpit status cards or blueprint manager UI | `devhub_architecture` |
+
+---
+
+## 2. The 12 Modular Building Blocks Architecture
+
+The platform architecture is structured around **12 pure modular building blocks** (BP 0 to BP 11) that balance maximum resource efficiency (0 MB idle RAM) with enterprise isolation:
 
 ```mermaid
 flowchart TD
     subgraph Core ["🛡️ PROTECTED CORE BASE (Always Active)"]
-        BP1["BP 1: Standalone ALISE DB<br/>db-alise (Port 1533, PDB ALISEPDB) + app-ords (:8088/:8448)"]
-        BP2["BP 2: Standalone ORDS & Dev Hub<br/>app-ords (Port 8088/8448, APEX Router, 0 Local DBs)"]
+        BP0["BP 0: Central Proxy & ORDS<br/>db-proxy (:1532) + app-ords (:8088/:8448)"]
+        BP1["BP 1: Standalone ALISE DB<br/>db-alise (:1533, PDB ALISEPDB)"]
     end
 
-    subgraph DynamicModules ["🧩 DYNAMIC ON-DEMAND MODULES (0 MB Idle RAM)"]
-        BP3["BP 3: Standalone Proxy DB & APEX SSO (:1532)"]
-        BP4["BP 4: Standalone Web-IDE Workstation (:8090, 0 Local DBs)"]
-        BP5["BP 5: Standalone Analytics Publisher (:1531 DB, :9502 WebLogic)"]
-        BP6["BP 6: Standalone Publisher Designer (:6083 MS Word noVNC, 0 DB)"]
-        BP7["BP 7: Standalone Oracle Forms 14c (:1534 DB, :9001 Forms, :6082 noVNC)"]
-        BP8["BP 8: Consolidated Forms + Publisher FMW (:1531 Unified DB, 50% RAM Sääst)"]
-        BP9["BP 9: Alternate Community Vendor DB (:1533, gvenzl FastStart)"]
-        BP10["BP 10: Oracle Autonomous Database Cloud ADB (mTLS Wallet, Cloud APEX/ORDS)"]
+    subgraph LocalModules ["🧩 ON-DEMAND LOCAL MODULES (0 MB Idle RAM)"]
+        BP2["BP 2: Standalone Proxy DB & SSO (:1532)"]
+        BP3["BP 3: Alternate Gvenzl DB (:1533)"]
+        BP4["BP 4: Cloud Autonomous DB (mTLS)"]
+        BP5["BP 5: Analytics Publisher (:1531, :9502)"]
+        BP6["BP 6: Oracle Forms 14c (:1534, :9001, :6082)"]
+        BP7["BP 7: Consolidated Forms + Publisher (:1531)"]
+        BP8["BP 8: VS Code Web-IDE (:8090, 0 DB)"]
+        BP9["BP 9: Publisher Designer (:6083 noVNC, 0 DB)"]
     end
 
-    Core --> DynamicModules
+    subgraph RemoteEnterprise ["🌐 REMOTE & MULTI-HOST MODULES"]
+        BP10["BP 10: Remote Multi-Host ORDS Gateway"]
+        BP11["BP 11: Remote Multi-Host Publisher"]
+    end
+
+    Core --> LocalModules
+    Core --> RemoteEnterprise
 ```
 
-### Modular Matrix Overview (10 Canonical Blueprints):
+### Modular Matrix Overview (12 Canonical Blueprints):
 
 | Blueprint | Name | Primary Profile YAML | Running Containers | Ports | Target Domain |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **BP 0** | **Central SSO/ORDS Gateway** | `config/blueprints/.env.0-default-proxy-ords` | `db-proxy`, `app-ords` | `1532, 8088, 8448` | **Permanent Central Gateway.** Central ORDS, Azure SSO, and multi-DB routing. |
 | **BP 1** | **Standalone ALISE DB** | `config/profiles/databases/db-oracle.yaml` | `db-alise` | `1533` | **Business DB Base.** Primary business schemas, PL/SQL, APEX. Uses central ORDS from BP 0. |
-| **BP 2** | **Standalone Web Gateway** | `config/profiles/ords/ords-image.yaml` | `app-ords` | `8088, 8448` | **Protected Gateway Only.** Central APEX router & Dev Hub (0 local DBs). |
-| **BP 3** | **Proxy DB & SSO** | `config/profiles/databases/db-oracle.yaml` | `db-proxy`, `app-ords` | `1532, 8088` | Isolated APEX Proxy, Azure Entra ID SSO gateway, public REST. |
-| **BP 4** | **Web-IDE Workstation** | `config/profiles/web-ide/web-ide-standard.yaml` | `web-ide-dev` | `8090` | Browser VS Code Web IDE, Oracle SQL Developer (0 local DBs). |
+| **BP 2** | **Standalone Proxy DB** | `config/blueprints/.env.2-standalone-proxy-db` | `db-proxy-standalone` | `1532` | Isolated APEX Proxy, Azure Entra ID SSO gateway, public REST. |
+| **BP 3** | **Vendor FastStart DB** | `config/profiles/databases/db-gvenzl.yaml` | `db-gvenzl` | `1533` | Pre-seeded community image for comparative benchmarking. |
+| **BP 4** | **Cloud Autonomous DB** | `config/profiles/databases/db-adb.yaml` | (Remote ADB) | Cloud mTLS | Oracle Autonomous Database Cloud (ADB Serverless) with mTLS Wallet. |
 | **BP 5** | **Analytics Publisher** | `config/profiles/databases/db-oracle.yaml` | `db-publisher`, `app-publisher` | `1531, 9502` | Analytics Publisher 2025 (Pixel-Perfect) & dedicated RCU DB. |
-| **BP 6** | **Publisher Designer** | `docker/publisher-designer/Dockerfile` | `app-publisher-designer` | `6083` | MS Word + BI Publisher Desktop plugin via browser noVNC (0 DB). |
-| **BP 7** | **Oracle Forms 14c** | `config/profiles/databases/db-oracle.yaml` | `db-forms`, `app-forms` | `1534, 9001, 6082`| Forms 14c Services, Builder GUI noVNC, and Forms RCU DB. |
-| **BP 8** | **Consolidated FMW** | `config/profiles/databases/db-oracle.yaml` | `db-publisher`, `app-forms-publisher` | `1531, 9001, 9502` | Unified WebLogic domain saving 2.5 GB RAM. |
-| **BP 9** | **Vendor FastStart DB** | `config/profiles/databases/db-gvenzl.yaml` | `db-alise` | `1533` | Pre-seeded community image for comparative benchmarking. |
-| **BP 10** | **Cloud Autonomous DB** | `config/profiles/databases/db-adb.yaml` | (Remote ADB) | Cloud mTLS | Oracle Autonomous Database Cloud (ADB Serverless) with mTLS Wallet. |
+| **BP 6** | **Oracle Forms 14c** | `config/profiles/databases/db-oracle.yaml` | `db-forms`, `app-forms` | `1534, 9001, 6082` | Forms 14c Services, Builder GUI noVNC, and Forms RCU DB. |
+| **BP 7** | **Consolidated FMW** | `config/profiles/databases/db-oracle.yaml` | `db-publisher`, `app-forms-publisher` | `1531, 9001, 9502` | Unified WebLogic domain saving 2.5 GB RAM. |
+| **BP 8** | **Web-IDE Workstation** | `config/profiles/web-ide/web-ide-standard.yaml` | `web-ide-dev` | `8090` | Browser VS Code Web IDE, Oracle SQL Developer (0 local DBs). |
+| **BP 9** | **Publisher Designer** | `docker/publisher-designer/Dockerfile` | `app-publisher-designer` | `6083` | MS Word + BI Publisher Desktop plugin via browser noVNC (0 DB). |
+| **BP 10** | **Remote Multi-Host ORDS** | `config/blueprints/.env.10-remote-ords` | `app-ords-remote` | `8088, 8448` | Remote distributed tier for Host 1 application gateway. |
+| **BP 11** | **Remote Multi-Host Publisher**| `config/blueprints/.env.11-remote-publisher` | `app-publisher-remote` | `9502` | Remote distributed tier for Host 2 Analytics Publisher. |
 
 ---
 
@@ -126,8 +154,8 @@ When multiple databases or services run concurrently, ports are resolved dynamic
 | **Forms Dedicated DB (`db-forms`)** | `1536` | `1521` | Forms 14c RCU DB. |
 | **Unified FMW DB (`db-forms-publisher`)** | `1535` | `1521` | Shared RCU DB for Forms + Publisher. |
 | **ORDS HTTP / HTTPS Gateway** | `8088` / `8448` | `8088` / `8448` | APEX, Database Actions, Dev Hub router. |
-| **Dev Hub Local Bridge Server** | `8089` | Host Process | Lightweight HTTP bridge for 1-click container toggling. |
-| **Web IDE Port** | `8090` / `8449` | `8443` | Browser-based VS Code IDE (`code-server`). |
+| **Dev Hub Local Bridge Server** | `8089` / `8449` | Host Process | Dual-protocol HTTP/HTTPS local bridge for Dev Hub commands & logs. |
+| **Web IDE Port** | `8090` / `8450` | `8443` | Browser-based VS Code IDE (`code-server`). |
 | **Forms Runtime / Forms Builder noVNC** | `9001` / `6082` | `9001` / `6080` | Forms Servlet & HTML5 noVNC builder workstation. |
 | **Publisher Web UI / Designer noVNC** | `9502` / `6083` | `9502` / `6080` | Pixel-Perfect `/xmlpserver` & MS Word Designer noVNC. |
 
@@ -236,4 +264,17 @@ To safeguard developer workstations against total freezes and Out-Of-Memory (OOM
    - A global timer of 12 hours is strictly enforced.
 2. **Graceful Emergency Abort:**
    - If the 12-hour mark is reached, the suite executes an immediate graceful emergency stop: stops non-core dynamic containers, preserves Core Base (BP 0), and flushes all benchmarks and interim pass/fail results to `tests/reports/` and `metrics/`.
+
+---
+
+## 13. 🩺 Diagnostic Signatures & 1-Line Remedies
+
+| Symptom / Error | Root Cause | 1-Line Remedy |
+|:---|:---|:---|
+| `RES_INSUFFICIENT_RAM` | Available host RAM is below the 2048 MB safety threshold | Free RAM or run `./scripts/deploy-blueprint.sh <N> --force` to override safety buffer. |
+| `STATUS_ALREADY_ACTIVE` | The requested blueprint containers are already running healthy | No action needed; engine idempotently skips re-initialization. |
+| Port collision on 1532/1533/8088 | Stale container holding port from previous ungraceful shutdown | Run `./scripts/start-containers.sh --status` and stop ghost processes with `podman rm -f <c>`. |
+| Standalone DB has no ORDS access | Blueprint defines DB without central ORDS | Run `./scripts/setup-all.sh --b 0` to spin up permanent central ORDS gateway. |
+| Remote ADB mTLS connection fails | Missing wallet or expired cloud credentials | Verify `db-adb.yaml` paths and check wallet in `config/tns_admin/`. |
+
 

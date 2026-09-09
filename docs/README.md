@@ -10,6 +10,7 @@ This directory contains technical architecture blueprints, deployment manuals, o
 
 | Topic | Document | Description |
 | :--- | :--- | :--- |
+| 🚀 **Zero-to-Hero Quickstart** | [getting-started-from-scratch.md](getting-started-from-scratch.md) | Setting up the entire platform from scratch on fresh macOS, Windows 11 (WSL2), or Linux workstations. |
 | 💻 **Enterprise Windows & WSL2** | [windows-enterprise-setup-guide.md](windows-enterprise-setup-guide.md) | Zero-Admin WSL2 setup, 10-step dry-run diagnostic engine, Hyper-V ports, and corporate VPN/proxy. |
 | 🏢 **Enterprise Onboarding & Mirrors** | [enterprise-onboarding-guide.md](enterprise-onboarding-guide.md) | Corporate Artifactory container mirrors, single-command profile patching, and clean rollback. |
 | 🏛️ **Enterprise Distributed 4-Host** | [enterprise-distributed-architecture.md](enterprise-distributed-architecture.md) | 4-host production architecture, active/standby failover, and zero-trust distribution. |
@@ -35,3 +36,5 @@ This directory contains technical architecture blueprints, deployment manuals, o
 | 📦 **APEX Applications Deployment** | [apex-apps-deployment.md](apex-apps-deployment.md) | Automated APEX application importing and deployment pipelines from `binaries/apex_apps/`. |
 | 🌐 **Standalone ORDS Server** | [standalone-ords.md](standalone-ords.md) | Standalone Oracle REST Data Services deployment on dedicated Linux hosts outside Docker. |
 | 🚀 **Setup Workflow Architecture** | [setup-all-workflow.md](setup-all-workflow.md) | Complete flowchart, idempotency contracts, SQLcl container fallback, and Microsoft Defender optimizations. |
+| ❓ **Platform FAQ (All Questions)** | [faq.md](faq.md) | Centralized SSOT covering beginner onboarding, architecture, zero-trust security & troubleshooting. |
+| 🏛️ **Oracle Resources & Downloads** | [oracle-resources-and-downloads.md](oracle-resources-and-downloads.md) | Curated index of official Oracle Container Registry (OCR) images, product downloads, and documentation portals. |

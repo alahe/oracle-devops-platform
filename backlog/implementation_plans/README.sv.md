@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📐 Tekniska Genomförandeplaner (`backlog/implementation_plans/`)
+# 📐 Tekniska genomförandeplaner (`backlog/implementation_plans/`)
 
 I denna katalog lagras detaljerade tekniska genomförandeplaner och arkitekturbeslut.
 

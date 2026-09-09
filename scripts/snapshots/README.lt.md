@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📸 Duomenų Bazės momentinių kopijų (golden snapshots) valdymo scenarijai (`scripts/snapshots/`)
+# 📸 Duomenų bazės momentinių kopijų (golden snapshots) valdymo scenarijai (`scripts/snapshots/`)
 
 Šiame kataloge pateikiami scenarijai, skirti kurti, atkurti ir valdyti suspaustas duomenų bazių tomų atsargines kopijas (Golden Snapshots) greitam atstatymui (~15s).
 

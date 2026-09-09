@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../security-audit-report.md) | [ 🇪🇪 Eesti ](security-audit-report.md) | [ 🇫🇮 Suomi ](../fi/security-audit-report.md) | [ 🇸🇪 Svenska ](../sv/security-audit-report.md) | [ 🇱🇻 Latviešu ](../lv/security-audit-report.md) | [ 🇱🇹 Lietuvių ](../lt/security-audit-report.md)
 
-# 🛡️ Ettevõtteklassi Turvaauditi Aruanne & Hardening Juhend
+# 🛡️ Ettevõtteklassi turvaauditi aruanne & hardening-juhend
 
 Käesolev dokument esitab **Oracle DevOps Platvormi** ja **Oracle APEX rakendusmootori** põhjaliku turvaauditi metoodika, tuvastatud tulemused, leevendusmeetmed ja vastavuse finantsstandarditele.
 
