@@ -183,13 +183,19 @@
 
     <!-- Navigation Tabs (Golden 7 Standard) -->
     <nav class="tabs-nav">
-        <button class="tab-btn active" onclick="switchTab('tab-services')">🚀 <span data-i18n="tab_cockpit">Juhtpaneel</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-devops')">⚡ <span data-i18n="tab_devops">DevOps</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-podman')">🐳 <span data-i18n="tab_podman">Podman</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-specs')">📋 <span data-i18n="tab_specs">Spetsid &amp; AI</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-testing')">🧪 <span data-i18n="tab_testing">Testimine</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-docs')">📚 <span data-i18n="tab_docs">Dokumendid</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-benchmarks')">📊 <span data-i18n="tab_benchmarks">Logid</span></button>
+        <button class="tab-btn active" data-tab-id="tab-services" onclick="switchTab('tab-services')">🚀 <span data-i18n="tab_cockpit">Juhtpaneel</span><span class="tab-home-pin-icon" style="display:none;" title="Vaikimisi avavaade">📌</span></button>
+        <button class="tab-btn" data-tab-id="tab-devops" onclick="switchTab('tab-devops')">⚡ <span data-i18n="tab_devops">DevOps</span><span class="tab-home-pin-icon" style="display:none;" title="Vaikimisi avavaade">📌</span></button>
+        <button class="tab-btn" data-tab-id="tab-podman" onclick="switchTab('tab-podman')">🐳 <span data-i18n="tab_podman">Podman</span><span class="tab-home-pin-icon" style="display:none;" title="Vaikimisi avavaade">📌</span></button>
+        <button class="tab-btn" data-tab-id="tab-specs" onclick="switchTab('tab-specs')">📋 <span data-i18n="tab_specs">Spetsid &amp; AI</span><span class="tab-home-pin-icon" style="display:none;" title="Vaikimisi avavaade">📌</span></button>
+        <button class="tab-btn" data-tab-id="tab-testing" onclick="switchTab('tab-testing')">🧪 <span data-i18n="tab_testing">Testimine</span><span class="tab-home-pin-icon" style="display:none;" title="Vaikimisi avavaade">📌</span></button>
+        <button class="tab-btn" data-tab-id="tab-docs" onclick="switchTab('tab-docs')">📚 <span data-i18n="tab_docs">Dokumendid</span><span class="tab-home-pin-icon" style="display:none;" title="Vaikimisi avavaade">📌</span></button>
+        <button class="tab-btn" data-tab-id="tab-benchmarks" onclick="switchTab('tab-benchmarks')">📊 <span data-i18n="tab_benchmarks">Logid</span><span class="tab-home-pin-icon" style="display:none;" title="Vaikimisi avavaade">📌</span></button>
+        <div class="tabs-home-ctrl">
+            <button id="btn-pin-home-tab" class="btn-pin-home-tab" onclick="togglePinCurrentTabAsHome()" data-i18n-title="tip_pin_home_tab" title="Määra praegune vaheleht vaikimisi avavaateks (📌)">
+                <span class="pin-icon">📌</span>
+                <span id="btn-pin-home-text" data-i18n="label_pin_home">Kinnita avavaateks</span>
+            </button>
+        </div>
     </nav>
 
     <!-- TAB 1: COCKPIT (SERVICES & BLUEPRINTS) -->

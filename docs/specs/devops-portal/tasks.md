@@ -19,6 +19,7 @@
 | **TSK-DP-06** | NFR-1 | `dev-hub-bridge.py` (Regex & Mutex) | `./scripts/check-pre-commit.sh` | ✅ Valmis |
 | **TSK-DP-07** | NFR-Mitmekeelsus | `i18n.js` (6 Keelt EN/ET/FI/SV/LV/LT) | `./tests/test-multilingual-support.sh` | ✅ Valmis |
 | **TSK-DP-08** | `[REQ-06]` | `bump-iteration.sh`, `release.sh` | `./tests/unit/test-semantic-versioning.sh` | ✅ Valmis |
+| **TSK-DP-09** | `[REQ-07]` | `layout.html`, `app.js`, `i18n.js` | `./tests/unit/test-devhub-landing-tab.sh` | ✅ Valmis |
 
 ---
 
@@ -32,6 +33,7 @@
 - [x] **TSK-DP-06:** Mutex lukustuse (HTTP 409) ja kasutajanimede regex-saniteerimise (`^[a-zA-Z0-9_]{3,30}$`) lisamine faili `dev-hub-bridge.py`.
 - [x] **TSK-DP-07:** 26 uue tõlkevõtme lisamine ja verifitseerimine 6 keeles (12/12 PASS).
 - [x] **TSK-DP-08:** 4-kohaline iteratsiooniloendur (`bump-iteration.sh`), Conventional Commits semantiline reliis (`release.sh`) ja pre-push hook.
+- [x] **TSK-DP-09:** Kodulehe nööpnõela kinnitamine (Home Tab Pinning 📌), nutikas adaptiivne maandumine (Lahendus 4) ja 6-keelne sünkroonimine.
 
 ---
 

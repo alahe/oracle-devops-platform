@@ -92,11 +92,85 @@ function initNavigationHistory() {
       if (cleanHash) {
         switchTab(cleanHash, true);
       } else {
-        switchTab('tab-services', true);
+        const pinnedHome = localStorage.getItem('dev_hub_home_tab');
+        const lastActive = localStorage.getItem('dev_hub_last_active_tab');
+        switchTab(pinnedHome || lastActive || 'tab-services', true);
       }
     }
     updateBackBtnVisibility();
   });
+}
+
+/* ==============================================================================
+ * HOME TAB PINNING & ADAPTIVE LANDING ENGINE (LAHENDUS 4)
+ * ============================================================================== */
+
+function updateHomeTabPinUI(activeTabId) {
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'] || {};
+  let pinnedHome = null;
+  try {
+    pinnedHome = localStorage.getItem('dev_hub_home_tab');
+  } catch (e) {}
+
+  const btnPin = document.getElementById('btn-pin-home-tab');
+  const btnPinText = document.getElementById('btn-pin-home-text');
+  const activeTabEl = document.querySelector('.tab-content.active');
+  const resolvedActive = activeTabId || (activeTabEl ? activeTabEl.id : 'tab-services');
+
+  // 1. Update pin badges on all tab buttons in tabs-nav
+  document.querySelectorAll('.tabs-nav .tab-btn').forEach(btn => {
+    const tabMatch = btn.getAttribute('data-tab-id') || btn.getAttribute('onclick') || '';
+    const pinBadge = btn.querySelector('.tab-home-pin-icon');
+    const isThisPinned = Boolean(pinnedHome && tabMatch.includes(pinnedHome));
+    if (pinBadge) {
+      pinBadge.style.display = isThisPinned ? 'inline-block' : 'none';
+      if (isThisPinned) {
+        pinBadge.setAttribute('title', dict.label_pinned_home || 'Vaikimisi avavaade');
+      }
+    }
+  });
+
+  // 2. Update the action button state for the currently active tab
+  if (btnPin && btnPinText) {
+    const isCurrentActivePinned = Boolean(pinnedHome && pinnedHome === resolvedActive);
+    if (isCurrentActivePinned) {
+      btnPin.classList.add('is-pinned');
+      btnPinText.textContent = dict.label_pinned_home || 'Vaikimisi avavaade';
+      btnPin.setAttribute('title', dict.tip_unpin_home_tab || 'Vaheleht on kinnitatud vaikimisi avavaateks. Klõpsa nutikale mälule lülitumiseks.');
+    } else {
+      btnPin.classList.remove('is-pinned');
+      btnPinText.textContent = dict.label_pin_home || 'Kinnita avavaateks';
+      btnPin.setAttribute('title', dict.tip_pin_home_tab || 'Määra praegune vaheleht vaikimisi avavaateks (📌)');
+    }
+  }
+}
+
+function togglePinCurrentTabAsHome() {
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'] || {};
+  const activeTabEl = document.querySelector('.tab-content.active');
+  const activeTabId = activeTabEl ? activeTabEl.id : 'tab-services';
+  let pinnedHome = null;
+  try {
+    pinnedHome = localStorage.getItem('dev_hub_home_tab');
+  } catch (e) {}
+
+  if (pinnedHome === activeTabId) {
+    // Unpin -> Revert to Smart Adaptive Memory (auto-reopen last visited tab)
+    try {
+      localStorage.removeItem('dev_hub_home_tab');
+    } catch (e) {}
+    updateHomeTabPinUI(activeTabId);
+    showToast(dict.toast_unpinned_home || '🔄 Lülitatud nutikale mälule (avatakse viimati külastatud vaheleht).');
+  } else {
+    // Pin currently active tab as Default Home
+    try {
+      localStorage.setItem('dev_hub_home_tab', activeTabId);
+    } catch (e) {}
+    updateHomeTabPinUI(activeTabId);
+    showToast(dict.toast_pinned_home || '📌 Vaheleht kinnitatud vaikimisi avavaateks!');
+  }
 }
 
 function switchTab(tabId, skipHistory = false) {
@@ -118,7 +192,7 @@ function switchTab(tabId, skipHistory = false) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-  let matchingBtn = document.querySelector(`.tab-btn[onclick*="${cleanId}"]`);
+  let matchingBtn = document.querySelector(`.tab-btn[data-tab-id="${cleanId}"]`) || document.querySelector(`.tab-btn[onclick*="${cleanId}"]`);
   if (!matchingBtn && window.event && window.event.currentTarget && window.event.currentTarget.classList.contains('tab-btn')) {
     matchingBtn = window.event.currentTarget;
   }
@@ -150,6 +224,15 @@ function switchTab(tabId, skipHistory = false) {
       loadRepoStatistics();
     }
   }
+
+  // Save last active tab to localStorage for Smart Context Memory (Adaptive)
+  const MAIN_NAV_TABS = ['tab-services', 'tab-devops', 'tab-podman', 'tab-specs', 'tab-testing', 'tab-docs', 'tab-benchmarks'];
+  if (MAIN_NAV_TABS.includes(cleanId)) {
+    try {
+      localStorage.setItem('dev_hub_last_active_tab', cleanId);
+    } catch (e) {}
+  }
+  updateHomeTabPinUI(cleanId);
 
   if (!skipHistory) {
     recordNavigationState({ tab: cleanId, docIdx: (cleanId === 'tab-docs' ? currentSelectedDocIdx : null) });
@@ -583,6 +666,9 @@ function setLanguage(lang) {
   if (searchModal && searchModal.style.display === 'flex') {
     const searchInput = document.getElementById('global-search-input');
     handleGlobalSearchInput(searchInput ? searchInput.value : '');
+  }
+  if (typeof updateHomeTabPinUI === 'function') {
+    updateHomeTabPinUI();
   }
 }
 
@@ -10881,14 +10967,29 @@ document.addEventListener('DOMContentLoaded', () => {
   if (targetLang && ['en', 'et', 'fi', 'sv', 'lv', 'lt'].includes(targetLang)) {
     setLanguage(targetLang);
   }
+  // LAHENDUS 4: Kuldne Hübriid Landing Resolution (Home Pin > Smart Memory > Cockpit)
+  if (!targetTab) {
+    try {
+      const pinnedHome = localStorage.getItem('dev_hub_home_tab');
+      const lastActive = localStorage.getItem('dev_hub_last_active_tab');
+      if (pinnedHome && pinnedHome !== 'auto' && document.getElementById(pinnedHome)) {
+        targetTab = pinnedHome;
+      } else if (lastActive && document.getElementById(lastActive)) {
+        targetTab = lastActive;
+      } else {
+        targetTab = 'tab-services';
+      }
+    } catch (e) {
+      targetTab = 'tab-services';
+    }
+  }
+
   if (targetTab) {
     switchTab(targetTab, true);
   } else {
-    const activeTabs = document.querySelectorAll('.tab-content.active');
-    if (activeTabs.length === 0) {
-      switchTab('tab-services', true);
-    }
+    switchTab('tab-services', true);
   }
+  updateHomeTabPinUI(targetTab);
   let targetDoc = urlParams.get('doc');
   if (!targetDoc && window.location.hash.includes('?doc=')) {
     targetDoc = decodeURIComponent(window.location.hash.split('?doc=')[1].split('&')[0].split('#')[0]);

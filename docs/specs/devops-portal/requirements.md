@@ -76,6 +76,17 @@ DevOps juhtpaneel on **Oracle DevOps Platformi** keskne operatsiooniline tööri
   - **Then:** Fail `VERSION` suureneb ühe võrra (`2.5.0.1` -> `2.5.0.2`) ja Dev Hubi HTML kompileeritakse taustal.
   - **And:** `git push` eelselt analüüsib pre-push hook commite ja arvutab uue SemVer versiooni (`feat` -> Minor, `fix` -> Patch).
 
+### [REQ-07]: Vaikimisi Avavaate Kinnitamine ja Nutikas Adaptiivne Maandumine (Lahendus 4)
+- **Kirjeldus:** Kogenud arendaja ei tohi iga kord portaali avades (`https://localhost:8448`) sattuda algajate alustusjuhendi peale. Süsteem pakub 4-astmelist maandumishierarhiat (URL parameeter > Kinnitatud koduleht 📌 > Viimati külastatud vaheleht > Juhtpaneel) ning võimalust vahelehte 1-klõpsuga avavaateks kinnitada.
+- **Vastuvõtukriteerium (Given/When/Then):**
+  - **Given:** Arendaja avab `https://localhost:8448` ilma URL-i parameetrita.
+  - **When:** Arendaja on eelnevalt klõpsanud `📌 Kinnita avavaateks` (nt `Juhtpaneel` või `DevOps`).
+  - **Then:** Portaal avaneb koheselt kinnitatud vahelehel, kuvades vahelehel nööpnõela märki `📌`.
+  - **When:** Arendaja pole konkreetset vahelehte kinnitanud, kuid töötas eelmisel sessioonil vahelehel `⚡ DevOps`.
+  - **Then:** Portaal taastab automaatselt viimati aktiivse vahelehe (`Smart Context Memory`).
+  - **When:** Esmaskülastus või tühi vahemälu.
+  - **Then:** Portaal avab vaikimisi elusa `🚀 Juhtpaneeli` (mitte staatilise dokumentatsiooni).
+
 ---
 
 ## 4. Loogiliste Vastuolude Analüüs (Contradiction Analysis)
