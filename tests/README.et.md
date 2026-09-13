@@ -38,10 +38,16 @@ Testide käivitamiseks puhtalt lehelt (automaatse `reset-all.sh -y` ja verifitse
 # 5. Kaugpaigalduse Multi-Cloud testid:
 ./tests/test-remote-multicloud.sh --dry-run
 
-# 6. Arhitektuursete Blueprintide ja profiilide terviklikkuse audit:
+# 6. Arhitektuuri blueprintide ja profiilide terviklikkuse audit:
 ./tests/unit/test-blueprint-profiles-integrity.sh
 
-# 7. Repositooriumi statistika ja koodibaasi mõõdikute raport:
+# 7. Andmebaasiprofiilide ja topoloogia eraldatuse audit (kattuvuste puudumine):
+./tests/unit/test-database-profiles-isolation.sh
+
+# 8. Konteinerite nimeisolatsiooni ja alamsõnade vältimise audit (Reegel 15):
+./tests/unit/test-container-naming-isolation.sh
+
+# 9. Repositooriumi statistika ja koodibaasi mõõdikute aruanne:
 ./tests/report-repo-stats.sh
 ```
 
@@ -53,3 +59,4 @@ Iga automaatne test valideerib:
 1. **🌐 Veebiteenuste HTTP Health Audit (`scripts/check-urls.sh`):** Kontrollib tegelike HTTP/HTTPS päringutega staatust (200/302).
 2. **🔑 SEPS Paroolivaba Walleti Audit (`scripts/check-wallet.sh`):** Paroolivaba SQLcl ühenduse kontroll (`SELECT status FROM v$instance`).
 3. **📊 Ressursi ja Kestuse Mõõdikud (Reegel 1):** Sammude ajakulu salvestatakse faili `metrics/setup_benchmarks.json`.
+4. **🛡️ Konteinerite Nimeisolatsioon (Reegel 15):** Täpne nimevastavus välistab blueprintide vahelised ekslikud alamsõnakattuvused.

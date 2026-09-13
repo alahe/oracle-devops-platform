@@ -18,6 +18,7 @@ This directory contains technical architecture blueprints, deployment manuals, o
 | 🔄 **Database Image Switching** | [database-image-switching-guide.md](database-image-switching-guide.md) | FastStart instant images, multi-vendor registry mirrors, and in-container unzipping. |
 | 🔄 **3-Tier Lifecycle & Snapshots** | [devops-lifecycle-guide.md](devops-lifecycle-guide.md) | Instant Golden Snapshot recovery (~15s), RMAN backups, and automated disaster recovery. |
 | 🧪 **Automated Testing & Dev Hub** | [testing-framework-and-devhub.md](testing-framework-and-devhub.md) | 160+ unit tests, live blueprint validation, dual-stream terminal UX, and Dev Hub architecture. |
+| 🤖 **Copilot AI Assistant & RAG** | [devhub-copilot-assistant.md](devhub-copilot-assistant.md) | Embedded Dev Hub AI assistant, Zero-Trust secret redaction, 3-tier offline fallback, and VS Code bridge. |
 | 🚀 **Quick Login & Credentials** | [quick-login-guide.md](quick-login-guide.md) | 1-click clipboard helpers, SEPS wallet credential retrieval, and direct web URLs. |
 | 📋 **Architecture Blueprints Matrix** | [../config/blueprints/README.md](../config/blueprints/README.md) | Complete matrix of the 12 canonical blueprints (0..11) from core base to distributed cluster. |
 | 🗄️ **Database Profiles & Topology** | [db-profiles-and-topology.md](db-profiles-and-topology.md) | YAML profile hierarchy (`config/profiles/databases/`), non-clashing port topology, and Rule 11 architecture. |

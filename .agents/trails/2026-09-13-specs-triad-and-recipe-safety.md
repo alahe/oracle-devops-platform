@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Problem Statements & Root Causes
+## 1. Intent, Problem Statements & Root Causes
 1. **SCS Specs Triad (REQ, DES, TSK) switching stuck on REQ:**
    - In `app.js` (`loadSpecInViewer`), `DOCS_DATA.find(d => d.id === docId || d.rel.includes(docId) || d.id.includes(domainOrId))` was evaluated.
    - Because `d.id.includes(domainOrId)` (e.g. `'devops-portal'`) matched the first requirements document (`spec-devops-portal-req`) in the array, clicking `DES` or `TSK` always resolved back to the requirements document.

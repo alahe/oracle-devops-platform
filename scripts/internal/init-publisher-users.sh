@@ -105,9 +105,10 @@ import sys
 admin_user = sys.argv[1]
 admin_pwd = sys.argv[2]
 users_data = sys.argv[3]
+admin_host = sys.argv[4] if len(sys.argv) > 4 else '127.0.0.1'
 
 try:
-    connect(admin_user, admin_pwd, 't3://localhost:9500')
+    connect(admin_user, admin_pwd, 't3://' + admin_host + ':9500')
     cd('/SecurityConfiguration/bi/Realms/myrealm/AuthenticationProviders/DefaultAuthenticator')
     
     # Process users: name:pwd:roles:desc;...
@@ -131,19 +132,72 @@ try:
                 if not cmo.groupExists(role):
                     print("Creating group: " + role)
                     cmo.createGroup(role, role)
-                if not cmo.isMember(role, uname, true):
+                if not cmo.isMember(role, uname, True):
                     print("Adding " + uname + " to group " + role)
                     cmo.addMemberToGroup(role, uname)
+            
+            # Map standard BI Application roles
+            extra_bi_roles = []
+            if uname == 'bip_developer':
+                extra_bi_roles = ['BIAdministrators', 'BIAuthors', 'BIAuthor', 'BIConsumers', 'BIConsumer', 'Administrators', 'XMLP_ADMIN', 'XMLP_DEVELOPER', 'XMLP_TEMPLATE_DESIGNER', 'XMLP_ANALYZER', 'XMLP_SCHEDULER']
+            elif uname == 'bip_user':
+                extra_bi_roles = ['BIConsumers', 'BIConsumer', 'XMLP_SCHEDULER', 'XMLP_ANALYZER']
+            elif uname == 'bip_admin':
+                extra_bi_roles = ['BIAdministrators', 'BIAdministrator', 'BIServiceAdministrator', 'BIAuthors', 'BIAuthor', 'BIConsumers', 'BIConsumer', 'Administrators', 'XMLP_ADMIN', 'XMLP_DEVELOPER']
+            for bi_r in extra_bi_roles:
+                if not cmo.groupExists(bi_r):
+                    cmo.createGroup(bi_r, bi_r)
+                if not cmo.isMember(bi_r, uname, True):
+                    cmo.addMemberToGroup(bi_r, uname)
+
+            # Grant OPSS application roles in obi stripe
+            if uname in ['bip_developer', 'bip_admin']:
+                for ar in ['BIServiceAdministrator', 'BIContentAuthor', 'BIDataModelAuthor', 'BIConsumer', 'DVContentAuthor', 'DVConsumer']:
+                    try:
+                        grantAppRole(appStripe='obi', appRoleName=ar, principalClass='weblogic.security.principal.WLSUserImpl', principalName=uname)
+                    except:
+                        pass
+            elif uname == 'bip_user':
+                for ar in ['BIConsumer', 'DVConsumer']:
+                    try:
+                        grantAppRole(appStripe='obi', appRoleName=ar, principalClass='weblogic.security.principal.WLSUserImpl', principalName=uname)
+                    except:
+                        pass
+
+    # Clean up any transient junk users created by previous IFS word-splitting bugs
+    for junk in ['and', 'data', 'model', 'author', 'developer', 'user:']:
+        try:
+            if cmo.userExists(junk):
+                print("Removing transient junk user: " + junk)
+                cmo.removeUser(junk)
+        except:
+            pass
+
     disconnect()
     print("SUCCESS")
 except Exception, e:
     print("WLST_ERROR: " + str(e))
-    # Do not exit with failure to avoid blocking local offline setups
 PYWLST
 
-  # Build serialized users data
+  # Build serialized users data line by line (preserving spaces in descriptions)
   SERIALIZED_DATA=""
-  for entry in $(echo "$USERS_JSON" | python3 -c '
+  while IFS='|' read -r uname walias roles udesc; do
+    [ -z "$uname" ] && continue
+    secret_key="publisher_$(echo "$uname" | sed 's/^bip_//')_password"
+    upwd=$(podman secret inspect --showsecret "$secret_key" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || echo "")
+    if [ -z "$upwd" ]; then
+      case "$uname" in
+        bip_developer)
+          upwd=$(podman secret inspect --showsecret publisher_dev_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || echo "")
+          ;;
+        bip_user)
+          upwd=$(podman secret inspect --showsecret publisher_app_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || echo "")
+          ;;
+      esac
+    fi
+    [ -z "$upwd" ] && upwd="AdminPassword123!"
+    SERIALIZED_DATA="${SERIALIZED_DATA}${uname}|${upwd}|${roles}|${udesc};"
+  done < <(echo "$USERS_JSON" | python3 -c '
 import sys, json
 users = json.load(sys.stdin)
 for u in users:
@@ -152,17 +206,14 @@ for u in users:
     roles = ",".join(u.get("roles", []))
     desc = u.get("description", "")
     print(f"{uname}|{walias}|{roles}|{desc}")
-'); do
-    IFS='|' read -r uname walias roles udesc <<< "$entry"
-    secret_key="publisher_$(echo "$uname" | sed 's/^bip_//')_password"
-    upwd=$(podman secret inspect --showsecret "$secret_key" 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || echo "")
-    SERIALIZED_DATA="${SERIALIZED_DATA}${uname}|${upwd}|${roles}|${udesc};"
-  done
+')
 
+  CONTAINER_IP=$(podman exec "${CONTAINER_NAME}" /bin/sh -c "export PATH=/bin:/usr/bin:\$PATH; hostname -i" 2>/dev/null | awk '{print $1}' | tr -d '\r\n')
+  ADMIN_HOST="${CONTAINER_IP:-127.0.0.1}"
   podman cp "$WLST_TMP" "${CONTAINER_NAME}:/tmp/provision_publisher_users.py" 2>/dev/null || true
   rm -f "$WLST_TMP"
-  podman exec -i "${CONTAINER_NAME}" bash -c "/u01/oracle/oracle_common/common/bin/wlst.sh /tmp/provision_publisher_users.py '$ADMIN_USER' '$ADMIN_PWD' '$SERIALIZED_DATA'" >/dev/null 2>&1 || true
-  podman exec -i "${CONTAINER_NAME}" rm -f /tmp/provision_publisher_users.py 2>/dev/null || true
+  podman exec -i "${CONTAINER_NAME}" /bin/bash -c "export PATH=/bin:/usr/bin:\$PATH; export WLST_PROPERTIES=\"-Djava.net.preferIPv4Stack=true\"; /u01/oracle/oracle_common/common/bin/wlst.sh /tmp/provision_publisher_users.py '$ADMIN_USER' '$ADMIN_PWD' '$SERIALIZED_DATA' '$ADMIN_HOST'" || true
+  podman exec -i "${CONTAINER_NAME}" /bin/bash -c "export PATH=/bin:/usr/bin:\$PATH; rm -f /tmp/provision_publisher_users.py" 2>/dev/null || true
   echo "✅ WebLogic security realm synchronized with Publisher user roles."
 else
   echo "ℹ️ Container ${CONTAINER_NAME} not running. Secrets stored in Podman for next container start."

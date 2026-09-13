@@ -38,6 +38,7 @@ NC='\033[0m'
 # Mode flags
 RUN_SCRIPTS=true
 RUN_DOCS=true
+RUN_DEVHUB=true
 VERBOSE=false
 JSON_MODE=false
 TARGET_LANG="all"
@@ -56,16 +57,25 @@ while [[ $# -gt 0 ]]; do
     --check-scripts)
       RUN_SCRIPTS=true
       RUN_DOCS=false
+      RUN_DEVHUB=false
       shift
       ;;
     --check-docs)
       RUN_SCRIPTS=false
       RUN_DOCS=true
+      RUN_DEVHUB=false
+      shift
+      ;;
+    --check-devhub)
+      RUN_SCRIPTS=false
+      RUN_DOCS=false
+      RUN_DEVHUB=true
       shift
       ;;
     --all)
       RUN_SCRIPTS=true
       RUN_DOCS=true
+      RUN_DEVHUB=true
       shift
       ;;
     --lang)
@@ -721,6 +731,142 @@ for item in non_en:
   return 0
 }
 
+# ==============================================================================
+# FAAS 3: DEV HUB & SCS SPETSIFIKATSIOONIDE MITMEKEELSUSE KONTROLL
+# ==============================================================================
+run_devhub_i18n_tests() {
+  log_ui "\n${BOLD}${CYAN}▶️ [FAAS 3]: Dev Hub & SCS Spetsifikatsioonide Mitmekeelsuse Kontroll (Dev Hub UI & Specs)...${NC}"
+
+  # 1. Dev Hub UI malli (layout.html) spetsifikatsioonide võtmete 6-keelne pariteet
+  TESTS_TOTAL=$((TESTS_TOTAL + 1))
+  log_ui "  └─ 1. Dev Hub UI spetsifikatsioonide võtmete 6-keelne pariteet (i18n.js)..."
+  DEVHUB_PARITY_RESULT=$(node -e '
+const fs = require("fs");
+const path = require("path");
+const workspace = "'"$WORKSPACE_DIR"'";
+const i18nFile = path.join(workspace, "scripts/internal/dev_hub/assets/i18n.js");
+const content = fs.readFileSync(i18nFile, "utf8");
+const dict = (new Function(content + "\nreturn I18N_DICT;"))();
+const langs = ["en", "et", "fi", "sv", "lv", "lt"];
+
+const requiredKeys = [
+  "specs_stat_domains_label", "specs_stat_domains_val",
+  "specs_stat_skills_label", "specs_stat_skills_val",
+  "specs_stat_trace_label", "specs_stat_trace_val",
+  "specs_btn_methodology", "badge_in_production",
+  "spec_domain_devops_sub", "spec_domain_devops_desc",
+  "spec_domain_wallet_sub", "spec_domain_wallet_desc",
+  "spec_domain_snapshots_sub", "spec_domain_snapshots_desc",
+  "spec_domain_blueprints_sub", "spec_domain_blueprints_desc",
+  "spec_density_comfortable", "spec_density_compact",
+  "tip_spec_density_comfort", "tip_spec_density_compact",
+  "tip_spec_focus", "spec_toc_title", "spec_triad_type_label",
+  "spec_filter_placeholder", "spec_reading_time_tmpl", "spec_not_found_tmpl"
+];
+
+let missing = [];
+requiredKeys.forEach(k => {
+  langs.forEach(l => {
+    if (!dict[l] || !dict[l][k] || typeof dict[l][k] !== "string" || dict[l][k].trim() === "") {
+      missing.push(`${l}:${k}`);
+    }
+  });
+});
+
+if (missing.length === 0) {
+  console.log(`OK:${requiredKeys.length}`);
+} else {
+  console.log(`FAIL:${missing.length}:${missing.slice(0, 5).join(",")}`);
+}
+')
+
+  if [[ "$DEVHUB_PARITY_RESULT" =~ ^OK:([0-9]+) ]]; then
+    KEY_COUNT="${BASH_REMATCH[1]}"
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+    log_ui "     ${GREEN}✅ 100% Sümmeetria: Kõik ${KEY_COUNT} spetsifikatsioonide võtit on tõlgitud kõigis 6 keeles!${NC}"
+  else
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    log_ui "     ${RED}❌ Puuduvad Dev Hub tõlkevõtmed: ${DEVHUB_PARITY_RESULT}${NC}"
+  fi
+
+  # 2. SCS Triad spetsifikatsioonide failide olemasolu kettal (EN + ET)
+  TESTS_TOTAL=$((TESTS_TOTAL + 1))
+  log_ui "  └─ 2. SCS Triad spetsifikatsioonide failide olemasolu kettal (EN + ET)..."
+  SPECS_EXIST_RESULT=$(python3 -c '
+import os, sys
+
+workspace = "'"$WORKSPACE_DIR"'"
+domains = ["devops-portal", "wallet-security", "golden-snapshots", "blueprints-topology"]
+types = ["requirements.md", "design.md", "tasks.md"]
+
+missing_files = []
+for d in domains:
+    for t in types:
+        en_path = os.path.join(workspace, "docs/specs", d, t)
+        et_path = os.path.join(workspace, "docs/et/specs", d, t)
+        if not os.path.exists(en_path) or os.path.getsize(en_path) == 0:
+            missing_files.append(f"Missing canonical EN: docs/specs/{d}/{t}")
+        if not os.path.exists(et_path) or os.path.getsize(et_path) == 0:
+            missing_files.append(f"Missing localized ET: docs/et/specs/{d}/{t}")
+
+if not missing_files:
+    print("OK:24")
+else:
+    print(f"FAIL:{len(missing_files)}")
+    for m in missing_files:
+        print(f"  ❌ {m}")
+')
+
+  if [[ "$SPECS_EXIST_RESULT" =~ ^OK:24 ]]; then
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+    log_ui "     ${GREEN}✅ Kõik 12 kanoonilist SCS spetsifikatsiooni omavad kehtivat EN ja ET faili kettal (24/24)!${NC}"
+  else
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    log_ui "     ${RED}❌ Puuduvad või tühjad spetsifikatsioonifailid:${NC}"
+    echo "$SPECS_EXIST_RESULT"
+  fi
+
+  # 3. Dev Hub dünaamilise keelevahetuse mootori audit (app.js)
+  TESTS_TOTAL=$((TESTS_TOTAL + 1))
+  log_ui "  └─ 3. Dev Hub dünaamilise keelevahetuse mootori audit (app.js)..."
+  APP_JS_FILE="$WORKSPACE_DIR/scripts/internal/dev_hub/assets/app.js"
+  APP_I18N_CHECK=0
+  if grep -q "document.documentElement.lang = lang;" "$APP_JS_FILE"; then
+    APP_I18N_CHECK=$((APP_I18N_CHECK + 1))
+  fi
+  if grep -q "loadSpecInViewer(gCurrentLoadedDomain, gCurrentLoadedType" "$APP_JS_FILE"; then
+    APP_I18N_CHECK=$((APP_I18N_CHECK + 1))
+  fi
+
+  if [ "$APP_I18N_CHECK" -eq 2 ]; then
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+    log_ui "     ${GREEN}✅ setLanguage(lang) määrab document.documentElement.lang ja värskendab aktiivset spetsifikatsiooni!${NC}"
+  else
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    log_ui "     ${RED}❌ app.js ei oma täielikku dünaamilist keelevahetuse ja taaslaadimise tuge!${NC}"
+  fi
+
+  # 4. Tehniliste terminite tõlkekaitse (translate="no" / notranslate)
+  TESTS_TOTAL=$((TESTS_TOTAL + 1))
+  log_ui "  └─ 4. Tehniliste terminite tõlkekaitse (Google Translate protection)..."
+  PROTECT_CHECK=0
+  LAYOUT_FILE="$WORKSPACE_DIR/scripts/internal/dev_hub/assets/templates/layout.html"
+  if grep -q 'class="notranslate" translate="no"' "$LAYOUT_FILE"; then
+    PROTECT_CHECK=$((PROTECT_CHECK + 1))
+  fi
+  if grep -q 'spec-card-btn notranslate' "$LAYOUT_FILE"; then
+    PROTECT_CHECK=$((PROTECT_CHECK + 1))
+  fi
+
+  if [ "$PROTECT_CHECK" -ge 2 ]; then
+    TESTS_PASSED=$((TESTS_PASSED + 1))
+    log_ui "     ${GREEN}✅ REQ, DES, TSK lühendid ja domeenid omavad translate=\"no\" kaitset brauseri tõlkevigade vastu!${NC}"
+  else
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+    log_ui "     ${RED}❌ layout.html ei oma vajalikku translate=\"no\" kaitset tehnilistele terminitele!${NC}"
+  fi
+}
+
 # Run requested sections
 if [ "$RUN_SCRIPTS" = "true" ]; then
   run_script_i18n_tests
@@ -728,6 +874,10 @@ fi
 
 if [ "$RUN_DOCS" = "true" ]; then
   run_doc_multilingual_tests
+fi
+
+if [ "$RUN_DEVHUB" = "true" ]; then
+  run_devhub_i18n_tests
 fi
 
 END_TIME=$(date +%s)

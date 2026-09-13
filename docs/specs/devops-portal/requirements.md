@@ -1,105 +1,100 @@
-# DevOps Juhtpaneel — Nõuete Spetsifikatsioon (Requirements Specification)
+# DevOps Portal — Requirements Specification
 
-- **Domeen (SCS):** `devops-portal` (Dev Hub vahekaart `⚡ DevOps`)
-- **Versioon:** `1.1.0`
-- **Staatus:** `Kinnitatud / Tootmises (v2.4.2)`
-- **Metoodika:** Julian Wood (Spec-Driven Development — SDD) & Simon Martinelli (SCS)
-
----
-
-## 1. Äriline Kontekst ja Eesmärk
-
-DevOps juhtpaneel on **Oracle DevOps Platformi** keskne operatsiooniline tööriist, mis võimaldab arendajatel ja administraatoritel hallata konteinerite, andmebaaside, SEPS Walleti, sertifikaatide ja hetktõmmiste elutsüklit ilma käsitsi CLI süntaksit pähe õppimata.
-
-### Kasutajarollid (Personas):
-1. **APEX / Andmebaasi Arendaja:** Vajab kiiret, 1-klõpsuga lokaalset keskkonda (FastStart ~15s), kasutajate lisamist (`create-developer.sh`) ja kiiret ligipääsu SQLcl terminalile.
-2. **DevOps / Süsteemiadministraator:** Vajab süsteemi sügavlähtestust (`reset-all.sh --system`), sertifikaatide genereerimist ja CI/CD ettevalmistust.
-3. **AI Paarisprogrammeerija (Copilot / Antigravity):** Suhtleb juhtpaneeli sillaga (`dev-hub-bridge.py`), diagnoosib logisid ja viib läbi automaatseid tõrkeparandusi (Ralph Loop).
+- **Domain (SCS):** `devops-portal` (Dev Hub tab `⚡ DevOps`)
+- **Version:** `1.1.0`
+- **Status:** `Approved / In Production (v2.4.2)`
+- **Methodology:** Julian Wood (Spec-Driven Development — SDD) & Simon Martinelli (SCS)
 
 ---
 
-## 2. Domeenisõnastik (Glossary — Ühene Keel)
+## 1. Business Context and Goals
 
-| Mõiste | Definitsioon | Piirangud / Sünonüümid |
+The DevOps Portal is the central operational workstation of the **Oracle DevOps Platform**, enabling developers and system administrators to manage containers, databases, SEPS Wallets, certificates, and snapshots without memorizing low-level CLI syntax.
+
+### User Roles (Personas):
+1. **APEX / Database Developer:** Requires rapid 1-click local setup (FastStart ~15s), developer provisioning (`create-developer.sh`), and instant SQLcl terminal access.
+2. **DevOps / System Administrator:** Requires deep environment reset (`reset-all.sh --system`), TLS certificate management, and CI/CD simulation.
+3. **AI Pair Programmer (Copilot / Antigravity):** Communicates with the asynchronous bridge (`dev-hub-bridge.py`), inspects execution logs, and performs autonomous error remediation (Ralph Loop).
+
+---
+
+## 2. Domain Glossary (Ubiquitous Language)
+
+| Term | Definition | Constraints / Notes |
 | :--- | :--- | :--- |
-| **FastStart (-s)** | Andmebaasi taastamine eelsalvestatud kuldsest hetktõmmisest (~15-20s). | Ei tohi segada `--fresh` paigaldusega. |
-| **Fresh Start (--fresh)** | Külm paigaldus täiesti puhtalt lehelt ilma hetktõmmisteta. | Kustutab olemasolevad andmeköited enne paigaldust. |
-| **Dry-Run (--dry-run)** | Ainult pordi- ja konfiguratsioonitest ilma konteinereid käivitamata. | Ei tee süsteemis püsivaid muudatusi. |
-| **Deep Reset (--system)** | Kõikide platvormi konteinerite, andmeköidete ja võrkude hävitamine (Zero-Trace). | Nõuab 2-astmelist kinnitust. |
-| **Docked Console** | Ekraani allosast väljalibisev, reguleeritava kõrgusega terminali aken. | Ei katke vahelehtede vahetamisel. |
+| **FastStart (-s)** | Instant database restoration from pre-baked Golden Snapshot (~15-20s). | Mutually exclusive with `--fresh`. |
+| **Fresh Start (--fresh)** | Cold installation from ground up without snapshots. | Removes existing data volumes prior to install. |
+| **Dry-Run (--dry-run)** | Port and configuration validation without starting containers. | Makes zero persistent filesystem modifications. |
+| **Deep Reset (--system)** | Complete destruction of containers, volumes, and networks (Zero-Trace). | Requires 2-stage explicit confirmation. |
+| **Docked Console** | Slide-out, resizable ring-buffer terminal docked at screen bottom. | Persists across tab switching without stream drops. |
 
 ---
 
-## 3. Funktsionaalsed Nõuded ja Vastuvõtukriteeriumid (Acceptance Criteria)
+## 3. Functional Requirements & Acceptance Criteria
 
-### [REQ-01]: Ülesannete Eraldatus (Single Responsibility)
-- **Kirjeldus:** Vahekaart `⚡ DevOps` sisaldab eranditult **platvormi halduse, elutsükli ja diagnostika käske**. Kõik CI testid ja raportid asuvad vahekaardil `🧪 Testimine`.
-- **Vastuvõtukriteerium (Given/When/Then):**
-  - **Given:** Arendaja avab Dev Hubi vahekaardi `⚡ DevOps`.
-  - **When:** Vaadeldakse kuvatavaid tööriistu ja kaarte.
-  - **Then:** Kuvatakse ainult elutsükli, walleti, tuumiktööriistade, hetktõmmiste ja diagnostika toimingud.
+### [REQ-01]: Single Responsibility Architecture
+- **Description:** The `⚡ DevOps` tab contains exclusively **platform lifecycle, management, and diagnostics commands**. All CI tests and reports reside on `🧪 Testing`.
+- **Acceptance Criteria (Given/When/Then):**
+  - **Given:** Developer opens Dev Hub tab `⚡ DevOps`.
+  - **When:** Displayed tools and action cards are inspected.
+  - **Then:** Exclusively lifecycle, wallet, core tools, snapshots, and diagnostic commands are rendered.
 
-### [REQ-02]: 3-Tasemeline Adaptiivne Logiliides (Docked Console)
-- **Kirjeldus:** Kaardid ei tohi logi tõttu ebaühtlaselt venida. Kogu reaalajas logivoog suunatakse ekraani allosas asuvasse dokitavasse terminali.
-- **Vastuvõtukriteerium:**
-  - **Given:** Arendaja käivitab mis tahes DevOps käsu.
-  - **When:** Käsk hakkab täituma.
-  - **Then:** Ekraani allosast libiseb välja dokitud terminal `#devops-docked-terminal`, stopper näitab aktiivset aega ja logi kuvatakse reaalajas ANSI värvidega.
-  - **And:** Arendaja saab vabalt liikuda teistele vahelehtedele ilma logivoo katkemiseta.
+### [REQ-02]: Docked Terminal Console
+- **Description:** Action cards must not stretch or distort during log streaming. Real-time stdout/stderr streams directly into a bottom-docked terminal.
+- **Acceptance Criteria:**
+  - **Given:** Developer triggers any DevOps command.
+  - **When:** The process starts executing.
+  - **Then:** Bottom docked console `#devops-docked-terminal` opens, live timer runs, and ANSI colorized logs stream in real-time.
+  - **And:** Navigation across tabs remains uninterrupted.
 
-### [REQ-03]: Juhendatud Command Studiod (Setup & Reset)
-- **Kirjeldus:** Vastastikku välistavad lipud (nt `-s` vs `--fresh`) peavad olema esitatud selgete raadiopillidena koos reaalajas käsu ja mõju eelvaatega.
-- **Vastuvõtukriteerium:**
-  - **Given:** Arendaja avab Setup Studio.
-  - **When:** Arendaja valib `FastStart (-s)`.
-  - **Then:** Reaalajas CLI eelvaade uueneb (`./scripts/setup-all.sh -s -y`) ja mõju tekst kinnitab tõmmisest taastamist.
+### [REQ-03]: Guided Command Studios (Setup & Reset)
+- **Description:** Conflicting flags (e.g. `-s` vs `--fresh`) must be represented as mutually exclusive radio pills with real-time command preview.
+- **Acceptance Criteria:**
+  - **Given:** Developer opens Setup Studio.
+  - **When:** Developer selects `FastStart (-s)`.
+  - **Then:** Live CLI preview updates (`./scripts/setup-all.sh -s -y`) with clear impact description.
 
-### [REQ-04]: Semantiline Ohutushierarhia ja 2-Astmeline Kinnituskaitse
-- **Kirjeldus:** Hävitavad toimingud (`reset-all.sh --system`) omavad punast hoiatusäärist ja nõuavad eksplitsiitset märkeruutu enne käivitusnupu aktiveerumist.
-- **Vastuvõtukriteerium:**
-  - **Given:** Arendaja valib Reset Studios režiimi `Sügav süsteemipuhastus (--system)`.
-  - **When:** Kinnitusmärkeruut on valimata.
-  - **Then:** Käivitusnupp on deaktiveeritud (disabled) ja avaneb hoiatuskast `#reset-studio-confirm-gate`.
+### [REQ-04]: 2-Stage Destructive Confirmation Protection
+- **Description:** Destructive operations (`reset-all.sh --system`) feature a warning outline and require explicit confirmation before execution.
+- **Acceptance Criteria:**
+  - **Given:** Developer selects `Deep System Purge (--system)`.
+  - **When:** Confirmation checkbox is unchecked.
+  - **Then:** Execution button is disabled and warning gate `#reset-studio-confirm-gate` displays.
 
-### [REQ-05]: 1-Kliki AI Lahendus (Copilot & Antigravity)
-- **Kirjeldus:** Tõrke korral peab terminal pakkuma kohest 1-kliki võimalust avada AI abi koos logilõiguga.
-- **Vastuvõtukriteerium:**
-  - **Given:** Käsu täitmisel tekib tõrge (`exit_code != 0` või `ORA-*`).
-  - **When:** Kasutaja klikib terminali päises nupule `🤖 Küsi AI-lt lahendust`.
-  - **Then:** Avaneb Copiloti või Antigravity sahtel, kuhu on ette täidetud käsu nimi, viimased 25 logirida ja paranduspäring.
+### [REQ-05]: 1-Click AI Troubleshooting (Copilot & Antigravity)
+- **Description:** When an execution error occurs, the terminal provides 1-click AI context escalation.
+- **Acceptance Criteria:**
+  - **Given:** Execution yields an error (`exit_code != 0` or `ORA-*`).
+  - **When:** User clicks `🤖 Ask AI for solution`.
+  - **Then:** Copilot / Antigravity panel opens pre-populated with command name, last 25 lines of logs, and troubleshooting context.
 
-### [REQ-06]: 4-Kohaline Tööiteratsioon ja Automaatne Semantiline Reliis (Rule 16)
-- **Kirjeldus:** Iga arendusetapp tõstab failis `VERSION` neljandat numbrit (`2.5.0.X`), kompileerib Dev Hubi taustal ning kuvab reaalajas iteratsiooni indikaatorit. Ametlikul `git push` tegevusel viiakse läbi Conventional Commits mõjuanalüüs ning kinnitatakse 3-kohaline SemVer versioon (`vX.Y.Z`) koos Git tagi ja `CHANGELOG.md` sissekandega.
-- **Vastuvõtukriteerium (Given/When/Then):**
-  - **Given:** Arendaja viib ellu koodimuudatuse või ülesande sammu.
-  - **When:** Käivitatakse `./scripts/bump-iteration.sh`.
-  - **Then:** Fail `VERSION` suureneb ühe võrra (`2.5.0.1` -> `2.5.0.2`) ja Dev Hubi HTML kompileeritakse taustal.
-  - **And:** `git push` eelselt analüüsib pre-push hook commite ja arvutab uue SemVer versiooni (`feat` -> Minor, `fix` -> Patch).
+### [REQ-06]: 4-Part Iteration & Automated Semantic Release (Rule 16)
+- **Description:** Development steps bump the 4th build number in `VERSION` (`2.5.0.X`), recompile Dev Hub, and show live progress.
+- **Acceptance Criteria:**
+  - **Given:** Developer implements an atomic change.
+  - **When:** `./scripts/bump-iteration.sh` executes.
+  - **Then:** Version increments in `VERSION` and Dev Hub compiles in background.
 
-### [REQ-07]: Vaikimisi Avavaate Kinnitamine ja Nutikas Adaptiivne Maandumine (Lahendus 4)
-- **Kirjeldus:** Kogenud arendaja ei tohi iga kord portaali avades (`https://localhost:8448`) sattuda algajate alustusjuhendi peale. Süsteem pakub 4-astmelist maandumishierarhiat (URL parameeter > Kinnitatud koduleht 📌 > Viimati külastatud vaheleht > Juhtpaneel) ning võimalust vahelehte 1-klõpsuga avavaateks kinnitada.
-- **Vastuvõtukriteerium (Given/When/Then):**
-  - **Given:** Arendaja avab `https://localhost:8448` ilma URL-i parameetrita.
-  - **When:** Arendaja on eelnevalt klõpsanud `📌 Kinnita avavaateks` (nt `Juhtpaneel` või `DevOps`).
-  - **Then:** Portaal avaneb koheselt kinnitatud vahelehel, kuvades vahelehel nööpnõela märki `📌`.
-  - **When:** Arendaja pole konkreetset vahelehte kinnitanud, kuid töötas eelmisel sessioonil vahelehel `⚡ DevOps`.
-  - **Then:** Portaal taastab automaatselt viimati aktiivse vahelehe (`Smart Context Memory`).
-  - **When:** Esmaskülastus või tühi vahemälu.
-  - **Then:** Portaal avab vaikimisi elusa `🚀 Juhtpaneeli` (mitte staatilise dokumentatsiooni).
+### [REQ-07]: Smart Adaptive Landing & Pinned Home Tab
+- **Description:** Developers can pin their preferred starting tab with 1 click, bypassing static onboarding documentation on repeated visits.
+- **Acceptance Criteria:**
+  - **Given:** Developer visits portal without URL query parameters.
+  - **When:** Tab has been pinned via `📌 Set as Home`.
+  - **Then:** Portal loads directly to the pinned view with active pin indicator.
 
 ---
 
-## 4. Loogiliste Vastuolude Analüüs (Contradiction Analysis)
+## 4. Contradiction & Edge Case Analysis
 
-| Nõue A | Nõue B | Potentsiaalne Vastuolu | Lahendus / Reegel |
+| Requirement A | Requirement B | Potential Conflict | Solution / Rule |
 | :--- | :--- | :--- | :--- |
-| **FastStart (-s)** | **Puhas algus (--fresh)** | Tõmmisest taastamine ja samaaegne tõmmise eiramine on loogiliselt vastuolulised. | Raadiopillide režiim tagab, et saab valida ainult ühe. Lisaks kontrollib `setup-all.sh` CLI tasemel ja katkestab veaga, kui mõlemad antakse. |
-| **Simulatsioon (--dry-run)** | **Puhas algus (--fresh)** | Simulatsioon ei tohi kustutada andmeköiteid. | `--dry-run` režiimis ignoreeritakse `--fresh` kustutusloogikat; CLI tasemel blokeeritud. |
+| **FastStart (-s)** | **Fresh Start (--fresh)** | Restoring snapshot while ignoring snapshots is mutually contradictory. | Radio pill mode enforces single selection. CLI aborts with validation error if both are passed. |
+| **Dry-Run (--dry-run)** | **Fresh Start (--fresh)** | Simulation must not destroy volumes. | In dry-run mode, deletion logic is strictly suppressed. |
 
 ---
 
-## 5. Mittefunktsionaalsed Nõuded (NFR)
+## 5. Non-Functional Requirements (NFR)
 
-1. **Turvalisus (Zero-Trust):** Rangelt keelatud paroolide kettale kirjutamine. Kasutajanimi valideeritakse regexiga `^[a-zA-Z0-9_]{3,30}$`.
-2. **Brauseri Mälu (DOM Ring-Buffer):** Terminal hoiab mälus maksimaalselt 1500 rida.
-3. **Kohalik Logi (Reegel 1.2):** Täislogi kirjutatakse kohalikule kettale `install_logs/` (ei lähe Giti).
+1. **Security (Zero-Trust):** Strictly prohibits storing plaintext credentials on disk. Usernames are sanitized with `^[a-zA-Z0-9_]{3,30}$`.
+2. **Browser Performance (DOM Ring-Buffer):** Terminal buffer caps at 1500 lines to prevent DOM bloat.
+3. **Local Audit Logging (Rule 1.2):** Full logs tee directly into local `install_logs/` (Git excluded).

@@ -93,17 +93,19 @@ except Exception:
     # 1. Primary: Query SEPS Wallet dynamically in-memory via get-password.sh
     get_pwd_script = Path(ws) / "scripts" / "get-password.sh"
     running_c_names = set()
+    podman_active = False
     try:
-        r_ps = subprocess.run(["podman", "ps", "--format", "{{.Names}}"], capture_output=True, text=True, timeout=5)
+        r_ps = subprocess.run(["podman", "ps", "--format", "{{.Names}}"], capture_output=True, text=True, timeout=2)
         if r_ps.returncode == 0:
+            podman_active = True
             running_c_names = {n.strip() for n in r_ps.stdout.splitlines() if n.strip()}
     except Exception:
         pass
 
-    if get_pwd_script.exists() and os.access(get_pwd_script, os.X_OK):
+    if podman_active and get_pwd_script.exists() and os.access(get_pwd_script, os.X_OK):
         for db_info in all_dbs:
             c_name = db_info.get("c_name", "")
-            if running_c_names and c_name and c_name not in running_c_names:
+            if c_name and c_name not in running_c_names:
                 continue
             c_short = db_info.get("short", "").upper()
             test_aliases = [
@@ -143,81 +145,83 @@ except Exception:
                     pass
 
     # 2. Extract dynamically from running container wallet via mkstore in-memory (fallback)
-    for db_info in all_dbs:
-        c_name = db_info.get("c_name", "")
-        if c_name:
-            if running_c_names and c_name not in running_c_names:
-                continue
-            c_short = db_info.get("short", "").upper()
-            needed = [f"DB_{c_short}_{role}" for role in ["SYS", "DBA_ADMIN", "DEV", "VIEWER", "APP", "APEX_ADMIN"]]
-            if all(a in pwd_map for a in needed):
-                continue
-            try:
-                res = subprocess.run(["podman", "exec", "-i", c_name, "python3", "-c", script], capture_output=True, text=True, timeout=3)
-                if res.returncode == 0 and res.stdout.strip().startswith("{"):
-                    w_data = json.loads(res.stdout.strip())
-                    for a, p in w_data.items():
-                        if a and p and a not in pwd_map:
-                            pwd_map[a] = p
-            except Exception:
-                pass
+    if podman_active and running_c_names:
+        for db_info in all_dbs:
+            c_name = db_info.get("c_name", "")
+            if c_name:
+                if c_name not in running_c_names:
+                    continue
+                c_short = db_info.get("short", "").upper()
+                needed = [f"DB_{c_short}_{role}" for role in ["SYS", "DBA_ADMIN", "DEV", "VIEWER", "APP", "APEX_ADMIN"]]
+                if all(a in pwd_map for a in needed):
+                    continue
+                try:
+                    res = subprocess.run(["podman", "exec", "-i", c_name, "python3", "-c", script], capture_output=True, text=True, timeout=3)
+                    if res.returncode == 0 and res.stdout.strip().startswith("{"):
+                        w_data = json.loads(res.stdout.strip())
+                        for a, p in w_data.items():
+                            if a and p and a not in pwd_map:
+                                pwd_map[a] = p
+                except Exception:
+                    pass
 
     # 3. Dynamic fallback: Podman Secret Store in-memory
-    try:
-        res = subprocess.run(["podman", "secret", "list", "-q"], capture_output=True, text=True, timeout=5)
-        if res.returncode == 0:
-            sec_ids = [s.strip() for s in res.stdout.splitlines() if s.strip()]
-            if sec_ids:
-                cmd = ["podman", "secret", "inspect", "--showsecret"] + sec_ids
-                res_ins = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
-                if res_ins.returncode == 0:
-                    data = json.loads(res_ins.stdout)
-                    for item in data:
-                        s_name = item.get("Spec", {}).get("Name", "").lower()
-                        s_data = item.get("SecretData", "")
-                        if not s_data:
-                            continue
-                        
-                        m = re.match(r"^([a-z0-9_-]+)_(dev|sys|db_sys|dba_admin|schema|app|viewer|admin|apex_admin)_password$", s_name)
-                        if m:
-                            prefix = m.group(1).upper().replace("-", "_")
-                            role = m.group(2).upper().replace("DB_SYS", "SYS")
-                            alias = f"DB_{prefix}_{role}"
-                            if alias not in pwd_map:
-                                pwd_map[alias] = s_data
-                            if role == "DEV":
-                                udev_alias = f"DB_{prefix}_USER_DEVELOPER"
-                                if udev_alias not in pwd_map:
-                                    pwd_map[udev_alias] = s_data
-                        if s_name in ["apex_admin_password", "proxy_apex_admin_password"]:
-                            if "DB_PROXY_APEX_ADMIN" not in pwd_map: pwd_map["DB_PROXY_APEX_ADMIN"] = s_data
-                            if "APEX_ADMIN" not in pwd_map: pwd_map["APEX_ADMIN"] = s_data
-                        elif s_name in ["user_developer_password", "proxy_dev_password"]:
-                            if "DB_PROXY_DEV" not in pwd_map: pwd_map["DB_PROXY_DEV"] = s_data
-                            if "DB_PROXY_USER_DEVELOPER" not in pwd_map: pwd_map["DB_PROXY_USER_DEVELOPER"] = s_data
-                        elif s_name in ["dba_admin_password", "proxy_dba_admin_password"]:
-                            if "DB_PROXY_DBA_ADMIN" not in pwd_map: pwd_map["DB_PROXY_DBA_ADMIN"] = s_data
-                        elif s_name in ["user_app_password", "proxy_app_password"]:
-                            if "DB_PROXY_APP" not in pwd_map: pwd_map["DB_PROXY_APP"] = s_data
-                        elif s_name in ["user_viewer_password", "proxy_viewer_password"]:
-                            if "DB_PROXY_VIEWER" not in pwd_map: pwd_map["DB_PROXY_VIEWER"] = s_data
-                        elif s_name in ["proxy_sys_password", "proxy_db_sys_password"]:
-                            if "DB_PROXY_SYS" not in pwd_map: pwd_map["DB_PROXY_SYS"] = s_data
-                        elif s_name in ["publisher_developer_password", "publisher_dev_password"]:
-                            pwd_map["PUBLISHER_DEVELOPER"] = s_data
-                            pwd_map["DB_PUBLISHER_DEV"] = s_data
-                            pwd_map["DB_PUBLISHER_DEVELOPER"] = s_data
-                        elif s_name in ["publisher_user_password", "publisher_app_password"]:
-                            pwd_map["PUBLISHER_USER"] = s_data
-                            pwd_map["DB_PUBLISHER_USER"] = s_data
-                            pwd_map["DB_PUBLISHER_APP"] = s_data
-                        elif s_name in ["publisher_admin_password"]:
-                            pwd_map["PUBLISHER_ADMIN"] = s_data
-                            pwd_map["DB_PUBLISHER_ADMIN"] = s_data
-                        elif s_name in ["publisher_db_sys_password"]:
-                            pwd_map["DB_PUBLISHER_SYS"] = s_data
-    except Exception:
-        pass
+    if podman_active:
+        try:
+            res = subprocess.run(["podman", "secret", "list", "-q"], capture_output=True, text=True, timeout=3)
+            if res.returncode == 0:
+                sec_ids = [s.strip() for s in res.stdout.splitlines() if s.strip()]
+                if sec_ids:
+                    cmd = ["podman", "secret", "inspect", "--showsecret"] + sec_ids
+                    res_ins = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+                    if res_ins.returncode == 0:
+                        data = json.loads(res_ins.stdout)
+                        for item in data:
+                            s_name = item.get("Spec", {}).get("Name", "").lower()
+                            s_data = item.get("SecretData", "")
+                            if not s_data:
+                                continue
+                            
+                            m = re.match(r"^([a-z0-9_-]+)_(dev|sys|db_sys|dba_admin|schema|app|viewer|admin|apex_admin)_password$", s_name)
+                            if m:
+                                prefix = m.group(1).upper().replace("-", "_")
+                                role = m.group(2).upper().replace("DB_SYS", "SYS")
+                                alias = f"DB_{prefix}_{role}"
+                                if alias not in pwd_map:
+                                    pwd_map[alias] = s_data
+                                if role == "DEV":
+                                    udev_alias = f"DB_{prefix}_USER_DEVELOPER"
+                                    if udev_alias not in pwd_map:
+                                        pwd_map[udev_alias] = s_data
+                            if s_name in ["apex_admin_password", "proxy_apex_admin_password"]:
+                                if "DB_PROXY_APEX_ADMIN" not in pwd_map: pwd_map["DB_PROXY_APEX_ADMIN"] = s_data
+                                if "APEX_ADMIN" not in pwd_map: pwd_map["APEX_ADMIN"] = s_data
+                            elif s_name in ["user_developer_password", "proxy_dev_password"]:
+                                if "DB_PROXY_DEV" not in pwd_map: pwd_map["DB_PROXY_DEV"] = s_data
+                                if "DB_PROXY_USER_DEVELOPER" not in pwd_map: pwd_map["DB_PROXY_USER_DEVELOPER"] = s_data
+                            elif s_name in ["dba_admin_password", "proxy_dba_admin_password"]:
+                                if "DB_PROXY_DBA_ADMIN" not in pwd_map: pwd_map["DB_PROXY_DBA_ADMIN"] = s_data
+                            elif s_name in ["user_app_password", "proxy_app_password"]:
+                                if "DB_PROXY_APP" not in pwd_map: pwd_map["DB_PROXY_APP"] = s_data
+                            elif s_name in ["user_viewer_password", "proxy_viewer_password"]:
+                                if "DB_PROXY_VIEWER" not in pwd_map: pwd_map["DB_PROXY_VIEWER"] = s_data
+                            elif s_name in ["proxy_sys_password", "proxy_db_sys_password"]:
+                                if "DB_PROXY_SYS" not in pwd_map: pwd_map["DB_PROXY_SYS"] = s_data
+                            elif s_name in ["publisher_developer_password", "publisher_dev_password"]:
+                                pwd_map["PUBLISHER_DEVELOPER"] = s_data
+                                pwd_map["DB_PUBLISHER_DEV"] = s_data
+                                pwd_map["DB_PUBLISHER_DEVELOPER"] = s_data
+                            elif s_name in ["publisher_user_password", "publisher_app_password"]:
+                                pwd_map["PUBLISHER_USER"] = s_data
+                                pwd_map["DB_PUBLISHER_USER"] = s_data
+                                pwd_map["DB_PUBLISHER_APP"] = s_data
+                            elif s_name in ["publisher_admin_password"]:
+                                pwd_map["PUBLISHER_ADMIN"] = s_data
+                                pwd_map["DB_PUBLISHER_ADMIN"] = s_data
+                            elif s_name in ["publisher_db_sys_password"]:
+                                pwd_map["DB_PUBLISHER_SYS"] = s_data
+        except Exception:
+            pass
         
     return pwd_map
 

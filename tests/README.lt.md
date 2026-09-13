@@ -41,7 +41,13 @@ Norint paleisti testus iš švarios pradinės būsenos (su automatiniu `reset-al
 # 6. Architektūros brėžinių ir profilių vientisumo auditas:
 ./tests/unit/test-blueprint-profiles-integrity.sh
 
-# 7. Saugyklos statistikos ir kodo bazės metrikos ataskaita:
+# 7. Duomenų bazių profilių ir topologijos izoliacijos auditas (be konfliktų):
+./tests/unit/test-database-profiles-isolation.sh
+
+# 8. Konteinerių pavadinimų izoliacijos ir poeilučių prevencijos auditas (15 taisyklė):
+./tests/unit/test-container-naming-isolation.sh
+
+# 9. Saugyklos statistikos ir kodo bazės metrikos ataskaita:
 ./tests/report-repo-stats.sh
 ```
 
@@ -53,3 +59,4 @@ Kiekvienas testas patikrina:
 1. **🌐 Žiniatinklio Paslaugų HTTP Sveikata (`scripts/check-urls.sh`):** HTTP/HTTPS atsakai (200/302).
 2. **🔑 SEPS Wallet Ryšiai Be Slaptažodžio (`scripts/check-wallet.sh`):** SQLcl prisijungimai be slaptažodžio.
 3. **📊 Našumo Rodikliai (1 taisyklė):** Trukmės matavimai išsaugomi `metrics/setup_benchmarks.json`.
+4. **🛡️ Konteinerių Pavadinimų Izoliacija (15 taisyklė):** Tikslus pavadinimų atitikimas užkerta kelią klaidingiems poeilučių sutapimams tarp projektų.

@@ -31,7 +31,7 @@ See dokument koondab projekti **reaalse teostusauditi (Staatuse Kontroll)**, rea
 | **4.1** | Artifactory & Git žetoonide maskeerimine logides | **✅ REALISEERITUD** | Loodud `sanitize-logs.sh`, mis maskeerib logides `ACCESS_TOKEN` ja paroolid |
 | **1.14** | Universaalne Reaalaegne Progress ja Puhverdamata Väljund | **✅ REALISEERITUD** | Option C `print_step_progress` & `sed -u` unbuffered filter kõigil sammudel |
 | **1.15** | Viivitatud Tsentraalne Tervisekontrolli Arhitektuur | **✅ REALISEERITUD** | Üks tsentraalne lõppkontroll `test-urls.sh` (ORDS, APEX, Publisher, Web IDE) |
-| **1.16** | LIS Süsteemi Üldine Põhiarhitektuur (4-Kihiline Mudel) | **✅ REALISEERITUD** | `publisher-free` + `proxy-gvenzl` + `app-free`, Outbound REST & ACL, DB-Link & Inbound Push |
+| **1.16** | ALISE Süsteemi Üldine Põhiarhitektuur (4-Kihiline Mudel) | **✅ REALISEERITUD** | `publisher-free` + `proxy-gvenzl` + `app-free`, Outbound REST & ACL, DB-Link & Inbound Push |
 | **1.17** | Automaatne Versiooni Tuvastamine (DB, APEX, ORDS) | **✅ REALISEERITUD** | Tuvastus otse konteineri pildilt (`podman image inspect`) ja standalone paketist (`binaries/ords/`) |
 | **1.18** | Paigalduse Ajakulu Optimeerimine (APEX DB Kiirendus 15m ➔ 1–2m) | **✅ REALISEERITUD** | 4-sambaline lahendus: FastStart/Artifactory pildid, Golden Snapshot kiirtaastus (~30s), mälu tuunimine ja Runtime režiim (`TASK-018`) |
 | **1.19** | Analytics Publisheri & Multi-DB Paigalduse Kiirendus | **✅ REALISEERITUD** | Pre-built WebLogic domeenipilt (~45s), konfigureeritav paralleelsus (`--parallel`), domeeniehitaja (`TASK-019`) |
@@ -118,7 +118,7 @@ See dokument koondab projekti **reaalse teostusauditi (Staatuse Kontroll)**, rea
 - **Staatus:** **✅ REALISEERITUD JA VALIDEERITUD**
 - **Kirjeldus:** Teostatud Option C hübriidne topeltvoo progressimuster (`print_step_progress`) koos unbuffered logifiltriga (`sed -u -E`), mis võimaldab reaalajas sekundite tiksumist brauseris ja terminalis, tagades samal ajal 100% puhtad ja loetavad logifailid ilma `\r` reostuseta.
 
-### 1.16 LIS Süsteemi Üldine Põhiarhitektuur (4-Kihiline Mudel)
+### 1.16 ALISE Süsteemi Üldine Põhiarhitektuur (4-Kihiline Mudel)
 - **Staatus:** **✅ REALISEERITUD JA VALIDEERITUD**
 - **Kirjeldus:** Teostatud standardne enterprise 4-kihiline topoloogia (`db-publisher` metaandmed + `db-proxy` APEX/SSO vahekiht + `db-alise` isoleeritud äribaas + `app_ords` tsentraalne multi-pool ORDS server + `app_publisher` BI Publisher).
 

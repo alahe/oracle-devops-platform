@@ -207,12 +207,6 @@ get_backup_stats() {
   msg_str "BENCHMARK_AVG" "$(format_duration $avg)"
 }
 
-echo -e "${CYAN}==================================================================${NC}"
-echo -e "${YELLOW}🚀 Oracle DB Volume Golden Snapshot${NC}"
-echo -e "📂 Target destination: ${CYAN}$BACKUP_FILE${NC}"
-echo -e "   📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(get_backup_stats "25s")${NC}"
-echo -e "${CYAN}==================================================================${NC}"
-
 # 1. Setup local execution log
 LOG_DIR="$WORKSPACE_DIR/install_logs"
 mkdir -p "$LOG_DIR"
@@ -221,6 +215,14 @@ ln -sf "$LOG_FILE" "$LOG_DIR/snapshot_create_bp_${TARGET_BP_ID:-0}_latest.log" 2
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 START_BACKUP=$(date +%s)
+START_TIME_HUMAN=$(date "+%Y-%m-%d %H:%M:%S")
+
+echo -e "${CYAN}==================================================================${NC}"
+echo -e "${YELLOW}🚀 Oracle DB Volume Golden Snapshot${NC}"
+echo -e "📂 Target destination: ${CYAN}$BACKUP_FILE${NC}"
+echo -e "   📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(get_backup_stats "25s")${NC}"
+echo -e "${CYAN}$(msg_str "LABEL_STARTED_AT" "$START_TIME_HUMAN")${NC}"
+echo -e "${CYAN}==================================================================${NC}"
 
 COMPOSE_ARGS=(-f "$COMPOSE_FILE")
 [ -f "$WORKSPACE_DIR/podman-compose.override.yml" ] && COMPOSE_ARGS+=(-f "$WORKSPACE_DIR/podman-compose.override.yml")
@@ -294,7 +296,9 @@ fi
 echo "Restarting services..."
 podman-compose "${COMPOSE_ARGS[@]}" start >> "$LOG_FILE" 2>&1 || true
 
-DURATION_BACKUP=$(( $(date +%s) - START_BACKUP ))
+END_BACKUP=$(date +%s)
+END_TIME_HUMAN=$(date "+%Y-%m-%d %H:%M:%S")
+DURATION_BACKUP=$(( END_BACKUP - START_BACKUP ))
 
 # Rotation: keep only the last 10 snapshots in golden-snapshots/
 (cd "$BACKUP_DIR" && ls -t apex_proxy_oradata_*.tar.gz 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null || true)
@@ -311,6 +315,8 @@ FILE_SIZE_MB=$(( FILE_SIZE_BYTES / 1024 / 1024 ))
 cat << MEOF > "$JSON_TS_BACKUP"
 {
   "last_updated": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "started_at": "$START_TIME_HUMAN",
+  "finished_at": "$END_TIME_HUMAN",
   "snapshot_duration_seconds": $DURATION_BACKUP,
   "snapshot_size_mb": $FILE_SIZE_MB,
   "snapshot_file": "$(basename "$BACKUP_FILE")",
@@ -328,6 +334,8 @@ cp "$JSON_TS_BACKUP" "$METRICS_DIR/golden_snapshot_benchmarks.json"
 
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${GREEN}✅ GOLDEN SNAPSHOT COMPLETED: $(format_duration $DURATION_BACKUP) (file size: ${FILE_SIZE_MB}MB)${NC}"
+echo -e "$(msg_str "LABEL_STARTED_AT" "$START_TIME_HUMAN")"
+echo -e "$(msg_str "LABEL_FINISHED_AT" "$END_TIME_HUMAN")"
 echo "------------------------------------------------------------------"
 echo -e "📝 Log file saved:            ${CYAN}$LOG_FILE${NC}"
 echo -e "📄 Metadata file:             ${CYAN}${BACKUP_FILE%.tar.gz}.meta.json${NC}"

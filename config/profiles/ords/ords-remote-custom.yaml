@@ -8,8 +8,8 @@ profile:
 ords:
   enabled: true
   version: "26.2.2"
-  container_name: app-ords
-  service_name: app-ords
+  container_name: app-ords-remote
+  service_name: app-ords-remote
   download_url: "https://download.oracle.com/otn_software/java/ords/ords-latest.zip"
   http_port: 8088
   https_port: 8448

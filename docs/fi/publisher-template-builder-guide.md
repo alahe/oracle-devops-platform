@@ -330,3 +330,27 @@ sequenceDiagram
     deactivate GHA
 ```
 
+### 9.5 Automaattinen E2E-testaus ja varmennusputki (`test-deploy-verify-e2e.sh`)
+
+Varmistaakseen mallimuutosten virheettömän toiminnan ja palvelinpuolen tulostuksen, alusta tarjoaa automaattisen E2E-testauksen:
+
+```bash
+# Perustestaus dynaamisella testitunnisteella (Edellyttää Blueprint 5):
+./scripts/publisher/test-deploy-verify-e2e.sh
+
+# Testaus määritellyllä raportilla ja hakusanalla:
+./scripts/publisher/test-deploy-verify-e2e.sh Custom/Invoices/Invoice_Report "Nordic Innovation AS"
+
+# Automaattinen vaihto Blueprint 5:een tarvittaessa:
+./scripts/publisher/test-deploy-verify-e2e.sh --auto-switch
+```
+
+#### Keskeiset laatuportit ja tarkistukset:
+1. **Blueprint 5 -esitarkistus:** Varmistaa, että Blueprint 5 (`app-publisher` porteissa 9500/9502) on käynnissä ja terve.
+2. **Hakemistopolkujen suojaus (CWE-22):** Validoi sallitut tiedostopolut työtilassa.
+3. **Dynaaminen tunniste ja sisällön varmennus:** Lisää aikaleimatun tunnisteen tiedostoon `sample_data.xml`, pakkaa `.xdmz` ja `.xdoz`, julkaisee REST API:lla, suorittaa raportin, lataa PDF:n ja tarkistaa tunnisteen Python `pypdf` -kirjastolla.
+4. **Integroitu PDF/UA-1 -saavutettavuusauditointi:** Suorittaa automaattisesti `validate-pdf-accessibility.sh` -skriptin.
+5. **Rule 7 -linkit:** Tarjoaa klikattavat linkit RTF-malliin (`file://...`), PDF-tiedostoon (`file://...`) ja Publisher-portaaliin.
+6. **Dev Hub Report Lab -integraatio:** 1-klikkauksen käynnistys painikkeesta `🧪 Käivita E2E Test & Kontroll`.
+
+

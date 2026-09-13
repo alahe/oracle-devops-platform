@@ -7,7 +7,7 @@ db_name: FREE
 pdb_name: FREEPDB1
 port: 1533
 memory_limit: 3500m
-container_name: db-proxy
+container_name: db-proxy-remote
 container_image: container-registry.oracle.com/database/free:23.6.0.0-lite
 install_apex: true
 apex_version: "24.2"

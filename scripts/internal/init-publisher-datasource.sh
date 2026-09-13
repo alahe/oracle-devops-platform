@@ -61,4 +61,17 @@ cat <<EOF > "$DS_FILE"
 </jdbc-data-source>
 EOF
 
-echo "✅ Analytics Publisher JDBC Data Source 'LIS_APP_DB' configured! (File: $DS_FILE)"
+# Ensure ALISE_APP_DB is configured in Publisher datasources.xml inside container
+PUB_CONTAINER="app-publisher"
+if command -v podman >/dev/null 2>&1 && podman container exists "$PUB_CONTAINER" 2>/dev/null && [ "$(podman inspect --format='{{.State.Status}}' "$PUB_CONTAINER" 2>/dev/null)" = "running" ]; then
+  podman exec -i "$PUB_CONTAINER" /bin/bash -c '
+    DS_XML="/u01/oracle/user_projects/domains/bi/config/fmwconfig/biconfig/bipublisher/Admin/DataSource/datasources.xml"
+    if [ -f "$DS_XML" ] && ! grep -q "ALISE_APP_DB" "$DS_XML"; then
+      echo "Injecting ALISE_APP_DB JNDI connection into $DS_XML..."
+      sed -i "s|</dataSources>|<dataSource name=\"ALISE_APP_DB\">\n      <connection>\n         <connectionType>jndi</connectionType>\n         <proxyAuthentication>false</proxyAuthentication>\n         <jndiName>jdbc/BIPlatformDatasource</jndiName>\n      </connection>\n      <acl>\n         <policy>\n            <subject>\n               <rolename>BIConsumer</rolename>\n               <rolename>BIContentAuthor</rolename>\n               <rolename>BIDataLoadAuthor</rolename>\n               <rolename>BIDataModelAuthor</rolename>\n               <rolename>BIServiceAdministrator</rolename>\n               <rolename>DVConsumer</rolename>\n               <rolename>DVContentAuthor</rolename>\n            </subject>\n            <action name=\"read\"/>\n         </policy>\n      </acl>\n   </dataSource>\n</dataSources>|" "$DS_XML"
+      echo "✅ ALISE_APP_DB registered in Publisher container."
+    fi
+  ' 2>/dev/null || true
+fi
+
+echo "✅ Analytics Publisher JDBC Data Source 'ALISE_APP_DB' configured!"

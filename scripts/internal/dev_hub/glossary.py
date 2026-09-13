@@ -38,6 +38,60 @@ GLOSSARY_ITEMS = [
         ]
     },
     {
+        "acronym": "ADR",
+        "expansion": "Architecture Decision Record",
+        "category": "architecture",
+        "ref_url": "https://adr.github.io/",
+        "ref_title": "ADR GitHub Organization",
+        "def": {
+            "en": "A structured document capturing a significant architectural decision along with its context, options considered, and consequences.",
+            "et": "Struktureeritud dokument, mis talletab olulise arhitektuurilise otsuse koos selle konteksti, kaalutud alternatiivide ja tagajärgedega.",
+            "fi": "Strukturoitu dokumentti, joka tallentaa merkittävän arkkitehtuuripäätöksen perusteluineen ja seurauksineen.",
+            "sv": "Ett strukturerat dokument som fångar ett viktigt arkitekturbeslut med sammanhang och konsekvenser.",
+            "lv": "Strukturēts dokuments, kurā fiksēts būtisks arhitektūras lēmums, konteksts un sekas.",
+            "lt": "Struktūrizuotas dokumentas, fiksuojantis esminį architektūrinį sprendimą, jo kontekstą ir pasekmes."
+        },
+        "project_role": {
+            "en": "Authoritative decision records in docs/adr/ (such as ADR 0017) ensuring thin contracts, team alignment, and zero token saturation.",
+            "et": "Autoriteetsed otsused kaustas docs/adr/ (nt ADR 0017), mis tagavad saledad lepingud ja väldivad tehisintellekti kontekstireostust.",
+            "fi": "Viralliset arkkitehtuuripäätökset kansiossa docs/adr/ (kuten ADR 0017) varmistavat selkeät sopimukset ja AI-tehokkuuden.",
+            "sv": "Auktoritativa beslut i docs/adr/ (som ADR 0017) som säkerställer tydliga kontrakt och motverkar tokenmättnad.",
+            "lv": "Autoritatīvi lēmumu ieraksti docs/adr/ (piem., ADR 0017), kas nodrošina skaidrus līgumus un komandas saskaņotību.",
+            "lt": "Autoritetingi sprendimai aplanke docs/adr/ (pvz., ADR 0017), užtikrinantys aiškius susitarimus ir AI efektyvumą."
+        },
+        "links": [
+            {"label": "docs/adr/0017-devops-tab-ux-and-docked-terminal.md", "url": "docs/adr/0017-devops-tab-ux-and-docked-terminal.md"},
+            {"label": "docs/specs/devops-management-portal-spec.md", "url": "docs/specs/devops-management-portal-spec.md"}
+        ]
+    },
+    {
+        "acronym": "ALISE",
+        "expansion": "ALISE Business Application Database",
+        "category": "app",
+        "ref_url": "https://en.wikipedia.org/wiki/Enterprise_software",
+        "ref_title": "Wikipedia: Enterprise Application Software",
+        "def": {
+            "en": "Dedicated Oracle Free DB 23ai database environment hosting core business schemas, PL/SQL engines, application tablespaces, and APEX/ORDS runtime on port 1533.",
+            "et": "Pühendatud Oracle Free DB 23ai äriandmebaas, mis majutab põhiskeeme, PL/SQL äriloogikat, rakenduste tabeliruume ja sisemist APEX/ORDS käitust pordil 1533.",
+            "fi": "Erillinen Oracle Free DB 23ai -liiketoimintatietokanta liiketoimintaskeemoille, PL/SQL-koodille ja APEX/ORDS-palveluille portissa 1533.",
+            "sv": "Dedikerad Oracle Free DB 23ai affärsdatabas för verksamhetsscheman, PL/SQL-logik och APEX/ORDS på port 1533.",
+            "lv": "Pielāgota Oracle Free DB 23ai biznesa datubāze pamatskēmām, PL/SQL biznesa loģikai un APEX/ORDS portā 1533.",
+            "lt": "Skirta Oracle Free DB 23ai verslo duomenų bazė pagrindinėms schemoms, PL/SQL logikai ir APEX/ORDS prievade 1533."
+        },
+        "project_role": {
+            "en": "Demonstrated as canonical business database in Blueprint 1 (Standalone ALISE DB :1533) and Blueprint 7/3, enforcing complete schema isolation from the proxy layer.",
+            "et": "Demonstreeritud kanoonilise äriandmebaasina Blueprint 1-s (Eraldiseisev ALISE DB :1533), tagades täieliku skeemi-isolatsiooni proxy väravast.",
+            "fi": "Käytössä ensisijaisena liiketoimintatietokantana Blueprint 1:ssä (ALISE DB :1533) eristäen skeemat välityspalvelimesta.",
+            "sv": "Demonstreras som primär affärsdatabas i Blueprint 1 (ALISE DB :1533) med strikt schemaisolering från proxy.",
+            "lv": "Izmantota kā galvenā biznesa datubāze Blueprint 1 (ALISE DB :1533), nodrošinot shēmu izolāciju.",
+            "lt": "Naudojama kaip pagrindinė verslo duomenų bazė Blueprint 1 (ALISE DB :1533), užtikrinant schemų izoliaciją."
+        },
+        "links": [
+            {"label": "config/blueprints/.env.1-standalone-alise-db", "url": "config/blueprints/.env.1-standalone-alise-db"},
+            {"label": "config/profiles/databases/db-alise-oracle.yaml", "url": "config/profiles/databases/db-alise-oracle.yaml"}
+        ]
+    },
+    {
         "acronym": "APEX",
         "expansion": "Oracle Application Express",
         "category": "app",
@@ -466,6 +520,33 @@ GLOSSARY_ITEMS = [
         ]
     },
     {
+        "acronym": "FastStart",
+        "expansion": "Instant FastStart Recovery (-s)",
+        "category": "database",
+        "ref_url": "docs/devops-lifecycle-guide.md",
+        "ref_title": "DevOps Lifecycle Guide",
+        "def": {
+            "en": "Instant ~15-second database recovery mechanism using pre-initialized data volumes and golden snapshots, bypassing long APEX/ORDS compilation.",
+            "et": "Kiire ~15-sekundiline andmebaasi taastemehhanism, mis kasutab eelsoojendatud andmemahte ja kuldseid tõmmiseid, vältides pikka paigaldustsüklit.",
+            "fi": "Nopea ~15 sekunnin tietokannan palautusmekanismi kultaisten pikavedosten avulla ilman pitkää asennusta.",
+            "sv": "Snabb ~15 sekunders återställningsmekanism med gyllene snapshots som kringgår långa installationstider.",
+            "lv": "Tūlītējs ~15 sekunžu datubāzes atjaunošanas mehānisms ar zelta momentuzņēmumiem.",
+            "lt": "Greitas ~15 sekundžių duomenų bazės atkūrimo mechanizmas naudojant auksines momentines kopijas."
+        },
+        "project_role": {
+            "en": "Activated via './scripts/setup-all.sh -s' or the Quick Recipe bar, slashing cold build times from 7 minutes to under 20 seconds.",
+            "et": "Käivitatav käsuga './scripts/setup-all.sh -s' või kiirretseptide ribalt, lühendades külmkäivituse aega 7 minutilt alla 20 sekundi.",
+            "fi": "Käynnistetään komennolla './scripts/setup-all.sh -s' tai pikareseptipalkista, nopeuttaen käynnistyksen 7 minuutista alle 20 sekuntiin.",
+            "sv": "Aktiveras via './scripts/setup-all.sh -s' eller snabbrecept, vilket sänker starttiden från 7 minuter till under 20 sekunder.",
+            "lv": "Aktivizējams ar './scripts/setup-all.sh -s', samazinot palaišanas laiku no 7 minūtēm līdz zem 20 sekundēm.",
+            "lt": "Aktyvuojama per './scripts/setup-all.sh -s', sutrumpinant paleidimo laiką nuo 7 minučių iki mažiau nei 20 sekundžių."
+        },
+        "links": [
+            {"label": "scripts/setup-all.sh", "url": "scripts/setup-all.sh"},
+            {"label": "scripts/snapshots/restore-golden-snapshots.sh", "url": "scripts/snapshots/restore-golden-snapshots.sh"}
+        ]
+    },
+    {
         "acronym": "FMW",
         "expansion": "Fusion Middleware",
         "category": "middleware",
@@ -703,33 +784,7 @@ GLOSSARY_ITEMS = [
         "links": [
             {"label": ".gitattributes", "url": ".gitattributes"}
         ]
-    },
-    {
-        "acronym": "LIS",
-        "expansion": "Laboratory Information System",
-        "category": "app",
-        "ref_url": "https://en.wikipedia.org/wiki/Laboratory_information_management_system",
-        "ref_title": "Wikipedia: LIS / LIMS",
-        "def": {
-            "en": "Enterprise software designed to manage healthcare laboratory sample workflows, instrument data, and test results.",
-            "et": "Labori infosüsteem tervishoiuasutuste proovide, analüüside ja laboriseadmete andmevahetuse juhtimiseks.",
-            "fi": "Laboratoriotietojärjestelmä näytteiden käsittelyyn, laiteintegraatioihin ja analyysituloksiin.",
-            "sv": "Laboratorieinformationssystem för hantering av prover, instrument och analysresultat.",
-            "lv": "Laboratorijas informācijas sistēma paraugu un analīžu rezultātu pārvaldībai.",
-            "lt": "Laboratorinė informacinė sistema mėginių, tyrimų ir analizių duomenims valdyti."
-        },
-        "project_role": {
-            "en": "Demonstrated in Blueprint 3 (Multi-DB with separate db-proxy, db-alise, and db-lis instances) showing schema isolation.",
-            "et": "Demonstreeritud Blueprint 3-s (eraldi db-proxy, db-alise ja db-lis baasidega) näidates skeemide isoleeritust.",
-            "fi": "Käytössä Blueprint 3 -monikantamallissa (db-proxy, db-alise ja db-lis) eristäen tietokannat.",
-            "sv": "Demonstreras i Blueprint 3 med isolerade instanser för proxy, alise och lis.",
-            "lv": "Attēlots Blueprint 3 ar atsevišķām proxy, alise un lis datubāzēm.",
-            "lt": "Demonstruojama Blueprint 3 su atskiromis proxy, alise ir lis duomenų bazėmis."
-        },
-        "links": [
-            {"label": "config/blueprints/.env.bp3-multi-db-lis", "url": "config/blueprints/.env.bp3-multi-db-lis"},
-            {"label": "config/profiles/databases/db-lis.yaml", "url": "config/profiles/databases/db-lis.yaml"}
-        ]
+
     },
     {
         "acronym": "mTLS",
@@ -1048,6 +1103,60 @@ GLOSSARY_ITEMS = [
         ]
     },
     {
+        "acronym": "SCS",
+        "expansion": "Self-Contained Systems",
+        "category": "architecture",
+        "ref_url": "https://scs-architecture.org/",
+        "ref_title": "Self-Contained Systems Architecture",
+        "def": {
+            "en": "An architectural approach dividing systems into autonomous web applications, each owning its logic, data storage, and user interface.",
+            "et": "Arhitektuuriline lähenemine, mis jaotab süsteemi autonoomseteks veebirakendusteks, millest igaüks omab oma loogikat, andmebaasi ja kasutajaliidest.",
+            "fi": "Arkkitehtuurimalli, joka jakaa järjestelmän itsenäisiin osajärjestelmiin omalla datalla ja käyttöliittymällä.",
+            "sv": "Ett arkitekturmönster som delar upp systemet i autonoma webbapplikationer med egen logik, databas och gränssnitt.",
+            "lv": "Arhitektūras pieeja, kas sadala sistēmu autonomās tīmekļa lietojumprogrammās ar savu loģiku un datubāzi.",
+            "lt": "Architektūrinis modelis, skaidantis sistemą į autonomines taikomąsias programas su sava duomenų baze ir sąsaja."
+        },
+        "project_role": {
+            "en": "Enforces bounded contexts across the 4 platform domains (devops-portal, wallet-security, golden-snapshots, blueprints-topology) documented in docs/specs/.",
+            "et": "Kehtestab piiritletud kontekstid 4 platvormi domeenile (devops-portal, wallet-security, golden-snapshots, blueprints-topology), mis on kirjeldatud kaustas docs/specs/.",
+            "fi": "Määrittää itsenäiset rajatut kontekstit 4 alustan osa-alueelle kansiossa docs/specs/.",
+            "sv": "Tillämpar avgränsade kontexter över de 4 plattformsdomänerna som dokumenteras i docs/specs/.",
+            "lv": "Nodrošina ierobežotus kontekstus 4 platformas domēniem, kas aprakstīti docs/specs/.",
+            "lt": "Taikoma apribotiems kontekstams 4 platformos srityse, dokumentuotose docs/specs/."
+        },
+        "links": [
+            {"label": "docs/spec-driven-development-and-assembly-line.md", "url": "docs/spec-driven-development-and-assembly-line.md"},
+            {"label": "docs/specs/devops-portal/design.md", "url": "docs/specs/devops-portal/design.md"}
+        ]
+    },
+    {
+        "acronym": "SDD",
+        "expansion": "Spec-Driven Development",
+        "category": "architecture",
+        "ref_url": "https://aws.amazon.com/blogs/compute/",
+        "ref_title": "Julian Wood: Spec-Driven Development",
+        "def": {
+            "en": "A rigorous software engineering methodology where formal, executable specifications (Given/When/Then) are authored before implementation begins.",
+            "et": "Tarkvaratehniline metoodika, kus täpsed ja käivitatavad spetsifikatsioonid (Given/When/Then) koostatakse enne koodi kirjutamist.",
+            "fi": "Ohjelmistokehitysmenetelmä, jossa vaatimukset ja spesifikaatiot (Given/When/Then) laaditaan ennen toteutusta.",
+            "sv": "En utvecklingsmetod där formella specifikationer (Given/When/Then) skapas innan implementationen påbörjas.",
+            "lv": "Izstrādes metodoloģija, kur precīzas specifikācijas (Given/When/Then) tiek radītas pirms koda rakstīšanas.",
+            "lt": "Programinės įrangos kūrimo metodika, kurioje specifikacijos (Given/When/Then) kuriamos prieš programuojant."
+        },
+        "project_role": {
+            "en": "Powers the platform's Spec-Driven Cockpit in Dev Hub (#tab-specs) and AI Agentic Assembly Line with 5 automated Quality Gates.",
+            "et": "Juhib Dev Hubi spetsifikatsioonide juhtpaneeli (#tab-specs) ja AI agentide koosteliini koos 5 automatiseeritud kvaliteediväravaga.",
+            "fi": "Ohjaa Dev Hubin spesifikaationäkymää (#tab-specs) ja tekoälyliukuhihnaa 5 automaattisella laatuportilla.",
+            "sv": "Drivkraften bakom specifikationspanelen i Dev Hub (#tab-specs) och AI-monteringslinjen med 5 kvalitetsgrindar.",
+            "lv": "Nodrošina specifikāciju paneli Dev Hub (#tab-specs) un AI konveijeru ar 5 kvalitātes vārtiem.",
+            "lt": "Valdo specifikacijų skydelį Dev Hub (#tab-specs) ir AI surinkimo liniją su 5 kokybės vartais."
+        },
+        "links": [
+            {"label": "docs/spec-driven-development-and-assembly-line.md", "url": "docs/spec-driven-development-and-assembly-line.md"},
+            {"label": "docs/specs/devops-portal/requirements.md", "url": "docs/specs/devops-portal/requirements.md"}
+        ]
+    },
+    {
         "acronym": "SDW",
         "expansion": "SQL Developer Web (Database Actions)",
         "category": "tools",
@@ -1334,8 +1443,36 @@ GLOSSARY_ITEMS = [
             "lt": "Automatiškai sukonfigūruota tnsnames.ora faile ir eksportuota per TNS_ADMIN."
         },
         "links": [
-            {"label": "tnsnames/tnsnames.ora", "url": "tnsnames/tnsnames.ora"},
+            {"label": "config/tns_admin/tnsnames.ora", "url": "config/tns_admin/tnsnames.ora"},
             {"label": "scripts/register-connections.sh", "url": "scripts/register-connections.sh"}
+        ]
+    },
+    {
+        "acronym": "Triad",
+        "expansion": "Specification Triad (REQ / DES / TSK)",
+        "category": "architecture",
+        "ref_url": "docs/spec-driven-development-and-assembly-line.md",
+        "ref_title": "Spec-Driven Development Guide",
+        "def": {
+            "en": "The three-tier specification standard composed of Requirements (REQ), SCS Design (DES), and Tasks Matrix (TSK).",
+            "et": "Kolmetasemeline spetsifikatsioonistandard, mis koosneb Nõuetest (REQ), SCS Disainist (DES) ja Ülesannete maatriksist (TSK).",
+            "fi": "Kolmitasoinen spesifikaatiomalli, joka koostuu vaatimuksista (REQ), SCS-arkkitehtuurista (DES) ja tehtävistä (TSK).",
+            "sv": "Trestegs specifikationsstandard bestående av Krav (REQ), SCS-design (DES) och Uppgiftsmatris (TSK).",
+            "lv": "Trīslīmeņu specifikāciju standarts: Prasības (REQ), SCS dizains (DES) un Uzdevumu matrica (TSK).",
+            "lt": "Trijų lygių specifikacijų standartas: Reikalavimai (REQ), SCS dizainas (DES) ir Užduotys (TSK)."
+        },
+        "project_role": {
+            "en": "Enforces 100% bidirectional traceability between user stories, container architectures, and verified unit test scripts in Dev Hub.",
+            "et": "Tagab 100% kahesuunalise jälgitavuse kasutajalugude, arhitektuuri ja automaattestide vahel Dev Hubi vaates.",
+            "fi": "Varmistaa 100% jäljitettävyyden vaatimusten, arkkitehtuurin ja automaattitestien välillä.",
+            "sv": "Garanterar 100% spårbarhet mellan användarberättelser, arkitektur och tester i Dev Hub.",
+            "lv": "Nodrošina 100% izsekojamību starp prasībām, arhitektūru un testiem Dev Hub.",
+            "lt": "Užtikrina 100% atsekamumą tarp reikalavimų, architektūros ir testų Dev Hub."
+        },
+        "links": [
+            {"label": "docs/specs/devops-portal/requirements.md", "url": "docs/specs/devops-portal/requirements.md"},
+            {"label": "docs/specs/devops-portal/design.md", "url": "docs/specs/devops-portal/design.md"},
+            {"label": "docs/specs/devops-portal/tasks.md", "url": "docs/specs/devops-portal/tasks.md"}
         ]
     },
     {

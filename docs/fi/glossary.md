@@ -24,6 +24,12 @@
 - **Virallinen viite / Wikipedia:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
 - **Liittyvät ohjeet ja skriptit:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
 
+### `ALISE` — ALISE-liiketoimintatietokanta
+- **Määritelmä:** Erillinen Oracle Free DB 23ai -tietokantaympäristö ydinliiketoimintasovelluksille, PL/SQL-koodille ja APEX/ORDS-rajapinnoille portissa 1533.
+- **Rooli tässä projektissa:** Toimii malliliiketoimintatietokantana malleissa Blueprint 1 (:1533) ja Blueprint 7/3, eristäen liiketoimintaskeemat proksikerroksesta.
+- **Virallinen viite / Wikipedia:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
+- **Liittyvät ohjeet ja skriptit:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
+
 ### `APFS` — Apple File System
 - **Määritelmä:** macOS-käyttöjärjestelmän moderni tiedostojärjestelmä SSD-levyille ja pikavedoksille.
 - **Rooli tässä projektissa:** macOS-kehitysympäristön tiedostojärjestelmä, jossa varmistetaan siirrettävyys (Sääntö 13) Windows NTFS:ään.
@@ -190,12 +196,6 @@
 - **Virallinen viite / Wikipedia:** [Wikipedia: Newline (LF)](https://en.wikipedia.org/wiki/Newline)
 - **Liittyvät ohjeet ja skriptit:** [.gitattributes](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/.gitattributes)
 
-### `LIS` — Laboratory Information System
-- **Määritelmä:** Laboratoriotietojärjestelmä näytteiden käsittelyyn, laiteintegraatioihin ja analyysituloksiin.
-- **Rooli tässä projektissa:** Käytössä Blueprint 3 -monikantamallissa (db-proxy, db-alise ja db-lis) eristäen tietokannat.
-- **Virallinen viite / Wikipedia:** [Wikipedia: LIS / LIMS](https://en.wikipedia.org/wiki/Laboratory_information_management_system)
-- **Liittyvät ohjeet ja skriptit:** [config/blueprints/.env.bp3-multi-db-lis](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.bp3-multi-db-lis), [config/profiles/databases/db-lis.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-lis.yaml)
-
 ## M
 
 ### `mTLS` — Mutual Transport Layer Security
@@ -242,7 +242,7 @@
 
 ### `PDB` — Pluggable Database
 - **Määritelmä:** Itsenäinen skeemojen ja objektien kokonaisuus, joka näkyy asiakkaille erillisenä tietokantana.
-- **Rooli tässä projektissa:** Eristää sovellusalueet: FREEPDB1 (Proxy/APEX), ALISEPDB (Liiketoimintadata), LIS_PDB jne.
+- **Rooli tässä projektissa:** Eristää sovellusalueet: FREEPDB1 (Proxy/APEX), ALISEPDB (Liiketoimintadata), PUBPDB ja BIP_PDB.
 - **Virallinen viite / Wikipedia:** [Oracle Pluggable Database (PDB)](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/multitenant-architecture.html)
 - **Liittyvät ohjeet ja skriptit:** [docs/db-profiles-and-topology.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/db-profiles-and-topology.md), [scripts/internal/resolve-topology.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/resolve-topology.sh)
 

@@ -57,6 +57,21 @@ if [ -f "$WORKSPACE_DIR/tests/unit/test-blueprint-profiles-integrity.sh" ]; then
   bash "$WORKSPACE_DIR/tests/unit/test-blueprint-profiles-integrity.sh"
 fi
 
+# 0.1b Audit database profiles and topology isolation (non-collision)
+if [ -f "$WORKSPACE_DIR/tests/unit/test-database-profiles-isolation.sh" ]; then
+  bash "$WORKSPACE_DIR/tests/unit/test-database-profiles-isolation.sh"
+fi
+
+# 0.1c Audit container naming isolation and substring collision prevention (Rule 15)
+if [ -f "$WORKSPACE_DIR/tests/unit/test-container-naming-isolation.sh" ]; then
+  bash "$WORKSPACE_DIR/tests/unit/test-container-naming-isolation.sh"
+fi
+
+# 0.1d Audit Spec-Driven Development (SDD), SCS & Assembly Line Traceability (Rules 17-19)
+if [ -f "$WORKSPACE_DIR/tests/unit/test-spec-traceability.sh" ]; then
+  bash "$WORKSPACE_DIR/tests/unit/test-spec-traceability.sh"
+fi
+
 # 0.2 Audit Oracle BI Publisher RTF template and Copilot integration
 if [ -f "$WORKSPACE_DIR/tests/unit/test-publisher-rtf-template.sh" ]; then
   bash "$WORKSPACE_DIR/tests/unit/test-publisher-rtf-template.sh"
@@ -82,7 +97,22 @@ if [ -f "$WORKSPACE_DIR/tests/unit/test-publisher-deploy-template.sh" ]; then
   bash "$WORKSPACE_DIR/tests/unit/test-publisher-deploy-template.sh"
 fi
 
-# 0.3 Audit Windows dry-run compatibility if requested
+# 0.7 Audit Publisher E2E Test & Verification Pipeline syntax and guardrails
+if [ -f "$WORKSPACE_DIR/tests/integration/test-publisher-deploy-verify-e2e.sh" ]; then
+  bash -n "$WORKSPACE_DIR/tests/integration/test-publisher-deploy-verify-e2e.sh"
+fi
+
+# 0.8 Audit Developer Hub WCAG 2.1 AA contrast and theme safety
+if [ -f "$WORKSPACE_DIR/tests/unit/test-devhub-contrast.sh" ]; then
+  bash "$WORKSPACE_DIR/tests/unit/test-devhub-contrast.sh"
+fi
+
+# 0.8.1 Audit Developer Hub Dual-Theme (Dark & Light) contracts
+if [ -f "$WORKSPACE_DIR/tests/unit/test-devhub-theme-modes.sh" ]; then
+  bash "$WORKSPACE_DIR/tests/unit/test-devhub-theme-modes.sh"
+fi
+
+# 0.9 Audit Windows dry-run compatibility if requested
 if [ "$RUN_WIN_DRYRUN" = true ] && [ -f "$SCRIPT_DIR/test-windows-dryrun.sh" ]; then
   bash "$SCRIPT_DIR/test-windows-dryrun.sh"
 fi

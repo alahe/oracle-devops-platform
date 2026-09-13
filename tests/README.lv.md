@@ -41,7 +41,13 @@ Lai palaistu testus no tīra stāvokļa (ar automātisku `reset-all.sh -y`):
 # 6. Arhitektūras rasējumu un profilu integritātes audits:
 ./tests/unit/test-blueprint-profiles-integrity.sh
 
-# 7. Krātuves statistikas un koda bāzes metrikas atskaite:
+# 7. Datubāzes profilu un topoloģijas izolācijas audits (bez sadursmēm):
+./tests/unit/test-database-profiles-isolation.sh
+
+# 8. Konteineru nosaukumu izolācijas un apakšvirkņu novēršanas audits (15. noteikums):
+./tests/unit/test-container-naming-isolation.sh
+
+# 9. Krātuves statistikas un koda bāzes metrikas atskaite:
 ./tests/report-repo-stats.sh
 ```
 
@@ -53,3 +59,4 @@ Katrs automatizētais tests pārbauda:
 1. **🌐 Tīmekļa Pakalpojumu HTTP Veselība (`scripts/check-urls.sh`):** HTTP/HTTPS atbildes (200/302).
 2. **🔑 SEPS Wallet Bezparoles Savienojumi (`scripts/check-wallet.sh`):** SQLcl pieslēgumi bez parolēm.
 3. **📊 Veiktspējas Rādītāji (1. noteikums):** Laika mērījumi tiek saglabāti `metrics/setup_benchmarks.json`.
+4. **🛡️ Konteineru Nosaukumu Izolācija (15. noteikums):** Precīza nosaukumu atbilstība novērš kļūdainas apakšvirkņu sakritības starp modeļiem.

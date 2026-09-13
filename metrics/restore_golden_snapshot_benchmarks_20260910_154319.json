@@ -1,0 +1,9 @@
+{
+  "last_updated": "2026-09-10T12:45:43Z",
+  "started_at": "2026-09-10 15:43:22",
+  "finished_at": "2026-09-10 15:45:43",
+  "restore_duration_seconds": 141,
+  "snapshot_file": "bp_5_latest.tar.gz",
+  "blueprint_id": "5",
+  "profile_name": "db-publisher-oracle"
+}

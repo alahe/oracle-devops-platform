@@ -144,7 +144,7 @@ Platvorm kasutab **Oracle SEPS (Secure External Password Store)** auto-login wal
 ## 🔄 Mitme Andmebaasivirna Halidus
 
 Platvorm toetab **1, 2 või 3 andmebaasivirna samaaegset tööd**:
-- Teise virna lisamine (nt Blueprint 3 LIS Database või Blueprint 4 Publisher) **ei võta olemasolevaid andmebaase maha**.
+- Teise virna lisamine (nt Blueprint 3 ALISE Database või Blueprint 4 Publisher) **ei võta olemasolevaid andmebaase maha**.
 - Süsteem kontrollib enne käivitamist vaba RAM-i, tagades masina stabiilsuse.
 
 ---

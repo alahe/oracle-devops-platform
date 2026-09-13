@@ -165,9 +165,9 @@ When running multiple database instances (e.g. 3 x `proxy-adb-oracle`), `config/
 
 ---
 
-## 🏆 LIS Primary Enterprise 4-Tier Profile Combination
+## 🏆 ALISE Primary Enterprise 4-Tier Profile Combination
 
-For the primary enterprise LIS application architecture, `.env` configures 3 distinct profiles:
+For the primary enterprise ALISE application architecture, `.env` configures 3 distinct profiles:
 
 ```bash
 # 1. Publisher Metadata DB (db-publisher - Port 1531)
@@ -176,7 +176,7 @@ DB_PUBLISHER=publisher-free
 # 2. APEX Proxy & Outbound REST DB (db-proxy - Port 1532)
 DB_PROXY=proxy-gvenzl
 
-# 3. LIS Business App DB (db-alise - Port 1533)
+# 3. ALISE Business App DB (db-alise - Port 1533)
 DB_ALISE=app-free
 ```
 
@@ -187,7 +187,7 @@ Tsentraalne ORDS teenus (`app_ords`) kasuta andmebaaside ühendamiseks ORDS mult
 | URL Marsruut (Prefix) | ORDS Pooli Nimi | Sihtbaas & Port | Suunamise Eesmärk |
 | :--- | :--- | :--- | :--- |
 | `https://localhost:8448/ords/proxy/` | `default.xml` / `proxy.xml` | `db-proxy:1521/FREEPDB1` | 🛡️ APEX Proxy, Outbound REST ja Azure Entra-ID OIDC SSO |
-| `https://localhost:8448/ords/lis/` | `lis.xml` | `db-alise:1521/FREEPDB1` | 🧪 LIS Ärirakendus & PL/SQL loogika (Restricted DB Zone) |
+| `https://localhost:8448/ords/alise/` | `alise.xml` | `db-alise:1521/FREEPDB1` | 🧪 ALISE Ärirakendus & PL/SQL loogika (Restricted DB Zone) |
 | `https://localhost:8448/ords/pub/` | `pub.xml` | `db-publisher:1521/FREEPDB1` | 🗄️ Analytics Publisher RCU metaandmete hoidla |
 
 ---
@@ -211,17 +211,17 @@ sequenceDiagram
     autonumber
     participant ExtREST as "Valine REST API"
     participant ProxyDB as "Proxy DB (db-proxy)"
-    participant LisORDS as "LIS ORDS Inbound Endpoint"
-    participant LisDB as "LIS DB (db-alise)"
-    participant LisAPEX as "LIS APEX App (db-alise)"
+    participant LisORDS as "ALISE ORDS Inbound Endpoint"
+    participant LisDB as "ALISE DB (db-alise)"
+    participant LisAPEX as "ALISE APEX App (db-alise)"
 
     ProxyDB->>ExtREST: Proxy DB teeb valjuva HTTPS paringu valisele API-le
     ExtREST-->>ProxyDB: Tagastab JSON vastuse
-    ProxyDB->>LisORDS: Proxy DB algatab sissetuleva paringu LIS sise-ORDSi
-    LisORDS->>LisDB: Salvestab vastuvoetud andmed LIS kohalikku puhvertabelisse
+    ProxyDB->>LisORDS: Proxy DB algatab sissetuleva paringu ALISE sise-ORDSi
+    LisORDS->>LisDB: Salvestab vastuvoetud andmed ALISE kohalikku puhvertabelisse
     LisDB-->>LisORDS: Kinnitus HTTP 200 OK
     LisORDS-->>ProxyDB: Sunkroniseerimine lopetatud
-    LisAPEX->>LisDB: LIS APEX rakendus luges kohalikust tabelist andmed
+    LisAPEX->>LisDB: ALISE APEX rakendus luges kohalikust tabelist andmed
 ```
 
 ---

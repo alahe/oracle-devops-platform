@@ -186,9 +186,12 @@ print_sub_header() {
 copy_patch_images_to_volume() {
   if [ "$EXEC_MODE" = "CONTAINER" ]; then
     podman exec -u root "$CONTAINER_NAME" chown -R oracle:oinstall /opt/oracle/apex_images || true
-    if podman exec "$CONTAINER_NAME" [ -d "$PATCH_DIR/images" ] 2>/dev/null; then
+    if podman exec "$CONTAINER_NAME" test -d "$PATCH_DIR/images" 2>/dev/null; then
       echo "Copying APEX patch (${TARGET_PATCH_VER:-updated}) static resources to volume (/opt/oracle/apex_images/images/)..."
       podman exec "$CONTAINER_NAME" cp -R "$PATCH_DIR/images/." "/opt/oracle/apex_images/images/"
+      if [ -n "$TARGET_PATCH_VER" ]; then
+        podman exec -u root "$CONTAINER_NAME" bash -c "echo '$TARGET_PATCH_VER' > /opt/oracle/apex_images/images/apex_version.txt" 2>/dev/null || true
+      fi
       echo "Static resources (${TARGET_PATCH_VER:-updated}) updated successfully."
     fi
     echo "Cleaning temporary files from container..."
@@ -198,6 +201,15 @@ copy_patch_images_to_volume() {
       echo "Copying updated static assets to ./apex/images/..."
       cp -R "$PATCH_DIR/images/." "./apex/images/"
       echo "Static resources updated successfully in ./apex/images."
+      if podman container exists "$CONTAINER_NAME" 2>/dev/null; then
+        echo "Copying static assets directly to container volume (/opt/oracle/apex_images/images/)..."
+        podman exec -u root "$CONTAINER_NAME" mkdir -p /opt/oracle/apex_images/images 2>/dev/null || true
+        podman cp "$PATCH_DIR/images/." "$CONTAINER_NAME":/opt/oracle/apex_images/images/
+        if [ -n "$TARGET_PATCH_VER" ]; then
+          podman exec -u root "$CONTAINER_NAME" bash -c "echo '$TARGET_PATCH_VER' > /opt/oracle/apex_images/images/apex_version.txt" 2>/dev/null || true
+        fi
+        podman exec -u root "$CONTAINER_NAME" chown -R oracle:oinstall /opt/oracle/apex_images 2>/dev/null || true
+      fi
     fi
   fi
 }
@@ -240,7 +252,8 @@ if [ "$IS_CONTAINER_AVAIL" = "true" ]; then
   echo -e "⏱  [Patch step 1 completed (unpacking in container): ${YELLOW}$PSTEP1_TIME${NC}]"
   
   PSTEP2_START=$(date +%s)
-  in_sql=$(podman exec "$CONTAINER_NAME" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+  # Rule 6 Exemption: Official Oracle APEX core patch engine (catpatch.sql) requires native C-binary sqlplus for JVM memory bounds & raw execution speed
+  in_sql=$(podman exec "$CONTAINER_NAME" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/bin/sqlplus 2>/dev/null | head -n 1' 2>/dev/null || echo "")
   DB_CLI="podman exec -i -u oracle -w $PATCH_DIR $CONTAINER_NAME ${in_sql:-sqlplus} -s / as sysdba"
   PSTEP2_TIME=$(format_duration $(($(date +%s) - PSTEP2_START)))
   echo -e "⏱  [Patch step 2 completed (container setup): ${YELLOW}$PSTEP2_TIME${NC}]"
@@ -296,8 +309,8 @@ fi
 
 DB_APEX_INFO=""
 if [ "$EXEC_MODE" = "CONTAINER" ]; then
-  in_sql=$(podman exec "$CONTAINER_NAME" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
-  DB_APEX_INFO=$(podman exec -i -u oracle "$CONTAINER_NAME" ${in_sql:-sql} -s / as sysdba <<EOF 2>/dev/null | grep -v -E "Connected to|Oracle Database|version" || echo ""
+  in_sql=$(podman exec "$CONTAINER_NAME" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/bin/sqlplus 2>/dev/null | head -n 1' 2>/dev/null || echo "")
+  DB_APEX_INFO=$(podman exec -i -u oracle "$CONTAINER_NAME" ${in_sql:-sqlplus} -s / as sysdba <<EOF 2>/dev/null | grep -v -E "Connected to|Oracle Database|version" || echo ""
 ALTER SESSION SET CONTAINER = ${DB_SERVICE};
 SET FEEDBACK OFF
 SET HEADING OFF
@@ -420,9 +433,9 @@ PSTEP4_TIME=$(format_duration $(($(date +%s) - PSTEP4_START)))
 # ----------------------------------------------------------------------------
 PSTEP5_START=$(date +%s)
   print_sub_header "4" "Restarting ORDS service to apply updated static assets..." "" "" "2s"
-ords_found=$(podman ps --format '{{.Names}}' | grep -E '^oracle-ords-dev|^ords-|^oracle-ords-' | head -n 1 || echo "oracle-ords-dev")
+ords_found=$(podman ps --format '{{.Names}}' 2>/dev/null | grep -E '^app-ords|^oracle-ords-dev|^ords-|^oracle-ords-' | head -n 1 || echo "app-ords")
 ORDS_CONTAINER="${PROFILE_ORDS_CONTAINER_NAME:-$ords_found}"
-if [ "$SKIP_ORDS" = "false" ] && podman container exists "$ORDS_CONTAINER" 2>/dev/null; then
+if podman container exists "$ORDS_CONTAINER" 2>/dev/null; then
   podman restart "$ORDS_CONTAINER" || true
 fi
 PSTEP5_TIME=$(format_duration $(($(date +%s) - PSTEP5_START)))

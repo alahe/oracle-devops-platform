@@ -34,7 +34,7 @@ if [ -z "$SYS_PWD" ]; then
 fi
 
 # Synchronize SYS password in database
-if podman ps --format "{{.Names}}" 2>/dev/null | grep -q "$PRIMARY_CONTAINER"; then
+if podman ps --format "{{.Names}}" 2>/dev/null | grep -q -E "^${PRIMARY_CONTAINER}$"; then
   in_sql=$(podman exec "$PRIMARY_CONTAINER" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
   if [ -n "$in_sql" ]; then
     podman exec -i "$PRIMARY_CONTAINER" "$in_sql" -s / as sysdba << SYSSYNC >/dev/null 2>&1 || true
@@ -100,7 +100,7 @@ EOF
 TARGET_PUB_CONTAINER=$(get_active_db_instances 2>/dev/null | grep -i "publisher" | head -n 1 | cut -d'|' -f1)
 TARGET_PUB_CONTAINER="${TARGET_PUB_CONTAINER:-main-db-profile}"
 
-if podman ps --format "{{.Names}}" 2>/dev/null | grep -q "$TARGET_PUB_CONTAINER"; then
+if podman ps --format "{{.Names}}" 2>/dev/null | grep -q -E "^${TARGET_PUB_CONTAINER}$"; then
   in_sql=$(podman exec "$TARGET_PUB_CONTAINER" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
   if [ -n "$in_sql" ]; then
     echo "$SQL_STATEMENT" | podman exec -i "$TARGET_PUB_CONTAINER" "$in_sql" -s / as sysdba || true

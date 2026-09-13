@@ -164,8 +164,8 @@ for alias in "${ALIASES[@]}"; do
     TARGET_CONTAINER=$(podman ps --format "{{.Names}}\t{{.Ports}}" 2>/dev/null | grep ":${ALIAS_PORT}->" | awk '{print $1}' | head -n 1 || echo "")
   fi
   if [ -z "$TARGET_CONTAINER" ]; then
-    if [[ "$alias" == *"LIS"* ]]; then
-      TARGET_CONTAINER="db-lis"
+    if [[ "$alias" == *"ALISE"* ]] || [[ "$alias" == *"LIS"* ]]; then
+      TARGET_CONTAINER="db-alise"
     elif [[ "$alias" == *"PROXY"* ]] || [[ "$alias" == *"APEX_PROXY"* ]] || [[ "$alias" == *"TEST"* ]] || [[ "$alias" == *"DBA_ADMIN"* ]]; then
       TARGET_CONTAINER="db-proxy"
     elif [[ "$alias" == *"PUBLISHER"* ]] || [[ "$alias" == *"INFRA"* ]]; then

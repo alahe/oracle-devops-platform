@@ -33,6 +33,8 @@ case "$APP_LANG" in
     DESC_INSPECTOR="Browse XML fields and insert Oracle XDO tags into LibreOffice"
     TITLE_RENDER="⚡ Fast-Render Invoice PDF"
     DESC_RENDER="Compile arve_test_standard.rtf sample into PDF"
+    TITLE_DEPLOY="🚀 Deploy & Test on Publisher"
+    DESC_DEPLOY="Upload RTF template to Publisher server and verify test rendering"
     TITLE_WORD="Microsoft Word (Oracle BI Publisher)"
     DESC_WORD="Design Pixel-Perfect RTF templates in Microsoft Word with Publisher Add-in"
     TITLE_INSTALL="⚡ Install Word & Publisher Designer"
@@ -51,6 +53,8 @@ case "$APP_LANG" in
     DESC_INSPECTOR="Selaa XML-kenttiä ja lisää Oracle XDO -tunnisteita LibreOfficeen"
     TITLE_RENDER="⚡ Pika-Renderöi Lasku PDF"
     DESC_RENDER="Käännä arve_test_standard.rtf näyte-PDF-tiedostoksi"
+    TITLE_DEPLOY="🚀 Asenna ja Testaa Palvelimella"
+    DESC_DEPLOY="Lataa RTF-malli Publisher-palvelimelle ja tarkista tuloste"
     TITLE_WORD="Microsoft Word (Oracle BI Publisher)"
     DESC_WORD="Suunnittele Pixel-Perfect RTF -malleja Microsoft Wordissa Publisher-lisäosalla"
     TITLE_INSTALL="⚡ Asenna Word & Publisher Designer"
@@ -69,6 +73,8 @@ case "$APP_LANG" in
     DESC_INSPECTOR="Bläddra bland XML-fält och infoga Oracle XDO-taggar i LibreOffice"
     TITLE_RENDER="⚡ Snabb-rendera Faktura PDF"
     DESC_RENDER="Kompilera arve_test_standard.rtf till exempel-PDF"
+    TITLE_DEPLOY="🚀 Distribuera & Testa på Servern"
+    DESC_DEPLOY="Ladda upp RTF-mallen till Publisher-servern och verifiera"
     TITLE_WORD="Microsoft Word (Oracle BI Publisher)"
     DESC_WORD="Designa Pixel-Perfect RTF-mallar i Microsoft Word med Publisher-tillägg"
     TITLE_INSTALL="⚡ Installera Word & Publisher Designer"
@@ -87,6 +93,8 @@ case "$APP_LANG" in
     DESC_INSPECTOR="Pārlūkot XML laukus un ievietot Oracle XDO tagus LibreOffice"
     TITLE_RENDER="⚡ Ātrā Rēķina PDF Renderēšana"
     DESC_RENDER="Kompilēt arve_test_standard.rtf par parauga PDF failu"
+    TITLE_DEPLOY="🚀 Izvietot un Testēt Serverī"
+    DESC_DEPLOY="Augšupielādēt RTF veidni Publisher serverī un pārbaudīt"
     TITLE_WORD="Microsoft Word (Oracle BI Publisher)"
     DESC_WORD="Noformēt Pixel-Perfect RTF veidnes programmā Microsoft Word ar Publisher spraudni"
     TITLE_INSTALL="⚡ Instalēt Word un Publisher Designer"
@@ -105,6 +113,8 @@ case "$APP_LANG" in
     DESC_INSPECTOR="Naršyti XML laukus ir įterpti Oracle XDO žymas į LibreOffice"
     TITLE_RENDER="⚡ Greitas Sąskaitos PDF Generavimas"
     DESC_RENDER="Kompiliuoti arve_test_standard.rtf į pavyzdinį PDF failą"
+    TITLE_DEPLOY="🚀 Įdiegti ir Testuoti Serveryje"
+    DESC_DEPLOY="Įkelti RTF šabloną į Publisher serverį ir patikrinti"
     TITLE_WORD="Microsoft Word (Oracle BI Publisher)"
     DESC_WORD="Kurti Pixel-Perfect RTF šablonus programoje Microsoft Word su Publisher priedu"
     TITLE_INSTALL="⚡ Įdiegti Word ir Publisher Designer"
@@ -124,6 +134,8 @@ case "$APP_LANG" in
     DESC_INSPECTOR="Sirvi XML välju ja lisa Oracle XDO tage LibreOffice'isse"
     TITLE_RENDER="⚡ Kiir-Renderda Arve PDF"
     DESC_RENDER="Kompileeri arve_test_standard.rtf näidis PDF-iks"
+    TITLE_DEPLOY="🚀 Paigalda ja Testi Serveris"
+    DESC_DEPLOY="Laadi RTF mall Publisheri serverisse ja kontrolli renderdust"
     TITLE_WORD="Microsoft Word (Oracle BI Publisher)"
     DESC_WORD="Kujunda Pixel-Perfect RTF malle Microsoft Wordis koos Publisher lisandmooduliga"
     TITLE_INSTALL="⚡ Paigalda Word & Publisher Designer"
@@ -192,6 +204,18 @@ Terminal=true
 Categories=Development;
 EOF
 
+cat << EOF > "$DIR_STUDIO/Deploy-To-Publisher.desktop"
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=$TITLE_DEPLOY
+Comment=$DESC_DEPLOY
+Exec=/bin/bash -c 'echo "🚀 Paigaldan malli Publisheri serverisse..."; if [ -f /workspace/scripts/publisher/deploy-template.sh ]; then /workspace/scripts/publisher/deploy-template.sh Custom/Invoices/Invoice_Report --render; else echo "⚡ Käivitan serveritesti..."; /u01/oracle/bin/render-template.sh /u01/templates/samples/arve_test_standard.rtf /u01/templates/samples/arve_test_andmed.xml /u01/templates/samples/valmis_arve.pdf --locale $APP_LANG; fi; echo ""; echo "Vajuta Enter sulgemiseks..."; read -r'
+Icon=system-software-install
+Terminal=true
+Categories=Development;
+EOF
+
 # B. Group 2: MS Word & Wine (Optional)
 cat << EOF > "$DIR_WORD/Oracle-Template-Builder.desktop"
 [Desktop Entry]
@@ -238,6 +262,7 @@ EOF
 # C. Quick 1-click Studio Launchers directly on Desktop Root
 cp "$DIR_STUDIO/Oracle-Publisher-Studio.desktop" /u01/oracle/Desktop/
 cp "$DIR_STUDIO/Arrange-Studio-Windows.desktop" /u01/oracle/Desktop/
+cp "$DIR_STUDIO/Deploy-To-Publisher.desktop" /u01/oracle/Desktop/
 
 chmod +x /u01/oracle/Desktop/*.desktop "$DIR_STUDIO"/*.desktop "$DIR_WORD"/*.desktop 2>/dev/null || true
 
@@ -358,6 +383,20 @@ sleep 2
 # 7. Start websockify noVNC HTTP Gateway
 echo "🌐 Starting noVNC WebSocket Gateway on port 6080..."
 echo "   Access URL: http://localhost:6083/vnc.html"
+if [ ! -f /usr/share/novnc/index.html ]; then
+  cat << 'HTMLEOF' > /usr/share/novnc/index.html 2>/dev/null || true
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="refresh" content="0; url=vnc.html?autoconnect=true&resize=remote">
+  <title>Oracle Publisher Designer</title>
+</head>
+<body>
+  <p>Connecting to Oracle Publisher Designer... <a href="vnc.html?autoconnect=true&resize=remote">Click here</a></p>
+</body>
+</html>
+HTMLEOF
+fi
 websockify --web /usr/share/novnc/ 6080 localhost:5900 &
 
 # 8. Check if Office installer is waiting in /u01/binaries and Word is not installed yet

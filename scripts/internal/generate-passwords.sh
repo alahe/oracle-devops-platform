@@ -95,6 +95,11 @@ generate_all_passwords() {
       create_podman_secret "${c_short}_app_password" "$app_pwd"
       create_podman_secret "${c_short}_schema_password" "$sch_pwd"
 
+      if [ "$c_short" = "publisher" ]; then
+        create_podman_secret "publisher_developer_password" "$dev_pwd"
+        create_podman_secret "publisher_user_password" "$app_pwd"
+      fi
+
       if [ "$is_first" = "true" ]; then
         primary_dev_pwd="$dev_pwd"
         primary_viewer_pwd="$viewer_pwd"
@@ -109,6 +114,8 @@ generate_all_passwords() {
   create_podman_secret "apex_admin_password" "$(gen_random_password)"
   create_podman_secret "ords_listener_password" "$(gen_random_password)"
   create_podman_secret "publisher_admin_password" "$(gen_random_password)"
+  create_podman_secret "publisher_developer_password" "${primary_dev_pwd:-$(gen_random_password)}"
+  create_podman_secret "publisher_user_password" "${primary_app_pwd:-$(gen_random_password)}"
   create_podman_secret "forms_admin_password" "$(gen_random_password)"
 
   # 3. Backward-compatibility shared aliases matching primary database

@@ -80,7 +80,7 @@ if [ -n "$TARGET_DB" ]; then
     CONTAINER_NAME="db-$raw_target"
   fi
 else
-  c_found=$(get_active_db_instances 2>/dev/null | grep -v "publisher" | head -n 1 | cut -d'|' -f1 || echo "")
+  c_found=$(get_active_db_instances 2>/dev/null | grep -E -v '^db-publisher\|' | head -n 1 | cut -d'|' -f1 || echo "")
   CONTAINER_NAME="${c_found:-db-proxy}"
 fi
 
@@ -1002,7 +1002,7 @@ echo -e "⏱  [$(msg_str "STEP_4_APEX_ENGINE_DONE" "$STEP4_TIME")]"
 # ----------------------------------------------------------------------------
 ORDS_CONF_START=$(date +%s)
 
-ords_found=$(podman ps --format '{{.Names}}' | grep -E '^app-ords|^oracle-ords-dev|^ords-|^oracle-ords-' | head -n 1 || echo "app-ords")
+ords_found=$(podman ps --format '{{.Names}}' | grep -E '^app-ords$|^oracle-ords-dev$|^ords-.*$|^oracle-ords-.*$' | head -n 1 || echo "app-ords")
 ORDS_CONTAINER="${PROFILE_ORDS_CONTAINER_NAME:-$ords_found}"
 ORDS_CONF_LOG="$LOG_DIR/ords_configure_${DB_SUFFIX}_${TIMESTAMP}.log"
 

@@ -173,6 +173,15 @@ for path in md_files:
                     print(f"❌ {path} Block {b_idx} L{l_num}: Subgraph-to-subgraph arrow detected: {sl}", file=sys.stderr)
                     errs += 1
 
+            # Sequence diagram message quote validation (prevents Mermaid parser crash)
+            if 'sequenceDiagram' in block and any(arrow in sl for arrow in ['->>', '-->>', '->', '-->']):
+                parts = re.split(r'--?>>?', sl, maxsplit=1)
+                if len(parts) == 2 and ':' in parts[1]:
+                    msg = parts[1].split(':', 1)[1].strip()
+                    if '"' in msg:
+                        print(f"❌ {path} Block {b_idx} L{l_num}: Sequence diagram message contains unescaped double quotes: '{msg}' (must use single quotes or remove quotes)", file=sys.stderr)
+                        errs += 1
+
             # Multi-line Decision Diamond Line Length Check (Rule 10 & mermaid_diagram_design skill)
             for m in re.finditer(r'(\b\w+)\s*\{[\"\'\s]*([^}\"\'\n]+)[\"\'\s]*\}', sl):
                 nid, text = m.group(1), m.group(2)
@@ -242,6 +251,61 @@ if errs > 0:
     sys.exit(1)
 
 print("     ✅ DOM tag balance and Markdown Mermaid syntax 100% verified.")
+PY_EOF
+
+# 8. Check all 12 Blueprint dynamic topology Mermaid diagrams across all 6 languages
+echo "  [8/8] Validating all 12 Blueprint Mermaid topology diagrams (72 combinations)..."
+WORKSPACE_DIR="$WORKSPACE_DIR" python3 << 'PY_EOF'
+import sys, os, glob, re
+ws = os.environ["WORKSPACE_DIR"]
+sys.path.insert(0, os.path.join(ws, "scripts/internal"))
+from dev_hub.parser import parse_blueprint_env_and_metadata
+
+bp_files = sorted(glob.glob(os.path.join(ws, "config/blueprints/.env.*")))
+languages = ["en", "et", "fi", "sv", "lv", "lt"]
+errs = 0
+total_checked = 0
+
+for bf in bp_files:
+    m = re.search(r"\.env\.(\d+)", os.path.basename(bf))
+    if not m:
+        continue
+    b_num = int(m.group(1))
+    data = parse_blueprint_env_and_metadata(bf, b_num)
+    diagrams = data.get("diagrams", {})
+
+    for lang in languages:
+        total_checked += 1
+        d = diagrams.get(lang)
+        if not d:
+            print(f"❌ BP {b_num} missing diagram for lang '{lang}'", file=sys.stderr)
+            errs += 1
+            continue
+
+        lines = d.strip().splitlines()
+        if not lines[0].startswith("flowchart") and not lines[0].startswith("graph"):
+            print(f"❌ BP {b_num} [{lang}] diagram must start with flowchart/graph: {lines[0]}", file=sys.stderr)
+            errs += 1
+
+        for idx, line in enumerate(lines, 1):
+            sl = line.strip()
+            # Node line count check (Rule 10: max 4 lines per box)
+            for m_box in re.finditer(r'\[\"([^\"]+)\"\]', sl):
+                text = m_box.group(1)
+                segs = re.split(r'<br\s*/?>', text, flags=re.IGNORECASE)
+                if len(segs) > 4:
+                    print(f"❌ BP {b_num} [{lang}] L{idx}: Node has {len(segs)} lines (exceeds max 4): '{text}'", file=sys.stderr)
+                    errs += 1
+                for s in segs:
+                    if len(s.strip()) > 45:
+                        print(f"❌ BP {b_num} [{lang}] L{idx}: Node line exceeds 45 chars ({len(s.strip())}): '{s}'", file=sys.stderr)
+                        errs += 1
+
+if errs > 0:
+    print(f"❌ Total Blueprint Mermaid errors: {errs}", file=sys.stderr)
+    sys.exit(1)
+
+print(f"     ✅ All {total_checked} Blueprint topology diagrams (12 BPs x 6 languages) validated successfully.")
 PY_EOF
 
 echo "✅ All Dev-Hub Mermaid diagram rendering validations passed successfully!"

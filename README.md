@@ -162,6 +162,7 @@ The **Dev Hub** acts as the unified cockpit for managing services and blueprints
 - **1-Click Password Copying:** Decrypts passwords dynamically in-memory from Oracle Wallet straight to clipboard.
 - **ORDS Smart Gateway Strip:** Real-time visibility into central ORDS container health, dynamic connection pools, live probe latency (ms), and 1-click pool synchronization.
 - **Automated Testing Center & Quality Gate (🧪 Testimine):** Interactive test suite runner (Unit, Integration, Live Platform, i18n Parity, Filename Portability), embedded live streaming terminal console (no blocking modals), Markdown test reports split-pane viewer, script code coverage explorer, and persistent test execution history. See [docs/testing-framework-and-devhub.md](docs/testing-framework-and-devhub.md).
+- **GitHub Copilot AI Assistant & Smart RAG (⌘J / Ctrl+J):** Embedded slide-out AI assistant with Zero-Trust secret redaction (Rule 5), 3-tier offline fallback, smart platform RAG context, and 1-click bridge to VS Code Copilot Chat. See [docs/devhub-copilot-assistant.md](docs/devhub-copilot-assistant.md).
 
 ---
 
@@ -206,6 +207,31 @@ sql /@DB_ALISE_DEV
 
 ---
 
+## 🏭 Spec-Driven Development (SDD), SCS & Agentic Assembly Line
+
+To transition from exploratory *vibe coding* to **deterministic, enterprise-grade viable code**, the platform operates on a unified engineering standard synthesized from three software architecture leaders:
+
+1. **Julian Wood (AWS) — Spec-Driven Development (SDD):**
+   - Specifications precede code: every domain boundary maintains a canonical triad in `docs/specs/<domain>/` (`requirements.md`, `design.md`, `tasks.md`).
+   - **Pre-Implementation Contradiction Analysis (Rule 17):** Conflicting flags (e.g. `-s` snapshot restore vs `--fresh` rebuild) are resolved before any code is generated.
+   - Requirements map 1-to-1 to atomic implementation tasks via a strict **Traceability Matrix**.
+2. **Simon Martinelli — Self-Contained Systems (SCS) & AI Context Economics:**
+   - **David Parnas (1972) Modularization:** Rejection of microservices fragmentation; domain boundaries are vertical Self-Contained Systems (UI + Logic + Data).
+   - **Oracle Pluggable Databases (PDBs) as the Ultimate SCS:** PDBs provide complete data sovereignty, isolated tablespaces, and independent credentials within a resource-efficient container footprint.
+   - **Context Window Budgeting:** Specifications are scoped to <300–500 lines per file so an AI model can ingest the complete vertical slice in a single prompt window.
+3. **Thomas Dohmke (Entire.io / ex-GitHub CEO) — The Agentic Assembly Line:**
+   - **Intent-Driven Engineering:** Developers guide architectural intent; AI agents execute tasks through autonomous **Ralph Loops** (test-patch-verify until exit code 0).
+   - **Institutional Memory in Git (`.agents/trails/`):** Agent session logs, design trade-offs, and self-corrections are version-controlled in Git, eliminating lost context across AI conversations.
+   - **5 Quality Evaluation Gates:** Every change must satisfy Security (Rule 5 Zero-Trust), Functional Correctness (Rule 17), 6-Language Multilingual Symmetry (Rule 9), Cross-Platform Portability (Rule 13), and Performance SLAs (Rule 1).
+
+Run the automated specification and assembly line audit anytime:
+```bash
+./tests/unit/test-spec-traceability.sh
+```
+See the complete [Spec-Driven Development & Assembly Line Architecture Guide](docs/spec-driven-development-and-assembly-line.md).
+
+---
+
 ## 🎯 3-Stakeholder Perspectives & Value Delivery
 
 | Stakeholder | Key Benefits & Daily Experience | Technical Enabler |
@@ -247,26 +273,30 @@ Oracle Free DB in Prod incorporates an **intelligent multi-tier Golden Snapshot 
 ./scripts/check-urls.sh
 ./scripts/check-wallet.sh
 
-# 4. Run automated end-to-end browser & UI login test:
+# 4. Hard-refresh Dev Hub in Google Chrome without cache & verify version:
+./scripts/refresh-devhub.sh                        # Hard-refresh Chrome tab & verify version match
+./scripts/refresh-devhub.sh --compile              # Force recompile & hard-refresh Chrome
+
+# 5. Run automated end-to-end browser & UI login test:
 ./scripts/test-browser-login.sh
 
-# 5. Run multi-language (i18n) verification suite (Rule 9: EN, ET, FI, SV, LV, LT):
+# 6. Run multi-language (i18n) verification suite (Rule 9: EN, ET, FI, SV, LV, LT):
 ./tests/test-multilingual-support.sh
 
-# 6. Golden Snapshot lifecycle (Rapid restore ~15s vs full rebuild):
+# 7. Golden Snapshot lifecycle (Rapid restore ~15s vs full rebuild):
 ./scripts/snapshots/create-golden-snapshots.sh                    # Standard baseline snapshot
 ./scripts/snapshots/restore-golden-snapshots.sh --force           # Rapid restore (~15–45s)
 ./scripts/reset-all.sh -y && ./scripts/setup-all.sh -y            # Deep clean & cold rebuild
 
-# 7. Clean logs (filter by age) and old snapshots:
+# 8. Clean logs (filter by age) and old snapshots:
 ./scripts/clean-logs.sh --older-than-hours=20 -y                  # Clean logs older than 20h
 ./scripts/clean-logs.sh -y                                        # Clean all logs
 ./scripts/snapshots/clean-golden-snapshots.sh -y
 
-# 8. Audit cross-platform filename and path portability (Rule 13):
+# 9. Audit cross-platform filename and path portability (Rule 13):
 ./tests/unit/test-filename-portability.sh
 
-# 9. Pre-commit & pre-push security & quality guard (Rule 5, 13, 14 & GDPR):
+# 10. Pre-commit & pre-push security & quality guard (Rule 5, 13, 14 & GDPR):
 ./scripts/check-pre-commit.sh --staged                     # Check only staged files (~1s)
 ./scripts/check-pre-commit.sh --full                       # Full repository audit (~5s)
 ./scripts/check-pre-commit.sh --install-hook               # One-click Git hooks configuration
@@ -287,6 +317,7 @@ Oracle Free DB in Prod incorporates an **intelligent multi-tier Golden Snapshot 
 
 ## 📑 Dedicated User Guides
 
+- 📋 **[docs/spec-driven-development-and-assembly-line.md](docs/spec-driven-development-and-assembly-line.md) | [docs/et/spec-driven-development-and-assembly-line.md](docs/et/spec-driven-development-and-assembly-line.md):** **Spec-Driven Development (SDD), SCS & Agentic Assembly Line** — Tripartite engineering standard (Julian Wood, Simon Martinelli, Thomas Dohmke), spec triads in `docs/specs/`, Ralph Loops, Git session trails (`.agents/trails/`), and 5 Quality Evaluation Gates.
 - 🏛️ **[docs/enterprise-distributed-architecture.md](docs/enterprise-distributed-architecture.md):** **Enterprise Distributed Multi-Host Architecture** — 4-tier enterprise architecture (ORDS, Publisher, Proxy DB, Publisher DB), existing core mission-critical Business DB integration, and PROD Active/Standby disaster recovery (RTO < 60s, RPO < 15m).
 - 🛡️ **[docs/security-audit-report.md](docs/security-audit-report.md) | [docs/et/security-audit-report.md](docs/et/security-audit-report.md):** **Enterprise Security Audit & Hardening Report** — Automated 7-tier security scanner (`test-security-audit.sh`), OWASP Top 10, CIS Benchmark compliance, and DORA resilience posture.
 - 🛡️ **[docs/security.md](docs/security.md) | [docs/et/security.md](docs/et/security.md):** **Security & SSO Architecture Guide** — Zero-Trust credential storage, Azure Entra-ID SSO, 5-tier TLS architecture, and least-privilege roles.

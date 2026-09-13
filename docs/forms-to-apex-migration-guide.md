@@ -287,7 +287,15 @@ Oracle APEX cannot parse proprietary binary `.fmb` files directly. Convert binar
 find forms_apps -name "*.fmb" -exec ./scripts/forms/form-to-xml.sh {} \;
 ```
 
-This generates `orders.xml`, detailing every block, item, trigger, alert, and canvas coordinate.
+This generates `orders_fmb.xml` (or `orders.xml`), detailing every block, item, trigger, alert, and canvas coordinate.
+
+> [!TIP]
+> **2-Pass Roundtrip Integrity Verification (`test-fmb-xml-roundtrip.sh`):**
+> Before committing to Git or migrating to APEX, verify that bidirectional conversion maintains 100% semantic integrity:
+> ```bash
+> ./scripts/forms/test-fmb-xml-roundtrip.sh forms_apps/orders.fmb
+> ```
+> This executes `FMB -> XML(1) -> temp.fmb -> XML(2)` and uses `scripts/internal/compare_forms_xml.py` to assert that all blocks, items, and triggers match identically while filtering volatile timestamp metadata (`DateSaved`).
 
 ---
 

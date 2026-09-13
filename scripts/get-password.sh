@@ -187,10 +187,12 @@ case "$ALIAS_UPPER" in
   "PUBLISHER_DEVELOPER"|"BIP_DEVELOPER")
     USER_VAL="bip_developer"
     PWD_VAL=$(podman secret inspect --showsecret publisher_developer_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+    [ -z "$PWD_VAL" ] && PWD_VAL=$(podman secret inspect --showsecret publisher_dev_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
     ;;
   "PUBLISHER_USER"|"BIP_USER")
     USER_VAL="bip_user"
     PWD_VAL=$(podman secret inspect --showsecret publisher_user_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
+    [ -z "$PWD_VAL" ] && PWD_VAL=$(podman secret inspect --showsecret publisher_app_password 2>/dev/null | grep '"SecretData"' | cut -d'"' -f4 | tr -d '\r\n' || true)
     ;;
   "PUBLISHER_ADMIN"|"BIP_ADMIN")
     USER_VAL="bip_admin"

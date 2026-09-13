@@ -1,0 +1,130 @@
+{
+  "system_safety_reserve_gb": 2.0,
+  "description": "Blueprint memory benchmarks: expected range, measured startup RAM, and runtime RAM",
+  "last_updated": "2026-09-14T00:44:09.503647",
+  "blueprints": {
+    "0": {
+      "name": "default-proxy-ords",
+      "containers": [
+        "db-proxy",
+        "app-ords"
+      ],
+      "expected_ram_range_gb": "2-3 GB",
+      "startup_ram_mb": 1550,
+      "runtime_ram_mb": 1476,
+      "last_measured": "2026-09-14T00:44:09.503627"
+    },
+    "1": {
+      "name": "standalone-alise",
+      "containers": [
+        "db-alise"
+      ],
+      "expected_ram_range_gb": "2-3 GB",
+      "startup_ram_mb": 1400,
+      "runtime_ram_mb": 1600,
+      "last_measured": null
+    },
+    "2": {
+      "name": "standalone-proxy-sso",
+      "containers": [
+        "db-proxy"
+      ],
+      "expected_ram_range_gb": "2-3 GB",
+      "startup_ram_mb": 1400,
+      "runtime_ram_mb": 1550,
+      "last_measured": null
+    },
+    "3": {
+      "name": "community-base-gvenzl",
+      "containers": [
+        "db-gvenzl"
+      ],
+      "expected_ram_range_gb": "2-3 GB",
+      "startup_ram_mb": 1350,
+      "runtime_ram_mb": 1500,
+      "last_measured": null
+    },
+    "4": {
+      "name": "micro-db-slim",
+      "containers": [
+        "db-minimal"
+      ],
+      "expected_ram_range_gb": "1-2 GB",
+      "startup_ram_mb": 850,
+      "runtime_ram_mb": 980,
+      "last_measured": null
+    },
+    "5": {
+      "name": "standalone-publisher",
+      "containers": [
+        "db-publisher",
+        "app-publisher"
+      ],
+      "expected_ram_range_gb": "3-5 GB",
+      "startup_ram_mb": 4200,
+      "runtime_ram_mb": 5450,
+      "last_measured": "2026-09-13T09:36:07.660903"
+    },
+    "6": {
+      "name": "enterprise-bi-warehouse",
+      "containers": [
+        "db-analytics"
+      ],
+      "expected_ram_range_gb": "2-3 GB",
+      "startup_ram_mb": 1500,
+      "runtime_ram_mb": 1750,
+      "last_measured": null
+    },
+    "7": {
+      "name": "consolidated-forms-publisher",
+      "containers": [
+        "db-publisher",
+        "app-forms-publisher"
+      ],
+      "expected_ram_range_gb": "5-7 GB",
+      "startup_ram_mb": 4800,
+      "runtime_ram_mb": 5900,
+      "last_measured": null
+    },
+    "8": {
+      "name": "standalone-web-ide",
+      "containers": [
+        "web-ide-dev"
+      ],
+      "expected_ram_range_gb": "1-2 GB",
+      "startup_ram_mb": 650,
+      "runtime_ram_mb": 820,
+      "last_measured": null
+    },
+    "9": {
+      "name": "standalone-publisher-designer",
+      "containers": [
+        "app-publisher-designer"
+      ],
+      "expected_ram_range_gb": "1-2 GB",
+      "startup_ram_mb": 160,
+      "runtime_ram_mb": 176,
+      "last_measured": "2026-09-10T19:48:00Z"
+    },
+    "10": {
+      "name": "remote-ords-gateway",
+      "containers": [
+        "app-ords-remote"
+      ],
+      "expected_ram_range_gb": "1-2 GB",
+      "startup_ram_mb": 850,
+      "runtime_ram_mb": 1030,
+      "last_measured": null
+    },
+    "11": {
+      "name": "remote-publisher-reporting",
+      "containers": [
+        "app-publisher-remote"
+      ],
+      "expected_ram_range_gb": "3-5 GB",
+      "startup_ram_mb": 3500,
+      "runtime_ram_mb": 4200,
+      "last_measured": null
+    }
+  }
+}

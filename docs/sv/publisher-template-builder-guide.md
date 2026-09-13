@@ -285,3 +285,27 @@ sequenceDiagram
     deactivate GHA
 ```
 
+### 9.5 Automatiserad E2E-test och verifieringspipeline (`test-deploy-verify-e2e.sh`)
+
+För att garantera att malländringar driftsätts och renderas korrekt på den officiella servern, erbjuder plattformen automatiserad E2E-verifiering:
+
+```bash
+# Grundläggande körning med dynamisk testtoken (Kräver Blueprint 5):
+./scripts/publisher/test-deploy-verify-e2e.sh
+
+# Körning med specifik rapport och förväntad söktext:
+./scripts/publisher/test-deploy-verify-e2e.sh Custom/Invoices/Invoice_Report "Nordic Innovation AS"
+
+# Automatisk växling till Blueprint 5 vid behov:
+./scripts/publisher/test-deploy-verify-e2e.sh --auto-switch
+```
+
+#### Viktiga kvalitetsgrindar och kontroller:
+1. **Blueprint 5 förhandskontroll:** Validerar att Blueprint 5 (`app-publisher` på portarna 9500/9502) är igång och felfri.
+2. **Sökvägsvalidering (CWE-22):** Skyddar mot otillåtna sökvägar utanför arbetsytan.
+3. **Dynamisk token och innehållsverifiering:** Infogar en tidsstämplad token i `sample_data.xml`, paketerar `.xdmz` och `.xdoz`, distribuerar via REST API, kör rapporten på servern, laddar ned PDF och verifierar med Python `pypdf`.
+4. **Integrerad PDF/UA-1 tillgänglighetsgranskning:** Kör automatiskt `validate-pdf-accessibility.sh`.
+5. **Rule 7 klickbara länkar:** Visar klickbara länkar till RTF-källmallen (`file://...`), genererad PDF (`file://...`) och Publisher-portalen.
+6. **Dev Hub Report Lab-integration:** 1-klickskörning via knappen `🧪 Käivita E2E Test & Kontroll`.
+
+

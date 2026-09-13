@@ -1,48 +1,47 @@
-# DevOps Juhtpaneel — Teostusülesanded ja Verifitseerimine (Implementation Tasks)
+# DevOps Portal — Traceability Matrix & Tasks
 
-- **Domeen (SCS):** `devops-portal`
-- **Viidatud Nõuded:** `docs/specs/devops-portal/requirements.md`
-- **Viidatud Disain:** `docs/specs/devops-portal/design.md`
-- **Metoodika:** Thomas Dohmke (Agentic Assembly Line) & Julian Wood (Tasks Traceability)
+- **Domain (SCS):** `devops-portal`
+- **Referenced Requirements:** `docs/specs/devops-portal/requirements.md`
+- **Referenced Design:** `docs/specs/devops-portal/design.md`
+- **Methodology:** Thomas Dohmke (Agentic Assembly Line) & Julian Wood (Tasks Traceability)
 
 ---
 
-## 1. Ülesannete Jälgitavuse Maatriks (Traceability Matrix)
+## 1. Traceability Matrix
 
-| Task ID | Nõue | Komponent / Fail | Verifitseerimise Käsk | Staatus |
+| Task ID | Requirement | Component / File | Verification Command | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **TSK-DP-01** | `[REQ-01]` | `layout.html` (Kaartide eraldamine) | `./tests/unit/test-devhub-testing-tab.sh` | ✅ Valmis |
-| **TSK-DP-02** | `[REQ-02]` | `app.js` (Dokitud terminal & Ring-buffer) | `node --check scripts/internal/dev_hub/assets/app.js` | ✅ Valmis |
-| **TSK-DP-03** | `[REQ-03]` | `app.js` (Setup & Reset Command Studiod) | `./tests/unit/test-dev-hub-generation.sh` | ✅ Valmis |
-| **TSK-DP-04** | `[REQ-04]` | `layout.html` / `style.css` (Ohutusväravad) | Visuaalne kontroll ja test | ✅ Valmis |
-| **TSK-DP-05** | `[REQ-05]` | `app.js` (1-Kliki AI Remediation) | Testitud Copilot/Antigravity liidesega | ✅ Valmis |
-| **TSK-DP-06** | NFR-1 | `dev-hub-bridge.py` (Regex & Mutex) | `./scripts/check-pre-commit.sh` | ✅ Valmis |
-| **TSK-DP-07** | NFR-Mitmekeelsus | `i18n.js` (6 Keelt EN/ET/FI/SV/LV/LT) | `./tests/test-multilingual-support.sh` | ✅ Valmis |
-| **TSK-DP-08** | `[REQ-06]` | `bump-iteration.sh`, `release.sh` | `./tests/unit/test-semantic-versioning.sh` | ✅ Valmis |
-| **TSK-DP-09** | `[REQ-07]` | `layout.html`, `app.js`, `i18n.js` | `./tests/unit/test-devhub-landing-tab.sh` | ✅ Valmis |
+| **TSK-DP-01** | `[REQ-01]` | `layout.html` (Card Separation) | `./tests/unit/test-devhub-testing-tab.sh` | ✅ Completed |
+| **TSK-DP-02** | `[REQ-02]` | `app.js` (Docked Console & Ring-Buffer) | `node --check scripts/internal/dev_hub/assets/app.js` | ✅ Completed |
+| **TSK-DP-03** | `[REQ-03]` | `app.js` (Setup & Reset Command Studios) | `./tests/unit/test-dev-hub-generation.sh` | ✅ Completed |
+| **TSK-DP-04** | `[REQ-04]` | `layout.html` / `style.css` (Safety Gates) | Visual inspection & unit tests | ✅ Completed |
+| **TSK-DP-05** | `[REQ-05]` | `app.js` (1-Click AI Troubleshooting) | Tested via Copilot/Antigravity integration | ✅ Completed |
+| **TSK-DP-06** | NFR-1 | `dev-hub-bridge.py` (Regex & Mutex) | `./scripts/check-pre-commit.sh` | ✅ Completed |
+| **TSK-DP-07** | NFR-i18n | `i18n.js` (6 Languages EN/ET/FI/SV/LV/LT) | `./tests/test-multilingual-support.sh` | ✅ Completed |
+| **TSK-DP-08** | `[REQ-06]` | `bump-iteration.sh`, `release.sh` | `./tests/unit/test-semantic-versioning.sh` | ✅ Completed |
+| **TSK-DP-09** | `[REQ-07]` | `layout.html`, `app.js`, `i18n.js` | `./tests/unit/test-devhub-landing-tab.sh` | ✅ Completed |
 
 ---
 
-## 2. Aatomülesannete Teostuse Ajalugu
+## 2. Implementation History & Atomic Tasks
 
-- [x] **TSK-DP-01:** Vahekaardi `⚡ DevOps` puhastamine testimiselementidest ja suunamine vahekaardile `🧪 Testimine`.
-- [x] **TSK-DP-02:** Alumise väljalibiseva dokitava terminali `#devops-docked-terminal` realiseerimine koos stopperi, ANSI parsingu ja DOM ring-bufferiga (1500 rida).
-- [x] **TSK-DP-03:** `Setup Studio` ja `Reset Studio` raadiopillide, smart disabling loogika ja reaalajas käsurea eelvaate loomine.
-- [x] **TSK-DP-04:** Semantiliste ohutusmärgiste (`safe`, `action`, `destructive`) ja 2-astmelise kinnituskaitse lisamine.
-- [x] **TSK-DP-05:** `askAiAboutCurrentTerminalError()` ja `explainStudioCmdWithAi()` integratsioon Dev Hubi Copiloti/Antigravity sahtliga.
-- [x] **TSK-DP-06:** Mutex lukustuse (HTTP 409) ja kasutajanimede regex-saniteerimise (`^[a-zA-Z0-9_]{3,30}$`) lisamine faili `dev-hub-bridge.py`.
-- [x] **TSK-DP-07:** 26 uue tõlkevõtme lisamine ja verifitseerimine 6 keeles (12/12 PASS).
-- [x] **TSK-DP-08:** 4-kohaline iteratsiooniloendur (`bump-iteration.sh`), Conventional Commits semantiline reliis (`release.sh`) ja pre-push hook.
-- [x] **TSK-DP-09:** Kodulehe nööpnõela kinnitamine (Home Tab Pinning 📌), nutikas adaptiivne maandumine (Lahendus 4) ja 6-keelne sünkroonimine.
+- [x] **TSK-DP-01:** Purged test cards from `⚡ DevOps` and migrated them to `🧪 Testing`.
+- [x] **TSK-DP-02:** Implemented bottom slide-out console `#devops-docked-terminal` with live timer, ANSI parser, and 1500-line DOM ring buffer.
+- [x] **TSK-DP-03:** Created `Setup Studio` and `Reset Studio` with mutually exclusive radio pills and real-time CLI preview.
+- [x] **TSK-DP-04:** Added semantic safety indicators (`safe`, `action`, `destructive`) and 2-stage destructive confirmation.
+- [x] **TSK-DP-05:** Integrated `askAiAboutCurrentTerminalError()` and `explainStudioCmdWithAi()` with Copilot/Antigravity split-pane.
+- [x] **TSK-DP-06:** Added Mutex lock (HTTP 409) and username regex sanitizer (`^[a-zA-Z0-9_]{3,30}$`) to `dev-hub-bridge.py`.
+- [x] **TSK-DP-07:** Integrated 26 new translation keys across 6 languages (100% test pass).
+- [x] **TSK-DP-08:** Implemented 4-part iteration counter (`bump-iteration.sh`), Conventional Commits semantic release, and pre-push hook.
+- [x] **TSK-DP-09:** Implemented home tab pinning (📌), smart adaptive landing, and 6-language synchronization.
 
 ---
 
-## 3. Autonoomne Verifitseerimise Tsükkel (Ralph Loop Invariant)
+## 3. Autonomous Verification Cycle (Ralph Loop Invariant)
 
-Vastavalt Rule 19 reeglile teostatakse kõigi ülesannete valideerimine autonoomse Ralph Loop tsüklina:
-1. **Käivita:** Käivita seotud komponendi test või lokaalne CI.
-2. **Hinda:** Kui test ebaõnnestub, analüüsi ebaõnnestumise logi kontekstis.
-3. **Paranda:** Vii koodis sisse parandus ilma inimsekkumist nõudmata.
-4. **Verifitseeri:** Korda tsüklit kuni 100% testidest läbivad roheliselt (exit code 0).
-5. **Väravad:** Kinnita tulemus läbi 5 Kvaliteedivärava (Turvalisus, Funktsionaalsus, Mitmekeelsus, Porditavus, Jõudlus).
-
+Per Rule 19, validation of all atomic tasks follows an autonomous Ralph Loop cycle:
+1. **Execute:** Run target test suite or local CI.
+2. **Evaluate:** If test fails, analyze failure output in context.
+3. **Remediate:** Apply code patch autonomously without requiring human intervention.
+4. **Verify:** Repeat cycle until 100% of test suites pass (exit code 0).
+5. **Quality Gates:** Pass all 5 Quality Gates (Security, Functionality, Multilingual, Portability, Performance).

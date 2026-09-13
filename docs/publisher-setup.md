@@ -24,7 +24,7 @@ See juhend kirjeldab **Oracle Analytics Publisheri (Pixel Perfect / BI Publisher
 | :---: | :--- | :--- | :--- |
 | **BP 10** | `.env.10-publisher-dedicated-db` | `db-publisher`, `app-publisher` | **Pühendatud Publisher:** Publisher ja eraldiseisev RCU andmebaas. |
 | **BP 11** | `.env.11-publisher-full-enterprise` | 3 DB-d, `app-ords`, `app-publisher` | **Täisisoleeritud Ettevõttestack:** Publisher + 3 eraldatud andmebaasi + ORDS. |
-| **BP 12** | `.env.12-publisher-minimal-hybrid` | `db-proxy`, `db-alise`, `app-ords`, `app-publisher` | **Minimaalne Hübriid:** Kombineeritud Publisher/Proxy DB + LIS DB + Publisher. |
+| **BP 12** | `.env.12-publisher-minimal-hybrid` | `db-proxy`, `db-alise`, `app-ords`, `app-publisher` | **Minimaalne Hübriid:** Kombineeritud Publisher/Proxy DB + ALISE DB + Publisher. |
 | **BP 13** | `.env.13-publisher-all-in-one-db` | `db-proxy`, `app-ords`, `app-publisher` | **Kõik-ühes Publisher:** Kõik skeemid ühes andmebaasis + Publisher. |
 | **BP 32** | `.env.32-publisher-gvenzl-with-web-ide` | `db-publisher`, `app-publisher`, `web-ide-dev` | **Publisher Dev Lab:** Pixel Perfect aruandlus kergel baasil koos Web IDE-ga. |
 | **BP 40** | `.env.40-ultimate-all-in-one-enterprise` | Kõik 5 konteinerit | **Ultimate Enterprise:** Forms 14c + Publisher + APEX 26.1 + ORDS. |

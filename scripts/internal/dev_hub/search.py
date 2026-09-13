@@ -401,4 +401,68 @@ def generate_search_index(workspace_dir):
     except Exception:
         pass
 
+    # 10. Interactive Presentation Decks (Platform Overview & Forms Modernization)
+    items.append({
+        "id": "pres-platform-deck",
+        "type": "presentation",
+        "category": "presentation",
+        "title": "Platform Architecture Overview Deck (13 Slides)",
+        "titles": {
+            "en": "Platform Architecture Overview Deck (13 Slides)",
+            "et": "Platvormi Arhitektuuri Ülevaate Slaidid (13 slaidi)",
+            "fi": "Alustan Arkkitehtuurikatsauksen Kalvot (13 diaa)",
+            "sv": "Plattformens Arkitekturöversikt Presentation (13 bilder)",
+            "lv": "Platformas Arhitektūras Pārskata Prezentācija (13 slaidi)",
+            "lt": "Platformos Architektūros Apžvalgos Skaidrės (13 skaidrių)"
+        },
+        "path": "tab-presentation#platform",
+        "summary": "Executive & Technical presentation: vision, blueprints, developer ergonomics, DevOps CI/CD and zero-trust security.",
+        "summaries": {
+            "en": "Executive & Technical presentation: vision, blueprints, developer ergonomics, DevOps CI/CD and zero-trust security.",
+            "et": "Juhtkonna ja tehniline esitlus: visioon, blueprintid, arendaja ergonoomika, DevOps CI/CD ja nullusaldus turve.",
+            "fi": "Johdon ja tekninen esitys: visio, mallit, kehittäjäergonomia, DevOps CI/CD ja nollaluottamusturvallisuus.",
+            "sv": "Lednings- och teknisk presentation: vision, ritningar, utvecklarergonomi, DevOps CI/CD och nollförtroendesäkerhet.",
+            "lv": "Vadības un tehniskā prezentācija: vīzija, paraugi, izstrādātāju ergonomika, DevOps CI/CD un nulles uzticības drošība.",
+            "lt": "Vadovybės ir techninis pristatymas: vizija, šablonai, kūrėjų ergonomika, DevOps CI/CD ir nulinio pasitikėjimo saugumas."
+        },
+        "keywords": "slides slaidid esitlus presentation deck overview platform arhitektuur roadmap 13 juhtkond arendaja devops dba",
+        "target": {
+            "action": "navigate_tab",
+            "tabId": "tab-presentation",
+            "deck": "platform"
+        }
+    })
+
+    items.append({
+        "id": "pres-forms-deck",
+        "type": "presentation",
+        "category": "presentation",
+        "title": "Oracle Forms Modernization Strategy Deck (13 Slides)",
+        "titles": {
+            "en": "Oracle Forms Modernization Strategy Deck (13 Slides)",
+            "et": "Oracle Forms Moderniseerimise Strateegia Slaidid (13 slaidi)",
+            "fi": "Oracle Forms Modernisointistrategian Kalvot (13 diaa)",
+            "sv": "Oracle Forms Moderniseringsstrategi Presentation (13 bilder)",
+            "lv": "Oracle Forms Modernizācijas Stratēģijas Prezentācija (13 slaidi)",
+            "lt": "Oracle Forms Modernizavimo Strategijos Skaidrės (13 skaidrių)"
+        },
+        "path": "tab-presentation#forms",
+        "summary": "Step-by-step modernization roadmap from 25-year legacy Oracle Forms to modern APEX and Oracle AI Database@Azure.",
+        "summaries": {
+            "en": "Step-by-step modernization roadmap from 25-year legacy Oracle Forms to modern APEX and Oracle AI Database@Azure.",
+            "et": "Samm-sammuline tegevuskava 25-aastase pärandsüsteemi (Forms) viimiseks kaasaegsele APEX & Oracle AI Database@Azure platvormile.",
+            "fi": "Vaiheittainen etenemissuunnitelma 25-vuotiaan Forms-perintöjärjestelmän siirtämiseksi moderniin APEX- ja Oracle AI -arkkitehtuuriin.",
+            "sv": "Steg-för-steg moderniseringsplan för att migrera 25-åriga Forms-system till modern APEX & Oracle AI Database@Azure.",
+            "lv": "Pakāpenisks modernizācijas plāns 25 gadus vecas Forms sistēmas pārejai uz modernu APEX un Oracle AI Database@Azure.",
+            "lt": "Nuoseklus modernizavimo planas perkelti 25 metų Forms sistemą į šiuolaikinę APEX ir Oracle AI Database@Azure platformą."
+        },
+        "keywords": "slides slaidid esitlus presentation forms modernization moderniseerimine apex cloud azure roadmap 13",
+        "target": {
+            "action": "navigate_tab",
+            "tabId": "tab-presentation",
+            "deck": "forms"
+        }
+    })
+
     return items
+

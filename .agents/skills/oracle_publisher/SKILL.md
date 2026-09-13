@@ -140,6 +140,37 @@ sed -i 's|<listen-address>[^<]*</listen-address>|<listen-address></listen-addres
 # hostname: publisher-dev
 ```
 
+### 3.10 Zero-Trust 1-Click Auto-Authentication & Role Switching Engine (Web & Dev Hub)
+To eliminate manual credential copying and popup-blocker issues, the platform features a zero-trust automatic authentication bridge:
+
+1. **Authentication Flow & Zero-Trust Architecture (Rule 5):**
+   - **No Passwords in URLs:** Passwords are NEVER passed in query parameters or cached in client HTML.
+   - **Just-In-Time Wallet Extraction:** Dev Hub Bridge (`/api/publisher/open?user=<role>`) queries the SEPS auto-login wallet in-memory (`scripts/get-password.sh <ALIAS>`).
+   - **Auto-POST Form Target:** The generated relay page renders an automatic POST form targeting `http://localhost:9502/xmlpserver/login.jsp` (NOT `servlet/home`) with `id`, `passwd`, `_xuil=en_US`, and `SUBMIT_BUTTON=Sign In`.
+   - **Instant Redirection:** WebLogic validates the POST credentials and issues an `HTTP 302 Found` redirecting to `http://localhost:9502/xmlpserver/servlet/home`.
+
+2. **Mitigating WebLogic `JSESSIONID` Session Stickiness:**
+   - **The Problem:** WebLogic Publisher (`__login.class`) checks if `_xdo_principal` exists in the HTTP session. If a user previously logged in as `bip_admin`, any subsequent POST to `login.jsp` containing that cookie is ignored and redirected back as `bip_admin`.
+   - **Automated Cookie Reset:** The Bridge `/api/publisher/open` response emits HTTP response headers that instantly expire stale cookies in the browser:
+     ```http
+     Set-Cookie: JSESSIONID=deleted; Path=/xmlpserver; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax
+     Set-Cookie: ORA_XDO_UI=deleted; Path=/xmlpserver; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax
+     ```
+   - **Dedicated 1-Click Sign-Out Button:** Dev Hub Blueprint 5 card provides `🚪 Sign Out (Puhasta sessioon) ↗` linking to `http://localhost:9502/xmlpserver/signout.jsp`. Navigating to `signout.jsp` destroys the server-side session and issues a clean session.
+
+3. **CLI Usage (`open-publisher.sh`):**
+   ```bash
+   ./scripts/publisher/open-publisher.sh developer            # bip_developer
+   ./scripts/publisher/open-publisher.sh user                 # bip_user
+   ./scripts/publisher/open-publisher.sh admin                # bip_admin
+   ./scripts/publisher/open-publisher.sh developer --dry-run  # Prints Bridge URL
+   ```
+
+4. **Dev Hub Static Cache Invalidation:**
+   - ORDS Jetty (`app-ords` on port 8448) does not send `Cache-Control: no-cache` for static docroot files.
+   - Always verify the version badge in the Dev Hub header: `v2.2.0 • Bridge v2.2.0 Online`.
+   - If changes do not appear, perform a **hard refresh**: `Cmd + Shift + R` (macOS) or `Ctrl + F5` (Windows/Linux) or query `curl -s http://localhost:8089/api/version`.
+
 ---
 
 ## 4. Mandatory Rules & Strict Prohibitions (Anti-Patterns)
@@ -158,6 +189,8 @@ sed -i 's|<listen-address>[^<]*</listen-address>|<listen-address></listen-addres
 | `EmbeddedLDAP assertion crash / Hostname mismatch` | WebLogic pinned ephemeral container hostname in `config.xml` | Clear `<listen-address>` in `config.xml` and ensure static `hostname: publisher-dev`. |
 | `UnexpectedBarImportException: Failed to import ee.bar` | `CONFIGURE_BIEE=true` attempted to configure full BI Enterprise Edition | Set `CONFIGURE_BIEE=false` and `CONFIGURE_BIP=true` in configuration environment. |
 | `HTTP 401 Unauthorized` on REST API call | Wrong credentials or user locked out | Query genuine WebLogic password via `./scripts/get-password.sh DB_PUBLISHER_SYS`. |
+| `Always logs in as first user / bip_admin sticky` | WebLogic active `JSESSIONID` cookie prevents switching users | Click `🚪 Sign Out` or ensure `dev-hub-bridge.py` is running v2.2.0 with `Set-Cookie` reset. |
+| `Version badge missing / old UI in Dev Hub` | Chrome/Edge cached `docs/dev-hub.html` from ORDS Jetty docroot | Hard refresh with `Cmd+Shift+R` (macOS) or `Ctrl+F5` (Windows/Linux). |
 | `OPatch failed with error code 73` | Prerequisite patch conflict or active running WebLogic process | Stop WebLogic managed servers before applying OPatch bundle. |
 | `java.lang.OutOfMemoryError: Metaspace` | Insufficient JVM Metaspace allocated for BI Publisher classes | Increase `-XX:MaxMetaspaceSize=1024m` in WebLogic startup arguments. |
 | `Connection refused on port 9502` | `bi_server1` is still initializing or boot stalled | Run `./scripts/publisher/status-publisher.sh` and inspect WebLogic boot log. |

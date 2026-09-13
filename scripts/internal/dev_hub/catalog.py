@@ -498,7 +498,7 @@ DOC_SPECS = [
         },
         "files": {
             "en": "docs/specs/devops-portal/requirements.md",
-            "et": "docs/specs/devops-portal/requirements.md",
+            "et": "docs/et/specs/devops-portal/requirements.md",
             "fi": "docs/specs/devops-portal/requirements.md",
             "sv": "docs/specs/devops-portal/requirements.md",
             "lv": "docs/specs/devops-portal/requirements.md",
@@ -518,7 +518,7 @@ DOC_SPECS = [
         },
         "files": {
             "en": "docs/specs/devops-portal/design.md",
-            "et": "docs/specs/devops-portal/design.md",
+            "et": "docs/et/specs/devops-portal/design.md",
             "fi": "docs/specs/devops-portal/design.md",
             "sv": "docs/specs/devops-portal/design.md",
             "lv": "docs/specs/devops-portal/design.md",
@@ -538,7 +538,7 @@ DOC_SPECS = [
         },
         "files": {
             "en": "docs/specs/devops-portal/tasks.md",
-            "et": "docs/specs/devops-portal/tasks.md",
+            "et": "docs/et/specs/devops-portal/tasks.md",
             "fi": "docs/specs/devops-portal/tasks.md",
             "sv": "docs/specs/devops-portal/tasks.md",
             "lv": "docs/specs/devops-portal/tasks.md",
@@ -558,7 +558,7 @@ DOC_SPECS = [
         },
         "files": {
             "en": "docs/specs/wallet-security/requirements.md",
-            "et": "docs/specs/wallet-security/requirements.md",
+            "et": "docs/et/specs/wallet-security/requirements.md",
             "fi": "docs/specs/wallet-security/requirements.md",
             "sv": "docs/specs/wallet-security/requirements.md",
             "lv": "docs/specs/wallet-security/requirements.md",
@@ -578,7 +578,7 @@ DOC_SPECS = [
         },
         "files": {
             "en": "docs/specs/wallet-security/design.md",
-            "et": "docs/specs/wallet-security/design.md",
+            "et": "docs/et/specs/wallet-security/design.md",
             "fi": "docs/specs/wallet-security/design.md",
             "sv": "docs/specs/wallet-security/design.md",
             "lv": "docs/specs/wallet-security/design.md",
@@ -598,7 +598,7 @@ DOC_SPECS = [
         },
         "files": {
             "en": "docs/specs/wallet-security/tasks.md",
-            "et": "docs/specs/wallet-security/tasks.md",
+            "et": "docs/et/specs/wallet-security/tasks.md",
             "fi": "docs/specs/wallet-security/tasks.md",
             "sv": "docs/specs/wallet-security/tasks.md",
             "lv": "docs/specs/wallet-security/tasks.md",
@@ -618,7 +618,7 @@ DOC_SPECS = [
         },
         "files": {
             "en": "docs/specs/golden-snapshots/requirements.md",
-            "et": "docs/specs/golden-snapshots/requirements.md",
+            "et": "docs/et/specs/golden-snapshots/requirements.md",
             "fi": "docs/specs/golden-snapshots/requirements.md",
             "sv": "docs/specs/golden-snapshots/requirements.md",
             "lv": "docs/specs/golden-snapshots/requirements.md",
@@ -638,7 +638,7 @@ DOC_SPECS = [
         },
         "files": {
             "en": "docs/specs/golden-snapshots/design.md",
-            "et": "docs/specs/golden-snapshots/design.md",
+            "et": "docs/et/specs/golden-snapshots/design.md",
             "fi": "docs/specs/golden-snapshots/design.md",
             "sv": "docs/specs/golden-snapshots/design.md",
             "lv": "docs/specs/golden-snapshots/design.md",
@@ -658,7 +658,7 @@ DOC_SPECS = [
         },
         "files": {
             "en": "docs/specs/golden-snapshots/tasks.md",
-            "et": "docs/specs/golden-snapshots/tasks.md",
+            "et": "docs/et/specs/golden-snapshots/tasks.md",
             "fi": "docs/specs/golden-snapshots/tasks.md",
             "sv": "docs/specs/golden-snapshots/tasks.md",
             "lv": "docs/specs/golden-snapshots/tasks.md",
@@ -678,7 +678,7 @@ DOC_SPECS = [
         },
         "files": {
             "en": "docs/specs/blueprints-topology/requirements.md",
-            "et": "docs/specs/blueprints-topology/requirements.md",
+            "et": "docs/et/specs/blueprints-topology/requirements.md",
             "fi": "docs/specs/blueprints-topology/requirements.md",
             "sv": "docs/specs/blueprints-topology/requirements.md",
             "lv": "docs/specs/blueprints-topology/requirements.md",
@@ -698,7 +698,7 @@ DOC_SPECS = [
         },
         "files": {
             "en": "docs/specs/blueprints-topology/design.md",
-            "et": "docs/specs/blueprints-topology/design.md",
+            "et": "docs/et/specs/blueprints-topology/design.md",
             "fi": "docs/specs/blueprints-topology/design.md",
             "sv": "docs/specs/blueprints-topology/design.md",
             "lv": "docs/specs/blueprints-topology/design.md",
@@ -718,7 +718,7 @@ DOC_SPECS = [
         },
         "files": {
             "en": "docs/specs/blueprints-topology/tasks.md",
-            "et": "docs/specs/blueprints-topology/tasks.md",
+            "et": "docs/et/specs/blueprints-topology/tasks.md",
             "fi": "docs/specs/blueprints-topology/tasks.md",
             "sv": "docs/specs/blueprints-topology/tasks.md",
             "lv": "docs/specs/blueprints-topology/tasks.md",
@@ -743,6 +743,46 @@ DOC_SPECS = [
             "sv": ".agents/trails/2026-09-13-devops-ux-and-sdd-assembly-line.md",
             "lv": ".agents/trails/2026-09-13-devops-ux-and-sdd-assembly-line.md",
             "lt": ".agents/trails/2026-09-13-devops-ux-and-sdd-assembly-line.md"
+        }
+    },
+    {
+        "id": "adr-0017",
+        "rel": "docs/adr/0017-devops-tab-ux-and-docked-terminal.md",
+        "titles": {
+            "en": "🏛️ ADR 0017: DevOps Tab UX, Docked Terminal & Command Studios",
+            "et": "🏛️ ADR 0017: DevOps vahelehe UX, dokitav terminal ja stuudiod",
+            "fi": "🏛️ ADR 0017: DevOps-välilehden UX, telakoituva terminaali ja studiot",
+            "sv": "🏛️ ADR 0017: DevOps-flikens UX, dockad terminal och studior",
+            "lv": "🏛️ ADR 0017: DevOps cilnes UX, dokēts terminālis un studijas",
+            "lt": "🏛️ ADR 0017: DevOps skirtuko UX, dokuojamas terminalas ir studijos"
+        },
+        "files": {
+            "en": "docs/adr/0017-devops-tab-ux-and-docked-terminal.md",
+            "et": "docs/adr/0017-devops-tab-ux-and-docked-terminal.md",
+            "fi": "docs/adr/0017-devops-tab-ux-and-docked-terminal.md",
+            "sv": "docs/adr/0017-devops-tab-ux-and-docked-terminal.md",
+            "lv": "docs/adr/0017-devops-tab-ux-and-docked-terminal.md",
+            "lt": "docs/adr/0017-devops-tab-ux-and-docked-terminal.md"
+        }
+    },
+    {
+        "id": "spec-devops-mgmt",
+        "rel": "docs/specs/devops-management-portal-spec.md",
+        "titles": {
+            "en": "📜 Product Spec: DevOps Management Portal & Command Studios",
+            "et": "📜 Tootespetsifikatsioon: DevOps juhtpaneel ja stuudiod",
+            "fi": "📜 Tuotespesifikaatio: DevOps-hallintaportaali ja studiot",
+            "sv": "📜 Produktspecifikation: DevOps-hanteringsportal och studior",
+            "lv": "📜 Produkta specifikācija: DevOps pārvaldības portāls un studijas",
+            "lt": "📜 Produkto specifikacija: DevOps valdymo portalas ir studijos"
+        },
+        "files": {
+            "en": "docs/specs/devops-management-portal-spec.md",
+            "et": "docs/specs/devops-management-portal-spec.md",
+            "fi": "docs/specs/devops-management-portal-spec.md",
+            "sv": "docs/specs/devops-management-portal-spec.md",
+            "lv": "docs/specs/devops-management-portal-spec.md",
+            "lt": "docs/specs/devops-management-portal-spec.md"
         }
     }
 ]
@@ -1430,17 +1470,17 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                          'lv': '1. Palaist vidi',
                                          'lt': '1. Paleisti aplinką'},
                             'desc': {   'en': 'Deploy core database &amp; ORDS:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
+                                              'class="text-accent-sky">./scripts/setup-all.sh</code>',
                                         'et': 'Paigalda andmebaas ja teenused:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
+                                              'class="text-accent-sky">./scripts/setup-all.sh</code>',
                                         'fi': 'Asenna tietokanta ja palvelut:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
+                                              'class="text-accent-sky">./scripts/setup-all.sh</code>',
                                         'sv': 'Installera databas och tjänster:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
+                                              'class="text-accent-sky">./scripts/setup-all.sh</code>',
                                         'lv': 'Uzstādīt datubāzi un pakalpojumus:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
+                                              'class="text-accent-sky">./scripts/setup-all.sh</code>',
                                         'lt': 'Įdiegti duomenų bazę ir paslaugas:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/setup-all.sh</code>'},
+                                              'class="text-accent-sky">./scripts/setup-all.sh</code>'},
                             'command': './scripts/setup-all.sh'},
                         {   'icon': '2️⃣',
                             'kpi': 'SAMM 2',
@@ -1451,17 +1491,17 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                          'lv': '2. Pārslēgt rasējumu',
                                          'lt': '2. Pasirinkti brėžinį'},
                             'desc': {   'en': 'Switch architecture stack:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
+                                              'class="text-accent-sky">./scripts/module-toggle.sh</code>',
                                         'et': 'Vali sobiv arhitektuuripinu:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
+                                              'class="text-accent-sky">./scripts/module-toggle.sh</code>',
                                         'fi': 'Vaihda kokoonpanoa:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
+                                              'class="text-accent-sky">./scripts/module-toggle.sh</code>',
                                         'sv': 'Växla konfiguration:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
+                                              'class="text-accent-sky">./scripts/module-toggle.sh</code>',
                                         'lv': 'Mainīt profilu:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
+                                              'class="text-accent-sky">./scripts/module-toggle.sh</code>',
                                         'lt': 'Pakeisti profilį:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/module-toggle.sh</code>'},
+                                              'class="text-accent-sky">./scripts/module-toggle.sh</code>'},
                             'command': './scripts/module-toggle.sh'},
                         {   'icon': '3️⃣',
                             'kpi': 'SAMM 3',
@@ -1472,17 +1512,17 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                          'lv': '3. Palaist testus',
                                          'lt': '3. Paleisti testus'},
                             'desc': {   'en': 'Automated end-to-end verification:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
+                                              'class="text-accent-sky">./scripts/test-apex-suite.sh</code>',
                                         'et': 'Täisautomaatne testimine:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
+                                              'class="text-accent-sky">./scripts/test-apex-suite.sh</code>',
                                         'fi': 'Täysautomaattinen testaus:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
+                                              'class="text-accent-sky">./scripts/test-apex-suite.sh</code>',
                                         'sv': 'Automatiserad verifiering:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
+                                              'class="text-accent-sky">./scripts/test-apex-suite.sh</code>',
                                         'lv': 'Automatizēta pārbaude:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
+                                              'class="text-accent-sky">./scripts/test-apex-suite.sh</code>',
                                         'lt': 'Automatizuotas testavimas:<br/><code '
-                                              'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>'},
+                                              'class="text-accent-sky">./scripts/test-apex-suite.sh</code>'},
                             'command': './scripts/test-apex-suite.sh'}],
            'oracle_links': [   {   'title': '📋 Spec-Driven Dev (SDD) & Assembly Line',
                                    'url': 'docs/spec-driven-development-and-assembly-line.md'},

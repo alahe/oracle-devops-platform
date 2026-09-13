@@ -249,11 +249,17 @@ for r_rel in "${REPORTS_TO_PROCESS[@]}"; do
   # Deployment execution
   if [ "$DEPLOY_MODE" = "copy" ]; then
     if command -v "$RUNTIME_ENGINE" >/dev/null 2>&1 && "$RUNTIME_ENGINE" container exists "$CONTAINER_NAME" 2>/dev/null && [ "$("$RUNTIME_ENGINE" inspect --format='{{.State.Status}}' "$CONTAINER_NAME" 2>/dev/null)" = "running" ]; then
-      DEST_PATH="/u01/oracle/user_projects/domains/bi/bidata/components/bipublisher/repository/$r_rel"
-      echo "   ├─ Copying to container catalog: ${DEST_PATH}..." | tee -a "$LOG_FILE"
-      "$RUNTIME_ENGINE" exec -i "$CONTAINER_NAME" mkdir -p "$DEST_PATH" >> "$LOG_FILE" 2>&1 || true
-      "$RUNTIME_ENGINE" cp "$R_DIR/." "${CONTAINER_NAME}:${DEST_PATH}/" >> "$LOG_FILE" 2>&1 || true
-      echo -e "   └─ ${GREEN}✅ Files synchronized to Publisher catalog volume!${NC}" | tee -a "$LOG_FILE"
+      DEST_PATH_1="/u01/oracle/user_projects/domains/bi/bidata/components/bipublisher/repository/$r_rel"
+      DEST_PATH_2="/u01/oracle/user_projects/domains/bi/bidata/components/bipublisher/repository/Reports/$r_rel"
+      echo "   ├─ Copying to container catalog paths..." | tee -a "$LOG_FILE"
+      for dpath in "$DEST_PATH_1" "$DEST_PATH_2"; do
+        "$RUNTIME_ENGINE" exec -i "$CONTAINER_NAME" /bin/sh -c "export PATH=/bin:/usr/bin:\$PATH; mkdir -p '$dpath'" >> "$LOG_FILE" 2>&1 || true
+        "$RUNTIME_ENGINE" cp "$R_DIR/." "${CONTAINER_NAME}:${dpath}/" >> "$LOG_FILE" 2>&1 || true
+        "$RUNTIME_ENGINE" exec -i "$CONTAINER_NAME" /bin/sh -c "export PATH=/bin:/usr/bin:\$PATH; chown -R oracle:oracle '$dpath'; find '$dpath' -name '*.e2ebak' -delete 2>/dev/null || true" >> "$LOG_FILE" 2>&1 || true
+      done
+      # Evict compiled XSL template cache to ensure WebLogic immediately evaluates changes
+      "$RUNTIME_ENGINE" exec -i "$CONTAINER_NAME" /bin/sh -c "export PATH=/bin:/usr/bin:\$PATH; rm -rf /u01/oracle/user_projects/domains/bi/servers/bi_server1/tmp/_WL_user/bipublisher_11.1.1/*/public/xdo/ssi/cache/* 2>/dev/null || true" >> "$LOG_FILE" 2>&1 || true
+      echo -e "   └─ ${GREEN}✅ Files synchronized & template cache evicted in Publisher container!${NC}" | tee -a "$LOG_FILE"
     else
       echo -e "   └─ ${YELLOW}⚠️ Container ${CONTAINER_NAME} not running. Cannot execute copy mode.${NC}" | tee -a "$LOG_FILE"
     fi

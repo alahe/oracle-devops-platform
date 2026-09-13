@@ -93,6 +93,16 @@ FROM customers c WITH INSERT UPDATE DELETE;
 
 ---
 
+## 4. APEX Engine & Patch Memory Bounds (Rule 6 sqlplus In-Container Exemption)
+
+When installing or patching Oracle APEX inside database containers (`install-apex.sh`, `apply-apex-patch.sh`):
+- Database containers operate under strict cgroup memory limits (`memory: 3072M`).
+- Oracle Database 23ai processes consume ~2.4–2.6 GB RAM.
+- Executing SQLcl (JVM) inside the container alongside Oracle DB during heavy DDL and metadata operations (`apxins.sql`, `catpatch.sql`) causes JVM heap expansion to exceed the 3GB limit, triggering the Linux kernel OOM killer (`10173 Killed`, exit code 137).
+- **Mandatory Pattern (Rule 6 Exemption):** Always invoke the native C-binary `$ORACLE_HOME/bin/sqlplus -s / as sysdba` inside the container for APEX core engine (`apxins.sql`) and bundle patch (`catpatch.sql`) execution. Native `sqlplus` requires only ~15 MB RAM, completes in ~39s, and completely eliminates OOM kill risks.
+
+---
+
 ## 5. Multitenant PDB Context & Clock Skew Resilience (Multi-DB Invariants)
 
 ### 5.1 Multitenant PDB Direct Connection Rule (`CDB$ROOT` Drop Prevention)
@@ -145,4 +155,5 @@ podman run --rm -i \
 | `ORA-03114: not connected to ORACLE` | Datafile autoextend I/O flush timeout | Pre-allocate datafiles (`sysaux01.dbf` to 2048M) before running heavy scripts. |
 | `ORA-00609: could not attach connection` | Parallel recompilation worker TCP timeout | Use `sys.utl_recomp.recomp_serial` instead of `recomp_parallel`. |
 | Container status `unhealthy` | Oracle listener or healthcheck probe timed out | Inspect logs: `podman logs <container_id> --tail 50` to check database alert.log. |
+| Container false match / hanging loops | Unanchored substring grep falsely matching longer name (Rule 15) | Replace loose greps with `is_container_running '<name>'` or `container_exact_grep`. |
 

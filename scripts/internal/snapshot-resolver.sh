@@ -142,6 +142,12 @@ find_best_golden_snapshot() {
   if [ "$prof_name" = "NONE" ] || [ "$prof_name" = "none" ] || [ "$prof_name" = "disabled" ] || [ "${DB_ENABLED:-true}" = "false" ]; then
     return 1
   fi
+  if [ "$bp_id" = "8" ] || [ "$bp_id" = "9" ]; then
+    return 1
+  fi
+  if [ -z "$(get_active_db_instances 2>/dev/null)" ]; then
+    return 1
+  fi
 
   mkdir -p "$snap_dir"
 
@@ -305,24 +311,33 @@ can_skip_in_db_apex() {
     return 1
   fi
 
-  # Check in-database APEX schema presence
-  local schema_exists
-  schema_exists="$(podman exec "$container_name" bash -c "
+  # Check in-database APEX status via dba_registry (authoritative Oracle check)
+  local db_apex_info
+  db_apex_info="$(podman exec "$container_name" bash -c "
     in_sql=\$(ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1)
     if [ -n \"\$in_sql\" ]; then
       \"\$in_sql\" -s / as sysdba << 'SQLEOF' 2>/dev/null
 SET HEADING OFF FEEDBACK OFF PAGESIZE 0 VERIFY OFF
 ALTER SESSION SET CONTAINER = ${target_pdb};
-SELECT count(*) FROM all_users WHERE username LIKE 'APEX_%';
+SELECT version || ':' || status FROM dba_registry WHERE comp_id = 'APEX';
 EXIT;
 SQLEOF
-    else
-      echo '0'
+    elif command -v sqlplus >/dev/null 2>&1; then
+      sqlplus -s / as sysdba << 'SQLEOF' 2>/dev/null
+SET HEADING OFF FEEDBACK OFF PAGESIZE 0 VERIFY OFF
+ALTER SESSION SET CONTAINER = ${target_pdb};
+SELECT version || ':' || status FROM dba_registry WHERE comp_id = 'APEX';
+EXIT;
+SQLEOF
     fi
-" 2>/dev/null | tr -d ' \r\n\t' || echo "0")"
+" 2>/dev/null | tr -d '\r' | grep -E '^[[:space:]]*[0-9]+\.[0-9]+' | head -n 1 | tr -d ' ' || echo "")"
 
-  if [[ "$schema_exists" =~ ^[0-9]+$ ]] && [ "$schema_exists" -gt 0 ]; then
-    msg_print "APEX_ALREADY_INSTALLED_SKIPPING" "$target_apex_ver"
+  local db_ver db_status
+  db_ver="$(echo "$db_apex_info" | cut -d':' -f1)"
+  db_status="$(echo "$db_apex_info" | cut -d':' -f2)"
+
+  if [ "$db_status" = "VALID" ] || [ "$db_status" = "UPGRADED" ]; then
+    msg_print "APEX_ALREADY_INSTALLED_SKIPPING" "${db_ver:-$target_apex_ver}"
     return 0
   fi
 

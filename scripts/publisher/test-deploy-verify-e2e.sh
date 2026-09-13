@@ -1,0 +1,1 @@
+../../tests/integration/test-publisher-deploy-verify-e2e.sh

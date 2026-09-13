@@ -13,6 +13,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+if [ -f "$WORKSPACE_DIR/scripts/internal/common.sh" ]; then
+  source "$WORKSPACE_DIR/scripts/internal/common.sh"
+fi
+
 SUITE_DIR="$WORKSPACE_DIR/templates/publisher/accessibility_suite"
 METRICS_JSON="$WORKSPACE_DIR/metrics/accessibility_benchmarks.json"
 METRICS_ENV="$WORKSPACE_DIR/metrics/accessibility_benchmarks.env"
@@ -67,14 +71,14 @@ for CASE_DIR in "$SUITE_DIR"/*; do
 
     # 2. Render Accessible PDF in container or locally
     echo "  [2/3] ⚙️ Rendering Accessible PDF/UA-1 with locale '$LOCALE'..."
-    if podman ps --format "{{.Names}}" 2>/dev/null | grep -q "app-publisher-designer"; then
+    if is_container_running "app-publisher-designer"; then
       # Run in active container
-      podman exec app-publisher-designer /u01/oracle/bin/render-template.sh \
+      podman exec app-publisher-designer python3 /u01/oracle/bin/export-accessible-pdf.py \
         "/u01/templates/accessibility_suite/$CASE_NAME/template.rtf" \
-        "/u01/templates/accessibility_suite/$CASE_NAME/data.xml" \
         "/u01/templates/accessibility_suite/$CASE_NAME/output_accessible.pdf" \
         --locale "$LOCALE" >/dev/null 2>&1 || true
-    else
+    fi
+    if [ ! -f "$OUT_PDF" ] || [ "$(wc -c < "$OUT_PDF" 2>/dev/null || echo 0)" -lt 500 ]; then
       # Local fallback via export-accessible-pdf.py
       python3 "$WORKSPACE_DIR/docker/publisher-designer/export-accessible-pdf.py" "$TPL_FILE" "$OUT_PDF" --locale "$LOCALE" >/dev/null 2>&1 || true
     fi

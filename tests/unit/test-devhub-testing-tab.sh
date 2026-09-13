@@ -127,8 +127,8 @@ assert_contains "$DEV_HUB_HTML" "renderBlueprintLogsTab" "renderBlueprintLogsTab
 assert_contains "$DEV_HUB_HTML" "filterBpLogsCategory" "filterBpLogsCategory compiled into dev-hub.html"
 assert_contains "$DEV_HUB_HTML" "selectBpLogFile" "selectBpLogFile compiled into dev-hub.html"
 assert_contains "$BRIDGE_PY" '/api/logs/blueprint' "Bridge endpoint: /api/logs/blueprint"
-assert_contains "$I18N_JS" 'modal_tab_logs: "📄 Execution Logs"' "EN translation: modal_tab_logs"
-assert_contains "$I18N_JS" 'modal_tab_logs: "📄 Teostuse logid"' "ET translation: modal_tab_logs"
+assert_contains "$I18N_JS" 'modal_tab_logs: "Logs"' "EN translation: modal_tab_logs"
+assert_contains "$I18N_JS" 'modal_tab_logs: "Logid"' "ET translation: modal_tab_logs"
 assert_contains "$I18N_JS" 'logs_cat_setup: "Setup"' "EN translation: logs_cat_setup"
 assert_contains "$I18N_JS" 'logs_cat_setup: "Paigaldus"' "ET translation: logs_cat_setup"
 

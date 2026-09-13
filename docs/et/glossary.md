@@ -23,6 +23,11 @@
 - **Roll ja kasutus selles projektis:** Peamine veebiliides Proxy andmebaasis (port 8448/8088), mida juhitakse APEXlang DSL-i ja Git-põhiste SQLcl eksportidega.
 - **Ametlik viide / Vikipeedia:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
 - **Seotud juhendid ja skriptid:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
+### `ALISE` — ALISE äriandmebaas ja rakendusplatvorm
+- **Definitsioon:** Pühendatud Oracle Free DB 23ai äriandmebaas, mis majutab põhiskeeme, PL/SQL äriloogikat, rakenduste tabeliruume ja sisemist APEX/ORDS käitust pordil 1533.
+- **Roll ja kasutus selles projektis:** Demonstreeritud kanoonilise äriandmebaasina Blueprint 1-s (Eraldiseisev ALISE DB :1533), tagades täieliku skeemi-isolatsiooni proxy väravast.
+- **Ametlik viide / Vikipeedia:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
+- **Seotud juhendid ja skriptid:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
 
 ### `APFS` — Apple File System
 - **Definitsioon:** macOS vaikefailisüsteem, optimeeritud SSD-ketastele, krüpteeringule ja tõmmistele (snapshots).
@@ -190,11 +195,6 @@
 - **Ametlik viide / Vikipeedia:** [Wikipedia: Newline (LF)](https://en.wikipedia.org/wiki/Newline)
 - **Seotud juhendid ja skriptid:** [.gitattributes](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/.gitattributes)
 
-### `LIS` — Laboratory Information System
-- **Definitsioon:** Labori infosüsteem tervishoiuasutuste proovide, analüüside ja laboriseadmete andmevahetuse juhtimiseks.
-- **Roll ja kasutus selles projektis:** Demonstreeritud Blueprint 3-s (eraldi db-proxy, db-alise ja db-lis baasidega) näidates skeemide isoleeritust.
-- **Ametlik viide / Vikipeedia:** [Wikipedia: LIS / LIMS](https://en.wikipedia.org/wiki/Laboratory_information_management_system)
-- **Seotud juhendid ja skriptid:** [config/blueprints/.env.bp3-multi-db-lis](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.bp3-multi-db-lis), [config/profiles/databases/db-lis.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-lis.yaml)
 
 ## M
 
@@ -242,7 +242,7 @@
 
 ### `PDB` — Pluggable Database
 - **Definitsioon:** Isehaldav skeemide ja objektide kogum Oracle multitenant süsteemis, mis käitub nagu eraldiseisev andmebaas.
-- **Roll ja kasutus selles projektis:** Isoleerib domeenid: FREEPDB1 (Proxy/APEX), ALISEPDB (Äriandmed), LIS_PDB ja BIP_PDB vastavalt blueprintidele.
+- **Roll ja kasutus selles projektis:** Isoleerib domeenid: FREEPDB1 (Proxy/APEX), ALISEPDB (Äriandmed), PUBPDB ja BIP_PDB vastavalt blueprintidele.
 - **Ametlik viide / Vikipeedia:** [Oracle Pluggable Database (PDB)](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/multitenant-architecture.html)
 - **Seotud juhendid ja skriptid:** [docs/db-profiles-and-topology.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/db-profiles-and-topology.md), [scripts/internal/resolve-topology.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/resolve-topology.sh)
 

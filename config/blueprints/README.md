@@ -87,8 +87,8 @@ flowchart TD
 | **7** | [`.env.7-consolidated-forms-publisher`](.env.7-consolidated-forms-publisher) | `db-publisher-oracle.yaml` (:1531) | `forms-publisher-unified.yaml` (:9001/9502/6082) | `db-publisher`, `app-forms-publisher` | Unified WebLogic container running both Forms 14c & Publisher. |
 | **8** | [`.env.8-standalone-web-ide`](.env.8-standalone-web-ide) | - *(Zero DB)* | `web-ide-standard.yaml` (:8090/8450/8091) | `web-ide-dev` | VS Code server & SQL Developer operational workstation with preconfigured extensions and CLI tools. |
 | **9** | [`.env.9-standalone-publisher-designer`](.env.9-standalone-publisher-designer) | - *(Zero DB)* | `publisher-designer-standard.yaml` (:6083 noVNC) | `app-publisher-designer` | HTML5 noVNC desktop container for MS Word & BIP Template Builder. Automated setup via `setup-word-designer.sh`. |
-| **10** | [`.env.10-remote-ords`](.env.10-remote-ords) | `MAIN_DB_PROFILE=NONE` | `ords-standalone.yaml` (:8088/8448) | `app-ords` | **⚠️ Testing & Refinement:** Edge ORDS container boots. Remote cloud ADB & enterprise routing under active development. |
-| **11** | [`.env.11-remote-publisher`](.env.11-remote-publisher) | `MAIN_DB_PROFILE=NONE` | `publisher-standard.yaml` (:9502/9503) | `app-publisher` | **⚠️ Testing & Refinement:** Analytics Publisher container boots. Remote enterprise database reporting under active development. |
+| **10** | [`.env.10-remote-ords`](.env.10-remote-ords) | `MAIN_DB_PROFILE=NONE` | `ords-standalone-remote.yaml` (:8088/8448) | `app-ords-remote` | **⚠️ Testing & Refinement:** Edge ORDS container boots. Remote cloud ADB & enterprise routing under active development. |
+| **11** | [`.env.11-remote-publisher`](.env.11-remote-publisher) | `MAIN_DB_PROFILE=NONE` | `publisher-standalone-remote.yaml` (:9502/9503) | `app-publisher-remote` | **⚠️ Testing & Refinement:** Analytics Publisher container boots. Remote enterprise database reporting under active development. |
 
 ---
 

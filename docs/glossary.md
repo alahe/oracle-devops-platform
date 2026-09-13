@@ -23,6 +23,11 @@
 - **Role in this Project:** Central UI runtime hosted in Proxy DB (port 8448/8088), automated via APEXlang DSL and split SQLcl Git exports.
 - **Official / External Reference:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
 - **Related Documentation & Scripts:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
+### `ALISE` — ALISE Business Application Database
+- **Definition:** Dedicated Oracle Free DB 23ai database environment hosting core business schemas, PL/SQL engines, application tablespaces, and APEX/ORDS runtime on port 1533.
+- **Role in this Project:** Demonstrated as canonical business database in Blueprint 1 (Standalone ALISE DB :1533) and Blueprint 7/3, enforcing complete schema isolation from the proxy layer.
+- **Official / External Reference:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
+- **Related Documentation & Scripts:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
 
 ### `APFS` — Apple File System
 - **Definition:** Default copy-on-write filesystem for macOS optimized for SSD storage, encryption, and snapshots.
@@ -190,11 +195,6 @@
 - **Official / External Reference:** [Wikipedia: Newline (LF)](https://en.wikipedia.org/wiki/Newline)
 - **Related Documentation & Scripts:** [.gitattributes](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/.gitattributes)
 
-### `LIS` — Laboratory Information System
-- **Definition:** Enterprise software designed to manage healthcare laboratory sample workflows, instrument data, and test results.
-- **Role in this Project:** Demonstrated in Blueprint 3 (Multi-DB with separate db-proxy, db-alise, and db-lis instances) showing schema isolation.
-- **Official / External Reference:** [Wikipedia: LIS / LIMS](https://en.wikipedia.org/wiki/Laboratory_information_management_system)
-- **Related Documentation & Scripts:** [config/blueprints/.env.bp3-multi-db-lis](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.bp3-multi-db-lis), [config/profiles/databases/db-lis.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-lis.yaml)
 
 ## M
 
@@ -242,7 +242,7 @@
 
 ### `PDB` — Pluggable Database
 - **Definition:** A self-contained collection of schemas, schema objects, and non-schema objects that appears as a dedicated database.
-- **Role in this Project:** Isolates application domains: FREEPDB1 (Proxy/APEX), ALISEPDB (Business Data), LIS_PDB, and BIP_PDB across blueprints.
+- **Role in this Project:** Isolates application domains: FREEPDB1 (Proxy/APEX), ALISEPDB (Business Data), PUBPDB, and BIP_PDB across blueprints.
 - **Official / External Reference:** [Oracle Pluggable Database (PDB)](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/multitenant-architecture.html)
 - **Related Documentation & Scripts:** [docs/db-profiles-and-topology.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/db-profiles-and-topology.md), [scripts/internal/resolve-topology.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/resolve-topology.sh)
 

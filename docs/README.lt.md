@@ -17,6 +17,7 @@
 | 🔄 **Duomenų bazės atvaizdų keitimas** | [database-image-switching-guide.md](database-image-switching-guide.md) | FastStart spartieji atvaizdai, registrų veidrodžiai ir išpakavimas konteineryje. |
 | 🔄 **3 lygmenų gyvavimo ciklas ir kopijos** | [devops-lifecycle-guide.md](devops-lifecycle-guide.md) | Auksinių momentinių kopijų atkūrimas (~15s), RMAN atsarginės kopijos ir atkūrimas po avarijos. |
 | 🧪 **Automatizuotas testavimas ir Dev Hub** | [testing-framework-and-devhub.md](testing-framework-and-devhub.md) | 160+ automatizuotų testų, planų tikrinimas realiuoju laiku ir Dev Hub. |
+| 🤖 **Copilot AI asistentas ir RAG** | [devhub-copilot-assistant.md](devhub-copilot-assistant.md) | Integruotas Dev Hub AI asistentas, Zero-Trust slaptažodžių apsauga, offline atsarginė sistema ir VS Code tiltas. |
 | 🚀 **Greito prisijungimo gidas** | [quick-login-guide.md](quick-login-guide.md) | 1 paspaudimo iškarpinės įrankiai, SEPS Wallet kredencialų gavimas ir tiesioginės nuorodos. |
 | 📋 **Architektūros planų matrica** | [../config/blueprints/README.md](../config/blueprints/README.md) | 12 kanoninių architektūros modelių (0..11) palyginimas ir išteklių reikalavimai. |
 | 🗄️ **Duomenų bazių profiliai ir topologija** | [db-profiles-and-topology.md](db-profiles-and-topology.md) | YAML profilių hierarchija (`config/profiles/databases/`), prievadų topologija ir Taisyklė 11. |

@@ -128,31 +128,51 @@ if [ -n "$DB_APEX_VER" ] && [ "$CURRENT_JS_VER" != "$DB_APEX_VER" ]; then
     [ -f "$f" ] && PATCH_ZIPS+=("$f")
   done < <(find "$WORKSPACE_DIR/binaries/apex/patches" "$WORKSPACE_DIR/patches" -maxdepth 2 -name "*.zip" 2>/dev/null || true)
 
-  for pz in "${PATCH_ZIPS[@]}"; do
-    if unzip -l "$pz" 2>/dev/null | grep -q "images/apex_version.js"; then
-      echo -e "   🚀 Applying patch images overlay from $(basename "$pz")..."
-      podman exec -u root "$TARGET_CONTAINER" mkdir -p /tmp/apex_patch_sync
-      podman cp "$pz" "$TARGET_CONTAINER":/tmp/apex_patch_sync/patch.zip
-      podman exec -u root "$TARGET_CONTAINER" sh -c '
-        img_dir=$(unzip -l /tmp/apex_patch_sync/patch.zip 2>/dev/null | grep -oE "[^ ]+/images/apex_version\.js" | head -n 1 | sed "s|/images/apex_version.js||")
-        if [ -n "$img_dir" ]; then
-          unzip -q -o /tmp/apex_patch_sync/patch.zip "${img_dir}/images/*" -d /tmp/apex_patch_sync/ 2>/dev/null || true
-          cp -R /tmp/apex_patch_sync/"${img_dir}"/images/. /opt/oracle/apex_images/images/ 2>/dev/null || true
-        fi
-        rm -rf /tmp/apex_patch_sync
-      '
-      podman exec -u root "$TARGET_CONTAINER" chown -R oracle:oinstall /opt/oracle/apex_images 2>/dev/null || true
-      PATCH_FOUND=true
-      break
-    fi
-  done
+  # Check if host directory already has matching patched images
+  BASE_MAJOR_MINOR=$(echo "$DB_APEX_VER" | cut -d'.' -f1,2)
+  HOST_IMG_DIR=""
+  if [ -d "$WORKSPACE_DIR/db-install/apex_${BASE_MAJOR_MINOR}/apex/images" ]; then
+    HOST_IMG_DIR="$WORKSPACE_DIR/db-install/apex_${BASE_MAJOR_MINOR}/apex/images"
+  elif [ -d "$WORKSPACE_DIR/db-install/apex_${BASE_MAJOR_MINOR}/images" ]; then
+    HOST_IMG_DIR="$WORKSPACE_DIR/db-install/apex_${BASE_MAJOR_MINOR}/images"
+  elif [ -d "$WORKSPACE_DIR/db-install/apex/images" ]; then
+    HOST_IMG_DIR="$WORKSPACE_DIR/db-install/apex/images"
+  fi
+  if [ -n "$HOST_IMG_DIR" ] && grep -q "gApexVersion = \"${DB_APEX_VER}\"" "$HOST_IMG_DIR/apex_version.js" 2>/dev/null; then
+    echo -e "   🚀 Copying updated patch images directly from host ($HOST_IMG_DIR)..."
+    podman cp "$HOST_IMG_DIR/." "$TARGET_CONTAINER":/opt/oracle/apex_images/images/
+    podman exec -u root "$TARGET_CONTAINER" chown -R oracle:oinstall /opt/oracle/apex_images 2>/dev/null || true
+    PATCH_FOUND=true
+  fi
 
-  # Safety fallback: if no patch zip found with images, ensure apex_version.js matches DB version
+  if [ "$PATCH_FOUND" != "true" ]; then
+    for pz in "${PATCH_ZIPS[@]}"; do
+      if unzip -l "$pz" 2>/dev/null | grep -q "images/apex_version.js"; then
+        echo -e "   🚀 Applying patch images overlay from $(basename "$pz")..."
+        podman exec -u root "$TARGET_CONTAINER" mkdir -p /tmp/apex_patch_sync
+        podman cp "$pz" "$TARGET_CONTAINER":/tmp/apex_patch_sync/patch.zip
+        podman exec -u root "$TARGET_CONTAINER" sh -c '
+          img_dir=$(unzip -l /tmp/apex_patch_sync/patch.zip 2>/dev/null | grep -oE "[^ ]+/images/apex_version\.js" | head -n 1 | sed "s|/images/apex_version.js||")
+          if [ -n "$img_dir" ]; then
+            unzip -q -o /tmp/apex_patch_sync/patch.zip "${img_dir}/images/*" -d /tmp/apex_patch_sync/ 2>/dev/null || true
+            cp -R /tmp/apex_patch_sync/"${img_dir}"/images/. /opt/oracle/apex_images/images/ 2>/dev/null || true
+          fi
+          rm -rf /tmp/apex_patch_sync
+        '
+        podman exec -u root "$TARGET_CONTAINER" chown -R oracle:oinstall /opt/oracle/apex_images 2>/dev/null || true
+        PATCH_FOUND=true
+        break
+      fi
+    done
+  fi
+
+  # Safety fallback: if no patch zip found with images, ensure apex_version.js and apex_version.txt match DB version
   CURRENT_JS_VER=$(podman exec "$TARGET_CONTAINER" cat /opt/oracle/apex_images/images/apex_version.js 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 || echo "")
   if [ "$CURRENT_JS_VER" != "$DB_APEX_VER" ] && [[ "$DB_APEX_VER" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
     echo "var gApexVersion = \"${DB_APEX_VER}\";" | podman exec -i -u root "$TARGET_CONTAINER" tee /opt/oracle/apex_images/images/apex_version.js >/dev/null
-    podman exec -u root "$TARGET_CONTAINER" chown -R oracle:oinstall /opt/oracle/apex_images 2>/dev/null || true
   fi
+  echo "Oracle APEX Version:  ${DB_APEX_VER}" | podman exec -i -u root "$TARGET_CONTAINER" tee /opt/oracle/apex_images/images/apex_version.txt >/dev/null 2>&1 || true
+  podman exec -u root "$TARGET_CONTAINER" chown -R oracle:oinstall /opt/oracle/apex_images 2>/dev/null || true
 fi
 
 # Step 3: Refresh ORDS if running

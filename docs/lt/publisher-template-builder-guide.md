@@ -274,3 +274,27 @@ sequenceDiagram
     deactivate GHA
 ```
 
+### 9.5 Automatizuotas E2E testavimo ir patvirtinimo konvejeris (`test-deploy-verify-e2e.sh`)
+
+Norint užtikrinti, kad šablonų pakeitimai būtų teisingai įdiegti ir sugeneruoti oficialiame serveryje, platforma siūlo automatizuotą E2E patikrą:
+
+```bash
+# Bazinis vykdymas su dinaminiu testavimo žymekliu (Reikalingas Blueprint 5):
+./scripts/publisher/test-deploy-verify-e2e.sh
+
+# Vykdymas su konkrečia ataskaita ir ieškomu tekstu:
+./scripts/publisher/test-deploy-verify-e2e.sh Custom/Invoices/Invoice_Report "Nordic Innovation AS"
+
+# Automatinis perjungimas į Blueprint 5 esant poreikiui:
+./scripts/publisher/test-deploy-verify-e2e.sh --auto-switch
+```
+
+#### Pagrindiniai kokybės vartai ir patikros:
+1. **Blueprint 5 išankstinė patikra:** Patikrina, ar Blueprint 5 (`app-publisher` prievaduose 9500/9502) veikia sklandžiai.
+2. **Kelių apsauga (CWE-22):** Užtikrina leistinų failų kelių ribas darbo erdvėje.
+3. **Dinaminis žymeklis ir turinio patvirtinimas:** Įterpia laiko žyma pažymėtą žymeklį į `sample_data.xml`, supakuoja `.xdmz` ir `.xdoz`, įdiegia per REST API, įvykdo ataskaitą, atsisiunčia PDF ir patikrina tekstą su Python `pypdf`.
+4. **Integruotas PDF/UA-1 prieinamumo auditas:** Automatiškai paleidžia `validate-pdf-accessibility.sh`.
+5. **Rule 7 paspaudžiamos nuorodos:** Pateikia tiesiogines nuorodas į RTF šabloną (`file://...`), sugeneruotą PDF (`file://...`) ir Publisher portalą.
+6. **Dev Hub Report Lab integracija:** 1-spustelėjimo vykdymas mygtuku `🧪 Käivita E2E Test & Kontroll`.
+
+

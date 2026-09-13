@@ -185,13 +185,19 @@ extract_blueprint_containers() {
 
   # Application containers
   if [ -n "$ords_prof" ] && [ "$ords_prof" != "NONE" ] && [ "$ords_prof" != "disabled" ]; then
-    containers+=("app-ords")
+    local o_file="$WORKSPACE_DIR/config/profiles/ords/${ords_prof}.yaml"
+    local o_cname=""
+    [ -f "$o_file" ] && o_cname=$(grep -E '^[[:space:]]*container_name:' "$o_file" | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^" #]+)"?.*/\1/' | tr -d '\r\n')
+    containers+=("${o_cname:-app-ords}")
   elif [ "$ords_prof" != "NONE" ] && [ "$ords_prof" != "disabled" ] && [ "$has_db_ords" = "true" ]; then
     containers+=("app-ords")
   fi
 
   if [ -n "$publisher_prof" ] && [ "$publisher_prof" != "NONE" ] && [ "$publisher_prof" != "disabled" ]; then
-    containers+=("app-publisher")
+    local pub_file="$WORKSPACE_DIR/config/profiles/publisher/${publisher_prof}.yaml"
+    local pub_cname=""
+    [ -f "$pub_file" ] && pub_cname=$(grep -E '^[[:space:]]*container_name:' "$pub_file" | head -n 1 | sed -E 's/.*:[[:space:]]*"?([^" #]+)"?.*/\1/' | tr -d '\r\n')
+    containers+=("${pub_cname:-app-publisher}")
   elif [ -n "$db_publisher" ] && [ "$db_publisher" != "NONE" ] && [ -n "$publisher_prof" ] && [ "$publisher_prof" != "NONE" ]; then
     containers+=("app-publisher")
   fi

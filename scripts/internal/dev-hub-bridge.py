@@ -20,6 +20,8 @@ import datetime
 import time
 import threading
 import ssl
+import hashlib
+import html
 
 # Ensure scripts/internal is in sys.path for dev_hub imports
 INTERNAL_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -29,13 +31,26 @@ if INTERNAL_DIR not in sys.path:
 try:
     from dev_hub.parser import parse_blueprint_env_and_metadata
     from dev_hub.diagnostics import find_latest_log_for_blueprint, find_all_logs_for_blueprint, load_all_passwords
-    from dev_hub.testing import get_script_doc_reference
+    from dev_hub.copilot import (
+        get_copilot_status,
+        ask_copilot,
+        generate_vscode_deeplink,
+        get_ai_status,
+        ask_ai,
+        generate_ai_deeplink
+    )
 except Exception:
     parse_blueprint_env_and_metadata = None
     find_latest_log_for_blueprint = None
     find_all_logs_for_blueprint = None
     load_all_passwords = None
     get_script_doc_reference = lambda s: {"doc_file": "docs/testing-framework-and-devhub.md", "doc_key": "testing_framework", "title": "Testing Framework & Dev Hub Architecture"}
+    get_copilot_status = lambda: {"status": "ok", "available": False, "auth_type": "none", "offline_ready": True}
+    ask_copilot = lambda q, h=None, l="en": {"status": "ok", "reply": "Copilot engine offline", "offline": True}
+    generate_vscode_deeplink = lambda q, l="en": {"status": "ok", "vscode_url": f"vscode://github.copilot/chat?message={q}", "clipboard_content": q}
+    get_ai_status = lambda: {"status": "ok", "providers": {"copilot": {"available": False}, "antigravity": {"available": False}}}
+    ask_ai = lambda p, q, h=None, l="en": {"status": "ok", "reply": "AI engine offline", "offline": True}
+    generate_ai_deeplink = lambda t, q, l="en": {"status": "ok", f"{t}_url": f"{t}://chat?message={q}", "clipboard_content": q}
 
 # Ensure standard system and package manager binary directories are in PATH
 for p in ["/opt/homebrew/bin", "/usr/local/bin", os.path.expanduser("~/.local/bin")]:
@@ -105,34 +120,77 @@ MODULE_PROFILE_MAP = {
 }
 
 ACTIVE_TASKS = {}
+PDF_PREVIEW_STORE = {}
+
+def get_platform_version():
+    vfile = os.path.join(WORKSPACE_DIR, "VERSION")
+    if os.path.isfile(vfile):
+        try:
+            with open(vfile, "r", encoding="utf-8") as vf:
+                return vf.read().strip()
+        except Exception:
+            pass
+    return "2.3.0"
+
+def get_platform_build_timestamp():
+    vfile = os.path.join(WORKSPACE_DIR, "VERSION")
+    if os.path.isfile(vfile):
+        try:
+            mtime = os.path.getmtime(vfile)
+            return datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
+        except Exception:
+            pass
+    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 DEVOPS_WHITELIST = {
+    "setup-dryrun": ["./scripts/setup-all.sh", "--dry-run"],
+    "setup-help": ["./scripts/setup-all.sh", "--help"],
+    "setup-studio-full": ["./scripts/setup-all.sh", "-y"],
+    "setup-studio-fast": ["./scripts/setup-all.sh", "-s", "-y"],
+    "setup-studio-fresh": ["./scripts/setup-all.sh", "--fresh", "-y"],
+    "setup-studio-dryrun": ["./scripts/setup-all.sh", "--dry-run"],
+    "reset-all": ["./scripts/reset-all.sh", "-y"],
+    "reset-system": ["./scripts/reset-all.sh", "--system", "-y"],
+    "reset-clean-logs": ["./scripts/reset-all.sh", "--clean-logs", "-y"],
+    "reset-studio-std": ["./scripts/reset-all.sh", "-y"],
+    "reset-studio-deep": ["./scripts/reset-all.sh", "--system", "-y"],
+    "reset-studio-clean": ["./scripts/reset-all.sh", "--clean-logs", "-y"],
+    "reset-studio-deep-clean": ["./scripts/reset-all.sh", "--system", "--clean-logs", "-y"],
+    "sqlcl-cli": ["./scripts/sqlcl.sh", "/@DB_PROXY_DEV"],
+    "reset-help": ["./scripts/reset-all.sh", "--help"],
+    "start-containers": ["./scripts/start-containers.sh"],
+    "start-containers-help": ["./scripts/start-containers.sh", "--help"],
+    "start-bridge": ["./scripts/start-bridge.sh", "--restart"],
+    "start-bridge-status": ["./scripts/start-bridge.sh", "--status"],
+    "deploy-status": ["./scripts/deploy-blueprint.sh", "--status"],
     "check-urls": ["./scripts/check-urls.sh"],
     "check-wallet": ["./scripts/check-wallet.sh"],
     "get-passwords": ["./scripts/get-password.sh", "--list"],
     "rotate-dev": ["./scripts/rotate-password.sh", "db-proxy", "dev"],
     "rotate-all": ["./scripts/rotate-password.sh", "all"],
-    "restore-snapshot": ["./scripts/snapshots/restore-golden-snapshots.sh", "--auto", "-b", "0"],
-    "create-snapshot": ["./scripts/snapshots/create-golden-snapshots.sh"],
-    "clean-snapshots": ["./scripts/snapshots/clean-golden-snapshots.sh", "-y"],
-    "reset-all": ["./scripts/reset-all.sh", "-y"],
-    "deploy-status": ["./scripts/deploy-blueprint.sh", "--status"],
+    "create-dev-user": ["./scripts/create-developer.sh", "dev_user"],
+    "register-connections": ["./scripts/register-connections.sh"],
     "clean-logs": ["./scripts/clean-logs.sh"],
+    "clean-certs": ["./scripts/clean-certs.sh"],
+    "report-repo-stats": ["./scripts/report-repo-stats.sh"],
+    "onboard-enterprise": ["./scripts/onboard-enterprise.sh", "--status"],
+    "create-snapshot": ["./scripts/snapshots/create-golden-snapshots.sh"],
+    "restore-snapshot": ["./scripts/snapshots/restore-golden-snapshots.sh", "--auto", "-b", "0"],
+    "clean-snapshots": ["./scripts/snapshots/clean-golden-snapshots.sh", "-y"],
+    "trust-cert": ["./scripts/certs/trust-local-cert-mac.sh"] if sys.platform == "darwin" else ["./scripts/certs/trust-local-cert.cmd"],
+    "check-precommit": ["./scripts/check-pre-commit.sh", "--full"],
+    "test-precommit": ["./scripts/check-pre-commit.sh", "--full"],
+    "blueprint-info": ["./scripts/blueprint-info.sh"],
+    "update-extensions": ["./scripts/update-extensions.sh"],
+    # Testing tab runners (invoked via test runner / legacy compatibility)
     "test-ci": ["./scripts/test-local-ci.sh"],
     "test-containers": ["./tests/test-containers-live.sh"],
-    "register-connections": ["./scripts/register-connections.sh"],
-    "trust-cert": ["./scripts/certs/trust-local-cert-mac.sh"] if sys.platform == "darwin" else ["./scripts/certs/trust-local-cert.cmd"],
-    "update-extensions": ["./scripts/update-extensions.sh"],
-    "blueprint-info": ["./scripts/blueprint-info.sh"],
     "test-devhub-blueprints": ["./tests/test-devhub-browser-blueprints.sh"],
     "test-devhub-lifecycle": ["./tests/test-devhub-lifecycle-full.sh"],
     "test-devhub-lifecycle-dryrun": ["./tests/test-devhub-lifecycle-full.sh", "--dry-run"],
     "windows-dryrun": ["./scripts/test-windows-dryrun.sh"],
-    "onboard-enterprise": ["./scripts/onboard-enterprise.sh", "--status"],
     "security-audit": ["./scripts/test-security-audit.sh"],
     "test-mermaid": ["./tests/unit/test-devhub-mermaid-rendering.sh"],
-    "check-precommit": ["./scripts/check-pre-commit.sh", "--full"],
-    "test-precommit": ["./scripts/check-pre-commit.sh", "--full"],
     "test-publisher-a11y": ["./tests/integration/test-publisher-accessibility-suite.sh"],
     "test-publisher-designer-e2e": ["./tests/integration/test-publisher-designer-e2e.sh"],
     "rtf-lint": ["./scripts/publisher/validate-rtf-accessibility.sh"],
@@ -451,7 +509,10 @@ def get_live_container_status():
         status_map = {"alise": False, "ords": True, "proxy": True}
 
     setup_prog = get_setup_in_progress()
+    active_bp = read_active_blueprint()
+    return status_map, running_names, active_bp, container_health, setup_prog
 
+def read_active_blueprint():
     abp_path = os.path.join(WORKSPACE_DIR, ".active_blueprint")
     if os.path.isfile(abp_path):
         try:
@@ -459,11 +520,10 @@ def get_live_container_status():
                 txt = f.read().strip()
                 m = re.search(r"(\d+)", txt)
                 if m:
-                    active_bp = int(m.group(1))
+                    return int(m.group(1))
         except Exception:
             pass
-
-    return status_map, running_names, active_bp, container_health, setup_prog
+    return None
 
 CACHED_ORDS_POOLS = {}
 
@@ -482,6 +542,15 @@ def get_live_ords_pools():
     ctx = ssl._create_unverified_context()
     opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx))
 
+    running_containers, _ = get_running_containers_with_ports()
+    pool_db_map = {
+        "proxy": ["db-proxy", "db-oracle"],
+        "alise": ["db-alise"],
+        "proxy_standalone": ["db-proxy-standalone"],
+        "gvenzl": ["db-gvenzl"],
+        "adb": ["db-adb"],
+    }
+
     pool_dirs = [d for d in glob.glob(os.path.join(pools_dir, "*")) if os.path.isdir(d) and os.path.basename(d) != "default"]
     for pd in sorted(pool_dirs):
         pname = os.path.basename(pd)
@@ -499,6 +568,31 @@ def get_live_ords_pools():
             except Exception:
                 pass
 
+        req_dbs = pool_db_map.get(pname)
+        if req_dbs and not any(d in running_containers for d in req_dbs):
+            if pname == "adb":
+                _, _, active_bp, _, _ = get_live_container_status()
+                if active_bp != 4:
+                    ords_pools[pname] = {
+                        "configured": True,
+                        "status": "offline",
+                        "url": f"http://localhost:{ords_port}/ords/{pname}/",
+                        "target": target,
+                        "latency_ms": 0,
+                        "http_code": 0
+                    }
+                    continue
+            else:
+                ords_pools[pname] = {
+                    "configured": True,
+                    "status": "offline",
+                    "url": f"http://localhost:{ords_port}/ords/{pname}/",
+                    "target": target,
+                    "latency_ms": 0,
+                    "http_code": 0
+                }
+                continue
+
         t0 = time.time()
         url = f"http://127.0.0.1:{ords_port}/ords/{pname}/"
         status = "offline"
@@ -509,18 +603,18 @@ def get_live_ords_pools():
             with opener.open(req, timeout=4.0) as resp:
                 lat = int((time.time() - t0) * 1000)
                 http_code = resp.status
-                status = "online" if resp.status in [200, 301, 302, 303, 307, 308, 404] else "degraded"
+                status = "online" if resp.status in [200, 301, 302, 303, 307, 308, 401, 403, 404] else "degraded"
         except urllib.error.HTTPError as e:
             lat = int((time.time() - t0) * 1000)
             http_code = e.code
-            status = "online" if e.code in [200, 301, 302, 303, 307, 308, 404] else "degraded"
-        except Exception:
-            # If ORDS is running and listening on port, treat as online (or starting during warmup)
-            if is_socket_busy(int(ords_port)):
+            if e.code in [200, 301, 302, 303, 307, 308, 401, 403, 404]:
                 status = "online"
-                http_code = 200
-            else:
+            elif e.code in [500, 502, 503, 504]:
                 status = "offline"
+            else:
+                status = "degraded"
+        except Exception:
+            status = "offline"
 
         ords_pools[pname] = {
             "configured": True,
@@ -575,7 +669,102 @@ def get_system_resources():
                 avail_ram_gb = round(int(m_avail.group(1)) / (1024 * 1024), 1)
     except Exception:
         pass
-    return {"total_ram_gb": total_ram_gb, "avail_ram_gb": avail_ram_gb}
+    system_reserve_gb = 2.0
+    safe_avail_ram_gb = max(0.0, round(avail_ram_gb - system_reserve_gb, 1))
+    return {
+        "total_ram_gb": total_ram_gb,
+        "avail_ram_gb": avail_ram_gb,
+        "system_reserve_gb": system_reserve_gb,
+        "safe_avail_ram_gb": safe_avail_ram_gb
+    }
+
+CONTAINER_MEM_CACHE = {"timestamp": 0, "data": {}}
+
+def get_containers_memory_stats():
+    now = time.time()
+    if CONTAINER_MEM_CACHE["data"] and (now - CONTAINER_MEM_CACHE["timestamp"]) < 4:
+        return CONTAINER_MEM_CACHE["data"]
+
+    mem_stats = {}
+    total_mb = 0.0
+    try:
+        res = subprocess.run([PODMAN_BIN, "stats", "--no-stream", "--format", "json"], capture_output=True, text=True, timeout=4, cwd=WORKSPACE_DIR)
+        if res.returncode == 0 and res.stdout.strip():
+            data = json.loads(res.stdout)
+            for item in data:
+                cname = item.get("name", "")
+                if not cname:
+                    continue
+                mem_str = item.get("mem_usage", "")
+                used_mb = 0.0
+                if "/" in mem_str:
+                    used_part = mem_str.split("/")[0].strip()
+                    m_val = re.match(r"^([\d\.]+)\s*([a-zA-Z]+)", used_part)
+                    if m_val:
+                        num = float(m_val.group(1))
+                        unit = m_val.group(2).upper()
+                        if "G" in unit:
+                            used_mb = num * 1024.0
+                        elif "M" in unit:
+                            used_mb = num
+                        elif "K" in unit:
+                            used_mb = num / 1024.0
+                        elif "B" in unit:
+                            used_mb = num / (1024.0 * 1024.0)
+
+                pct_str = str(item.get("mem_percent", "0%")).replace("%", "").strip()
+                try:
+                    pct = float(pct_str)
+                except Exception:
+                    pct = 0.0
+
+                used_str = f"{round(used_mb / 1024.0, 2)} GB" if used_mb >= 1024.0 else f"{int(round(used_mb))} MB"
+                mem_stats[cname] = {
+                    "mem_used_mb": round(used_mb, 1),
+                    "mem_used_str": used_str,
+                    "mem_percent": round(pct, 1)
+                }
+                total_mb += used_mb
+    except Exception:
+        pass
+
+    total_gb = round(total_mb / 1024.0, 2)
+    result = {
+        "container_memory": mem_stats,
+        "containers_total_mem_mb": round(total_mb, 1),
+        "containers_total_mem_gb": total_gb
+    }
+    CONTAINER_MEM_CACHE["timestamp"] = now
+    CONTAINER_MEM_CACHE["data"] = result
+    return result
+
+def update_blueprint_runtime_ram(active_bp_id, container_mem_map):
+    if active_bp_id is None:
+        return
+    ram_file = os.path.join(WORKSPACE_DIR, "metrics", "blueprint_ram_benchmarks.json")
+    if not os.path.isfile(ram_file):
+        return
+    try:
+        with open(ram_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        bps = data.get("blueprints", {})
+        bp_str = str(active_bp_id)
+        if bp_str in bps:
+            target_containers = bps[bp_str].get("containers", [])
+            total_mb = 0.0
+            for cn in target_containers:
+                if cn in container_mem_map:
+                    total_mb += container_mem_map[cn].get("mem_used_mb", 0.0)
+            if total_mb > 0:
+                measured_mb = int(round(total_mb))
+                if bps[bp_str].get("runtime_ram_mb") != measured_mb:
+                    bps[bp_str]["runtime_ram_mb"] = measured_mb
+                    bps[bp_str]["last_measured"] = datetime.datetime.now().isoformat()
+                    data["last_updated"] = datetime.datetime.now().isoformat()
+                    with open(ram_file, "w", encoding="utf-8") as f:
+                        json.dump(data, f, indent=2)
+    except Exception:
+        pass
 
 def format_bytes_human(sz):
     try:
@@ -945,6 +1134,156 @@ def get_test_suites_catalog():
         pass
     return {}
 
+def get_publisher_templates_catalog():
+    """Scans repository for RTF report templates, matching XML test data, and localized XLF bundles."""
+    templates = []
+    
+    # 1. Samples (templates/publisher/samples/)
+    samples_dir = os.path.join(WORKSPACE_DIR, "templates/publisher/samples")
+    if os.path.isdir(samples_dir):
+        sample_xmls = []
+        for f in sorted(os.listdir(samples_dir)):
+            full_f = os.path.join(samples_dir, f)
+            if f.endswith(".xml") and os.path.isfile(full_f):
+                sample_xmls.append({
+                    "name": f.replace(".xml", "").replace("_", " ").title(),
+                    "filename": f,
+                    "path": f"templates/publisher/samples/{f}"
+                })
+        for f in sorted(os.listdir(samples_dir)):
+            if f.endswith(".rtf"):
+                base_name = f[:-4]
+                locales = ["et"]
+                for xlf in os.listdir(samples_dir):
+                    if xlf.startswith(base_name) and xlf.endswith(".xlf"):
+                        m = re.search(r'_([a-z]{2})\.xlf$', xlf)
+                        if m and m.group(1) not in locales:
+                            locales.append(m.group(1))
+                
+                title = base_name.replace("_", " ").title()
+                if "Arve Test Standard" in title:
+                    title = "Eesti Standardarve (Näidis)"
+                elif "Arve Eesti Standard" in title:
+                    title = "Standardne Müügiarve (Eesti)"
+                elif "Saateleht" in title:
+                    title = "Standardne Saateleht (Näidis)"
+                elif "Accessible Starter" in title:
+                    title = "Ligipääsetav Alusmall (Starter)"
+
+                best_xml = f"templates/publisher/samples/{sample_xmls[0]['filename']}" if sample_xmls else ""
+                for sxml in sample_xmls:
+                    if "test" in base_name.lower() and "test" in sxml["filename"].lower():
+                        best_xml = sxml["path"]
+                        break
+                    elif "arve" in base_name.lower() and "arve" in sxml["filename"].lower():
+                        best_xml = sxml["path"]
+                        break
+                    elif "saateleht" in base_name.lower() and "saateleht" in sxml["filename"].lower():
+                        best_xml = sxml["path"]
+                        break
+
+                templates.append({
+                    "id": f"sample_{base_name}",
+                    "name": title,
+                    "filename": f,
+                    "category": "samples",
+                    "category_label": "Näidismallid (Samples)",
+                    "rtf_path": f"templates/publisher/samples/{f}",
+                    "default_xml": best_xml,
+                    "available_xmls": sample_xmls,
+                    "locales": sorted(locales),
+                    "is_deployable": True,
+                    "deploy_path": "Custom/Invoices/Invoice_Report"
+                })
+
+    # 2. Accessibility Suite (templates/publisher/accessibility_suite/)
+    a11y_dir = os.path.join(WORKSPACE_DIR, "templates/publisher/accessibility_suite")
+    if os.path.isdir(a11y_dir):
+        for sub in sorted(os.listdir(a11y_dir)):
+            sub_path = os.path.join(a11y_dir, sub)
+            rtf_file = os.path.join(sub_path, "template.rtf")
+            xml_file = os.path.join(sub_path, "data.xml")
+            if os.path.isfile(rtf_file) and os.path.isfile(xml_file):
+                title = sub.replace("-", " ").title()
+                if "01" in sub:
+                    title = "Ligipääsetav Arve (PDF/UA-1 & WCAG AA)"
+                elif "02" in sub:
+                    title = "Mitmerealine Tabeli Aruanne (Ligipääsetav)"
+                elif "03" in sub:
+                    title = "Finantsaruanne & Kokkuvõtted (Ligipääsetav)"
+                
+                templates.append({
+                    "id": f"a11y_{sub}",
+                    "name": title,
+                    "filename": "template.rtf",
+                    "category": "accessibility",
+                    "category_label": "Ligipääsetavuse Suite (PDF/UA-1)",
+                    "rtf_path": f"templates/publisher/accessibility_suite/{sub}/template.rtf",
+                    "default_xml": f"templates/publisher/accessibility_suite/{sub}/data.xml",
+                    "available_xmls": [{
+                        "name": "Suite Test Data XML",
+                        "filename": "data.xml",
+                        "path": f"templates/publisher/accessibility_suite/{sub}/data.xml"
+                    }],
+                    "locales": ["et", "en", "fi", "sv", "lv", "lt"],
+                    "is_deployable": False,
+                    "deploy_path": ""
+                })
+
+    # 3. Official Custom Reports (applications/publisher/Custom/)
+    custom_dir = os.path.join(WORKSPACE_DIR, "applications/publisher/Custom")
+    if os.path.isdir(custom_dir):
+        for domain in sorted(os.listdir(custom_dir)):
+            domain_path = os.path.join(custom_dir, domain)
+            if not os.path.isdir(domain_path) or domain.startswith("."):
+                continue
+            for rep in sorted(os.listdir(domain_path)):
+                rep_path = os.path.join(domain_path, rep)
+                if not os.path.isdir(rep_path) or rep.startswith("."):
+                    continue
+                
+                xdo_dirs = glob.glob(os.path.join(rep_path, "*.xdo"))
+                if not xdo_dirs:
+                    continue
+                xdo_dir = xdo_dirs[0]
+                rtf_file = os.path.join(xdo_dir, "template.rtf")
+                if not os.path.isfile(rtf_file):
+                    continue
+
+                available_xmls = []
+                xdm_dirs = glob.glob(os.path.join(rep_path, "*.xdm"))
+                if xdm_dirs:
+                    for xfile in sorted(os.listdir(xdm_dirs[0])):
+                        if xfile.endswith(".xml"):
+                            available_xmls.append({
+                                "name": xfile.replace(".xml", "").replace("_", " ").title(),
+                                "filename": xfile,
+                                "path": f"applications/publisher/Custom/{domain}/{rep}/{os.path.basename(xdm_dirs[0])}/{xfile}"
+                            })
+
+                locales = ["et"]
+                for xlf in os.listdir(xdo_dir):
+                    m = re.search(r'template_([a-z]{2})\.xlf$', xlf)
+                    if m and m.group(1) not in locales:
+                        locales.append(m.group(1))
+
+                title = f"Ametlik Raport: {rep.replace('_', ' ')}"
+                templates.append({
+                    "id": f"custom_{domain}_{rep}",
+                    "name": title,
+                    "filename": "template.rtf",
+                    "category": "custom",
+                    "category_label": f"Ametlikud Raportid ({domain})",
+                    "rtf_path": f"applications/publisher/Custom/{domain}/{rep}/{os.path.basename(xdo_dir)}/template.rtf",
+                    "default_xml": available_xmls[0]["path"] if available_xmls else "templates/publisher/samples/arve_test_andmed.xml",
+                    "available_xmls": available_xmls or [{"name": "Vaikimisi Arve Andmed", "filename": "arve_test_andmed.xml", "path": "templates/publisher/samples/arve_test_andmed.xml"}],
+                    "locales": sorted(locales),
+                    "is_deployable": True,
+                    "deploy_path": f"Custom/{domain}/{rep}"
+                })
+
+    return templates
+
 def get_test_reports_list():
     """Scans tests/reports/ and returns a structured list of test reports."""
     try:
@@ -1068,7 +1407,19 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Private-Network", "true")
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("X-Frame-Options", "SAMEORIGIN")
+        if not self.path.startswith("/api/publisher/pdf"):
+            self.send_header("X-Frame-Options", "SAMEORIGIN")
+
+    def _safe_write(self, body, content_type="application/json", status=200):
+        try:
+            self.send_response(status)
+            self._send_cors_headers()
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError, ssl.SSLEOFError, OSError):
+            pass
 
     def _send_json(self, data, cb=None, status=200):
         json_str = json.dumps(data)
@@ -1079,12 +1430,7 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             body = json_str.encode("utf-8")
             ct = "application/json"
 
-        self.send_response(status)
-        self._send_cors_headers()
-        self.send_header("Content-Type", ct)
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        self._safe_write(body, ct, status)
 
     def do_OPTIONS(self):
         self.send_response(200)
@@ -1105,6 +1451,9 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             statuses, running_names, active_bp, container_health, setup_prog = get_live_container_status()
             conflicts = detect_port_conflicts()
             resources = get_system_resources()
+            mem_info = get_containers_memory_stats()
+            if active_bp is not None:
+                update_blueprint_runtime_ram(active_bp, mem_info.get("container_memory", {}))
             include_pools = params.get("include_ords_pools", ["1"])[0]
             if include_pools == "0" and CACHED_ORDS_POOLS:
                 ords_pools = CACHED_ORDS_POOLS
@@ -1119,7 +1468,12 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 "setup_in_progress": setup_prog,
                 "active_blueprint": active_bp,
                 "conflicts": conflicts,
-                "system_resources": resources
+                "system_resources": resources,
+                "version": get_platform_version(),
+                "build_timestamp": get_platform_build_timestamp(),
+                "container_memory": mem_info.get("container_memory", {}),
+                "containers_total_mem_mb": mem_info.get("containers_total_mem_mb", 0),
+                "containers_total_mem_gb": mem_info.get("containers_total_mem_gb", 0)
             }
             json_str = json.dumps(data)
             if cb:
@@ -1129,40 +1483,23 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 body = json_str.encode("utf-8")
                 ct = "application/json"
 
-            self.send_response(200)
-            self._send_cors_headers()
-            self.send_header("Content-Type", ct)
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+            self._safe_write(body, ct)
 
         elif parsed.path == "/api/ords/pools":
             ords_pools = get_live_ords_pools()
             data = {"status": "ok", "ords_pools": ords_pools}
             json_str = json.dumps(data)
             body = json_str.encode("utf-8")
-            self.send_response(200)
-            self._send_cors_headers()
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+            self._safe_write(body, "application/json")
 
         elif parsed.path == "/api/ords/refresh":
-            try:
-                subprocess.run([os.path.join(WORKSPACE_DIR, "scripts/internal/manage-ords-pools.sh"), "sync"], capture_output=True, timeout=5)
-            except Exception:
-                pass
-            ords_pools = get_live_ords_pools()
-            data = {"status": "ok", "message": "ORDS pools synchronized", "ords_pools": ords_pools}
-            json_str = json.dumps(data)
-            body = json_str.encode("utf-8")
-            self.send_response(200)
-            self._send_cors_headers()
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+            self.handle_ords_refresh(cb)
+
+        elif parsed.path == "/api/copilot/status":
+            self._send_json(get_copilot_status(), cb)
+
+        elif parsed.path == "/api/ai/status":
+            self._send_json(get_ai_status(), cb)
 
         elif parsed.path == "/api/tests/suites":
             self._send_json({"status": "ok", "suites": get_test_suites_catalog()}, cb)
@@ -1184,6 +1521,12 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
 
         elif parsed.path == "/api/tests/history":
             self._send_json({"status": "ok", "history": get_test_execution_history()}, cb)
+
+        elif parsed.path == "/api/publisher/templates":
+            self._send_json({"status": "ok", "templates": get_publisher_templates_catalog()}, cb)
+
+        elif parsed.path == "/api/publisher/pdf":
+            self.handle_publisher_pdf(parsed.query)
 
         elif parsed.path == "/api/report/stats":
             stats_path = os.path.join(WORKSPACE_DIR, "metrics/repo_statistics.json")
@@ -1295,6 +1638,182 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         elif parsed.path in ["/api/passwords", "/api/credentials"]:
             pwds = load_all_passwords() if load_all_passwords else {}
             self._send_json({"status": "ok", "passwords": pwds}, cb)
+
+        elif parsed.path in ["/api/publisher/open", "/api/publisher/login"]:
+            # Rule 5 Zero-Trust: Passwords are NEVER accepted or transmitted via URL parameters.
+            # Query the credential dynamically in-memory from SEPS Wallet using user/role/alias.
+            raw_user = params.get("user", [""])[0] or params.get("username", [""])[0] or params.get("role", [""])[0] or "bip_developer"
+            alias = params.get("alias", [""])[0]
+            dest = params.get("dest", [""])[0] or params.get("target", [""])[0] or "/servlet/home"
+
+            user_clean = raw_user.strip().lower()
+            if not alias:
+                if user_clean in ["bip_developer", "developer", "dev"]:
+                    alias = "PUBLISHER_DEVELOPER"
+                    user_clean = "bip_developer"
+                elif user_clean in ["bip_user", "user"]:
+                    alias = "PUBLISHER_USER"
+                    user_clean = "bip_user"
+                elif user_clean in ["bip_admin", "admin"]:
+                    alias = "PUBLISHER_ADMIN"
+                    user_clean = "bip_admin"
+                elif user_clean in ["weblogic", "sys", "system", "administrator"]:
+                    alias = "PUBLISHER_WEBLOGIC_ADMIN"
+                    user_clean = "weblogic"
+                else:
+                    alias = f"PUBLISHER_{raw_user.strip().upper()}"
+                    user_clean = raw_user.strip()
+            else:
+                user_clean = raw_user.strip()
+
+            pwd = get_single_credential(alias)
+            if not pwd and alias == "PUBLISHER_WEBLOGIC_ADMIN":
+                pwd = get_single_credential("DB_PUBLISHER_SYS")
+            if not pwd and alias != "PUBLISHER_DEVELOPER":
+                pwd = get_single_credential("PUBLISHER_DEVELOPER")
+
+            # Destination parsing & whitelist validation (prevents Open Redirect)
+            dest_unquoted = urllib.parse.unquote(dest).strip()
+            if not (dest_unquoted.startswith("/") or dest_unquoted.startswith("http://localhost:9502/") or dest_unquoted.startswith("http://127.0.0.1:9502/")):
+                self.send_response(400)
+                self.send_header("Content-Type", "text/plain; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(b"400 Bad Request: Invalid destination parameter (must target /xmlpserver or localhost:9502)")
+                return
+
+            # Canonical Publisher base and destination resolution
+            base_login_url = "http://localhost:9502/xmlpserver/login.jsp"
+            if dest_unquoted.startswith("http://localhost:9502"):
+                target_dest_url = dest_unquoted
+            elif dest_unquoted.startswith("http://127.0.0.1:9502"):
+                target_dest_url = dest_unquoted.replace("http://127.0.0.1:9502", "http://localhost:9502")
+            elif dest_unquoted.startswith("/xmlpserver/"):
+                target_dest_url = f"http://localhost:9502{dest_unquoted}"
+            elif dest_unquoted.startswith("/"):
+                target_dest_url = f"http://localhost:9502/xmlpserver{dest_unquoted}"
+            else:
+                target_dest_url = "http://localhost:9502/xmlpserver/servlet/home"
+
+            # Detect if navigation targets a specific report/custom page rather than the default home portal
+            target_norm = target_dest_url.rstrip("/")
+            is_specific_dest = (
+                any(marker in target_dest_url for marker in [".xdo", ".xdm", "/Custom/", "/viewHistory", "/myjob"])
+                and not (target_norm.endswith("/xmlpserver") or target_norm.endswith("/servlet/home"))
+            )
+
+            # Direct top-level navigation (Zero iframes: 100% CSP and SameSite compliant)
+            target_form_action = target_dest_url if is_specific_dest else base_login_url
+
+            auto_nav_script = f"""
+        var submitted = false;
+        function submitLogin() {{
+            if (!submitted) {{
+                submitted = true;
+                document.getElementById('autoPostForm').submit();
+            }}
+        }}
+        // Pre-flight session invalidation: reset any lingering WebLogic sessions (e.g. prior weblogic login)
+        try {{
+            var resetImg = new Image();
+            resetImg.onload = resetImg.onerror = function() {{
+                setTimeout(submitLogin, 50);
+            }};
+            resetImg.src = "http://localhost:9502/xmlpserver/signout.jsp?_ts=" + Date.now();
+            setTimeout(submitLogin, 300);
+        }} catch(e) {{
+            submitLogin();
+        }}
+"""
+
+            html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Connecting to Oracle Analytics Publisher...</title>
+    <style>
+        body {{
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }}
+        .card {{
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 32px 40px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 420px;
+        }}
+        .spinner {{
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(56, 189, 248, 0.2);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 18px;
+        }}
+        @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="spinner"></div>
+        <h3 style="margin: 0 0 8px 0; color: #38bdf8;">Oracle Analytics Publisher</h3>
+        <p style="margin: 0 0 12px 0; color: #94a3b8; font-size: 0.9rem;">Automaatne sisselogimine rollis <b>{html.escape(user_clean)}</b>...</p>
+        <noscript>
+            <p style="color: #fbbf24;">JavaScript on keelatud. Klõpsa jätkamiseks:</p>
+            <button type="submit" form="autoPostForm" style="padding: 8px 16px; background: #38bdf8; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Logi sisse</button>
+        </noscript>
+    </div>
+
+    <form id="autoPostForm" method="POST" action="{html.escape(target_form_action)}">
+        <input type="hidden" name="id" value="{html.escape(user_clean)}">
+        <input type="hidden" name="passwd" value="{html.escape(pwd)}">
+        <input type="hidden" name="_xuil" value="en_US">
+        <input type="hidden" name="SUBMIT_BUTTON" value="Sign In">
+    </form>
+
+    <script>
+{auto_nav_script}
+    </script>
+</body>
+</html>"""
+            response_bytes = html_content.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(response_bytes)))
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src http://localhost:9502 http://127.0.0.1:9502; img-src http://localhost:9502 http://127.0.0.1:9502; form-action http://localhost:9502 http://127.0.0.1:9502; frame-src http://localhost:9502 http://127.0.0.1:9502;")
+            # Force browser to clear any active WebLogic session for localhost /xmlpserver so new credentials always take effect
+            self.send_header("Set-Cookie", "JSESSIONID=deleted; Path=/xmlpserver; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax")
+            self.send_header("Set-Cookie", "ORA_XDO_UI=deleted; Path=/xmlpserver; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax")
+            self.end_headers()
+            self.wfile.write(response_bytes)
+
+        elif parsed.path == "/api/version":
+            self._send_json({
+                "status": "ok",
+                "version": get_platform_version(),
+                "build_timestamp": get_platform_build_timestamp(),
+                "engine": "zero-trust-bip-auto-login",
+                "session_invalidation": "active",
+                "supported_roles": ["bip_developer", "bip_user", "bip_admin", "weblogic"],
+                "active_blueprint": read_active_blueprint()
+            }, cb)
+
 
         elif parsed.path.startswith("/api/resolve-port-conflict"):
             self.handle_resolve_conflict(parsed.query, cb)
@@ -1550,6 +2069,13 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         elif parsed.path.startswith("/api/toggle") or parsed.path.startswith("/toggle"):
             self.handle_toggle(parsed.query, cb)
 
+        elif parsed.path in ["/api/bridge/restart", "/api/bridge/reload"]:
+            self._send_json({"status": "ok", "message": "Bridge restarting..."}, cb)
+            def _restart():
+                time.sleep(0.5)
+                os.execv(sys.executable, [sys.executable] + sys.argv)
+            threading.Thread(target=_restart).start()
+
         elif parsed.path in ["/", "/dev-hub", "/dev-hub.html", "/index.html"]:
             if os.path.exists(DEV_HUB_HTML):
                 with open(DEV_HUB_HTML, "rb") as f:
@@ -1561,8 +2087,7 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(content)
             else:
-                self.send_response(404)
-                self.end_headers()
+                self._send_json({"status": "error", "error": "Not found"}, cb, status=404)
         else:
             self.send_response(200)
             self._send_cors_headers()
@@ -1610,6 +2135,24 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             self.handle_test_run(post_body, parsed.query, cb)
         elif parsed.path == "/api/tests/stop":
             self.handle_test_stop(post_body, parsed.query, cb)
+        elif parsed.path == "/api/publisher/render":
+            self.handle_publisher_render(post_body, parsed.query, cb)
+        elif parsed.path == "/api/publisher/deploy":
+            self.handle_publisher_deploy(post_body, parsed.query, cb)
+        elif parsed.path == "/api/publisher/audit":
+            self.handle_publisher_audit(post_body, parsed.query, cb)
+        elif parsed.path == "/api/publisher/test-e2e":
+            self.handle_publisher_test_e2e(post_body, parsed.query, cb)
+        elif parsed.path == "/api/publisher/open-designer":
+            self.handle_publisher_open_designer(post_body, parsed.query, cb)
+        elif parsed.path == "/api/copilot/chat":
+            self.handle_copilot_chat(post_body, parsed.query, cb)
+        elif parsed.path == "/api/ai/chat":
+            self.handle_ai_chat(post_body, parsed.query, cb)
+        elif parsed.path == "/api/copilot/deeplink":
+            self.handle_copilot_deeplink(post_body, parsed.query, cb)
+        elif parsed.path == "/api/ai/deeplink":
+            self.handle_ai_deeplink(post_body, parsed.query, cb)
         elif parsed.path == "/api/podman/action":
             self.handle_podman_action(post_body, parsed.query, cb)
         elif parsed.path == "/api/bridge/restart" or parsed.path == "/api/bridge/reload":
@@ -1619,6 +2162,8 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 os.execv(sys.executable, [sys.executable] + sys.argv)
             import threading
             threading.Thread(target=_restart).start()
+        elif parsed.path == "/api/ords/refresh":
+            self.handle_ords_refresh(cb)
         elif parsed.path == "/api/report/refresh":
             try:
                 subprocess.run([sys.executable, os.path.join(WORKSPACE_DIR, "scripts/internal/generate-repo-report.py")], timeout=10, check=True)
@@ -1629,8 +2174,30 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             except Exception as e:
                 self._send_json({"status": "error", "error": str(e)}, cb, status=500)
         else:
-            self.send_response(404)
-            self.end_headers()
+            self._send_json({"status": "error", "error": f"Endpoint not found: {parsed.path}"}, cb, status=404)
+
+    def handle_ords_refresh(self, cb=None):
+        try:
+            subprocess.run([os.path.join(WORKSPACE_DIR, "scripts/internal/manage-ords-pools.sh"), "sync"], capture_output=True, timeout=5)
+        except Exception:
+            pass
+        ords_pools = get_live_ords_pools(force=True) if "force" in get_live_ords_pools.__code__.co_varnames else get_live_ords_pools()
+        CONTAINER_MEM_CACHE["timestamp"] = 0
+        mem_info = get_containers_memory_stats()
+        resources = get_system_resources()
+        _, _, active_bp, _, _ = get_live_container_status()
+        if active_bp is not None:
+            update_blueprint_runtime_ram(active_bp, mem_info.get("container_memory", {}))
+        data = {
+            "status": "ok",
+            "message": "ORDS pools and container RAM synchronized",
+            "ords_pools": ords_pools,
+            "container_memory": mem_info.get("container_memory", {}),
+            "containers_total_mem_mb": mem_info.get("containers_total_mem_mb", 0),
+            "containers_total_mem_gb": mem_info.get("containers_total_mem_gb", 0),
+            "system_resources": resources
+        }
+        self._send_json(data, cb)
 
     def handle_podman_action(self, post_body, query_str, cb=None):
         """Controls Podman resources: containers (start, stop, restart, remove), volumes (remove), images (remove)."""
@@ -1851,71 +2418,100 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
 
     def handle_devops_run(self, post_body, query_str, cb=None):
         cmd_key = ""
+        payload = {}
         try:
             if post_body.strip().startswith("{"):
-                data = json.loads(post_body)
-                cmd_key = data.get("command", "")
+                payload = json.loads(post_body)
+                cmd_key = payload.get("command", "")
             else:
                 q = urllib.parse.parse_qs(post_body or query_str)
                 cmd_key = q.get("command", [""])[0]
+                payload = {k: v[0] for k, v in q.items()}
         except Exception:
             pass
 
         if cmd_key not in DEVOPS_WHITELIST:
-            self.send_response(400)
-            self._send_cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "error", "error": f"Command '{cmd_key}' is not in allowed whitelist"}).encode("utf-8"))
+            self._send_json({"status": "error", "error": f"Command '{cmd_key}' is not in allowed whitelist"}, cb, status=400)
             return
 
-        cmd_args = DEVOPS_WHITELIST[cmd_key]
+        # Mutex lock: Prevent concurrent execution of lifecycle-altering operations
+        lock_file = os.path.join(WORKSPACE_DIR, ".setup_in_progress")
+        is_lifecycle_op = cmd_key.startswith("setup-") or cmd_key.startswith("reset-")
+        if is_lifecycle_op and os.path.isfile(lock_file):
+            self._send_json({"status": "error", "error": "Teine elutsükli toiming on juba käimas (.setup_in_progress lukk aktiivne)."}, cb, status=409)
+            return
+
+        cmd_args = list(DEVOPS_WHITELIST[cmd_key])
+
+        # Security Guardrail: Parameter sanitization with strict regex (No shell injection)
+        if cmd_key == "create-dev-user" and "username" in payload:
+            user_val = str(payload["username"]).strip()
+            if not re.match(r"^[a-zA-Z0-9_]{3,30}$", user_val):
+                self._send_json({"status": "error", "error": "Vigane kasutajanimi! Lubatud on ainult tähed, numbrid ja alakriips (3-30 märki)."}, cb, status=400)
+                return
+            cmd_args = ["./scripts/create-developer.sh", user_val]
+
+        if cmd_key == "sqlcl-cli" and "alias" in payload:
+            alias_val = str(payload["alias"]).strip()
+            if not re.match(r"^/?[a-zA-Z0-9_@]+$", alias_val):
+                self._send_json({"status": "error", "error": "Vigane Wallet alias süntaks!"}, cb, status=400)
+                return
+            cmd_args = ["./scripts/sqlcl.sh", alias_val]
+
+        start_time = time.time()
+        timeout_sec = 300 if is_lifecycle_op else 120
+
         try:
             res = subprocess.run(
                 cmd_args,
                 cwd=WORKSPACE_DIR,
                 capture_output=True,
                 text=True,
-                timeout=120
+                timeout=timeout_sec
             )
+            elapsed_sec = round(time.time() - start_time, 2)
+            out_comb = res.stdout + ("\n" + res.stderr if res.stderr else "")
+
             data = {
                 "status": "ok",
                 "ok": (res.returncode == 0),
                 "command": cmd_key,
                 "cmd_str": " ".join(cmd_args),
                 "exit_code": res.returncode,
+                "duration_s": elapsed_sec,
                 "stdout": res.stdout,
                 "stderr": res.stderr,
-                "output": res.stdout + ("\n" + res.stderr if res.stderr else "")
+                "output": out_comb
             }
             log_fn = f"devops_{cmd_key.replace('-', '_')}.log"
             log_full = os.path.join(WORKSPACE_DIR, "install_logs", log_fn)
             try:
+                os.makedirs(os.path.join(WORKSPACE_DIR, "install_logs"), exist_ok=True)
                 with open(log_full, "w", encoding="utf-8") as f:
-                    f.write(data["output"])
+                    f.write(out_comb)
                 data["log_file"] = log_fn
                 data["log_relative_path"] = f"install_logs/{log_fn}"
                 data["log_full_path"] = log_full
+
+                # Audit Trail Invariant (strictly local in install_logs/):
+                audit_fn = os.path.join(WORKSPACE_DIR, "install_logs", "audit_events.jsonl")
+                audit_entry = {
+                    "timestamp": datetime.datetime.now().isoformat(),
+                    "command": cmd_key,
+                    "cmd_str": " ".join(cmd_args),
+                    "exit_code": res.returncode,
+                    "duration_s": elapsed_sec
+                }
+                with open(audit_fn, "a", encoding="utf-8") as af:
+                    af.write(json.dumps(audit_entry) + "\n")
             except Exception:
                 pass
-            json_str = json.dumps(data)
-            body = f"{cb}({json_str});".encode("utf-8") if cb else json_str.encode("utf-8")
-            ct = "application/javascript" if cb else "application/json"
-            self.send_response(200)
-            self._send_cors_headers()
-            self.send_header("Content-Type", ct)
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+
+            self._send_json(data, cb, status=200 if res.returncode == 0 else 500)
         except subprocess.TimeoutExpired:
-            self.send_response(504)
-            self._send_cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "error", "error": "Command timed out after 120s"}).encode("utf-8"))
+            self._send_json({"status": "error", "error": f"Käsu täitmine aegus (üle {timeout_sec}s)"}, cb, status=504)
         except Exception as e:
-            self.send_response(500)
-            self._send_cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"status": "error", "error": str(e)}).encode("utf-8"))
+            self._send_json({"status": "error", "error": str(e)}, cb, status=500)
 
     def handle_resolve_conflict(self, query_str, cb=None):
         params = urllib.parse.parse_qs(query_str)
@@ -1990,14 +2586,25 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             self._send_json({"status": "error", "error": "Missing module"}, cb, status=400)
             return
 
-        # Core Base Protection: db-proxy and app-ords cannot be stopped via Web UI
+        # Core Base Protection: db-proxy and app-ords stopping requires confirmation
         CORE_PROTECTED = ["core", "proxy", "db-proxy", "ords", "app-ords", "0"]
+        confirmed = False
+        try:
+            if raw_str.startswith("{"):
+                confirmed = bool(json.loads(raw_str).get("confirmed", False))
+        except Exception:
+            pass
+        if not confirmed and params.get("confirmed", ["false"])[0].lower() in ["true", "1"]:
+            confirmed = True
+
         if action in ["stop", "down"] and (str(module).lower() in CORE_PROTECTED or str(module) == "0"):
-            self._send_json({
-                "status": "error",
-                "error": "Core Base Protection: db-proxy and app-ords cannot be stopped via Web UI."
-            }, cb, status=403)
-            return
+            if not confirmed:
+                self._send_json({
+                    "status": "error",
+                    "requires_confirmation": True,
+                    "error": "Core Base Protection: Blueprint #0 (db-proxy and app-ords) is the central Core Base. Stopping it requires confirmation (&confirmed=true)."
+                }, cb, status=403)
+                return
 
         if action in ["setup", "activate", "switch", "deploy", "start"] and str(module).isdigit():
             # Check available RAM safety buffer (< 2.0 GB)
@@ -2064,14 +2671,16 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         elif action == "stop" and str(module).isdigit():
             bp_files = glob.glob(os.path.join(WORKSPACE_DIR, f"config/blueprints/.env.{module}-*"))
             to_stop = []
-            if bp_files and parse_blueprint_env_and_metadata:
+            if int(module) == 0:
+                to_stop = ["db-proxy", "app-ords"]
+            elif bp_files and parse_blueprint_env_and_metadata:
                 try:
                     meta = parse_blueprint_env_and_metadata(bp_files[0], int(module))
                     cnames = meta.get("container_names", [])
                     to_stop = [c for c in cnames if c not in ["db-proxy", "app-ords"]]
                 except Exception as e:
                     print(f"Error parsing blueprint {module} for stop: {e}", file=sys.stderr)
-            if not to_stop and bp_files:
+            if not to_stop and bp_files and int(module) != 0:
                 with open(bp_files[0], "r", encoding="utf-8") as f:
                     for line in f:
                         line = line.strip()
@@ -2852,26 +3461,455 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         else:
             self._send_json({"status": "ok", "message": "Test process already finished"}, cb)
 
+    def handle_publisher_pdf(self, query_str):
+        q = urllib.parse.parse_qs(query_str)
+        token = q.get("token", [""])[0]
+        preview = PDF_PREVIEW_STORE.get(token)
+        if not preview or not os.path.isfile(preview.get("path", "")):
+            file_param = q.get("file", [""])[0]
+            if file_param and file_param.endswith(".pdf"):
+                safe_full = os.path.abspath(os.path.join(WORKSPACE_DIR, file_param))
+                if safe_full.startswith(WORKSPACE_DIR) and os.path.isfile(safe_full):
+                    preview = {"path": safe_full, "filename": os.path.basename(safe_full)}
+
+        if not preview or not os.path.isfile(preview["path"]):
+            self.send_response(404)
+            self._send_cors_headers()
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(b"PDF faili ei leitud voi see on aegunud.")
+            return
+
+        try:
+            with open(preview["path"], "rb") as f:
+                content = f.read()
+            safe_name = preview.get("filename", "report_preview.pdf")
+            self.send_response(200)
+            self._send_cors_headers()
+            self.send_header("Content-Type", "application/pdf")
+            self.send_header("Content-Disposition", f'inline; filename="{safe_name}"')
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.send_header("Content-Length", str(len(content)))
+            self.end_headers()
+            self.wfile.write(content)
+        except Exception as e:
+            self.send_response(500)
+            self._send_cors_headers()
+            self.end_headers()
+            self.wfile.write(str(e).encode("utf-8"))
+
+    def handle_publisher_render(self, post_body, query_str, cb=None):
+        try:
+            now = time.time()
+            # Clean old preview entries
+            for k in list(PDF_PREVIEW_STORE.keys()):
+                if now - PDF_PREVIEW_STORE[k].get("created_at", 0) > 3600:
+                    try:
+                        p = PDF_PREVIEW_STORE[k].get("path")
+                        if p and p.startswith("/tmp/bip_preview_") and os.path.isfile(p):
+                            os.remove(p)
+                    except Exception:
+                        pass
+                    PDF_PREVIEW_STORE.pop(k, None)
+
+            data = {}
+            if post_body and post_body.strip().startswith("{"):
+                data = json.loads(post_body)
+            else:
+                q = urllib.parse.parse_qs(post_body or query_str)
+                data = {k: v[0] for k, v in q.items()}
+
+            rtf_rel = data.get("rtf_path", "").strip()
+            xml_rel = data.get("xml_path", "").strip()
+            locale = data.get("locale", "et").strip()[:2].lower()
+            if not locale:
+                locale = "et"
+
+            if not rtf_rel:
+                self._send_json({"status": "error", "error": "Malli tee (rtf_path) on kohustuslik!"}, cb, status=400)
+                return
+
+            rtf_full = os.path.abspath(os.path.join(WORKSPACE_DIR, rtf_rel))
+            if not rtf_full.startswith(WORKSPACE_DIR) or not os.path.isfile(rtf_full):
+                self._send_json({"status": "error", "error": f"RTF malli faili ei leitud: {rtf_rel}"}, cb, status=404)
+                return
+
+            if xml_rel:
+                xml_full = os.path.abspath(os.path.join(WORKSPACE_DIR, xml_rel))
+                if not xml_full.startswith(WORKSPACE_DIR) or not os.path.isfile(xml_full):
+                    self._send_json({"status": "error", "error": f"XML andmefaili ei leitud: {xml_rel}"}, cb, status=404)
+                    return
+            else:
+                xml_full = os.path.join(WORKSPACE_DIR, "templates/publisher/samples/arve_test_andmed.xml")
+
+            prev_dir = os.path.join(WORKSPACE_DIR, "templates/publisher/.previews")
+            os.makedirs(prev_dir, exist_ok=True)
+            token = f"prev_{int(now)}_{os.getpid()}_{abs(hash(rtf_rel)) % 100000}"
+            out_pdf = os.path.join(prev_dir, f"preview_{token}.pdf")
+
+            render_script = os.path.join(WORKSPACE_DIR, "scripts/publisher/test-render.sh")
+            start_t = time.time()
+
+            cmd = [render_script, rtf_full, xml_full, out_pdf, "--locale", locale]
+            res = subprocess.run(cmd, cwd=WORKSPACE_DIR, capture_output=True, text=True, timeout=30)
+            dur = time.time() - start_t
+
+            if os.path.isfile(out_pdf) and os.path.getsize(out_pdf) > 0:
+                PDF_PREVIEW_STORE[token] = {
+                    "path": out_pdf,
+                    "filename": os.path.basename(rtf_rel).replace(".rtf", f"_{locale}.pdf"),
+                    "created_at": time.time()
+                }
+                pdf_size = os.path.getsize(out_pdf)
+                self._send_json({
+                    "status": "ok",
+                    "pdf_token": token,
+                    "pdf_url": f"/api/publisher/pdf?token={token}",
+                    "pdf_size": pdf_size,
+                    "duration_ms": int(dur * 1000),
+                    "rtf": rtf_rel,
+                    "xml": xml_rel or os.path.relpath(xml_full, WORKSPACE_DIR),
+                    "locale": locale,
+                    "stdout": res.stdout
+                }, cb)
+            else:
+                raw_err = (res.stderr + "\n" + res.stdout).strip()
+                friendly = "PDF genereerimine ebaõnnestus."
+                if "unclosed for-each" in raw_err.lower():
+                    friendly = "Süntaksiviga mallis: 'Unclosed for-each loop'. Veendu, et igal <?for-each:LINE?> sildil on vastav <?end for-each?>."
+                elif "element not found" in raw_err.lower() or "tag not found" in raw_err.lower():
+                    friendly = "XML andmete viga: Mallis viidatud väli puudub valitud XML testandmetest."
+                elif "syntaxerror" in raw_err.lower():
+                    friendly = "Süntaksiviga RTF malli märgendites."
+
+                self._send_json({
+                    "status": "error",
+                    "error": friendly,
+                    "raw_output": raw_err,
+                    "duration_ms": int(dur * 1000)
+                }, cb, status=500)
+        except subprocess.TimeoutExpired:
+            self._send_json({"status": "error", "error": "Renderdamine aegus (üle 30s)"}, cb, status=504)
+        except Exception as e:
+            self._send_json({"status": "error", "error": str(e)}, cb, status=500)
+
+    def handle_publisher_deploy(self, post_body, query_str, cb=None):
+        try:
+            data = {}
+            if post_body and post_body.strip().startswith("{"):
+                data = json.loads(post_body)
+            else:
+                q = urllib.parse.parse_qs(post_body or query_str)
+                data = {k: v[0] for k, v in q.items()}
+
+            rep_path = data.get("report_path", "Custom/Invoices/Invoice_Report").strip()
+            deploy_script = os.path.join(WORKSPACE_DIR, "scripts/publisher/deploy-template.sh")
+
+            start_t = time.time()
+            res = subprocess.run([deploy_script, rep_path, "--render"], cwd=WORKSPACE_DIR, capture_output=True, text=True, timeout=60)
+            dur = time.time() - start_t
+
+            out_comb = (res.stdout + "\n" + res.stderr).strip()
+            ok = (res.returncode == 0)
+
+            friendly_msg = "Raport edukalt paigaldatud ja serveris testitud!" if ok else "Paigaldamisel tekkis tõrge."
+            if "Container app-publisher is not running" in out_comb or "server at http://localhost:9502/xmlpserver is not responding" in out_comb:
+                friendly_msg = "Konteiner app-publisher ei tööta või WebLogic server ei vasta pordil 9502. Käivita Publisher enne paigaldamist!"
+            elif "ORA-" in out_comb:
+                m = re.search(r'ORA-[0-9]{5}: [^\n]+', out_comb)
+                if m:
+                    friendly_msg = f"Andmebaasi viga paigaldamisel: {m.group(0)}"
+
+            self._send_json({
+                "status": "ok" if ok else "error",
+                "ok": ok,
+                "message": friendly_msg,
+                "report_path": rep_path,
+                "duration_ms": int(dur * 1000),
+                "output": out_comb
+            }, cb, status=200 if ok else 500)
+        except subprocess.TimeoutExpired:
+            self._send_json({"status": "error", "error": "Paigaldus aegus (üle 60s)"}, cb, status=504)
+        except Exception as e:
+            self._send_json({"status": "error", "error": str(e)}, cb, status=500)
+
+    def handle_publisher_audit(self, post_body, query_str, cb=None):
+        try:
+            data = {}
+            if post_body and post_body.strip().startswith("{"):
+                data = json.loads(post_body)
+            else:
+                q = urllib.parse.parse_qs(post_body or query_str)
+                data = {k: v[0] for k, v in q.items()}
+
+            token = data.get("token", "")
+            pdf_path = ""
+            if token and token in PDF_PREVIEW_STORE:
+                pdf_path = PDF_PREVIEW_STORE[token]["path"]
+            elif data.get("pdf_path"):
+                p = os.path.abspath(os.path.join(WORKSPACE_DIR, data["pdf_path"]))
+                if p.startswith(WORKSPACE_DIR) and os.path.isfile(p):
+                    pdf_path = p
+
+            if not pdf_path or not os.path.isfile(pdf_path):
+                self._send_json({"status": "error", "error": "PDF faili ei leitud auditeerimiseks. Renderda esmalt PDF!"}, cb, status=404)
+                return
+
+            audit_script = os.path.join(WORKSPACE_DIR, "scripts/publisher/validate-pdf-accessibility.sh")
+            res = subprocess.run([audit_script, pdf_path], cwd=WORKSPACE_DIR, capture_output=True, text=True, timeout=20)
+            out_comb = (res.stdout + "\n" + res.stderr).strip()
+
+            compliant = (res.returncode == 0) and ("❌ KRIITILINE" not in out_comb and "❌ TULEMUS" not in out_comb and "FAILED" not in out_comb)
+
+            self._send_json({
+                "status": "ok",
+                "compliant": compliant,
+                "output": out_comb,
+                "summary": "PDF vastab PDF/UA-1 ja WCAG 2.1 AA standarditele!" if compliant else "PDF vajab ligipääsetavuse viimistlust."
+            }, cb)
+        except Exception as e:
+            self._send_json({"status": "error", "error": str(e)}, cb, status=500)
+
+    def handle_publisher_test_e2e(self, post_body, query_str, cb=None):
+        try:
+            data = {}
+            if post_body and post_body.strip().startswith("{"):
+                data = json.loads(post_body)
+            else:
+                q = urllib.parse.parse_qs(post_body or query_str)
+                data = {k: v[0] for k, v in q.items()}
+
+            rep_path = data.get("report_path", "Custom/Invoices/Invoice_Report").strip()
+            expected_text = data.get("expected_text", "").strip()
+            xml_rel = data.get("xml_path", "").strip()
+
+            # Resolve catalog template if an ID or RTF path was provided
+            catalog = get_publisher_templates_catalog()
+            matched_tpl = None
+            for tpl in catalog:
+                if tpl.get("id") == rep_path or tpl.get("rtf_path") == rep_path:
+                    matched_tpl = tpl
+                    break
+
+            if matched_tpl:
+                target_rep = matched_tpl.get("deploy_path") or "Custom/Invoices/Invoice_Report"
+                rtf_src = os.path.join(WORKSPACE_DIR, matched_tpl.get("rtf_path", ""))
+                xml_src = os.path.join(WORKSPACE_DIR, xml_rel or matched_tpl.get("default_xml", ""))
+                target_dir = os.path.join(WORKSPACE_DIR, "applications/publisher", target_rep)
+                if os.path.isfile(rtf_src) and os.path.isdir(target_dir):
+                    rep_xdo_dir = os.path.join(target_dir, os.path.basename(target_rep) + ".xdo")
+                    if os.path.isdir(rep_xdo_dir):
+                        shutil.copy2(rtf_src, os.path.join(rep_xdo_dir, "template.rtf"))
+                    if os.path.isfile(xml_src):
+                        if os.path.isdir(rep_xdo_dir):
+                            shutil.copy2(xml_src, os.path.join(rep_xdo_dir, "sample_data.xml"))
+                        dm_dir = os.path.join(target_dir, "Invoice_DataModel.xdm")
+                        if os.path.isdir(dm_dir):
+                            shutil.copy2(xml_src, os.path.join(dm_dir, "sample_data.xml"))
+                rep_path = target_rep
+
+            e2e_script = os.path.join(WORKSPACE_DIR, "scripts/publisher/test-deploy-verify-e2e.sh")
+            cmd = [e2e_script, rep_path]
+            if expected_text:
+                cmd.append(expected_text)
+
+            start_t = time.time()
+            res = subprocess.run(cmd, cwd=WORKSPACE_DIR, capture_output=True, text=True, timeout=120)
+            dur = time.time() - start_t
+
+            out_comb = (res.stdout + "\n" + res.stderr).strip()
+            ok = (res.returncode == 0)
+
+            import glob
+            pdf_files = sorted(glob.glob(os.path.join(WORKSPACE_DIR, "install_logs/publisher_e2e_*.pdf")), key=os.path.getmtime, reverse=True)
+            pdf_rel = os.path.relpath(pdf_files[0], WORKSPACE_DIR) if pdf_files else ""
+            pdf_url = ""
+            if pdf_files and os.path.isfile(pdf_files[0]):
+                token = hashlib.sha256(f"{pdf_files[0]}_{os.path.getmtime(pdf_files[0])}".encode()).hexdigest()[:16]
+                PDF_PREVIEW_STORE[token] = {"path": pdf_files[0], "ts": time.time()}
+                pdf_url = f"/api/publisher/pdf?token={token}"
+
+            friendly_msg = "E2E Test edukalt läbitud! Sisu ja ligipääsetavus kinnitatud." if ok else "E2E Testi käivitamisel ilmnes tõrge."
+            if "nõutav Blueprint 5" in out_comb:
+                friendly_msg = "E2E testimiseks on nõutav Blueprint 5 (Standalone Analytics Publisher). Aktiveeri see Blueprints vaatest!"
+
+            self._send_json({
+                "status": "ok",
+                "ok": ok,
+                "message": friendly_msg,
+                "report_path": rep_path,
+                "duration_ms": int(dur * 1000),
+                "pdf_url": pdf_url,
+                "pdf_file": pdf_rel,
+                "output": out_comb
+            }, cb, status=200)
+        except subprocess.TimeoutExpired:
+            self._send_json({"status": "error", "error": "E2E Test aegus (üle 120s)"}, cb, status=504)
+        except Exception as e:
+            self._send_json({"status": "error", "error": str(e)}, cb, status=500)
+
+    def handle_publisher_open_designer(self, post_body, query_str, cb=None):
+        try:
+            data = {}
+            if post_body and post_body.strip().startswith("{"):
+                data = json.loads(post_body)
+            else:
+                q = urllib.parse.parse_qs(post_body or query_str)
+                data = {k: v[0] for k, v in q.items()}
+
+            rtf_rel = data.get("rtf_path", "").strip()
+
+            if not rtf_rel:
+                catalog = get_publisher_templates_catalog()
+                if catalog:
+                    rtf_rel = catalog[0].get("rtf_path", "")
+
+            container_name = "app-publisher-designer"
+            container_rtf = "/u01/templates/samples/arve_eesti_standard.rtf"
+
+            if rtf_rel:
+                clean_rel = rtf_rel.lstrip("/")
+                if clean_rel.startswith("templates/publisher/"):
+                    sub = clean_rel[len("templates/publisher/"):]
+                    container_rtf = f"/u01/templates/{sub}"
+                elif os.path.isfile(os.path.join(WORKSPACE_DIR, clean_rel)):
+                    host_full = os.path.join(WORKSPACE_DIR, clean_rel)
+                    dest_c = f"/u01/templates/custom/{os.path.basename(clean_rel)}"
+                    subprocess.run([PODMAN_BIN, "exec", "-u", "oracle", container_name, "mkdir", "-p", "/u01/templates/custom"], timeout=5)
+                    subprocess.run([PODMAN_BIN, "cp", host_full, f"{container_name}:{dest_c}"], timeout=5)
+                    container_rtf = dest_c
+
+            c_check = subprocess.run([PODMAN_BIN, "ps", "--format", "{{.Names}}"], capture_output=True, text=True, timeout=5)
+            if container_name not in c_check.stdout:
+                self._send_json({
+                    "status": "error",
+                    "error": f"Designer konteiner '{container_name}' ei tööta. Käivita see Blueprints vaatest või käsuga: ./scripts/publisher/start-publisher-designer.sh"
+                }, cb, status=503)
+                return
+
+            # Open target RTF in LibreOffice Writer on display :1
+            subprocess.run([
+                PODMAN_BIN, "exec", "-d", "-u", "oracle", "-e", "DISPLAY=:1",
+                container_name, "libreoffice", "--norestore", "--writer", container_rtf
+            ], timeout=5)
+
+            # Bring to focus using xdotool if available, and close any Tip of the Day popup
+            doc_base = os.path.basename(container_rtf)
+            subprocess.run([
+                PODMAN_BIN, "exec", "-d", "-u", "oracle", "-e", "DISPLAY=:1",
+                container_name, "bash", "-c", f"sleep 1; xdotool search --name 'Tip of the Day' windowclose 2>/dev/null || true; xdotool search --name '{doc_base}' windowactivate 2>/dev/null || true"
+            ], timeout=5)
+
+            designer_url = "http://localhost:6083/vnc.html?autoconnect=true&resize=remote"
+            self._send_json({
+                "status": "ok",
+                "message": f"Malli avamine algatatud LibreOffice Writeris: {os.path.basename(container_rtf)}",
+                "container_file": container_rtf,
+                "designer_url": designer_url
+            }, cb)
+        except Exception as e:
+            self._send_json({"status": "error", "error": str(e)}, cb, status=500)
+
+    def handle_ai_chat(self, post_body, query_str, cb=None):
+        try:
+            req = json.loads(post_body) if post_body.strip() else {}
+        except Exception:
+            req = {}
+        provider = req.get("provider", "copilot")
+        query = req.get("query") or req.get("message", "")
+        history = req.get("history", [])
+        lang = req.get("lang", "en")
+        res = ask_ai(provider, query, history, lang)
+        self._send_json(res, cb)
+
+    def handle_copilot_chat(self, post_body, query_str, cb=None):
+        self.handle_ai_chat(post_body, query_str, cb)
+
+    def handle_ai_deeplink(self, post_body, query_str, cb=None):
+        try:
+            req = json.loads(post_body) if post_body.strip() else {}
+        except Exception:
+            req = {}
+        target = req.get("target") or req.get("provider", "vscode")
+        query = req.get("query") or req.get("message", "")
+        lang = req.get("lang", "en")
+        res = generate_ai_deeplink(target, query, lang)
+
+        if target == "antigravity" and sys.platform == "darwin":
+            try:
+                for app in ["Antigravity", "Antigravity IDE"]:
+                    if os.path.exists(f"/Applications/{app}.app"):
+                        subprocess.Popen(["open", "-a", app], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        break
+            except Exception:
+                pass
+
+        self._send_json(res, cb)
+
+    def handle_copilot_deeplink(self, post_body, query_str, cb=None):
+        self.handle_ai_deeplink(post_body, query_str, cb)
+
     def log_message(self, format, *args):
         return
+
+class SafeThreadingTCPServer(socketserver.ThreadingTCPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+    def handle_error(self, request, client_address):
+        exc_type = sys.exc_info()[0]
+        if exc_type and issubclass(exc_type, (BrokenPipeError, ConnectionResetError, ssl.SSLEOFError, OSError)):
+            return
+        super().handle_error(request, client_address)
 
 def start_https_server(bind_host, https_port, cert_file, key_file):
     try:
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         context.load_cert_chain(certfile=cert_file, keyfile=key_file)
-        socketserver.ThreadingTCPServer.allow_reuse_address = True
-        with socketserver.ThreadingTCPServer((bind_host, https_port), DevHubBridgeHandler) as httpsd:
+        SafeThreadingTCPServer.allow_reuse_address = True
+        with SafeThreadingTCPServer((bind_host, https_port), DevHubBridgeHandler) as httpsd:
             httpsd.socket = context.wrap_socket(httpsd.socket, server_side=True)
             print(f"🔒 Dev Hub Bridge HTTPS server active on https://{bind_host}:{https_port}")
             httpsd.serve_forever()
     except Exception as e:
         print(f"⚠️ Dev Hub Bridge HTTPS server could not start on {https_port}: {e}")
 
+def start_auto_reload_watcher():
+    """Monitors core files (VERSION, dev-hub-bridge.py) and hot-reloads via os.execv on modification."""
+    watch_files = [
+        os.path.join(WORKSPACE_DIR, "VERSION"),
+        os.path.abspath(__file__),
+    ]
+    initial_mtimes = {}
+    for f in watch_files:
+        if os.path.isfile(f):
+            initial_mtimes[f] = os.path.getmtime(f)
+
+    def _watch_loop():
+        time.sleep(2)
+        while True:
+            try:
+                for f, init_t in list(initial_mtimes.items()):
+                    if os.path.isfile(f):
+                        current_t = os.path.getmtime(f)
+                        if current_t > init_t:
+                            print(f"🔄 [Dev Hub Bridge Auto-Reload] {os.path.basename(f)} muutus kettal. Taaskäivitan sildserveri...", flush=True)
+                            time.sleep(0.5)
+                            os.execv(sys.executable, [sys.executable] + sys.argv)
+            except Exception:
+                pass
+            time.sleep(1.5)
+
+    watcher = threading.Thread(target=_watch_loop, daemon=True, name="BridgeAutoReloadWatcher")
+    watcher.start()
+
 def main():
-    socketserver.ThreadingTCPServer.allow_reuse_address = True
+    SafeThreadingTCPServer.allow_reuse_address = True
     bind_host = BIND_HOST
     cert_file = os.path.join(WORKSPACE_DIR, "config/certs/localhost.crt")
     key_file = os.path.join(WORKSPACE_DIR, "config/certs/localhost.key")
+
+    start_auto_reload_watcher()
 
     if os.path.isfile(cert_file) and os.path.isfile(key_file):
         https_thread = threading.Thread(
@@ -2881,7 +3919,7 @@ def main():
         )
         https_thread.start()
 
-    with socketserver.ThreadingTCPServer((bind_host, PORT), DevHubBridgeHandler) as httpd:
+    with SafeThreadingTCPServer((bind_host, PORT), DevHubBridgeHandler) as httpd:
         print(f"🚀 Dev Hub Bridge & Dashboard server active on http://{bind_host}:{PORT}")
         httpd.serve_forever()
 

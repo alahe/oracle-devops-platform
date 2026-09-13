@@ -39,7 +39,8 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 FORCE=false
 NO_ROTATE=false
 AUTO_MODE=false
-TARGET_BP_ID="${BLUEPRINT_ID:-3}"
+DRY_RUN=false
+TARGET_BP_ID="${BLUEPRINT_ID:-$(cat "$WORKSPACE_DIR/.active_blueprint" 2>/dev/null || echo "0")}"
 TARGET_PROFILE="${PROFILE_NAME:-db-proxy-oracle}"
 BACKUP_FILE_NAME=""
 TARGET_TAG=""
@@ -86,6 +87,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-rotate)
       NO_ROTATE=true
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN=true
       shift
       ;;
     -b=*|--blueprint=*)
@@ -151,7 +156,7 @@ if [ -x "$WORKSPACE_DIR/scripts/internal/generate-compose-override.sh" ]; then
 fi
 
 ACTIVE_DBS=$(get_active_db_instances 2>/dev/null || true)
-if [ -z "$ACTIVE_DBS" ] || [ "${DB_ENABLED:-true}" = "false" ] || [ "${TARGET_PROFILE:-}" = "NONE" ]; then
+if [ -z "$ACTIVE_DBS" ] || [ "${DB_ENABLED:-true}" = "false" ] || [ "${TARGET_PROFILE:-}" = "NONE" ] || [ "${TARGET_BP_ID:-0}" = "8" ] || [ "${TARGET_BP_ID:-0}" = "9" ]; then
   echo -e "${YELLOW}ℹ️  [Golden Snapshot]: Zero local database instances configured for Blueprint ${TARGET_BP_ID:-0} (${TARGET_PROFILE:-NONE}). No database volume to restore.${NC}"
   exit 0
 fi
@@ -309,12 +314,6 @@ get_restore_stats() {
   msg_str "BENCHMARK_AVG" "$(format_duration $avg)"
 }
 
-echo -e "${CYAN}==================================================================${NC}"
-echo -e "${YELLOW}🚀 Oracle DB Volume Golden Snapshot Restore${NC}"
-echo -e "📂 Source snapshot: ${CYAN}$BACKUP_FILE${NC}"
-echo -e "   📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(get_restore_stats "15s")${NC}"
-echo -e "${CYAN}==================================================================${NC}"
-
 LOG_DIR="$WORKSPACE_DIR/install_logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/restore_bp_${TARGET_BP_ID:-0}_${TIMESTAMP}.log"
@@ -322,6 +321,24 @@ ln -sf "$LOG_FILE" "$LOG_DIR/restore_bp_${TARGET_BP_ID:-0}_latest.log" 2>/dev/nu
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 START_RESTORE=$(date +%s)
+START_TIME_HUMAN=$(date "+%Y-%m-%d %H:%M:%S")
+
+echo -e "${CYAN}==================================================================${NC}"
+echo -e "${YELLOW}🚀 Oracle DB Volume Golden Snapshot Restore${NC}"
+echo -e "📂 Source snapshot: ${CYAN}$BACKUP_FILE${NC}"
+echo -e "   📊 $(msg_str "BENCHMARK_LABEL") ${YELLOW}$(get_restore_stats "15s")${NC}"
+echo -e "${CYAN}$(msg_str "LABEL_STARTED_AT" "$START_TIME_HUMAN")${NC}"
+echo -e "${CYAN}==================================================================${NC}"
+
+if [ "$DRY_RUN" = "true" ]; then
+  END_RESTORE=$(date +%s)
+  END_TIME_HUMAN=$(date "+%Y-%m-%d %H:%M:%S")
+  echo -e "${GREEN}🔍 DRY-RUN VALIDATION SUCCESSFUL:${NC} Snapshot $(basename "$BACKUP_FILE") is valid for $TARGET_PROFILE."
+  echo -e "$(msg_str "LABEL_STARTED_AT" "$START_TIME_HUMAN")"
+  echo -e "$(msg_str "LABEL_FINISHED_AT" "$END_TIME_HUMAN")"
+  echo -e "${CYAN}==================================================================${NC}"
+  exit 0
+fi
 
 COMPOSE_ARGS=(-f "$COMPOSE_FILE")
 [ -f "$WORKSPACE_DIR/podman-compose.override.yml" ] && COMPOSE_ARGS+=(-f "$WORKSPACE_DIR/podman-compose.override.yml")
@@ -386,6 +403,8 @@ echo "Starting services with restored data..."
 if [ -x "$WORKSPACE_DIR/scripts/start-containers.sh" ]; then
   if ! "$WORKSPACE_DIR/scripts/start-containers.sh" >> "$LOG_FILE" 2>&1; then
     echo -e "${RED}❌ Error: Services failed to start cleanly with restored data.${NC}"
+    echo -e "$(msg_str "LABEL_STARTED_AT" "$START_TIME_HUMAN")"
+    echo -e "$(msg_str "LABEL_FINISHED_AT" "$(date '+%Y-%m-%d %H:%M:%S')")"
     exit 1
   fi
 else
@@ -405,7 +424,9 @@ if [ "$NO_ROTATE" != "true" ] && [ -x "$WORKSPACE_DIR/scripts/rotate-password.sh
   echo -e "${GREEN}✅ Passwords successfully rotated and synchronized.${NC}"
 fi
 
-DURATION_RESTORE=$(( $(date +%s) - START_RESTORE ))
+END_RESTORE=$(date +%s)
+END_TIME_HUMAN=$(date "+%Y-%m-%d %H:%M:%S")
+DURATION_RESTORE=$(( END_RESTORE - START_RESTORE ))
 
 METRICS_DIR="$WORKSPACE_DIR/metrics"
 mkdir -p "$METRICS_DIR"
@@ -414,6 +435,8 @@ JSON_TS_RESTORE="$METRICS_DIR/restore_golden_snapshot_benchmarks_${TIMESTAMP}.js
 cat << MEOF > "$JSON_TS_RESTORE"
 {
   "last_updated": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "started_at": "$START_TIME_HUMAN",
+  "finished_at": "$END_TIME_HUMAN",
   "restore_duration_seconds": $DURATION_RESTORE,
   "snapshot_file": "$(basename "$BACKUP_FILE")",
   "blueprint_id": "$TARGET_BP_ID",
@@ -424,8 +447,21 @@ MEOF
 cp "$JSON_TS_RESTORE" "$METRICS_DIR/restore_golden_snapshot_benchmarks.json"
 (cd "$METRICS_DIR" && ls -t restore_golden_snapshot_benchmarks_*.json 2>/dev/null | tail -n +11 | xargs rm -f 2>/dev/null || true)
 
+cat << EOF > "$METRICS_DIR/restore_golden_snapshot_benchmarks.env"
+# Golden Snapshot Restore Benchmark Metrics (Updated: $(date))
+RESTORE_STARTED_AT="$START_TIME_HUMAN"
+RESTORE_FINISHED_AT="$END_TIME_HUMAN"
+RESTORE_DURATION_SECS=$DURATION_RESTORE
+RESTORE_DURATION_FORMATTED="$(format_duration $DURATION_RESTORE)"
+RESTORE_SNAPSHOT_FILE="$(basename "$BACKUP_FILE")"
+RESTORE_BLUEPRINT_ID="$TARGET_BP_ID"
+RESTORE_PROFILE_NAME="$TARGET_PROFILE"
+EOF
+
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "${GREEN}✅ GOLDEN SNAPSHOT RESTORED: $(format_duration $DURATION_RESTORE)${NC}"
+echo -e "$(msg_str "LABEL_STARTED_AT" "$START_TIME_HUMAN")"
+echo -e "$(msg_str "LABEL_FINISHED_AT" "$END_TIME_HUMAN")"
 echo "------------------------------------------------------------------"
 echo -e "📝 Log file saved:            ${CYAN}$LOG_FILE${NC}"
 echo -e "📊 Git benchmarks saved:      ${CYAN}$METRICS_DIR/restore_golden_snapshot_benchmarks.json${NC}"

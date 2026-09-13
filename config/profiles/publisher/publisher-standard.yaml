@@ -26,15 +26,15 @@ publisher:
   users:
     - username: bip_developer
       wallet_alias: PUBLISHER_DEVELOPER
-      roles: ["XMLP_DEVELOPER", "XMLP_TEMPLATE_DESIGNER"]
+      roles: ["BIConsumer", "BIConsumers", "BIAuthor", "BIAuthors", "XMLP_DEVELOPER", "XMLP_TEMPLATE_DESIGNER", "XMLP_ANALYZER", "XMLP_SCHEDULER"]
       description: "Template and data model author / developer (/Custom)"
     - username: bip_user
       wallet_alias: PUBLISHER_USER
-      roles: ["XMLP_SCHEDULER", "XMLP_ANALYZER"]
+      roles: ["BIConsumer", "BIConsumers", "XMLP_SCHEDULER", "XMLP_ANALYZER"]
       description: "Standard user: run, view, modify, and delete printout job history"
     - username: bip_admin
       wallet_alias: PUBLISHER_ADMIN
-      roles: ["XMLP_ADMIN"]
+      roles: ["BIConsumer", "BIConsumers", "BIAuthor", "BIAuthors", "BIAdministrator", "BIAdministrators", "BIServiceAdministrator", "XMLP_ADMIN", "XMLP_DEVELOPER"]
       is_weblogic_admin: false
       description: "Publisher administrator without WebLogic domain console access"
 

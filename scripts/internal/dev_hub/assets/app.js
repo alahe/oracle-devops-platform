@@ -196,11 +196,16 @@ function switchTab(tabId, skipHistory = false) {
   if (!matchingBtn && window.event && window.event.currentTarget && window.event.currentTarget.classList.contains('tab-btn')) {
     matchingBtn = window.event.currentTarget;
   }
-  if (!matchingBtn) {
+  if (!matchingBtn && cleanId !== 'tab-presentation' && cleanId !== 'tab-onboarding') {
     matchingBtn = document.querySelector('.tab-btn[onclick*="tab-services"]');
   }
   if (matchingBtn) {
     matchingBtn.classList.add('active');
+  }
+
+  const headerPresBtn = document.getElementById('header-presentation-btn');
+  if (headerPresBtn) {
+    headerPresBtn.classList.toggle('active', cleanId === 'tab-presentation');
   }
 
   if (activeContent) {
@@ -272,44 +277,150 @@ function switchToCockpitSection(section) {
   }, 120);
 }
 
-let gMermaidInitialized = false;
+let gMermaidThemeInitialized = null;
 window._MERMAID_SOURCES = window._MERMAID_SOURCES || {};
 let gZoomedMermaidSource = '';
 
-function initMermaidGlobal() {
-  if (gMermaidInitialized) return;
+function getDevHubTheme() {
+  const saved = localStorage.getItem('dev_hub_theme');
+  if (saved === 'light' || saved === 'dark') return saved;
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+    return 'light';
+  }
+  return 'dark';
+}
+
+function initMermaidGlobal(forceTheme) {
+  const activeTheme = forceTheme || getDevHubTheme();
+  if (gMermaidThemeInitialized === activeTheme) return;
   if (typeof mermaid !== 'undefined') {
     try {
-      mermaid.initialize({
-        startOnLoad: false,
-        suppressErrorRendering: true,
-        theme: 'dark',
-        securityLevel: 'loose',
-        fontFamily: 'ui-sans-serif, system-ui, -apple-system, sans-serif',
-        themeVariables: {
-          darkMode: true,
-          background: '#030712',
-          primaryColor: '#38bdf8',
-          primaryTextColor: '#f8fafc',
-          primaryBorderColor: '#0284c7',
-          lineColor: '#94a3b8',
-          secondaryColor: '#1e293b',
-          tertiaryColor: '#0f172a'
-        },
-        flowchart: {
-          useMaxWidth: true,
-          htmlLabels: true,
-          curve: 'basis',
-          padding: 12
-        }
-      });
-      gMermaidInitialized = true;
+      if (activeTheme === 'light') {
+        mermaid.initialize({
+          startOnLoad: false,
+          suppressErrorRendering: true,
+          theme: 'default',
+          securityLevel: 'loose',
+          fontFamily: 'ui-sans-serif, system-ui, -apple-system, sans-serif',
+          themeVariables: {
+            darkMode: false,
+            background: '#ffffff',
+            primaryColor: '#e0f2fe',
+            primaryTextColor: '#0f172a',
+            primaryBorderColor: '#0284c7',
+            lineColor: '#64748b',
+            secondaryColor: '#f1f5f9',
+            tertiaryColor: '#f8fafc'
+          },
+          flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+            padding: 12
+          }
+        });
+      } else {
+        mermaid.initialize({
+          startOnLoad: false,
+          suppressErrorRendering: true,
+          theme: 'dark',
+          securityLevel: 'loose',
+          fontFamily: 'ui-sans-serif, system-ui, -apple-system, sans-serif',
+          themeVariables: {
+            darkMode: true,
+            background: '#030712',
+            primaryColor: '#38bdf8',
+            primaryTextColor: '#f8fafc',
+            primaryBorderColor: '#0284c7',
+            lineColor: '#94a3b8',
+            secondaryColor: '#1e293b',
+            tertiaryColor: '#0f172a'
+          },
+          flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+            padding: 12
+          }
+        });
+      }
+      gMermaidThemeInitialized = activeTheme;
     } catch (e) {
       console.warn('Mermaid initialize warning:', e);
     }
   }
 }
 initMermaidGlobal();
+
+function setTheme(theme, persist = true) {
+  if (theme !== 'light' && theme !== 'dark') {
+    theme = 'dark';
+  }
+  document.documentElement.setAttribute('data-theme', theme);
+  if (persist) {
+    try {
+      localStorage.setItem('dev_hub_theme', theme);
+    } catch (e) {}
+  }
+
+  // Update button icon and tooltip
+  const btn = document.getElementById('theme-toggle-btn');
+  const icon = document.getElementById('theme-toggle-icon');
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  if (icon) {
+    icon.textContent = (theme === 'light') ? '🌙' : '☀️';
+  }
+  if (btn) {
+    const tipKey = (theme === 'light') ? 'tip_theme_toggle_dark' : 'tip_theme_toggle_light';
+    const tipText = dict[tipKey] || (theme === 'light' ? 'Lülita tumedale teemale (Alt+T)' : 'Lülita heledale teemale (Alt+T)');
+    btn.setAttribute('title', tipText);
+    btn.setAttribute('data-tooltip', tipText);
+  }
+
+  // Update Mermaid theme and re-render diagrams
+  initMermaidGlobal(theme);
+  if (typeof renderMermaidDiagrams === 'function') {
+    try {
+      renderMermaidDiagrams(currentLang);
+    } catch (e) {}
+  }
+  const dynamicContainers = [
+    document.getElementById('specs-viewer-body'),
+    document.getElementById('docs-rendered-body')
+  ];
+  dynamicContainers.forEach(cont => {
+    if (cont && typeof renderMermaidInContainer === 'function') {
+      try {
+        cont.querySelectorAll('.mermaid-diagram-card').forEach(card => {
+          const id = card.getAttribute('data-mermaid-card-id');
+          const rawCode = window._MERMAID_SOURCES && window._MERMAID_SOURCES[id];
+          if (rawCode) {
+            const pre = document.createElement('pre');
+            pre.className = 'mermaid';
+            pre.innerHTML = `<code>${escapeHtml(rawCode)}</code>`;
+            if (card.parentNode) {
+              card.parentNode.replaceChild(pre, card);
+            }
+          }
+        });
+        renderMermaidInContainer(cont);
+      } catch (e) {}
+    }
+  });
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || getDevHubTheme();
+  const next = (current === 'light') ? 'dark' : 'light';
+  setTheme(next, true);
+}
+
+function initTheme() {
+  const theme = getDevHubTheme();
+  setTheme(theme, false);
+}
 
 function cleanupStrayMermaidElements() {
   // Mermaid automatically appends error diagrams to document.body when render() fails
@@ -356,7 +467,7 @@ async function renderMermaidInContainer(container) {
         </div>
       </div>
       <div class="mermaid-render-target" id="${uniqueId}">
-        <div style="color:#94a3b8; font-size:0.85rem; padding:16px;">⏳ Renderin diagrammi...</div>
+        <div style="color: var(--text-muted); font-size:0.85rem; padding:16px;">⏳ Renderin diagrammi...</div>
       </div>
       <pre class="mermaid-raw-code" id="${uniqueId}-raw" style="display:none;"><code>${escapeHtml(rawCode)}</code></pre>
     `;
@@ -371,7 +482,7 @@ async function renderMermaidInContainer(container) {
     if (typeof mermaid === 'undefined') {
       if (targetEl) {
         targetEl.innerHTML = `
-          <div style="color:#f59e0b; padding:14px; font-size:0.82rem; background:#451a03; border-radius:6px; border:1px solid #78350f; width:100%; text-align:left;">
+          <div class="alert-box-warning" style="width:100%; text-align:left;">
             ⚠️ <strong>${escapeHtml(dict.mermaid_offline_msg || 'Mermaid teek ei ole kättesaadav (offline/tulemüür). Skeemi kood on vaadatav nupust "Kuva kood".')}</strong>
           </div>
         `;
@@ -405,9 +516,9 @@ async function renderMermaidInContainer(container) {
 
       if (targetEl) {
         targetEl.innerHTML = `
-          <div style="color:#f87171; padding:14px; font-size:0.82rem; background:#450a0a; border-radius:6px; border:1px solid #991b1b; width:100%; text-align:left;">
+          <div class="alert-box-danger" style="width:100%; text-align:left;">
             ⚠️ <strong>${escapeHtml(dict.mermaid_err_msg || 'Diagrammi renderdamise hoiatus:')}</strong> ${escapeHtml(err.message || 'Süntaksi viga')}<br/>
-            <span style="font-size:0.75rem; color:#fca5a5;">Skeemi lähtekood on kuvatud allpool:</span>
+            <span style="font-size:0.75rem; opacity:0.85;">Skeemi lähtekood on kuvatud allpool:</span>
           </div>
         `;
       }
@@ -677,6 +788,7 @@ function navigateToPinnedHome() {
 function setLanguage(lang) {
   if (!I18N_DICT[lang]) lang = 'en';
   localStorage.setItem('dev_hub_lang', lang);
+  document.documentElement.lang = lang;
   
   updateHybridLangUI(lang);
   
@@ -762,6 +874,9 @@ function setLanguage(lang) {
   if (typeof updateHomeTabPinUI === 'function') {
     updateHomeTabPinUI();
   }
+  if (typeof loadSpecInViewer === 'function' && typeof gCurrentLoadedDomain !== 'undefined' && gCurrentLoadedDomain) {
+    loadSpecInViewer(gCurrentLoadedDomain, gCurrentLoadedType, false);
+  }
 }
 
 function applyPillState(pill, state, lang, matchedCount, totalCount) {
@@ -793,18 +908,39 @@ function applyPillState(pill, state, lang, matchedCount, totalCount) {
   }
 }
 
-function showToast(msg) {
-  let toast = document.getElementById('devhub-toast');
+function showToast(msg, type) {
+  let toast = document.getElementById('dev-hub-toast');
   if (!toast) {
     toast = document.createElement('div');
-    toast.id = 'devhub-toast';
-    toast.style.cssText = 'position: fixed; bottom: 24px; right: 24px; background: #0f172a; border: 1px solid var(--primary); color: #f8fafc; padding: 12px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 99999; transition: opacity 0.3s ease;';
+    toast.id = 'dev-hub-toast';
     document.body.appendChild(toast);
   }
+
+  // Auto-detect type from message icons if not explicitly provided
+  if (!type) {
+    const str = String(msg || '');
+    if (str.includes('✅')) {
+      type = 'success';
+    } else if (str.includes('⚠️')) {
+      type = 'warning';
+    } else if (str.includes('❌') || str.includes('🚨') || str.includes('💣')) {
+      type = 'danger';
+    } else {
+      type = 'info';
+    }
+  }
+
+  toast.className = `devhub-toast toast-${type} toast-show`;
   toast.innerHTML = msg;
-  toast.style.opacity = '1';
+
   clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+  toast._timer = setTimeout(() => {
+    toast.classList.remove('toast-show');
+  }, 3200);
+}
+
+function showDevHubToast(msg, type) {
+  showToast(msg, type);
 }
 
 let gMasterAutoRefresh = true;
@@ -963,7 +1099,7 @@ function renderActiveContainersPills() {
   });
 
   startingContainers.forEach(c => {
-    html += `<span class="badge" style="font-size:0.72rem; padding: 2px 7px; display:inline-flex; align-items:center; gap:4px; font-family: ui-monospace, monospace; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3);" title="${c}: starting / launching"><span>🟡</span><span>${c}</span></span>`;
+    html += `<span class="badge" style="font-size:0.72rem; padding: 2px 7px; display:inline-flex; align-items:center; gap:4px; font-family: ui-monospace, monospace; background:rgba(234,179,8,0.15); color: var(--warning); border:1px solid rgba(234,179,8,0.3);" title="${c}: starting / launching"><span>🟡</span><span>${c}</span></span>`;
   });
 
   container.innerHTML = html;
@@ -1016,7 +1152,7 @@ async function pollBridgeStatus(manual = false) {
       if (headerStatus) {
         const bridgeVer = data.version || '';
         if (bridgeVer && bridgeVer !== platVer) {
-          headerStatus.innerHTML = `• Bridge v${bridgeVer} (<span style="color: #f59e0b; cursor: pointer; text-decoration: underline;" onclick="triggerBridgeRestart()" title="Klõpsa siia, et taaskäivitada Dev Hub sildserver automaatselt uue koodiga v${platVer}!">⚠️ Taaskäivita sild: v${platVer}</span>)`;
+          headerStatus.innerHTML = `• Bridge v${bridgeVer} (<span style="color: var(--warning); cursor: pointer; text-decoration: underline;" onclick="triggerBridgeRestart()" title="Klõpsa siia, et taaskäivitada Dev Hub sildserver automaatselt uue koodiga v${platVer}!">⚠️ Taaskäivita sild: v${platVer}</span>)`;
           headerStatus.style.color = '#f59e0b';
         } else {
           headerStatus.innerHTML = `• Bridge v${bridgeVer || platVer} Online`;
@@ -1207,7 +1343,7 @@ function updateWalletStatusUI() {
     if (isUp) {
       cell.innerHTML = `<span class="badge badge-success" style="font-size:0.75rem; padding:3px 8px;">🟢 <span data-i18n="status_online">${dict.status_online || 'Töös'}</span></span>`;
     } else {
-      cell.innerHTML = `<span class="badge badge-danger" style="font-size:0.75rem; padding:3px 8px; background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.4);">🔴 <span data-i18n="status_offline">${dict.status_offline || 'Maas'}</span></span>`;
+      cell.innerHTML = `<span class="badge badge-danger" style="font-size:0.75rem; padding:3px 8px; background:rgba(239,68,68,0.2); color: var(--danger); border:1px solid rgba(239,68,68,0.4);">🔴 <span data-i18n="status_offline">${dict.status_offline || 'Maas'}</span></span>`;
     }
   });
   if (typeof applyWalletFilters === 'function' && gWalletSelectedDb === 'active') {
@@ -1479,14 +1615,14 @@ function updateCardState(card, bpStateInfo, currentLang) {
         const memStr = bpMemMb >= 1024 ? `${(bpMemMb / 1024.0).toFixed(2)} GB` : `${Math.round(bpMemMb)} MB`;
         const nowPattern = dict.ram_live_current || 'Hetkel: %s';
         const nowLabel = nowPattern.replace('%s', memStr);
-        ramPill.innerHTML = ` · <span style="color:#22c55e; font-weight:600;">🟢 ${nowLabel}</span>`;
+        ramPill.innerHTML = ` · <span style="color: var(--success); font-weight:600;">🟢 ${nowLabel}</span>`;
       } else {
         const activeLabel = (dict.status_online || 'Aktiivne');
-        ramPill.innerHTML = ` · <span style="color:#22c55e; font-weight:600;">🟢 ${activeLabel}</span>`;
+        ramPill.innerHTML = ` · <span style="color: var(--success); font-weight:600;">🟢 ${activeLabel}</span>`;
       }
     } else {
       const stoppedLabel = (dict.status_stopped || 'Seisatud');
-      ramPill.innerHTML = ` · <span style="color:#94a3b8;">⚪ ${stoppedLabel}</span>`;
+      ramPill.innerHTML = ` · <span style="color: var(--text-muted);">⚪ ${stoppedLabel}</span>`;
     }
   }
 
@@ -1547,7 +1683,7 @@ async function checkServiceHealth() {
   if (filterActiveBtn) {
     const baseText = (I18N_DICT[currentLang] && I18N_DICT[currentLang]['filter_active']) || '🟢 Active';
     if (activeCards.length > 0) {
-      filterActiveBtn.innerHTML = `${baseText} <span class="badge" style="background:rgba(74,222,128,0.25); color:#4ade80; border:1px solid rgba(74,222,128,0.5); font-size:0.75rem; padding:1px 6px; border-radius:10px; margin-left:4px;">${activeCards.length}</span>`;
+      filterActiveBtn.innerHTML = `${baseText} <span class="badge" style="background:rgba(74,222,128,0.25); color: var(--success); border:1px solid rgba(74,222,128,0.5); font-size:0.75rem; padding:1px 6px; border-radius:10px; margin-left:4px;">${activeCards.length}</span>`;
     } else {
       filterActiveBtn.innerHTML = baseText;
     }
@@ -1598,11 +1734,11 @@ function renderOrdsGatewayStrip() {
   const poolKeys = Object.keys(pools);
 
   if (poolKeys.length === 0) {
-    listContainer.innerHTML = `<span style="font-size:0.75rem; color:#64748b;">${dict.ords_pools_label || 'Active Pools:'} <em>${dict.status_none || 'None'}</em></span>`;
+    listContainer.innerHTML = `<span style="font-size:0.75rem; color: var(--text-muted);">${dict.ords_pools_label || 'Active Pools:'} <em>${dict.status_none || 'None'}</em></span>`;
     return;
   }
 
-  let html = `<span style="font-size:0.75rem; color:#94a3b8; margin-right:4px;">${dict.ords_pools_label || 'Active Pools:'}</span>`;
+  let html = `<span style="font-size:0.75rem; color: var(--text-muted); margin-right:4px;">${dict.ords_pools_label || 'Active Pools:'}</span>`;
   poolKeys.forEach(pname => {
     const p = pools[pname];
     const isOrdsUp = isContainerRunning('app-ords');
@@ -1710,7 +1846,7 @@ async function handleStartServiceFromCard(btn, modKey) {
     }
   } catch (e) {
     copyText(cliCmd);
-    showToast(`📋 Kopeerisin käsu: ${cliCmd}<br/><small style="color:#94a3b8;">(Terminali käivitus: käsk kopeeritud!)</small>`);
+    showToast(`📋 Kopeerisin käsu: ${cliCmd}<br/><small style="color: var(--text-muted);">(Terminali käivitus: käsk kopeeritud!)</small>`);
   } finally {
     setTimeout(() => {
       btn.disabled = false;
@@ -1875,11 +2011,11 @@ async function fetchAndRenderProfilesList() {
         }
       }
     } else if (!CACHED_PROFILES || CACHED_PROFILES.length === 0) {
-      container.innerHTML = `<span style="color: #f87171; font-size: 0.8rem;">Bridge API viga: HTTP ${resp.status}</span>`;
+      container.innerHTML = `<span style="color: var(--danger); font-size: 0.8rem;">Bridge API viga: HTTP ${resp.status}</span>`;
     }
   } catch (e) {
     if (!CACHED_PROFILES || CACHED_PROFILES.length === 0) {
-      container.innerHTML = `<span style="color: #f87171; font-size: 0.8rem;">Bridge offline (${BRIDGE_URL}). Käivitage dev-hub-bridge.py</span>`;
+      container.innerHTML = `<span style="color: var(--danger); font-size: 0.8rem;">Bridge offline (${BRIDGE_URL}). Käivitage dev-hub-bridge.py</span>`;
     }
   }
 }
@@ -1892,13 +2028,13 @@ function renderProfilesSidebar(profiles) {
   profiles.forEach(p => {
     if (p.category !== currentCat) {
       currentCat = p.category;
-      html += `<div style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin: 10px 0 3px 4px;">📂 ${currentCat}</div>`;
+      html += `<div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin: 10px 0 3px 4px;">📂 ${currentCat}</div>`;
     }
     const isSel = (p.rel_path === CURRENT_PROFILE_PATH);
     html += `
-      <div class="profile-item-btn" onclick="loadProfileToEditor('${p.rel_path}')" style="padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; display: flex; justify-content: space-between; align-items: center; background: ${isSel ? 'rgba(56,189,248,0.15)' : 'transparent'}; color: ${isSel ? '#38bdf8' : '#cbd5e1'}; border: 1px solid ${isSel ? 'rgba(56,189,248,0.3)' : 'transparent'};">
+      <div class="profile-item-btn ${isSel ? 'active' : ''}" onclick="loadProfileToEditor('${p.rel_path}')">
         <span style="font-family: ui-monospace, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 190px;">${p.name}</span>
-        ${p.port ? `<span style="font-size: 0.7rem; color: #4ade80; font-family: ui-monospace, monospace; font-weight: 600;">:${p.port}</span>` : ''}
+        ${p.port ? `<span style="font-size: 0.7rem; color: var(--success); font-family: ui-monospace, monospace; font-weight: 600;">:${p.port}</span>` : ''}
       </div>
     `;
   });
@@ -1923,7 +2059,7 @@ function enableProfileEdit() {
     btnSave.disabled = false;
   }
   if (msgEl) {
-    msgEl.innerHTML = '<span style="color: #38bdf8;">✏️ Muutmisrežiim aktiivne. Tee muudatused ja vajuta "Salvesta Profiil".</span>';
+    msgEl.innerHTML = '<span style="color: var(--primary);">✏️ Muutmisrežiim aktiivne. Tee muudatused ja vajuta "Salvesta Profiil".</span>';
   }
 }
 
@@ -1968,7 +2104,7 @@ function confirmCloneProfile() {
   }
   cancelCloneProfile();
   if (msgEl) {
-    msgEl.innerHTML = `<span style="color: #4ade80;">📋 Kloon loodud mälus (${newName}). Kohanda parameetreid ja vajuta "Salvesta Profiil".</span>`;
+    msgEl.innerHTML = `<span style="color: var(--success);">📋 Kloon loodud mälus (${newName}). Kohanda parameetreid ja vajuta "Salvesta Profiil".</span>`;
   }
 }
 
@@ -1987,23 +2123,23 @@ async function loadProfileToEditor(relPath) {
     btnSave.style.display = 'none';
     btnSave.disabled = true;
   }
-  if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
+  if (msgEl) msgEl.innerHTML = `<span style="color: var(--text-muted);">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
 
   renderProfilesSidebar(CACHED_PROFILES);
 
   const profObj = CACHED_PROFILES.find(p => p.rel_path === relPath);
   if (badgesEl && profObj) {
     badgesEl.innerHTML = `
-      <span class="bp-tag" style="color: #38bdf8;">📁 ${profObj.category}</span>
-      ${profObj.port ? `<span class="bp-tag" style="color: #4ade80;">🔌 Port: ${profObj.port}</span>` : ''}
-      ${profObj.memory ? `<span class="bp-tag" style="color: #c084fc;">💾 RAM: ${profObj.memory}</span>` : ''}
+      <span class="bp-tag" style="color: var(--primary);">📁 ${profObj.category}</span>
+      ${profObj.port ? `<span class="bp-tag" style="color: var(--success);">🔌 Port: ${profObj.port}</span>` : ''}
+      ${profObj.memory ? `<span class="bp-tag" style="color: var(--accent);">💾 RAM: ${profObj.memory}</span>` : ''}
     `;
   }
 
   // Pre-load content immediately from embedded profile object
   if (profObj && profObj.content !== undefined) {
     if (ta) ta.value = profObj.content;
-    if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
+    if (msgEl) msgEl.innerHTML = `<span style="color: var(--text-muted);">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
   }
 
   try {
@@ -2011,13 +2147,13 @@ async function loadProfileToEditor(relPath) {
     if (resp.ok) {
       const data = await resp.json();
       if (ta) ta.value = (data.content !== undefined) ? data.content : JSON.stringify(data, null, 2);
-      if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
+      if (msgEl) msgEl.innerHTML = `<span style="color: var(--text-muted);">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
     } else if (!ta || !ta.value) {
       if (ta) ta.value = `# Failed to load file: HTTP ${resp.status}`;
     }
   } catch (e) {
     if (ta && ta.value) {
-      if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim (Staatiline / Bridge offline): <code>${relPath}</code></span>`;
+      if (msgEl) msgEl.innerHTML = `<span style="color: var(--text-muted);">Vaaterežiim (Staatiline / Bridge offline): <code>${relPath}</code></span>`;
     } else {
       if (ta) ta.value = `# Bridge viga: ${e.message}`;
     }
@@ -2045,7 +2181,7 @@ async function saveProfileFromEditor() {
   }
 
   if (btnSave) btnSave.disabled = true;
-  if (msgEl) msgEl.innerHTML = '<span style="color: #facc15;">⏳ Salvestan ja genereerin Dev Hub uuesti...</span>';
+  if (msgEl) msgEl.innerHTML = '<span style="color: var(--warning);">⏳ Salvestan ja genereerin Dev Hub uuesti...</span>';
 
   try {
     const resp = await fetch(`${BRIDGE_URL}/api/profile`, {
@@ -2056,17 +2192,17 @@ async function saveProfileFromEditor() {
     });
     const resData = await resp.json();
     if (resp.ok) {
-      if (msgEl) msgEl.innerHTML = `<span style="color: #4ade80;">✅ ${resData.message || 'Profiil salvestatud edukalt!'}</span>`;
+      if (msgEl) msgEl.innerHTML = `<span style="color: var(--success);">✅ ${resData.message || 'Profiil salvestatud edukalt!'}</span>`;
       showToast('✅ Profiil salvestatud! Dev Hub genereeritakse uuesti taustal.');
       ta.readOnly = true;
       if (btnSave) btnSave.style.display = 'none';
       setTimeout(() => fetchAndRenderProfilesList(), 1500);
       setTimeout(() => pollBridgeStatus(), 2000);
     } else {
-      if (msgEl) msgEl.innerHTML = `<span style="color: #f87171;">❌ Viga: ${resData.error || 'Salvestamine ebaõnnestus'}</span>`;
+      if (msgEl) msgEl.innerHTML = `<span style="color: var(--danger);">❌ Viga: ${resData.error || 'Salvestamine ebaõnnestus'}</span>`;
     }
   } catch (e) {
-    if (msgEl) msgEl.innerHTML = `<span style="color: #f87171;">❌ Salvestamiseks on vaja aktiivset Dev Hub Bridge'i (${BRIDGE_URL}): ${e.message}</span>`;
+    if (msgEl) msgEl.innerHTML = `<span style="color: var(--danger);">❌ Salvestamiseks on vaja aktiivset Dev Hub Bridge'i (${BRIDGE_URL}): ${e.message}</span>`;
   } finally {
     if (btnSave) btnSave.disabled = false;
   }
@@ -2132,11 +2268,11 @@ async function fetchAndRenderBlueprintsList() {
         }
       }
     } else if (CACHED_BLUEPRINTS.length === 0) {
-      container.innerHTML = `<span style="color: #f87171; font-size: 0.8rem;">Bridge API viga: HTTP ${resp.status}</span>`;
+      container.innerHTML = `<span style="color: var(--danger); font-size: 0.8rem;">Bridge API viga: HTTP ${resp.status}</span>`;
     }
   } catch (e) {
     if (CACHED_BLUEPRINTS.length === 0) {
-      container.innerHTML = `<span style="color: #f87171; font-size: 0.8rem;">Bridge offline (${BRIDGE_URL}). Käivitage dev-hub-bridge.py</span>`;
+      container.innerHTML = `<span style="color: var(--danger); font-size: 0.8rem;">Bridge offline (${BRIDGE_URL}). Käivitage dev-hub-bridge.py</span>`;
     }
   }
 }
@@ -2149,9 +2285,9 @@ function renderBlueprintsSidebar(blueprints) {
     const isSel = (b.rel_path === CURRENT_BP_PATH);
     const numBadge = b.number !== null && b.number !== 999 ? `#${b.number}` : '•';
     html += `
-      <div class="profile-item-btn" onclick="loadBlueprintToView('${b.rel_path}')" style="padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; display: flex; justify-content: space-between; align-items: center; background: ${isSel ? 'rgba(56,189,248,0.15)' : 'transparent'}; color: ${isSel ? '#38bdf8' : '#cbd5e1'}; border: 1px solid ${isSel ? 'rgba(56,189,248,0.3)' : 'transparent'};">
+      <div class="profile-item-btn ${isSel ? 'active' : ''}" onclick="loadBlueprintToView('${b.rel_path}')">
         <div style="display: flex; align-items: center; gap: 6px; overflow: hidden;">
-          <span style="background: rgba(56,189,248,0.2); color: #38bdf8; font-weight: 700; padding: 1px 5px; border-radius: 4px; font-size: 0.7rem; font-family: ui-monospace, monospace;">${numBadge}</span>
+          <span class="bp-num-badge" style="background: rgba(56,189,248,0.2); color: var(--primary); font-weight: 700; padding: 1px 5px; border-radius: 4px; font-size: 0.7rem; font-family: ui-monospace, monospace;">${numBadge}</span>
           <span style="font-family: ui-monospace, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">${b.name.replace('.env.', '')}</span>
         </div>
       </div>
@@ -2189,15 +2325,15 @@ async function loadBlueprintToView(relPath) {
   const bpObj = CACHED_BLUEPRINTS.find(b => b.rel_path === relPath || b.file === relPath || b.name === relPath);
   if (badgesEl && bpObj) {
     badgesEl.innerHTML = `
-      <span class="bp-tag" style="color: #38bdf8;">🏷️ ${bpObj.title || bpObj.name}</span>
-      <span class="bp-tag" style="color: #4ade80;">№ ${bpObj.number}</span>
+      <span class="bp-tag" style="color: var(--primary);">🏷️ ${bpObj.title || bpObj.name}</span>
+      <span class="bp-tag" style="color: var(--success);">№ ${bpObj.number}</span>
     `;
   }
 
   // Pre-load content immediately from embedded blueprint object
   if (bpObj && bpObj.content) {
     if (ta) ta.value = bpObj.content;
-    if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
+    if (msgEl) msgEl.innerHTML = `<span style="color: var(--text-muted);">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
   }
 
   try {
@@ -2205,13 +2341,13 @@ async function loadBlueprintToView(relPath) {
     if (resp.ok) {
       const data = await resp.json();
       if (ta) ta.value = data.content || '';
-      if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
+      if (msgEl) msgEl.innerHTML = `<span style="color: var(--text-muted);">Vaaterežiim: <code>${relPath}</code> (Muutmiseks vajuta ✏️ Muuda)</span>`;
     } else if (!ta || !ta.value) {
       if (ta) ta.value = `# Failed to load file: HTTP ${resp.status}`;
     }
   } catch (e) {
     if (ta && ta.value) {
-      if (msgEl) msgEl.innerHTML = `<span style="color: #94a3b8;">Vaaterežiim (Staatiline / Bridge offline): <code>${relPath}</code></span>`;
+      if (msgEl) msgEl.innerHTML = `<span style="color: var(--text-muted);">Vaaterežiim (Staatiline / Bridge offline): <code>${relPath}</code></span>`;
     } else {
       if (ta) ta.value = `# Bridge viga: ${e.message}`;
     }
@@ -2231,7 +2367,7 @@ function enableBlueprintEdit() {
     btnSave.disabled = false;
   }
   if (msgEl) {
-    msgEl.innerHTML = '<span style="color: #38bdf8;">✏️ Muutmisrežiim aktiivne. Tee muudatused ja salvesta blueprint.</span>';
+    msgEl.innerHTML = '<span style="color: var(--primary);">✏️ Muutmisrežiim aktiivne. Tee muudatused ja salvesta blueprint.</span>';
   }
 }
 
@@ -2244,7 +2380,7 @@ async function saveBlueprintFromView() {
 
   const newContent = ta.value;
   if (btnSave) btnSave.disabled = true;
-  if (msgEl) msgEl.innerHTML = '<span style="color: #facc15;">⏳ Salvestan blueprinti...</span>';
+  if (msgEl) msgEl.innerHTML = '<span style="color: var(--warning);">⏳ Salvestan blueprinti...</span>';
 
   try {
     const resp = await fetch(`${BRIDGE_URL}/api/blueprint/save`, {
@@ -2255,17 +2391,17 @@ async function saveBlueprintFromView() {
     });
     const resData = await resp.json();
     if (resp.ok) {
-      if (msgEl) msgEl.innerHTML = `<span style="color: #4ade80;">✅ ${resData.message || 'Blueprint salvestatud edukalt!'}</span>`;
+      if (msgEl) msgEl.innerHTML = `<span style="color: var(--success);">✅ ${resData.message || 'Blueprint salvestatud edukalt!'}</span>`;
       showToast('✅ Blueprint salvestatud edukalt!');
       ta.readOnly = true;
       if (btnSave) btnSave.style.display = 'none';
       setTimeout(() => fetchAndRenderBlueprintsList(), 1500);
       setTimeout(() => pollBridgeStatus(), 2000);
     } else {
-      if (msgEl) msgEl.innerHTML = `<span style="color: #f87171;">❌ Viga: ${resData.error || 'Salvestamine ebaõnnestus'}</span>`;
+      if (msgEl) msgEl.innerHTML = `<span style="color: var(--danger);">❌ Viga: ${resData.error || 'Salvestamine ebaõnnestus'}</span>`;
     }
   } catch (e) {
-    if (msgEl) msgEl.innerHTML = `<span style="color: #f87171;">❌ Bridge viga: ${e.message}</span>`;
+    if (msgEl) msgEl.innerHTML = `<span style="color: var(--danger);">❌ Bridge viga: ${e.message}</span>`;
   } finally {
     if (btnSave) btnSave.disabled = false;
   }
@@ -2497,7 +2633,7 @@ async function renderBlueprintMermaid(bNum) {
 
   mermaidContainer.removeAttribute('data-processed');
   mermaidContainer.setAttribute('data-rendered-bp', String(bNum));
-  mermaidContainer.innerHTML = '<div style="color:#94a3b8; font-size:0.85rem; padding:10px;">⏳ Renderin arhitektuurijoonist...</div>';
+  mermaidContainer.innerHTML = '<div style="color: var(--text-muted); font-size:0.85rem; padding:10px;">⏳ Renderin arhitektuurijoonist...</div>';
 
   const diagCode = (b.diagrams && b.diagrams[currentLang]) || (b.diagrams && b.diagrams['en']) || '';
   if (rawEl) {
@@ -2506,12 +2642,12 @@ async function renderBlueprintMermaid(bNum) {
   }
 
   if (!diagCode) {
-    mermaidContainer.innerHTML = '<span style="color:#64748b; font-size:0.85rem;">Diagramm pole saadaval.</span>';
+    mermaidContainer.innerHTML = '<span style="color: var(--text-muted); font-size:0.85rem;">Diagramm pole saadaval.</span>';
     return;
   }
 
   if (typeof mermaid === 'undefined') {
-    mermaidContainer.innerHTML = '<div style="color:#f59e0b; padding:12px; font-size:0.82rem; background:#451a03; border-radius:6px; border:1px solid #78350f;">⚠️ Mermaid teek ei ole kättesaadav (offline/tulemüür). Lähtekood on vaadatav nupust "Kuva kood".</div>';
+    mermaidContainer.innerHTML = '<div class="alert-box-warning">⚠️ Mermaid teek ei ole kättesaadav (offline/tulemüür). Lähtekood on vaadatav nupust "Kuva kood".</div>';
     if (rawEl) rawEl.style.display = 'block';
     return;
   }
@@ -2552,7 +2688,7 @@ async function renderBlueprintMermaid(bNum) {
     cleanupStrayMermaidElements();
     setTimeout(cleanupStrayMermaidElements, 50);
 
-    mermaidContainer.innerHTML = `<div style="color:#f87171; padding:12px; font-size:0.82rem; background:#450a0a; border-radius:6px; border:1px solid #991b1b;">⚠️ Diagrammi renderdamise hoiatus: ${escapeHtml(err.message || 'Süntaksiviga')}</div>`;
+    mermaidContainer.innerHTML = `<div class="alert-box-danger">⚠️ Diagrammi renderdamise hoiatus: ${escapeHtml(err.message || 'Süntaksiviga')}</div>`;
     if (rawEl) rawEl.style.display = 'block';
   }
 }
@@ -2568,7 +2704,7 @@ function renderBlueprintGuidesTab(bNum) {
   if (stepsContainer) {
     const rawSteps = (b.quickstart && (b.quickstart[currentLang] || b.quickstart['en'])) || [];
     if (!rawSteps.length) {
-      stepsContainer.innerHTML = `<div style="color:#94a3b8; font-size:0.85rem; padding:8px;">${dict.no_quickstart || 'Juhend pole saadaval.'}</div>`;
+      stepsContainer.innerHTML = `<div style="color: var(--text-muted); font-size:0.85rem; padding:8px;">${dict.no_quickstart || 'Juhend pole saadaval.'}</div>`;
     } else {
       stepsContainer.innerHTML = rawSteps.map(s => {
         let actionBtn = '';
@@ -2584,16 +2720,16 @@ function renderBlueprintGuidesTab(bNum) {
           actionBtn = `<button class="btn btn-sm btn-secondary" style="padding:3px 8px; font-size:0.75rem;" onclick="openBlueprintDocFull()">${s.btn_text || dict.modal_btn_open_full_guide_text || 'Loe juhendit 📖'}</button>`;
         }
         return `
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px;">
-            <div style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 700; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; flex-shrink: 0; margin-top: 2px;">
+          <div class="bp-quickstart-step-card" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px;">
+            <div style="background: rgba(56, 189, 248, 0.15); color: var(--primary); font-weight: 700; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; flex-shrink: 0; margin-top: 2px;">
               ${s.step}
             </div>
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
-                <strong style="color: #f8fafc; font-size: 0.9rem;">${s.title}</strong>
+                <strong style="color: var(--text-main); font-size: 0.9rem;">${s.title}</strong>
                 ${actionBtn}
               </div>
-              <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.45; margin-top: 4px;">${s.desc}</div>
+              <div class="bp-quickstart-step-desc" style="font-size: 0.82rem; line-height: 1.45; margin-top: 4px;">${s.desc}</div>
             </div>
           </div>
         `;
@@ -2616,7 +2752,7 @@ async function renderBlueprintWorkflowMermaid(bNum) {
 
   mermaidContainer.removeAttribute('data-processed');
   mermaidContainer.setAttribute('data-rendered-bp', String(bNum));
-  mermaidContainer.innerHTML = '<div style="color:#94a3b8; font-size:0.85rem; padding:10px;">⏳ Renderin töövoo skeemi...</div>';
+  mermaidContainer.innerHTML = '<div style="color: var(--text-muted); font-size:0.85rem; padding:10px;">⏳ Renderin töövoo skeemi...</div>';
 
   let rawDiagram = '';
   if (b.workflow_diagram && typeof b.workflow_diagram === 'object') {
@@ -2632,12 +2768,12 @@ async function renderBlueprintWorkflowMermaid(bNum) {
   }
 
   if (!diagCode) {
-    mermaidContainer.innerHTML = '<span style="color:#64748b; font-size:0.85rem;">Töövoo diagramm pole saadaval.</span>';
+    mermaidContainer.innerHTML = '<span style="color: var(--text-muted); font-size:0.85rem;">Töövoo diagramm pole saadaval.</span>';
     return;
   }
 
   if (typeof mermaid === 'undefined') {
-    mermaidContainer.innerHTML = '<div style="color:#f59e0b; padding:12px; font-size:0.82rem; background:#451a03; border-radius:6px; border:1px solid #78350f;">⚠️ Mermaid teek ei ole kättesaadav. Lähtekood on vaadatav nupust "Kuva kood".</div>';
+    mermaidContainer.innerHTML = '<div class="alert-box-warning">⚠️ Mermaid teek ei ole kättesaadav. Lähtekood on vaadatav nupust "Kuva kood".</div>';
     if (rawEl) rawEl.style.display = 'block';
     return;
   }
@@ -2654,7 +2790,7 @@ async function renderBlueprintWorkflowMermaid(bNum) {
     }
     cleanupStrayMermaidElements();
     setTimeout(cleanupStrayMermaidElements, 50);
-    mermaidContainer.innerHTML = `<div style="color:#f87171; padding:8px; font-size:0.8rem;">Diagrammi viga: ${escapeHtml(err.message || 'Süntaksiviga')}</div>`;
+    mermaidContainer.innerHTML = `<div style="color: var(--danger); padding:8px; font-size:0.8rem;">Diagrammi viga: ${escapeHtml(err.message || 'Süntaksiviga')}</div>`;
     if (rawEl) rawEl.style.display = 'block';
   }
 }
@@ -2922,11 +3058,11 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
 
   if (titleEl) titleEl.innerHTML = `🏗️ Blueprint #${b.num}: ${title}`;
   if (subEl) subEl.innerHTML = `
-    <div style="margin-bottom: 6px; font-size: 0.88rem; color: #cbd5e1;">${desc}</div>
+    <div class="bp-modal-subtitle-desc" style="margin-bottom: 6px; font-size: 0.88rem;">${desc}</div>
     <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px;">
-      <span class="badge" style="background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); font-family: ui-monospace, monospace; font-size: 0.78rem;">📁 ${b.file}</span>
-      <span class="badge" style="background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); font-size: 0.78rem;">💾 RAM: ${b.ram}</span>
-      <span class="badge" style="background: rgba(192,132,252,0.12); color: #c084fc; border: 1px solid rgba(192,132,252,0.3); font-size: 0.78rem;">🔑 ${(b.users || []).length} ${dict.meta_accounts || 'Accounts'}</span>
+      <span class="badge" style="background: rgba(56,189,248,0.12); color: var(--primary); border: 1px solid rgba(56,189,248,0.3); font-family: ui-monospace, monospace; font-size: 0.78rem;">📁 ${b.file}</span>
+      <span class="badge" style="background: rgba(34,197,94,0.12); color: var(--success); border: 1px solid rgba(34,197,94,0.3); font-size: 0.78rem;">💾 RAM: ${b.ram}</span>
+      <span class="badge" style="background: rgba(192,132,252,0.12); color: var(--accent); border: 1px solid rgba(192,132,252,0.3); font-size: 0.78rem;">🔑 ${(b.users || []).length} ${dict.meta_accounts || 'Accounts'}</span>
     </div>
   `;
 
@@ -2989,12 +3125,12 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
         poolBadge.style.background = 'rgba(56,189,248,0.12)';
         poolBadge.style.color = '#38bdf8';
         poolBadge.style.border = '1px solid rgba(56,189,248,0.3)';
-        poolBadge.innerHTML = `🌐 ORDS: <strong>${poolName}</strong> <span style="color:#4ade80; font-size:0.7rem; margin-left:3px;">(🟢 Online)</span>`;
+        poolBadge.innerHTML = `🌐 ORDS: <strong>${poolName}</strong> <span style="color: var(--success); font-size:0.7rem; margin-left:3px;">(🟢 Online)</span>`;
       } else {
         poolBadge.style.background = 'rgba(148,163,184,0.1)';
         poolBadge.style.color = '#94a3b8';
         poolBadge.style.border = '1px solid rgba(148,163,184,0.2)';
-        poolBadge.innerHTML = `🌐 ORDS: <strong>${poolName}</strong> <span style="color:#94a3b8; font-size:0.7rem; margin-left:3px;">(⚪ Offline)</span>`;
+        poolBadge.innerHTML = `🌐 ORDS: <strong>${poolName}</strong> <span style="color: var(--text-muted); font-size:0.7rem; margin-left:3px;">(⚪ Offline)</span>`;
       }
     } else {
       poolBadge.style.display = 'none';
@@ -3011,9 +3147,9 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
         const cport = comp.host_ports ? comp.host_ports.split(',')[0].trim() : '';
         const alive = isContainerAlive(c);
         if (alive) {
-          return `<span class="badge" style="background:rgba(34,197,94,0.12); color:#4ade80; border:1px solid rgba(34,197,94,0.3); font-family:ui-monospace,monospace; font-size:0.75rem; padding:3px 8px; display:inline-flex; align-items:center; gap:5px;">🟢 <strong>${c}</strong> ${cport ? `<span style="color:#86efac; font-size:0.7rem;">(${cport})</span>` : ''}</span>`;
+          return `<span class="badge bp-container-pill alive" style="background:rgba(34,197,94,0.12); color: var(--success); border:1px solid rgba(34,197,94,0.3); font-family:ui-monospace,monospace; font-size:0.75rem; padding:3px 8px; display:inline-flex; align-items:center; gap:5px;">🟢 <strong>${c}</strong> ${cport ? `<span style="color: var(--success); font-size:0.7rem;">(${cport})</span>` : ''}</span>`;
         } else {
-          return `<span class="badge" style="background:rgba(148,163,184,0.1); color:#94a3b8; border:1px solid rgba(148,163,184,0.2); font-family:ui-monospace,monospace; font-size:0.75rem; padding:3px 8px; display:inline-flex; align-items:center; gap:5px;">⚪ <strong>${c}</strong></span>`;
+          return `<span class="badge bp-container-pill stopped" style="background:rgba(148,163,184,0.1); color: var(--text-muted); border:1px solid rgba(148,163,184,0.2); font-family:ui-monospace,monospace; font-size:0.75rem; padding:3px 8px; display:inline-flex; align-items:center; gap:5px;">⚪ <strong>${c}</strong></span>`;
         }
       }).join('');
     }
@@ -3045,45 +3181,45 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
                       (['forms-designer', 'app-forms'].includes(c.name) && runningList.some(x => ['forms-designer', 'app-forms'].includes(x)));
 
       const statusBadge = isAlive
-        ? `<span class="badge" style="background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); font-size:0.7rem; padding:2px 6px; margin-left:6px;">🟢 ${dict.status_online || 'Töötab'}</span>`
-        : `<span class="badge" style="background:rgba(248,113,113,0.15); color:#f87171; border:1px solid rgba(248,113,113,0.3); font-size:0.7rem; padding:2px 6px; margin-left:6px;">🔴 ${dict.status_stopped || 'Peatatud'}</span>`;
+        ? `<span class="badge" style="background:rgba(34,197,94,0.15); color: var(--success); border:1px solid rgba(34,197,94,0.3); font-size:0.7rem; padding:2px 6px; margin-left:6px;">🟢 ${dict.status_online || 'Töötab'}</span>`
+        : `<span class="badge" style="background:rgba(248,113,113,0.15); color: var(--danger); border:1px solid rgba(248,113,113,0.3); font-size:0.7rem; padding:2px 6px; margin-left:6px;">🔴 ${dict.status_stopped || 'Peatatud'}</span>`;
 
       let formattedPorts = '';
       if (!c.host_ports || c.host_ports === '-' || c.host_ports.toLowerCase() === 'none') {
-        formattedPorts = '<span style="color:#64748b; font-size:0.75rem;">—</span>';
+        formattedPorts = '<span style="color: var(--text-muted); font-size:0.75rem;">—</span>';
       } else {
         const portParts = c.host_ports.split(',').map(p => p.trim());
         formattedPorts = portParts.map(pStr => {
           if (pStr.includes('6083')) {
             return isAlive
-              ? `<a href="http://localhost:6083/vnc.html" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava noVNC töölaud (port 6083)">${pStr} ↗️</a>`
-              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+              ? `<a href="http://localhost:6083/vnc.html" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight:600; text-decoration:underline;" title="Ava noVNC töölaud (port 6083)">${pStr} ↗️</a>`
+              : `<span style="color: var(--text-muted);" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
           } else if (pStr.includes('8448')) {
             return isAlive
-              ? `<a href="https://localhost:8448/ords/" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava ORDS HTTPS portaal">${pStr} ↗️</a>`
-              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+              ? `<a href="https://localhost:8448/ords/" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight:600; text-decoration:underline;" title="Ava ORDS HTTPS portaal">${pStr} ↗️</a>`
+              : `<span style="color: var(--text-muted);" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
           } else if (pStr.includes('8088')) {
             return isAlive
-              ? `<a href="http://localhost:8088/ords/" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava ORDS HTTP portaal">${pStr} ↗️</a>`
-              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+              ? `<a href="http://localhost:8088/ords/" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight:600; text-decoration:underline;" title="Ava ORDS HTTP portaal">${pStr} ↗️</a>`
+              : `<span style="color: var(--text-muted);" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
           } else if (pStr.includes('8090')) {
             return isAlive
-              ? `<a href="http://localhost:8090/" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava Web-IDE (port 8090)">${pStr} ↗️</a>`
-              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+              ? `<a href="http://localhost:8090/" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight:600; text-decoration:underline;" title="Ava Web-IDE (port 8090)">${pStr} ↗️</a>`
+              : `<span style="color: var(--text-muted);" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
           } else if (pStr.includes('9502')) {
             return isAlive
-              ? `<a href="http://localhost:9502/xmlpserver" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava Analytics Publisher">${pStr} ↗️</a>`
-              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+              ? `<a href="http://localhost:9502/xmlpserver" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight:600; text-decoration:underline;" title="Ava Analytics Publisher">${pStr} ↗️</a>`
+              : `<span style="color: var(--text-muted);" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
           } else if (pStr.includes('9001')) {
             return isAlive
-              ? `<a href="http://localhost:9001/forms/frmservlet" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava Forms Runtime">${pStr} ↗️</a>`
-              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+              ? `<a href="http://localhost:9001/forms/frmservlet" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight:600; text-decoration:underline;" title="Ava Forms Runtime">${pStr} ↗️</a>`
+              : `<span style="color: var(--text-muted);" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
           } else if (pStr.includes('6082')) {
             return isAlive
-              ? `<a href="http://localhost:6082/vnc.html" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;" title="Ava Forms Builder noVNC">${pStr} ↗️</a>`
-              : `<span style="color:#94a3b8;" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
+              ? `<a href="http://localhost:6082/vnc.html" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight:600; text-decoration:underline;" title="Ava Forms Builder noVNC">${pStr} ↗️</a>`
+              : `<span style="color: var(--text-muted);" title="${dict.port_offline_tooltip || 'Konteiner on peatatud — käivita virn enne avamist'}">${pStr}</span>`;
           } else {
-            return `<code style="color:#22c55e; font-weight:600;">${pStr}</code>`;
+            return `<code style="color: var(--success); font-weight:600;">${pStr}</code>`;
           }
         }).join(', ');
       }
@@ -3095,10 +3231,10 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
               <strong style="color: var(--primary); font-family: ui-monospace, monospace;">${c.name}</strong>
               ${statusBadge}
             </div>
-            <span style="font-size:0.75rem; color:#94a3b8;">${c.type}</span>
+            <span class="bp-comp-type" style="font-size:0.75rem; color: var(--text-muted);">${c.type}</span>
           </td>
           <td>${formattedPorts}</td>
-          <td style="font-size: 0.85rem; color: #cbd5e1;">${c.desc}</td>
+          <td class="bp-comp-desc" style="font-size: 0.85rem;">${c.desc}</td>
         </tr>
       `;
     });
@@ -3110,8 +3246,8 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
   const userContainer = document.getElementById('bp-modal-users');
   if (userContainer) {
     let userHtml = `
-      <div class="tip-box" style="background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; font-size: 0.82rem; line-height: 1.5; color: #cbd5e1;">
-        <div style="font-weight: 700; color: #38bdf8; margin-bottom: 6px; font-size: 0.88rem;">${dict.modal_tip_title || '💡 Quick Guide: Zero-Trust Credentials, SEPS Wallet & 1-Click Launch'}</div>
+      <div class="tip-box bp-users-tip-box" style="background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; font-size: 0.82rem; line-height: 1.5;">
+        <div style="font-weight: 700; color: var(--primary); margin-bottom: 6px; font-size: 0.88rem;">${dict.modal_tip_title || '💡 Quick Guide: Zero-Trust Credentials, SEPS Wallet & 1-Click Launch'}</div>
         <div style="margin-bottom: 5px;">${dict.modal_tip_seps || '<b>SEPS Wallet TNS Alias:</b> Encrypted auto-login alias. Use <code>sql /@ALIAS</code> in terminal or VS Code extension.'}</div>
         <div style="margin-bottom: 5px;">${dict.modal_tip_launch || '<b>1-Click Web Launch:</b> Prefills username and auto-copies password to clipboard (Ctrl+V / Cmd+V to paste).'}</div>
         <div>${dict.modal_tip_pwd || '<b>Copy Credentials:</b> Click any username or use buttons to copy passwords or TNS aliases directly.'}</div>
@@ -3131,7 +3267,7 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
       const isDbUser = (!u.db || u.db.startsWith('db-'));
       const aliasCol = u.wallet_alias ? `
         <div style="display:flex; flex-direction:column; gap:4px;">
-          <div><code style="color:#22c55e; font-size:0.8rem; font-weight:600; background:rgba(34,197,94,0.08); padding:2px 6px; border-radius:4px;">${u.wallet_alias}</code></div>
+          <div><code style="color: var(--success); font-size:0.8rem; font-weight:600; background:rgba(34,197,94,0.08); padding:2px 6px; border-radius:4px;">${u.wallet_alias}</code></div>
           <div style="display:flex; gap:4px; flex-wrap:wrap;">
             <button class="btn btn-secondary" style="padding:2px 7px; font-size:0.72rem;" onclick="copyTnsAlias('${u.wallet_alias}', this)" title="${dict.btn_copy_alias || 'Copy Alias'}">
               <span>📋</span> <span>${dict.btn_copy_alias || 'Alias'}</span>
@@ -3142,7 +3278,7 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
             </button>` : ''}
           </div>
         </div>
-      ` : `<span style="color:#64748b; font-size:0.75rem;">Web / VNC only</span>`;
+      ` : `<span style="color: var(--text-muted); font-size:0.75rem;">Web / VNC only</span>`;
 
       const isDev = (u.username && ['DEV', 'USER_DEVELOPER'].includes(u.username.toUpperCase())) || (u.wallet_alias && u.wallet_alias.includes('DEV'));
       const isDba = (u.role === 'DBA' || (u.wallet_alias && u.wallet_alias.includes('DBA')));
@@ -3155,7 +3291,7 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
             </button>
           ` : ''}
           ${(isDev && u.login_url) ? `
-            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; color:#38bdf8; border-color:rgba(56,189,248,0.3);" onclick="openServiceWithCredentials('${u.login_url.replace('/r/apex/workspace-sign-in/oracle-apex-sign-in', '/user_developer/sign-in')}&r=_sdw', '${u.wallet_alias}', '${u.username}', event)" title="Database Actions">
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; color: var(--primary); border-color:rgba(56,189,248,0.3);" onclick="openServiceWithCredentials('${u.login_url.replace('/r/apex/workspace-sign-in/oracle-apex-sign-in', '/user_developer/sign-in')}&r=_sdw', '${u.wallet_alias}', '${u.username}', event)" title="Database Actions">
               <span>📊</span> <span>${dict.btn_launch_sdw || 'DB Actions'}</span>
             </button>
           ` : ''}
@@ -3165,7 +3301,7 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
             </button>
           ` : ''}
           ${(u.wallet_alias && u.username && isDbUser) ? `
-            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; color:#fbbf24; border-color:rgba(251,191,36,0.3);" onclick="triggerRotateUserPassword(${b.num}, '${(u.db && u.db.toLowerCase().startsWith('db-')) ? u.db.toLowerCase() : ((b.container_names && b.container_names.find(c => c.startsWith('db-'))) || 'db-proxy')}', '${u.username.toLowerCase()}', this)" title="${dict.btn_rotate_pwd || 'Rotate Password'}">
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; color: var(--warning); border-color:rgba(251,191,36,0.3);" onclick="triggerRotateUserPassword(${b.num}, '${(u.db && u.db.toLowerCase().startsWith('db-')) ? u.db.toLowerCase() : ((b.container_names && b.container_names.find(c => c.startsWith('db-'))) || 'db-proxy')}', '${u.username.toLowerCase()}', this)" title="${dict.btn_rotate_pwd || 'Rotate Password'}">
               <span>🔄</span> <span>${dict.btn_rotate_pwd || 'Rotate'}</span>
             </button>
           ` : ''}
@@ -3175,14 +3311,14 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
       userHtml += `
         <tr>
           <td>
-            <span class="badge" style="background: rgba(56,189,248,0.1); color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); font-size:0.72rem;">${u.db}</span>
-            <div style="font-weight:600; color:#f1f5f9; font-size:0.84rem; margin-top:3px;">${u.portal_title || u.role}</div>
+            <span class="badge" style="background: rgba(56,189,248,0.1); color: var(--primary); border: 1px solid rgba(56,189,248,0.2); font-size:0.72rem;">${u.db}</span>
+            <div class="bp-user-portal-title" style="font-weight:600; color: var(--text-main); font-size:0.84rem; margin-top:3px;">${u.portal_title || u.role}</div>
           </td>
           <td>
             <span style="font-weight:700; color:${u.color || '#fff'}; font-family: ui-monospace, monospace; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" onclick="copyUsername('${u.username}', this)" title="Click to copy username">
-              ${u.username} <span style="font-size:0.7rem; color:#64748b;">📋</span>
+              ${u.username} <span style="font-size:0.7rem; color: var(--text-muted);">📋</span>
             </span>
-            <div style="font-size:0.75rem; color:#94a3b8; margin-top:2px;">${u.scope ? u.scope + (u.role ? ' &bull; ' + u.role : '') : u.role}</div>
+            <div class="bp-user-scope-desc" style="font-size:0.75rem; color: var(--text-muted); margin-top:2px;">${u.scope ? u.scope + (u.role ? ' &bull; ' + u.role : '') : u.role}</div>
           </td>
           <td>${aliasCol}</td>
           <td>${actionBtns}</td>
@@ -3212,29 +3348,29 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
       const runsCount = bpBench.runs_count || hist.length || 1;
 
       setupHtml = `
-        <div style="flex: 1; min-width: 220px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px 14px;">
-          <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">
+        <div class="bp-bench-card" style="flex: 1; min-width: 220px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px 14px;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">
             ❄️ ${dict.telemetry_cold_setup || 'Külm Paigaldus Nullist'}
           </div>
           <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
-            <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; font-family: ui-monospace, monospace;">${latestDur}</span>
-            ${latestTime ? `<span style="font-size: 0.78rem; color: #64748b;">(${latestTime})</span>` : ''}
+            <span style="font-size: 1.15rem; font-weight: 700; color: var(--primary); font-family: ui-monospace, monospace;">${latestDur}</span>
+            ${latestTime ? `<span style="font-size: 0.78rem; color: var(--text-muted);">(${latestTime})</span>` : ''}
           </div>
-          <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 4px;">
-            ${dict.telemetry_avg || 'Keskmine'}: <strong style="color: #f8fafc;">${avgDur}</strong> (${runsCount} ${dict.telemetry_runs || 'mõõtmist'})
+          <div class="bp-bench-label" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+            ${dict.telemetry_avg || 'Keskmine'}: <strong class="bp-bench-val-strong" style="color: var(--text-main);">${avgDur}</strong> (${runsCount} ${dict.telemetry_runs || 'mõõtmist'})
           </div>
         </div>
       `;
     } else {
       setupHtml = `
-        <div style="flex: 1; min-width: 220px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px 14px;">
-          <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">
+        <div class="bp-bench-card" style="flex: 1; min-width: 220px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px 14px;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">
             ❄️ ${dict.telemetry_cold_setup || 'Külm Paigaldus Nullist'}
           </div>
           <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
-            <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; font-family: ui-monospace, monospace;">${b.ram ? b.ram : 'Standard'}</span>
+            <span style="font-size: 1.15rem; font-weight: 700; color: var(--primary); font-family: ui-monospace, monospace;">${b.ram ? b.ram : 'Standard'}</span>
           </div>
-          <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">
+          <div class="bp-bench-label" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
             ${dict.telemetry_no_runs || 'Esmane paigaldus tegemata'}
           </div>
         </div>
@@ -3249,29 +3385,29 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
       const restTime = snapBench.started_at ? formatBenchmarkTimestamp(snapBench.started_at) : (snapBench.finished_at ? formatBenchmarkTimestamp(snapBench.finished_at) : '');
       const profileName = snapBench.profile_name || snapBench.snapshot_file || 'Golden Snapshot';
       restoreHtml = `
-        <div style="flex: 1; min-width: 220px; background: rgba(34,197,94,0.03); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; padding: 10px 14px;">
-          <div style="font-size: 0.75rem; color: #4ade80; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">
+        <div class="bp-bench-card restore" style="flex: 1; min-width: 220px; background: rgba(34,197,94,0.03); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; padding: 10px 14px;">
+          <div style="font-size: 0.75rem; color: var(--success); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">
             🚀 ${dict.telemetry_restore_snapshot || 'FastStart Snapshot Taastamine'}
           </div>
           <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
-            <span style="font-size: 1.15rem; font-weight: 700; color: #4ade80; font-family: ui-monospace, monospace;">${restDur}</span>
-            ${restTime ? `<span style="font-size: 0.78rem; color: #64748b;">(${restTime})</span>` : ''}
+            <span style="font-size: 1.15rem; font-weight: 700; color: var(--success); font-family: ui-monospace, monospace;">${restDur}</span>
+            ${restTime ? `<span style="font-size: 0.78rem; color: var(--text-muted);">(${restTime})</span>` : ''}
           </div>
-          <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 4px;">
-            ${dict.telemetry_profile || 'Profiil'}: <strong style="color: #f8fafc;">${profileName}</strong>
+          <div class="bp-bench-label" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+            ${dict.telemetry_profile || 'Profiil'}: <strong class="bp-bench-val-strong" style="color: var(--text-main);">${profileName}</strong>
           </div>
         </div>
       `;
     } else {
       restoreHtml = `
-        <div style="flex: 1; min-width: 220px; background: rgba(34,197,94,0.03); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; padding: 10px 14px;">
-          <div style="font-size: 0.75rem; color: #4ade80; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">
+        <div class="bp-bench-card restore" style="flex: 1; min-width: 220px; background: rgba(34,197,94,0.03); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; padding: 10px 14px;">
+          <div style="font-size: 0.75rem; color: var(--success); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">
             🚀 ${dict.telemetry_restore_snapshot || 'FastStart Snapshot Taastamine'}
           </div>
           <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
-            <span style="font-size: 1.15rem; font-weight: 700; color: #4ade80; font-family: ui-monospace, monospace;">Valmis</span>
+            <span style="font-size: 1.15rem; font-weight: 700; color: var(--success); font-family: ui-monospace, monospace;">Valmis</span>
           </div>
-          <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">
+          <div class="bp-bench-label" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
             ${dict.telemetry_golden_ready || 'Golden Snapshot valmidus'}
           </div>
         </div>
@@ -3286,8 +3422,8 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
           const cleanName = sKey.replace(/step\d+_/, '').replace(/_seconds/, '').replace(/_/g, ' ');
           stepsHtml += `
             <div style="display: flex; justify-content: space-between; background: rgba(255,255,255,0.02); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
-              <span style="color: #cbd5e1; text-transform: capitalize;">${cleanName}:</span>
-              <span style="color: #38bdf8; font-family: ui-monospace, monospace; font-weight: 600;">${formatDurationSeconds(sVal)}</span>
+              <span style="color: var(--text-dim); text-transform: capitalize;">${cleanName}:</span>
+              <span style="color: var(--primary); font-family: ui-monospace, monospace; font-weight: 600;">${formatDurationSeconds(sVal)}</span>
             </div>`;
         }
       }
@@ -3326,13 +3462,13 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
     // Card 1: Activate / Add Stack (setup-all.sh)
     const isOnline = isBlueprintActiveOrRunning(b);
     const cardActivate = `
-      <div style="background: rgba(56, 189, 248, 0.04); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div class="bp-action-card" style="background: rgba(56, 189, 248, 0.04); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
         <div>
-          <div style="font-weight: 700; color: #38bdf8; font-size: 0.92rem; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-weight: 700; color: var(--primary); font-size: 0.92rem; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
             <span>${dict.modal_act_activate_title || dict.modal_act_deploy_title || '⚡ Käivita / Lisa Virn'}</span>
             ${isOnline ? `<span class="badge badge-success" style="font-size: 0.72rem; padding: 2px 6px;">🟢 ${dict.status_online || 'Aktiivne'}</span>` : ''}
           </div>
-          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${isOnline ? (dict.modal_act_already_active_hint || 'Konteiner(id) on juba aktiivsed ja töötavad. Probleemide korral kasuta: Taaskäivita & Uuenda.') : (dict.modal_act_activate_desc || dict.modal_act_deploy_desc || 'Käivitab vajalikud konteinerid paralleelselt olemasolevate kõrvale ilma vanu sulgemata.')}</p>
+          <p class="bp-action-card-desc" style="font-size: 0.8rem; line-height: 1.4; margin: 0 0 10px 0;">${isOnline ? (dict.modal_act_already_active_hint || 'Konteiner(id) on juba aktiivsed ja töötavad. Probleemide korral kasuta: Taaskäivita & Uuenda.') : (dict.modal_act_activate_desc || dict.modal_act_deploy_desc || 'Käivitab vajalikud konteinerid paralleelselt olemasolevate kõrvale ilma vanu sulgemata.')}</p>
           <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
             <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
             ./scripts/setup-all.sh -b ${b.num} -y --lang ${currentLang}
@@ -3346,16 +3482,16 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
 
     // Card 2: Restart & Update
     const cardRestart = `
-      <div id="bp-card-restart-box" style="background: rgba(251, 191, 36, 0.04); border: 1px solid rgba(251, 191, 36, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease;">
+      <div id="bp-card-restart-box" class="bp-action-card" style="background: rgba(251, 191, 36, 0.04); border: 1px solid rgba(251, 191, 36, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease;">
         <div>
-          <div style="font-weight: 700; color: #fbbf24; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_act_restart_title || '🔄 Taaskäivita & Uuenda'}</div>
-          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_act_restart_desc || 'Taaskäivitab selle pinu konteinerid ja rakendab uued seadistused ilma andmekaota.'}</p>
+          <div style="font-weight: 700; color: var(--warning); font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_act_restart_title || '🔄 Taaskäivita & Uuenda'}</div>
+          <p class="bp-action-card-desc" style="font-size: 0.8rem; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_act_restart_desc || 'Taaskäivitab selle pinu konteinerid ja rakendab uued seadistused ilma andmekaota.'}</p>
           <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
             <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
             ./scripts/deploy-blueprint.sh -b ${b.num} -u --lang ${currentLang}
           </div>
         </div>
-        <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; color: #fbbf24; border-color: rgba(251,191,36,0.5);" onclick="triggerBlueprintActionModal(${b.num}, 'restart')">
+        <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; color: var(--warning); border-color: rgba(251,191,36,0.5);" onclick="triggerBlueprintActionModal(${b.num}, 'restart')">
           <span>🔄</span> <span>${dict.modal_act_restart_btn || 'Taaskäivita & Uuenda'}</span>
         </button>
       </div>
@@ -3364,19 +3500,19 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
     // Card 3: Stop Services
     const isCore = b.num === 0;
     const cardStop = `
-      <div style="background: rgba(148, 163, 184, 0.04); border: 1px solid ${isCore ? 'rgba(251, 191, 36, 0.35)' : 'rgba(148, 163, 184, 0.25)'}; border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div class="bp-action-card" style="background: rgba(148, 163, 184, 0.04); border: 1px solid ${isCore ? 'rgba(251, 191, 36, 0.35)' : 'rgba(148, 163, 184, 0.25)'}; border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
         <div>
-          <div style="font-weight: 700; color: ${isCore ? '#fbbf24' : '#cbd5e1'}; font-size: 0.92rem; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+          <div class="bp-action-card-title" style="font-weight: 700; color: ${isCore ? '#fbbf24' : 'var(--text-main)'}; font-size: 0.92rem; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
             <span>${dict.modal_act_stop_title || '⏹️ Peata See Pinu'}</span>
-            ${isCore ? `<span class="badge" style="background: rgba(251, 191, 36, 0.12); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.35); font-size: 0.7rem; padding: 2px 6px;">⚠️ ${dict.modal_act_stop_protected || 'Tuum'}</span>` : ''}
+            ${isCore ? `<span class="badge" style="background: rgba(251, 191, 36, 0.12); color: var(--warning); border: 1px solid rgba(251, 191, 36, 0.35); font-size: 0.7rem; padding: 2px 6px;">⚠️ ${dict.modal_act_stop_protected || 'Tuum'}</span>` : ''}
           </div>
-          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${isCore ? (dict.modal_act_stop_core_desc || 'Peatab tuumteenused (db-proxy ja app-ords). Keskne APEX/ORDS värav peatatakse. Enne jätkamist kuvatakse hoiatus.') : (dict.modal_act_stop_desc || 'Peatab ainult selle blueprinti konteinerid ja vabastab hosti mälu. Teised andmebaasid jäävad tööle.')}</p>
+          <p class="bp-action-card-desc" style="font-size: 0.8rem; line-height: 1.4; margin: 0 0 10px 0;">${isCore ? (dict.modal_act_stop_core_desc || 'Peatab tuumteenused (db-proxy ja app-ords). Keskne APEX/ORDS värav peatatakse. Enne jätkamist kuvatakse hoiatus.') : (dict.modal_act_stop_desc || 'Peatab ainult selle blueprinti konteinerid ja vabastab hosti mälu. Teised andmebaasid jäävad tööle.')}</p>
           <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
             <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
             podman stop ${stopTarget}
           </div>
         </div>
-        <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; border-color: rgba(239,68,68,0.5); color: #f87171;" onclick="triggerBlueprintActionModal(${b.num}, 'stop')">
+        <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; border-color: rgba(239,68,68,0.5); color: var(--danger);" onclick="triggerBlueprintActionModal(${b.num}, 'stop')">
           <span>${isCore ? '⚠️' : '⏹️'}</span> <span>${dict.modal_act_stop_btn || 'Peata See Pinu'}</span>
         </button>
       </div>
@@ -3388,16 +3524,16 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
     let cardCustomSnap = '';
     if (hasDb) {
       cardRapidRestore = `
-        <div style="background: rgba(34, 197, 94, 0.04); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="bp-action-card" style="background: rgba(34, 197, 94, 0.04); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
           <div>
-            <div style="font-weight: 700; color: #4ade80; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_dr_variant_a_title || '⚡ Rapid Restore (~15–45s)'}</div>
-            <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_dr_variant_a_desc || 'Taastab andmebaasi puhtasse baasseisu Golden Snapshotist ilma täisrebuildita.'}</p>
+            <div style="font-weight: 700; color: var(--success); font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_dr_variant_a_title || '⚡ Rapid Restore (~15–45s)'}</div>
+            <p class="bp-action-card-desc" style="font-size: 0.8rem; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_dr_variant_a_desc || 'Taastab andmebaasi puhtasse baasseisu Golden Snapshotist ilma täisrebuildita.'}</p>
             <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
               <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
               ./scripts/snapshots/restore-golden-snapshots.sh -b ${b.num} --force
             </div>
           </div>
-          <button class="btn btn-primary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; background: #16a34a; border-color: #22c55e;" onclick="triggerRestoreSnapshot(null, ${b.num}, this)">
+          <button class="btn btn-primary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; background: #16a34a; border-color: var(--success);" onclick="triggerRestoreSnapshot(null, ${b.num}, this)">
             <span>⚡</span> <span>${dict.modal_dr_variant_a_btn || 'Taasta Golden Snapshot'}</span>
           </button>
         </div>
@@ -3406,32 +3542,32 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
       const primaryDb = (b.components || []).find(c => (c.type && (c.type.toLowerCase().includes('database') || c.type.toLowerCase().includes('pdb'))) || (c.name && c.name.startsWith('db-')));
       const dbTargetName = primaryDb ? primaryDb.name : 'db-proxy';
       cardRotate = `
-        <div style="background: rgba(245, 158, 11, 0.04); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="bp-action-card" style="background: rgba(245, 158, 11, 0.04); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
           <div>
-            <div style="font-weight: 700; color: #fbbf24; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_act_rotate_title || '🔄 Paroolide Null-Seisakuga Rotatsioon'}</div>
-            <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_act_rotate_desc || 'Genereerib uue parooli ja uuendab selle andmebaasis, Podmani saladustes ja SEPS Walletis.'}</p>
+            <div style="font-weight: 700; color: var(--warning); font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_act_rotate_title || '🔄 Paroolide Null-Seisakuga Rotatsioon'}</div>
+            <p class="bp-action-card-desc" style="font-size: 0.8rem; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_act_rotate_desc || 'Genereerib uue parooli ja uuendab selle andmebaasis, Podmani saladustes ja SEPS Walletis.'}</p>
             <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
               <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
               ./scripts/rotate-password.sh ${dbTargetName} dev
             </div>
           </div>
-          <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; color: #fbbf24; border-color: rgba(245,158,11,0.5);" onclick="triggerRotateUserPassword(${b.num}, '${dbTargetName}', 'dev', this)">
+          <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; color: var(--warning); border-color: rgba(245,158,11,0.5);" onclick="triggerRotateUserPassword(${b.num}, '${dbTargetName}', 'dev', this)">
             <span>🔄</span> <span>${dict.modal_act_rotate_btn || 'Roteeri DEV parool'}</span>
           </button>
         </div>
       `;
 
       cardCustomSnap = `
-        <div style="background: rgba(56, 189, 248, 0.04); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="bp-action-card" style="background: rgba(56, 189, 248, 0.04); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
           <div>
-            <div style="font-weight: 700; color: #38bdf8; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_dr_custom_title || '📸 Salvesta Hetkeseis (Snapshot)'}</div>
-            <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_dr_custom_desc || 'Salvestab jooksvad testandmed ja skeemi uue nimega kohalikuks snapshotiks.'}</p>
+            <div style="font-weight: 700; color: var(--primary); font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_dr_custom_title || '📸 Salvesta Hetkeseis (Snapshot)'}</div>
+            <p class="bp-action-card-desc" style="font-size: 0.8rem; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_dr_custom_desc || 'Salvestab jooksvad testandmed ja skeemi uue nimega kohalikuks snapshotiks.'}</p>
             <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
-              <input type="text" id="modal-snap-tag-${b.num}" placeholder="${dict.modal_dr_custom_placeholder || 'Tag / Nimi'}" style="width: 100%; padding: 6px 10px; font-size: 0.8rem; background: #030712; border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; outline: none; font-family: ui-monospace, monospace;" />
-              <input type="text" id="modal-snap-desc-${b.num}" placeholder="${dict.snap_placeholder_desc || 'Valikuline kirjeldus...'}" style="width: 100%; padding: 6px 10px; font-size: 0.8rem; background: #030712; border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; outline: none;" />
+              <input type="text" id="modal-snap-tag-${b.num}" class="bp-action-snap-input" placeholder="${dict.modal_dr_custom_placeholder || 'Tag / Nimi'}" style="width: 100%; padding: 6px 10px; font-size: 0.8rem; background: #030712; border: 1px solid var(--border); border-radius: 6px; color: var(--text-main); outline: none; font-family: ui-monospace, monospace;" />
+              <input type="text" id="modal-snap-desc-${b.num}" class="bp-action-snap-input" placeholder="${dict.snap_placeholder_desc || 'Valikuline kirjeldus...'}" style="width: 100%; padding: 6px 10px; font-size: 0.8rem; background: #030712; border: 1px solid var(--border); border-radius: 6px; color: var(--text-main); outline: none;" />
             </div>
           </div>
-          <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; border-color: rgba(56,189,248,0.5); color: #38bdf8;" onclick="triggerCreateCustomSnapshotModal(${b.num}, this)">
+          <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; border-color: rgba(56,189,248,0.5); color: var(--primary);" onclick="triggerCreateCustomSnapshotModal(${b.num}, this)">
             <span>📸</span> <span>${dict.modal_dr_custom_btn || 'Loo Snapshot'}</span>
           </button>
         </div>
@@ -3440,16 +3576,16 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
 
     // Zone 3 Card: Deep Reset
     const cardDeepReset = `
-      <div style="background: rgba(239, 68, 68, 0.04); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div class="bp-action-card" style="background: rgba(239, 68, 68, 0.04); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
         <div>
-          <div style="font-weight: 700; color: #f87171; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_dr_variant_b_title || '⚠️ Külm Taasehitus Nullist (~4–8 min)'}</div>
-          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_dr_variant_b_desc || 'Kustutab andmemahud ja ehitab kogu pinu uuesti nullist (kasuta ainult tõsise rikke korral).'}</p>
+          <div style="font-weight: 700; color: var(--danger); font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_dr_variant_b_title || '⚠️ Külm Taasehitus Nullist (~4–8 min)'}</div>
+          <p class="bp-action-card-desc" style="font-size: 0.8rem; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_dr_variant_b_desc || 'Kustutab andmemahud ja ehitab kogu pinu uuesti nullist (kasuta ainult tõsise rikke korral).'}</p>
           <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
             <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
             ./scripts/reset-all.sh -y &amp;&amp; ./scripts/setup-all.sh -b ${b.num} -y --lang ${currentLang}
           </div>
         </div>
-        <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; border-color: rgba(239,68,68,0.5); color: #f87171;" onclick="triggerDeepReset(${b.num}, this)">
+        <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; border-color: rgba(239,68,68,0.5); color: var(--danger);" onclick="triggerDeepReset(${b.num}, this)">
           <span>⚠️</span> <span>${dict.modal_dr_variant_b_btn || 'Külm Taasehitus (Deep Reset)'}</span>
         </button>
       </div>
@@ -3459,9 +3595,9 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
       <div style="grid-column: 1 / -1; margin-top: 4px; margin-bottom: 4px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 1.1rem;">🟢</span>
-          <strong style="font-size: 0.92rem; color: #38bdf8;" data-i18n="modal_zone_lifecycle">${dict.modal_zone_lifecycle || 'Igapäevane Elutsükkel & Käivitused (Lifecycle)'}</strong>
+          <strong style="font-size: 0.92rem; color: var(--primary);" data-i18n="modal_zone_lifecycle">${dict.modal_zone_lifecycle || 'Igapäevane Elutsükkel & Käivitused (Lifecycle)'}</strong>
         </div>
-        <span style="font-size: 0.75rem; color: #94a3b8;" data-i18n="modal_zone_lifecycle_sub">${dict.modal_zone_lifecycle_sub || 'Käivita lisavirn, taaskäivita või peata ilma teisi baase sulgemata'}</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="modal_zone_lifecycle_sub">${dict.modal_zone_lifecycle_sub || 'Käivita lisavirn, taaskäivita või peata ilma teisi baase sulgemata'}</span>
       </div>
       ${cardActivate}
       ${cardRestart}
@@ -3472,9 +3608,9 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
       <div style="grid-column: 1 / -1; margin-top: 18px; margin-bottom: 4px; border-bottom: 1px solid rgba(34, 197, 94, 0.25); padding-bottom: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 1.1rem;">🛡️</span>
-          <strong style="font-size: 0.92rem; color: #4ade80;" data-i18n="modal_zone_dr">${dict.modal_zone_dr || 'Kiirtaastus & Turvalisus (Disaster Recovery & Security)'}</strong>
+          <strong style="font-size: 0.92rem; color: var(--success);" data-i18n="modal_zone_dr">${dict.modal_zone_dr || 'Kiirtaastus & Turvalisus (Disaster Recovery & Security)'}</strong>
         </div>
-        <span style="font-size: 0.75rem; color: #94a3b8;" data-i18n="modal_zone_dr_sub">${dict.modal_zone_dr_sub || 'Taasta puhas algseis Golden Snapshotist või roteeri paroolid'}</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="modal_zone_dr_sub">${dict.modal_zone_dr_sub || 'Taasta puhas algseis Golden Snapshotist või roteeri paroolid'}</span>
       </div>
       ${cardRapidRestore}
       ${cardRotate}
@@ -3485,9 +3621,9 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
       <div style="grid-column: 1 / -1; margin-top: 18px; margin-bottom: 4px; border-bottom: 1px solid rgba(239, 68, 68, 0.25); padding-bottom: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 1.1rem;">⚠️</span>
-          <strong style="font-size: 0.92rem; color: #f87171;" data-i18n="modal_zone_danger">${dict.modal_zone_danger || 'Ohutsoon: Külm Taasehitus (Danger Zone: Cold Rebuild)'}</strong>
+          <strong style="font-size: 0.92rem; color: var(--danger);" data-i18n="modal_zone_danger">${dict.modal_zone_danger || 'Ohutsoon: Külm Taasehitus (Danger Zone: Cold Rebuild)'}</strong>
         </div>
-        <span style="font-size: 0.75rem; color: #94a3b8;" data-i18n="modal_zone_danger_sub">${dict.modal_zone_danger_sub || 'Kustutab andmemahud ja ehitab pinu uuesti nullist (~4–8 min)'}</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="modal_zone_danger_sub">${dict.modal_zone_danger_sub || 'Kustutab andmemahud ja ehitab pinu uuesti nullist (~4–8 min)'}</span>
       </div>
       ${cardDeepReset}
     `;
@@ -3588,13 +3724,8 @@ function renderBlueprintConfigTab(bNum) {
     pillsContainer.innerHTML = files.map((f, idx) => {
       const isSel = (idx === BP_CONFIG_ACTIVE_IDX);
       const icon = f.type === 'blueprint' ? '📁' : '📄';
-      const catBadge = f.category ? `<span style="font-size:0.68rem; opacity:0.75; margin-left:4px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.08);">${f.category}</span>` : '';
-      const bgStyle = isSel
-        ? 'background: rgba(56,189,248,0.2); border: 1px solid #38bdf8; color: #38bdf8; font-weight: 600;'
-        : 'background: rgba(15,23,42,0.6); border: 1px solid rgba(148,163,184,0.2); color: #cbd5e1;';
-
       return `
-        <button type="button" class="btn btn-sm" onclick="selectBlueprintConfigFile(${idx})" style="${bgStyle} font-size: 0.78rem; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.15s ease;">
+        <button type="button" class="btn btn-sm bp-config-file-btn ${isSel ? 'active' : ''}" onclick="selectBlueprintConfigFile(${idx})" style="font-size: 0.78rem; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.15s ease;">
           <span>${icon}</span>
           <span style="font-family: ui-monospace, monospace;">${f.label}</span>
           ${catBadge}
@@ -3607,12 +3738,12 @@ function renderBlueprintConfigTab(bNum) {
   const varsContainer = document.getElementById('bp-config-vars-container');
   if (varsContainer) {
     if (varsList.length === 0) {
-      varsContainer.innerHTML = '<span style="color:#64748b; font-size:0.8rem;">Muutujaid ei leitud.</span>';
+      varsContainer.innerHTML = '<span style="color: var(--text-muted); font-size:0.8rem;">Muutujaid ei leitud.</span>';
     } else {
       let vHtml = `
         <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
           <thead>
-            <tr style="border-bottom: 1px solid var(--border); color: #94a3b8; text-align: left;">
+            <tr style="border-bottom: 1px solid var(--border); color: var(--text-muted); text-align: left;">
               <th style="padding: 6px 10px; width: 25%; font-family: ui-monospace, monospace;">Parameeter (ENV)</th>
               <th style="padding: 6px 10px; width: 30%;">Väärtus</th>
               <th style="padding: 6px 10px; width: 30%;">Seotud fail</th>
@@ -3625,16 +3756,16 @@ function renderBlueprintConfigTab(bNum) {
         const fileIdx = files.findIndex(f => f.path === (v.profileObj ? v.profileObj.rel_path : null));
         const actionBtn = fileIdx >= 0
           ? `<button type="button" class="btn btn-sm btn-secondary" style="padding: 2px 8px; font-size: 0.72rem;" onclick="selectBlueprintConfigFile(${fileIdx})">🔍 Ava redaktoris</button>`
-          : '<span style="color:#64748b; font-size:0.75rem;">—</span>';
+          : '<span style="color: var(--text-muted); font-size:0.75rem;">—</span>';
 
         const fileLink = v.profileObj
-          ? `<code style="color: #38bdf8; font-size: 0.75rem;">${v.profileObj.rel_path}</code>`
-          : (v.value === 'NONE' || v.value === 'none' ? '<span style="color:#94a3b8; font-style:italic;">Keelatud (NONE)</span>' : '<span style="color:#64748b; font-size:0.75rem;">Otsene väärtus</span>');
+          ? `<code style="color: var(--primary); font-size: 0.75rem;">${v.profileObj.rel_path}</code>`
+          : (v.value === 'NONE' || v.value === 'none' ? '<span style="color: var(--text-muted); font-style:italic;">Keelatud (NONE)</span>' : '<span style="color: var(--text-muted); font-size:0.75rem;">Otsene väärtus</span>');
 
         vHtml += `
           <tr style="border-bottom: 1px solid rgba(148,163,184,0.1);">
-            <td style="padding: 6px 10px; font-family: ui-monospace, monospace; color: #a5b4fc;">${v.key}</td>
-            <td style="padding: 6px 10px; font-family: ui-monospace, monospace; color: #f1f5f9; font-weight: 600;">${v.value}</td>
+            <td style="padding: 6px 10px; font-family: ui-monospace, monospace; color: var(--accent);">${v.key}</td>
+            <td style="padding: 6px 10px; font-family: ui-monospace, monospace; color: var(--text-main); font-weight: 600;">${v.value}</td>
             <td style="padding: 6px 10px;">${fileLink}</td>
             <td style="padding: 6px 10px; text-align: right;">${actionBtn}</td>
           </tr>
@@ -3659,11 +3790,7 @@ function selectBlueprintConfigFile(idx) {
   if (pillsContainer) {
     const btns = pillsContainer.querySelectorAll('button');
     btns.forEach((btn, bIdx) => {
-      const isSel = (bIdx === idx);
-      btn.style.background = isSel ? 'rgba(56,189,248,0.2)' : 'rgba(15,23,42,0.6)';
-      btn.style.borderColor = isSel ? '#38bdf8' : 'rgba(148,163,184,0.2)';
-      btn.style.color = isSel ? '#38bdf8' : '#cbd5e1';
-      btn.style.fontWeight = isSel ? '600' : 'normal';
+      btn.classList.toggle('active', bIdx === idx);
     });
   }
 
@@ -3692,7 +3819,7 @@ async function loadActiveBlueprintConfigFile() {
   if (badgeEl) {
     badgeEl.textContent = dict.btn_view_mode || 'Vaaterežiim';
     badgeEl.style.background = 'rgba(148, 163, 184, 0.15)';
-    badgeEl.style.color = '#cbd5e1';
+    badgeEl.style.color = 'var(--text-muted)';
   }
   if (msgEl) msgEl.innerHTML = '';
   if (btnSave) btnSave.style.display = 'none';
@@ -3757,7 +3884,7 @@ function toggleBlueprintConfigEdit() {
       badgeEl.style.background = 'rgba(56, 189, 248, 0.2)';
       badgeEl.style.color = '#38bdf8';
     }
-    if (msgEl) msgEl.innerHTML = '<span style="color:#38bdf8;">✏️ Redigeerimisrežiim aktiivne. Tee muudatused ja salvesta.</span>';
+    if (msgEl) msgEl.innerHTML = '<span style="color: var(--primary);">✏️ Redigeerimisrežiim aktiivne. Tee muudatused ja salvesta.</span>';
   } else {
     if (ta) ta.readOnly = true;
     if (btnSave) btnSave.style.display = 'none';
@@ -3767,7 +3894,7 @@ function toggleBlueprintConfigEdit() {
     if (badgeEl) {
       badgeEl.textContent = dict.btn_view_mode || 'Vaaterežiim';
       badgeEl.style.background = 'rgba(148, 163, 184, 0.15)';
-      badgeEl.style.color = '#cbd5e1';
+      badgeEl.style.color = 'var(--text-muted)';
     }
     if (msgEl) msgEl.innerHTML = '';
   }
@@ -3805,7 +3932,7 @@ async function saveBlueprintConfigActiveFile() {
   }
 
   if (btnSave) btnSave.disabled = true;
-  if (msgEl) msgEl.innerHTML = '<span style="color:#facc15;">⏳ Salvestan ja genereerin Dev Hub uuesti...</span>';
+  if (msgEl) msgEl.innerHTML = '<span style="color: var(--warning);">⏳ Salvestan ja genereerin Dev Hub uuesti...</span>';
 
   try {
     const targetUrl = f.type === 'blueprint' ? `${BRIDGE_URL}/api/blueprint/save` : `${BRIDGE_URL}/api/profile`;
@@ -3832,7 +3959,7 @@ async function saveBlueprintConfigActiveFile() {
         if (pTarget) pTarget.content = newContent;
       }
 
-      if (msgEl) msgEl.innerHTML = `<span style="color:#4ade80;">✅ ${resData.message || dict.config_saved_success || 'Salvestatud edukalt!'}</span>`;
+      if (msgEl) msgEl.innerHTML = `<span style="color: var(--success);">✅ ${resData.message || dict.config_saved_success || 'Salvestatud edukalt!'}</span>`;
       if (typeof showToast === 'function') {
         showToast(`✅ ${f.name} salvestatud! Dev Hub genereeritakse uuesti taustal.`);
       }
@@ -3840,10 +3967,10 @@ async function saveBlueprintConfigActiveFile() {
       // Return to view mode
       toggleBlueprintConfigEdit();
     } else {
-      if (msgEl) msgEl.innerHTML = `<span style="color:#f87171;">❌ Viga: ${resData.error || 'Salvestamine ebaõnnestus'}</span>`;
+      if (msgEl) msgEl.innerHTML = `<span style="color: var(--danger);">❌ Viga: ${resData.error || 'Salvestamine ebaõnnestus'}</span>`;
     }
   } catch (e) {
-    if (msgEl) msgEl.innerHTML = `<span style="color:#f87171;">❌ Salvestamiseks on vaja aktiivset Dev Hub Bridge'i (${BRIDGE_URL}): ${e.message}</span>`;
+    if (msgEl) msgEl.innerHTML = `<span style="color: var(--danger);">❌ Salvestamiseks on vaja aktiivset Dev Hub Bridge'i (${BRIDGE_URL}): ${e.message}</span>`;
   } finally {
     if (btnSave) btnSave.disabled = false;
   }
@@ -3857,7 +3984,7 @@ function revertBlueprintConfigContent() {
   const msgEl = document.getElementById('bp-config-status-msg');
   if (ta && f.originalContent !== undefined) {
     ta.value = f.originalContent;
-    if (msgEl) msgEl.innerHTML = '<span style="color:#facc15;">🔄 Algne sisu taastatud.</span>';
+    if (msgEl) msgEl.innerHTML = '<span style="color: var(--warning);">🔄 Algne sisu taastatud.</span>';
   }
 }
 
@@ -3910,15 +4037,15 @@ function renderBlueprintDiagTab(bNum) {
         const statusBadgeId = `test-status-badge-${safeKey}`;
 
         return `
-          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+          <div class="bp-diag-card" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 8px;">
                 <div style="font-weight: 700; color: ${color}; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">
                   <span>${title}</span>
                 </div>
-                <span id="${statusBadgeId}" class="badge" style="background: rgba(148, 163, 184, 0.12); color: #94a3b8; font-size: 0.72rem; padding: 2px 6px;">⚪ ${dict.test_status_pending || 'Ootel'}</span>
+                <span id="${statusBadgeId}" class="badge" style="background: rgba(148, 163, 184, 0.12); color: var(--text-muted); font-size: 0.72rem; padding: 2px 6px;">⚪ ${dict.test_status_pending || 'Ootel'}</span>
               </div>
-              <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${desc}</p>
+              <p class="bp-diag-card-desc" style="font-size: 0.8rem; line-height: 1.4; margin: 0 0 10px 0;">${desc}</p>
               <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
                 <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                 ${t.cmd}
@@ -3952,7 +4079,7 @@ function renderBlueprintDiagTab(bNum) {
       btnText: dict.modal_act_dryrun_btn || 'Preview (Dry-Run)',
       btnIcon: '🔍',
       btnClass: 'btn-secondary',
-      btnStyle: 'color: #c084fc; border-color: rgba(168,85,247,0.5);'
+      btnStyle: 'color: var(--accent); border-color: rgba(168,85,247,0.5);'
     },
     {
       key: 'blueprint-info',
@@ -4015,13 +4142,13 @@ function renderBlueprintDiagTab(bNum) {
     const statusBadgeId = `diag-status-badge-${safeKey}`;
 
     return `
-    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+    <div class="bp-diag-card" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
       <div>
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 8px;">
           <div style="font-weight: 700; color: ${item.color}; font-size: 0.92rem;">${item.title}</div>
-          <span id="${statusBadgeId}" class="badge" style="background: rgba(148, 163, 184, 0.12); color: #94a3b8; font-size: 0.72rem; padding: 2px 6px;">⚪ ${dict.test_status_pending || 'Ootel'}</span>
+          <span id="${statusBadgeId}" class="badge" style="background: rgba(148, 163, 184, 0.12); color: var(--text-muted); font-size: 0.72rem; padding: 2px 6px;">⚪ ${dict.test_status_pending || 'Ootel'}</span>
         </div>
-        <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${item.desc}</p>
+        <p class="bp-diag-card-desc" style="font-size: 0.8rem; line-height: 1.4; margin: 0 0 10px 0;">${item.desc}</p>
         <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
           <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
           ${item.cmd}
@@ -4249,9 +4376,9 @@ function renderBlueprintLogsListAndActive() {
 
   if (filtered.length === 0) {
     listEl.innerHTML = `
-      <div style="text-align: center; padding: 28px 12px; color: #64748b;">
+      <div style="text-align: center; padding: 28px 12px; color: var(--text-muted);">
         <div style="font-size: 1.6rem; margin-bottom: 6px;">📄</div>
-        <div style="font-size: 0.85rem; color: #cbd5e1;" data-i18n="no_bp_logs_found">
+        <div style="font-size: 0.85rem; color: var(--text-dim);" data-i18n="no_bp_logs_found">
           ${dict.no_bp_logs_found || 'Selle filtriga ei leitud ühtegi logifaili.'}
         </div>
       </div>`;
@@ -4281,13 +4408,13 @@ function renderBlueprintLogsListAndActive() {
     if (cat === 'setup' || cat === 'deploy') {
       catBadge = `<span class="badge badge-success" style="font-size:0.68rem; padding: 1px 6px;">${dict.logs_cat_setup || 'Paigaldus'}</span>`;
     } else if (cat === 'test') {
-      catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; background:rgba(168,85,247,0.2); color:#c084fc; border:1px solid rgba(168,85,247,0.4);">${dict.logs_cat_test || 'Testimine'}</span>`;
+      catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; background:rgba(168,85,247,0.2); color: var(--accent); border:1px solid rgba(168,85,247,0.4);">${dict.logs_cat_test || 'Testimine'}</span>`;
     } else if (cat === 'snapshot' || cat === 'restore') {
-      catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.4);">${dict.logs_cat_snapshot || 'Snapshot'}</span>`;
+      catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; background:rgba(245,158,11,0.2); color: var(--warning); border:1px solid rgba(245,158,11,0.4);">${dict.logs_cat_snapshot || 'Snapshot'}</span>`;
     } else if (cat === 'devops' || cat === 'reset') {
       catBadge = `<span class="badge badge-primary" style="font-size:0.68rem; padding: 1px 6px;">${dict.logs_cat_devops || 'DevOps'}</span>`;
     } else {
-      catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; color:#94a3b8; background:rgba(255,255,255,0.08);">${dict.logs_cat_general || 'Üldine'}</span>`;
+      catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; color: var(--text-muted); background:rgba(255,255,255,0.08);">${dict.logs_cat_general || 'Üldine'}</span>`;
     }
 
     return `
@@ -4296,12 +4423,12 @@ function renderBlueprintLogsListAndActive() {
           <div style="display: flex; gap: 5px; align-items: center;">
             ${catBadge}
           </div>
-          <span style="font-size: 0.72rem; color: #94a3b8; font-family: ui-monospace, monospace;">${sizeStr}</span>
+          <span style="font-size: 0.72rem; color: var(--text-muted); font-family: ui-monospace, monospace;">${sizeStr}</span>
         </div>
         <div style="font-family: ui-monospace, monospace; font-size: 0.76rem; color: ${isSel ? '#38bdf8' : '#e2e8f0'}; word-break: break-all; line-height: 1.35; font-weight: ${isSel ? '600' : '400'};">
           ${escapeHtml(fname)}
         </div>
-        <div style="font-size: 0.68rem; color: #64748b; margin-top: 4px; font-family: ui-monospace, monospace;">
+        <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 4px; font-family: ui-monospace, monospace;">
           ${escapeHtml(timeStr)}
         </div>
       </div>`;
@@ -4453,25 +4580,25 @@ function renderBlueprintLatestLogHtml(container, bpNum, logInfo, dict) {
 
   const logFile = (logInfo && (logInfo.file || logInfo.name)) || (b && b.latest_log) || '';
   if (!logFile) {
-    container.innerHTML = `<span style="font-size:0.85rem; color:#64748b;">${dict.no_bp_log || 'Eelnevat paigalduslogi selle kavandi kohta veel pole.'}</span>`;
+    container.innerHTML = `<span style="font-size:0.85rem; color: var(--text-muted);">${dict.no_bp_log || 'Eelnevat paigalduslogi selle kavandi kohta veel pole.'}</span>`;
     return;
   }
 
   const relPath = (logInfo && logInfo.relative_path) || ('install_logs/' + logFile);
   const fullPath = (logInfo && logInfo.full_path) || relPath;
-  const sizeBadge = (logInfo && logInfo.size_human) ? `<span class="badge" style="background:rgba(56,189,248,0.1); color:#38bdf8; font-size:0.75rem; border:1px solid rgba(56,189,248,0.25);">💾 ${logInfo.size_human}</span>` : '';
-  const modBadge = (logInfo && logInfo.modified_time) ? `<span style="color:#64748b; font-size:0.75rem;">📅 ${logInfo.modified_time}</span>` : '';
+  const sizeBadge = (logInfo && logInfo.size_human) ? `<span class="badge" style="background:rgba(56,189,248,0.1); color: var(--primary); font-size:0.75rem; border:1px solid rgba(56,189,248,0.25);">💾 ${logInfo.size_human}</span>` : '';
+  const modBadge = (logInfo && logInfo.modified_time) ? `<span style="color: var(--text-muted); font-size:0.75rem;">📅 ${logInfo.modified_time}</span>` : '';
 
   container.innerHTML = `
     <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
       <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; flex:1;">
-        <span style="color:#38bdf8; font-family:ui-monospace,monospace; font-size:0.85rem; cursor:pointer; text-decoration:underline; font-weight:600;" 
+        <span style="color: var(--primary); font-family:ui-monospace,monospace; font-size:0.85rem; cursor:pointer; text-decoration:underline; font-weight:600;" 
               onclick="loadBlueprintLog('${logFile}', document.getElementById('bp-modal-log-toggle-btn'))" 
               title="${dict.tip_click_open_log || 'Klõpsa logi avamiseks'}">
           📄 ${relPath}
         </span>
         ${sizeBadge}
-        <span class="badge" style="background:rgba(34,197,94,0.15); color:#4ade80; font-size:0.75rem; border:1px solid rgba(34,197,94,0.3);">⏱️ ${benchDuration}</span>
+        <span class="badge" style="background:rgba(34,197,94,0.15); color: var(--success); font-size:0.75rem; border:1px solid rgba(34,197,94,0.3);">⏱️ ${benchDuration}</span>
         ${modBadge}
       </div>
       <div style="display:flex; align-items:center; gap:6px;">
@@ -4483,7 +4610,7 @@ function renderBlueprintLatestLogHtml(container, bpNum, logInfo, dict) {
         </button>
       </div>
     </div>
-    <div id="bp-modal-log-preview" style="display:none; margin-top:10px; background:#030712; border:1px solid #1e293b; border-radius:6px; padding:10px; font-family:ui-monospace,monospace; font-size:0.75rem; color:#94a3b8; max-height:260px; overflow-y:auto; white-space:pre-wrap; word-break:break-all;"></div>
+    <div id="bp-modal-log-preview" class="code-box" style="display:none; margin-top:10px; padding:10px; font-family:ui-monospace,monospace; font-size:0.75rem; max-height:260px; overflow-y:auto; white-space:pre-wrap; word-break:break-all;"></div>
   `;
 }
 
@@ -4543,7 +4670,7 @@ async function loadBlueprintLog(logFile, btn) {
     }
     if (!resp.ok) {
       if (resp.status === 404) {
-        previewBox.innerHTML = `<span style="color:#94a3b8;">${dict.log_not_found || 'ℹ️ Logifaili pole veel loodud või eelnev paigalduslogi puudub.'}</span>`;
+        previewBox.innerHTML = `<span style="color: var(--text-muted);">${dict.log_not_found || 'ℹ️ Logifaili pole veel loodud või eelnev paigalduslogi puudub.'}</span>`;
         return;
       }
       throw new Error(`HTTP ${resp.status}`);
@@ -4551,16 +4678,16 @@ async function loadBlueprintLog(logFile, btn) {
     const data = await resp.json();
     if (data.ok || data.status === 'ok') {
       if (data.found === false) {
-        previewBox.innerHTML = `<span style="color:#94a3b8;">${dict.log_not_found || 'ℹ️ Logifaili pole veel loodud või eelnev paigalduslogi puudub.'}</span>`;
+        previewBox.innerHTML = `<span style="color: var(--text-muted);">${dict.log_not_found || 'ℹ️ Logifaili pole veel loodud või eelnev paigalduslogi puudub.'}</span>`;
         return;
       }
       previewBox.textContent = data.content || `(${dict.log_empty || 'Logi on tühi'})`;
       previewBox.scrollTop = previewBox.scrollHeight;
     } else {
-      previewBox.innerHTML = `<span style="color:#f87171;">Viga: ${data.error || 'Logi ei õnnestunud lugeda'}</span>`;
+      previewBox.innerHTML = `<span style="color: var(--danger);">Viga: ${data.error || 'Logi ei õnnestunud lugeda'}</span>`;
     }
   } catch (err) {
-    previewBox.innerHTML = `<span style="color:#f87171;">Viga logi pärimisel: ${err.message}</span>`;
+    previewBox.innerHTML = `<span style="color: var(--danger);">Viga logi pärimisel: ${err.message}</span>`;
   }
 }
 
@@ -4912,7 +5039,7 @@ async function openLogViewerModal(logFile, logFullPath) {
       contentEl.innerHTML = `<span class="terminal-red">Viga: ${escapeHtml(data.error || 'Logi ei õnnestunud lugeda')}</span>`;
     }
   } catch (err) {
-    contentEl.innerHTML = `<span class="terminal-red">Viga logi pärimisel: ${escapeHtml(err.message)}</span><br/><span style="font-size:0.75rem; color:#94a3b8; display:block; margin-top:6px;">ℹ️ Kontrollige, et Dev Hub Bridge taustaprotsess töötab: <code>python3 scripts/internal/dev-hub-bridge.py</code></span>`;
+    contentEl.innerHTML = `<span class="terminal-red">Viga logi pärimisel: ${escapeHtml(err.message)}</span><br/><span style="font-size:0.75rem; color: var(--text-muted); display:block; margin-top:6px;">ℹ️ Kontrollige, et Dev Hub Bridge taustaprotsess töötab: <code>python3 scripts/internal/dev-hub-bridge.py</code></span>`;
   }
 }
 
@@ -5733,7 +5860,7 @@ function openDevOpsRecipeModal(recipeKey) {
       <div class="recipe-step-item">
         <div class="recipe-step-num">${s.num}</div>
         <div class="recipe-step-info">
-          <div class="recipe-step-title">${escapeHtml(s.title)} <span style="font-weight:normal; color:#94a3b8; font-size:0.75rem;">— ${escapeHtml(s.desc)}</span></div>
+          <div class="recipe-step-title">${escapeHtml(s.title)} <span class="recipe-step-desc" style="font-weight:normal; font-size:0.75rem;">— ${escapeHtml(s.desc)}</span></div>
           <div class="recipe-step-cmd"><code>${escapeHtml(s.cmd)}</code></div>
         </div>
       </div>
@@ -5894,10 +6021,6 @@ async function runDevOpsStepDirect(cmdKey, stepTitle) {
   }
 }
 
-// Pinned Cards & DevOps Filtering Logic
-let gActiveDevOpsCategory = 'all';
-let gDevOpsSearchQuery = '';
-
 function togglePinCard(btn) {
   const card = btn.closest('.card');
   if (!card) return;
@@ -5923,7 +6046,7 @@ function togglePinCard(btn) {
   localStorage.setItem('devops_pinned_cards', JSON.stringify(pinned));
   updatePinnedCounter();
   applyPinnedCardsOrder();
-  applyDevOpsCardsFilter();
+  filterDevOpsCards();
 }
 
 function getPinnedCardIds() {
@@ -5938,11 +6061,6 @@ function updatePinnedCounter() {
   const pinned = getPinnedCardIds();
   const counterEl = document.getElementById('devops-pinned-count');
   if (counterEl) counterEl.textContent = pinned.length;
-  const allEl = document.getElementById('devops-all-count');
-  if (allEl) {
-    const totalCards = document.querySelectorAll('#devops-cards-grid .card').length;
-    allEl.textContent = totalCards || 29;
-  }
 }
 
 function applyPinnedCardsOrder() {
@@ -5960,9 +6078,7 @@ function applyPinnedCardsOrder() {
         btn.textContent = '⭐';
         btn.title = 'Eemalda lemmikutest';
       }
-      if (card.id !== 'card-studio-setup' && card.id !== 'card-studio-reset') {
-        card.style.order = '-1';
-      }
+      card.style.order = '-1';
     }
   });
 
@@ -5975,92 +6091,9 @@ function applyPinnedCardsOrder() {
         btn.textContent = '☆';
         btn.title = 'Märgi lemmikuks';
       }
-      if (card.id !== 'card-studio-setup' && card.id !== 'card-studio-reset') {
-        card.style.order = '0';
-      }
+      card.style.order = '0';
     }
   });
-}
-
-function filterDevOpsCategory(cat, btn) {
-  gActiveDevOpsCategory = cat;
-  document.querySelectorAll('.devops-filter-pill').forEach(p => p.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  applyDevOpsCardsFilter();
-}
-
-function filterDevOpsCardsSearch(query) {
-  gDevOpsSearchQuery = (query || '').toLowerCase().trim();
-  applyDevOpsCardsFilter();
-}
-
-function applyDevOpsCardsFilter() {
-  const cards = document.querySelectorAll('#devops-cards-grid .card');
-  const pinnedIds = getPinnedCardIds();
-  let visibleCount = 0;
-
-  cards.forEach(card => {
-    const isPinned = pinnedIds.includes(card.id);
-    const cat = card.getAttribute('data-cat') || '';
-    const text = card.textContent.toLowerCase();
-
-    let matchesCat = true;
-    if (gActiveDevOpsCategory === 'all') {
-      matchesCat = true;
-    } else if (gActiveDevOpsCategory === 'pinned') {
-      matchesCat = isPinned;
-    } else {
-      matchesCat = (cat === gActiveDevOpsCategory);
-    }
-
-    let matchesSearch = true;
-    if (gDevOpsSearchQuery) {
-      matchesSearch = text.includes(gDevOpsSearchQuery);
-    }
-
-    if (matchesCat && matchesSearch) {
-      card.style.display = '';
-      visibleCount++;
-    } else {
-      card.style.display = 'none';
-    }
-  });
-
-  let emptyBox = document.getElementById('devops-cards-empty');
-  if (!emptyBox) {
-    emptyBox = document.createElement('div');
-    emptyBox.id = 'devops-cards-empty';
-    emptyBox.style.gridColumn = '1 / -1';
-    emptyBox.style.textAlign = 'center';
-    emptyBox.style.padding = '40px 20px';
-    emptyBox.style.color = 'var(--text-muted)';
-    emptyBox.style.background = 'rgba(15, 23, 42, 0.4)';
-    emptyBox.style.borderRadius = 'var(--radius-lg)';
-    emptyBox.style.border = '1px dashed var(--border)';
-    const grid = document.getElementById('devops-cards-grid');
-    if (grid) grid.appendChild(emptyBox);
-  }
-
-  if (visibleCount === 0) {
-    emptyBox.style.display = 'block';
-    if (gActiveDevOpsCategory === 'pinned') {
-      emptyBox.innerHTML = `
-        <div style="font-size: 2rem; margin-bottom: 8px;">⭐</div>
-        <h4 style="color: #f8fafc; margin: 0 0 6px 0;">Lemmikuid pole veel märgitud</h4>
-        <p style="font-size: 0.85rem; max-width: 480px; margin: 0 auto; color: #94a3b8;">
-          Klõpsa mistahes käsu kaardil olevale tähekesele (☆), et lisada see oma personaalsesse kiirpaneeli.
-        </p>
-      `;
-    } else {
-      emptyBox.innerHTML = `
-        <div style="font-size: 2rem; margin-bottom: 8px;">🔍</div>
-        <h4 style="color: #f8fafc; margin: 0 0 6px 0;">Ühtegi käsku ei leitud</h4>
-        <p style="font-size: 0.85rem; color: #94a3b8;">Proovi teist otsingusõna või vali kategooriaks "Kõik".</p>
-      `;
-    }
-  } else {
-    emptyBox.style.display = 'none';
-  }
 }
 
 function explainDevOpsCardWithAi(buttonEl) {
@@ -6089,7 +6122,7 @@ function explainDevOpsCardWithAi(buttonEl) {
   } else if (currentLang === 'fi') {
     prompt = `Selitä seuraava Oracle DevOps -alustan komento ja työnkulku:\n\n**Kortti:** ${title}\n**Komento:** \`${cmd}\`\n${desc ? `**Konteksti:** ${desc}\n` : ''}\nKerro lyhyesti:\n1. Mitä tämä komento tekee ja miten se toimii?\n2. Missä tilanteessa sitä tulisi käyttää?\n3. Tärkeimmät edellytykset ja turvallisuusnäkökohdat.\n4. Yleisimmät vianmääritysvinkit.`;
   } else if (currentLang === 'sv') {
-    prompt = `Förklara följande kommando och arbetsflöde för Oracle DevOps-plattformen:\n\n**Kort:** ${title}\n**Kommando:** \`${cmd}\`\n${desc ? `**Kontext:** ${desc}\n` : ''}\nFörklara kort:\n1. Vad gör det här kommandot och hur fungerar det?\n2. I vilket scenario bör det användas?\n3. Viktiga förutsättningar och säkerhetsaspekter.\n4. Vanliga felsökningstips.`;
+    prompt = `Förklara följande kommando och arbetsflöde för Oracle DevOps-plattformen:\n\n**Kort:** ${title}\n**Kommando:** \`${cmd}\`\n${desc ? `**Kontekst:** ${desc}\n` : ''}\nFörklara kort:\n1. Vad gör det här kommandot och hur fungerar det?\n2. I vilket scenario bör det användas?\n3. Viktiga förutsättningar och säkerhetsaspekter.\n4. Vanliga felsökningstips.`;
   } else if (currentLang === 'lv') {
     prompt = `Paskaidrojiet šo Oracle DevOps platformas komandu un darbplūsmu:\n\n**Kartīte:** ${title}\n**Komanda:** \`${cmd}\`\n${desc ? `**Konteksts:** ${desc}\n` : ''}\nLūdzu, paskaidrojiet:\n1. Ko šī komanda dara un kā tā darbojas?\n2. Kādā situācijā to vajadzētu izmantot?\n3. Galvenie priekšnosacījumi un drošības apsvērumi.\n4. Biežākie problēmu novēršanas padomi.`;
   } else if (currentLang === 'lt') {
@@ -6179,40 +6212,58 @@ function initDockedTerminalResize() {
   const terminal = document.getElementById('devops-docked-terminal');
   if (!handle || !terminal) return;
 
-  let isDragging = false;
   let startY = 0;
-  let startH = 0;
+  let startHeight = 0;
 
-  handle.addEventListener('mousedown', (e) => {
-    isDragging = true;
+  function onMouseDown(e) {
     startY = e.clientY;
-    startH = terminal.offsetHeight;
-    document.body.style.userSelect = 'none';
-    document.body.style.cursor = 'row-resize';
-  });
+    startHeight = terminal.offsetHeight;
+    document.documentElement.addEventListener('mousemove', onMouseMove);
+    document.documentElement.addEventListener('mouseup', onMouseUp);
+    e.preventDefault();
+  }
 
-  window.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    const deltaY = startY - e.clientY;
-    const newH = Math.min(Math.max(startH + deltaY, 160), window.innerHeight * 0.85);
+  function onMouseMove(e) {
+    const dy = startY - e.clientY;
+    const newH = Math.min(window.innerHeight * 0.9, Math.max(160, startHeight + dy));
     terminal.style.height = `${newH}px`;
-  });
+  }
 
-  window.addEventListener('mouseup', () => {
-    if (isDragging) {
-      isDragging = false;
-      document.body.style.userSelect = '';
-      document.body.style.cursor = '';
-    }
-  });
+  function onMouseUp() {
+    document.documentElement.removeEventListener('mousemove', onMouseMove);
+    document.documentElement.removeEventListener('mouseup', onMouseUp);
+  }
+
+  handle.addEventListener('mousedown', onMouseDown);
 }
 
+// Category filter state
 let currentDevOpsCategoryFilter = 'all';
 
 function filterDevOpsCategory(cat, btn) {
+  if (typeof cat === 'object' && cat !== null && cat.target) {
+    btn = null;
+    cat = 'all';
+  } else if (!cat) {
+    cat = 'all';
+    btn = null;
+  }
   currentDevOpsCategoryFilter = cat || 'all';
-  document.querySelectorAll('#devops-category-filters .bp-filter-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+
+  const filterBtns = document.querySelectorAll('#devops-category-filters .bp-filter-btn');
+  filterBtns.forEach(b => b.classList.remove('active'));
+
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    // Locate the matching button or fallback to 'all' button
+    const targetBtn = Array.from(filterBtns).find(b => {
+      const onclickAttr = b.getAttribute('onclick') || '';
+      return onclickAttr.includes(`'${cat}'`) || onclickAttr.includes(`"${cat}"`);
+    }) || filterBtns[0];
+    if (targetBtn) targetBtn.classList.add('active');
+  }
+
   filterDevOpsCards();
 }
 
@@ -6222,23 +6273,41 @@ function filterDevOpsCards() {
   const counterEl = document.getElementById('devops-filter-counter');
   const emptyEl = document.getElementById('devops-empty-state');
   const gridEl = document.getElementById('devops-cards-grid');
+  const studiosContainer = document.getElementById('devops-studios-container');
 
   const q = ((searchInput && searchInput.value) || '').toLowerCase().trim();
   if (clearBtn) {
     clearBtn.style.display = q ? 'inline-block' : 'none';
   }
 
+  // Manage Command Studios container visibility
+  if (studiosContainer) {
+    const showStudiosByCat = (currentDevOpsCategoryFilter === 'all' || currentDevOpsCategoryFilter === 'lifecycle');
+    let showStudiosBySearch = true;
+    if (q) {
+      const studioText = studiosContainer.textContent.toLowerCase();
+      showStudiosBySearch = studioText.includes(q);
+    }
+    if (showStudiosByCat && showStudiosBySearch) {
+      studiosContainer.style.display = 'flex';
+    } else {
+      studiosContainer.style.display = 'none';
+    }
+  }
+
   const cards = document.querySelectorAll('#devops-cards-grid .card');
+  const pinnedIds = (typeof getPinnedCardIds === 'function') ? getPinnedCardIds() : [];
   let visibleCount = 0;
   const totalCount = cards.length;
 
   cards.forEach(card => {
     const cardCat = card.getAttribute('data-cat') || 'tools';
+    const isPinned = pinnedIds.includes(card.id) || card.classList.contains('is-pinned');
     let matchesCat = false;
     if (currentDevOpsCategoryFilter === 'all') {
       matchesCat = true;
     } else if (currentDevOpsCategoryFilter === 'pinned') {
-      matchesCat = card.classList.contains('is-pinned');
+      matchesCat = isPinned;
     } else {
       matchesCat = (cardCat === currentDevOpsCategoryFilter);
     }
@@ -6278,11 +6347,7 @@ function clearDevOpsSearch() {
 function resetDevOpsFilters() {
   const searchInput = document.getElementById('devops-search-input');
   if (searchInput) searchInput.value = '';
-  currentDevOpsCategoryFilter = 'all';
-  const allBtn = document.querySelector('#devops-category-filters .bp-filter-btn');
-  document.querySelectorAll('#devops-category-filters .bp-filter-btn').forEach(b => b.classList.remove('active'));
-  if (allBtn) allBtn.classList.add('active');
-  filterDevOpsCards();
+  filterDevOpsCategory('all');
 }
 
 /* ==========================================================================
@@ -6433,7 +6498,7 @@ function renderRepoStatisticsUI(stats) {
         <tr>
           <td><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${color}; margin-right:6px;"></span><strong>${lang}</strong></td>
           <td>${st.files}</td>
-          <td><strong>${st.sloc.toLocaleString()}</strong> <small style="color:#64748b;">(${(st.lines || 0).toLocaleString()} tot)</small></td>
+          <td><strong>${st.sloc.toLocaleString()}</strong> <small style="color: var(--text-muted);">(${(st.lines || 0).toLocaleString()} tot)</small></td>
           <td><span class="badge" style="background:rgba(255,255,255,0.06); font-size:0.7rem;">${st.percent_of_sloc || 0}%</span></td>
         </tr>
       `;
@@ -6449,7 +6514,7 @@ function renderRepoStatisticsUI(stats) {
     topFiles.forEach(f => {
       topHtml += `
         <tr>
-          <td style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${f.path}"><code style="font-size:0.72rem; color:#93c5fd;">${f.path}</code></td>
+          <td style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${f.path}"><code style="font-size:0.72rem; color: var(--primary);">${f.path}</code></td>
           <td><span class="badge badge-secondary" style="font-size:0.68rem;">${f.language.split(' ')[0]}</span></td>
           <td><strong>${f.sloc.toLocaleString()}</strong></td>
         </tr>
@@ -6695,7 +6760,7 @@ function renderDocsNav(selectedIdx) {
     btn.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; text-align: left; min-width: 0;">
         <span class="docs-item-title" style="font-weight: 500; font-size: 0.84rem; line-height: 1.35; word-break: break-word;">${escapeHtml(title)}</span>
-        <span class="docs-item-file" style="font-size: 0.7rem; color: #64748b; font-family: ui-monospace, monospace;">${escapeHtml(shortName)}.md</span>
+        <span class="docs-item-file" style="font-size: 0.7rem; color: var(--text-muted); font-family: ui-monospace, monospace;">${escapeHtml(shortName)}.md</span>
       </div>
     `;
     btn.onclick = () => loadDocContent(idx, btn);
@@ -6764,7 +6829,7 @@ function handleDocsSearchInput(query) {
         const regex = new RegExp(`(${escapeRegExp(gDocsSearchQuery)})`, 'gi');
         snippet = escSnippet.replace(regex, '<mark style="background:#f59e0b; color:#0f172a; padding:1px 4px; border-radius:3px; font-weight:600;">$1</mark>');
       } else {
-        snippet = `<span style="color:#94a3b8; font-style:italic;">Pealkiri klapib otsinguga: <strong>${escapeHtml(title)}</strong></span>`;
+        snippet = `<span style="color: var(--text-muted); font-style:italic;">Pealkiri klapib otsinguga: <strong>${escapeHtml(title)}</strong></span>`;
       }
       matchedDocs.push({ idx, doc, title, snippet });
     }
@@ -6781,14 +6846,14 @@ function handleDocsSearchInput(query) {
       searchResultsBox.innerHTML = `
         <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 24px; text-align: center; color: var(--text-dim);">
           <div style="font-size: 1.8rem; margin-bottom: 8px;">🔍</div>
-          <div style="font-size: 0.95rem; font-weight: 600; color: #f8fafc;" data-i18n="docs_no_results">${dict.docs_no_results || 'Ühtegi sobivat dokumenti ei leitud.'}</div>
-          <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Päring: "${escapeHtml(gDocsSearchQuery)}"</div>
+          <div style="font-size: 0.95rem; font-weight: 600; color: var(--text-main);" data-i18n="docs_no_results">${dict.docs_no_results || 'Ühtegi sobivat dokumenti ei leitud.'}</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Päring: "${escapeHtml(gDocsSearchQuery)}"</div>
         </div>
       `;
     } else {
       let resultsHtml = `
         <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-          <span style="font-size: 0.85rem; font-weight: 600; color: #38bdf8;">
+          <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">
             🔍 ${matchedDocs.length} ${dict.docs_search_results || 'dokumenti leitud'} ("${escapeHtml(gDocsSearchQuery)}")
           </span>
           <button class="btn btn-sm btn-secondary" style="font-size: 0.75rem; padding: 2px 8px;" onclick="document.getElementById('docs-search-input').value=''; handleDocsSearchInput('');">✕ Tühjenda</button>
@@ -6799,10 +6864,10 @@ function handleDocsSearchInput(query) {
         resultsHtml += `
           <div class="card" style="margin-bottom: 0; padding: 14px 18px; cursor: pointer; border-left: 3px solid #38bdf8; transition: transform 0.15s ease;" onclick="openDocFromSearch(${m.idx})">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-weight: 700; color: #f8fafc; font-size: 0.95rem;">${escapeHtml(m.title)}</span>
+              <span style="font-weight: 700; color: var(--text-main); font-size: 0.95rem;">${escapeHtml(m.title)}</span>
               <span class="badge badge-primary" style="font-size: 0.72rem; font-family: ui-monospace, monospace;">${escapeHtml(m.doc.rel)}</span>
             </div>
-            <div style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.5; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 4px; font-family: ui-monospace, monospace;">
+            <div style="font-size: 0.82rem; color: var(--text-dim); line-height: 1.5; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 4px; font-family: ui-monospace, monospace;">
               ${m.snippet}
             </div>
           </div>
@@ -6852,7 +6917,7 @@ function generateDocToc(bodyEl) {
     const indent = isH3 ? 'margin-left: 16px; font-size: 0.78rem; opacity: 0.85;' : 'font-weight: 600; font-size: 0.82rem;';
     tocHtml += `
       <li style="margin-bottom: 4px; ${indent}">
-        <a href="#${anchorId}" style="color: #38bdf8; text-decoration: none;" onclick="document.getElementById('${anchorId}').scrollIntoView({behavior:'smooth'}); return false;">
+        <a href="#${anchorId}" class="doc-toc-link" onclick="document.getElementById('${anchorId}').scrollIntoView({behavior:'smooth'}); return false;">
           ${escapeHtml(h.textContent)}
         </a>
       </li>
@@ -7042,10 +7107,10 @@ function loadDocContent(idx, activeBtn, skipHistory = false) {
     headerEl.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 4px;">
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <h2 style="margin: 0; color: #f8fafc; font-size: 1.3rem;">${escapeHtml(title)}</h2>
+          <h2 style="margin: 0; color: var(--text-main); font-size: 1.3rem;">${escapeHtml(title)}</h2>
           <span class="badge badge-primary" style="font-family: ui-monospace, monospace; font-size: 0.75rem;">${escapeHtml(doc.rel)}</span>
         </div>
-        <div style="font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 12px; margin-top: 4px;">
+        <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 12px; margin-top: 4px;">
           <span>⏱️ ~${readMin} min read (${wordCount} words)</span>
           <span>•</span>
           <span>🌐 ${currentLang.toUpperCase()}</span>
@@ -7099,7 +7164,7 @@ function loadDocContent(idx, activeBtn, skipHistory = false) {
     if (typeof marked !== 'undefined') {
       parsedHtml = marked.parse(text);
     } else {
-      parsedHtml = `<pre style="white-space:pre-wrap; font-family:inherit; color:#e2e8f0;">${escapeHtml(text)}</pre>`;
+      parsedHtml = `<pre style="white-space:pre-wrap; font-family:inherit; color: var(--text-main);">${escapeHtml(text)}</pre>`;
     }
     bodyEl.innerHTML = smartBannerHtml + faqToolbarHtml + parsedHtml;
     generateDocToc(bodyEl);
@@ -7398,26 +7463,26 @@ function loadBenchmarksData() {
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
         <div class="card" style="padding: 16px; border-left: 4px solid var(--primary); background: rgba(56, 189, 248, 0.05);">
           <div style="font-size: 0.8rem; color: var(--text-muted);">${dict.bench_stat_total || 'Total Provisioning Time'}</div>
-          <div style="font-size: 1.6rem; font-weight: 800; color: #f8fafc; font-family: ui-monospace, monospace; margin-top: 4px;">
+          <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); font-family: ui-monospace, monospace; margin-top: 4px;">
             ⏱️ ${setup.total_duration_formatted || '15m 20s'} <span style="font-size: 0.9rem; color: var(--primary); font-weight: 500;">(${totalSecs}s)</span>
           </div>
         </div>
         <div class="card" style="padding: 16px; border-left: 4px solid #a855f7; background: rgba(168, 85, 247, 0.05);">
           <div style="font-size: 0.8rem; color: var(--text-muted);">${dict.bench_stat_bp || 'Active Blueprint'}</div>
-          <div style="font-size: 1.3rem; font-weight: 700; color: #f8fafc; margin-top: 4px;">
+          <div style="font-size: 1.3rem; font-weight: 700; color: var(--text-main); margin-top: 4px;">
             🏗️ Blueprint #${ACTIVE_BP_NUM}
           </div>
         </div>
         <div class="card" style="padding: 16px; border-left: 4px solid #22c55e; background: rgba(34, 197, 94, 0.05);">
           <div style="font-size: 0.8rem; color: var(--text-muted);">${dict.bench_stat_last || 'Last Execution Run'}</div>
-          <div style="font-size: 0.95rem; font-weight: 600; color: #f8fafc; font-family: ui-monospace, monospace; margin-top: 6px;">
+          <div style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); font-family: ui-monospace, monospace; margin-top: 6px;">
             📅 ${lastUpdatedStr}
           </div>
         </div>
         <div class="card" style="padding: 16px; border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
           <div style="font-size: 0.8rem; color: var(--text-muted);">${dict.bench_stat_reset || 'Instant Reset & Recovery'}</div>
-          <div style="font-size: 1.3rem; font-weight: 700; color: #f8fafc; font-family: ui-monospace, monospace; margin-top: 4px;">
-            ⚡ ${reset.reset_duration_formatted || '4s'} <span style="font-size: 0.85rem; color: #94a3b8;">/ Restore ~15s</span>
+          <div style="font-size: 1.3rem; font-weight: 700; color: var(--text-main); font-family: ui-monospace, monospace; margin-top: 4px;">
+            ⚡ ${reset.reset_duration_formatted || '4s'} <span style="font-size: 0.85rem; color: var(--text-muted);">/ Restore ~15s</span>
           </div>
         </div>
       </div>
@@ -7462,13 +7527,13 @@ function loadBenchmarksData() {
         <tr>
           <td><span style="margin-right: 8px;">${s.icon}</span> <strong>${s.name}</strong></td>
           <td style="font-family: ui-monospace, monospace; color: var(--primary); font-weight: 600;">
-            ${durFormatted} <span style="font-size: 0.75rem; color: #64748b;">(${sSecs}s)</span>
+            ${durFormatted} <span style="font-size: 0.75rem; color: var(--text-muted);">(${sSecs}s)</span>
           </td>
           <td>
             <div style="background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; width: 100%; overflow: hidden;">
               <div style="background: linear-gradient(90deg, #38bdf8, #818cf8); height: 100%; width: ${pct}%;"></div>
             </div>
-            <div style="font-size: 0.7rem; color: #64748b; margin-top: 2px;">${pct}% of setup</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">${pct}% of setup</div>
           </td>
           <td style="text-align: right;"><span style="color: var(--success); font-weight: 600; font-size: 0.85rem;">${dict.bench_completed || '✔ Completed'}</span></td>
         </tr>
@@ -7479,12 +7544,12 @@ function loadBenchmarksData() {
   tableHtml += `
         <tr style="background: rgba(56, 189, 248, 0.08); font-weight: bold; border-top: 2px solid var(--border);">
           <td>🏁 <strong>${dict.bench_total || 'TOTAL SETUP TIME'}</strong></td>
-          <td style="font-family: ui-monospace, monospace; color: #38bdf8; font-size: 1.05rem;">${setup.total_duration_formatted || '15m 20s'} (${totalSecs}s)</td>
+          <td style="font-family: ui-monospace, monospace; color: var(--primary); font-size: 1.05rem;">${setup.total_duration_formatted || '15m 20s'} (${totalSecs}s)</td>
           <td>
             <div style="background: rgba(255,255,255,0.1); border-radius: 4px; height: 8px; width: 100%; overflow: hidden;">
               <div style="background: #22c55e; height: 100%; width: 100%;"></div>
             </div>
-            <div style="font-size: 0.7rem; color: #22c55e; margin-top: 2px;">100% completed</div>
+            <div style="font-size: 0.7rem; color: var(--success); margin-top: 2px;">100% completed</div>
           </td>
           <td style="text-align: right;"><span style="color: var(--success); font-weight: 700; font-size: 0.9rem;">✔ 100% OK</span></td>
         </tr>
@@ -7609,10 +7674,10 @@ function renderLogsExplorerView() {
 
       let catBadge = '';
       if (l.category === 'setup') catBadge = `<span class="badge badge-success" style="font-size:0.68rem; padding: 1px 6px;">${dict.logs_cat_setup || 'Paigaldus'}</span>`;
-      else if (l.category === 'test') catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; background:rgba(168,85,247,0.2); color:#c084fc; border:1px solid rgba(168,85,247,0.4);">${dict.logs_cat_test || 'Testimine'}</span>`;
-      else if (l.category === 'snapshot') catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.4);">${dict.logs_cat_snapshot || 'Snapshot'}</span>`;
+      else if (l.category === 'test') catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; background:rgba(168,85,247,0.2); color: var(--accent); border:1px solid rgba(168,85,247,0.4);">${dict.logs_cat_test || 'Testimine'}</span>`;
+      else if (l.category === 'snapshot') catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; background:rgba(245,158,11,0.2); color: var(--warning); border:1px solid rgba(245,158,11,0.4);">${dict.logs_cat_snapshot || 'Snapshot'}</span>`;
       else if (l.category === 'devops') catBadge = `<span class="badge badge-primary" style="font-size:0.68rem; padding: 1px 6px;">${dict.logs_cat_devops || 'DevOps'}</span>`;
-      else catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; color:#94a3b8;">Üldine</span>`;
+      else catBadge = `<span class="badge" style="font-size:0.68rem; padding: 1px 6px; color: var(--text-muted);">Üldine</span>`;
 
       return `
         <div class="log-item ${isSelected ? 'active' : ''}" onclick="selectLogFile('${escapeHtml(l.filename)}')">
@@ -7621,12 +7686,12 @@ function renderLogsExplorerView() {
               ${catBadge}
               ${bpLabel}
             </div>
-            <span style="font-size: 0.72rem; color: #94a3b8; font-family: ui-monospace, monospace;">${sizeKb}</span>
+            <span style="font-size: 0.72rem; color: var(--text-muted); font-family: ui-monospace, monospace;">${sizeKb}</span>
           </div>
-          <div style="font-family: ui-monospace, monospace; font-size: 0.78rem; color: ${isSelected ? '#38bdf8' : '#e2e8f0'}; word-break: break-all; line-height: 1.35;">
+          <div class="log-item-filename" style="font-family: ui-monospace, monospace; font-size: 0.78rem; word-break: break-all; line-height: 1.35;">
             ${escapeHtml(l.filename)}
           </div>
-          <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px; font-family: ui-monospace, monospace;">
+          <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; font-family: ui-monospace, monospace;">
             ${escapeHtml(l.timestamp || l.mtime || '-')}
           </div>
         </div>
@@ -7639,7 +7704,7 @@ function renderLogsExplorerView() {
   logsContainer.innerHTML = `
     <div class="logs-split-container">
       <div class="logs-list-pane">
-        <div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; padding: 4px 6px; margin-bottom: 4px; display: flex; justify-content: space-between;">
+        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; padding: 4px 6px; margin-bottom: 4px; display: flex; justify-content: space-between;">
           <span>Logifailid (${filtered.length})</span>
           <span>Suurus</span>
         </div>
@@ -7648,9 +7713,9 @@ function renderLogsExplorerView() {
 
       <div class="logs-viewer-pane">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-          <div style="font-size: 0.82rem; color: #94a3b8; font-family: ui-monospace, monospace;">
-            📄 <strong id="log-view-title" style="color: #f8fafc;">${selectedLogObj ? escapeHtml(selectedLogObj.filename) : 'Vali logifail'}</strong>
-            <span id="log-view-meta" style="margin-left: 8px; font-size: 0.76rem; color: #64748b;">
+          <div style="font-size: 0.82rem; color: var(--text-muted); font-family: ui-monospace, monospace;">
+            📄 <strong id="log-view-title" style="color: var(--text-main);">${selectedLogObj ? escapeHtml(selectedLogObj.filename) : 'Vali logifail'}</strong>
+            <span id="log-view-meta" style="margin-left: 8px; font-size: 0.76rem; color: var(--text-muted);">
               ${selectedLogObj ? `(${((selectedLogObj.size_bytes || 0) / 1024).toFixed(1)} KB | ${selectedLogObj.timestamp || selectedLogObj.mtime || ''})` : ''}
             </span>
           </div>
@@ -7663,7 +7728,7 @@ function renderLogsExplorerView() {
             </button>
           </div>
         </div>
-        <pre id="current-log-pre" style="flex: 1; min-height: 0; color: #38bdf8; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; line-height: 1.5; overflow-y: auto; white-space: pre-wrap; word-break: break-all; margin: 0;">${selectedLogObj && selectedLogObj.content ? escapeHtml(selectedLogObj.content) : 'Laadin logi sisu...'}</pre>
+        <pre id="current-log-pre" style="flex: 1; min-height: 0; color: var(--primary); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; line-height: 1.5; overflow-y: auto; white-space: pre-wrap; word-break: break-all; margin: 0;">${selectedLogObj && selectedLogObj.content ? escapeHtml(selectedLogObj.content) : 'Laadin logi sisu...'}</pre>
       </div>
     </div>
   `;
@@ -7801,7 +7866,7 @@ function updateSpeakerNotes(lang) {
       const notes = sData.speaker_notes[lang] || sData.speaker_notes['en'] || '';
       bodyEl.innerHTML = notes;
     } else {
-      bodyEl.innerHTML = '<span style="color: #64748b;">No speaker notes for this slide.</span>';
+      bodyEl.innerHTML = '<span style="color: var(--text-muted);">No speaker notes for this slide.</span>';
     }
   }
 }
@@ -7846,7 +7911,7 @@ function renderRoleTracksUI(lang) {
   // In-page control bar
   const inPageGroup = document.getElementById('deck-role-tracks-group');
   if (inPageGroup) {
-    let inPageHtml = `<span class="role-track-label" style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-right: 4px;">${labelText}:</span>`;
+    let inPageHtml = `<span class="role-track-label" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-right: 4px;">${labelText}:</span>`;
     trackDefs.forEach(td => {
       const activeCls = (td.key === gActiveSlideTrack) ? 'active' : '';
       const text = (I18N_DICT[lang] && I18N_DICT[lang][td.i18n]) || td.defaultLabel;
@@ -7861,7 +7926,7 @@ function renderRoleTracksUI(lang) {
   // Fullscreen Cinema Modal track bar
   const modalGroup = document.getElementById('modal-track-filters');
   if (modalGroup) {
-    let modalHtml = `<span class="role-track-label" style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-right: 2px;">${labelText}:</span>`;
+    let modalHtml = `<span class="role-track-label" style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-right: 2px;">${labelText}:</span>`;
     trackDefs.forEach(td => {
       const activeCls = (td.key === gActiveSlideTrack) ? 'active' : '';
       const text = (I18N_DICT[lang] && I18N_DICT[lang][td.i18n]) || td.defaultLabel;
@@ -8739,12 +8804,12 @@ async function openServiceWithCredentials(targetUrl, alias, user, evt) {
     const sdwTip = dict.tip_db_actions_wait || dict.tip_sdw_warmup || '⏳ Käivitus võib võtta aega sõltuvalt arvutist kuni 1 min. Ole kannatlik.';
     const copyUserBtn = user ? ` <button class="btn btn-secondary" style="padding:1px 6px; font-size:0.7rem; margin-left:6px; cursor:pointer;" onclick="copyTextToClipboard('${user}'); showToast('📋 Kasutajanimi kopeeritud!');">📋 Kopeeri nimi</button>` : '';
     const toastMsg = (currentLang === 'et')
-      ? `🚀 Avati portaal! Kasutajanimi: <b>${user || alias}</b>.${copyUserBtn}<br/>🔑 Parool on kopeeritud lõikelauale – kleebi see (Ctrl+V / Cmd+V) paroolilahtrisse!` + (isSdw ? `<br/><small style="color:#fbbf24;">${sdwTip}</small>` : '')
-      : `🚀 Portal opened! Username: <b>${user || alias}</b>.${copyUserBtn}<br/>🔑 Password copied to clipboard – paste (Ctrl+V / Cmd+V) on password field!` + (isSdw ? `<br/><small style="color:#fbbf24;">${sdwTip}</small>` : '');
+      ? `🚀 Avati portaal! Kasutajanimi: <b>${user || alias}</b>.${copyUserBtn}<br/>🔑 Parool on kopeeritud lõikelauale – kleebi see (Ctrl+V / Cmd+V) paroolilahtrisse!` + (isSdw ? `<br/><small style="color: var(--warning);">${sdwTip}</small>` : '')
+      : `🚀 Portal opened! Username: <b>${user || alias}</b>.${copyUserBtn}<br/>🔑 Password copied to clipboard – paste (Ctrl+V / Cmd+V) on password field!` + (isSdw ? `<br/><small style="color: var(--warning);">${sdwTip}</small>` : '');
     showToast(toastMsg);
   } else {
     const sdwTip = dict.tip_db_actions_wait || dict.tip_sdw_warmup || '⏳ Starting DB Actions may take up to 1 min depending on machine speed. Please be patient.';
-    showToast(`ℹ️ Opening portal for <b>${user || alias}</b>...` + (isSdw ? `<br/><small style="color:#fbbf24;">${sdwTip}</small>` : ''));
+    showToast(`ℹ️ Opening portal for <b>${user || alias}</b>...` + (isSdw ? `<br/><small style="color: var(--warning);">${sdwTip}</small>` : ''));
   }
 
   window.open(finalUrl, '_blank');
@@ -8787,7 +8852,7 @@ function copyUsername(name, el) {
     const msg = (I18N_DICT[currentLang] && I18N_DICT[currentLang]['copied_user']) || 'Username Copied!';
     if (el) {
       const origHtml = el.innerHTML;
-      el.innerHTML = '<span style="color:#22c55e;">✅ ' + name + '</span>';
+      el.innerHTML = '<span style="color: var(--success);">✅ ' + name + '</span>';
       setTimeout(() => { el.innerHTML = origHtml; }, 1800);
     }
     showToast('👤 ' + name + ': ' + msg);
@@ -8825,24 +8890,6 @@ async function handleCopyPassword(alias, btn) {
   } else {
     showToast('⚠️ Password for ' + alias + ' not found in local cache');
   }
-}
-
-function showToast(msg) {
-  let t = document.getElementById('dev-hub-toast');
-  if (!t) {
-    t = document.createElement('div');
-    t.id = 'dev-hub-toast';
-    t.style.cssText = 'position:fixed; bottom:24px; right:24px; background:#0f172a; color:#f8fafc; padding:12px 20px; border-radius:8px; border:1px solid #38bdf8; box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:9999; font-size:0.875rem; font-weight:500; transition:all 0.3s ease; opacity:0; pointer-events:none; display:flex; align-items:center; gap:8px;';
-    document.body.appendChild(t);
-  }
-  t.innerHTML = msg;
-  t.style.opacity = '1';
-  t.style.transform = 'translateY(0)';
-  clearTimeout(t._timeout);
-  t._timeout = setTimeout(() => {
-    t.style.opacity = '0';
-    t.style.transform = 'translateY(10px)';
-  }, 3000);
 }
 
 function copyBadge(el, txt) {
@@ -8990,7 +9037,7 @@ function copyAndScrollToWallet(alias, el) {
     navigator.clipboard.writeText(pwd).then(() => {
       if (el) {
         const origHtml = el.innerHTML;
-        el.innerHTML = '<span style="color:#22c55e; font-weight:700;">🔑 Copied!</span>';
+        el.innerHTML = '<span style="color: var(--success); font-weight:700;">🔑 Copied!</span>';
         showToast('🔑 Password for ' + alias + ' copied to clipboard!');
         setTimeout(() => { el.innerHTML = origHtml; }, 1800);
       }
@@ -9154,7 +9201,7 @@ function copyPodmanToken(txt, el) {
   copyTextToClipboard(txt).then(() => {
     if (el) {
       const origHtml = el.innerHTML;
-      el.innerHTML = '<span style="color:#22c55e;">✅ Copied</span>';
+      el.innerHTML = '<span style="color: var(--success);">✅ Copied</span>';
       setTimeout(() => { el.innerHTML = origHtml; }, 1400);
     }
     showToast('📋 Copied: ' + txt);
@@ -9167,7 +9214,7 @@ function renderPodmanError() {
   ['containers', 'volumes', 'networks', 'images'].forEach(t => {
     const tbody = document.getElementById('podman-tbody-' + t);
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 24px; color: #ef4444;">⚠️ ${errMsg}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 24px; color: var(--danger);">⚠️ ${errMsg}</td></tr>`;
     }
   });
 }
@@ -9209,8 +9256,8 @@ function renderPodmanCurrentView() {
     tbody.innerHTML = list.map(c => {
       const isRunning = (c.state || '').toLowerCase() === 'running';
       const stateBadge = isRunning
-        ? '<span class="badge badge-success" style="font-size:0.75rem;">🟢 running</span>'
-        : `<span class="badge" style="font-size:0.75rem; background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid #475569;">⚪ ${escapePodmanHtml(c.state || 'stopped')}</span>`;
+        ? '<span class="badge badge-success notranslate" translate="no" style="font-size:0.75rem;">🟢 running</span>'
+        : `<span class="badge notranslate" translate="no" style="font-size:0.75rem; background: rgba(148, 163, 184, 0.15); color: var(--text-muted); border: 1px solid #475569;">⚪ ${escapePodmanHtml(c.state || 'stopped')}</span>`;
 
       const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
       let actBtns = '';
@@ -9219,29 +9266,29 @@ function renderPodmanCurrentView() {
           <button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem;" onclick="executePodmanAction('container', 'restart', '${escapePodmanHtml(c.name || '')}')" title="${dict.btn_restart_container || 'Taaskäivita'}">
             <span>🔄</span>
           </button>
-          <button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color:#f87171; border-color:rgba(239,68,68,0.3);" onclick="executePodmanAction('container', 'stop', '${escapePodmanHtml(c.name || '')}')" title="${dict.btn_stop_container || 'Peata'}">
+          <button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color: var(--danger); border-color:rgba(239,68,68,0.3);" onclick="executePodmanAction('container', 'stop', '${escapePodmanHtml(c.name || '')}')" title="${dict.btn_stop_container || 'Peata'}">
             <span>⏹️</span>
           </button>
         `;
       } else {
         actBtns = `
-          <button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color:#4ade80; border-color:rgba(74,222,128,0.3);" onclick="executePodmanAction('container', 'start', '${escapePodmanHtml(c.name || '')}')" title="${dict.btn_start_container || 'Käivita'}">
+          <button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color: var(--success); border-color:rgba(74,222,128,0.3);" onclick="executePodmanAction('container', 'start', '${escapePodmanHtml(c.name || '')}')" title="${dict.btn_start_container || 'Käivita'}">
             <span>▶️</span>
           </button>
-          <button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color:#ef4444; border-color:rgba(239,68,68,0.3);" onclick="executePodmanAction('container', 'rm', '${escapePodmanHtml(c.name || '')}')" title="${dict.btn_remove || 'Eemalda'}">
+          <button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color: var(--danger); border-color:rgba(239,68,68,0.3);" onclick="executePodmanAction('container', 'rm', '${escapePodmanHtml(c.name || '')}')" title="${dict.btn_remove || 'Eemalda'}">
             <span>🗑️</span>
           </button>
         `;
       }
 
-      return `<tr>
-        <td style="font-weight: 600; color: #f8fafc;">${escapePodmanHtml(c.name || '')}</td>
-        <td><span class="code-clip-token" onclick="copyPodmanToken('${escapePodmanHtml(c.id)}', this)" title="Click to copy ID">${escapePodmanHtml(c.id)} 📋</span></td>
-        <td style="color: #cbd5e1; font-size: 0.8rem;">${escapePodmanHtml(c.image || '')}</td>
-        <td>${stateBadge}</td>
-        <td style="color: var(--text-dim); font-size: 0.8rem;">${escapePodmanHtml(c.status || '')}</td>
-        <td style="font-family: ui-monospace, monospace; font-size: 0.78rem; color: #38bdf8;">${escapePodmanHtml(c.ports || '-')}</td>
-        <td style="color: var(--text-dim); font-size: 0.8rem; white-space: nowrap;">${escapePodmanHtml(c.created || '-')}</td>
+      return `<tr class="notranslate" translate="no">
+        <td class="notranslate" translate="no" style="font-weight: 600; color: var(--text-main); font-family: ui-monospace, monospace;">${escapePodmanHtml(c.name || '')}</td>
+        <td class="notranslate" translate="no"><span class="code-clip-token notranslate" translate="no" onclick="copyPodmanToken('${escapePodmanHtml(c.id)}', this)" title="Click to copy ID">${escapePodmanHtml(c.id)} 📋</span></td>
+        <td class="notranslate" translate="no" style="color: var(--text-muted); font-size: 0.8rem; font-family: ui-monospace, monospace;">${escapePodmanHtml(c.image || '')}</td>
+        <td class="notranslate" translate="no">${stateBadge}</td>
+        <td class="notranslate" translate="no" style="color: var(--text-dim); font-size: 0.8rem; font-family: ui-monospace, monospace;">${escapePodmanHtml(c.status || '')}</td>
+        <td class="notranslate" translate="no" style="font-family: ui-monospace, monospace; font-size: 0.78rem; color: var(--primary);">${escapePodmanHtml(c.ports || '-')}</td>
+        <td class="notranslate" translate="no" style="color: var(--text-dim); font-size: 0.8rem; white-space: nowrap;">${escapePodmanHtml(c.created || '-')}</td>
         <td style="text-align: right;"><div style="display:inline-flex; gap:4px; justify-content:flex-end;">${actBtns}</div></td>
       </tr>`;
     }).join('');
@@ -9269,20 +9316,20 @@ function renderPodmanCurrentView() {
     const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
     tbody.innerHTML = list.map(v => {
       const usedByHtml = (v.used_by && v.used_by.length > 0)
-        ? v.used_by.map(u => `<span class="badge badge-primary" style="font-size: 0.72rem; margin-right: 4px;">📦 ${escapePodmanHtml(u)}</span>`).join('')
+        ? v.used_by.map(u => `<span class="badge badge-primary notranslate" translate="no" style="font-size: 0.72rem; margin-right: 4px;">📦 ${escapePodmanHtml(u)}</span>`).join('')
         : '<span style="color: var(--text-dim); font-size: 0.78rem;">— (unused)</span>';
       const isUnused = !v.used_by || v.used_by.length === 0;
       const volAct = isUnused
-        ? `<button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color:#ef4444; border-color:rgba(239,68,68,0.3);" onclick="executePodmanAction('volume', 'rm', '${escapePodmanHtml(v.name || '')}')" title="${dict.btn_remove_unused || 'Eemalda kasutuseta andmemaht'}"><span>🗑️</span></button>`
-        : '<span style="font-size:0.72rem; color:#64748b;">(in use)</span>';
+        ? `<button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color: var(--danger); border-color:rgba(239,68,68,0.3);" onclick="executePodmanAction('volume', 'rm', '${escapePodmanHtml(v.name || '')}')" title="${dict.btn_remove_unused || 'Eemalda kasutuseta andmemaht'}"><span>🗑️</span></button>`
+        : '<span style="font-size:0.72rem; color: var(--text-muted);">(in use)</span>';
 
-      return `<tr>
-        <td><span class="code-clip-token" onclick="copyPodmanToken('${escapePodmanHtml(v.name)}', this)" title="Click to copy volume name">${escapePodmanHtml(v.name)} 📋</span></td>
-        <td>${usedByHtml}</td>
-        <td style="color: var(--text-dim); font-size: 0.8rem;">${escapePodmanHtml(v.driver || 'local')}</td>
-        <td style="color: var(--text-dim); font-size: 0.8rem;">${escapePodmanHtml(v.scope || 'local')}</td>
-        <td style="font-size: 0.76rem; color: #94a3b8; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapePodmanHtml(v.mountpoint || '')}"><span class="code-clip-token" onclick="copyPodmanToken('${escapePodmanHtml(v.mountpoint || '')}', this)">${escapePodmanHtml(v.mountpoint || '-')} 📋</span></td>
-        <td style="color: var(--text-dim); font-size: 0.8rem; white-space: nowrap;">${escapePodmanHtml(v.created || '-')}</td>
+      return `<tr class="notranslate" translate="no">
+        <td class="notranslate" translate="no"><span class="code-clip-token notranslate" translate="no" onclick="copyPodmanToken('${escapePodmanHtml(v.name)}', this)" title="Click to copy volume name">${escapePodmanHtml(v.name)} 📋</span></td>
+        <td class="notranslate" translate="no">${usedByHtml}</td>
+        <td class="notranslate" translate="no" style="color: var(--text-dim); font-size: 0.8rem;">${escapePodmanHtml(v.driver || 'local')}</td>
+        <td class="notranslate" translate="no" style="color: var(--text-dim); font-size: 0.8rem;">${escapePodmanHtml(v.scope || 'local')}</td>
+        <td class="notranslate" translate="no" style="font-size: 0.76rem; color: var(--text-muted); max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapePodmanHtml(v.mountpoint || '')}"><span class="code-clip-token notranslate" translate="no" onclick="copyPodmanToken('${escapePodmanHtml(v.mountpoint || '')}', this)">${escapePodmanHtml(v.mountpoint || '-')} 📋</span></td>
+        <td class="notranslate" translate="no" style="color: var(--text-dim); font-size: 0.8rem; white-space: nowrap;">${escapePodmanHtml(v.created || '-')}</td>
         <td style="text-align: right;">${volAct}</td>
       </tr>`;
     }).join('');
@@ -9307,11 +9354,11 @@ function renderPodmanCurrentView() {
     }
 
     tbody.innerHTML = list.map(n => {
-      return `<tr>
-        <td style="font-weight: 600; color: #f8fafc;"><span class="code-clip-token" onclick="copyPodmanToken('${escapePodmanHtml(n.name)}', this)" title="Click to copy network name">${escapePodmanHtml(n.name)} 📋</span></td>
-        <td><span class="code-clip-token" onclick="copyPodmanToken('${escapePodmanHtml(n.id)}', this)" title="Click to copy network ID">${escapePodmanHtml(n.id)} 📋</span></td>
-        <td style="color: var(--text-dim); font-size: 0.8rem;">${escapePodmanHtml(n.driver || 'bridge')}</td>
-        <td style="font-family: ui-monospace, monospace; font-size: 0.8rem; color: #38bdf8;">${escapePodmanHtml(n.subnets || '-')}</td>
+      return `<tr class="notranslate" translate="no">
+        <td class="notranslate" translate="no" style="font-weight: 600; color: var(--text-main);"><span class="code-clip-token notranslate" translate="no" onclick="copyPodmanToken('${escapePodmanHtml(n.name)}', this)" title="Click to copy network name">${escapePodmanHtml(n.name)} 📋</span></td>
+        <td class="notranslate" translate="no"><span class="code-clip-token notranslate" translate="no" onclick="copyPodmanToken('${escapePodmanHtml(n.id)}', this)" title="Click to copy network ID">${escapePodmanHtml(n.id)} 📋</span></td>
+        <td class="notranslate" translate="no" style="color: var(--text-dim); font-size: 0.8rem;">${escapePodmanHtml(n.driver || 'bridge')}</td>
+        <td class="notranslate" translate="no" style="font-family: ui-monospace, monospace; font-size: 0.8rem; color: var(--primary);">${escapePodmanHtml(n.subnets || '-')}</td>
       </tr>`;
     }).join('');
 
@@ -9336,13 +9383,13 @@ function renderPodmanCurrentView() {
 
     const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
     tbody.innerHTML = list.map(img => {
-      const imgAct = `<button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color:#ef4444; border-color:rgba(239,68,68,0.3);" onclick="executePodmanAction('image', 'rmi', '${escapePodmanHtml(img.id || '')}')" title="${dict.btn_remove || 'Eemalda tõmmis'}"><span>🗑️</span></button>`;
-      return `<tr>
-        <td style="font-weight: 600; color: #f8fafc;">${escapePodmanHtml(img.repository || '')}</td>
-        <td><span class="badge badge-primary" style="font-size: 0.75rem;">${escapePodmanHtml(img.tag || 'latest')}</span></td>
-        <td><span class="code-clip-token" onclick="copyPodmanToken('${escapePodmanHtml(img.id)}', this)" title="Click to copy image ID">${escapePodmanHtml(img.id)} 📋</span></td>
-        <td style="font-weight: 600; color: #38bdf8; font-size: 0.82rem;">${escapePodmanHtml(img.size_human || '-')}</td>
-        <td style="color: var(--text-dim); font-size: 0.8rem; white-space: nowrap;">${escapePodmanHtml(img.created || '-')}</td>
+      const imgAct = `<button class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:0.75rem; color: var(--danger); border-color:rgba(239,68,68,0.3);" onclick="executePodmanAction('image', 'rmi', '${escapePodmanHtml(img.id || '')}')" title="${dict.btn_remove || 'Eemalda tõmmis'}"><span>🗑️</span></button>`;
+      return `<tr class="notranslate" translate="no">
+        <td class="notranslate" translate="no" style="font-weight: 600; color: var(--text-main);">${escapePodmanHtml(img.repository || '')}</td>
+        <td class="notranslate" translate="no"><span class="badge badge-primary notranslate" translate="no" style="font-size: 0.75rem;">${escapePodmanHtml(img.tag || 'latest')}</span></td>
+        <td class="notranslate" translate="no"><span class="code-clip-token notranslate" translate="no" onclick="copyPodmanToken('${escapePodmanHtml(img.id)}', this)" title="Click to copy image ID">${escapePodmanHtml(img.id)} 📋</span></td>
+        <td class="notranslate" translate="no" style="font-weight: 600; color: var(--primary); font-size: 0.82rem;">${escapePodmanHtml(img.size_human || '-')}</td>
+        <td class="notranslate" translate="no" style="color: var(--text-dim); font-size: 0.8rem; white-space: nowrap;">${escapePodmanHtml(img.created || '-')}</td>
         <td style="text-align: right;">${imgAct}</td>
       </tr>`;
     }).join('');
@@ -9433,10 +9480,10 @@ async function loadSnapshotsTable(manual = false) {
 
     if (list.length === 0) {
       container.innerHTML = `
-        <div style="padding: 24px; text-align: center; color: #94a3b8; font-size: 0.85rem;">
+        <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
           <div style="font-size: 1.5rem; margin-bottom: 8px;">📭</div>
           <div>Eelnevaid snapshote ei leitud kaustast <code>golden-snapshots/</code>.</div>
-          <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">Uue snapshoti tekitamiseks kasuta nuppu "Loo Kohandatud Snapshot" või käivita <code>./scripts/snapshots/create-golden-snapshots.sh</code>.</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Uue snapshoti tekitamiseks kasuta nuppu "Loo Kohandatud Snapshot" või käivita <code>./scripts/snapshots/create-golden-snapshots.sh</code>.</div>
         </div>
       `;
       return;
@@ -9445,7 +9492,7 @@ async function loadSnapshotsTable(manual = false) {
     let html = `
       <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
         <thead>
-          <tr style="border-bottom: 1px solid var(--border); text-align: left; color: #94a3b8;">
+          <tr style="border-bottom: 1px solid var(--border); text-align: left; color: var(--text-muted);">
             <th style="padding: 10px 12px; width: 28%;">${dict.snap_th_name || 'Snapshot / Fail'}</th>
             <th style="padding: 10px 12px; width: 22%;">${dict.snap_th_type || 'Tüüp ja Silt'}</th>
             <th style="padding: 10px 12px; width: 14%;">${dict.snap_th_bp || 'Blueprint'}</th>
@@ -9460,24 +9507,24 @@ async function loadSnapshotsTable(manual = false) {
     list.forEach(item => {
       const isGolden = item.type === 'golden_latest' || item.type === 'golden';
       const typeBadge = isGolden
-        ? `<span class="badge" style="background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); font-size: 0.72rem;">${dict.snap_badge_golden || '🌟 Golden Baseline'}</span>`
-        : `<span class="badge" style="background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); font-size: 0.72rem;">${dict.snap_badge_custom || '👤 Kohandatud'}</span>`;
+        ? `<span class="badge" style="background: rgba(34,197,94,0.12); color: var(--success); border: 1px solid rgba(34,197,94,0.3); font-size: 0.72rem;">${dict.snap_badge_golden || '🌟 Golden Baseline'}</span>`
+        : `<span class="badge" style="background: rgba(56,189,248,0.12); color: var(--primary); border: 1px solid rgba(56,189,248,0.3); font-size: 0.72rem;">${dict.snap_badge_custom || '👤 Kohandatud'}</span>`;
 
       const tagDesc = item.tag
-        ? `<div style="font-weight: 600; color: #f8fafc; font-family: ui-monospace, monospace;">${item.tag}</div>`
-        : `<div style="color: #64748b; font-style: italic;">Standard Snapshot</div>`;
-      const descText = item.description ? `<div style="font-size: 0.75rem; color: #94a3b8; margin-top: 2px;">${item.description}</div>` : '';
+        ? `<div style="font-weight: 600; color: var(--text-main); font-family: ui-monospace, monospace;">${item.tag}</div>`
+        : `<div style="color: var(--text-muted); font-style: italic;">Standard Snapshot</div>`;
+      const descText = item.description ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">${item.description}</div>` : '';
 
       const bpBadge = item.blueprint_id
-        ? `<span class="badge" style="background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-size: 0.72rem;">BP #${item.blueprint_id}</span>`
-        : `<span style="color: #64748b;">-</span>`;
+        ? `<span class="badge" style="background: rgba(251,191,36,0.12); color: var(--warning); border: 1px solid rgba(251,191,36,0.3); font-size: 0.72rem;">BP #${item.blueprint_id}</span>`
+        : `<span style="color: var(--text-muted);">-</span>`;
 
       const restoreCmd = `./scripts/snapshots/restore-golden-snapshots.sh --file ${item.file}`;
 
       html += `
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
           <td style="padding: 10px 12px;">
-            <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; color: #f8fafc; font-weight: 600;">${item.file}</div>
+            <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace; color: var(--text-main); font-weight: 600;">${item.file}</div>
             <div style="margin-top: 4px;">${typeBadge}</div>
           </td>
           <td style="padding: 10px 12px;">
@@ -9485,8 +9532,8 @@ async function loadSnapshotsTable(manual = false) {
             ${descText}
           </td>
           <td style="padding: 10px 12px;">${bpBadge}</td>
-          <td style="padding: 10px 12px; font-family: ui-monospace, monospace; color: #38bdf8;">${item.size_human}</td>
-          <td style="padding: 10px 12px; color: #94a3b8; font-size: 0.78rem;">${item.created_at || item.modified_time}</td>
+          <td style="padding: 10px 12px; font-family: ui-monospace, monospace; color: var(--primary);">${item.size_human}</td>
+          <td style="padding: 10px 12px; color: var(--text-muted); font-size: 0.78rem;">${item.created_at || item.modified_time}</td>
           <td style="padding: 10px 12px; text-align: right;">
             <div style="display: inline-flex; gap: 6px; align-items: center; justify-content: flex-end;">
               <button class="btn btn-primary" style="padding: 3px 8px; font-size: 0.74rem;" onclick="triggerRestoreSnapshot('${item.file}', '${item.blueprint_id || 0}', this)" title="${dict.snap_btn_restore || 'Taasta'}">
@@ -9496,7 +9543,7 @@ async function loadSnapshotsTable(manual = false) {
                 <span>📋</span>
               </button>
               ${item.is_deletable ? `
-                <button class="btn btn-secondary" style="padding: 3px 6px; font-size: 0.74rem; border-color: rgba(239,68,68,0.3); color: #f87171;" onclick="triggerDeleteSnapshot('${item.file}', this)" title="${dict.snap_btn_delete || 'Kustuta'}">
+                <button class="btn btn-secondary" style="padding: 3px 6px; font-size: 0.74rem; border-color: rgba(239,68,68,0.3); color: var(--danger);" onclick="triggerDeleteSnapshot('${item.file}', this)" title="${dict.snap_btn_delete || 'Kustuta'}">
                   <span>🗑️</span>
                 </button>
               ` : ''}
@@ -9512,7 +9559,7 @@ async function loadSnapshotsTable(manual = false) {
   } catch (err) {
     console.error('Error fetching snapshots list:', err);
     container.innerHTML = `
-      <div style="padding: 20px; text-align: center; color: #f87171; font-size: 0.85rem;">
+      <div style="padding: 20px; text-align: center; color: var(--danger); font-size: 0.85rem;">
         <div>⚠️ Snapshotide nimekirja laadimine ebaõnnestus või Bridge (:8089) ei vasta.</div>
         <div style="margin-top: 6px;"><button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;" onclick="loadSnapshotsTable(true)">Proovi uuesti</button></div>
       </div>
@@ -9579,22 +9626,22 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
     <div style="background: #030712; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; padding: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 8px; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span class="badge" style="background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); font-weight: 700; font-size: 0.75rem;">⏳ ${dict.snap_console_running || 'TOIMING KÄIB'}</span>
-          <strong style="color: #f8fafc; font-size: 0.88rem;">${opName}</strong>
+          <span class="badge" style="background: rgba(56,189,248,0.15); color: var(--primary); border: 1px solid rgba(56,189,248,0.3); font-weight: 700; font-size: 0.75rem;">⏳ ${dict.snap_console_running || 'TOIMING KÄIB'}</span>
+          <strong style="color: var(--text-main); font-size: 0.88rem;">${opName}</strong>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span id="${containerId}-timer" style="font-family: ui-monospace, monospace; color: #4ade80; font-weight: 700; font-size: 0.9rem;">⏱️ 00:00</span>
-          <span style="font-size: 0.75rem; color: #94a3b8;">(${['reset_deep', 'setup', 'activate', 'switch', 'deploy'].includes(opType) ? (dict.snap_est_duration_deep || 'Kestus: ~4–8 min') : (dict.snap_est_duration || 'Kestus: ~30–60s')})</span>
+          <span id="${containerId}-timer" style="font-family: ui-monospace, monospace; color: var(--success); font-weight: 700; font-size: 0.9rem;">⏱️ 00:00</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">(${['reset_deep', 'setup', 'activate', 'switch', 'deploy'].includes(opType) ? (dict.snap_est_duration_deep || 'Kestus: ~4–8 min') : (dict.snap_est_duration || 'Kestus: ~30–60s')})</span>
         </div>
       </div>
 
       <!-- Live Stage Progress Bar -->
       <div style="margin-bottom: 12px;">
         <div style="display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 5px;">
-          <span id="${containerId}-phase" style="color: #38bdf8; font-weight: 600;">Valmistan ette toimingut...</span>
-          <span id="${containerId}-pct" style="color: #4ade80; font-family: ui-monospace, monospace; font-weight: 700;">5%</span>
+          <span id="${containerId}-phase" style="color: var(--primary); font-weight: 600;">Valmistan ette toimingut...</span>
+          <span id="${containerId}-pct" style="color: var(--success); font-family: ui-monospace, monospace; font-weight: 700;">5%</span>
         </div>
-        <div style="height: 7px; background: #0f172a; border-radius: 4px; overflow: hidden; border: 1px solid #1e293b;">
+        <div style="height: 7px; background: var(--bg); border-radius: 4px; overflow: hidden; border: 1px solid var(--border);">
           <div id="${containerId}-bar" style="height: 100%; width: 5%; background: linear-gradient(90deg, #38bdf8, #22c55e); transition: width 0.4s ease;"></div>
         </div>
       </div>
@@ -9604,9 +9651,9 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
         <div class="terminal-column-header">
           <div style="display: flex; align-items: center; gap: 6px;">
             <span>💻</span>
-            <strong style="color: #cbd5e1;">${dict.snap_output_title || 'Terminali väljund ja logi'}</strong>
+            <strong style="color: var(--text-dim);">${dict.snap_output_title || 'Terminali väljund ja logi'}</strong>
           </div>
-          <span style="font-family: ui-monospace, monospace; color: #64748b; font-size: 0.72rem;">$ ${cmdStr}</span>
+          <span style="font-family: ui-monospace, monospace; color: var(--text-muted); font-size: 0.72rem;">$ ${cmdStr}</span>
         </div>
         <pre id="${containerId}-output" class="terminal-column-content" style="min-height: 280px; height: 280px; max-height: 280px; box-sizing: border-box;"></pre>
         <button id="${containerId}-scroll-btn" type="button" class="terminal-scroll-pill" style="display: none;" onclick="scrollTerminalToBottom('${containerId}')">
@@ -9617,8 +9664,8 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
       <!-- Active Log File Bar with Full Modal Expander -->
       <div id="${containerId}-log-bar" style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center; background: rgba(15,23,42,0.8); border: 1px solid #1e293b; border-radius: 6px; padding: 6px 12px; font-size: 0.76rem; flex-wrap: wrap; gap: 6px;">
         <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
-          <span style="color: #94a3b8; font-size: 0.74rem; white-space: nowrap;">📄 ${dict.label_active_log || 'Aktiivne logifail'}:</span>
-          <span id="${containerId}-log-path" data-log-file="${initialLogName}" style="color: #38bdf8; font-family: ui-monospace, monospace; font-size: 0.76rem; text-decoration: underline; cursor: pointer; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" onclick="toggleActiveTerminalLog('${containerId}')" title="${dict.tip_click_open_log || 'Klõpsa logi avamiseks eraldi aknas'}">${initialLogRel}</span>
+          <span style="color: var(--text-muted); font-size: 0.74rem; white-space: nowrap;">📄 ${dict.label_active_log || 'Aktiivne logifail'}:</span>
+          <span id="${containerId}-log-path" data-log-file="${initialLogName}" style="color: var(--primary); font-family: ui-monospace, monospace; font-size: 0.76rem; text-decoration: underline; cursor: pointer; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" onclick="toggleActiveTerminalLog('${containerId}')" title="${dict.tip_click_open_log || 'Klõpsa logi avamiseks eraldi aknas'}">${initialLogRel}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 6px;">
           <button type="button" class="btn btn-secondary" style="padding: 3px 9px; font-size: 0.72rem;" onclick="copyActiveLogPath(document.getElementById('${containerId}-log-path')?.getAttribute('data-full-path') || document.getElementById('${containerId}-log-path')?.textContent || '', this)" title="${dict.btn_copy_path || 'Kopeeri tee'}">
@@ -9930,16 +9977,16 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
           let fileDetails = '';
           if (createdFile) {
             fileDetails = `
-              <div style="margin-top: 6px; font-size: 0.82rem; color: #cbd5e1; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
-                <div>📦 <b>Fail:</b> <code style="color: #38bdf8; font-weight: 600;">${createdFile}</code></div>
-                ${sizeHuman ? `<div>💾 <b>Maht:</b> <strong style="color: #fbbf24;">${sizeHuman}</strong></div>` : ''}
-                <div>⏱️ <b>Koguaeg:</b> <strong style="color: #4ade80;">${elapsed}</strong></div>
+              <div style="margin-top: 6px; font-size: 0.82rem; color: var(--text-dim); display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+                <div>📦 <b>Fail:</b> <code style="color: var(--primary); font-weight: 600;">${createdFile}</code></div>
+                ${sizeHuman ? `<div>💾 <b>Maht:</b> <strong style="color: var(--warning);">${sizeHuman}</strong></div>` : ''}
+                <div>⏱️ <b>Koguaeg:</b> <strong style="color: var(--success);">${elapsed}</strong></div>
               </div>
             `;
           } else {
             fileDetails = `
-              <div style="margin-top: 6px; font-size: 0.82rem; color: #cbd5e1; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
-                <div>⏱️ <b>Koguaeg:</b> <strong style="color: #4ade80;">${elapsed}</strong></div>
+              <div style="margin-top: 6px; font-size: 0.82rem; color: var(--text-dim); display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+                <div>⏱️ <b>Koguaeg:</b> <strong style="color: var(--success);">${elapsed}</strong></div>
               </div>
             `;
           }
@@ -9962,7 +10009,7 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
           resEl.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
               <div>
-                <div style="font-weight: 700; color: #4ade80; font-size: 0.95rem;">
+                <div style="font-weight: 700; color: var(--success); font-size: 0.95rem;">
                   ✅ ${succText}
                 </div>
                 ${fileDetails}
@@ -9983,32 +10030,32 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
           resEl.style.background = 'rgba(239, 68, 68, 0.08)';
           resEl.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-              <div style="color: #f87171; font-weight: 700; font-size: 0.95rem;">
+              <div style="color: var(--danger); font-weight: 700; font-size: 0.95rem;">
                 ⚠️ ${dict.msg_op_failed || 'Viga toimingu teostamisel!'}
               </div>
-              <span class="badge" style="background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); font-size: 0.74rem;">
+              <span class="badge" style="background: rgba(239,68,68,0.2); color: var(--danger); border: 1px solid rgba(239,68,68,0.4); font-size: 0.74rem;">
                 ${dict.status_failed || 'Ebaõnnestus'} (⏱️ ${seconds}s)
               </span>
             </div>
-            <div style="background: #180909; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 6px; padding: 10px; margin-top: 8px; font-family: ui-monospace, monospace; font-size: 0.78rem; color: #fca5a5; white-space: pre-wrap; word-break: break-all; line-height: 1.45;">${errText}</div>
+            <div class="alert-box-danger" style="margin-top: 8px; font-family: ui-monospace, monospace; font-size: 0.78rem; white-space: pre-wrap; word-break: break-all; line-height: 1.45;">${errText}</div>
 
             <div style="margin-top: 10px; padding: 8px 12px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
               <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
-                <span style="font-size: 0.78rem; color: #cbd5e1; white-space: nowrap;">📄 <b>${dict.label_active_log || 'Logifail'}:</b></span>
-                <span style="color: #38bdf8; font-family: ui-monospace, monospace; font-size: 0.8rem; font-weight: 600; text-decoration: underline; cursor: pointer; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" onclick="toggleActiveTerminalLog('${containerId}')" title="${dict.tip_click_open_log || 'Klõpsa logi avamiseks'}">${errLogRel}</span>
+                <span style="font-size: 0.78rem; color: var(--text-dim); white-space: nowrap;">📄 <b>${dict.label_active_log || 'Logifail'}:</b></span>
+                <span style="color: var(--primary); font-family: ui-monospace, monospace; font-size: 0.8rem; font-weight: 600; text-decoration: underline; cursor: pointer; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" onclick="toggleActiveTerminalLog('${containerId}')" title="${dict.tip_click_open_log || 'Klõpsa logi avamiseks'}">${errLogRel}</span>
               </div>
               <div style="display: flex; gap: 6px;">
                 <button type="button" class="btn btn-secondary" style="padding: 3px 10px; font-size: 0.75rem;" onclick="copyActiveLogPath('${errLogFull}', this)" title="${dict.btn_copy_path || 'Kopeeri tee'}">
                   <span>📋</span> <span>${dict.btn_copy_path || 'Kopeeri tee'}</span>
                 </button>
-                <button type="button" class="btn btn-secondary" style="padding: 3px 10px; font-size: 0.75rem; border-color: rgba(239,68,68,0.5); color: #fca5a5;" onclick="toggleActiveTerminalLog('${containerId}')">
+                <button type="button" class="btn btn-secondary" style="padding: 3px 10px; font-size: 0.75rem; border-color: rgba(239,68,68,0.5); color: var(--danger);" onclick="toggleActiveTerminalLog('${containerId}')">
                   <span>👁️</span> <span>${dict.btn_open_log || 'Ava logi'}</span>
                 </button>
               </div>
             </div>
-            <div style="margin-top: 6px; font-size: 0.75rem; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+            <div style="margin-top: 6px; font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
               <span>💡</span>
-              <span>${dict.tip_check_error_cli || 'Täpsemate vigade ja Oracle ORA-veakoodide uurimiseks ava logi nupuga või vaata terminalis:'} <code style="color: #cbd5e1;">cat ${errLogRel} | tail -n 50</code></span>
+              <span>${dict.tip_check_error_cli || 'Täpsemate vigade ja Oracle ORA-veakoodide uurimiseks ava logi nupuga või vaata terminalis:'} <code style="color: var(--text-dim);">cat ${errLogRel} | tail -n 50</code></span>
             </div>
           `;
         }
@@ -10636,7 +10683,7 @@ function renderTestingSuites(suites) {
                 <span>▶️</span>
               </button>
             ` : ''}
-            <button type="button" class="btn-compact btn-compact-secondary" onclick="askAiAboutTestSuite('${suite.key}')" title="${dict.tip_test_ai || 'Küsi Copilotilt nõu selle testimiskomplekti või valitud skripti kohta'}" style="font-size:0.75rem; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
+            <button type="button" class="btn-compact btn-compact-secondary" onclick="askAiAboutTestSuite('${suite.key}')" title="${dict.tip_test_ai || 'Küsi Copilotilt nõu selle testimiskomplekti või valitud skripti kohta'}" style="font-size:0.75rem; border-color: rgba(56, 189, 248, 0.4); color: var(--primary);">
               <span>🤖</span> <span>${dict.btn_test_ai || 'AI'}</span>
             </button>
           </div>
@@ -10654,9 +10701,18 @@ function renderTestingSuites(suites) {
 let currentTestingCategoryFilter = 'all';
 
 function filterTestingCategory(cat, btn) {
+  if (cat !== 'all' && currentTestingCategoryFilter === cat) {
+    cat = 'all';
+    btn = null;
+  }
   currentTestingCategoryFilter = cat || 'all';
   document.querySelectorAll('#testing-category-filters .bp-filter-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    const allBtn = document.querySelector('#testing-category-filters .bp-filter-btn');
+    if (allBtn) allBtn.classList.add('active');
+  }
   filterTestingSuites();
 }
 
@@ -10960,6 +11016,62 @@ function openDocFromTestModal() {
   }
 }
 
+function togglePresentationDropdown(event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  const btn = document.getElementById('header-presentation-btn');
+  const menu = document.getElementById('presentation-dropdown-menu');
+  if (menu) {
+    const isShowing = menu.classList.contains('show') || menu.style.display === 'block';
+    const entMenu = document.getElementById('enterprise-dropdown-menu');
+    const entBtn = document.getElementById('enterprise-dropdown-btn');
+    if (entMenu) {
+      entMenu.classList.remove('show');
+      entMenu.style.display = 'none';
+    }
+    if (entBtn) {
+      entBtn.classList.remove('active');
+      entBtn.setAttribute('aria-expanded', 'false');
+    }
+    const langMenu = document.getElementById('lang-dropdown-menu');
+    if (langMenu) langMenu.style.display = 'none';
+
+    if (isShowing) {
+      menu.classList.remove('show');
+      menu.style.display = 'none';
+      if (btn) {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    } else {
+      menu.classList.add('show');
+      menu.style.display = 'block';
+      if (btn) {
+        btn.classList.add('active');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    }
+  }
+}
+
+function openPresentationDeck(deckType) {
+  const btn = document.getElementById('header-presentation-btn');
+  const menu = document.getElementById('presentation-dropdown-menu');
+  if (menu) {
+    menu.classList.remove('show');
+    menu.style.display = 'none';
+  }
+  if (btn) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  switchTab('tab-presentation');
+  if (typeof switchPresentationDeck === 'function') {
+    switchPresentationDeck(deckType);
+  }
+}
+
 function toggleEnterpriseDropdown(event) {
   if (event) {
     event.stopPropagation();
@@ -10968,6 +11080,19 @@ function toggleEnterpriseDropdown(event) {
   const menu = document.getElementById('enterprise-dropdown-menu');
   if (menu) {
     const isShowing = menu.classList.contains('show');
+    const presMenu = document.getElementById('presentation-dropdown-menu');
+    const presBtn = document.getElementById('header-presentation-btn');
+    if (presMenu) {
+      presMenu.classList.remove('show');
+      presMenu.style.display = 'none';
+    }
+    if (presBtn) {
+      presBtn.classList.remove('active');
+      presBtn.setAttribute('aria-expanded', 'false');
+    }
+    const langMenu = document.getElementById('lang-dropdown-menu');
+    if (langMenu) langMenu.style.display = 'none';
+
     menu.classList.toggle('show', !isShowing);
     if (btn) {
       btn.classList.toggle('active', !isShowing);
@@ -11094,6 +11219,18 @@ document.addEventListener('click', function(event) {
       if (btn) {
         btn.classList.remove('active');
         btn.setAttribute('aria-expanded', 'false');
+      }
+    }
+  }
+  const presMenu = document.getElementById('presentation-dropdown-menu');
+  const presBtn = document.getElementById('header-presentation-btn');
+  if (presMenu && (presMenu.classList.contains('show') || presMenu.style.display === 'block')) {
+    if (!presMenu.contains(event.target) && (!presBtn || !presBtn.contains(event.target))) {
+      presMenu.classList.remove('show');
+      presMenu.style.display = 'none';
+      if (presBtn) {
+        presBtn.classList.remove('active');
+        presBtn.setAttribute('aria-expanded', 'false');
       }
     }
   }
@@ -11346,7 +11483,7 @@ function renderTestReportsList(reports) {
   if (badgeEl) badgeEl.innerText = `${loadedTestReports.length} raportit`;
 
   if (loadedTestReports.length === 0) {
-    listEl.innerHTML = '<div style="color:#64748b; padding:16px; text-align:center;">Raporteid ei leitud.</div>';
+    listEl.innerHTML = '<div style="color: var(--text-muted); padding:16px; text-align:center;">Raporteid ei leitud.</div>';
     return;
   }
 
@@ -11429,7 +11566,7 @@ function loadTestReportContent(name, relPath, title, status, mtime) {
   if (mtimeEl) mtimeEl.innerText = mtime || '';
 
   if (bodyEl) {
-    bodyEl.innerHTML = '<div style="color:#94a3b8; text-align:center; padding:40px;">⏳ Laadin raporti sisu...</div>';
+    bodyEl.innerHTML = '<div style="color: var(--text-muted); text-align:center; padding:40px;">⏳ Laadin raporti sisu...</div>';
   }
 
   fetch(`${BRIDGE_URL}/api/tests/report-content?file=${encodeURIComponent(relPath || ('tests/reports/' + name))}`)
@@ -11444,7 +11581,7 @@ function loadTestReportContent(name, relPath, title, status, mtime) {
     })
     .catch(err => {
       if (bodyEl) {
-        bodyEl.innerHTML = `<div style="color:#ef4444; padding:20px;">Viga raporti laadimisel: ${err.message}</div>`;
+        bodyEl.innerHTML = `<div style="color: var(--danger); padding:20px;">Viga raporti laadimisel: ${err.message}</div>`;
       }
     });
 }
@@ -11454,13 +11591,13 @@ function renderCurrentReportContent() {
   if (!bodyEl) return;
 
   if (isRawReportView) {
-    bodyEl.innerHTML = `<pre style="font-size:0.8rem; line-height:1.4; color:#e2e8f0; white-space:pre-wrap;">${escapeTestHtml(selectedReportRawContent)}</pre>`;
+    bodyEl.innerHTML = `<pre style="font-size:0.8rem; line-height:1.4; color: var(--text-main); white-space:pre-wrap;">${escapeTestHtml(selectedReportRawContent)}</pre>`;
   } else {
     try {
       if (typeof marked !== 'undefined') {
         bodyEl.innerHTML = marked.parse(selectedReportRawContent);
       } else {
-        bodyEl.innerHTML = `<pre style="white-space:pre-wrap; font-family:inherit; color:#e2e8f0;">${escapeTestHtml(selectedReportRawContent)}</pre>`;
+        bodyEl.innerHTML = `<pre style="white-space:pre-wrap; font-family:inherit; color: var(--text-main);">${escapeTestHtml(selectedReportRawContent)}</pre>`;
       }
       renderMermaidInContainer(bodyEl);
     } catch (err) {
@@ -11526,7 +11663,7 @@ function filterCoverageTable(query) {
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b; padding:20px;">Vasteid ei leitud.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-muted); padding:20px;">Vasteid ei leitud.</td></tr>';
     return;
   }
 
@@ -11538,7 +11675,7 @@ function filterCoverageTable(query) {
 
     const testBadges = (s.tests && s.tests.length > 0)
       ? s.tests.map(t => `<span class="badge badge-secondary" style="font-size:0.68rem; margin:2px 4px 2px 0; font-family:monospace;">${escapeTestHtml(t)}</span>`).join('')
-      : '<span style="color:#64748b; font-size:0.75rem;">-</span>';
+      : '<span style="color: var(--text-muted); font-size:0.75rem;">-</span>';
 
     html += `
       <tr>
@@ -11562,7 +11699,7 @@ function renderTestHistoryTable(history) {
   const list = history || [];
 
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748b; padding:20px;">Testide käivituste ajalugu on tühi.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-muted); padding:20px;">Testide käivituste ajalugu on tühi.</td></tr>';
     return;
   }
 
@@ -11574,15 +11711,15 @@ function renderTestHistoryTable(history) {
       : `<span class="badge badge-danger" style="font-size:0.7rem; padding:2px 7px;">FAIL (${h.exit_code})</span>`;
 
     const logLink = h.log_file 
-      ? `<a href="${BRIDGE_URL}/api/tests/report-content?file=${encodeURIComponent(h.log_file)}" target="_blank" style="color:#38bdf8; font-size:0.75rem; text-decoration:none;">📄 ${h.log_file.split('/').pop()}</a>`
+      ? `<a href="${BRIDGE_URL}/api/tests/report-content?file=${encodeURIComponent(h.log_file)}" target="_blank" style="color: var(--primary); font-size:0.75rem; text-decoration:none;">📄 ${h.log_file.split('/').pop()}</a>`
       : '-';
 
     html += `
       <tr>
-        <td style="font-size:0.75rem; color:#94a3b8;">${escapeTestHtml(h.timestamp || '')}</td>
-        <td><strong>${escapeTestHtml(h.suite || '')}</strong> ${h.script ? `<code style="font-size:0.72rem; color:#93c5fd;">${escapeTestHtml(h.script)}</code>` : ''}</td>
+        <td style="font-size:0.75rem; color: var(--text-muted);">${escapeTestHtml(h.timestamp || '')}</td>
+        <td><strong>${escapeTestHtml(h.suite || '')}</strong> ${h.script ? `<code style="font-size:0.72rem; color: var(--primary);">${escapeTestHtml(h.script)}</code>` : ''}</td>
         <td>${badge}</td>
-        <td style="font-size:0.75rem; color:#94a3b8;">${h.duration_seconds || 0}s</td>
+        <td style="font-size:0.75rem; color: var(--text-muted);">${h.duration_seconds || 0}s</td>
         <td>${logLink}</td>
         <td>
           <button type="button" class="btn-compact btn-compact-secondary" style="font-size:0.72rem; padding:3px 8px;" onclick="runTestSuite('${h.suite}', '${h.script || ''}')">
@@ -11609,6 +11746,7 @@ function loadTestHistory() {
 document.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('dev_hub_lang') || 'en';
   setLanguage(saved);
+  initTheme();
   
   // Initialize wallet matrix collapse state
   const isWalletOpen = localStorage.getItem('dev_hub_wallet_open') === 'true';
@@ -11676,16 +11814,20 @@ document.addEventListener('DOMContentLoaded', () => {
   else if (targetDoc) {
     targetTab = 'tab-docs';
   }
-  // 3. User's Pinned Home Tab (priority on cold start over restored hash)
-  else if (pinnedHome && pinnedHome !== 'auto' && document.getElementById(pinnedHome)) {
-    targetTab = pinnedHome;
-  }
-  // 4. URL Hash fragment (if user navigated to specific #tab-...)
-  else if (cleanHash && document.getElementById(cleanHash.startsWith('tab-') ? cleanHash : `tab-${cleanHash}`)) {
-    targetTab = cleanHash.startsWith('tab-') ? cleanHash : `tab-${cleanHash}`;
+  // 3. URL Hash fragment (prioritized when explicitly provided in URL, e.g. #presentation, #slides, #slaidid, #tab-presentation)
+  else if (cleanHash && (cleanHash === 'presentation' || cleanHash === 'slides' || cleanHash === 'slaidid' || document.getElementById(cleanHash.startsWith('tab-') ? cleanHash : `tab-${cleanHash}`))) {
+    if (cleanHash === 'slides' || cleanHash === 'slaidid' || cleanHash === 'presentation') {
+      targetTab = 'tab-presentation';
+    } else {
+      targetTab = cleanHash.startsWith('tab-') ? cleanHash : `tab-${cleanHash}`;
+    }
     if (!targetDoc && window.location.hash.includes('?doc=')) {
       targetDoc = decodeURIComponent(window.location.hash.split('?doc=')[1].split('&')[0].split('#')[0]);
     }
+  }
+  // 4. User's Pinned Home Tab (priority on cold start over restored session)
+  else if (pinnedHome && pinnedHome !== 'auto' && document.getElementById(pinnedHome)) {
+    targetTab = pinnedHome;
   }
   // 5. Smart Adaptive Memory (last visited tab)
   else if (lastActive && document.getElementById(lastActive)) {
@@ -11809,7 +11951,7 @@ function renderGlossaryModal() {
     container.innerHTML = `
       <div style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
         <div style="font-size: 2.5rem; margin-bottom: 12px;">🔍</div>
-        <div style="font-size: 1.05rem; font-weight: 600; color: #e2e8f0; margin-bottom: 6px;">${noResultsTitle}</div>
+        <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">${noResultsTitle}</div>
         <div style="font-size: 0.85rem;">"${escapeHtml(term)}"</div>
         <button class="btn btn-secondary" onclick="clearGlossarySearch()" style="margin-top: 14px; padding: 6px 14px; font-size: 0.82rem;">
           ↺ Reset
@@ -11895,7 +12037,7 @@ function renderGlossaryModal() {
             <span class="glossary-text">${escapeHtml(defText)}</span>
           </div>
           <div class="glossary-role-box">
-            <span class="glossary-label" style="color:#7dd3fc;">${lblRole}</span>
+            <span class="glossary-label glossary-role-label">${lblRole}</span>
             <span class="glossary-text">${escapeHtml(roleText)}</span>
           </div>
           ${linksHtml}
@@ -12087,7 +12229,7 @@ function renderFaqModal() {
     container.innerHTML = `
       <div style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
         <div style="font-size: 2.5rem; margin-bottom: 12px;">🔍</div>
-        <div style="font-size: 1.05rem; font-weight: 600; color: #e2e8f0; margin-bottom: 6px;">${noResultsTitle}</div>
+        <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">${noResultsTitle}</div>
       </div>`;
     return;
   }
@@ -12114,7 +12256,7 @@ function renderFaqModal() {
     let linksHtml = '';
     if (item.links && item.links.length > 0) {
       const linkPills = item.links.map(l => {
-        return `<a href="javascript:void(0)" onclick="handleGlossaryLinkClick('${l.url}')" style="font-size: 0.76rem; color: #38bdf8; text-decoration: none; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); padding: 2px 8px; border-radius: 4px;">📖 ${l.label}</a>`;
+        return `<a href="javascript:void(0)" onclick="handleGlossaryLinkClick('${l.url}')" class="faq-link-pill">📖 ${l.label}</a>`;
       }).join(' ');
       linksHtml = `<div class="faq-card-links">${linkPills}</div>`;
     }
@@ -12427,7 +12569,7 @@ function renderOracleResourcesModal() {
     container.innerHTML = `
       <div style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
         <div style="font-size: 2.5rem; margin-bottom: 12px;">🏛️</div>
-        <div style="font-size: 1.05rem; font-weight: 600; color: #e2e8f0; margin-bottom: 6px;">${noResultsTitle}</div>
+        <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">${noResultsTitle}</div>
       </div>`;
     return;
   }
@@ -12456,7 +12598,7 @@ function renderOracleResourcesModal() {
             <span>${escapeHtml(item.name)}</span>
           </h4>
           <div style="display: flex; gap: 6px; align-items: center;">
-            ${item.is_custom ? `<span class="badge" style="background: rgba(56,189,248,0.15); color: #38bdf8; font-size: 0.7rem; border: 1px solid rgba(56,189,248,0.3);">${dict.badge_custom || 'Kohandatud'}</span>` : ''}
+            ${item.is_custom ? `<span class="badge badge-custom-pill">${dict.badge_custom || 'Kohandatud'}</span>` : ''}
             <span class="oracle-resource-badge ${badgeClass}">${escapeHtml(item.badge || '')}</span>
           </div>
         </div>
@@ -12471,7 +12613,7 @@ function renderOracleResourcesModal() {
             <button type="button" class="btn btn-secondary" onclick="openEditOracleResourceModal('${escapeHtml(item.id)}')" style="font-size: 0.78rem; padding: 5px 9px;" title="${dict.btn_edit || 'Muuda'}">
               <span>✏️</span>
             </button>
-            <button type="button" class="btn btn-secondary" onclick="deleteOracleResource('${escapeHtml(item.id)}')" style="font-size: 0.78rem; padding: 5px 9px; color: #ef4444;" title="${dict.btn_delete || 'Kustuta'}">
+            <button type="button" class="btn btn-secondary" onclick="deleteOracleResource('${escapeHtml(item.id)}')" style="font-size: 0.78rem; padding: 5px 9px; color: var(--danger);" title="${dict.btn_delete || 'Kustuta'}">
               <span>🗑️</span>
             </button>
           </div>
@@ -12557,7 +12699,7 @@ function handleSkillsSearch(val) {
 }
 
 function renderFormattedSkillMarkdown(rawMd) {
-  if (!rawMd) return '<p style="color: #64748b; font-style: italic;">Sisu puudub.</p>';
+  if (!rawMd) return '<p style="color: var(--text-muted); font-style: italic;">Sisu puudub.</p>';
   let md = rawMd.replace(/^---[\s\S]*?\n---\s*\n?/, '').trim();
 
   if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
@@ -12568,7 +12710,7 @@ function renderFormattedSkillMarkdown(rawMd) {
     });
     return html;
   } else {
-    return `<pre style="white-space: pre-wrap; font-size: 0.85rem; color: #cbd5e1; line-height: 1.6;">${escapeHtml(md)}</pre>`;
+    return `<pre style="white-space: pre-wrap; font-size: 0.85rem; color: var(--text-dim); line-height: 1.6;">${escapeHtml(md)}</pre>`;
   }
 }
 
@@ -12605,7 +12747,7 @@ function renderSkillsReaderSidebar() {
   });
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div style="font-size: 0.8rem; color: #64748b; padding: 12px 6px;">Sobivaid oskusi ei leitud</div>`;
+    container.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); padding: 12px 6px;">Sobivaid oskusi ei leitud</div>`;
     return;
   }
 
@@ -12619,7 +12761,7 @@ function renderSkillsReaderSidebar() {
           <span style="font-size: 1.1rem; flex-shrink: 0;">${skill.icon}</span>
           <div style="min-width: 0; text-align: left;">
             <div style="font-size: 0.84rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(displayTitle)}</div>
-            <div style="font-size: 0.72rem; color: #64748b; font-family: monospace;">${escapeHtml(skill.id)}</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); font-family: monospace;">${escapeHtml(skill.id)}</div>
           </div>
         </div>
         <span style="font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; font-weight: 600; flex-shrink: 0; color: ${skill.tier_color}; background: ${skill.tier_bg}; border: 1px solid ${skill.tier_border};">
@@ -12658,12 +12800,12 @@ function renderSkillsReaderContent(skillId) {
         <span style="font-size: 2rem;">${skill.icon}</span>
         <div>
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <h3 style="margin: 0; font-size: 1.2rem; color: #f8fafc; font-weight: 700;">${escapeHtml(displayTitle)}</h3>
+            <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-main); font-weight: 700;">${escapeHtml(displayTitle)}</h3>
             <span class="skill-tier-badge" style="color: ${skill.tier_color}; background: ${skill.tier_bg}; border: 1px solid ${skill.tier_border}; font-size: 0.75rem;">
               Tier ${skill.tier}: ${escapeHtml(tierName)}
             </span>
           </div>
-          <div style="font-size: 0.78rem; color: #94a3b8; font-family: monospace; margin-top: 4px;">
+          <div style="font-size: 0.78rem; color: var(--text-muted); font-family: monospace; margin-top: 4px;">
             ${escapeHtml(skill.rel_path)}
           </div>
         </div>
@@ -12694,7 +12836,7 @@ function renderSkillsReaderContent(skillId) {
     } else {
       relsHtml += `<div class="skill-rel-group">
         <span class="skill-rel-label">${depLabel}:</span>
-        <span style="font-size: 0.78rem; color: #64748b;">${dict.skills_none_root || 'Puuduvad (Tuumik/Root)'}</span>
+        <span style="font-size: 0.78rem; color: var(--text-muted);">${dict.skills_none_root || 'Puuduvad (Tuumik/Root)'}</span>
       </div>`;
     }
 
@@ -12728,11 +12870,11 @@ function renderSkillsReaderContent(skillId) {
 
   // Triggers Bar
   if (triggersEl) {
-    let trHtml = `<span style="font-size: 0.76rem; font-weight: 600; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.05em;">🤖 ${dict.skills_prompt_triggers || 'AI Agendi Päästikud'}:</span>`;
+    let trHtml = `<span style="font-size: 0.76rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em;">🤖 ${dict.skills_prompt_triggers || 'AI Agendi Päästikud'}:</span>`;
     if (skill.triggers && skill.triggers.length > 0) {
       trHtml += skill.triggers.map(tr => `<span class="skill-trigger-pill">#${escapeHtml(tr)}</span>`).join(' ');
     } else {
-      trHtml += `<span style="font-size: 0.76rem; color: #64748b;">Automaatne semantiline tuvastus</span>`;
+      trHtml += `<span style="font-size: 0.76rem; color: var(--text-muted);">Automaatne semantiline tuvastus</span>`;
     }
     triggersEl.innerHTML = trHtml;
   }
@@ -12781,8 +12923,8 @@ function renderSkillsCards() {
     container.innerHTML = `
       <div style="grid-column: 1 / -1; text-align: center; padding: 48px 16px; background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border); border-radius: 12px; color: var(--text-muted);">
         <div style="font-size: 2.2rem; margin-bottom: 8px;">🔍</div>
-        <div style="font-size: 1.05rem; font-weight: 600; color: #f8fafc; margin-bottom: 4px;">${dict.skills_no_results || 'Ühtegi sobivat oskust ei leitud'}</div>
-        <div style="font-size: 0.82rem; color: #64748b;">"${escapeHtml(q)}"</div>
+        <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">${dict.skills_no_results || 'Ühtegi sobivat oskust ei leitud'}</div>
+        <div style="font-size: 0.82rem; color: var(--text-muted);">"${escapeHtml(q)}"</div>
         <button class="btn btn-secondary btn-sm" onclick="clearSkillsSearch()" style="margin-top: 14px;">↺ ${dict.btn_reset_filters || 'Lähtesta otsing'}</button>
       </div>`;
     return;
@@ -12872,7 +13014,7 @@ async function renderSkillsRelationshipGraph(force) {
   }
 
   try {
-    container.innerHTML = `<div style="padding: 40px; color: #94a3b8;">Renderdan Mermaid graafikut...</div>`;
+    container.innerHTML = `<div style="padding: 40px; color: var(--text-muted);">Renderdan Mermaid graafikut...</div>`;
     const svgId = `skills-graph-svg-${Math.floor(Math.random() * 100000)}`;
     const renderRes = await mermaid.render(svgId, mermaidCode);
     container.innerHTML = renderRes.svg;
@@ -12880,7 +13022,7 @@ async function renderSkillsRelationshipGraph(force) {
   } catch (err) {
     console.error('Mermaid render error:', err);
     container.innerHTML = `
-      <div style="padding: 24px; color: #f87171; background: rgba(239, 68, 68, 0.1); border-radius: 8px; font-size: 0.85rem;">
+      <div style="padding: 24px; color: var(--danger); background: rgba(239, 68, 68, 0.1); border-radius: 8px; font-size: 0.85rem;">
         <strong>Mermaid viga:</strong> ${escapeHtml(err.message || String(err))}
       </div>`;
   }
@@ -12909,7 +13051,7 @@ function renderSkillsTasksMatrix() {
     container.innerHTML = `
       <div style="text-align: center; padding: 32px; color: var(--text-muted);">
         <div style="font-size: 1.8rem; margin-bottom: 6px;">🔍</div>
-        <div style="font-size: 0.95rem; color: #e2e8f0;">${dict.skills_no_tasks_found || 'Ülesandeid ei leitud'}</div>
+        <div style="font-size: 0.95rem; color: var(--text-main);">${dict.skills_no_tasks_found || 'Ülesandeid ei leitud'}</div>
       </div>`;
     return;
   }
@@ -12941,13 +13083,13 @@ function renderSkillsTasksMatrix() {
         return `<button class="skill-task-chip" onclick="openSkillDetail('${sId}')" title="${sId}">${secIcon} ${sId}</button>`;
       }).join(' ');
     } else {
-      secHtml = '<span style="color: #64748b;">—</span>';
+      secHtml = '<span style="color: var(--text-muted);">—</span>';
     }
 
     const cleanCli = escapeHtml(t.cli_hint || '');
     html += `
       <tr>
-        <td style="font-weight: 500; color: #f1f5f9;">
+        <td style="font-weight: 500; color: var(--text-main);">
           ${escapeHtml(taskDesc)}
         </td>
         <td>
@@ -13024,7 +13166,7 @@ function openSkillDetail(skillId) {
     } else {
       relsHtml += `<div class="skill-rel-group">
         <span class="skill-rel-label">${depLabel}:</span>
-        <span style="font-size: 0.78rem; color: #64748b;">${dict.skills_none_root || 'Puuduvad (Tuumik/Root)'}</span>
+        <span style="font-size: 0.78rem; color: var(--text-muted);">${dict.skills_none_root || 'Puuduvad (Tuumik/Root)'}</span>
       </div>`;
     }
 
@@ -13060,11 +13202,11 @@ function openSkillDetail(skillId) {
 
   // Build triggers pill bar
   if (triggersBar) {
-    let trHtml = `<span style="font-size: 0.76rem; font-weight: 600; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.05em;">🤖 ${dict.skills_prompt_triggers || 'AI Agendi Päästikud'}:</span>`;
+    let trHtml = `<span style="font-size: 0.76rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em;">🤖 ${dict.skills_prompt_triggers || 'AI Agendi Päästikud'}:</span>`;
     if (skill.triggers && skill.triggers.length > 0) {
       trHtml += skill.triggers.map(tr => `<span class="skill-trigger-pill">#${escapeHtml(tr)}</span>`).join(' ');
     } else {
-      trHtml += `<span style="font-size: 0.76rem; color: #64748b;">Automaatne semantiline tuvastus</span>`;
+      trHtml += `<span style="font-size: 0.76rem; color: var(--text-muted);">Automaatne semantiline tuvastus</span>`;
     }
     triggersBar.innerHTML = trHtml;
   }
@@ -13261,7 +13403,7 @@ function renderRecentSearches() {
       <div class="recent-search-tag" onclick='navigateToSearchResult(${JSON.stringify(r).replace(/'/g, "&#39;")})' title="${escapeHtml(r.path)}">
         <span>${getCategoryIcon(r.category)}</span>
         <span>${escapeHtml(rTitle)}</span>
-        <span style="font-family: monospace; font-size: 0.68rem; color: #64748b;">${escapeHtml((r.path || '').split('/').pop())}</span>
+        <span style="font-family: monospace; font-size: 0.68rem; color: var(--text-muted);">${escapeHtml((r.path || '').split('/').pop())}</span>
       </div>
     `;
   }).join('');
@@ -13278,6 +13420,7 @@ function getCategoryIcon(cat) {
     case 'faq': return '❓';
     case 'skills': return '🧠';
     case 'resources': return '🏛️';
+    case 'presentation': return '📽️';
     default: return '📄';
   }
 }
@@ -13351,6 +13494,23 @@ function filterGlobalSearchResults(query = '') {
       const bInPath = bPath.includes(query) ? 1 : 0;
       return bInPath - aInPath;
     });
+
+    const qTrimmed = query.toLowerCase().trim();
+    if (['theme', 'teema', 'teemat', 'hele', 'tume', 'light', 'dark'].some(k => qTrimmed.includes(k))) {
+      const currTheme = document.documentElement.getAttribute('data-theme') || getDevHubTheme();
+      const nextTheme = (currTheme === 'light') ? 'dark' : 'light';
+      const targetLabel = (nextTheme === 'light') ? (dict.theme_light || 'Hele teema') : (dict.theme_dark || 'Tume teema');
+      filtered.unshift({
+        category: 'scripts',
+        action: 'toggle_theme',
+        title: `${dict.cmd_theme_toggle || 'Lülita teemat'}: ${targetLabel}`,
+        titles: { en: `Toggle Theme: ${nextTheme.toUpperCase()}`, et: `Vaheta teemat: ${targetLabel}` },
+        summary: dict.tip_theme_toggle || 'Lülita heledale/tumedale teemale (Alt+T)',
+        summaries: { en: 'Toggle Light/Dark Theme (Alt+T)', et: 'Lülita heledale/tumedale teemale (Alt+T)' },
+        path: 'Alt+T',
+        target: {}
+      });
+    }
   }
 
   gCurrentSearchResults = filtered.slice(0, 100);
@@ -13363,10 +13523,10 @@ function filterGlobalSearchResults(query = '') {
 
   if (gCurrentSearchResults.length === 0) {
     resultsContainer.innerHTML = `
-      <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+      <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
         <div style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.6;">🔍</div>
-        <div style="font-size: 0.95rem; font-weight: 600; color: #cbd5e1;">${escapeHtml(dict.search_no_results || 'Repositooriumist ei leitud ühtegi vastet')}</div>
-        <div style="font-size: 0.8rem; margin-top: 6px;">Päring: <code style="color: #38bdf8; background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">${escapeHtml(query)}</code></div>
+        <div style="font-size: 0.95rem; font-weight: 600; color: var(--text-dim);">${escapeHtml(dict.search_no_results || 'Repositooriumist ei leitud ühtegi vastet')}</div>
+        <div style="font-size: 0.8rem; margin-top: 6px;">Päring: <code style="color: var(--primary); background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">${escapeHtml(query)}</code></div>
       </div>
     `;
     return;
@@ -13459,7 +13619,7 @@ function fallbackCopyText(text) {
 function notifyPathCopied(cleanPath) {
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
-  const tMsg = (dict.toast_path_copied || 'Tee kopeeritud: %s').replace('%s', `<code style="color:#38bdf8; font-weight:700;">${escapeHtml(cleanPath)}</code>`);
+  const tMsg = (dict.toast_path_copied || 'Tee kopeeritud: %s').replace('%s', `<code style="color: var(--primary); font-weight:700;">${escapeHtml(cleanPath)}</code>`);
   showToast(`📋 ${tMsg}`);
 }
 
@@ -13489,6 +13649,9 @@ function navigateToSearchResult(item) {
     }
   } else if (action === 'navigate_tab') {
     switchTab(target.tabId);
+    if (target.deck && typeof switchPresentationDeck === 'function') {
+      switchPresentationDeck(target.deck);
+    }
     if (target.bpNum !== undefined) {
       switchToCockpitSection('blueprints');
       setTimeout(() => {
@@ -13537,6 +13700,9 @@ function navigateToSearchResult(item) {
     }
   } else if (action === 'view_preview') {
     openCodePreview(target.path || item.path, target.title || item.title, target.fileType);
+  } else if (action === 'toggle_theme') {
+    toggleTheme();
+    closeGlobalSearchModal();
   } else if (action === 'open_url') {
     if (target.url) window.open(target.url, '_blank');
   }
@@ -14811,7 +14977,7 @@ function formatCopilotMarkdown(text) {
   
   // Format code blocks ```code```
   escaped = escaped.replace(/```([a-zA-Z0-9_\-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
-    return `<pre><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:0.7rem; color:#64748b;"><span>${lang || 'code'}</span><button class="btn btn-xs" style="padding:1px 5px; font-size:0.65rem;" onclick="navigator.clipboard.writeText(this.parentNode.nextSibling.textContent); showToast('Kood kopeeritud!');">Copy</button></div><code>${code}</code></pre>`;
+    return `<pre><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:0.7rem; color: var(--text-muted);"><span>${lang || 'code'}</span><button class="btn btn-xs" style="padding:1px 5px; font-size:0.65rem;" onclick="navigator.clipboard.writeText(this.parentNode.nextSibling.textContent); showToast('Kood kopeeritud!');">Copy</button></div><code>${code}</code></pre>`;
   });
 
   // Format inline code `code`
@@ -15009,8 +15175,13 @@ function clearCopilotHistory() {
   loadCopilotHistory();
 }
 
-// Global Keyboard Shortcut for Copilot Drawer (⌘J / Ctrl+J)
+// Global Keyboard Shortcut for Copilot Drawer (⌘J / Ctrl+J) and Theme Toggle (Alt+T)
 window.addEventListener('keydown', (e) => {
+  if (e.altKey && (e.key.toLowerCase() === 't' || e.code === 'KeyT')) {
+    e.preventDefault();
+    toggleTheme();
+    return;
+  }
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') {
     e.preventDefault();
     toggleCopilotDrawer();
@@ -15137,7 +15308,9 @@ function loadSpecInViewer(domainOrId, type, shouldScroll = false) {
   const tocListEl = document.getElementById('spec-toc-list');
 
   if (!doc) {
-    if (contentEl) contentEl.innerHTML = `<p style="color: #94a3b8; padding: 20px;">Spetsifikatsiooni dokumenti ei leitud: ${escapeHtml(docId)}</p>`;
+    const notFoundTmpl = (I18N_DICT[currentLang] && I18N_DICT[currentLang]['spec_not_found_tmpl']) || 'Specification document not found: %s';
+    const notFoundMsg = notFoundTmpl.includes('%s') ? notFoundTmpl.replace('%s', escapeHtml(docId)) : `${notFoundTmpl} ${escapeHtml(docId)}`;
+    if (contentEl) contentEl.innerHTML = `<p style="color: var(--text-muted); padding: 20px;">${notFoundMsg}</p>`;
     return;
   }
 
@@ -15158,7 +15331,8 @@ function loadSpecInViewer(domainOrId, type, shouldScroll = false) {
   if (readingTimeEl) {
     const words = rawText.trim().split(/\s+/).filter(Boolean).length;
     const mins = Math.max(1, Math.ceil(words / 180));
-    readingTimeEl.textContent = `~${mins} min lugemist`;
+    const tmpl = (I18N_DICT[currentLang] && I18N_DICT[currentLang]['spec_reading_time_tmpl']) || '~%s min read';
+    readingTimeEl.textContent = tmpl.includes('%s') ? tmpl.replace('%s', mins) : `~${mins} min`;
   }
 
   // Clear filter input
@@ -15183,10 +15357,6 @@ function loadSpecInViewer(domainOrId, type, shouldScroll = false) {
     buildSpecTableOfContents(contentEl, tocListEl);
   }
 
-  // Restore density preference
-  const savedDensity = localStorage.getItem('devhub_spec_density') || 'comfortable';
-  setSpecDensity(savedDensity, false);
-
   if (shouldScroll) {
     const viewerCard = document.getElementById('specs-viewer-card');
     if (viewerCard) {
@@ -15200,23 +15370,8 @@ function switchCurrentSpecType(type) {
   loadSpecInViewer(gCurrentLoadedDomain, type);
 }
 
-function setSpecDensity(mode, savePref = true) {
-  const container = document.getElementById('spec-master-detail-container') || document.getElementById('specs-viewer-card');
-  const comfortBtn = document.getElementById('spec-density-btn-comfort');
-  const compactBtn = document.getElementById('spec-density-btn-compact');
-
-  if (mode === 'compact') {
-    if (container) container.classList.add('spec-density-compact');
-    if (comfortBtn) comfortBtn.classList.remove('active');
-    if (compactBtn) compactBtn.classList.add('active');
-  } else {
-    if (container) container.classList.remove('spec-density-compact');
-    if (comfortBtn) comfortBtn.classList.add('active');
-    if (compactBtn) compactBtn.classList.remove('active');
-  }
-  if (savePref) {
-    localStorage.setItem('devhub_spec_density', mode);
-  }
+function setSpecDensity(mode, savePref = false) {
+  // Legacy stub: Optimal balanced density is standard (Rule 10 typography)
 }
 
 function toggleSpecFocusMode() {
@@ -15408,7 +15563,7 @@ function enhanceSpecRenderedDom(contentEl) {
 
       const descBox = document.createElement('div');
       descBox.className = 'gherkin-req-desc';
-      descBox.innerHTML = `<strong>${escapeHtml(reqTitle)}</strong>${descHtml ? `<div style="margin-top:4px; color:#cbd5e1;">${descHtml}</div>` : ''}`;
+      descBox.innerHTML = `<strong>${escapeHtml(reqTitle)}</strong>${descHtml ? `<div class="gherkin-req-desc-body" style="margin-top:4px;">${descHtml}</div>` : ''}`;
       card.appendChild(descBox);
 
       if (scenarioSteps.length > 0) {
@@ -15419,7 +15574,7 @@ function enhanceSpecRenderedDom(contentEl) {
           stepRow.className = 'gherkin-step';
           stepRow.innerHTML = `
             <span class="gherkin-badge ${st.type}">${escapeHtml(st.label)}</span>
-            <span style="color:#e2e8f0;">${st.content}</span>
+            <span class="gherkin-step-content">${st.content}</span>
           `;
           scenBox.appendChild(stepRow);
         });
@@ -15451,7 +15606,7 @@ function buildSpecTableOfContents(contentEl, tocListEl) {
 
   const sections = contentEl.querySelectorAll('h2, .gherkin-card');
   if (sections.length === 0) {
-    tocListEl.innerHTML = '<li style="font-size:0.75rem; color:#64748b; padding:8px 10px;">Sisukord puudub</li>';
+    tocListEl.innerHTML = '<li style="font-size:0.75rem; color: var(--text-muted); padding:8px 10px;">Sisukord puudub</li>';
     return;
   }
 
@@ -15566,13 +15721,13 @@ function renderSpecsTraceabilityTable() {
   ];
 
   tbody.innerHTML = matrix.map(row => `
-    <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
-      <td style="font-weight: 700; color: #38bdf8; font-family: monospace;">${escapeHtml(row.req)}</td>
+    <tr class="trace-row" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+      <td class="trace-req-cell" style="font-weight: 700; color: var(--primary); font-family: monospace;">${escapeHtml(row.req)}</td>
       <td><span class="badge badge-primary" style="font-size:0.72rem;">${escapeHtml(row.domain)}</span></td>
-      <td style="color: #cbd5e1; font-size: 0.85rem;">${escapeHtml(row.desc)}</td>
-      <td style="font-family: monospace; font-size: 0.78rem; color: #94a3b8;">${escapeHtml(row.script)}</td>
-      <td><span class="badge" style="background: rgba(168,85,247,0.15); color: #c084fc; font-size:0.72rem;">${escapeHtml(row.gate)}</span></td>
-      <td style="color: #22c55e; font-weight: 700; font-size: 0.82rem;">${escapeHtml(row.status)}</td>
+      <td class="trace-desc-cell" style="font-size: 0.85rem;">${escapeHtml(row.desc)}</td>
+      <td class="trace-script-cell" style="font-family: monospace; font-size: 0.78rem;">${escapeHtml(row.script)}</td>
+      <td><span class="badge badge-purple" style="font-size:0.72rem;">${escapeHtml(row.gate)}</span></td>
+      <td class="trace-status-cell" style="color: var(--success); font-weight: 700; font-size: 0.82rem;">${escapeHtml(row.status)}</td>
     </tr>
   `).join('');
 }
@@ -15685,9 +15840,9 @@ function openVersionInspectorModal() {
   if (cacheEl) {
     const hasCb = window.location.search.includes('_cb=') || window.location.search.includes('_ts=');
     if (hasCb) {
-      cacheEl.innerHTML = '<span style="color: #4ade80;">⚡ Tühistatud (_cb päring aktiivne)</span>';
+      cacheEl.innerHTML = '<span style="color: var(--success);">⚡ Tühistatud (_cb päring aktiivne)</span>';
     } else {
-      cacheEl.innerHTML = '<span style="color: #94a3b8;">Tavaline brauseri vahemälu</span>';
+      cacheEl.innerHTML = '<span style="color: var(--text-muted);">Tavaline brauseri vahemälu</span>';
     }
   }
 

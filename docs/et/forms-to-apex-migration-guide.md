@@ -287,6 +287,14 @@ Kuna APEX ei loe suletud binaarset `.fmb` formaati, teisendatakse moodulid struk
 find forms_apps -name "*.fmb" -exec ./scripts/forms/form-to-xml.sh {} \;
 ```
 
+> [!TIP]
+> **2-Pass Roundtrip Terviklikkuse Kontroll (`test-fmb-xml-roundtrip.sh`):**
+> Enne Giti salvestamist või APEX-isse migreerimist saavad arendajad kontrollida, et kahesuunaline konverteerimine säilitab 100% semantika:
+> ```bash
+> ./scripts/forms/test-fmb-xml-roundtrip.sh forms_apps/orders.fmb
+> ```
+> See käivitab `FMB -> XML(1) -> temp.fmb -> XML(2)` ning rakendab `scripts/internal/compare_forms_xml.py` mootorit, mis filtreerib volatiilsed metaandmed (`DateSaved`), tagades et plokid, väljad ja päästikud kattuvad identselt.
+
 ---
 
 ### Etapp 2: PL/SQL äriloogika eraldamine pakettidesse

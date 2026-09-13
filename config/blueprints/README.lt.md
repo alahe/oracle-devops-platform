@@ -87,8 +87,8 @@ flowchart TD
 | **7** | [`.env.7-consolidated-forms-publisher`](.env.7-consolidated-forms-publisher) | `db-publisher-oracle.yaml` (:1531) | `forms-publisher-unified.yaml` (:9001/9502/6082) | `db-publisher`, `app-forms-publisher` | Vieningas WebLogic konteineris, vykdantis ir Forms 14c, ir Publisher. |
 | **8** | [`.env.8-standalone-web-ide`](.env.8-standalone-web-ide) | - *(Zero DB)* | `web-ide-standard.yaml` (:8090/8450/8091) | `web-ide-dev` | Atskira kūrėjo Web IDE darbo vieta: VS Code serveris, SQLcl ir iš anksto sukonfigūruoti įrankiai. |
 | **9** | [`.env.9-standalone-publisher-designer`](.env.9-standalone-publisher-designer) | - *(Zero DB)* | `publisher-designer-standard.yaml` (:6083 noVNC) | `app-publisher-designer` | noVNC darbalaukio konteineris MS Word & BIP Template Builder RTF šablonams (`setup-word-designer.sh`). |
-| **10** | [`.env.10-remote-ords`](.env.10-remote-ords) | `MAIN_DB_PROFILE=NONE` | `ords-standalone.yaml` (:8088/8448) | `app-ords` | **⚠️ Testuojama ir tobulinama:** Atskiras ORDS konteineris pasileidžia. Nuotolinis maršrutizavimas į debesį kuriamas. |
-| **11** | [`.env.11-remote-publisher`](.env.11-remote-publisher) | `MAIN_DB_PROFILE=NONE` | `publisher-standard.yaml` (:9502/9503) | `app-publisher` | **⚠️ Testuojama ir tobulinama:** Publisher pasileidžia. Ataskaitų teikimas prieš išorines duomenų bazes kuriamas. |
+| **10** | [`.env.10-remote-ords`](.env.10-remote-ords) | `MAIN_DB_PROFILE=NONE` | `ords-standalone-remote.yaml` (:8088/8448) | `app-ords-remote` | **⚠️ Testuojama ir tobulinama:** Atskiras ORDS konteineris pasileidžia. Nuotolinis maršrutizavimas į debesį kuriamas. |
+| **11** | [`.env.11-remote-publisher`](.env.11-remote-publisher) | `MAIN_DB_PROFILE=NONE` | `publisher-standalone-remote.yaml` (:9502/9503) | `app-publisher-remote` | **⚠️ Testuojama ir tobulinama:** Publisher pasileidžia. Ataskaitų teikimas prieš išorines duomenų bazes kuriamas. |
 
 ---
 

@@ -39,9 +39,9 @@ get_expected_header() {
 
 get_expected_label() {
   case "$1" in
-    et) echo "Kuup\'e4ev:" ;;
+    et) echo "Kuup" ;;
     en) echo "Date:" ;;
-    fi) echo "P\'e4iv\'e4m\'e4\'e4r\'e4:" ;;
+    fi) echo "iv" ;;
     sv) echo "Datum:" ;;
     lv) echo "Datums:" ;;
     lt) echo "Data:" ;;

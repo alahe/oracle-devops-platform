@@ -172,6 +172,7 @@ def validate_pdf(pdf_path, strict=False, output_json=False):
     # Formatting output
     if output_json:
         print(json.dumps(results, indent=2, ensure_ascii=False))
+        return results, (1 if (strict and results["errors"]) else 0)
     else:
         print("=" * 80)
         print(f"♿ Oracle Analytics Publisher PDF Ligipääsetavuse Validaator (PDF/UA-1)")

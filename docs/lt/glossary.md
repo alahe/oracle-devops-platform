@@ -24,6 +24,12 @@
 - **Oficiali nuoroda / Vikipedija:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
 - **Susijusi dokumentacija ir skriptai:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
 
+### `ALISE` — ALISE verslo taikomųjų programų duomenų bazė
+- **Apibrėžimas:** Speciali Oracle Free DB 23ai duomenų bazės aplinka verslo schemoms, PL/SQL logikai ir APEX/ORDS vykdymui 1533 prievade.
+- **Vaidmuo šiame projekte:** Kanoninė verslo duomenų bazė Blueprint 1 (:1533) ir Blueprint 7/3 modeliuose, užtikrinanti visišką schemų izoliaciją nuo proxy sluoksnio.
+- **Oficiali nuoroda / Vikipedija:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
+- **Susijusi dokumentacija ir skriptai:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
+
 ### `APFS` — Apple File System
 - **Apibrėžimas:** Numatytoji macOS failų sistema, optimizuota SSD kaupikliams ir momentinėms kopijoms.
 - **Vaidmuo šiame projekte:** macOS failų sistema, kurioje tikrinamas suderinamumas (13 taisyklė) su Windows NTFS.
@@ -190,12 +196,6 @@
 - **Oficiali nuoroda / Vikipedija:** [Wikipedia: Newline (LF)](https://en.wikipedia.org/wiki/Newline)
 - **Susijusi dokumentacija ir skriptai:** [.gitattributes](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/.gitattributes)
 
-### `LIS` — Laboratory Information System
-- **Apibrėžimas:** Laboratorinė informacinė sistema mėginių, tyrimų ir analizių duomenims valdyti.
-- **Vaidmuo šiame projekte:** Demonstruojama Blueprint 3 su atskiromis proxy, alise ir lis duomenų bazėmis.
-- **Oficiali nuoroda / Vikipedija:** [Wikipedia: LIS / LIMS](https://en.wikipedia.org/wiki/Laboratory_information_management_system)
-- **Susijusi dokumentacija ir skriptai:** [config/blueprints/.env.bp3-multi-db-lis](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.bp3-multi-db-lis), [config/profiles/databases/db-lis.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-lis.yaml)
-
 ## M
 
 ### `mTLS` — Mutual Transport Layer Security
@@ -242,7 +242,7 @@
 
 ### `PDB` — Pluggable Database
 - **Apibrėžimas:** Autonominis schemų ir objektų rinkinys, veikiantis kaip atskira duomenų bazė.
-- **Vaidmuo šiame projekte:** Izoliuoja sritis: FREEPDB1 (APEX), ALISEPDB (verslas), LIS_PDB ir BIP_PDB pagal modelius.
+- **Vaidmuo šiame projekte:** Izoliuoja sritis: FREEPDB1 (APEX), ALISEPDB (verslas), PUBPDB ir BIP_PDB pagal modelius.
 - **Oficiali nuoroda / Vikipedija:** [Oracle Pluggable Database (PDB)](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/multitenant-architecture.html)
 - **Susijusi dokumentacija ir skriptai:** [docs/db-profiles-and-topology.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/db-profiles-and-topology.md), [scripts/internal/resolve-topology.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/resolve-topology.sh)
 

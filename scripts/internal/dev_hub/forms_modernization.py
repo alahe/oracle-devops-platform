@@ -1272,18 +1272,18 @@ FORMS_SLIDES_CONTENT = {
 }
 
 FORMS_SUMMARY_HTML = """
-<div class="forms-modernization-summary card" style="background: linear-gradient(180deg, #0b1120 0%, #030712 100%); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 12px; padding: 28px; margin-top: 24px; box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);">
+<div class="forms-modernization-summary card forms-summary-card">
     
     <!-- HEADER -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 20px; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 24px;">
         <div>
-            <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 9999px; padding: 4px 12px; font-size: 0.75rem; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+            <div class="forms-summary-badge">
                 <span>📑</span> Strateegiline Tegevuskava &amp; Arhitektuur
             </div>
-            <h2 style="font-size: 1.45rem; font-weight: 800; color: #f8fafc; margin: 0 0 6px 0; letter-spacing: -0.02em;">
+            <h2 class="forms-summary-title">
                 Oracle Forms → APEX Moderniseerimise Strateegia &amp; Tegevuskava
             </h2>
-            <p style="font-size: 0.88rem; color: #94a3b8; margin: 0; max-width: 850px; line-height: 1.5;">
+            <p class="forms-summary-lead">
                 Põhjalik strateegia 150 Oracle Forms vormi sujuvaks evolutsiooniks kaasaegsele Oracle APEX platvormile. Säilitab 25 aasta intellektuaalomandi, väldib naabertoote 10-aastast krahhi ning tagab 100% kooskõla ettevõtte Azure-pilvestrateegiaga.
             </p>
         </div>
@@ -1299,43 +1299,43 @@ FORMS_SUMMARY_HTML = """
 
     <!-- STRATEGIC COMPARISON TABLE -->
     <div style="margin-bottom: 32px;">
-        <h3 style="font-size: 1.1rem; color: #38bdf8; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
+        <h3 class="forms-summary-section-title">
             <span>⚖️</span> Strateegiliste Valikute Võrdlusmaatriks: Miks Evolutsioon Võidab
         </h3>
         <div style="overflow-x: auto;">
-            <table class="services-table" style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
+            <table class="services-table forms-matrix-table" style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
                 <thead>
-                    <tr style="background: rgba(15, 23, 42, 0.9);">
-                        <th style="padding: 10px 14px; text-align: left; color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.1);">Mõõdik / Kriteerium</th>
-                        <th style="padding: 10px 14px; text-align: left; color: #f87171; border-bottom: 1px solid rgba(255,255,255,0.1);">Valik A: Big-Bang Ümberkirjutus (Vue/Java)</th>
-                        <th style="padding: 10px 14px; text-align: left; color: #4ade80; border-bottom: 1px solid rgba(255,255,255,0.1);">Valik B: APEX &amp; Olemasolev Taristu</th>
+                    <tr>
+                        <th class="forms-matrix-th-metric">Mõõdik / Kriteerium</th>
+                        <th class="forms-matrix-th-risk">Valik A: Big-Bang Ümberkirjutus (Vue/Java)</th>
+                        <th class="forms-matrix-th-apex">Valik B: APEX &amp; Olemasolev Taristu</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="padding: 10px 14px; font-weight: 600; color: #f8fafc; border-bottom: 1px solid rgba(255,255,255,0.05);">Valmimise tähtaeg</td>
-                        <td style="padding: 10px 14px; color: #fca5a5; border-bottom: 1px solid rgba(255,255,255,0.05);">5–10 aastat (naabertoode on juba 4a teinud, lõppu ei paista)</td>
-                        <td style="padding: 10px 14px; color: #86efac; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05);">10–12 kuud (optimistlik) / 16–18k (realistlik)</td>
+                        <td class="forms-matrix-td-metric">Valmimise tähtaeg</td>
+                        <td class="forms-matrix-td-risk">5–10 aastat (naabertoode on juba 4a teinud, lõppu ei paista)</td>
+                        <td class="forms-matrix-td-apex">10–12 kuud (optimistlik) / 16–18k (realistlik)</td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px 14px; font-weight: 600; color: #f8fafc; border-bottom: 1px solid rgba(255,255,255,0.05);">Spetsifikatsioon &amp; ärifookus</td>
-                        <td style="padding: 10px 14px; color: #fca5a5; border-bottom: 1px solid rgba(255,255,255,0.05);">Konsultandid vajavad detailset spetsifikatsiooni ja ei tunne backend'i; seadused ja elutsükkel jooksevad eest</td>
-                        <td style="padding: 10px 14px; color: #86efac; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05);">80–90% loogikast juba baasis; oma tiim (5 DB + 3 analüütikut + 1 Java) tagab 0 teadmusekadu</td>
+                        <td class="forms-matrix-td-metric">Spetsifikatsioon &amp; ärifookus</td>
+                        <td class="forms-matrix-td-risk">Konsultandid vajavad detailset spetsifikatsiooni ja ei tunne backend'i; seadused ja elutsükkel jooksevad eest</td>
+                        <td class="forms-matrix-td-apex">80–90% loogikast juba baasis; oma tiim (5 DB + 3 analüütikut + 1 Java) tagab 0 teadmusekadu</td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px 14px; font-weight: 600; color: #f8fafc; border-bottom: 1px solid rgba(255,255,255,0.05);">Taristu valmidus &amp; DR</td>
-                        <td style="padding: 10px 14px; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.05);">Nõuab uusi komponente, uusi DR-tellimusi ja eraldi mikroteenuste haldust</td>
-                        <td style="padding: 10px 14px; color: #86efac; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05);">Keskkond on 100% valmis; 0 uut komponenti, 0 uut DR-tellimust, olemasoleva täielik ärakasutus</td>
+                        <td class="forms-matrix-td-metric">Taristu valmidus &amp; DR</td>
+                        <td class="forms-matrix-td-neutral">Nõuab uusi komponente, uusi DR-tellimusi ja eraldi mikroteenuste haldust</td>
+                        <td class="forms-matrix-td-apex">Keskkond on 100% valmis; 0 uut komponenti, 0 uut DR-tellimust, olemasoleva täielik ärakasutus</td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px 14px; font-weight: 600; color: #f8fafc; border-bottom: 1px solid rgba(255,255,255,0.05);">Süsteemi keerukus &amp; WebLogic</td>
-                        <td style="padding: 10px 14px; color: #fca5a5; border-bottom: 1px solid rgba(255,255,255,0.05);">WebLogic, Forms ja batch-portaal jäävad aastateks paralleelselt; keerukus kahekordistub</td>
-                        <td style="padding: 10px 14px; color: #86efac; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05);">Radikaalne lihtsustamine: Forms, batch-portaal ja WebLogic eemaldatakse; halduskoormus langeb</td>
+                        <td class="forms-matrix-td-metric">Süsteemi keerukus &amp; WebLogic</td>
+                        <td class="forms-matrix-td-risk">WebLogic, Forms ja batch-portaal jäävad aastateks paralleelselt; keerukus kahekordistub</td>
+                        <td class="forms-matrix-td-apex">Radikaalne lihtsustamine: Forms, batch-portaal ja WebLogic eemaldatakse; halduskoormus langeb</td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px 14px; font-weight: 600; color: #f8fafc; border-bottom: 1px solid rgba(255,255,255,0.05);">Täiendav eelarve &amp; litsentsid</td>
-                        <td style="padding: 10px 14px; color: #fca5a5; border-bottom: 1px solid rgba(255,255,255,0.05);">&gt; 1 500 000 € (välised konsultandid, uued litsentsid)</td>
-                        <td style="padding: 10px 14px; color: #86efac; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05);">0 € lisalitsentsi (APEX sisaldub baasis), oma tiim</td>
+                        <td class="forms-matrix-td-metric">Täiendav eelarve &amp; litsentsid</td>
+                        <td class="forms-matrix-td-risk">&gt; 1 500 000 € (välised konsultandid, uued litsentsid)</td>
+                        <td class="forms-matrix-td-apex">0 € lisalitsentsi (APEX sisaldub baasis), oma tiim</td>
                     </tr>
                 </tbody>
             </table>
@@ -1344,10 +1344,10 @@ FORMS_SUMMARY_HTML = """
 
     <!-- MERMAID DIAGRAM 1: 2-PHASE ARCHITECTURE -->
     <div style="margin-bottom: 32px;">
-        <h3 style="font-size: 1.1rem; color: #38bdf8; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px;">
+        <h3 class="forms-summary-section-title">
             <span>🏗️</span> Arhitektuurne Skeem 1: 2-Etapiline Evolutsioon ja Azure ODSA Pilvesiht
         </h3>
-        <p style="font-size: 0.8rem; color: #94a3b8; margin: 0 0 12px 0;">
+        <p class="forms-summary-section-subtitle">
             Kõrge kontrastsusega arhitektuurijoonis (Rule 10): selged otsuse-rombikujulised sõlmed ja mitmekihiline subgraafide hierarhia.
         </p>
         <pre class="mermaid">
@@ -1370,197 +1370,193 @@ flowchart TB
         GW_ORDS["ORDS 26.1 API Värav<br/>(OpenAPI 3.0 / Swagger)"]:::midTier
     end
 
-    subgraph Tier_DB["3. Tuumik: Oracle Andmebaas (Olemasolev Baas)"]
+    subgraph Tier_AppCore["3. Rakendustuum ja Andmebaas"]
         direction TB
-        DB_APEX["APEX 26.1 Runtime<br/>(Veebirakenduste Mootor)"]:::dbTier
-        DB_API["PL/SQL API Kiht<br/>(25a Läbiproovitud Paketid)"]:::dbTier
-        DB_DATA["Tabelid ja Tehingud<br/>(Ühtne Andmetõde - SSOT)"]:::dbTier
-        DB_APEX --> DB_API
-        DB_API --> DB_DATA
+        DB_APEX["APEX Rakendusmootor<br/>(Fookus: Vormid & Aruanded)"]:::dbTier
+        DB_PACKAGES["Olemasolevad PL/SQL Paketid<br/>(Äriloogika Tuum: 85%)"]:::dbTier
+        DB_CORE["Oracle 23ai Free / EE Baas<br/>(Ühtne Andmemudel)"]:::dbTier
     end
 
-    subgraph Tier_Cloud["4. Pilve Sihtarhitektuur (Faas 2)"]
+    subgraph Tier_Cloud["4. Strateegiline Siht: Pilv"]
         direction TB
-        AZ_ODSA["Oracle Database@Azure<br/>(ODSA Microsoft Azure DC-s)"]:::cloudTarget
-        AZ_NET["Azure VNet Integreeritus<br/>(Latentsus alla 1 ms)"]:::cloudTarget
-        AZ_ODSA --- AZ_NET
+        AZ_ODSA["Oracle Database@Azure<br/>(Madalaim Viiteaeg & Pilve DR)"]:::cloudTarget
     end
 
     U_Web --> GW_SSO
-    GW_SSO --> DB_APEX
-    U_Forms -.->|30p Turvavõrk| DB_API
+    U_Forms -.-> DB_CORE
     U_Batch --> GW_ORDS
-    GW_ORDS --> DB_API
-    Tier_DB ==>|Faas 2: 0 Koodimuudatust| Tier_Cloud
+    GW_SSO --> DB_APEX
+    GW_ORDS --> DB_PACKAGES
+    DB_APEX --> DB_PACKAGES
+    DB_PACKAGES --> DB_CORE
+    DB_CORE ==> AZ_ODSA
         </pre>
     </div>
 
-    <!-- MERMAID DIAGRAM 2: 6-STAGE VIBE-CODING LOOP -->
+    <!-- MERMAID DIAGRAM 2: MODERNIZATION FACTORY LOOP -->
     <div style="margin-bottom: 32px;">
-        <h3 style="font-size: 1.1rem; color: #38bdf8; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px;">
-            <span>⚡</span> Arhitektuurne Skeem 2: 6-Etapiline AI Vibe-Coding Tsükkel
+        <h3 class="forms-summary-section-title">
+            <span>🔄</span> Arhitektuurne Skeem 2: Moderniseerimise Konveier &amp; Ralph Quality Loop
         </h3>
-        <p style="font-size: 0.8rem; color: #94a3b8; margin: 0 0 12px 0;">
-            Kaudne koodigeneratsioon APEXlang DSL (.apx), ametliku EBNF grammatika ja SQLcl MCP serveri koostöös.
-        </p>
-        <pre class="mermaid">
-flowchart LR
-    classDef loopStep fill:#1e1b4b,stroke:#4338ca,stroke-width:2px,color:#ffffff;
-    classDef gateStep fill:#831843,stroke:#9d174d,stroke-width:2px,color:#ffffff;
-    classDef okStep fill:#064e3b,stroke:#047857,stroke-width:2px,color:#ffffff;
-
-    subgraph VibeLoop["AI Vibe-Coding Konveier (150 Vormi Kiirendus)"]
-        direction LR
-        ST1["1. Skeemitõde<br/>(MCP sql -mcp)"]:::loopStep
-        ST2["2. PL/SQL Pakett<br/>(STATUS = VALID)"]:::loopStep
-        ST3["3. APEXlang DSL<br/>(.apx + messages.apx)"]:::loopStep
-        ST4{"4. Kas süntaks<br/>ja EBNF klapib?<br/>(apexctl validate)"}:::gateStep
-        ST5["5. Import DEV Baasi<br/>(apex import)"]:::okStep
-        ST6["6. Git Diff Kontroll<br/>(Iniminseneri Heakskiit)"]:::okStep
-    end
-
-    ST1 --> ST2
-    ST2 --> ST3
-    ST3 --> ST4
-    ST4 -->|JAH / Kehtiv| ST5
-    ST4 -->|EI / Viga| ST3
-    ST5 --> ST6
-        </pre>
-    </div>
-
-    <!-- MERMAID DIAGRAM 3: DECOMMISSIONING GATES -->
-    <div style="margin-bottom: 32px;">
-        <h3 style="font-size: 1.1rem; color: #38bdf8; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px;">
-            <span>🚪</span> Arhitektuurne Skeem 3: Pärandtaristu Sulgemise Väravad (Decommissioning Gates)
-        </h3>
-        <p style="font-size: 0.8rem; color: #94a3b8; margin: 0 0 12px 0;">
-            Kontrollitud ja turvaline teekaart WebLogic ja Forms serverite sulgemiseks ning püsikulude likvideerimiseks.
+        <p class="forms-summary-section-subtitle">
+            Samm-sammuline vormi migratsiooniprotsess kvaliteediväravate ja 30-päevase tagasiteega.
         </p>
         <pre class="mermaid">
 flowchart TB
-    classDef gateBlock fill:#312e81,stroke:#4338ca,stroke-width:2px,color:#ffffff;
-    classDef decisionBlock fill:#701a75,stroke:#86198f,stroke-width:2px,color:#ffffff;
-    classDef actionBlock fill:#0f766e,stroke:#115e59,stroke-width:2px,color:#ffffff;
+    classDef loopStep fill:#1e1b4b,stroke:#4338ca,stroke-width:2px,color:#ffffff;
+    classDef gateStep fill:#831843,stroke:#9d174d,stroke-width:2px,color:#ffffff;
+    classDef liveStep fill:#064e3b,stroke:#059669,stroke-width:2px,color:#ffffff;
 
-    subgraph Gates["Pärandtaristu Sulgemise Verstapostid"]
-        direction TB
-        G1["VÄRAV 1 (Kuu 2):<br/>Forms Feature Freeze Mandaat"]:::gateBlock
-        D1{"Kas vanas vormis<br/>on kriitiline viga<br/>või seadusmuudatus?"}:::decisionBlock
-        A1["Lahendatakse vanas<br/>ainult P1 turvavead"]:::actionBlock
-        A2["Uued funktsioonid<br/>ehitatakse ainult APEXisse"]:::actionBlock
-
-        G2["VÄRAV 2 (Kuu 8):<br/>Tier A/B Vormide Sulgemine"]:::gateBlock
-        D2{"Kas 30p paralleelne<br/>turvavõrk on möödas<br/>ja vigu ei esine?"}:::decisionBlock
-        A3["Vorm lülitatakse<br/>Formsis ainult lugemiseks"]:::actionBlock
-
-        G3["VÄRAV 3 (Kuu 14):<br/>WebLogic / Forms Täielik Seiskamine"]:::gateBlock
-        A4["Forms Server ja WebLogic suletakse.<br/>Serveripinnad ja litsentsikulud vabad!"]:::actionBlock
+    subgraph Step1_Ingest["1. Analüüs & Dekonstrueerimine"]
+        direction LR
+        S1_FMB["Forms .fmb Lähtekood"]:::loopStep
+        S1_XML["XML Dekonstruktsioon<br/>(Plokid, väljad, trigerid)"]:::loopStep
+        S1_APX["APEXlang DSL (.apx)<br/>Deklaratiivne Spets"]:::loopStep
+        S1_FMB --> S1_XML --> S1_APX
     end
 
-    G1 --> D1
-    D1 -->|JAH / P1 viga| A1
-    D1 -->|EI / Uus soov| A2
-    A2 --> G2
-    G2 --> D2
-    D2 -->|JAH / Stabiilne| A3
-    A3 --> G3
-    G3 --> A4
+    subgraph Step2_Generate["2. Generatsioon & Ärilise Puhastus"]
+        direction LR
+        S2_AI["Ralph Vibe-Coding Tsükkel<br/>(SQLcl MCP + Skeemitõde)"]:::loopStep
+        S2_PKG["PL/SQL Pakettide Isolatsioon<br/>(ON-INSERT/UPDATE baasi)"]:::loopStep
+        S2_APP["APEX Lehe Generatsioon<br/>(Interactive Grid & Form)"]:::loopStep
+        S2_AI --> S2_PKG --> S2_APP
+    end
+
+    subgraph Step3_Gate["3. Kvaliteedivärav & Validatsioon"]
+        direction LR
+        QG_SEC["Küber- ja IDOR Kontroll<br/>(Session State Protection)"]:::gateStep
+        QG_UAT["Kasutajatest (Enter/Tab,<br/>30-40 rida ekraanil)"]:::gateStep
+        QG_SEC --> QG_UAT
+    end
+
+    subgraph Step4_Deploy["4. Tarnimine & 30p Paralleelkäitus"]
+        direction LR
+        D_PROD["PROD Paigaldus (Liquibase)"]:::liveStep
+        D_SAFETY["30p Ohutu Tagasipöördumine<br/>(1-kliki tagasiside)"]:::liveStep
+        D_DECOM["Vana Vormi Sulgemine"]:::liveStep
+        D_PROD --> D_SAFETY --> D_DECOM
+    end
+
+    Step1_Ingest --> Step2_Generate --> Step3_Gate --> Step4_Deploy
+        </pre>
+    </div>
+
+    <!-- MERMAID DIAGRAM 3: TIMELINE GANTT (SIMULATED VIA FLOWCHART FOR ROBUSTNESS) -->
+    <div style="margin-bottom: 32px;">
+        <h3 class="forms-summary-section-title">
+            <span>📅</span> Arhitektuurne Skeem 3: 4-Etapiline Ajakava ja Ressursijaotus
+        </h3>
+        <p class="forms-summary-section-subtitle">
+            12–16 kuud realistlikku plaani: vundamendist kuni vana süsteemi lõpliku pensionile saatmiseni.
+        </p>
+        <pre class="mermaid">
+flowchart LR
+    classDef phase1 fill:#0f766e,stroke:#14b8a6,stroke-width:2px,color:#ffffff;
+    classDef phase2 fill:#0369a1,stroke:#0284c7,stroke-width:2px,color:#ffffff;
+    classDef phase3 fill:#4338ca,stroke:#6366f1,stroke-width:2px,color:#ffffff;
+    classDef phase4 fill:#831843,stroke:#ec4899,stroke-width:2px,color:#ffffff;
+
+    P1["Etapp 1 (Kuu 1-2)<br/>Vundament & Piloot<br/>• CI/CD konveier<br/>• 5 pilootvormi"]:::phase1
+    --> P2["Etapp 2 (Kuu 3-6)<br/>Aruanded (50 tk)<br/>• Interactive Grid<br/>• 1-kliki Excel eksport"]:::phase2
+    --> P3["Etapp 3 (Kuu 7-12)<br/>Põhivormid (80 tk)<br/>• Master-detail aknad<br/>• Kiirklahvid"]:::phase3
+    --> P4["Etapp 4 (Kuu 13-16)<br/>Finiš & Deformeerimine<br/>• Viimased 15 vormi<br/>• Forms & WLS sulgemine"]:::phase4
         </pre>
     </div>
 
     <!-- 10 PERSPECTIVES MATRIX -->
     <div style="margin-bottom: 32px;">
-        <h3 style="font-size: 1.1rem; color: #38bdf8; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
+        <h3 class="forms-summary-section-title">
             <span>👥</span> Ekspertide ja Sidusrühmade Konsensus: 8 Vaatenurka
         </h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
             
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                <div style="font-weight: 700; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <div class="perspective-card">
+                <div class="perspective-card-title text-accent-sky" style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>👨‍💻</span> Tarkvaraarendaja vaade
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.45;">
+                <div class="perspective-card-desc">
                     Stateless seansid ja olemasolevate PL/SQL pakettide taaskasutus. Java taustaportaal isoleeritakse ORDS REST API taha, mis välistab otsese andmebaasisidumise.
                 </div>
             </div>
 
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                <div style="font-weight: 700; color: #a855f7; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <div class="perspective-card">
+                <div class="perspective-card-title text-accent-purple" style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>🎨</span> UX-arhitekti vaade
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.45;">
+                <div class="perspective-card-desc">
                     Kompaktne režiim (Dense Mode), 30-40 rida ekraanil. Enter/Tab navigatsioon, kiirklahvid (F7/F8 asendus) ja hoiatused salvestamata andmete kaitsmiseks.
                 </div>
             </div>
 
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                <div style="font-weight: 700; color: #ef4444; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <div class="perspective-card">
+                <div class="perspective-card-title text-accent-danger" style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>🛡️</span> Küberturbe eksperdi vaade
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.45;">
+                <div class="perspective-card-desc">
                     Azure Entra ID (OIDC) SSO, SHA-256 Session State Protection, IDOR kaitse ja reaalne APP_USER auditikontekst andmebaasi trigerites ning SIEM-is.
                 </div>
             </div>
 
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                <div style="font-weight: 700; color: #22c55e; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <div class="perspective-card">
+                <div class="perspective-card-title text-accent-success" style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>👥</span> Lõppkasutaja vaade
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.45;">
+                <div class="perspective-card-desc">
                     0 topeltandmesisestust (1 ühine andmebaas). 30-päevane turvaline tagasipöördumise nupp vanasse vormi, 1-kliki tagasiside andmine ja 1-kliki Excel eksport.
                 </div>
             </div>
 
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                <div style="font-weight: 700; color: #f59e0b; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <div class="perspective-card">
+                <div class="perspective-card-title text-accent-warning" style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>🤝</span> Tiimiliikme &amp; Töörahu vaade
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.45;">
+                <div class="perspective-card-desc">
                     5 DB arendajat + 3 analüütikut + 1 kogenud Java konsultant. Java ekspert hoiab töös batch-portaali (vabastades DB tiimi 100% Formsile) ja ehitab hiljem mikroteenuseid. 60/40 koormusreegel ja Forms feature freeze.
                 </div>
             </div>
 
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                <div style="font-weight: 700; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <div class="perspective-card">
+                <div class="perspective-card-title text-accent-sky" style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>🏛️</span> Ettevõtte Arhitekti (EA) vaade
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.45;">
+                <div class="perspective-card-desc">
                     Oracle Database@Azure (ODSA) tagab 100% pilvevalmiduse ilma koodi ümberkirjutamata. ORDS kui ametlik OpenAPI 3.0 (Swagger) kataloogi API värav.
                 </div>
             </div>
 
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                <div style="font-weight: 700; color: #ec4899; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <div class="perspective-card">
+                <div class="perspective-card-title text-accent-pink" style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>📋</span> Tiimijuhi &amp; PM-i vaade
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.45;">
+                <div class="perspective-card-desc">
                     Range ulatuse kontroll (0 äriprotsesside ümberdisaini 1. faasis). 2-nädalased sprindid, 1. kuu varajane demo ja läbipaistev burndown juhtpaneel.
                 </div>
             </div>
 
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                <div style="font-weight: 700; color: #10b981; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <div class="perspective-card">
+                <div class="perspective-card-title text-accent-emerald" style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>💼</span> Juhtkonna (C-Level) vaade
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.45;">
+                <div class="perspective-card-desc">
                     Äririskide täielik maandamine, 0€ lisalitsentsi, talitluspidevus ja kirjalik Forms feature freeze direktiiv meeskonna kaitseks.
                 </div>
             </div>
 
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                <div style="font-weight: 700; color: #6366f1; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <div class="perspective-card">
+                <div class="perspective-card-title text-accent-indigo" style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>🧙‍♂️</span> Forms &amp; APEX Guru reeglid
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.45;">
+                <div class="perspective-card-desc">
                     Optimistlik lukustus (Lost Update Protection) asendab SELECT FOR UPDATE. Trigerite de-chattifitseerimine ja natiivne Interactive Grid master-detail.
                 </div>
             </div>
 
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
-                <div style="font-weight: 700; color: #06b6d4; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <div class="perspective-card">
+                <div class="perspective-card-title text-accent-cyan" style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>🤖</span> AI &amp; APEXlang Guru printsiibid
                 </div>
-                <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.45;">
+                <div class="perspective-card-desc">
                     Kaudne generatsioon ("genereeri ainult seda, mida soovid ise omada"). Ametlik EBNF grammatika (GBNF), SQLcl MCP skeemitõde ja Git diff kontroll.
                 </div>
             </div>
@@ -1570,52 +1566,52 @@ flowchart TB
 
     <!-- 30-DAY ACTION PLAN TABLE -->
     <div>
-        <h3 style="font-size: 1.1rem; color: #38bdf8; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
+        <h3 class="forms-summary-section-title">
             <span>🏁</span> 30 Päeva Stardi Tegevuskava (Nädalate Lõikes)
         </h3>
         <div style="overflow-x: auto;">
-            <table class="services-table" style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
+            <table class="services-table forms-matrix-table" style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
                 <thead>
-                    <tr style="background: rgba(15, 23, 42, 0.9);">
-                        <th style="padding: 10px 14px; text-align: left; color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.1); width: 120px;">Aeg</th>
-                        <th style="padding: 10px 14px; text-align: left; color: #38bdf8; border-bottom: 1px solid rgba(255,255,255,0.1);">Põhitegevused &amp; Verstapostid</th>
-                        <th style="padding: 10px 14px; text-align: left; color: #4ade80; border-bottom: 1px solid rgba(255,255,255,0.1);">Oodatav Tulemus &amp; Artefakt</th>
+                    <tr>
+                        <th class="forms-matrix-th-metric" style="width: 120px;">Aeg</th>
+                        <th class="forms-matrix-th-metric">Põhitegevused &amp; Verstapostid</th>
+                        <th class="forms-matrix-th-apex">Oodatav Tulemus &amp; Artefakt</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="padding: 10px 14px; font-weight: 700; color: #f8fafc; border-bottom: 1px solid rgba(255,255,255,0.05);">Nädal 1</td>
-                        <td style="padding: 10px 14px; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td class="forms-matrix-td-metric">Nädal 1</td>
+                        <td class="forms-matrix-td-neutral">
                             Ametliku CI/CD konveieri seadistamine (SQLcl Project + Liquibase changelogid + Git repo). Forms feature freeze direktiivi allkirjastamine.
                         </td>
-                        <td style="padding: 10px 14px; color: #86efac; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td class="forms-matrix-td-apex">
                             Töötav <code>test-local-ci.sh</code> simulatsioon, Git branchimine ja selge mandaat.
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px 14px; font-weight: 700; color: #f8fafc; border-bottom: 1px solid rgba(255,255,255,0.05);">Nädal 2</td>
-                        <td style="padding: 10px 14px; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td class="forms-matrix-td-metric">Nädal 2</td>
+                        <td class="forms-matrix-td-neutral">
                             Esimese pilootvormi valik (Tier A aruanne). FMB XML dekonstrueerimine APEXlang DSL-iks, lehe genereerimine ja import DEV keskkonda.
                         </td>
-                        <td style="padding: 10px 14px; color: #86efac; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td class="forms-matrix-td-apex">
                             Töötav APEXi interaktiivne aruanne, 1-kliki Excel eksport ja Entra ID SSO test.
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px 14px; font-weight: 700; color: #f8fafc; border-bottom: 1px solid rgba(255,255,255,0.05);">Nädal 3</td>
-                        <td style="padding: 10px 14px; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td class="forms-matrix-td-metric">Nädal 3</td>
+                        <td class="forms-matrix-td-neutral">
                             5 andmebaasiarendaja sisekoolitus (Oracle MyLearn APEX Developer kursus). SQLcl MCP serveri ja Copilot integratsiooni häälestus töökohtadel.
                         </td>
-                        <td style="padding: 10px 14px; color: #86efac; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td class="forms-matrix-td-apex">
                             Arendajatel on töölaual AI Vibe-Coding valmidus ja ühtsed standardid.
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding: 10px 14px; font-weight: 700; color: #f8fafc; border-bottom: 1px solid rgba(255,255,255,0.05);">Nädal 4</td>
-                        <td style="padding: 10px 14px; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td class="forms-matrix-td-metric">Nädal 4</td>
+                        <td class="forms-matrix-td-neutral">
                             Sprint 1 pidulik reaalajas demo juhtkonnale, ärianalüütikutele ja kasutajatele. Esimese 10 aruandevormi tootmisse viimine.
                         </td>
-                        <td style="padding: 10px 14px; color: #86efac; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td class="forms-matrix-td-apex">
                             Vankumatu usaldus juhtkonnas ja eduelamus kogu tiimis.
                         </td>
                     </tr>

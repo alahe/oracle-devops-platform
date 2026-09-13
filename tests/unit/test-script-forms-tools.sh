@@ -12,7 +12,7 @@ echo "🧪 UNIT TEST: Forms Developer Tools & APEX Migration Scripts"
 echo "=================================================================="
 
 # 1. Check syntax of all scripts
-for s in launch-builder.sh compile-form.sh form-to-xml.sh export-forms-for-apex.sh extract-forms-plsql.sh; do
+for s in launch-builder.sh compile-form.sh form-to-xml.sh export-forms-for-apex.sh extract-forms-plsql.sh test-fmb-xml-roundtrip.sh; do
   f="$PROJECT_ROOT/scripts/forms/$s"
   echo "▶️  Testing script existence and syntax: $s..."
   [ -f "$f" ] || { echo "❌ Faili $f ei leitud!"; exit 1; }
@@ -26,6 +26,7 @@ echo "▶️  Testing help options..."
 "$PROJECT_ROOT/scripts/forms/launch-builder.sh" --help >/dev/null
 "$PROJECT_ROOT/scripts/forms/compile-form.sh" --help >/dev/null
 "$PROJECT_ROOT/scripts/forms/form-to-xml.sh" --help >/dev/null
+"$PROJECT_ROOT/scripts/forms/test-fmb-xml-roundtrip.sh" --help >/dev/null
 
 # 3. Test XML conversion fallback
 TEMP_TEST_DIR=$(mktemp -d)

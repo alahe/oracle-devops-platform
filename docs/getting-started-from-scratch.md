@@ -144,7 +144,7 @@ Platform uses **Oracle SEPS (Secure External Password Store)** auto-login wallet
 ## 🔄 Managing Multi-Database Stacks
 
 The platform supports running **1, 2, or 3 database stacks concurrently**:
-- Starting a secondary stack (e.g. Blueprint 3 LIS Database or Blueprint 4 Analytics Publisher) **does not tear down your existing database**.
+- Starting a secondary stack (e.g. Blueprint 3 ALISE Database or Blueprint 4 Analytics Publisher) **does not tear down your existing database**.
 - The system automatically checks free host RAM before launching additional services to prevent out-of-memory container crashes.
 - Open **Juhtpaneel (Cockpit)** in Developer Hub to manage individual stacks, trigger instant Golden Snapshot recovery, or perform clean restarts.
 

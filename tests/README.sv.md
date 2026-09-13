@@ -41,7 +41,13 @@ För att köra tester från en ren startpunkt (med automatisk `reset-all.sh -y`)
 # 6. Integritetsgranskning av arkitekturritningar och profiler:
 ./tests/unit/test-blueprint-profiles-integrity.sh
 
-# 7. Rapport för kodbasstatistik och repository-mått:
+# 7. Granskning av databasprofilers och topologiers isolering (inga kollisioner):
+./tests/unit/test-database-profiles-isolation.sh
+
+# 8. Granskning av behållarnamnsisolering och förhindrande av delsträngar (Regel 15):
+./tests/unit/test-container-naming-isolation.sh
+
+# 9. Rapport för kodbasstatistik och repository-mått:
 ./tests/report-repo-stats.sh
 ```
 
@@ -53,3 +59,4 @@ Varje automatiserat test validerar:
 1. **🌐 HTTP-Hälsokontroll för Webbtjänster (`scripts/check-urls.sh`):** HTTP/HTTPS-status (200/302).
 2. **🔑 Lösenordsfria SEPS Wallet-Anslutningar (`scripts/check-wallet.sh`):** SQLcl-anslutningar utan lösenord.
 3. **📊 Prestandamätningar (Regel 1):** Tidsåtgång sparas i `metrics/setup_benchmarks.json`.
+4. **🛡️ Behållarnamnsisolering (Regel 15):** Exakt namnhantering förhindrar felaktiga delsträngsträffar mellan ritningar.

@@ -18,6 +18,7 @@ See kataloog sisaldab Oracle DevOps platvormi tehnilisi spetsifikatsioone, paiga
 | 🔄 **Konteineripiltide vahetamine** | [database-image-switching-guide.md](database-image-switching-guide.md) | FastStart kiirpildid, registripeeglid ja konteinerisisene lahtipakkimine. |
 | 🔄 **3-tasemeline elutsükkel ja hetktõmmised** | [devops-lifecycle-guide.md](devops-lifecycle-guide.md) | Kuldsete hetktõmmiste taastamine (~15s), RMAN varukoopiad ja katastroofijärgne taaste. |
 | 🧪 **Automaattestimine ja Dev Hub** | [testing-framework-and-devhub.md](testing-framework-and-devhub.md) | 160+ automaattesti, reaalajas kavandite valideerimine ja Dev Hubi arhitektuur. |
+| 🤖 **Copilot AI Assistent ja RAG** | [devhub-copilot-assistant.md](devhub-copilot-assistant.md) | Dev Hubi sisseehitatud AI abiline, Zero-Trust paroolide kaitse, võrguühenduseta tagavara ja VS Code sild. |
 | 🚀 **Kiirjuhend sisselogimiseks** | [quick-login-guide.md](quick-login-guide.md) | 1-kliki lõikelaua abivahendid, SEPS Wallet paroolide pärimine ja veebilingid. |
 | 📋 **Arhitektuursete kavandite maatriks** | [../config/blueprints/README.et.md](../config/blueprints/README.et.md) | 12 kanoonilise arhitektuurikavandi (0..11) võrdlus ja ressursinõuded. |
 | 🗄️ **Andmebaasi profiilid** | [db-profiles-and-topology.md](db-profiles-and-topology.md) | YAML profiilide hierarhia (`config/profiles/databases/`), mittepõrkuv portide topoloogia ja Reegel 11. |

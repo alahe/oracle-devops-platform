@@ -51,22 +51,47 @@ if ! grep -q "BLUEPRINTS_DATA = \[" "$TMP_OUT"; then
   exit 1
 fi
 
+# Verify Single Source of Truth Platform Version in Header and Footer (Rule 16)
+EXPECTED_VER="$(cat "$WORKSPACE_DIR/VERSION" 2>/dev/null || echo "2.3.0")"
+if grep -q "%PLATFORM_VERSION%" "$TMP_OUT"; then
+  echo "❌ Unrendered %PLATFORM_VERSION% token found in $TMP_OUT!"
+  rm -f "$TMP_OUT"
+  exit 1
+fi
+
+if ! grep -q "id=\"platform-global-version\">v${EXPECTED_VER}<" "$TMP_OUT"; then
+  echo "❌ Missing or mismatched platform-global-version in header (expected v${EXPECTED_VER})"
+  rm -f "$TMP_OUT"
+  exit 1
+fi
+
+if ! grep -q "id=\"footer-platform-version\"" "$TMP_OUT" || ! grep -q "v${EXPECTED_VER}" "$TMP_OUT"; then
+  echo "❌ Missing or mismatched footer-platform-version in footer (expected v${EXPECTED_VER})"
+  rm -f "$TMP_OUT"
+  exit 1
+fi
+echo "✅ Platform version v${EXPECTED_VER} verified in both header and footer!"
+
 # Verify embedded JavaScript syntax integrity (catches syntax errors, missing commas, unescaped strings)
 if command -v node >/dev/null 2>&1; then
   node -e "
     const fs = require('fs');
     const html = fs.readFileSync('$TMP_OUT', 'utf8');
-    const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>[\s\r\n]*<\/body>/);
-    if (!scriptMatch) {
+    const scriptMatches = [...html.matchAll(/<script(?:\s+[^>]*)?>([\s\S]*?)<\/script>/gi)]
+      .map(m => m[1].trim())
+      .filter(c => c.length > 0);
+    if (scriptMatches.length === 0) {
       console.error('❌ Error: Could not find embedded script block in $TMP_OUT');
       process.exit(1);
     }
     const tmpJs = '$TMP_OUT.check.js';
-    fs.writeFileSync(tmpJs, scriptMatch[1]);
-    try {
-      require('child_process').execSync('node --check ' + tmpJs, { stdio: 'pipe' });
-    } finally {
-      if (fs.existsSync(tmpJs)) fs.unlinkSync(tmpJs);
+    for (let i = 0; i < scriptMatches.length; i++) {
+      fs.writeFileSync(tmpJs, scriptMatches[i]);
+      try {
+        require('child_process').execSync('node --check ' + tmpJs, { stdio: 'pipe' });
+      } finally {
+        if (fs.existsSync(tmpJs)) fs.unlinkSync(tmpJs);
+      }
     }
   "
   echo "✅ Embedded JavaScript syntax validation passed (no SyntaxError)!"

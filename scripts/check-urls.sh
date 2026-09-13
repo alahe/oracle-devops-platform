@@ -114,7 +114,7 @@ for inst in $(get_active_db_instances 2>/dev/null); do
   fi
 done
 
-if is_ords_enabled || podman container exists app-ords 2>/dev/null; then
+if is_ords_enabled && { [ "$ANY_ORDS_ENABLED" = "true" ] || [ "${IS_ADB:-false}" = "true" ] || [ -n "${ORDS_PROFILE:-}" ]; }; then
   if podman container exists app-ords 2>/dev/null || [ "${PROFILE_ORDS_CONTAINER_REQUIRED:-true}" != "false" ]; then
     ords_h_port="${ORDS_HTTP_PORT:-${PROFILE_ORDS_HTTP_PORT:-8088}}"
     ords_s_port="${ORDS_HTTPS_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8448}}"
@@ -191,12 +191,10 @@ if is_forms_enabled || podman container exists app-forms 2>/dev/null; then
   URLS+=("Forms Builder GUI (noVNC)|http://localhost:${forms_builder_port}/vnc.html|")
   URLS+=("Forms WebLogic Console (HTTP)|http://localhost:${forms_admin_port}/console|")
   URLS+=("Forms Builder Web GUI (HTTP)|http://localhost:${forms_builder_port}/vnc.html|")
-elif curl -s -m 2 http://localhost:6082/vnc.html >/dev/null 2>&1; then
-  URLS+=("Developer Hub Web GUI (HTTP)|http://localhost:6082/vnc.html|")
 fi
 
 # 4. Web IDE URLs
-if is_web_ide_enabled || [ -n "$(podman ps -q --filter name=web-ide-dev 2>/dev/null)" ]; then
+if is_web_ide_enabled || is_container_running "web-ide-dev"; then
   web_ide_h_port="${WEB_IDE_HTTP_PORT:-8090}"
   web_ide_s_port="${WEB_IDE_HTTPS_PORT:-8450}"
   URLS+=("Web IDE (HTTP)|http://localhost:${web_ide_h_port}|")
@@ -206,7 +204,7 @@ if is_web_ide_enabled || [ -n "$(podman ps -q --filter name=web-ide-dev 2>/dev/n
 fi
 
 # 5. Publisher Designer URLs
-if is_publisher_designer_enabled || [ -n "$(podman ps -q --filter name=app-publisher-designer 2>/dev/null)" ]; then
+if is_publisher_designer_enabled || is_container_running "app-publisher-designer"; then
   designer_h_port="${PUBLISHER_DESIGNER_HTTP_PORT:-6083}"
   URLS+=("Publisher Designer GUI (noVNC)|http://localhost:${designer_h_port}/vnc.html|")
 fi
@@ -247,8 +245,9 @@ for item in "${URLS[@]}"; do
     BODY_OUTPUT=$(curl -s -k -L --noproxy "*" --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" "$url" 2>/dev/null || true)
     HTTP_CODE=$(curl -s -k -L --noproxy "*" --connect-timeout "${CURL_CONNECT_TIMEOUT}" --max-time "${CURL_MAX_TIME}" -o /dev/null -w "%{http_code}" "$url" 2>/dev/null | grep -E '^[0-9]{3}$' || echo "000")
 
-    # Check for valid HTTP code (1xx-4xx). HTTP 574 is a Database Credential Error and must NOT pass.
-    if [[ "$HTTP_CODE" =~ ^[1-4][0-9]{2}$ ]] && [ "$HTTP_CODE" != "574" ]; then
+    # Check for valid HTTP code (2xx, 3xx, or 401/403 for protected basic-auth consoles).
+    # HTTP 404 (Not Found) and 5xx (or 574 DB error) must NOT pass.
+    if { [[ "$HTTP_CODE" =~ ^[2-3][0-9]{2}$ ]] || [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "403" ]; } && [ "$HTTP_CODE" != "574" ]; then
       # If pattern check is required
       if [ -n "$pattern" ]; then
         if [[ "$pattern" == "!"* ]]; then

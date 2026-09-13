@@ -118,7 +118,7 @@ This document consolidates the **implementation audit (Status Verification)** of
 - **Status:** **✅ COMPLETED & VALIDATED**
 - **Description:** Implemented hybrid Option C double-stream logging (`print_step_progress`) and unbuffered streaming filter (`sed -u -E`), providing live second counters without polluting disk logs with `\r` control characters.
 
-### 1.16 LIS Enterprise Topology (4-Tier Architecture)
+### 1.16 ALISE Enterprise Topology (4-Tier Architecture)
 - **Status:** **✅ COMPLETED & VALIDATED**
 - **Description:** Standard enterprise 4-tier model (`db-publisher` metadata + `db-proxy` APEX/SSO gateway + `db-alise` isolated core DB + `app_ords` multi-pool ORDS gateway + `app_publisher` BI Publisher).
 

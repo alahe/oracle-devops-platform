@@ -74,7 +74,7 @@ if ! podman image exists "$FORMS_IMAGE" 2>/dev/null; then
 fi
 
 # Step 3: Start app-forms container
-NET_NAME=$(podman inspect "db-forms" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || podman inspect "db-proxy" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || podman inspect "db-lis" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || echo "")
+NET_NAME=$(podman inspect "db-forms" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || podman inspect "db-proxy" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || podman inspect "db-alise" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || echo "")
 NET_ARG=""
 [ -n "$NET_NAME" ] && NET_ARG="--network $NET_NAME"
 
@@ -97,6 +97,8 @@ TNS_VOL=""
 [ -d "$WORKSPACE_DIR/config/tns_admin" ] && TNS_VOL="-v $WORKSPACE_DIR/config/tns_admin:/u01/oracle/tns_admin:ro"
 HUB_VOL=""
 [ -f "$WORKSPACE_DIR/docs/dev-hub.html" ] && HUB_VOL="-v $WORKSPACE_DIR/docs/dev-hub.html:/u01/oracle/dev-hub.html:ro"
+CONV_VOL=""
+[ -f "$WORKSPACE_DIR/scripts/internal/forms_xml_converter.py" ] && CONV_VOL="-v $WORKSPACE_DIR/scripts/internal/forms_xml_converter.py:/u01/oracle/bin/forms_xml_converter.py:ro"
 
 podman run -d \
   --name "$FORMS_CONTAINER" \
@@ -111,6 +113,7 @@ podman run -d \
   -v "$WORKSPACE_DIR/docker/forms/dockerfiles/14.1.2/createAndStartFormsDomain.sh:/u01/createAndStartFormsDomain.sh:ro" \
   $TNS_VOL \
   $HUB_VOL \
+  $CONV_VOL \
   --entrypoint "/bin/bash" \
   "$FORMS_IMAGE" /u01/createAndStartFormsDomain.sh >/dev/null 2>&1 || true
 

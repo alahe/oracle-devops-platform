@@ -41,7 +41,13 @@ To run automated blueprint tests from a clean baseline (with automatic `reset-al
 # 6. Architecture Blueprints & Profiles Integrity Audit:
 ./tests/unit/test-blueprint-profiles-integrity.sh
 
-# 7. Repository Statistics & Codebase Metrics Report:
+# 7. Database Profiles & Topology Isolation Audit:
+./tests/unit/test-database-profiles-isolation.sh
+
+# 8. Container Naming Isolation & Substring Prevention Audit (Rule 15):
+./tests/unit/test-container-naming-isolation.sh
+
+# 9. Repository Statistics & Codebase Metrics Report:
 ./tests/report-repo-stats.sh
 ```
 
@@ -53,3 +59,4 @@ Every automated test run validates:
 1. **🌐 Web Endpoints HTTP Health (`scripts/check-urls.sh`):** Real HTTP/HTTPS requests verifying status 200/302.
 2. **🔑 SEPS Wallet Passwordless Connectivity (`scripts/check-wallet.sh`):** Passwordless SQLcl connection checks (`SELECT status FROM v$instance`).
 3. **📊 Resource & Duration Benchmarks (Rule 1):** Measurement of step durations saved in `metrics/setup_benchmarks.json`.
+4. **🛡️ Container Naming & Substring Isolation (Rule 15):** Exact container name matching preventing false positives across overlapping blueprint names.

@@ -1,6 +1,6 @@
 ---
 name: devhub_architecture
-description: Guidelines for Developer Hub (dev-hub.html / dev-blue.html) modular SPA architecture, Single Source of Truth, Zero-Trust SEPS Wallet, 6-language i18n, and compiler boundaries.
+description: Guidelines for Developer Hub (dev-hub.html / dev-blue.html) modular SPA architecture, Single Source of Truth, Zero-Trust SEPS Wallet, 6-language i18n, dark/light dual-theme support (dark default), and compiler boundaries.
 ---
 
 # Developer Hub SPA Architecture & Invariants
@@ -117,6 +117,62 @@ Card action buttons (`▶️ Start Service`, `⏹️ Stop Service`) and stack sw
 - **Offline Pre-Embedding (Instant UX):** All 22 YAML profiles (`window.PROFILES_DATA`) and 12 blueprints (`window.BLUEPRINTS_DATA`) are pre-compiled directly into `dev-hub.html` with full content and metadata. The profile manager and blueprint viewer render immediately from in-memory cache upon opening. Even if the bridge daemon is stopped, users can browse, inspect, and copy all configurations in read-only mode.
 - **Strict Variable Scoping:** State variables (`CURRENT_PROFILE_PATH`, `CURRENT_BP_PATH`, `CACHED_PROFILES`, `CACHED_BLUEPRINTS`) must be cleanly declared with `let` to guarantee zero `ReferenceError` crashes across browsers.
 
+### 4.9 Zero-Trust Web Authentication Relay Engine (Rule 5)
+For complex enterprise portals (such as Oracle Analytics Publisher / WebLogic) where query-string authentication is prohibited or unsupported:
+- **Relay Endpoint (`/api/publisher/open?user=<role>`):** The client opens the bridge relay endpoint in a new tab. The bridge extracts credentials strictly in-memory from the SEPS Wallet (`get-password.sh <ALIAS>`) and renders an auto-submitting POST form targeting `http://localhost:9502/xmlpserver/login.jsp`.
+- **Session Stickiness Resolution:** To prevent WebLogic from reusing a previously active session (e.g. `bip_admin`) when switching to `bip_developer` or `bip_user`, the Bridge sends immediate session-expiration headers:
+  `Set-Cookie: JSESSIONID=deleted; Path=/xmlpserver; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax`.
+- **Card-Level Sign-Out Control:** Cards for stateful middleware provide a direct `🚪 Sign Out (Puhasta sessioon)` link to the vendor logout servlet (`/xmlpserver/signout.jsp`).
+
+### 4.10 Mandatory Platform Version Bumping & Header/Footer Visibility Contract (Rule 16)
+- **Single Source of Truth (`VERSION`):** The repository root `VERSION` file is the sole authoritative definition of the platform version.
+- **Mandatory Bump on Code Changes:** Whenever code changes, bug fixes, UI improvements, or scripts are committed, the version in `VERSION` MUST be bumped (semver).
+- **Dual Visual Visibility:** The version MUST be visibly rendered in both:
+  1. Sticky Navigation Header (`#platform-global-version`): `🚀 Oracle DevOps Platform • v<VERSION>`
+  2. Platform Footer (`#footer-platform-version`): `© 2026 Oracle DevOps Platform • v<VERSION>`
+- **Live Bridge Lockstep:** `dev-hub-bridge.py` dynamically reads `VERSION` on `/api/version` and `/api/health`, preventing any version drift between the backend bridge and client UI.
+- **Eliminating Stale Cache Testing:** If a developer or user opens Dev Hub and observes an outdated version in either the header or footer, it immediately flags that the browser or ORDS/Jetty is serving a cached build, prompting a hard refresh (Ctrl+F5 / Cmd+Shift+R).
+
+### 4.11 DevOps Management Tab & Docked Terminal Contract (ADR 0017)
+- **Separation of Concerns:** `⚡ DevOps` tab is strictly for platform lifecycle, configuration, and tools. All CI test suites belong exclusively to `🧪 Testimine`.
+- **Log Streaming:** Execution logs stream into the Docked Terminal Drawer (`#devops-docked-terminal`) with DOM ring-buffer (1500 lines) and `⏱️` timer. Cards show only a compact status strip.
+- **Safety & Mutex:** Destructive commands (`reset-all --system`) require 2-step confirmation. Concurrent long-running operations are rejected with HTTP 409.
+- **AI Remediation:** Failed commands link to Copilot/Antigravity via `askAiAboutTerminalError()`.
+- **Full Architecture & Business Rationale:** [`docs/adr/0017-devops-tab-ux-and-docked-terminal.md`](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/adr/0017-devops-tab-ux-and-docked-terminal.md) and [`docs/specs/devops-management-portal-spec.md`](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-management-portal-spec.md).
+
+### 4.12 Dual-Theme Support (Dark & Light) & Dark-First Default Invariant
+- **Mandatory Dual-Theme Architecture:** Developer Hub (`docs/dev-hub.html` and `docs/dev-blue.html`) MUST provide first-class, seamless support for both **Dark Theme (`[data-theme="dark"]`)** and **Light Theme (`[data-theme="light"]`)**.
+- **Dark-First Default Invariant (Mandatory Initial Choice):**
+  - The default, out-of-the-box theme for all users and fresh browser sessions MUST ALWAYS be **Dark Theme** (`data-theme="dark"`).
+  - If no explicit user preference is stored in `localStorage.getItem('dev_hub_theme')`, the application automatically defaults to Dark Theme.
+  - Flash-of-Unstyled-Theme (FOUT) is prevented via an immediate synchronous script in `<head>`.
+- **Theme Switching & Shortcuts:**
+  - Fast 1-click theme toggle button (`#theme-toggle-btn`) in the sticky navigation header toggles between Dark (`🌙`) and Light (`☀️`) modes with smooth transitions.
+  - Global keyboard shortcut **`Alt+T`** instantly toggles the active theme.
+  - State is persisted across browser reloads via `localStorage.setItem('dev_hub_theme', theme)`.
+- **Zero Dark Regression Guarantee:**
+  - Dark mode styles must remain 100% pristine, high-contrast, and unaltered when introducing or refining light theme styles.
+- **Dark Console Invariant (Mandatory Terminal Protection):**
+  - Terminal output containers, execution logs, and CLI consoles (`#terminal-output`, `.devops-docked-terminal`, `.embedded-terminal-container`, `#report-console-pre`, `#bp-config-editor-textarea`) MUST remain strictly dark (`#030712` background, `#f8fafc` text) across ALL themes, preserving developer terminal ergonomics.
+- **Light Theme Contrast & Zero Black Boxes Contract (WCAG AAA):**
+  - In light theme (`[data-theme="light"]`), all non-terminal components (cards, modals, tabs, tables, toolbars) must render on clean, polished surfaces (`--surface: #ffffff`, `--bg: #f8fafc`) with WCAG AAA compliant text contrast (`#0f172a` headings/bold, `#334155` body text, `#475569` labels).
+  - Hardcoded dark slate or black boxes (`rgba(15, 23, 42, ...)` or `#0f172a`) are strictly prohibited in light mode UI elements (such as modal tabs, filter toolbars, and card backgrounds).
+  - Text selection (`::selection`) must provide high-contrast styling (Sky Blue `#0284c7` background with pure white `#ffffff` text).
+
+### 4.13 Mandatory Dual-Mode (Dark & Light) Invariant for New Pages & Components
+Whenever any new page, tab, sub-tab, modal, card, or UI component is created or modified in Developer Hub:
+- **Simultaneous Dual-Mode Delivery (Mandatory):** Both Dark Mode and Light Mode styles MUST be authored, tested, and validated simultaneously within the exact same workflow cycle. Delivering a feature only in Dark Mode or only in Light Mode is strictly prohibited.
+- **Strict Text Contrast Standards (WCAG 2.1 AA $\ge 4.5:1$):**
+  - In Light Mode, text on white/light surfaces MUST use dark, high-contrast colors (`#0f172a`, `#1e293b`, or `#334155`). Low-contrast light-gray text (e.g. `#cbd5e1`, `#94a3b8`) on white surfaces is strictly prohibited.
+  - In Dark Mode, text on dark surfaces MUST use crisp light colors (`#f8fafc`, `#e2e8f0`, or `#cbd5e1`).
+- **Button & Visual Hierarchy Discipline:**
+  - Solid saturated primary color (`var(--primary)` / `#0284c7`) is strictly reserved for the single primary focal action on a screen/modal (e.g., "Save Profile", "Deploy").
+  - Repeated card buttons in grids (such as skill cards, blueprint cards, DevOps cards) MUST use neutral secondary or outline styles (`background: #ffffff; border: 1px solid #cbd5e1; color: #334155;`) with gentle hover accents, preventing an overwhelming sea of solid blue boxes.
+- **Active State Selection Discipline:**
+  - Active selection in lists (log files, YAML profiles, blueprint trees) MUST use modern subtle accents (e.g. `border-left: 3.5px solid var(--primary); background: #f0f9ff; color: #0369a1;`) instead of thick, opaque 4-sided blue boxes.
+- **Automated Verification:**
+  - Every component and theme change MUST be verified by `./tests/unit/test-devhub-theme-modes.sh`.
+
 ---
 
 ## 5. Operational Playbooks & Step-by-Step Execution
@@ -155,6 +211,9 @@ curl -s http://localhost:8089/api/health | jq .
 - ❌ **No Dead Code Accumulation:** When removing UI sections, prune unused CSS classes and unused i18n dictionary keys across all 6 languages.
 - ❌ **No Third-Party Python Dependencies:** Use only Python 3 standard library (`os`, `sys`, `json`, `re`, `pathlib`, `glob`, `datetime`, `subprocess`) plus `yaml` (PyYAML). Do not introduce Jinja2 or external build tools.
 - ❌ **No Blocking Synchronous Calls on Long Tasks:** Never run cold setups or migrations synchronously in browser requests.
+- ❌ **No Single-Theme Features:** Never deliver new tabs, modals, or components that only support Dark Mode or only support Light Mode. Both themes must be fully authored and validated simultaneously with WCAG 2.1 AA compliant contrast.
+- ❌ **No Indiscriminate Solid Primary Buttons:** Never apply solid primary button styling (`background: var(--primary) !important`) across all `.btn` elements or repeat solid buttons on every card in a large grid.
+- ❌ **No Low-Contrast Inline Colors in JavaScript:** Never hardcode low-contrast text colors (e.g., `color: #cbd5e1` or `#38bdf8`) inline in DOM generators when rendered on white/light surfaces.
 
 ---
 

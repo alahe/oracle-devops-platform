@@ -153,7 +153,7 @@
 
 ### Oracle Architecture Center Technology Catalog `[Architecture Center]`
 - **Description:** Curated catalog of reference architectures, blueprints, deployment topologies, and enterprise solution playbooks.
-- **Project Role:** Architectural alignment for hybrid cloud, multi-database LIS topology, and zero-trust deployments.
+- **Project Role:** Architectural alignment for hybrid cloud, multi-database ALISE topology, and zero-trust deployments.
 - **Official Link:** [https://apexadb.oracle.com/ords/r/tech/catalog/home](https://apexadb.oracle.com/ords/r/tech/catalog/home)
 
 ### Oracle Forms 14c (14.1.2) Documentation `[Technical Docs]`

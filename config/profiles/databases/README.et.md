@@ -8,7 +8,7 @@ See kataloog sisaldab domeenipõhiselt isoleeritud YAML profiile **Oracle andmeb
 
 | Profiili Fail | Kirjeldus | DB Tüüp | Wallet Nõutud | Kasutusvaldkond |
 | :--- | :--- | :--- | :--- | :--- |
-| **`db-alise-oracle.yaml`** | Ärirakenduste põhibaasi ametlik Oracle 23ai Free profiil | `standard` | Jah | Ärirakenduste põhibaasi LIS |
+| **`db-alise-oracle.yaml`** | Ärirakenduste põhibaasi ametlik Oracle 23ai Free profiil | `standard` | Jah | Ärirakenduste põhibaas ALISE |
 | **`db-proxy-oracle.yaml`** | APEX Proxy ja SSO turvavärav ametlikul Oracle 23ai Free | `standard` | Jah | APEX Proxy ja SSO lüüs |
 | **`db-proxy-standalone.yaml`** | Eraldiseisev APEX Proxy isoleeritud pordil 1537 | `standard` | Jah | Spetsiaalne SSO värav |
 | **`db-gvenzl.yaml`** | Gerald Venzl 23c kogukonnamootor | `standard` | Jah | Jõudlustestid ja kiirstart |

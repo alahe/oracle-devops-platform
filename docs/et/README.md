@@ -157,6 +157,7 @@ Dev Hub toimib tervikliku juhtpaneelina teenuste ja blueprintide haldamiseks:
 - **1-Kliki Parooli Kopeerimine:** Paroolid dekrüpteeritakse vajaduspõhiselt otse mälus Oracle SEPS Walletist.
 - **ORDS Nutivärava Paneel:** Reaalajas ülevaade keskse ORDS konteineri tervisest, dünaamilistest ühenduste poolidest, reageerimisajast (ms) ja 1-kliki sünkroonimisest.
 - **Automaattestimise Keskus & Kvaliteedivärav (🧪 Testimine):** Interaktiivne testikomplektide käivitaja (Unit, Integration, Live Platform, i18n Pariteet, Failinimede Portatiivsus), sisseehitatud reaalajas terminalivoog (ilma blokeerivate hüpikakendeta), Markdown testiaruannete kahepaaniline lugeja, koodikaetuse sirvija ja püsiv käivituste ajalugu. Vaata [docs/et/testing-framework-and-devhub.md](testing-framework-and-devhub.md).
+- **GitHub Copilot AI Assistent & Nutikas RAG (⌘J / Ctrl+J):** Sisseehitatud AI abiline Reegel 5 Zero-Trust paroolide peitmisega, 3-tasemelise võrguühenduseta tagavaraga, platvormi teadmusbaasiga ja 1-kliki üleminekuga VS Code Copilot Chati. Vaata [docs/et/devhub-copilot-assistant.md](devhub-copilot-assistant.md).
 
 ---
 
@@ -195,6 +196,31 @@ Kõik credentials-andmed genereeritakse krüptograafiliselt ja talletatakse turv
 # Ühendu andmebaasiga SQLcl kaudu ILMA parooli sisestamata:
 sql /@DB_ALISE_DEV
 ```
+
+---
+
+## 🏭 Spetsifikatsioonipõhine Arendus (SDD), SCS ja Agentne Konveier
+
+Selleks, et liikuda katselisest *vibe codingust* **deterministliku ja toodangukõlbliku (viable) koodini**, järgib platvorm ühtset arhitektuuristandardit kolmelt tarkvarajuhilt:
+
+1. **Julian Wood (AWS) — Spetsifikatsioonipõhine Arendus (SDD):**
+   - Spetsifikatsioon eelneb koodile: iga süsteemipiir omab kanoonilist trioodi kaustas `docs/specs/<domain>/` (`requirements.md`, `design.md`, `tasks.md`).
+   - **Teostuseelne Vastuolude Analüüs (Reegel 17):** Vastuolulised lipud (nt `-s` snapshot restore vs `--fresh` puhas ehitus) lahendatakse enne koodi kirjutamist.
+   - Nõuded on seotud 1:1 konkreetsete teostusülesannetega läbi range **Jälgitavuse maatriksi (Traceability Matrix)**.
+2. **Simon Martinelli — Isehalduslikud Süsteemid (SCS) ja AI Kontekstiökonoomika:**
+   - **David Parnas (1972) Modulariseerimine:** Mikroteenuste killustatuse asemel vertikaalsed isehalduslikud süsteemid (UI + Loogika + Andmed).
+   - **Oracle Pluggable Databases (PDB-d) kui Ülim SCS:** PDB-d tagavad täieliku andmesuveräänsuse ja eraldatuse ühe kerge konteineri ressursijalajäljega.
+   - **Kontekstiakna Eelarvestamine:** Spetsifikatsioonid hoitakse alla 300–500 rea, võimaldades AI-l laadida kogu vertikaalse viilu ühte kontekstiaknasse.
+3. **Thomas Dohmke (Entire.io / ex-GitHub CEO) — Agentne Konveier (Agentic Assembly Line):**
+   - **Kavatsusepõhine Arendus (Intent-Driven):** Arendaja juhib kavatsust; AI-agendid teostavad ülesandeid autonoomsetes **Ralph Loop** tsüklites (testi-lapi-verifitseeri kuni kood 0).
+   - **Institutsionaalne Mälu Git-is (`.agents/trails/`):** Agendi seansilogid ja disainiotsused talletatakse Gitis, välistades konteksti kadumise sessioonide vahel.
+   - **5 Kvaliteediväravat (Release Gates):** Iga muudatus peab läbima Turvalisuse (Reegel 5 Zero-Trust), Funktsionaalsuse (Reegel 17), 6-keelse Sümmeetria (Reegel 9), Porditavuse (Reegel 13) ja Jõudluse (Reegel 1).
+
+Käivita automatiseeritud spetsifikatsioonide audit igal ajal:
+```bash
+./tests/unit/test-spec-traceability.sh
+```
+Vaata täielikku [Spetsifikatsioonipõhise Arenduse ja Agendikonveieri Juhendit](spec-driven-development-and-assembly-line.md).
 
 ---
 
@@ -265,6 +291,7 @@ Oracle Free DB in Prod sisaldab **kuldsnapshottide mootorit**, mis vähendab taa
 
 ## 📑 Spetsiaalsed juhendid
 
+- 📋 **[docs/spec-driven-development-and-assembly-line.md](../../docs/spec-driven-development-and-assembly-line.md) | [docs/et/spec-driven-development-and-assembly-line.md](spec-driven-development-and-assembly-line.md):** **Spetsifikatsioonipõhine Arendus (SDD), SCS & Agentne Konveier** — Julian Woodi, Simon Martinelli ja Thomas Dohmke standard, spetsifikatsioonitrioodid kaustas `docs/specs/`, Ralph Loops ja seansirajad (`.agents/trails/`).
 - 🏛️ **[docs/enterprise-distributed-architecture.md](../../docs/enterprise-distributed-architecture.md) | [docs/et/enterprise-distributed-architecture.md](enterprise-distributed-architecture.md):** **Ettevõtteklassi Hajutatud Multi-Host Arhitektuur** — 4-kihiline finantsarhitektuur (ORDS, Publisher, Proxy DB, Publisher DB), olemasoleva äri-DB ühendamine ja PROD Active/Standby avariitaaste (RTO < 60s, RPO < 15m).
 - 🛡️ **[docs/security-audit-report.md](../../docs/security-audit-report.md) | [docs/et/security-audit-report.md](security-audit-report.md):** **Ettevõtteklassi Turvaauditi Aruanne & Hardening** — Automaatne 7-tasandiline turvaskänner (`test-security-audit.sh`), OWASP Top 10, CIS Benchmark ja DORA vastupidavus.
 - 📋 **[docs/backlog/README.md](../../docs/backlog/README.md):** **Finantsettevõtte Jira Backlog** — 11 tootmisvalmis Jira storyt (62 SP) hajutatud paigalduse, multi-pooli ja avariitaaste jaoks.

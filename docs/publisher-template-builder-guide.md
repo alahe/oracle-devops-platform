@@ -389,3 +389,27 @@ sequenceDiagram
     deactivate GHA
 ```
 
+### 9.5 Automated E2E Test & Verification Pipeline (`test-deploy-verify-e2e.sh`)
+
+To guarantee that template changes deploy and render accurately on the official server, the platform provides an automated end-to-end verification pipeline:
+
+```bash
+# Basic run with automatic dynamic token injection (Blueprint 5 required):
+./scripts/publisher/test-deploy-verify-e2e.sh
+
+# Run against a specific report and search for expected custom text:
+./scripts/publisher/test-deploy-verify-e2e.sh Custom/Invoices/Invoice_Report "Nordic Innovation AS"
+
+# Automatic switch to Blueprint 5 if not currently active:
+./scripts/publisher/test-deploy-verify-e2e.sh --auto-switch
+```
+
+#### Key Quality Gates & Validations:
+1. **Blueprint 5 Pre-flight Check:** Validates that Blueprint 5 (`app-publisher` on ports 9500/9502) is running and healthy.
+2. **Path Traversal Protection (CWE-22):** Validates report paths within the workspace.
+3. **Dynamic Token / Content Assertion:** Injects a unique timestamped token into `sample_data.xml`, packages the `.xdmz` and `.xdoz`, deploys to Publisher via REST, executes the report via `POST /reports/{path}/run`, downloads the PDF, and asserts token existence via Python `pypdf`.
+4. **Integrated PDF/UA-1 Accessibility Quality Gate:** Automatically runs `validate-pdf-accessibility.sh` to verify zero critical accessibility errors.
+5. **Rule 7 Clickable Output:** Outputs clickable links to the source RTF (`file://...`), generated PDF (`file://...`), and Publisher Web Portal (`http://localhost:9502/...`).
+6. **Dev Hub Report Lab Integration:** 1-click execution via the `🧪 Käivita E2E Test & Kontroll` button in the Report Lab modal.
+
+

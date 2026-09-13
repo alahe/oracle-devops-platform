@@ -27,7 +27,7 @@ Salasanojen etsimisen tai ruudulta kirjoittamisen sijaan voit kopioida salasanat
 | **🛠️ APEX Builder** | [Avaa APEX-Työtila](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in) | Työtila: `PROXY_WORKSPACE`<br/>Käyttäjä: `DEV` | `./scripts/get-password.sh DB_PROXY_DEV -c` |
 | **⚙️ APEX Instance Admin** | [Avaa APEX Admin](https://localhost:8448/ords/proxy/apex_admin) | Työtila: `INTERNAL`<br/>Käyttäjä: `ADMIN` | `./scripts/get-password.sh DB_PROXY_APEX_ADMIN -c` |
 | **📊 Database Actions (SDW)** | [Avaa SQL Developer Web](https://localhost:8448/ords/proxy/sql-developer) | Skeema / Käyttäjä: `USER_DEVELOPER` | `./scripts/get-password.sh DB_PROXY_DEV -c` |
-| **📑 Analytics Publisher** | [Avaa Analytics Publisher](http://localhost:9502/xmlpserver) | Käyttäjä: `weblogic` | `./scripts/get-password.sh DB_PUBLISHER_SYS -c` |
+| **📑 Analytics Publisher** | [1-Klikkauksen Automaattikirjautuminen (bip_developer)](http://localhost:8089/api/publisher/open?user=bip_developer)<br/>CLI: `./scripts/publisher/open-publisher.sh` | Käyttäjä: `bip_developer`<br/>Käyttäjä: `bip_user`<br/>Admin: `weblogic` | 1-Klikkauksen Auto-POST Bridgen kautta<br/>*(Varatoimi: `./scripts/get-password.sh PUBLISHER_DEVELOPER -c`)* |
 | **📐 Forms 14c Services** | [Avaa Forms-Testilomake](http://localhost:9001/forms/frmservlet?form=test.fmx) | Runtime / `test.fmx` | Ei vaadita |
 | **🎨 Forms Builder GUI** | [Avaa Forms Builder Web GUI](http://localhost:6082/vnc.html) | HTML5 noVNC -asiakas | Ei vaadita |
 | **💻 VS Code Web IDE** | [Avaa Web IDE](http://localhost:8090/?folder=/workspace) | Käyttäjä: `developer` | Ei vaadita (Salasanaton) |

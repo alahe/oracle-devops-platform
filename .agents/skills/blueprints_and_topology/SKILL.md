@@ -36,12 +36,12 @@ The platform architecture is structured around **12 pure modular building blocks
 
 ```mermaid
 flowchart TD
-    subgraph Core ["🛡️ PROTECTED CORE BASE (Always Active)"]
+    subgraph Core ["🛡️ FOUNDATIONAL BASE (BP 0)"]
         BP0["BP 0: Central Proxy & ORDS<br/>db-proxy (:1532) + app-ords (:8088/:8448)"]
-        BP1["BP 1: Standalone ALISE DB<br/>db-alise (:1533, PDB ALISEPDB)"]
     end
 
     subgraph LocalModules ["🧩 ON-DEMAND LOCAL MODULES (0 MB Idle RAM)"]
+        BP1["BP 1: Standalone ALISE DB (:1533)"]
         BP2["BP 2: Standalone Proxy DB & SSO (:1532)"]
         BP3["BP 3: Alternate Gvenzl DB (:1533)"]
         BP4["BP 4: Cloud Autonomous DB (mTLS)"]
@@ -80,13 +80,13 @@ flowchart TD
 
 ---
 
-## 2. Protected Core Base & Dynamic On-Demand Control
+## 2. Primary Base Blueprint (BP 0) & On-Demand Module Control
 
-To prevent high RAM consumption and container proliferation, the platform operates on two operational tiers:
+To prevent excessive RAM consumption and container sprawl while giving developers total operational flexibility:
 
-1. **Protected Core Base (`db-alise` + `app-ords`):**
-   - Must remain active during regular development.
-   - Accidental termination via `./scripts/module-toggle.sh stop alise` or `stop ords` is **strictly blocked** by the Core Protection contract.
+1. **Primary Base Blueprint (#0: `db-proxy` + `app-ords`):**
+   - **Foundational Base:** Blueprint 0 is the primary base blueprint required for running the platform (Central ORDS Gateway, APEX Proxy, Dev Hub portal).
+   - **Developer Choice & Autonomy:** While recommended as the shared gateway for local development, **the developer always retains full control** to stop, pause, or reset it at any time (`./scripts/reset-all.sh`, `./scripts/deploy-blueprint.sh --replace`, or `podman stop`). No rigid or artificial blocking is imposed.
 2. **On-Demand Dynamic Modules (Modules 3–9):**
    - Started and stopped dynamically without restarting the platform.
    - When not in active use, idle memory consumption is **0 MB RAM**.

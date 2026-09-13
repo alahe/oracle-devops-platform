@@ -168,8 +168,9 @@ set sqlprompt "@|bold,green _USER|@@@|bold,cyan _CONNECT_IDENTIFIER|@@|bold,mage
 To guarantee consistent behavior across local containers, remote hosts, and cloud Autonomous Databases (ADB), all database execution scripts must adhere to the **Exclusive SQLcl Usage Contract**:
 
 1. **Strict Prohibition of SQL\*Plus:** Direct invocation of legacy `sqlplus` is prohibited in automation scripts. SQLcl (`sql`) is the sole authorized database client.
+   - **Official Exemption (APEX Core Engine & Patch Set Exceptions):** In-container execution of Oracle APEX core engine installation (`apxins.sql`, `apxrtins.sql`) and bundle patch exceptions (`catpatch.sql`, `apxpatch.sql`) is explicitly EXEMPT from the JVM SQLcl requirement. These massive vendor metadata scripts exhaust JVM heap memory within container cgroup limits (e.g. 3072M) and trigger Linux kernel OOM kills. In-container APEX core engine and patch scripts MUST invoke the native C-binary `$ORACLE_HOME/bin/sqlplus -s / as sysdba` (~15MB RAM footprint).
 2. **Multi-Tier Execution Resolution:**
-   - **Tier 1 (In-Container Execution):** In containerized Oracle Free databases (`db-proxy`, `db-alise`, `db-publisher`, `db-forms`), execute via the official embedded binary:
+   - **Tier 1 (In-Container Execution):** In containerized Oracle Free databases (`db-proxy`, `db-alise`, `db-publisher`, `db-forms`), execute standard automation via the official embedded binary:
      ```bash
      podman exec -i "$target_container" /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql -s / as sysdba
      ```

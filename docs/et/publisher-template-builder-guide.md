@@ -389,3 +389,27 @@ sequenceDiagram
     deactivate GHA
 ```
 
+### 9.5 Automaatne E2E testimise ja verifitseerimise konveier (`test-deploy-verify-e2e.sh`)
+
+Tagamaks, et mallide muudatused paigaldatakse ja renderdatakse ametlikus serveris korrektselt, sisaldab platvorm automatiseeritud E2E verifitseerimist:
+
+```bash
+# Vaikimisi käivitus koos dünaamilise tokeni süstimisega (Nõutav Blueprint 5):
+./scripts/publisher/test-deploy-verify-e2e.sh
+
+# Käivitus konkreetse raportiga ja kindla oodatud teksti otsinguga:
+./scripts/publisher/test-deploy-verify-e2e.sh Custom/Invoices/Invoice_Report "Nordic Innovation AS"
+
+# Automaatne lülitus Blueprint 5 peale, kui see pole veel aktiivne:
+./scripts/publisher/test-deploy-verify-e2e.sh --auto-switch
+```
+
+#### Peamised kvaliteediväravad ja kontrollid:
+1. **Blueprint 5 eelkontroll:** Valideerib, et Blueprint 5 (`app-publisher` portidel 9500/9502) töötab ja on terve.
+2. **Path Traversal kaitse (CWE-22):** Kontrollib rangeid failiteede piiranguid.
+3. **Dünaamiline test-token ja sisu kontroll:** Süstib ajatempliga unikaalse tokeni faili `sample_data.xml`, pakib `.xdmz` ja `.xdoz`, paigaldab REST API kaudu, käivitab serveris raporti, laeb alla PDF-i ja verifitseerib tokeni olemasolu Pythoni `pypdf` abil.
+4. **Integreeritud PDF/UA-1 ligipääsetavuse audit:** Käivitab automaatselt `validate-pdf-accessibility.sh`, kontrollides, et kriitilisi vigu on 0.
+5. **Rule 7 klikitav kokkuvõte:** Väljastab klikitavad lingid lähte-RTF mallile (`file://...`), genereeritud PDF-ile (`file://...`) ja veebiportaalile (`http://localhost:9502/...`).
+6. **Dev Hub Report Lab integratsioon:** 1-klõpsu käivitus nupust `🧪 Käivita E2E Test & Kontroll`.
+
+

@@ -17,6 +17,7 @@ Tämä hakemisto sisältää Oracle DevOps -alustan tekniset määritykset, asen
 | 🔄 **Tietokantakonttikuvien vaihto** | [database-image-switching-guide.md](database-image-switching-guide.md) | FastStart-pikakuvat, rekisteripeilit ja kontin sisäinen purkaminen. |
 | 🔄 **3-tasoinen elinkaari ja tilannekuvat** | [devops-lifecycle-guide.md](devops-lifecycle-guide.md) | Kultaisten tilannekuvien nopea palautus (~15s), RMAN-varmuuskopiot ja toipumissuunnitelma. |
 | 🧪 **Automaattitestaus ja Dev Hub** | [testing-framework-and-devhub.md](testing-framework-and-devhub.md) | Yli 160 automaattitestiä, reaaliaikainen arkkitehtuurin validointi ja Dev Hub. |
+| 🤖 **Copilot AI -avustaja ja RAG** | [devhub-copilot-assistant.md](devhub-copilot-assistant.md) | Dev Hubin sisäänrakennettu AI-apuri, Zero-Trust-salasanansuojaus, offline-varajärjestelmä ja VS Code -silta. |
 | 🚀 **Pikaopas kirjautumiseen** | [quick-login-guide.md](quick-login-guide.md) | 1-klikkauksen leikepöytätyökalut, SEPS Wallet -tunnistetietojen haku ja verkkolinkit. |
 | 📋 **Arkkitehtuurin blueprint-matriisi** | [../config/blueprints/README.fi.md](../config/blueprints/README.fi.md) | 12 kanonisen mallin (0..11) vertailu ja resurssivaatimukset. |
 | 🗄️ **Tietokantaprofiilit ja topologia** | [db-profiles-and-topology.md](db-profiles-and-topology.md) | YAML-profiilihierarkia (`config/profiles/databases/`), porttitopologia ja Sääntö 11. |

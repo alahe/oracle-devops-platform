@@ -13,7 +13,7 @@ import argparse
 import xml.etree.ElementTree as ET
 
 
-def to_rtf_escaped(text):
+def to_rtf_escaped(text, style="legacy"):
     """Encodes unicode string to RTF-safe character sequence."""
     out = []
     for ch in text:
@@ -24,7 +24,10 @@ def to_rtf_escaped(text):
             else:
                 out.append(ch)
         elif cp <= 255:
-            out.append(f"\\'{cp:02x}")
+            if style == "full":
+                out.append(f"\\u{cp}\\'{cp:02x}")
+            else:
+                out.append(f"\\'{cp:02x}")
         else:
             signed = cp if cp < 32768 else cp - 65536
             out.append(f"\\u{signed}?")
@@ -114,12 +117,15 @@ def load_xliff_translations(xlf_path):
 def apply_xliff(rtf_text, translations):
     """Replaces source strings in RTF with translated target strings."""
     for src, tgt in translations.items():
-        # Match both literal text and RTF escaped text
-        src_escaped = to_rtf_escaped(src)
-        tgt_escaped = to_rtf_escaped(tgt)
+        # Match both literal text and RTF escaped variants (full and legacy)
+        src_escaped_full = to_rtf_escaped(src, style="full")
+        src_escaped_legacy = to_rtf_escaped(src, style="legacy")
+        tgt_escaped = to_rtf_escaped(tgt, style="full")
 
-        if src_escaped in rtf_text:
-            rtf_text = rtf_text.replace(src_escaped, tgt_escaped)
+        if src_escaped_full in rtf_text:
+            rtf_text = rtf_text.replace(src_escaped_full, tgt_escaped)
+        elif src_escaped_legacy in rtf_text:
+            rtf_text = rtf_text.replace(src_escaped_legacy, tgt_escaped)
         elif src in rtf_text:
             rtf_text = rtf_text.replace(src, tgt_escaped)
     return rtf_text

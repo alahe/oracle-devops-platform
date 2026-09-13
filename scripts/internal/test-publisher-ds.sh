@@ -14,6 +14,17 @@ ADMIN_USER="${ADMIN_USERNAME:-weblogic}"
 # Resolve password from Oracle Wallet via SEPS helper rule
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+if [ -f "$WORKSPACE_DIR/scripts/internal/common.sh" ]; then
+  source "$WORKSPACE_DIR/scripts/internal/common.sh"
+fi
+if [ -f "$WORKSPACE_DIR/scripts/internal/load-profile.sh" ]; then
+  source "$WORKSPACE_DIR/scripts/internal/load-profile.sh"
+fi
+
+PRIMARY_CONTAINER=$(resolve_service_target_db "publisher" 2>/dev/null || echo "")
+PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-${DB_CONTAINER_NAME:-db-publisher}}"
+
 WALLET_HELPER="${WORKSPACE_DIR}/scripts/get-password.sh"
 ADMIN_PWD=""
 
@@ -34,8 +45,8 @@ else
 fi
 
 # Verify FREEPDB1 database connection directly
-if command -v podman >/dev/null 2>&1 && podman ps --format "{{.Names}}" | grep -q "main-db-profile"; then
-  DB_TEST=$(podman exec -i main-db-profile bash -c '
+if command -v podman >/dev/null 2>&1 && is_container_running "$PRIMARY_CONTAINER"; then
+  DB_TEST=$(podman exec -i "$PRIMARY_CONTAINER" bash -c '
     in_sql=$(ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1)
     if [ -n "$in_sql" ]; then
       "$in_sql" -s / as sysdba << EOF

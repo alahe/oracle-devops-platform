@@ -27,7 +27,7 @@ Paroolide ekraanile kuvamise või käsitsi kopeerimise asemel saab parooli kopee
 | **🛠️ APEX Builder** | [Ava APEX Tööruum (Eeltäidetud)](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company=PROXY_WORKSPACE&f4550_p1_username=DEV) | Workspace: `PROXY_WORKSPACE`<br/>Kasutaja: `DEV` *(Eeltäidetud)* | `./scripts/get-password.sh DB_PROXY_DEV -c` |
 | **⚙️ APEX Instance Admin** | [Ava APEX Admin (Eeltäidetud)](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/administration-sign-in?p10_username=ADMIN) | Tööruum: `INTERNAL`<br/>Kasutaja: `ADMIN` *(Eeltäidetud)* | `./scripts/get-password.sh DB_PROXY_APEX_ADMIN -c` |
 | **📊 Database Actions (SDW)** | [Ava SQL Developer Web](https://localhost:8448/ords/proxy/user_developer/sign-in?r=_sdw) | Skeem: `user_developer`<br/>Kasutaja: `USER_DEVELOPER` | `./scripts/get-password.sh DB_PROXY_DEV -c` |
-| **📑 Analytics Publisher** | [Ava Analytics Publisher](http://localhost:9502/xmlpserver) | Kasutaja: `weblogic` | `./scripts/get-password.sh DB_PUBLISHER_SYS -c` |
+| **📑 Analytics Publisher** | [1-Kliki Automaatne Sisselogimine (bip_developer)](http://localhost:8089/api/publisher/open?user=bip_developer)<br/>CLI: `./scripts/publisher/open-publisher.sh` | Kasutaja: `bip_developer`<br/>Kasutaja: `bip_user`<br/>Admin: `weblogic` | 1-Kliki Auto-POST läbi Bridge'i<br/>*(Tagavara: `./scripts/get-password.sh PUBLISHER_DEVELOPER -c`)* |
 | **📐 Forms 14c Teenused** | [Ava Forms Testvorm](http://localhost:9001/forms/frmservlet?form=test.fmx) | Runtime / `test.fmx` | Parooli pole vaja |
 | **🎨 Forms Builder GUI** | [Ava Forms Builder Web GUI](http://localhost:6082/vnc.html) | HTML5 noVNC Klient | Parooli pole vaja |
 | **💻 VS Code Web IDE** | [Ava Web IDE Töökoht](http://localhost:8090/?folder=/workspace) | Kasutaja: `developer` | Paroolita töökoht |
@@ -39,6 +39,7 @@ Paroolide ekraanile kuvamise või käsitsi kopeerimise asemel saab parooli kopee
 
 > [!TIP]
 > **Developer Hub (`https://localhost:8448/dev-hub.html`):** Juhtpaneeli pealehel on integreeritud täielik paroolimaatriks koos 1-kliki `[📋 Copy]` nuppudega iga andmebaasi konto jaoks.
+> Analytics Publisheri rollide (`bip_developer`, `bip_user`, `bip_admin`) vahetamisel tühistab Dev Hub Bridge automaatselt varasema WebLogic `JSESSIONID` küpsise. Brauseris aktiivse sessiooni lõpetamiseks saab igal ajal kasutada Blueprint 5 kaardil asuvat nuppu **`🚪 Sign Out (Puhasta sessioon)`**.
 
 ---
 

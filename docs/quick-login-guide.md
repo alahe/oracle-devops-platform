@@ -27,7 +27,7 @@ Instead of searching for or typing passwords on screen, copy passwords directly 
 | **🛠️ APEX Builder** | [Open APEX Workspace (Prefilled)](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company=PROXY_WORKSPACE&f4550_p1_username=DEV) | Workspace: `PROXY_WORKSPACE`<br/>User: `DEV` *(Auto-prefilled)* | `./scripts/get-password.sh DB_PROXY_DEV -c` |
 | **⚙️ APEX Instance Admin** | [Open APEX Admin (Prefilled)](https://localhost:8448/ords/proxy/r/apex/workspace-sign-in/administration-sign-in?p10_username=ADMIN) | Workspace: `INTERNAL`<br/>User: `ADMIN` *(Auto-prefilled)* | `./scripts/get-password.sh DB_PROXY_APEX_ADMIN -c` |
 | **📊 Database Actions (SDW)** | [Open SQL Developer Web](https://localhost:8448/ords/proxy/user_developer/sign-in?r=_sdw) | Schema: `user_developer`<br/>User: `USER_DEVELOPER` | `./scripts/get-password.sh DB_PROXY_DEV -c` |
-| **📑 Analytics Publisher** | [Open Analytics Publisher](http://localhost:9502/xmlpserver) | User: `weblogic` | `./scripts/get-password.sh DB_PUBLISHER_SYS -c` |
+| **📑 Analytics Publisher** | [1-Click Auto-Login (bip_developer)](http://localhost:8089/api/publisher/open?user=bip_developer)<br/>CLI: `./scripts/publisher/open-publisher.sh` | User: `bip_developer`<br/>User: `bip_user`<br/>Admin: `weblogic` | 1-Click Auto-POST via Bridge<br/>*(Fallback: `./scripts/get-password.sh PUBLISHER_DEVELOPER -c`)* |
 | **📐 Forms 14c Services** | [Open Forms Test Form](http://localhost:9001/forms/frmservlet?form=test.fmx) | Runtime / `test.fmx` | None required |
 | **🎨 Forms Builder GUI** | [Open Forms Builder Web GUI](http://localhost:6082/vnc.html) | HTML5 noVNC Client | None required |
 | **💻 VS Code Web IDE** | [Open Web IDE Workspace](http://localhost:8090/?folder=/workspace) | User: `developer` | None (Passwordless) |
@@ -38,7 +38,8 @@ Instead of searching for or typing passwords on screen, copy passwords directly 
 > Use the direct URL `https://localhost:8448/ords/<pool>/user_developer/sign-in?r=_sdw` which automatically routes to SQL Developer Web upon sign-in.
 
 > [!TIP]
-> **Developer Hub (`https://localhost:8448/dev-hub.html`):** The Command Center pealeht embeds this entire table with 1-click `[📋 Copy]` buttons and clickable TNS alias badges for every single database user and service.
+> **Developer Hub (`https://localhost:8448/dev-hub.html`):** The Command Center embeds this entire table with 1-click `[📋 Copy]` buttons and clickable TNS alias badges for every single database user and service.
+> When switching between Analytics Publisher roles (`bip_developer`, `bip_user`, `bip_admin`), the Dev Hub Bridge automatically resets WebLogic `JSESSIONID` cookies. Use the **`🚪 Sign Out (Puhasta sessioon)`** button on Blueprint 5 card to cleanly terminate any active browser session.
 
 ---
 

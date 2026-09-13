@@ -24,6 +24,12 @@
 - **Oficiālā atsauce / Vikipēdija:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
 - **Saistītā dokumentācija un skripti:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
 
+### `ALISE` — ALISE biznesa lietojumprogrammu datubāze
+- **Definīcija:** Specializēta Oracle Free DB 23ai datubāzes vide pamatdarbības shēmām, PL/SQL loģikai un APEX/ORDS izpildlaikam portā 1533.
+- **Loma šajā projektā:** Kanoniskā biznesa datubāze Blueprint 1 (:1533) un Blueprint 7/3 sastāvā, nodrošinot pilnīgu shēmu izolāciju no starpniekservera.
+- **Oficiālā atsauce / Vikipēdija:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
+- **Saistītā dokumentācija un skripti:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
+
 ### `APFS` — Apple File System
 - **Definīcija:** Noklusējuma failu sistēma macOS ar SSD optimizāciju un momentuzņēmumiem.
 - **Loma šajā projektā:** macOS failu sistēma, kur tiek pārbaudīta savietojamība (Noteikums 13) ar Windows NTFS.
@@ -190,12 +196,6 @@
 - **Oficiālā atsauce / Vikipēdija:** [Wikipedia: Newline (LF)](https://en.wikipedia.org/wiki/Newline)
 - **Saistītā dokumentācija un skripti:** [.gitattributes](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/.gitattributes)
 
-### `LIS` — Laboratory Information System
-- **Definīcija:** Laboratorijas informācijas sistēma paraugu un analīžu rezultātu pārvaldībai.
-- **Loma šajā projektā:** Attēlots Blueprint 3 ar atsevišķām proxy, alise un lis datubāzēm.
-- **Oficiālā atsauce / Vikipēdija:** [Wikipedia: LIS / LIMS](https://en.wikipedia.org/wiki/Laboratory_information_management_system)
-- **Saistītā dokumentācija un skripti:** [config/blueprints/.env.bp3-multi-db-lis](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.bp3-multi-db-lis), [config/profiles/databases/db-lis.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-lis.yaml)
-
 ## M
 
 ### `mTLS` — Mutual Transport Layer Security
@@ -242,7 +242,7 @@
 
 ### `PDB` — Pluggable Database
 - **Definīcija:** Autonoma shēmu un objektu kopa multitenant arhitektūrā, kas darbojas kā atsevišķa datubāze.
-- **Loma šajā projektā:** Izolē lietojumu datus: FREEPDB1 (APEX), ALISEPDB (bizness), LIS_PDB un BIP_PDB.
+- **Loma šajā projektā:** Izolē lietojumu datus: FREEPDB1 (APEX), ALISEPDB (bizness), PUBPDB un BIP_PDB.
 - **Oficiālā atsauce / Vikipēdija:** [Oracle Pluggable Database (PDB)](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/multitenant-architecture.html)
 - **Saistītā dokumentācija un skripti:** [docs/db-profiles-and-topology.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/db-profiles-and-topology.md), [scripts/internal/resolve-topology.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/resolve-topology.sh)
 

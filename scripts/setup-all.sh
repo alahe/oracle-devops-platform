@@ -138,7 +138,7 @@ while [[ $# -gt 0 ]]; do
       fi
       shift
       ;;
-    -b|--b|--blueprint|--scenario|-s)
+    -b|--b|--blueprint|--scenario)
       val="$2"
       if [[ "$val" == *","* ]] || [ "$val" = "all" ] || [ "$val" = "ALL" ] || ! [[ "$val" =~ ^[0-9]+$ ]] || [ "$val" -lt 0 ] || [ "$val" -gt 49 ]; then
         echo -e "\n${RED}❌ ERROR: In blueprint mode (--blueprint / -b), you can select ONLY ONE blueprint between 0–49!${NC}"
@@ -148,7 +148,7 @@ while [[ $# -gt 0 ]]; do
       export SELECTED_BLUEPRINT="$val"
       shift 2
       ;;
-    -b=*|--b=*|--blueprint=*|--scenario=*|-s=*)
+    -b=*|--b=*|--blueprint=*|--scenario=*)
       val="${1#*=}"
       if [[ "$val" == *","* ]] || [ "$val" = "all" ] || [ "$val" = "ALL" ] || ! [[ "$val" =~ ^[0-9]+$ ]] || [ "$val" -lt 0 ] || [ "$val" -gt 49 ]; then
         echo -e "\n${RED}❌ ERROR: In blueprint mode (--blueprint / -b), you can select ONLY ONE blueprint between 0–49!${NC}"
@@ -188,6 +188,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --from-snapshot|--snapshot|-s)
+      export SNAPSHOT_REQUESTED=true
       export RESTORE_FROM_SNAPSHOT=true
       shift
       ;;
@@ -196,6 +197,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --fresh|--no-snapshot)
+      export FRESH_MODE=true
       export RESTORE_FROM_SNAPSHOT=false
       shift
       ;;
@@ -270,6 +272,17 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Guardrail: Validate mutually exclusive options (Senior Engineering SSOT rule)
+if [ "${SNAPSHOT_REQUESTED:-false}" = "true" ] && [ "${FRESH_MODE:-false}" = "true" ]; then
+  echo -e "\033[0;31m❌ Viga: Valikuid '--from-snapshot' (-s) ja '--fresh' ei saa korraga kasutada!\033[0m" >&2
+  echo -e "   ℹ️ FastStart (-s) taastab olemasoleva tõmmise, samas kui --fresh kustutab andmemahu." >&2
+  exit 1
+fi
+if [ "$DRY_RUN" = "true" ] && [ "${FRESH_MODE:-false}" = "true" ]; then
+  echo -e "\033[0;31m❌ Viga: Valikuid '--dry-run' ja '--fresh' ei saa korraga kasutada!\033[0m" >&2
+  exit 1
+fi
 
 # Handle dry-run simulation mode
 if [ "$DRY_RUN" = "true" ]; then
@@ -365,6 +378,8 @@ if [ -z "$TEST_BLUEPRINTS" ]; then
   BP_FILE=$(get_blueprint_file "$SELECTED_BLUEPRINT" 2>/dev/null || echo "")
   if [ -n "$BP_FILE" ] && [ -f "$BP_FILE" ]; then
     ACTIVE_BP_ID=$(get_blueprint_number "$BP_FILE")
+    export ACTIVE_BP_ID="$ACTIVE_BP_ID"
+    export ACTIVE_BP_FILE="$BP_FILE"
     # 🛡️ ARCHITECTURAL GUARDRAIL (Rule 12 & Invariant 3.7):
     # Do NOT write .active_blueprint here! Premature writing triggers false "Active"
     # indicators in Dev-Hub while database/APEX/ORDS configuration is in progress.
@@ -392,15 +407,17 @@ fi
 
 sanitize_blueprint_environment() {
   if [ "${INCREMENTAL_MODE:-false}" != "true" ]; then
-    unset DB_ALISE DB_PROXY DB_PUBLISHER DB_FORMS DB_CICD DB_LIS DB_INFRA DB_PROXY_STANDALONE DB_GVENZL DB_ADB
-    unset ORDS_PROFILE WEB_IDE_PROFILE PUBLISHER_PROFILE FORMS_PROFILE
-    unset PUBLISHER_DESIGNER_PROFILE FORMS_PUBLISHER_PROFILE
+    for k in $(compgen -v 2>/dev/null | grep -E '^(DB_[A-Z0-9_]+|ORDS_PROFILE|WEB_IDE_PROFILE|PUBLISHER_PROFILE|FORMS_PROFILE|PUBLISHER_DESIGNER_PROFILE|FORMS_PUBLISHER_PROFILE)$' | sort -u || true); do
+      unset "$k"
+    done
   fi
+  unset ACTIVE_BP_FILE
   unset MAIN_DB_PROFILE PROFILE_NAME PROFILE_DB_PORT PROFILE_DEFAULT_SERVICE
   unset PROFILE_APEX_ENABLED PROFILE_APEX_VERSION PROFILE_APEX_WORKSPACE
   unset PROFILE_CONTAINER_NAME PROFILE_CONTAINER_PORT PROFILE_CONTAINER_IMAGE
   unset SKIP_PUBLISHER SKIP_FORMS SKIP_WEB_IDE SKIP_ORDS SKIP_PUBLISHER_DESIGNER
   unset APEX_DB_HOST APEX_DB_PORT APEX_DB_SERVICE APEX_DB_SID APEX_DB_PDB
+  unset RESTORE_FROM_SNAPSHOT
 }
 
 # Load environment variables and profile engine
@@ -443,7 +460,7 @@ fi
 # Automated Golden Snapshot Discovery & Prompt (Fast Mode)
 # Only applicable when active local database instances exist
 ACTIVE_DBS_DISCOVERY=$(get_active_db_instances 2>/dev/null || true)
-if [ -z "$ACTIVE_DBS_DISCOVERY" ] || [ "${DB_ENABLED:-true}" = "false" ] || [ "${PROFILE_NAME:-}" = "NONE" ]; then
+if [ -z "$ACTIVE_DBS_DISCOVERY" ] || [ "${DB_ENABLED:-true}" = "false" ] || [ "${PROFILE_NAME:-}" = "NONE" ] || [ "${ACTIVE_BP_ID:-0}" = "8" ] || [ "${ACTIVE_BP_ID:-0}" = "9" ]; then
   export RESTORE_FROM_SNAPSHOT=false
 elif [ -z "${RESTORE_FROM_SNAPSHOT:-}" ] && [ -f "$SCRIPT_DIR/internal/snapshot-resolver.sh" ]; then
   # shellcheck source=/dev/null
@@ -627,7 +644,11 @@ fi
 # ----------------------------------------------------------------------------
 PULL_START=$(date +%s)
 if [ "$IS_LOCAL" = "true" ]; then
-  print_header "1" "$(msg_str "STEP_1_TITLE" "${PROFILE_NAME:-Oracle DB & ORDS}")" "step1_container_images_pull_seconds" "1m"
+  local_hdr_name="${PROFILE_NAME:-Oracle DB & ORDS}"
+  if [ "${PROFILE_NAME:-}" = "NONE" ] || [ "${DB_ENABLED:-true}" = "false" ] || [ -z "$(get_active_db_instances 2>/dev/null)" ]; then
+    local_hdr_name="Standalone Stack"
+  fi
+  print_header "1" "$(msg_str "STEP_1_TITLE" "$local_hdr_name")" "step1_container_images_pull_seconds" "1m"
   (
     if [ -f "$OVERRIDE_FILE" ]; then
       for img in $(grep -i 'image:' "$OVERRIDE_FILE" "$COMPOSE_FILE" 2>/dev/null | awk '{print $2}' | grep -v 'analyticsserver' | tr -d '"\r' | sort -u); do
@@ -803,7 +824,7 @@ if [ "$IS_LOCAL" = "true" ]; then
   print_header "4" "$(msg_str "STEP_4_TITLE")" "step4_container_startup_seconds" "45s"
 
   ACTIVE_DBS_STEP4=$(get_active_db_instances 2>/dev/null || true)
-  if [ -n "$ACTIVE_DBS_STEP4" ] && [ "${DB_ENABLED:-true}" != "false" ] && [ "${PROFILE_NAME:-}" != "NONE" ] && [ "${RESTORE_FROM_SNAPSHOT:-false}" = "true" ] && [ -f "$SCRIPT_DIR/snapshots/restore-golden-snapshots.sh" ]; then
+  if [ -n "$ACTIVE_DBS_STEP4" ] && [ "${DB_ENABLED:-true}" != "false" ] && [ "${PROFILE_NAME:-}" != "NONE" ] && [ "${ACTIVE_BP_ID:-0}" != "8" ] && [ "${ACTIVE_BP_ID:-0}" != "9" ] && [ "${RESTORE_FROM_SNAPSHOT:-false}" = "true" ] && [ -f "$SCRIPT_DIR/snapshots/restore-golden-snapshots.sh" ]; then
     echo -e "${CYAN}📸 [Golden Snapshot]: Rapid ~15s environment restore from snapshot...${NC}"
     restore_flags=(--auto -b "${ACTIVE_BP_ID:-0}")
     if [ "${ROTATE_RESTORE_PASSWORDS:-false}" != "true" ]; then
@@ -993,7 +1014,7 @@ fi
 STEP6_APEX_START=$(date +%s)
 print_header "6" "$(msg_str "STEP_6_TITLE")" "step7_apex_engine_install_seconds" "6m"
 ACTIVE_INST_LIST=$(get_active_db_instances 2>/dev/null || echo "")
-if [ -z "$ACTIVE_INST_LIST" ]; then
+if [ -z "$ACTIVE_INST_LIST" ] || [ "${DB_ENABLED:-true}" = "false" ] || [ "${PROFILE_NAME:-}" = "NONE" ] || [ "${ACTIVE_BP_ID:-0}" = "8" ] || [ "${ACTIVE_BP_ID:-0}" = "9" ]; then
   echo -e "   ℹ️  $(msg_str "STATUS_SKIPPED") (No local database instances active for this blueprint)"
 else
   for inst in $ACTIVE_INST_LIST; do
@@ -1032,7 +1053,7 @@ STEP5_5_START=$(date +%s)
 print_header "7" "$(msg_str "STEP_7_TITLE")" "step5_5_liquibase_migration_seconds" "15s"
 STEP5_5_LOG="$LOG_DIR/db_sqlcl_deploy_${TIMESTAMP}.log"
 
-if [ -z "$ACTIVE_INST_LIST" ]; then
+if [ -z "$ACTIVE_INST_LIST" ] || [ "${DB_ENABLED:-true}" = "false" ] || [ "${PROFILE_NAME:-}" = "NONE" ] || [ "${ACTIVE_BP_ID:-0}" = "8" ] || [ "${ACTIVE_BP_ID:-0}" = "9" ]; then
   STEP5_5_SECS=0
   STEP5_5_TIME="$(msg_str "STATUS_SKIPPED")"
   echo -e "   ℹ️  $(msg_str "STATUS_SKIPPED") (No local database instances active for this blueprint)"
@@ -1368,9 +1389,17 @@ if [ -f "$WORKSPACE_DIR/metrics/extensions_status.json" ]; then
   fi
 fi
 
-# Start Dev Hub Bridge background daemon for 1-click GUI container toggling
-if [ -f "$SCRIPT_DIR/internal/dev-hub-bridge.py" ] && ! curl -s http://localhost:8089/api/status >/dev/null 2>&1; then
-  python3 "$SCRIPT_DIR/internal/dev-hub-bridge.py" >/dev/null 2>&1 &
+# Start or reload Dev Hub Bridge background daemon if needed or if version mismatch
+if [ -f "$SCRIPT_DIR/internal/dev-hub-bridge.py" ]; then
+  RUNNING_VER=$(curl -s http://localhost:8089/api/version 2>/dev/null | grep -o '"version": *"[^"]*"' | cut -d'"' -f4 || true)
+  TARGET_VER=$(cat "$WORKSPACE_DIR/VERSION" 2>/dev/null || echo "2.4.0")
+  if [ -z "$RUNNING_VER" ]; then
+    python3 "$SCRIPT_DIR/internal/dev-hub-bridge.py" >/dev/null 2>&1 &
+  elif [ "$RUNNING_VER" != "$TARGET_VER" ]; then
+    pkill -f "dev-hub-bridge.py" 2>/dev/null || true
+    sleep 0.5
+    python3 "$SCRIPT_DIR/internal/dev-hub-bridge.py" >/dev/null 2>&1 &
+  fi
 fi
 
 echo ""
@@ -1381,10 +1410,15 @@ echo -e "$(msg_str "TOTAL_DURATION" "${GREEN}${TOTAL_MASTER_TIME}${NC} (${TOTAL_
 echo -e "$(msg_str "LOG_PATH_LABEL") [Log](file://$LOG_FILE)"
 echo -e "$(msg_str "METRICS_PATH_LABEL") [Metrics](file://$WORKSPACE_DIR/metrics/setup_benchmarks.json)"
 [ -n "${ACTIVE_BP_ID:-}" ] && save_blueprint_benchmark "$ACTIVE_BP_ID" "$TOTAL_MASTER_SECS"
+[ -n "${ACTIVE_BP_ID:-}" ] && save_blueprint_ram_benchmark "$ACTIVE_BP_ID"
 # 🛡️ ARCHITECTURAL GUARDRAIL (Rule 12 & Invariant 3.7):
 # Update .active_blueprint strictly after 100% successful verification!
 if [ -n "${ACTIVE_BP_ID:-}" ]; then
   echo "$ACTIVE_BP_ID" > "$WORKSPACE_DIR/.active_blueprint" 2>/dev/null || true
+  # Refresh Dev Hub dashboard with active blueprint and status
+  if [ -f "$WORKSPACE_DIR/scripts/internal/generate-dev-hub.sh" ]; then
+    "$WORKSPACE_DIR/scripts/internal/generate-dev-hub.sh" >/dev/null 2>&1 || true
+  fi
 fi
 rm -f "$WORKSPACE_DIR/.setup_in_progress" 2>/dev/null || true
 echo -e "${CYAN}==================================================================${NC}\n"
@@ -1397,7 +1431,7 @@ if [ "${BUILD_IMAGE:-false}" = "true" ] && [ "$IS_LOCAL" = "true" ]; then
   echo -e "${BOLD}📦 EELKONFIGUREERITUD PILDI LOOMINE (--build-image)${NC}"
   echo -e "${CYAN}==================================================================${NC}"
 
-  TARGET_CONTAINER=$(get_active_db_instances 2>/dev/null | grep -v "publisher" | head -n 1 | cut -d'|' -f1 || echo "db-proxy")
+  TARGET_CONTAINER=$(get_active_db_instances 2>/dev/null | grep -E -v '^db-publisher\|' | head -n 1 | cut -d'|' -f1 || echo "db-proxy")
   CONTAINER_CLI="podman"
   if ! command -v podman >/dev/null 2>&1 && command -v docker >/dev/null 2>&1; then
     CONTAINER_CLI="docker"

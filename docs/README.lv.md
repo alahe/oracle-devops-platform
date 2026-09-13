@@ -17,6 +17,7 @@
 | 🔄 **Datubāzes konteineru attēlu pārslēgšana** | [database-image-switching-guide.md](database-image-switching-guide.md) | FastStart ātrie attēli, reģistru spoguļi un atpakošana konteinerā. |
 | 🔄 **3 līmeņu dzīvescikls un momentuzņēmumi** | [devops-lifecycle-guide.md](devops-lifecycle-guide.md) | Zelta momentuzņēmumu tūlītēja atjaunošana (~15s), RMAN rezerves kopijas un avārijas atjaunošana. |
 | 🧪 **Automatizētā testēšana un Dev Hub** | [testing-framework-and-devhub.md](testing-framework-and-devhub.md) | 160+ automatizētie testi, plānu reāllaika validācija un Dev Hub. |
+| 🤖 **Copilot AI asistents un RAG** | [devhub-copilot-assistant.md](devhub-copilot-assistant.md) | Iebūvētais Dev Hub AI asistents, Zero-Trust paroļu aizsardzība, bezsaistes rezerves sistēma un VS Code tilts. |
 | 🚀 **Ātrās pieteikšanās rokasgrāmata** | [quick-login-guide.md](quick-login-guide.md) | 1 klikšķa starpliktuves palīgi, SEPS Wallet akreditācijas datu ieguve un tīmekļa saites. |
 | 📋 **Arhitektūras plānu matrica** | [../config/blueprints/README.md](../config/blueprints/README.md) | 12 kanonisko arhitektūras modeļu (0..11) salīdzinājums un resursu prasības. |
 | 🗄️ **Datubāzu profili un topoloģija** | [db-profiles-and-topology.md](db-profiles-and-topology.md) | YAML profilu hierarhija (`config/profiles/databases/`), portu topoloģija un Noteikums 11. |

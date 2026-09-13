@@ -223,11 +223,11 @@ if [ "$INSTALL_MODE" = "container" ]; then
   if podman container exists app-publisher 2>/dev/null; then
     if ! podman exec app-publisher test -f /u01/oracle/user_projects/domains/bi/config/config.xml 2>/dev/null; then
       echo -e "   ⚠️ Incomplete WebLogic domain detected — recreating container with environment secrets..."
-      podman rm -f app-publisher 2>/dev/null || true
+      podman rm -f app-publisher >/dev/null 2>&1 || true
     fi
   fi
 
-  if ! podman ps --format "{{.Names}}" 2>/dev/null | grep -q "app-publisher"; then
+  if ! podman ps --format "{{.Names}}" 2>/dev/null | grep -q -E "^app-publisher$"; then
     echo -e "🚀 Starting Analytics Publisher container (${CYAN}app-publisher${NC})..."
     
     TARGET_PUB_DB=$(resolve_service_target_db "publisher")
@@ -240,7 +240,7 @@ if [ "$INSTALL_MODE" = "container" ]; then
       podman start "$TARGET_PUB_DB" >/dev/null 2>&1 || true
     fi
 
-    podman rm -f app-publisher 2>/dev/null || true
+    podman rm -f app-publisher >/dev/null 2>&1 || true
     NET_NAME=$(podman inspect "$TARGET_PUB_DB" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || podman inspect "db-publisher" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || podman network ls --format "{{.Name}}" 2>/dev/null | grep -v "bridge" | grep -v "host" | head -n 1 || echo "oracle-free-db-in-prod_default")
     NET_NAME="${NET_NAME:-oracle-free-db-in-prod_default}"
     
@@ -274,7 +274,7 @@ if [ "$INSTALL_MODE" = "container" ]; then
     [ "$pub_db_svc" = "none" ] && pub_db_svc="FREEPDB1"
 
     podman run -d --name app-publisher --security-opt=no-new-privileges --network="$NET_NAME" \
-      --health-cmd="curl -k -f -s http://127.0.0.1:9502/xmlpserver/ || exit 1" \
+      --health-cmd="/usr/bin/curl -k -f -s http://127.0.0.1:9502/xmlpserver/ || exit 1" \
       --health-interval=15s \
       --health-timeout=5s \
       --health-start-period=60s \
@@ -303,7 +303,7 @@ if [ "$INSTALL_MODE" = "container" ]; then
   START_STEP4=$(date +%s)
   echo "$(msg_str "PUB_WAITING_MSG")"
   ELAPSED_WAIT=0
-  until curl -s -k -L --connect-timeout 4 --max-time 5 -o /dev/null -w "%{http_code}" http://localhost:9502/xmlpserver 2>/dev/null | grep -q -E "200|301|302|303|307" || [ $ELAPSED_WAIT -ge 420 ]; do
+  until curl -s -k -L --connect-timeout 4 --max-time 5 -o /dev/null -w "%{http_code}" http://localhost:9502/xmlpserver 2>/dev/null | grep -q -E "200|301|302|303|307" || [ $ELAPSED_WAIT -ge 600 ]; do
     sleep 4
     ELAPSED_WAIT=$((ELAPSED_WAIT + 4))
     print_step_progress "Waiting for Publisher Web UI (http://localhost:9502/xmlpserver)" "$ELAPSED_WAIT" 60
@@ -318,6 +318,14 @@ if [ "$INSTALL_MODE" = "container" ]; then
   END_STEP4=$(date +%s)
   ELAPSED_STEP4=$(( END_STEP4 - START_STEP4 ))
   echo -e "⏱  [$(msg_str "PUB_STEP_WAIT" "${YELLOW}$(format_duration $ELAPSED_STEP4)${NC}")]"
+
+  # Provision Publisher users and register JNDI Data Sources
+  if [ -x "$SCRIPT_DIR/init-publisher-users.sh" ]; then
+    "$SCRIPT_DIR/init-publisher-users.sh" >> "$LOG_FILE" 2>&1 || true
+  fi
+  if [ -x "$SCRIPT_DIR/init-publisher-datasource.sh" ]; then
+    "$SCRIPT_DIR/init-publisher-datasource.sh" >> "$LOG_FILE" 2>&1 || true
+  fi
 else
   print_pub_header "3" "Native Server Mode Installation..." "step10_3_build_seconds" "5m"
   START_STEP3=$(date +%s)

@@ -153,7 +153,7 @@
 
 ### Oracle Architecture Center Technology Catalog `[Architecture Center]`
 - **Kirjeldus:** Oracle ametlik arhitektuurikeskuse kataloog: etalonarhitektuurid, juhendkavandid (blueprints) ja paigalduse parimad praktikad.
-- **Roll platvormil:** Etalonarhitektuuride joondamine hübriidpilve, mitme andmebaasiga LIS süsteemi ja zero-trust turvamudelitega.
+- **Roll platvormil:** Etalonarhitektuuride joondamine hübriidpilve, mitme andmebaasiga ALISE süsteemi ja zero-trust turvamudelitega.
 - **Ametlik link:** [https://apexadb.oracle.com/ords/r/tech/catalog/home](https://apexadb.oracle.com/ords/r/tech/catalog/home)
 
 ### Oracle Forms 14c (14.1.2) Documentation `[Technical Docs]`

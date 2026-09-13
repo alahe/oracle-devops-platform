@@ -34,7 +34,7 @@ DB_SERVICE="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
 
 echo "🚀 Initializing ORDS REST Services for Publisher Database (${DB_SERVICE})..."
 
-if [ -f "$SCRIPT_DIR/init-publisher-ords.sql" ] && podman ps --format "{{.Names}}" 2>/dev/null | grep -q "$PRIMARY_CONTAINER"; then
+if [ -f "$SCRIPT_DIR/init-publisher-ords.sql" ] && podman ps --format "{{.Names}}" 2>/dev/null | grep -q -E "^${PRIMARY_CONTAINER}$"; then
   in_sql=$(podman exec "$PRIMARY_CONTAINER" bash -c 'ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1' 2>/dev/null || echo "")
   if [ -n "$in_sql" ]; then
     cat "$SCRIPT_DIR/init-publisher-ords.sql" | podman exec -i "$PRIMARY_CONTAINER" "$in_sql" -s / as sysdba || true

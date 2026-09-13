@@ -1,64 +1,64 @@
 {
   "metadata": {
-    "generated_at": "2026-09-09T10:34:57.688086",
-    "scan_duration_ms": 453,
+    "generated_at": "2026-09-14T00:44:14.858053",
+    "scan_duration_ms": 194,
     "generator": "scripts/internal/generate-repo-report.py",
     "workspace_root": "/Users/allanlahe/Oracle/oracle-free-db-in-prod"
   },
   "maintainable_core": {
-    "total_files": 524,
-    "total_lines": 86705,
-    "maintainable_sloc": 73375,
-    "test_sloc": 11603,
-    "functional_sloc": 61772,
-    "test_density_percent": 18.8,
-    "avg_sloc_per_file": 140.0
+    "total_files": 570,
+    "total_lines": 115975,
+    "maintainable_sloc": 99308,
+    "test_sloc": 13742,
+    "functional_sloc": 85566,
+    "test_density_percent": 16.1,
+    "avg_sloc_per_file": 174.2
   },
   "gross_repository": {
-    "total_files": 1955,
-    "total_gross_lines": 289712,
-    "generated_and_metrics_files": 1431,
-    "generated_and_metrics_lines": 203007
+    "total_files": 2073,
+    "total_gross_lines": 363637,
+    "generated_and_metrics_files": 1503,
+    "generated_and_metrics_lines": 247662
   },
   "architecture_components": {
     "blueprints_count": 12,
     "database_profiles_count": 11,
-    "cli_user_tools_count": 27,
-    "internal_engine_scripts_count": 49,
-    "test_scripts_count": 172
+    "cli_user_tools_count": 31,
+    "internal_engine_scripts_count": 53,
+    "test_scripts_count": 191
   },
   "language_breakdown": {
     "Shell / Bash": {
-      "files": 246,
-      "lines": 40355,
-      "sloc": 31888,
-      "blank": 4824,
-      "comment": 3643,
-      "percent_of_sloc": 43.5
+      "files": 277,
+      "lines": 45950,
+      "sloc": 36231,
+      "blank": 5517,
+      "comment": 4202,
+      "percent_of_sloc": 36.5
     },
     "Web Templates (HTML/JS/CSS)": {
       "files": 5,
-      "lines": 23777,
-      "sloc": 22128,
-      "blank": 1412,
-      "comment": 237,
-      "percent_of_sloc": 30.2
+      "lines": 38046,
+      "sloc": 35132,
+      "blank": 2418,
+      "comment": 496,
+      "percent_of_sloc": 35.4
     },
     "Python": {
-      "files": 16,
-      "lines": 10862,
-      "sloc": 10177,
-      "blank": 561,
-      "comment": 124,
-      "percent_of_sloc": 13.9
+      "files": 28,
+      "lines": 19796,
+      "sloc": 18371,
+      "blank": 1129,
+      "comment": 296,
+      "percent_of_sloc": 18.5
     },
     "Markdown Docs": {
-      "files": 180,
-      "lines": 8160,
-      "sloc": 6204,
-      "blank": 1956,
+      "files": 182,
+      "lines": 8354,
+      "sloc": 6361,
+      "blank": 1993,
       "comment": 0,
-      "percent_of_sloc": 8.5
+      "percent_of_sloc": 6.4
     },
     "SQL / PLSQL": {
       "files": 7,
@@ -66,31 +66,31 @@
       "sloc": 1219,
       "blank": 144,
       "comment": 52,
-      "percent_of_sloc": 1.7
-    },
-    "YAML Configuration": {
-      "files": 23,
-      "lines": 1012,
-      "sloc": 849,
-      "blank": 86,
-      "comment": 77,
       "percent_of_sloc": 1.2
     },
+    "YAML Configuration": {
+      "files": 25,
+      "lines": 1194,
+      "sloc": 1000,
+      "blank": 106,
+      "comment": 88,
+      "percent_of_sloc": 1.0
+    },
     "Other": {
-      "files": 31,
-      "lines": 369,
-      "sloc": 329,
-      "blank": 40,
+      "files": 30,
+      "lines": 464,
+      "sloc": 412,
+      "blank": 52,
       "comment": 0,
       "percent_of_sloc": 0.4
     },
     "Container / Docker": {
       "files": 5,
-      "lines": 379,
-      "sloc": 271,
+      "lines": 380,
+      "sloc": 272,
       "blank": 56,
       "comment": 52,
-      "percent_of_sloc": 0.4
+      "percent_of_sloc": 0.3
     },
     "Windows Scripts": {
       "files": 5,
@@ -98,7 +98,7 @@
       "sloc": 216,
       "blank": 43,
       "comment": 23,
-      "percent_of_sloc": 0.3
+      "percent_of_sloc": 0.2
     },
     "JSON Data/Specs": {
       "files": 6,
@@ -112,40 +112,40 @@
   "top_largest_files": [
     {
       "path": "scripts/internal/dev_hub/assets/app.js",
-      "sloc": 9413,
-      "total_lines": 10682,
-      "language": "Web Templates (HTML/JS/CSS)"
-    },
-    {
-      "path": "scripts/internal/dev_hub/assets/i18n.js",
-      "sloc": 5035,
-      "total_lines": 5044,
+      "sloc": 13944,
+      "total_lines": 15906,
       "language": "Web Templates (HTML/JS/CSS)"
     },
     {
       "path": "scripts/internal/dev_hub/assets/style.css",
-      "sloc": 4624,
-      "total_lines": 4767,
+      "sloc": 9689,
+      "total_lines": 10295,
       "language": "Web Templates (HTML/JS/CSS)"
     },
     {
-      "path": "scripts/internal/dev_hub/catalog.py",
-      "sloc": 2809,
-      "total_lines": 2819,
-      "language": "Python"
+      "path": "scripts/internal/dev_hub/assets/i18n.js",
+      "sloc": 6878,
+      "total_lines": 6893,
+      "language": "Web Templates (HTML/JS/CSS)"
     },
     {
       "path": "scripts/internal/dev_hub/assets/templates/layout.html",
-      "sloc": 2715,
-      "total_lines": 2894,
+      "sloc": 4280,
+      "total_lines": 4562,
       "language": "Web Templates (HTML/JS/CSS)"
+    },
+    {
+      "path": "scripts/internal/dev-hub-bridge.py",
+      "sloc": 3521,
+      "total_lines": 3927,
+      "language": "Python"
     }
   ],
   "git": {
-    "total_commits": 79,
-    "last_commit_hash": "0cbc8d0c",
-    "last_commit_date": "2026-09-08T00:44:48+03:00",
-    "last_commit_message": "feat: APEXlang slide expansion, 6-lang glossary with verified links, zero-download link checker, and enterprise windows suite",
+    "total_commits": 84,
+    "last_commit_hash": "d4aa3cd9",
+    "last_commit_date": "2026-09-13T15:56:44+03:00",
+    "last_commit_message": "feat(devhub): fix specs triad switching, add 2-stage recipe safety inspector & testing AI button (v2.5.0.5)",
     "last_commit_author": "lahe",
     "active_branches": 3,
     "active_tags": 0,
@@ -162,12 +162,12 @@
     ],
     "languages_count": 6,
     "shell_i18n_keys": 0,
-    "devhub_i18n_keys": 922,
-    "total_unique_i18n_keys": 922,
+    "devhub_i18n_keys": 1259,
+    "total_unique_i18n_keys": 1259,
     "synchronization_status": "100% Synchronized"
   },
   "testing": {
-    "total_test_scripts": 144,
+    "total_test_scripts": 164,
     "historical_test_runs": 0,
     "pass_rate_percent": 100.0,
     "last_test_run": null

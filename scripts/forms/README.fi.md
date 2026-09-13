@@ -2,7 +2,7 @@
 
 # 📐 Oracle Forms 14c toiminnalliset komentosarjat (`scripts/forms/`)
 
-Tämä hakemisto tarjoaa työkalut Oracle Forms 14c -suoritusympäristön, komentorivikääntämisen, WebLogic-toimialueen diagnostiikan ja sovellusten käyttöönoton hallintaan.
+Tämä hakemisto tarjoaa työkalut Oracle Forms 14c -suoritusympäristön, komentorivikääntämisen, kaksisuuntaisen XML-muunnoksen, roundtrip-varmennuksen, WebLogic-toimialueen diagnostiikan ja sovellusten käyttöönoton hallintaan.
 
 ---
 
@@ -15,6 +15,15 @@ Tämä hakemisto tarjoaa työkalut Oracle Forms 14c -suoritusympäristön, komen
 - **`compile-form.sh`:** Kääntää `.fmb`-binaarilähdelomakkeen suoritettavaksi `.fmx`-tiedostoksi komentoriviltä.
   ```bash
   ./scripts/forms/compile-form.sh /polku/lomake.fmb
+  ```
+- **`form-to-xml.sh`:** Kaksisuuntainen FMB ↔ XML -muunnin (Git diff- ja APEX Migration Workshop -yhteensopiva).
+  ```bash
+  ./scripts/forms/form-to-xml.sh forms_apps/orders.fmb            # FMB -> XML
+  ./scripts/forms/form-to-xml.sh --to-fmb forms_apps/orders.xml   # XML -> FMB
+  ```
+- **`test-fmb-xml-roundtrip.sh`:** Suorittaa 2-pass roundtrip -varmennuksen (`FMB -> XML(1) -> temp.fmb -> XML(2)`) ja tekee semanttisen vertailun.
+  ```bash
+  ./scripts/forms/test-fmb-xml-roundtrip.sh forms_apps/test.fmb
   ```
 - **`deploy-forms-apps.sh`:** Ottaa käyttöön käännetyt lomakkeet ja valikot säilön hakemistoon `/u01/oracle/forms_apps`.
   ```bash

@@ -21,6 +21,54 @@ export ADMIN_PASSWORD="${ADMIN_PASSWORD:-Welcome1}"
 
 mkdir -p /u01/oracle/forms_apps
 mkdir -p "$DOMAINS_DIR"
+mkdir -p /u01/oracle/bin
+
+# Set up frmf2xml.sh and frmxml2f.sh converters
+if [ ! -f "/u01/oracle/bin/frmf2xml.sh" ]; then
+cat << 'EOS' > /u01/oracle/bin/frmf2xml.sh
+#!/bin/bash
+export ORACLE_HOME="${ORACLE_HOME:-/u01/oracle}"
+export FORMS_PATH="${FORMS_PATH:-$ORACLE_HOME/forms:/u01/oracle/forms_apps}"
+export LD_LIBRARY_PATH="${ORACLE_HOME}/lib:${LD_LIBRARY_PATH:-}"
+export DISPLAY="${DISPLAY:-:1}"
+
+CP="/u01/oracle/jlib/frmxmltools.jar:/u01/oracle/jlib/frmjdapi.jar:/u01/oracle/lib/xmlparserv2.jar:/u01/oracle/jlib/frmbld.jar:/u01/oracle/oracle_common/modules/oracle.bali.share/share.jar:/u01/oracle/oracle_common/modules/oracle.bali.jewt/jewt4.jar"
+
+if [ -f "/u01/oracle/jlib/frmxmltools.jar" ]; then
+    java -Djava.awt.headless=true -cp "$CP" oracle.forms.util.xmltools.Forms2XML "$@"
+elif [ -f "/u01/oracle/bin/forms_xml_converter.py" ]; then
+    python3 /u01/oracle/bin/forms_xml_converter.py --to-xml "$@"
+else
+    echo "❌ Neither Forms2XML jar nor converter python script found!" >&2
+    exit 1
+fi
+EOS
+chmod +x /u01/oracle/bin/frmf2xml.sh
+ln -sf /u01/oracle/bin/frmf2xml.sh /u01/oracle/bin/frmf2xml 2>/dev/null || true
+fi
+
+if [ ! -f "/u01/oracle/bin/frmxml2f.sh" ]; then
+cat << 'EOS' > /u01/oracle/bin/frmxml2f.sh
+#!/bin/bash
+export ORACLE_HOME="${ORACLE_HOME:-/u01/oracle}"
+export FORMS_PATH="${FORMS_PATH:-$ORACLE_HOME/forms:/u01/oracle/forms_apps}"
+export LD_LIBRARY_PATH="${ORACLE_HOME}/lib:${LD_LIBRARY_PATH:-}"
+export DISPLAY="${DISPLAY:-:1}"
+
+CP="/u01/oracle/jlib/frmxmltools.jar:/u01/oracle/jlib/frmjdapi.jar:/u01/oracle/lib/xmlparserv2.jar:/u01/oracle/jlib/frmbld.jar:/u01/oracle/oracle_common/modules/oracle.bali.share/share.jar:/u01/oracle/oracle_common/modules/oracle.bali.jewt/jewt4.jar"
+
+if [ -f "/u01/oracle/jlib/frmxmltools.jar" ]; then
+    java -Djava.awt.headless=true -cp "$CP" oracle.forms.util.xmltools.XML2Forms "$@"
+elif [ -f "/u01/oracle/bin/forms_xml_converter.py" ]; then
+    python3 /u01/oracle/bin/forms_xml_converter.py --to-fmb "$@"
+else
+    echo "❌ Neither XML2Forms jar nor converter python script found!" >&2
+    exit 1
+fi
+EOS
+chmod +x /u01/oracle/bin/frmxml2f.sh
+ln -sf /u01/oracle/bin/frmxml2f.sh /u01/oracle/bin/frmxml2f 2>/dev/null || true
+fi
 
 # 1. Start HTTP responder immediately for 0.0.0.0:9001 and 0.0.0.0:6082 (Builder)
 echo "🚀 Starting Oracle Forms 14c Services on ports 9001 and 6082 (Builder)..."

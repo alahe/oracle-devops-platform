@@ -2,7 +2,7 @@
 
 # 📐 Oracle Forms 14c veiklos scenarijai (`scripts/forms/`)
 
-Šiame kataloge pateikiami įrankiai, skirti valdyti Oracle Forms 14c vykdymo aplinką, kompiliavimą iš komandinės eilutės, WebLogic domeno diagnostiką ir programų diegimą.
+Šiame kataloge pateikiami įrankiai, skirti valdyti Oracle Forms 14c vykdymo aplinką, kompiliavimą iš komandinės eilutės, dvikryptį XML konvertavimą, roundtrip patvirtinimą, WebLogic domeno diagnostiką ir programų diegimą.
 
 ---
 
@@ -15,6 +15,15 @@
 - **`compile-form.sh`:** Kompiliuoja dvejetainį `.fmb` šaltinio formos failą į vykdomąjį `.fmx` failą iš komandinės eilutės.
   ```bash
   ./scripts/forms/compile-form.sh /kelias/forma.fmb
+  ```
+- **`form-to-xml.sh`:** Dvikryptis FMB ↔ XML keitiklis (suderinamas su Git diff ir APEX Migration Workshop).
+  ```bash
+  ./scripts/forms/form-to-xml.sh forms_apps/orders.fmb            # FMB -> XML
+  ./scripts/forms/form-to-xml.sh --to-fmb forms_apps/orders.xml   # XML -> FMB
+  ```
+- **`test-fmb-xml-roundtrip.sh`:** Vykdo 2-pass roundtrip patikrinimą (`FMB -> XML(1) -> temp.fmb -> XML(2)`) ir atlieka semantinį palyginimą.
+  ```bash
+  ./scripts/forms/test-fmb-xml-roundtrip.sh forms_apps/test.fmb
   ```
 - **`deploy-forms-apps.sh`:** Įdiegia sukompiliuotas formas ir meniu į konteinerio katalogą `/u01/oracle/forms_apps`.
   ```bash

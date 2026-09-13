@@ -41,7 +41,13 @@ Testien suorittaminen puhtaalta pöydältä (automaattisella `reset-all.sh -y` -
 # 6. Arkkitehtuurikuvien ja profiilien eheyden tarkistus:
 ./tests/unit/test-blueprint-profiles-integrity.sh
 
-# 7. Tietovaraston tilastot ja koodikannan mittarit:
+# 7. Tietokantaprofiilien ja topologian eristystarkistus (ei päällekkäisyyksiä):
+./tests/unit/test-database-profiles-isolation.sh
+
+# 8. Konttien nimieristyksen ja alimerkkijonojen estotarkistus (Sääntö 15):
+./tests/unit/test-container-naming-isolation.sh
+
+# 9. Tietovaraston tilastot ja koodikannan mittarit:
 ./tests/report-repo-stats.sh
 ```
 
@@ -53,3 +59,4 @@ Jokainen testiajo tarkistaa:
 1. **🌐 Verkkopalveluiden HTTP-Terveys (`scripts/check-urls.sh`):** HTTP/HTTPS-vastaukset (200/302).
 2. **🔑 SEPS Walletin Salasanaton Yhteys (`scripts/check-wallet.sh`):** SQLcl-yhteydet ilman salasanoja.
 3. **📊 Suorituskykymittaukset (Sääntö 1):** Vaiheiden kestot tallennetaan tiedostoon `metrics/setup_benchmarks.json`.
+4. **🛡️ Konttien Nimieristys (Sääntö 15):** Tarkka nimenmääritys estää virheelliset alimerkkijonojen osumat blueprintien välillä.

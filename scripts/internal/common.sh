@@ -14,6 +14,9 @@ _ORACLE_COMMON_SH_LOADED=true
 _COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$_COMMON_DIR/../.." && pwd)"
 
+# Ensure standard python framework, local bins, Homebrew (podman) and user tools are in PATH
+export PATH="/Library/Frameworks/Python.framework/Versions/3.11/bin:/usr/local/bin:/opt/homebrew/bin:$HOME/.local/bin:$PATH"
+
 # Source central localization engine
 if [ -f "$_COMMON_DIR/i18n.sh" ]; then
   # shellcheck source=/dev/null
@@ -108,7 +111,68 @@ format_custom_image_tag() {
 }
 
 # ----------------------------------------------------------------------------
-# 2.5 Standardized In-Container SQLcl Invocation (Rule 6)
+# 2.6 Standardized Container Status & Exact-Match Inspection (Rule 15)
+# Prevents substring collision (e.g. app-publisher matching app-publisher-designer)
+# ----------------------------------------------------------------------------
+is_container_running() {
+  local cname="${1:-}"
+  [ -z "$cname" ] && return 1
+
+  local cli="podman"
+  if ! command -v podman >/dev/null 2>&1 && command -v docker >/dev/null 2>&1; then
+    cli="docker"
+  fi
+
+  if ! $cli container exists "$cname" 2>/dev/null; then
+    return 1
+  fi
+
+  local status
+  status=$($cli inspect --format='{{.State.Status}}' "$cname" 2>/dev/null || echo "")
+  [ "$status" = "running" ]
+}
+
+is_container_healthy() {
+  local cname="${1:-}"
+  [ -z "$cname" ] && return 1
+
+  if ! is_container_running "$cname"; then
+    return 1
+  fi
+
+  local cli="podman"
+  if ! command -v podman >/dev/null 2>&1 && command -v docker >/dev/null 2>&1; then
+    cli="docker"
+  fi
+
+  local h_status
+  h_status=$($cli inspect --format='{{.State.Health.Status}}' "$cname" 2>/dev/null || echo "")
+  if [ "$h_status" = "healthy" ] || [ "$h_status" = "none" ] || [ -z "$h_status" ]; then
+    return 0
+  fi
+  return 1
+}
+
+is_container_present() {
+  local cname="${1:-}"
+  [ -z "$cname" ] && return 1
+
+  local cli="podman"
+  if ! command -v podman >/dev/null 2>&1 && command -v docker >/dev/null 2>&1; then
+    cli="docker"
+  fi
+
+  $cli container exists "$cname" 2>/dev/null
+}
+
+container_exact_grep() {
+  local cname="${1:-}"
+  [ -z "$cname" ] && return 1
+  grep -q -E "^${cname}$"
+}
+
+# ----------------------------------------------------------------------------
+# 2.7 Standardized In-Container SQLcl Invocation (Rule 6)
 # ----------------------------------------------------------------------------
 run_container_sqlcl() {
   local target="$1"
@@ -289,6 +353,67 @@ if durations:
     data['max_duration_seconds'] = max(durations)
 with open(p, 'w') as f:
     json.dump(data, f, indent=2)
+" 2>/dev/null || true
+}
+
+save_blueprint_ram_benchmark() {
+  local bp_id="$1"
+  [ -z "$bp_id" ] && return 0
+  local m_dir="$WORKSPACE_DIR/metrics"
+  mkdir -p "$m_dir"
+  local ram_file="$m_dir/blueprint_ram_benchmarks.json"
+  [ -f "$ram_file" ] || return 0
+
+  python3 -c "
+import json, os, datetime, subprocess, re
+bp_id = str('$bp_id')
+p = '$ram_file'
+if not os.path.exists(p):
+    exit(0)
+try:
+    with open(p, 'r') as f:
+        data = json.load(f)
+except Exception:
+    exit(0)
+
+bps = data.get('blueprints', {})
+if bp_id not in bps:
+    exit(0)
+
+target_containers = bps[bp_id].get('containers', [])
+total_mb = 0.0
+try:
+    res = subprocess.run(['podman', 'stats', '--no-stream', '--format', 'json'], capture_output=True, text=True, timeout=4)
+    if res.returncode == 0 and res.stdout.strip():
+        items = json.loads(res.stdout)
+        for item in items:
+            cname = item.get('name', '')
+            if cname in target_containers:
+                mem_str = item.get('mem_usage', '')
+                if '/' in mem_str:
+                    used_part = mem_str.split('/')[0].strip()
+                    m = re.match(r'^([\d\.]+)\s*([a-zA-Z]+)', used_part)
+                    if m:
+                        num = float(m.group(1))
+                        unit = m.group(2).upper()
+                        if 'G' in unit:
+                            total_mb += num * 1024.0
+                        elif 'M' in unit:
+                            total_mb += num
+                        elif 'K' in unit:
+                            total_mb += num / 1024.0
+except Exception:
+    pass
+
+if total_mb > 0:
+    measured_mb = int(round(total_mb))
+    now_str = datetime.datetime.now().isoformat()
+    bps[bp_id]['startup_ram_mb'] = measured_mb
+    bps[bp_id]['runtime_ram_mb'] = measured_mb
+    bps[bp_id]['last_measured'] = now_str
+    data['last_updated'] = now_str
+    with open(p, 'w') as f:
+        json.dump(data, f, indent=2)
 " 2>/dev/null || true
 }
 

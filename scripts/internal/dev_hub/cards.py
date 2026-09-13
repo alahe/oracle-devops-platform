@@ -242,34 +242,34 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
             ep_links.append('<a href="https://localhost:8448/ords/adb/dba_admin/sign-in?username=DBA_ADMIN&r=_sdw" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/adb/dba_admin/sign-in?username=DBA_ADMIN&r=_sdw\', \'DB_ADB_DBA_ADMIN\', \'DBA_ADMIN\', event)" data-i18n-title="tip_db_actions_wait" title="Database Actions (warmup ~1 min)">📊 DB Actions (DBA_ADMIN) ↗</a>')
             ep_links.append('<a href="https://localhost:8448/ords/adb/" target="_blank" class="btn-endpoint" title="ORDS Landing for ADB">🌐 ORDS (adb) ↗</a>')
         elif b_num == 5:
-            ep_links.append(f'<a href="http://localhost:8089/api/publisher/open?user=bip_developer" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_DEVELOPER\', \'bip_developer\', event)" style="border-color:rgba(56,189,248,0.5); color:#38bdf8;">🎨 Developer Portal (bip_developer) ↗</a>')
-            ep_links.append(f'<a href="http://localhost:8089/api/publisher/open?user=bip_user" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_USER\', \'bip_user\', event)" style="border-color:rgba(74,222,128,0.5); color:#4ade80;">👤 User Portal (bip_user) ↗</a>')
-            ep_links.append(f'<a href="http://localhost:8089/api/publisher/open?user=bip_admin" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_ADMIN\', \'bip_admin\', event)" style="border-color:rgba(251,146,60,0.5); color:#fb923c;">📑 Admin Portal (bip_admin) ↗</a>')
-            ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver/signout.jsp" target="_blank" class="btn-endpoint" style="border-color:rgba(248,113,113,0.5); color:#f87171;" title="Lõpeta ja tühista aktiivne WebLogic sessioon brauseris">🚪 Sign Out (Puhasta sessioon) ↗</a>')
-            ep_links.append(f'<a href="http://localhost:{pub_admin_port}/console" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_admin_port}/console\', \'DB_PUBLISHER_SYS\', \'weblogic\', event)" style="color:#fbbf24;">⚙️ WebLogic Admin Console ↗</a>')
-            ep_links.append('<button type="button" class="btn-endpoint" onclick="openReportStudioModal()" style="border-color:rgba(168,85,247,0.6); color:#c084fc; background:rgba(168,85,247,0.1); font-weight:600;"><span>🎨</span> <span data-i18n="btn_report_lab">Aruannete Labor</span> ↗</button>')
+            ep_links.append(f'<a href="http://localhost:8089/api/publisher/open?user=bip_developer" target="_blank" class="btn-endpoint btn-endpoint-sky" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_DEVELOPER\', \'bip_developer\', event)">🎨 Developer Portal (bip_developer) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:8089/api/publisher/open?user=bip_user" target="_blank" class="btn-endpoint btn-endpoint-green" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_USER\', \'bip_user\', event)">👤 User Portal (bip_user) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:8089/api/publisher/open?user=bip_admin" target="_blank" class="btn-endpoint btn-endpoint-orange" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_ADMIN\', \'bip_admin\', event)">📑 Admin Portal (bip_admin) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver/signout.jsp" target="_blank" class="btn-endpoint btn-endpoint-danger" title="Lõpeta ja tühista aktiivne WebLogic sessioon brauseris">🚪 Sign Out (Puhasta sessioon) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{pub_admin_port}/console" target="_blank" class="btn-endpoint btn-endpoint-amber" onclick="openServiceWithCredentials(\'http://localhost:{pub_admin_port}/console\', \'DB_PUBLISHER_SYS\', \'weblogic\', event)">⚙️ WebLogic Admin Console ↗</a>')
+            ep_links.append('<button type="button" class="btn-endpoint btn-endpoint-purple" onclick="openReportStudioModal()" style="font-weight:600;"><span>🎨</span> <span data-i18n="btn_report_lab">Aruannete Labor</span> ↗</button>')
         elif b_num == 6:
-            ep_links.append(f'<a href="http://localhost:{forms_runtime_port}/forms/frmservlet?form=test.fmx" target="_blank" class="btn-endpoint" style="color:#4ade80;">🟢 Forms Test Form ↗</a>')
-            ep_links.append(f'<a href="http://localhost:{forms_vnc_port}/vnc.html" target="_blank" class="btn-endpoint" style="color:#38bdf8;">🎨 Forms Builder GUI (noVNC) ↗</a>')
-            ep_links.append(f'<a href="http://localhost:{forms_wls_port}/console" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{forms_wls_port}/console\', \'DB_FORMS_SYS\', \'weblogic\', event)" style="color:#fbbf24;">⚙️ WebLogic Console ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{forms_runtime_port}/forms/frmservlet?form=test.fmx" target="_blank" class="btn-endpoint btn-endpoint-green">🟢 Forms Test Form ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{forms_vnc_port}/vnc.html" target="_blank" class="btn-endpoint btn-endpoint-sky">🎨 Forms Builder GUI (noVNC) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{forms_wls_port}/console" target="_blank" class="btn-endpoint btn-endpoint-amber" onclick="openServiceWithCredentials(\'http://localhost:{forms_wls_port}/console\', \'DB_FORMS_SYS\', \'weblogic\', event)">⚙️ WebLogic Console ↗</a>')
         elif b_num == 7:
-            ep_links.append('<a href="http://localhost:9502/xmlpserver" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:9502/xmlpserver\', \'DB_PUBLISHER_SYS\', \'Administrator\', event)" style="color:#fb923c;">📑 Analytics Publisher ↗</a>')
-            ep_links.append(f'<a href="http://localhost:9001/forms/frmservlet?form=test.fmx" target="_blank" class="btn-endpoint" style="color:#4ade80;">🟢 Forms Test Form ↗</a>')
-            ep_links.append('<a href="http://localhost:6082/vnc.html" target="_blank" class="btn-endpoint" style="color:#38bdf8;">🎨 Forms Builder GUI ↗</a>')
-            ep_links.append('<a href="http://localhost:7001/console" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:7001/console\', \'DB_FORMS_SYS\', \'weblogic\', event)" style="color:#fbbf24;">⚙️ Unified WLS Console ↗</a>')
-            ep_links.append('<button type="button" class="btn-endpoint" onclick="openReportStudioModal()" style="border-color:rgba(168,85,247,0.6); color:#c084fc; background:rgba(168,85,247,0.1); font-weight:600;"><span>🎨</span> <span data-i18n="btn_report_lab">Aruannete Labor</span> ↗</button>')
+            ep_links.append('<a href="http://localhost:9502/xmlpserver" target="_blank" class="btn-endpoint btn-endpoint-orange" onclick="openServiceWithCredentials(\'http://localhost:9502/xmlpserver\', \'DB_PUBLISHER_SYS\', \'Administrator\', event)">📑 Analytics Publisher ↗</a>')
+            ep_links.append(f'<a href="http://localhost:9001/forms/frmservlet?form=test.fmx" target="_blank" class="btn-endpoint btn-endpoint-green">🟢 Forms Test Form ↗</a>')
+            ep_links.append('<a href="http://localhost:6082/vnc.html" target="_blank" class="btn-endpoint btn-endpoint-sky">🎨 Forms Builder GUI ↗</a>')
+            ep_links.append('<a href="http://localhost:7001/console" target="_blank" class="btn-endpoint btn-endpoint-amber" onclick="openServiceWithCredentials(\'http://localhost:7001/console\', \'DB_FORMS_SYS\', \'weblogic\', event)">⚙️ Unified WLS Console ↗</a>')
+            ep_links.append('<button type="button" class="btn-endpoint btn-endpoint-purple" onclick="openReportStudioModal()" style="font-weight:600;"><span>🎨</span> <span data-i18n="btn_report_lab">Aruannete Labor</span> ↗</button>')
         elif b_num == 8:
-            ep_links.append(f'<a href="http://localhost:{ide_port}/?folder=/workspace" target="_blank" class="btn-endpoint" style="border-color:rgba(192,132,252,0.5); color:#c084fc;">💻 Open VS Code Web IDE ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{ide_port}/?folder=/workspace" target="_blank" class="btn-endpoint btn-endpoint-purple">💻 Open VS Code Web IDE ↗</a>')
         elif b_num == 9:
-            ep_links.append('<button type="button" class="btn-endpoint btn-endpoint-primary-cta" onclick="openReportStudioModal()" style="border-color:#c084fc; color:#ffffff; background:linear-gradient(135deg, rgba(168,85,247,0.85) 0%, rgba(126,34,206,0.95) 100%); font-weight:700; box-shadow:0 2px 10px rgba(168,85,247,0.35);"><span>⚡</span> <span data-i18n="btn_report_lab">Aruannete Labor</span> <span>(Fast-Render) ↗</span></button>')
-            ep_links.append(f'<a href="http://localhost:{designer_port}/vnc.html" target="_blank" class="btn-endpoint" style="border-color:rgba(244,114,182,0.5); color:#f472b6;">🎨 Open Template Designer GUI ↗</a>')
+            ep_links.append('<button type="button" class="btn-endpoint btn-endpoint-primary-cta" onclick="openReportStudioModal()"><span>⚡</span> <span data-i18n="btn_report_lab">Aruannete Labor</span> <span>(Fast-Render) ↗</span></button>')
+            ep_links.append(f'<a href="http://localhost:{designer_port}/vnc.html" target="_blank" class="btn-endpoint btn-endpoint-pink">🎨 Open Template Designer GUI ↗</a>')
         elif b_num == 10:
-            ep_links.append('<a href="https://localhost:8448/ords/_/landing" target="_blank" class="btn-endpoint" style="color:#06b6d4;">🔗 Central ORDS Landing ↗</a>')
+            ep_links.append('<a href="https://localhost:8448/ords/_/landing" target="_blank" class="btn-endpoint btn-endpoint-cyan">🔗 Central ORDS Landing ↗</a>')
             ep_links.append('<a href="https://localhost:8448/ords/" target="_blank" class="btn-endpoint">🌐 Remote Routing Edge ↗</a>')
         elif b_num == 11:
-            ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'DB_PUBLISHER_SYS\', \'Administrator\', event)" style="color:#fb923c;">📑 Open Analytics Publisher (BIP) ↗</a>')
-            ep_links.append(f'<a href="http://localhost:{pub_admin_port}/console" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_admin_port}/console\', \'DB_PUBLISHER_SYS\', \'weblogic\', event)" style="color:#fbbf24;">⚙️ WebLogic Admin Console ↗</a>')
-            ep_links.append('<button type="button" class="btn-endpoint" onclick="openReportStudioModal()" style="border-color:rgba(168,85,247,0.6); color:#c084fc; background:rgba(168,85,247,0.1); font-weight:600;"><span>🎨</span> <span data-i18n="btn_report_lab">Aruannete Labor</span> ↗</button>')
+            ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver" target="_blank" class="btn-endpoint btn-endpoint-orange" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'DB_PUBLISHER_SYS\', \'Administrator\', event)">📑 Open Analytics Publisher (BIP) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{pub_admin_port}/console" target="_blank" class="btn-endpoint btn-endpoint-amber" onclick="openServiceWithCredentials(\'http://localhost:{pub_admin_port}/console\', \'DB_PUBLISHER_SYS\', \'weblogic\', event)">⚙️ WebLogic Admin Console ↗</a>')
+            ep_links.append('<button type="button" class="btn-endpoint btn-endpoint-purple" onclick="openReportStudioModal()" style="font-weight:600;"><span>🎨</span> <span data-i18n="btn_report_lab">Aruannete Labor</span> ↗</button>')
 
         # Actions: Two equal-width action buttons (Architecture & Operations/Management)
         if is_up:
@@ -288,7 +288,7 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
         """
         testing_badge_html = ""
         if b.get("testing", False) or b_num in [10, 11]:
-            testing_badge_html = '<span class="badge-testing-pill" style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:12px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); font-size: 0.72rem; font-weight: 600;" title="Konteiner käivitub, kuid funktsionaalsus on aktiivsel testimisel ja täiustamisel"><span class="badge-dot" style="width:6px; height:6px; border-radius:50%; background:#f59e0b;"></span><span data-i18n="badge_testing_refinement">⚠️ Testimisel / Täiustamisel</span></span>'
+            testing_badge_html = '<span class="badge-testing-pill" title="Konteiner käivitub, kuid funktsionaalsus on aktiivsel testimisel ja täiustamisel"><span class="badge-dot"></span><span data-i18n="badge_testing_refinement">⚠️ Testimisel / Täiustamisel</span></span>'
 
         card_html = f"""            <!-- Blueprint #{b_num}: {t_en} -->
                 <div class=\"card {card_cls}\" data-container=\"{primary_c}\" data-cnames=\"{cnames_str}\" data-bp=\"{b_num}\" data-cat=\"{b_cat}\" style=\"border-color: {theme['border']};\">
@@ -360,7 +360,7 @@ def render_wallet_table_rows(all_dbs_for_services, passwords_map=None, pub_profi
         db_port = db_info["port"]
         users = db_info["users"]
         is_up = is_container_online(c_name, running_containers)
-        status_badge = '<span class="badge badge-success" style="font-size:0.75rem; padding:3px 8px;">🟢 <span data-i18n="status_online">Töös</span></span>' if is_up else '<span class="badge badge-danger" style="font-size:0.75rem; padding:3px 8px; background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.4);">🔴 <span data-i18n="status_offline">Maas</span></span>'
+        status_badge = '<span class="badge badge-success" style="font-size:0.75rem; padding:3px 8px;">🟢 <span data-i18n="status_online">Töös</span></span>' if is_up else '<span class="badge badge-danger" style="font-size:0.75rem; padding:3px 8px;">🔴 <span data-i18n="status_offline">Maas</span></span>'
 
         if db_info.get("apex_enabled", True):
             admin_alias = f"DB_{c_short}_APEX_ADMIN"
@@ -369,10 +369,10 @@ def render_wallet_table_rows(all_dbs_for_services, passwords_map=None, pub_profi
                             <td><strong>⚙️ APEX Instance Admin</strong><br/><span style=\"font-size:0.75rem; color:#64748b;\">{c_name} (Port {db_port})</span></td>
                             <td class=\"wallet-status-cell\" data-cname=\"{c_name}\">{status_badge}</td>
                             <td>
-                                <span style=\"background:rgba(245,158,11,0.18); color:#f59e0b; padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.95rem; cursor:pointer; display:inline-block; margin-bottom:2px;\" onclick=\"copyUsername('ADMIN', this)\" data-i18n-title=\"tip_copy_user\" title=\"Click to copy username to clipboard\">ADMIN</span><br/>
+                                <span class=\"wallet-user-chip chip-amber\" onclick=\"copyUsername('ADMIN', this)\" data-i18n-title=\"tip_copy_user\" title=\"Click to copy username to clipboard\">ADMIN</span><br/>
                                 <span style=\"font-size:0.75rem; color:#94a3b8;\" data-i18n=\"desc_u_apex_admin\">APEX Platform Administrator</span>
                             </td>
-                            <td><span style=\"background:rgba(56,189,248,0.15); color:#38bdf8; padding:3px 8px; border-radius:4px; font-weight:600; font-size:0.85rem; cursor:pointer;\" onclick=\"copyUsername('INTERNAL', this)\" data-i18n-title=\"tip_copy_ws\" title=\"Click to copy workspace name to clipboard\">INTERNAL</span> <span style=\"font-size:0.75rem; color:#94a3b8;\">(Workspace)</span></td>
+                            <td><span class=\"wallet-user-chip chip-sm chip-sky\" onclick=\"copyUsername('INTERNAL', this)\" data-i18n-title=\"tip_copy_ws\" title=\"Click to copy workspace name to clipboard\">INTERNAL</span> <span style=\"font-size:0.75rem; color:#94a3b8;\">(Workspace)</span></td>
                             <td><code style=\"color:#22c55e; cursor:pointer;\" onclick=\"copyBadge(this, '{admin_alias}')\" title=\"Click to copy alias\">{admin_alias}</code></td>
                             <td>
                                 <div style=\"display:flex; gap:4px; flex-wrap:wrap; align-items:center;\">
@@ -402,19 +402,19 @@ def render_wallet_table_rows(all_dbs_for_services, passwords_map=None, pub_profi
             elif is_dev:
                 svc_desc = f"🛠️ Developer & DB Actions ({c_name})"
 
-            scope_badge = f"""<span style=\"background:rgba(148,163,184,0.15); color:#cbd5e1; padding:3px 8px; border-radius:4px; font-weight:600; font-size:0.85rem;\">{u_role}</span>"""
+            scope_badge = f"""<span class=\"wallet-user-chip chip-sm chip-slate\">{u_role}</span>"""
             if is_dev:
-                scope_badge = f"""<span style=\"background:rgba(56,189,248,0.15); color:#38bdf8; padding:3px 8px; border-radius:4px; font-weight:600; font-size:0.85rem; cursor:pointer;\" onclick=\"copyUsername('{ws_name}', this)\" data-i18n-title=\"tip_copy_ws\" title=\"Click to copy workspace name to clipboard\">{ws_name}</span> <span style=\"font-size:0.75rem; color:#94a3b8;\">({u_role})</span>"""
+                scope_badge = f"""<span class=\"wallet-user-chip chip-sm chip-sky\" onclick=\"copyUsername('{ws_name}', this)\" data-i18n-title=\"tip_copy_ws\" title=\"Click to copy workspace name to clipboard\">{ws_name}</span> <span style=\"font-size:0.75rem; color:#94a3b8;\">({u_role})</span>"""
 
             btn_list = []
             if is_dev:
                 apex_url = f"https://localhost:8448/ords/{p_name}/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company={ws_name}&f4550_p1_username={u_name}"
                 sdw_url = f"https://localhost:8448/ords/{p_name}/user_developer/sign-in?username={u_name}&r=_sdw"
                 btn_list.append(f"""<button class=\"btn btn-sm btn-primary\" style=\"padding: 4px 8px; font-size: 0.75rem;\" onclick=\"openServiceWithCredentials('{apex_url}', '{u_alias}', '{u_name}', event)\" data-i18n-title=\"tip_open_service\" title=\"Opens APEX Builder & copies password\"><span>🚀</span> <span data-i18n=\"btn_launch_apex\">APEX</span></button>""")
-                btn_list.append(f"""<button class=\"btn btn-sm btn-secondary\" style=\"padding: 4px 8px; font-size: 0.75rem; color:#38bdf8; border-color:rgba(56,189,248,0.3);\" onclick=\"openServiceWithCredentials('{sdw_url}', '{u_alias}', '{u_name}', event)\" data-i18n-title=\"tip_db_actions_wait\" title=\"Database Actions (warmup ~1 min)\"><span>📊</span> <span data-i18n=\"btn_launch_sdw\">DB Actions</span></button>""")
+                btn_list.append(f"""<button class=\"btn btn-sm btn-secondary\" style=\"padding: 4px 8px; font-size: 0.75rem;\" onclick=\"openServiceWithCredentials('{sdw_url}', '{u_alias}', '{u_name}', event)\" data-i18n-title=\"tip_db_actions_wait\" title=\"Database Actions (warmup ~1 min)\"><span>📊</span> <span data-i18n=\"btn_launch_sdw\">DB Actions</span></button>""")
             elif is_dba:
                 sdw_url = f"https://localhost:8448/ords/{p_name}/dba_admin/sign-in?username={u_name}&r=_sdw"
-                btn_list.append(f"""<button class=\"btn btn-sm btn-secondary\" style=\"padding: 4px 8px; font-size: 0.75rem; color:#38bdf8; border-color:rgba(56,189,248,0.3);\" onclick=\"openServiceWithCredentials('{sdw_url}', '{u_alias}', '{u_name}', event)\" data-i18n-title=\"tip_db_actions_wait\" title=\"Database Actions (warmup ~1 min)\"><span>📊</span> <span data-i18n=\"btn_launch_sdw\">DB Actions</span></button>""")
+                btn_list.append(f"""<button class=\"btn btn-sm btn-secondary\" style=\"padding: 4px 8px; font-size: 0.75rem;\" onclick=\"openServiceWithCredentials('{sdw_url}', '{u_alias}', '{u_name}', event)\" data-i18n-title=\"tip_db_actions_wait\" title=\"Database Actions (warmup ~1 min)\"><span>📊</span> <span data-i18n=\"btn_launch_sdw\">DB Actions</span></button>""")
 
             btn_list.append(f"""<button class=\"copy-btn\" style=\"position:static; padding: 4px 8px; font-size: 0.75rem;\" onclick=\"copyBadge(this, 'sql /@{u_alias}')\" title=\"Copy passwordless SQLcl connection\"><span>💻</span> <code>sql /@{u_alias}</code></button>""")
             btn_list.append(f"""<button class=\"copy-btn\" style=\"position:static; padding: 4px 8px; font-size: 0.75rem;\" onclick=\"handleCopyPassword('{u_alias}', this)\" data-i18n-title=\"tip_copy_pwd\" title=\"Copy password to clipboard\">📋 <span data-i18n=\"btn_copy_pwd\">Parool</span></button>""")
@@ -425,7 +425,7 @@ def render_wallet_table_rows(all_dbs_for_services, passwords_map=None, pub_profi
                             <td><strong>{svc_desc}</strong><br/><span style=\"font-size:0.75rem; color:#64748b;\">{c_name} (Port {db_port})</span></td>
                             <td class=\"wallet-status-cell\" data-cname=\"{c_name}\">{status_badge}</td>
                             <td>
-                                <span style=\"background:rgba(56,189,248,0.18); color:{u_color}; padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.95rem; cursor:pointer; display:inline-block; margin-bottom:2px;\" onclick=\"copyUsername('{u_name}', this)\" data-i18n-title=\"tip_copy_user\" title=\"Click to copy username to clipboard\">{u_name}</span><br/>
+                                <span class=\"wallet-user-chip chip-sky\" onclick=\"copyUsername('{u_name}', this)\" data-i18n-title=\"tip_copy_user\" title=\"Click to copy username to clipboard\">{u_name}</span><br/>
                                 <span style=\"font-size:0.75rem; color:#94a3b8;\" data-i18n=\"{desc_k}\">User Account</span>
                             </td>
                             <td>{scope_badge}</td>
@@ -440,15 +440,15 @@ def render_wallet_table_rows(all_dbs_for_services, passwords_map=None, pub_profi
         pub_alias = "DB_PUBLISHER_SYS"
         pub_url = f"http://localhost:{pub_port}/xmlpserver"
         is_pub_up = is_container_online("app-publisher", running_containers)
-        pub_status_badge = '<span class="badge badge-success" style="font-size:0.75rem; padding:3px 8px;">🟢 <span data-i18n="status_online">Töös</span></span>' if is_pub_up else '<span class="badge badge-danger" style="font-size:0.75rem; padding:3px 8px; background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.4);">🔴 <span data-i18n="status_offline">Maas</span></span>'
+        pub_status_badge = '<span class="badge badge-success" style="font-size:0.75rem; padding:3px 8px;">🟢 <span data-i18n="status_online">Töös</span></span>' if is_pub_up else '<span class="badge badge-danger" style="font-size:0.75rem; padding:3px 8px;">🔴 <span data-i18n="status_offline">Maas</span></span>'
         table_rows.append(f"""                    <tr id=\"row-{pub_alias}\" data-cname=\"app-publisher\">
                             <td><strong>👑 WebLogic Admin (Publisher)</strong><br/><span style=\"font-size:0.75rem; color:#64748b;\">app-publisher (Port {pub_port})</span></td>
                             <td class=\"wallet-status-cell\" data-cname=\"app-publisher\">{pub_status_badge}</td>
                             <td>
-                                <span style=\"background:rgba(251,146,60,0.18); color:#fb923c; padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.95rem; cursor:pointer; display:inline-block; margin-bottom:2px;\" onclick=\"copyUsername('weblogic', this)\" data-i18n-title=\"tip_copy_user\" title=\"Click to copy username\">weblogic</span><br/>
+                                <span class=\"wallet-user-chip chip-orange\" onclick=\"copyUsername('weblogic', this)\" data-i18n-title=\"tip_copy_user\" title=\"Click to copy username\">weblogic</span><br/>
                                 <span style=\"font-size:0.75rem; color:#94a3b8;\">Domain Administrator</span>
                             </td>
-                            <td><span style=\"background:rgba(251,146,60,0.15); color:#fb923c; padding:3px 8px; border-radius:4px; font-weight:600; font-size:0.85rem;\">WLS_ADMIN</span></td>
+                            <td><span class=\"wallet-user-chip chip-sm chip-orange\">WLS_ADMIN</span></td>
                             <td><code style=\"color:#22c55e; cursor:pointer;\" onclick=\"copyBadge(this, '{pub_alias}')\" title=\"Click to copy alias\">{pub_alias}</code></td>
                             <td>
                                 <button class=\"btn btn-sm btn-primary\" style=\"padding: 4px 8px; font-size: 0.75rem; margin-right: 4px;\" onclick=\"openServiceWithCredentials('{pub_url}', '{pub_alias}', 'weblogic', event)\" data-i18n-title=\"tip_open_service\" title=\"Opens portal & copies password to clipboard\"><span>🚀</span> <span data-i18n=\"btn_launch_copy\">Launch & Copy</span></button>
@@ -502,15 +502,15 @@ def render_wallet_table_rows(all_dbs_for_services, passwords_map=None, pub_profi
         forms_alias = "DB_FORMS_SYS"
         forms_url = f"http://localhost:{forms_wls_port}/console"
         is_forms_up = is_container_online("app-forms", running_containers)
-        forms_status_badge = '<span class="badge badge-success" style="font-size:0.75rem; padding:3px 8px;">🟢 <span data-i18n="status_online">Töös</span></span>' if is_forms_up else '<span class="badge badge-danger" style="font-size:0.75rem; padding:3px 8px; background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.4);">🔴 <span data-i18n="status_offline">Maas</span></span>'
+        forms_status_badge = '<span class="badge badge-success" style="font-size:0.75rem; padding:3px 8px;">🟢 <span data-i18n="status_online">Töös</span></span>' if is_forms_up else '<span class="badge badge-danger" style="font-size:0.75rem; padding:3px 8px;">🔴 <span data-i18n="status_offline">Maas</span></span>'
         table_rows.append(f"""                    <tr id=\"row-{forms_alias}\" data-cname=\"app-forms\">
-                            <td><strong>⚙️ WebLogic Admin (Forms / WLS)</strong><br/><span style=\"font-size:0.75rem; color:#64748b;\">app-forms (Port {forms_wls_port})</span></td>
+                            <td><strong>⚙️ WebLogic Admin (Forms / WLS)</strong><br/><span style=\"font-size:0.75rem; color:#64748b;\">{c_name} (Port {forms_wls_port})</span></td>
                             <td class=\"wallet-status-cell\" data-cname=\"app-forms\">{forms_status_badge}</td>
                             <td>
-                                <span style=\"background:rgba(74,222,128,0.18); color:#4ade80; padding:3px 8px; border-radius:4px; font-weight:700; font-size:0.95rem; cursor:pointer; display:inline-block; margin-bottom:2px;\" onclick=\"copyUsername('weblogic', this)\" data-i18n-title=\"tip_copy_user\" title=\"Click to copy username\">weblogic</span><br/>
+                                <span class=\"wallet-user-chip chip-green\" onclick=\"copyUsername('weblogic', this)\" data-i18n-title=\"tip_copy_user\" title=\"Click to copy username\">weblogic</span><br/>
                                 <span style=\"font-size:0.75rem; color:#94a3b8;\">Domain Administrator</span>
                             </td>
-                            <td><span style=\"background:rgba(74,222,128,0.15); color:#4ade80; padding:3px 8px; border-radius:4px; font-weight:600; font-size:0.85rem;\">WLS_ADMIN</span></td>
+                            <td><span class=\"wallet-user-chip chip-sm chip-green\">WLS_ADMIN</span></td>
                             <td><code style=\"color:#22c55e; cursor:pointer;\" onclick=\"copyBadge(this, '{forms_alias}')\" title=\"Click to copy alias\">{forms_alias}</code></td>
                             <td>
                                 <button class=\"btn btn-sm btn-primary\" style=\"padding: 4px 8px; font-size: 0.75rem; margin-right: 4px;\" onclick=\"openServiceWithCredentials('{forms_url}', '{forms_alias}', 'weblogic', event)\" data-i18n-title=\"tip_open_service\" title=\"Opens portal & copies password to clipboard\"><span>🚀</span> <span data-i18n=\"btn_launch_copy\">Launch & Copy</span></button>

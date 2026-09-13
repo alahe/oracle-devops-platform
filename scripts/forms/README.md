@@ -2,7 +2,7 @@
 
 # 📐 Oracle Forms 14c Operational Scripts (`scripts/forms/`)
 
-This directory provides operational tools for managing Oracle Forms 14c runtime environments, headless compilation, WebLogic domain diagnostics, and application deployments.
+This directory provides operational tools for managing Oracle Forms 14c runtime environments, headless compilation, bidirectional XML conversion, roundtrip verification, WebLogic domain diagnostics, and application deployments.
 
 ---
 
@@ -15,6 +15,15 @@ This directory provides operational tools for managing Oracle Forms 14c runtime 
 - **`compile-form.sh`:** Compiles `.fmb` binary source forms into executable `.fmx` from CLI.
   ```bash
   ./scripts/forms/compile-form.sh /path/to/form.fmb
+  ```
+- **`form-to-xml.sh`:** Bidirectional FMB ↔ XML converter (Git diff and APEX Migration Workshop compatible).
+  ```bash
+  ./scripts/forms/form-to-xml.sh forms_apps/orders.fmb            # FMB -> XML
+  ./scripts/forms/form-to-xml.sh --to-fmb forms_apps/orders.xml   # XML -> FMB
+  ```
+- **`test-fmb-xml-roundtrip.sh`:** Executes 2-pass roundtrip verification (`FMB -> XML(1) -> temp.fmb -> XML(2)`) and performs deep AST semantic diff.
+  ```bash
+  ./scripts/forms/test-fmb-xml-roundtrip.sh forms_apps/test.fmb
   ```
 - **`deploy-forms-apps.sh`:** Deploys compiled Forms and menus into `/u01/oracle/forms_apps` inside the container.
   ```bash

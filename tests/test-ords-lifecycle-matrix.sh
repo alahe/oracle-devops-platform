@@ -99,8 +99,7 @@ echo -e "\n${YELLOW}⭐ [Scenario A] Deploying Blueprint 0 (Central Proxy DB + O
 
 # Verify A.1 containers and endpoints
 A1_DUR=$(format_duration $(( $(date +%s) - A1_START )))
-if podman ps --filter name=db-proxy --filter status=running -q | grep -q . && \
-   podman ps --filter name=app-ords --filter status=running -q | grep -q .; then
+if is_container_running "db-proxy" && is_container_running "app-ords"; then
   # Test HTTP response from ORDS and Database Actions
   HTTP_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost:8448/ords/proxy/ || echo "000")
   HTTP_SQLDEV_CODE=$(curl -k -s -o /dev/null -w "%{http_code}" https://localhost:8448/ords/proxy/sql-developer || echo "000")
@@ -120,8 +119,7 @@ echo -e "\n${YELLOW}⭐ [Scenario A] Deploying Blueprint 1 (Standalone ALISE DB)
 
 A2_DUR=$(format_duration $(( $(date +%s) - A2_START )))
 # Check db-alise is running AND app-ords is still running from env0
-if podman ps --filter name=db-alise --filter status=running -q | grep -q . && \
-   podman ps --filter name=app-ords --filter status=running -q | grep -q .; then
+if is_container_running "db-alise" && is_container_running "app-ords"; then
   # Check if alise pool descriptor was copied or exists in app-ords
   POOL_CHECK=$(podman exec app-ords find /etc/ords/config/databases -name "pool.xml" 2>/dev/null | grep -E "alise|default" || true)
   record_result "Scenario A" "BP 1 Add (db-alise + pool auto-register)" "$A2_DUR" "PASSED" "db-alise active, central ORDS pool: ${POOL_CHECK:-registered}"
@@ -163,11 +161,11 @@ echo -e "\n${YELLOW}⭐ [Scenario B] Deploying Blueprint 1 directly without ORDS
 B1_DUR=$(format_duration $(( $(date +%s) - B1_START )))
 # Check db-alise is running AND app-ords is NOT running
 ORDS_RUNNING="false"
-if podman ps --filter name=app-ords --filter status=running -q | grep -q .; then
+if is_container_running "app-ords"; then
   ORDS_RUNNING="true"
 fi
 
-if podman ps --filter name=db-alise --filter status=running -q | grep -q . && [ "$ORDS_RUNNING" = "false" ]; then
+if is_container_running "db-alise" && [ "$ORDS_RUNNING" = "false" ]; then
   record_result "Scenario B" "BP 1 Deploy without ORDS" "$B1_DUR" "PASSED" "db-alise active, app-ords container absent (0 MB web RAM)"
 else
   record_result "Scenario B" "BP 1 Deploy without ORDS" "$B1_DUR" "FAILED" "Unexpected container state (db-alise missing or app-ords running)"

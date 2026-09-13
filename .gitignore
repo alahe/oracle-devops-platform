@@ -112,3 +112,5 @@ docker/forms/dockerfiles/*/*.zip
 __pycache__/
 *.pyc
 .~lock.*#
+templates/publisher/.previews/
+templates/publisher/tmp/

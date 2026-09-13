@@ -2,7 +2,7 @@
 
 # 📐 Oracle Forms 14c darbības skripti (`scripts/forms/`)
 
-Šis direktorijs nodrošina rīkus Oracle Forms 14c izpildlaika vides, komandrindas kompilēšanas, WebLogic domēna diagnostikas un lietotņu ieviešanas pārvaldībai.
+Šis direktorijs nodrošina rīkus Oracle Forms 14c izpildlaika vides, komandrindas kompilēšanas, divvirzienu XML konvertēšanas, roundtrip verifikācijas, WebLogic domēna diagnostikas un lietotņu ieviešanas pārvaldībai.
 
 ---
 
@@ -15,6 +15,15 @@
 - **`compile-form.sh`:** Kompilē bināro `.fmb` avota formu izpildāmā `.fmx` failā no komandrindas.
   ```bash
   ./scripts/forms/compile-form.sh /ceļš/forma.fmb
+  ```
+- **`form-to-xml.sh`:** Divvirzienu FMB ↔ XML konvertētājs (saderīgs ar Git diff un APEX Migration Workshop).
+  ```bash
+  ./scripts/forms/form-to-xml.sh forms_apps/orders.fmb            # FMB -> XML
+  ./scripts/forms/form-to-xml.sh --to-fmb forms_apps/orders.xml   # XML -> FMB
+  ```
+- **`test-fmb-xml-roundtrip.sh`:** Veic 2-pass roundtrip pārbaudi (`FMB -> XML(1) -> temp.fmb -> XML(2)`) un semantisko salīdzināšanu.
+  ```bash
+  ./scripts/forms/test-fmb-xml-roundtrip.sh forms_apps/test.fmb
   ```
 - **`deploy-forms-apps.sh`:** Ievieš kompilētās formas un izvēlnes konteinerā mapē `/u01/oracle/forms_apps`.
   ```bash

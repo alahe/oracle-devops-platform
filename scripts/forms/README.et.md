@@ -2,7 +2,7 @@
 
 # 📐 Oracle Forms 14c operatsioonide skriptid (`scripts/forms/`)
 
-Käesolev kataloog sisaldab tööriistu Oracle Forms 14c käitussüsteemi, käsurea kompileerimise, WebLogic domeeni diagnostika ja vormirakenduste tarne haldamiseks.
+Käesolev kataloog sisaldab tööriistu Oracle Forms 14c käitussüsteemi, käsurea kompileerimise, kahesuunalise XML konverteerimise, roundtrip verifitseerimise, WebLogic domeeni diagnostika ja vormirakenduste tarne haldamiseks.
 
 ---
 
@@ -15,6 +15,15 @@ Käesolev kataloog sisaldab tööriistu Oracle Forms 14c käitussüsteemi, käsu
 - **`compile-form.sh`:** Kompileerib `.fmb` binaarse vormiallika käsurealt käivitatavaks `.fmx` failiks.
   ```bash
   ./scripts/forms/compile-form.sh /asukoht/vorm.fmb
+  ```
+- **`form-to-xml.sh`:** Kahesuunaline FMB ↔ XML konverter (Git diff ja APEX Migration Workshop ühilduv).
+  ```bash
+  ./scripts/forms/form-to-xml.sh forms_apps/orders.fmb            # FMB -> XML
+  ./scripts/forms/form-to-xml.sh --to-fmb forms_apps/orders.xml   # XML -> FMB
+  ```
+- **`test-fmb-xml-roundtrip.sh`:** Käivitab 2-pass roundtrip kontrolli (`FMB -> XML(1) -> temp.fmb -> XML(2)`) ja teeb semantilise süvavõrdluse.
+  ```bash
+  ./scripts/forms/test-fmb-xml-roundtrip.sh forms_apps/test.fmb
   ```
 - **`deploy-forms-apps.sh`:** Tarnib kompileeritud vormid ja menüüd konteinerisse kataloogi `/u01/oracle/forms_apps`.
   ```bash

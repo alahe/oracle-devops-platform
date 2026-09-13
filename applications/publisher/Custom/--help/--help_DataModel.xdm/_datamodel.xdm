@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataModel xmlns="http://xmlns.oracle.com/oxp/xmlp" version="2.0">
+  <properties>
+    <property name="include_parameters" value="true"/>
+    <property name="include_null_Element" value="true"/>
+    <property name="xml_tag_case" value="upper"/>
+  </properties>
+  <dataSources>
+    <defaultDataSource value="ALISE_APP_DB"/>
+  </dataSources>
+  <dataSets>
+    <dataSet name="Q_MAIN" type="complex">
+      <sql dataSourceRef="ALISE_APP_DB">
+        <![CDATA[
+SELECT 
+    'Eesti Ettevõte OÜ'         AS company_name,
+    '12345678'                  AS reg_code,
+    'EE101234567'               AS vat_number,
+    '--help'           AS report_title,
+    'DOC-2026-001'              AS document_num,
+    TO_CHAR(SYSDATE, 'YYYY-MM-DD') AS document_date,
+    USER                        AS author,
+    1                           AS row_num,
+    'ITEM-01'                   AS item_code,
+    'Standard Teenus / Toode'   AS item_name,
+    10                          AS qty,
+    100.00                      AS total,
+    100.00                      AS grand_total
+FROM DUAL
+        ]]>
+      </sql>
+    </dataSet>
+  </dataSets>
+</dataModel>

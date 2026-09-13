@@ -103,9 +103,17 @@ if [ -x "$SCRIPT_DIR/internal/test-urls.sh" ]; then
   "$SCRIPT_DIR/internal/test-urls.sh" 15 4
 fi
 
-# Start Dev Hub Bridge background daemon if needed
-if [ -f "$SCRIPT_DIR/internal/dev-hub-bridge.py" ] && ! curl -s http://localhost:8089/api/status >/dev/null 2>&1; then
-  python3 "$SCRIPT_DIR/internal/dev-hub-bridge.py" >/dev/null 2>&1 &
+# Start or reload Dev Hub Bridge background daemon if needed or if version mismatch
+if [ -f "$SCRIPT_DIR/internal/dev-hub-bridge.py" ]; then
+  RUNNING_VER=$(curl -s http://localhost:8089/api/version 2>/dev/null | grep -o '"version": *"[^"]*"' | cut -d'"' -f4 || true)
+  TARGET_VER=$(cat "$WORKSPACE_DIR/VERSION" 2>/dev/null || echo "2.4.0")
+  if [ -z "$RUNNING_VER" ]; then
+    python3 "$SCRIPT_DIR/internal/dev-hub-bridge.py" >/dev/null 2>&1 &
+  elif [ "$RUNNING_VER" != "$TARGET_VER" ]; then
+    pkill -f "dev-hub-bridge.py" 2>/dev/null || true
+    sleep 0.5
+    python3 "$SCRIPT_DIR/internal/dev-hub-bridge.py" >/dev/null 2>&1 &
+  fi
 fi
 
 echo "=================================================================="

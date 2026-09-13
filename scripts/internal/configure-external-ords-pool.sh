@@ -81,7 +81,7 @@ echo -e "${YELLOW}🔍 1. Kontrollin ORDS skeemi valmisolekut andmebaasis...${NC
 PRIMARY_CONTAINER=$(get_active_db_instances 2>/dev/null | grep -i "publisher" | head -n 1 | cut -d'|' -f1)
 PRIMARY_CONTAINER="${PRIMARY_CONTAINER:-main-db-profile}"
 
-if podman ps --format "{{.Names}}" 2>/dev/null | grep -q "$PRIMARY_CONTAINER"; then
+if is_container_running "$PRIMARY_CONTAINER"; then
   ORDS_VER_CHECK=$(podman exec -i "$PRIMARY_CONTAINER" bash -c '
     in_sql=$(ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1)
     if [ -n "$in_sql" ]; then

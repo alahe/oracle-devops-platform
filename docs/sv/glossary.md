@@ -24,6 +24,12 @@
 - **Officiell referens / Wikipedia:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
 - **Relaterade guider och skript:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
 
+### `ALISE` — ALISE affärsdatabasmiljö
+- **Definition:** Dedikerad Oracle Free DB 23ai-databas som hanterar affärsscheman, PL/SQL-motorer, tabellutrymmen och APEX/ORDS-körtid på port 1533.
+- **Roll i detta projekt:** Fungerar som kanonisk affärsdatabas i Blueprint 1 (:1533) och Blueprint 7/3, vilket isolerar affärsscheman från proxylagret.
+- **Officiell referens / Wikipedia:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
+- **Relaterade guider och skript:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
+
 ### `APFS` — Apple File System
 - **Definition:** Standardfilsystem för macOS optimerat för SSD-lagring, kryptering och snapshots.
 - **Roll i detta projekt:** macOS utvecklingsfilsystem där portabilitet (Regel 13) verifieras mot Windows NTFS.
@@ -190,12 +196,6 @@
 - **Officiell referens / Wikipedia:** [Wikipedia: Newline (LF)](https://en.wikipedia.org/wiki/Newline)
 - **Relaterade guider och skript:** [.gitattributes](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/.gitattributes)
 
-### `LIS` — Laboratory Information System
-- **Definition:** Laboratorieinformationssystem för hantering av prover, instrument och analysresultat.
-- **Roll i detta projekt:** Demonstreras i Blueprint 3 med isolerade instanser för proxy, alise och lis.
-- **Officiell referens / Wikipedia:** [Wikipedia: LIS / LIMS](https://en.wikipedia.org/wiki/Laboratory_information_management_system)
-- **Relaterade guider och skript:** [config/blueprints/.env.bp3-multi-db-lis](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.bp3-multi-db-lis), [config/profiles/databases/db-lis.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-lis.yaml)
-
 ## M
 
 ### `mTLS` — Mutual Transport Layer Security
@@ -242,7 +242,7 @@
 
 ### `PDB` — Pluggable Database
 - **Definition:** Självgående databasinstans i Oracles multitenant-arkitektur som fungerar som en isolerad databas.
-- **Roll i detta projekt:** Isolerar applikationsdomäner: FREEPDB1 (Proxy), ALISEPDB (Affärsdata), LIS_PDB och BIP_PDB.
+- **Roll i detta projekt:** Isolerar applikationsdomäner: FREEPDB1 (Proxy), ALISEPDB (Affärsdata), PUBPDB och BIP_PDB.
 - **Officiell referens / Wikipedia:** [Oracle Pluggable Database (PDB)](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/multitenant-architecture.html)
 - **Relaterade guider och skript:** [docs/db-profiles-and-topology.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/db-profiles-and-topology.md), [scripts/internal/resolve-topology.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/resolve-topology.sh)
 

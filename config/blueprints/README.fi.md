@@ -87,8 +87,8 @@ flowchart TD
 | **7** | [`.env.7-consolidated-forms-publisher`](.env.7-consolidated-forms-publisher) | `db-publisher-oracle.yaml` (:1531) | `forms-publisher-unified.yaml` (:9001/9502/6082) | `db-publisher`, `app-forms-publisher` | Yhdistetty WebLogic-säilö, joka ajaa sekä Forms 14c:tä että Publisheria. |
 | **8** | [`.env.8-standalone-web-ide`](.env.8-standalone-web-ide) | - *(Zero DB)* | `web-ide-standard.yaml` (:8090/8450/8091) | `web-ide-dev` | Erillinen kehittäjän Web-IDE-työasema: VS Code -palvelin, SQLcl ja esikonfiguroidut työkalut. |
 | **9** | [`.env.9-standalone-publisher-designer`](.env.9-standalone-publisher-designer) | - *(Zero DB)* | `publisher-designer-standard.yaml` (:6083 noVNC) | `app-publisher-designer` | HTML5 noVNC -työpöytäsäilö MS Word- ja BIP Template Builder RTF -malleille (`setup-word-designer.sh`). |
-| **10** | [`.env.10-remote-ords`](.env.10-remote-ords) | `MAIN_DB_PROFILE=NONE` | `ords-standalone.yaml` (:8088/8448) | `app-ords` | **⚠️ Testauksessa ja kehitteillä:** Reunatason ORDS käynnistyy. Reititys pilvi-ADB:hen kehitteillä. |
-| **11** | [`.env.11-remote-publisher`](.env.11-remote-publisher) | `MAIN_DB_PROFILE=NONE` | `publisher-standard.yaml` (:9502/9503) | `app-publisher` | **⚠️ Testauksessa ja kehitteillä:** Publisher käynnistyy. Raportointi etätietokantoihin kehitteillä. |
+| **10** | [`.env.10-remote-ords`](.env.10-remote-ords) | `MAIN_DB_PROFILE=NONE` | `ords-standalone-remote.yaml` (:8088/8448) | `app-ords-remote` | **⚠️ Testauksessa ja kehitteillä:** Reunatason ORDS käynnistyy. Reititys pilvi-ADB:hen kehitteillä. |
+| **11** | [`.env.11-remote-publisher`](.env.11-remote-publisher) | `MAIN_DB_PROFILE=NONE` | `publisher-standalone-remote.yaml` (:9502/9503) | `app-publisher-remote` | **⚠️ Testauksessa ja kehitteillä:** Publisher käynnistyy. Raportointi etätietokantoihin kehitteillä. |
 
 ---
 

@@ -1,9 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Module version="140102" xmlns="http://xmlns.oracle.com/Forms" Name="test">
-  <FormModule Name="test" Title="Oracle Forms Module test">
-    <Block Name="MAIN_BLOCK">
-      <Item Name="ID" ItemType="Text Item" DataType="Number" Required="true"/>
-      <Item Name="NAME" ItemType="Text Item" DataType="Char" MaxLength="100"/>
-    </Block>
-  </FormModule>
-</Module>
+<?xml version='1.0' encoding='UTF-8'?>
+<ns0:Module xmlns:ns0="http://xmlns.oracle.com/Forms" version="140102" Name="test">
+  <ns0:FormModule Name="TEST" Title="Oracle Forms Module test" DateSaved="Sunday Sep 13 2026 17:44:38">
+    <ns0:Coordinate DefaultFontScaling="false" CharacterCellWidth="6" CharacterCellHeight="14" />
+    <ns0:Block Name="MAIN_BLOCK" RecordsDisplayCount="1" DatabaseBlock="true">
+      <ns0:Item Name="ID" ItemType="Text Item" DataType="Number" Required="true" MaxLength="10" />
+      <ns0:Item Name="NAME" ItemType="Text Item" DataType="Char" MaxLength="100" />
+      <ns0:Item Name="CREATED_AT" ItemType="Text Item" DataType="Date" />
+    </ns0:Block>
+    <ns0:Trigger Name="WHEN-NEW-FORM-INSTANCE" TriggerText="-- Forms initialization&#10;BEGIN&#10;  NULL;&#10;END;" />
+  </ns0:FormModule>
+</ns0:Module>

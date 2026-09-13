@@ -9,6 +9,8 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+[ -f "$SCRIPT_DIR/common.sh" ] && source "$SCRIPT_DIR/common.sh"
+
 LOG_DIR="$WORKSPACE_DIR/install_logs"
 METRICS_DIR="$WORKSPACE_DIR/metrics"
 PATCH_DIR="$WORKSPACE_DIR/binaries/publisher/patches"
@@ -42,7 +44,7 @@ PRIMARY_CONTAINER="${PUBLISHER_CONTAINER_NAME:-app-publisher}"
 for patch_zip in $PATCH_FILES; do
   echo "🚀 Applying OPatch package: $(basename "$patch_zip")..." | tee -a "$LOG_FILE"
   
-  if podman ps --format "{{.Names}}" 2>/dev/null | grep -q "$PRIMARY_CONTAINER"; then
+  if is_container_running "$PRIMARY_CONTAINER"; then
     echo "  Applying patch inside Container ${PRIMARY_CONTAINER} via OPatch..." | tee -a "$LOG_FILE"
     podman cp "$patch_zip" "${PRIMARY_CONTAINER}:/tmp/" >> "$LOG_FILE" 2>&1
     podman exec -u oracle "$PRIMARY_CONTAINER" sh -c "cd /tmp && unzip -q -o $(basename "$patch_zip") && cd /tmp/* && \$ORACLE_HOME/OPatch/opatch apply -silent" >> "$LOG_FILE" 2>&1 || true

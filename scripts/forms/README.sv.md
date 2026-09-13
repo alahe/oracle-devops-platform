@@ -2,7 +2,7 @@
 
 # 📐 Driftskript för Oracle Forms 14c (`scripts/forms/`)
 
-Denna katalog tillhandahåller verktyg för hantering av Oracle Forms 14c runtime-miljö, kompilering från kommandoraden, diagnostik av WebLogic-domän och applikationsdriftsättning.
+Denna katalog tillhandahåller verktyg för hantering av Oracle Forms 14c runtime-miljö, kompilering från kommandoraden, dubbelriktad XML-konvertering, roundtrip-verifiering, diagnostik av WebLogic-domän och applikationsdriftsättning.
 
 ---
 
@@ -15,6 +15,15 @@ Denna katalog tillhandahåller verktyg för hantering av Oracle Forms 14c runtim
 - **`compile-form.sh`:** Kompilerar en binär `.fmb`-källform till en körbar `.fmx`-fil via CLI.
   ```bash
   ./scripts/forms/compile-form.sh /sökväg/form.fmb
+  ```
+- **`form-to-xml.sh`:** Dubbelriktad FMB ↔ XML-konverterare (kompatibel med Git diff och APEX Migration Workshop).
+  ```bash
+  ./scripts/forms/form-to-xml.sh forms_apps/orders.fmb            # FMB -> XML
+  ./scripts/forms/form-to-xml.sh --to-fmb forms_apps/orders.xml   # XML -> FMB
+  ```
+- **`test-fmb-xml-roundtrip.sh`:** Kör 2-pass roundtrip-verifiering (`FMB -> XML(1) -> temp.fmb -> XML(2)`) och utför semantisk AST-jämförelse.
+  ```bash
+  ./scripts/forms/test-fmb-xml-roundtrip.sh forms_apps/test.fmb
   ```
 - **`deploy-forms-apps.sh`:** Driftsätter kompilerade formulär och menyer till `/u01/oracle/forms_apps` i containern.
   ```bash

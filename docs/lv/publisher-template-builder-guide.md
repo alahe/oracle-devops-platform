@@ -274,3 +274,27 @@ sequenceDiagram
     deactivate GHA
 ```
 
+### 9.5 Automatizēta E2E testēšanas un verifikācijas konveijers (`test-deploy-verify-e2e.sh`)
+
+Lai nodrošinātu, ka veidņu izmaiņas tiek pareizi izvietotas un renderētas oficiālajā serverī, platforma piedāvā automatizētu E2E verifikāciju:
+
+```bash
+# Pamata izpilde ar dinamisku testa marķieri (Nepieciešams Blueprint 5):
+./scripts/publisher/test-deploy-verify-e2e.sh
+
+# Izpilde ar konkrētu atskaiti un meklējamo tekstu:
+./scripts/publisher/test-deploy-verify-e2e.sh Custom/Invoices/Invoice_Report "Nordic Innovation AS"
+
+# Automātiska pārslēgšanās uz Blueprint 5:
+./scripts/publisher/test-deploy-verify-e2e.sh --auto-switch
+```
+
+#### Galvenie kvalitātes vārti un pārbaudes:
+1. **Blueprint 5 priekšpārbaude:** Pārliecinās, ka Blueprint 5 (`app-publisher` portos 9500/9502) darbojas nevainojami.
+2. **Ceļu aizsardzība (CWE-22):** Pārbauda atļautos failu ceļus darba telpā.
+3. **Dinamiskais marķieris un satura verifikācija:** Ievieto unikālu marķieri failā `sample_data.xml`, sapako `.xdmz` un `.xdoz`, izvieto caur REST API, izpilda atskaiti, lejupielādē PDF un pārbauda tekstu ar Python `pypdf`.
+4. **Integrēts PDF/UA-1 piekļūstamības audits:** Automātiski palaiž `validate-pdf-accessibility.sh`.
+5. **Rule 7 klikšķināmas saites:** Nodrošina tiešas saites uz RTF veidni (`file://...`), PDF failu (`file://...`) un Publisher portālu.
+6. **Dev Hub Report Lab integrācija:** 1-klikšķa izpilde no pogas `🧪 Käivita E2E Test & Kontroll`.
+
+

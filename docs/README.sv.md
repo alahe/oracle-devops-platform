@@ -17,6 +17,7 @@ Denna katalog innehåller tekniska specifikationer, installationsguider och arki
 | 🔄 **Byte av databascontaineravbilder** | [database-image-switching-guide.md](database-image-switching-guide.md) | FastStart snabbavbilder, registerpeglar och uppackning i containern. |
 | 🔄 **3-nivåers livscykel och ögonblicksbilder** | [devops-lifecycle-guide.md](devops-lifecycle-guide.md) | Gyllene ögonblicksbilder (~15s återställning), RMAN-backuper och katastrofåterställning. |
 | 🧪 **Automatiserad testning och Dev Hub** | [testing-framework-and-devhub.md](testing-framework-and-devhub.md) | 160+ enhetstester, realtidsvalidering av blueprints och Dev Hub. |
+| 🤖 **Copilot AI-assistent och RAG** | [devhub-copilot-assistant.md](devhub-copilot-assistant.md) | Inbyggd AI-assistent i Dev Hub, Zero-Trust lösenordsskydd, offline reservsystem och VS Code-brygga. |
 | 🚀 **Snabbguide för inloggning** | [quick-login-guide.md](quick-login-guide.md) | 1-klicks urklippshjälpare, SEPS Wallet lösenordshämtning och webblänkar. |
 | 📋 **Arkitektur blueprints matris** | [../config/blueprints/README.md](../config/blueprints/README.md) | Jämförelse av 12 kanoniska arkitekturmodeller (0..11) och resurskrav. |
 | 🗄️ **Databasprofiler och topologi** | [db-profiles-and-topology.md](db-profiles-and-topology.md) | YAML-profilhierarki (`config/profiles/databases/`), porttopologi och Regel 11. |

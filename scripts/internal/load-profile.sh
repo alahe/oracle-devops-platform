@@ -356,6 +356,9 @@ load_db_profile() {
   export ORDS_VER="${ORDS_VER:-$PROFILE_ORDS_VERSION}"
   export APEX_WORKSPACE="${APEX_WORKSPACE:-$PROFILE_APEX_WORKSPACE}"
 
+  export ORDS_CONTAINER_NAME="${ORDS_CONTAINER_NAME:-${PROFILE_ORDS_CONTAINER_NAME:-app-ords}}"
+  export ORDS_SERVICE_NAME="${ORDS_SERVICE_NAME:-${PROFILE_ORDS_SERVICE_NAME:-app-ords}}"
+
   export PUBLISHER_ENABLED="${PUBLISHER_ENABLED:-$PROFILE_PUBLISHER_ENABLED}"
   export PUBLISHER_CONTAINER_NAME="${PUBLISHER_CONTAINER_NAME:-$PROFILE_PUBLISHER_CONTAINER_NAME}"
   export PUBLISHER_HTTP_PORT="${PUBLISHER_HTTP_PORT:-$PROFILE_PUBLISHER_HTTP_PORT}"
@@ -584,43 +587,58 @@ get_active_db_instances() {
     has_explicit_none=true
   fi
 
+  # Check if standalone zero-database profile is active without local DB declarations
+  if [ -n "${PUBLISHER_DESIGNER_PROFILE:-}" ] || [ -n "${WEB_IDE_PROFILE:-}" ]; then
+    local bp_has_db=false
+    local cur_bp="${ACTIVE_BP_FILE:-$WORKSPACE_DIR/.env}"
+    if [ -f "$cur_bp" ]; then
+      if grep -E '^DB_[A-Z0-9_]+=' "$cur_bp" 2>/dev/null | grep -v '=NONE' | grep -q '='; then
+        bp_has_db=true
+      fi
+    fi
+    if [ "$bp_has_db" = "false" ]; then
+      raw_instances=()
+      has_explicit_none=true
+    fi
+  fi
+
   # 2. Second priority: If no in-memory DB keys, check if a standalone profile is active
   if [ "${#raw_instances[*]}" -eq 0 ] && [ "$has_explicit_none" = "false" ]; then
     if [ -n "${PUBLISHER_DESIGNER_PROFILE:-}" ] || [ -n "${WEB_IDE_PROFILE:-}" ]; then
       has_explicit_none=true
     else
       resolve_active_blueprint
-    fi
-    local src_file="${ACTIVE_BP_FILE:-}"
-    if [ -n "$src_file" ] && [ -f "$src_file" ]; then
-      local none_count=0
-      local db_count=0
-      local file_keys=()
-      for k in $(grep -E '^DB_[A-Z0-9_]+=' "$src_file" 2>/dev/null | cut -d'=' -f1 | sort -u || true); do
-        file_keys+=("$k")
-      done
-      [ ${#file_keys[@]} -eq 0 ] && file_keys=(DB_PROXY DB_PUBLISHER DB_FORMS DB_ALISE DB_PROXY_STANDALONE DB_GVENZL DB_ADB)
-      for env_k in "${file_keys[@]}"; do
-        local prof_val
-        prof_val=$(grep -E "^${env_k}=" "$src_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
-        [ -z "$prof_val" ] && continue
-        if [ "$prof_val" = "NONE" ]; then
-          db_count=$((db_count + 1))
-          none_count=$((none_count + 1))
-        else
-          local pfile="$WORKSPACE_DIR/config/profiles/databases/${prof_val}.yaml"
-          [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/${prof_val}.yaml"
-          if [ -f "$pfile" ]; then
+      local src_file="${ACTIVE_BP_FILE:-}"
+      if [ -n "$src_file" ] && [ -f "$src_file" ]; then
+        local none_count=0
+        local db_count=0
+        local file_keys=()
+        for k in $(grep -E '^DB_[A-Z0-9_]+=' "$src_file" 2>/dev/null | cut -d'=' -f1 | sort -u || true); do
+          file_keys+=("$k")
+        done
+        [ ${#file_keys[@]} -eq 0 ] && file_keys=(DB_PROXY DB_PUBLISHER DB_FORMS DB_ALISE DB_PROXY_STANDALONE DB_GVENZL DB_ADB)
+        for env_k in "${file_keys[@]}"; do
+          local prof_val
+          prof_val=$(grep -E "^${env_k}=" "$src_file" 2>/dev/null | cut -d'=' -f2 | tr -d ' "\r\n' || echo "")
+          [ -z "$prof_val" ] && continue
+          if [ "$prof_val" = "NONE" ]; then
             db_count=$((db_count + 1))
-            local c_name=""
-            c_name=$(parse_db_container_name "$pfile")
-            [ -z "$c_name" ] && c_name=$(echo "$env_k" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
-            raw_instances+=("${c_name}|${prof_val}|${env_k}")
+            none_count=$((none_count + 1))
+          else
+            local pfile="$WORKSPACE_DIR/config/profiles/databases/${prof_val}.yaml"
+            [ ! -f "$pfile" ] && pfile="$WORKSPACE_DIR/config/profiles/${prof_val}.yaml"
+            if [ -f "$pfile" ]; then
+              db_count=$((db_count + 1))
+              local c_name=""
+              c_name=$(parse_db_container_name "$pfile")
+              [ -z "$c_name" ] && c_name=$(echo "$env_k" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+              raw_instances+=("${c_name}|${prof_val}|${env_k}")
+            fi
           fi
+        done
+        if [ "$db_count" -gt 0 ] && [ "$none_count" -eq "$db_count" ]; then
+          has_explicit_none=true
         fi
-      done
-      if [ "$db_count" -gt 0 ] && [ "$none_count" -eq "$db_count" ]; then
-        has_explicit_none=true
       fi
     fi
   fi

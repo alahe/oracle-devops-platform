@@ -123,6 +123,8 @@ Before introducing a new step in `setup-all.sh`:
      - `forms` $\rightarrow$ Port 1534, pool `forms`, workspace `FORMS_WORKSPACE`, wallet `DB_FORMS_...`
 3. **APEX `latest` + Patch Resolution Contract:**
    - If `version: latest` or omitted, dynamic resolver (`resolve_apex_latest`) queries `binaries/apex/` for the highest semver zip and automatically pairs the latest PSE bundle patch in `patches/apex/`.
+   - **APEX In-Container Engine & Patch Execution (Rule 6 sqlplus Exemption):** Inside database containers (`db-proxy`, `db-alise`), official APEX core engine scripts (`apxins.sql`, `apxrtins.sql`) and bundle patch set exceptions (`catpatch.sql`, `apxpatch.sql`) MUST execute using the native C-binary `$ORACLE_HOME/bin/sqlplus -s / as sysdba`. Using SQLcl (JVM) inside 3GB database containers triggers Linux kernel OOM killer (`10173 Killed`) during heavy metadata compilation. Native `sqlplus` uses ~15MB RAM and runs without memory risk.
+   - **Authoritative APEX In-DB Status Verification:** APEX installation presence and idempotency checks must query `dba_registry WHERE comp_id = 'APEX' AND status IN ('VALID', 'UPGRADED')` rather than naive user prefix checks (`all_users LIKE 'APEX_%'`), which falsely match application proxy schemas (e.g. `APEX_PROXY_SCHEMA`).
 4. **Decoupled ORDS Schema & Pool Lifecycle Contract:**
    - **DB Metadata Setup:** `ords.enabled: true` in DB YAML installs ORDS metadata in the database without starting `app-ords`.
    - **Version Resolution:** `resolve_target_ords_version` determines the target ORDS version: (1) Running `app-ords` container $\rightarrow$ (2) `binaries/ords/ords-*.zip` $\rightarrow$ (3) Official OCR container image.
@@ -141,5 +143,6 @@ Before introducing a new step in `setup-all.sh`:
 | `reset-all.sh` fails to remove containers | Orphaned container lock or permission issue | Run `podman rm -f $(podman ps -aq)` and retry `./scripts/reset-all.sh -y`. |
 | Database healthy check loops forever | Container started but Oracle listener or PDB is slow | Inspect container logs: `podman logs -f <container_name>` to see cold init progress. |
 | SEPS Wallet fails to create aliases | Missing `mkstore` or Podman secret tmpfs issue | Check Java/SQLcl paths and inspect `install_logs/create_wallet_*.log`. |
+| False positive container discovery (skips or hangs) | Unanchored substring grep matches composite name (e.g. `app-publisher-designer` matches `app-publisher`) | Use `is_container_running '<name>'` or `container_exact_grep '<name>'` per Rule 15. |
 
 

@@ -75,12 +75,23 @@ Binary `.fmb` files cannot be diffed cleanly in Git. Convert them to readable XM
 # 1. Convert binary FMB to human-readable XML:
 ./scripts/forms/form-to-xml.sh forms_apps/orders.fmb
 
-# 2. Track orders.xml in Git:
-git add forms_apps/orders.xml
+# 2. Track orders_fmb.xml in Git:
+git add forms_apps/orders_fmb.xml
 
 # 3. Convert XML back to binary FMB on any host:
-./scripts/forms/xml-to-form.sh forms_apps/orders.xml
+./scripts/forms/form-to-xml.sh --to-fmb forms_apps/orders_fmb.xml
 ```
+
+### 3.3b 2-Pass FMB ↔ XML Roundtrip Verification Suite (`test-fmb-xml-roundtrip.sh`)
+Verify that bidirectional compilation and XML conversion preserve 100% of Forms structural semantics:
+```bash
+# Run 2-pass verification loop (FMB -> XML(1) -> temp.fmb -> XML(2) -> compare(XML1, XML2)):
+./scripts/forms/test-fmb-xml-roundtrip.sh forms_apps/test.fmb
+
+# Keep intermediate artifacts in scratch/ for manual inspection:
+./scripts/forms/test-fmb-xml-roundtrip.sh --keep forms_apps/test.fmb
+```
+* **Semantic AST Comparator:** Powered by `scripts/internal/compare_forms_xml.py`, automatically filtering volatile metadata (`DateSaved`, `SaveTimestamp`, compiler build hashes) while guaranteeing that 100% of Blocks, Items, Data Types, Triggers, and Canvases match.
 
 ### 3.4 1-Click APEX Migration Bundle (`export-forms-for-apex.sh`)
 Prepare legacy Oracle Forms applications for modernizing into Oracle APEX:

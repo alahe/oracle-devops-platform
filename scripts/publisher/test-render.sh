@@ -58,14 +58,43 @@ fi
 # Execute via running designer container if present
 if podman ps --format '{{.Names}}' | grep -q '^app-publisher-designer$'; then
   echo "🚀 Running render inside app-publisher-designer container..."
-  REL_TPL="${TPL#$WORKSPACE_DIR/templates/publisher/}"
-  REL_DATA="${DATA#$WORKSPACE_DIR/templates/publisher/}"
-  REL_OUT="${OUT#$WORKSPACE_DIR/templates/publisher/}"
+  
+  # Resolve Template in container
+  if [[ "$TPL" == "$WORKSPACE_DIR/templates/publisher/"* ]]; then
+    CONTAINER_TPL="/u01/templates/${TPL#$WORKSPACE_DIR/templates/publisher/}"
+  else
+    CONTAINER_TPL="/tmp/input_template_$$.rtf"
+    podman cp "$TPL" "app-publisher-designer:${CONTAINER_TPL}"
+  fi
+
+  # Resolve Data in container
+  if [[ "$DATA" == "$WORKSPACE_DIR/templates/publisher/"* ]]; then
+    CONTAINER_DATA="/u01/templates/${DATA#$WORKSPACE_DIR/templates/publisher/}"
+  else
+    CONTAINER_DATA="/tmp/input_data_$$.xml"
+    podman cp "$DATA" "app-publisher-designer:${CONTAINER_DATA}"
+  fi
+
+  # Resolve Output in container
+  NEED_CP_BACK=false
+  if [[ "$OUT" == "$WORKSPACE_DIR/templates/publisher/"* ]]; then
+    CONTAINER_OUT="/u01/templates/${OUT#$WORKSPACE_DIR/templates/publisher/}"
+  else
+    CONTAINER_OUT="/tmp/output_render_$$.pdf"
+    NEED_CP_BACK=true
+  fi
+
   podman exec -i app-publisher-designer /u01/oracle/bin/render-template.sh \
-    "/u01/templates/$REL_TPL" \
-    "/u01/templates/$REL_DATA" \
-    "/u01/templates/$REL_OUT" \
+    "$CONTAINER_TPL" \
+    "$CONTAINER_DATA" \
+    "$CONTAINER_OUT" \
     --locale "$LOCALE"
+
+  if [ "$NEED_CP_BACK" = true ]; then
+    REAL_OUT="$(python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$OUT")"
+    podman cp "app-publisher-designer:${CONTAINER_OUT}" "$REAL_OUT"
+    podman exec -i app-publisher-designer rm -f "$CONTAINER_OUT" "${CONTAINER_TPL}" "${CONTAINER_DATA}" 2>/dev/null || true
+  fi
 else
   # Local fast fallback rendering
   echo "📄 Running local fallback rendering..."

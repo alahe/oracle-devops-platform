@@ -8,7 +8,7 @@ This directory contains domain-isolated YAML profiles for configuring **Oracle D
 
 | Profile Filename | Description | DB Type | Wallet Required | Use Case |
 | :--- | :--- | :--- | :--- | :--- |
-| **`db-alise-oracle.yaml`** | Primary Application DB on Official Oracle Free DB 23ai | `standard` | Yes | Primary LIS Business DB |
+| **`db-alise-oracle.yaml`** | Primary Application DB on Official Oracle Free DB 23ai | `standard` | Yes | Primary ALISE Business DB |
 | **`db-proxy-oracle.yaml`** | APEX Proxy & SSO Gateway on Official Oracle Free DB 23ai | `standard` | Yes | APEX Proxy & SSO Gateway |
 | **`db-proxy-standalone.yaml`** | Standalone APEX Proxy DB on Isolated Port 1537 | `standard` | Yes | Dedicated SSO Gateway |
 | **`db-gvenzl.yaml`** | Gerald Venzl 23c Community Engine | `standard` | Yes | Benchmarking & Fast Start |
