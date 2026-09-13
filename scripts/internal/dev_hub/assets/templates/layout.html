@@ -52,6 +52,13 @@
                 <kbd class="shortcut-badge">⌘K</kbd>
             </button>
 
+            <!-- Responsive Header Copilot Trigger Button -->
+            <button class="header-copilot-btn" id="header-copilot-btn" onclick="toggleCopilotDrawer()" data-i18n-title="tip_header_copilot" title="GitHub Copilot & AI Assistant (⌘J / Ctrl+J)">
+                <span class="copilot-pill-icon">🤖</span>
+                <span class="copilot-pill-label" data-i18n="header_copilot_label">Copilot</span>
+                <kbd class="copilot-pill-kbd">⌘J</kbd>
+            </button>
+
             <!-- Knowledge Base Dropdown -->
             <div class="enterprise-nav-dropdown" id="enterprise-nav-dropdown">
                 <button class="enterprise-dropdown-btn" id="enterprise-dropdown-btn" onclick="toggleEnterpriseDropdown(event)" aria-haspopup="true" aria-expanded="false">
@@ -227,6 +234,9 @@
                 </button>
                 <button class="btn-compact btn-compact-primary" onclick="openBlueprintManager()" title="Blueprint Manager">
                     <span>📋</span> <span data-i18n="btn_create_blueprint">Blueprint Manager</span>
+                </button>
+                <button class="btn-compact btn-compact-ai" onclick="askAiAboutCockpitServices()" data-i18n-title="tip_cockpit_ai" title="Küsi tehisintellektilt aktiivsete teenuste ja andmebaaside kohta (⌘J)">
+                    <span>🤖</span> <span data-i18n="btn_cockpit_ai">Küsi AI-lt</span>
                 </button>
             </div>
         </div>
@@ -4249,7 +4259,13 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
         </div>
         <div class="devops-terminal-actions">
             <button type="button" class="devops-terminal-btn ai-btn" id="devops-docked-ai-btn" onclick="askAiAboutCurrentTerminalError()" style="display: none;" title="Küsi Copilotilt või Antigravitylt lahendust sellele veale">
-                <span>🤖</span> <span data-i18n="devops_btn_ask_ai">Küsi AI-lt lahendust</span>
+                <span>🤖</span> <span data-i18n="devops_btn_ask_ai">Küsi AI-lt</span>
+            </button>
+            <button type="button" class="devops-terminal-btn" id="devops-docked-vscode-btn" onclick="exportDockedTerminalErrorToIDE('vscode')" style="display: none; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35); color: #38bdf8;" title="Kopeeri veakontekst ja ava VS Code Copilotis">
+                <span>💻</span> <span>VS Code</span>
+            </button>
+            <button type="button" class="devops-terminal-btn" id="devops-docked-antigravity-btn" onclick="exportDockedTerminalErrorToIDE('antigravity')" style="display: none; background: rgba(168, 85, 247, 0.12); border-color: rgba(168, 85, 247, 0.35); color: #c084fc;" title="Kopeeri veakontekst ja ava Google Antigravitys">
+                <span>✨</span> <span>Antigravity</span>
             </button>
             <button type="button" class="devops-terminal-btn" onclick="copyDockedTerminalOutput()" title="Kopeeri terminali väljund">
                 <span>📋</span> <span data-i18n="btn_copy">Kopeeri</span>

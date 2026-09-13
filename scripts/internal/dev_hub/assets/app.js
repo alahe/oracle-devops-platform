@@ -4976,6 +4976,10 @@ function openDockedTerminal(title, cmdKey) {
     statusEl.style.color = '#38bdf8';
   }
   if (aiBtn) aiBtn.style.display = 'none';
+  const vscodeBtn = document.getElementById('devops-docked-vscode-btn');
+  const antigravityBtn = document.getElementById('devops-docked-antigravity-btn');
+  if (vscodeBtn) vscodeBtn.style.display = 'none';
+  if (antigravityBtn) antigravityBtn.style.display = 'none';
 
   const startIso = new Date().toLocaleTimeString();
   const initHtml = `<span class="ansi-cyan">[${startIso}] ⚡ Käivitatud: ${gDockedTerminalCurrentTitle} (${cmdKey})</span>\n<span class="ansi-dim">--------------------------------------------------------------------------------</span>\n`;
@@ -5082,6 +5086,10 @@ function setDockedTerminalFinished(exitCode, durationSec, rawOutput) {
       aiBtn.classList.remove('pulse');
     }
   }
+  const vscodeBtn = document.getElementById('devops-docked-vscode-btn');
+  const antigravityBtn = document.getElementById('devops-docked-antigravity-btn');
+  if (vscodeBtn) vscodeBtn.style.display = isError ? 'inline-flex' : 'none';
+  if (antigravityBtn) antigravityBtn.style.display = isError ? 'inline-flex' : 'none';
 
   const finishIso = new Date().toLocaleTimeString();
   const summaryLine = `\n<span class="ansi-dim">--------------------------------------------------------------------------------</span>\n` +
@@ -5140,6 +5148,56 @@ function askAiAboutCurrentTerminalError() {
   }
 }
 
+function exportDockedTerminalErrorToIDE(provider) {
+  const preEl = document.getElementById('devops-docked-pre');
+  const title = gDockedTerminalCurrentTitle || 'DevOps Task';
+  const cmd = gDockedTerminalCurrentCmd || '';
+  const exitCode = gDockedTerminalLastExitCode;
+
+  let errorSnippet = '';
+  if (preEl) {
+    const raw = preEl.textContent || preEl.innerText || '';
+    const lines = raw.split('\n').filter(l => l.trim().length > 0);
+    errorSnippet = lines.slice(-25).join('\n');
+  }
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'et';
+  let prompt = '';
+  if (currentLang === 'en') {
+    prompt = `The DevOps command "${title}" (${cmd}) failed with exit code ${exitCode}. Here are the recent log lines:\n\`\`\`\n${errorSnippet}\n\`\`\`\nPlease analyze the root cause and provide exact step-by-step remediation commands.`;
+  } else {
+    prompt = `DevOps käsk "${title}" (${cmd}) ebaõnnestus koodiga ${exitCode}. Siin on väljavõte viimastest logiridadest:\n\`\`\`\n${errorSnippet}\n\`\`\`\nPalun analüüsi tõrke põhjust ja anna täpsed parandussammud ning vajalikud käsud.`;
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(prompt);
+  } else if (typeof fallbackCopyText === 'function') {
+    fallbackCopyText(prompt);
+  }
+
+  const provLabel = provider === 'vscode' ? 'VS Code Copilot' : 'Google Antigravity';
+  if (typeof showToast === 'function') {
+    showToast(`📋 Kontekst kopeeritud! Avatakse ${provLabel}...`, 'info');
+  }
+
+  fetch(`${BRIDGE_URL}/api/ai/deeplink`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target: provider, query: prompt, lang: currentLang })
+  })
+  .then(r => r.json())
+  .then(data => {
+    const url = data.vscode_url || data.antigravity_url || (provider === 'vscode' ? `vscode://github.copilot/chat?message=${encodeURIComponent(prompt)}` : `antigravity://chat?message=${encodeURIComponent(prompt)}`);
+    if (url) {
+      window.location.href = url;
+    }
+  })
+  .catch(() => {
+    const url = provider === 'vscode' ? `vscode://github.copilot/chat?message=${encodeURIComponent(prompt)}` : `antigravity://chat?message=${encodeURIComponent(prompt)}`;
+    window.location.href = url;
+  });
+}
+
 function explainStudioCmdWithAi(studioType) {
   let cmd = '';
   if (studioType === 'setup') {
@@ -5156,6 +5214,72 @@ function explainStudioCmdWithAi(studioType) {
     prompt = `Explain briefly what the following Oracle DevOps platform command does, what effect it has on running containers and databases, and when it should be used:\n\`${cmd}\``;
   } else {
     prompt = `Selgita lühidalt, mida teeb järgmine Oracle DevOps platvormi käsk, milline on selle tegelik mõju andmebaasidele ja konteineritele ning millal seda kasutada:\n\`${cmd}\``;
+  }
+
+  if (typeof toggleCopilotDrawer === 'function') {
+    toggleCopilotDrawer(true);
+    setTimeout(() => {
+      const input = document.getElementById('copilot-user-input');
+      if (input) {
+        input.value = prompt;
+        input.style.height = 'auto';
+        if (typeof submitCopilotQuery === 'function') {
+          submitCopilotQuery();
+        }
+      }
+    }, 350);
+  }
+}
+
+function askAiAboutCockpitServices(serviceName) {
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'et';
+  let prompt = '';
+  const bpId = (typeof LIVE_ACTIVE_BP === 'number') ? LIVE_ACTIVE_BP : null;
+  const runningList = (Array.isArray(LIVE_RUNNING_CONTAINERS) && LIVE_RUNNING_CONTAINERS.length > 0)
+    ? LIVE_RUNNING_CONTAINERS.join(', ')
+    : '';
+
+  if (serviceName) {
+    if (currentLang === 'en') {
+      prompt = `How do I connect to and use the "${serviceName}" service in the current Oracle DevOps environment? Please detail authentication credentials (SEPS Wallet), ports, and recommended client tools (VS Code, SQLcl, Browser).`;
+    } else if (currentLang === 'fi') {
+      prompt = `Miten muodostan yhteyden ja käytän palvelua "${serviceName}" nykyisessä Oracle DevOps -ympäristössä? Selvitä autentikointi (SEPS Wallet), portit ja suositellut työkalut (VS Code, SQLcl, selain).`;
+    } else if (currentLang === 'sv') {
+      prompt = `Hur ansluter jag till och använder tjänsten "${serviceName}" i den nuvarande Oracle DevOps-miljön? Förklara autentisering (SEPS Wallet), portar och rekommenderade verktyg (VS Code, SQLcl, webbläsare).`;
+    } else if (currentLang === 'lv') {
+      prompt = `Kā pieslēgties un izmantot pakalpojumu "${serviceName}" pašreizējā Oracle DevOps vidē? Lūdzu, paskaidrojiet autentifikāciju (SEPS Wallet), portus un ieteiktos rīkus (VS Code, SQLcl, pārlūks).`;
+    } else if (currentLang === 'lt') {
+      prompt = `Kaip prisijungti ir naudotis paslauga "${serviceName}" dabartinėje Oracle DevOps aplinkoje? Paaiškinkite autentifikavimą (SEPS Wallet), prievadus ir rekomenduojamus įrankius (VS Code, SQLcl, naršyklė).`;
+    } else {
+      prompt = `Kuidas luua ühendus ja kasutada teenust "${serviceName}" praeguses Oracle DevOps keskkonnas? Palun selgita autentimist (SEPS Wallet), porte ja soovitatud arendustööriistu (VS Code, SQLcl, veebibrauser).`;
+    }
+  } else {
+    const bpStr = (bpId !== null) ? `Blueprint ${bpId}` : 'aktiivne arhitektuur';
+    const contStr = runningList ? ` (jooksvad konteinerid: ${runningList})` : '';
+
+    if (currentLang === 'en') {
+      const bpEn = (bpId !== null) ? `Blueprint ${bpId}` : 'the active architecture';
+      const contEn = runningList ? ` (running containers: ${runningList})` : '';
+      prompt = `Can you provide a comprehensive architecture walkthrough of ${bpEn}${contEn}? How are the database instances, ORDS gateway, and web services mapped, and how can I securely connect using the SEPS Wallet?`;
+    } else if (currentLang === 'fi') {
+      const bpFi = (bpId !== null) ? `Blueprint ${bpId}` : 'aktiivinen arkkitehtuuri';
+      const contFi = runningList ? ` (käynnissä olevat kontit: ${runningList})` : '';
+      prompt = `Voitko antaa kattavan arkkitehtuurikatsauksen kokonaisuudesta ${bpFi}${contFi}? Miten tietokantainstanssit, ORDS-yhdyskäytävä ja verkkopalvelut on yhdistetty, ja miten voin muodostaa suojatun yhteyden SEPS Walletin avulla?`;
+    } else if (currentLang === 'sv') {
+      const bpSv = (bpId !== null) ? `Blueprint ${bpId}` : 'den aktiva arkitekturen';
+      const contSv = runningList ? ` (körande containrar: ${runningList})` : '';
+      prompt = `Kan du ge en omfattande arkitekturöversikt över ${bpSv}${contSv}? Hur är databasinstanserna, ORDS-gatewayen och webbtjänsterna mappade, och hur kan jag ansluta säkert med SEPS Wallet?`;
+    } else if (currentLang === 'lv') {
+      const bpLv = (bpId !== null) ? `Blueprint ${bpId}` : 'aktīvā arhitektūra';
+      const contLv = runningList ? ` (aktīvie konteineri: ${runningList})` : '';
+      prompt = `Vai vari sniegt visaptverošu arhitektūras pārskatu par ${bpLv}${contLv}? Kā ir kartētas datubāzu instances, ORDS vārteja un tīmekļa pakalpojumi, un kā es varu droši pieslēgties, izmantojot SEPS Wallet?`;
+    } else if (currentLang === 'lt') {
+      const bpLt = (bpId !== null) ? `Blueprint ${bpId}` : 'aktyvi architektūra';
+      const contLt = runningList ? ` (veikiantys konteineriai: ${runningList})` : '';
+      prompt = `Ar galite pateikti išsamią architektūros apžvalgą apie ${bpLt}${contLt}? Kaip susietos duomenų bazių instancijos, ORDS šliuzas ir žiniatinklio paslaugos, ir kaip saugiai prisijungti naudojant SEPS Wallet?`;
+    } else {
+      prompt = `Kas saad anda ülevaate praegu aktiivsest arhitektuurist (${bpStr}${contStr})? Kuidas on andmebaasid, ORDS lüüs ja veebiteenused ühendatud ning kuidas ma saan SEPS Walleti abil turvaliselt ühenduda?`;
+    }
   }
 
   if (typeof toggleCopilotDrawer === 'function') {
@@ -13925,6 +14049,7 @@ function toggleCopilotDrawer(forceState) {
   }
 
   if (gCopilotDrawerOpen) {
+    document.body.classList.add('copilot-drawer-open');
     backdrop.style.display = 'block';
     setTimeout(() => {
       backdrop.classList.add('active');
@@ -13940,6 +14065,8 @@ function toggleCopilotDrawer(forceState) {
       if (input) input.focus();
     }, 100);
   } else {
+    document.body.classList.remove('copilot-drawer-open');
+    document.body.classList.remove('copilot-fullscreen');
     drawer.classList.remove('open');
     backdrop.classList.remove('active');
     setTimeout(() => {
@@ -13968,9 +14095,11 @@ function toggleCopilotFullscreen(forceState) {
 
   if (gCopilotFullscreen) {
     drawer.classList.add('fullscreen');
+    document.body.classList.add('copilot-fullscreen');
     if (btn) btn.textContent = '🗗';
   } else {
     drawer.classList.remove('fullscreen');
+    document.body.classList.remove('copilot-fullscreen');
     if (btn) btn.textContent = '⛶';
   }
 }
