@@ -5,11 +5,27 @@ Renders the 12 blueprint cards for Tab 1 and the SEPS Wallet credentials table.
 from .catalog import BP_COLOR_THEMES
 from .topology import load_yaml_profile
 
-def is_container_online(cn, running_containers):
+ORDS_POOL_DB_MAP = {
+    "ords/proxy": ["db-proxy", "db-oracle"],
+    "ords/alise": ["db-alise"],
+    "ords/proxy_standalone": ["db-proxy-standalone"],
+    "ords/gvenzl": ["db-gvenzl"],
+    "ords/adb": ["db-adb"],
+}
+
+def is_container_online(cn, running_containers, active_bp_num=None):
     if running_containers is None:
         return True
     if cn.startswith("ords/"):
-        return "app-ords" in running_containers
+        if "app-ords" not in running_containers:
+            return False
+        req_dbs = ORDS_POOL_DB_MAP.get(cn)
+        if req_dbs:
+            db_up = any(d in running_containers for d in req_dbs)
+            if not db_up and cn == "ords/adb" and active_bp_num == 4:
+                return True
+            return db_up
+        return True
     if cn in running_containers:
         return True
     if cn == "app-publisher" and "oracle-publisher-dev" in running_containers:
@@ -54,6 +70,7 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
 
     pub_cfg = load_yaml_profile(pub_profile) if pub_profile and pub_profile != "NONE" else load_yaml_profile("publisher-standard")
     pub_port = str(pub_cfg.get("publisher", {}).get("http_port") or pub_cfg.get("http_port") or pub_cfg.get("port") or "9502")
+    pub_admin_port = str(pub_cfg.get("publisher", {}).get("admin_port") or pub_cfg.get("admin_port") or "9500")
 
     forms_cfg = load_yaml_profile(forms_profile) if forms_profile and forms_profile != "NONE" else load_yaml_profile("forms-standard")
     forms_runtime_port = str(forms_cfg.get("forms", {}).get("http_port") or forms_cfg.get("http_port") or "9001")
@@ -77,7 +94,7 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
         container_chips = []
         if running_containers_initial is not None and cnames:
             for cn in cnames:
-                cn_online = is_container_online(cn, running_containers_initial)
+                cn_online = is_container_online(cn, running_containers_initial, active_bp_num)
                 if cn_online:
                     matched += 1
                 chip_cls = "chip-online" if cn_online else "chip-offline"
@@ -92,40 +109,38 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
             is_up = (matched == len(cnames))
             is_partial = (0 < matched < len(cnames))
             if b_num == 10:
-                has_local_db = any(d in running_containers_initial for d in ["db-proxy", "db-alise", "db-proxy-standalone", "db-publisher", "db-forms", "db-gvenzl", "db-adb"])
-                if has_local_db and b_num != active_bp_num:
+                if b_num != active_bp_num:
                     is_up = False
                     is_partial = False
-            elif b_num == 1 and not is_container_online("db-alise", running_containers_initial):
+            elif b_num == 1 and not is_container_online("db-alise", running_containers_initial, active_bp_num):
                 is_up = False
                 is_partial = False
-            elif b_num == 2 and not is_container_online("db-proxy-standalone", running_containers_initial):
+            elif b_num == 2 and not is_container_online("db-proxy-standalone", running_containers_initial, active_bp_num):
                 is_up = False
                 is_partial = False
-            elif b_num == 3 and not is_container_online("db-gvenzl", running_containers_initial):
+            elif b_num == 3 and not is_container_online("db-gvenzl", running_containers_initial, active_bp_num):
                 is_up = False
                 is_partial = False
-            elif b_num == 4 and not is_container_online("db-adb", running_containers_initial) and b_num != active_bp_num:
+            elif b_num == 4 and not is_container_online("db-adb", running_containers_initial, active_bp_num) and b_num != active_bp_num:
                 is_up = False
                 is_partial = False
-            elif b_num == 5 and not is_container_online("app-publisher", running_containers_initial) and not is_container_online("oracle-publisher-dev", running_containers_initial):
+            elif b_num == 5 and not is_container_online("app-publisher", running_containers_initial, active_bp_num) and not is_container_online("oracle-publisher-dev", running_containers_initial, active_bp_num):
                 is_up = False
                 is_partial = False
-            elif b_num == 6 and not is_container_online("app-forms", running_containers_initial):
+            elif b_num == 6 and not is_container_online("app-forms", running_containers_initial, active_bp_num):
                 is_up = False
                 is_partial = False
-            elif b_num == 7 and not is_container_online("app-forms-publisher", running_containers_initial):
+            elif b_num == 7 and not is_container_online("app-forms-publisher", running_containers_initial, active_bp_num):
                 is_up = False
                 is_partial = False
-            elif b_num == 8 and not is_container_online("web-ide-dev", running_containers_initial):
+            elif b_num == 8 and not is_container_online("web-ide-dev", running_containers_initial, active_bp_num):
                 is_up = False
                 is_partial = False
-            elif b_num == 9 and not is_container_online("app-publisher-designer", running_containers_initial) and not is_container_online("publisher-designer", running_containers_initial):
+            elif b_num == 9 and not is_container_online("app-publisher-designer", running_containers_initial, active_bp_num) and not is_container_online("publisher-designer", running_containers_initial, active_bp_num):
                 is_up = False
                 is_partial = False
             elif b_num == 11:
-                has_local_db = any(d in running_containers_initial for d in ["db-proxy", "db-alise", "db-proxy-standalone", "db-publisher", "db-forms", "db-gvenzl", "db-adb", "db-forms-publisher"])
-                if has_local_db and b_num != active_bp_num:
+                if b_num != active_bp_num:
                     is_up = False
                     is_partial = False
         else:
@@ -166,11 +181,11 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
         elif b_num == 1:
             status_url = "https://localhost:8448/ords/alise/"
         elif b_num == 2:
-            status_url = "https://localhost:8448/ords/proxy/"
+            status_url = "https://localhost:8448/ords/proxy_standalone/"
         elif b_num == 3:
             status_url = "https://localhost:8448/ords/gvenzl/"
         elif b_num == 4:
-            status_url = "https://localhost:8448/ords/alise/"
+            status_url = "https://localhost:8448/ords/adb/"
         elif b_num in [5, 11]:
             status_url = f"http://localhost:{pub_port}/xmlpserver"
         elif b_num == 6:
@@ -202,7 +217,7 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
             ep_links.append('<a href="https://localhost:8448/ords/proxy/user_developer/sign-in?username=USER_DEVELOPER&r=_sdw" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/proxy/user_developer/sign-in?username=USER_DEVELOPER&r=_sdw\', \'DB_PROXY_DEV\', \'USER_DEVELOPER\', event)" data-i18n-title="tip_db_actions_wait" title="Database Actions (warmup ~1 min)">📊 DB Actions (DEV) ↗</a>')
             ep_links.append('<a href="https://localhost:8448/ords/proxy/dba_admin/sign-in?username=DBA_ADMIN&r=_sdw" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/proxy/dba_admin/sign-in?username=DBA_ADMIN&r=_sdw\', \'DB_PROXY_DBA_ADMIN\', \'DBA_ADMIN\', event)" data-i18n-title="tip_db_actions_wait" title="Database Actions (warmup ~1 min)">📊 DB Actions (DBA_ADMIN) ↗</a>')
             ep_links.append('<a href="https://localhost:8448/ords/proxy/" target="_blank" class="btn-endpoint" title="ORDS Landing for Proxy">🌐 ORDS (proxy) ↗</a>')
-        elif b_num in [1, 3, 4]:
+        elif b_num == 1:
             ep_links.append(f'<a href="https://localhost:8448/ords/alise/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company={alise_ws}&f4550_p1_username=DEV" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/alise/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company={alise_ws}&f4550_p1_username=DEV\', \'DB_ALISE_DEV\', \'DEV\', event)" title="Developer Workspace ({alise_ws})">🛠️ APEX Workspace (DEV) ↗</a>')
             ep_links.append('<a href="https://localhost:8448/ords/alise/r/apex/workspace-sign-in/administration-sign-in?p10_username=ADMIN" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/alise/r/apex/workspace-sign-in/administration-sign-in?p10_username=ADMIN\', \'DB_ALISE_APEX_ADMIN\', \'ADMIN\', event)" title="Instance Admin">⚙️ APEX Admin (ADMIN) ↗</a>')
             ep_links.append('<a href="https://localhost:8448/ords/alise/user_developer/sign-in?username=USER_DEVELOPER&r=_sdw" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/alise/user_developer/sign-in?username=USER_DEVELOPER&r=_sdw\', \'DB_ALISE_DEV\', \'USER_DEVELOPER\', event)" data-i18n-title="tip_db_actions_wait" title="Database Actions (warmup ~1 min)">📊 DB Actions (DEV) ↗</a>')
@@ -214,34 +229,49 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
             ep_links.append('<a href="https://localhost:8448/ords/proxy_standalone/user_developer/sign-in?username=USER_DEVELOPER&r=_sdw" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/proxy_standalone/user_developer/sign-in?username=USER_DEVELOPER&r=_sdw\', \'DB_PROXY_STANDALONE_DEV\', \'USER_DEVELOPER\', event)" data-i18n-title="tip_db_actions_wait" title="Database Actions (warmup ~1 min)">📊 DB Actions (DEV) ↗</a>')
             ep_links.append('<a href="https://localhost:8448/ords/proxy_standalone/dba_admin/sign-in?username=DBA_ADMIN&r=_sdw" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/proxy_standalone/dba_admin/sign-in?username=DBA_ADMIN&r=_sdw\', \'DB_PROXY_STANDALONE_DBA_ADMIN\', \'DBA_ADMIN\', event)" data-i18n-title="tip_db_actions_wait" title="Database Actions (warmup ~1 min)">📊 DB Actions (DBA_ADMIN) ↗</a>')
             ep_links.append('<a href="https://localhost:8448/ords/proxy_standalone/" target="_blank" class="btn-endpoint" title="SSO REST Gateway">🌐 ORDS (proxy_standalone) ↗</a>')
+        elif b_num == 3:
+            ep_links.append('<a href="https://localhost:8448/ords/gvenzl/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company=GVENZL_WORKSPACE&f4550_p1_username=DEV" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/gvenzl/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company=GVENZL_WORKSPACE&f4550_p1_username=DEV\', \'DB_GVENZL_DEV\', \'DEV\', event)" title="Developer Workspace (GVENZL_WORKSPACE)">🛠️ APEX Workspace (DEV) ↗</a>')
+            ep_links.append('<a href="https://localhost:8448/ords/gvenzl/r/apex/workspace-sign-in/administration-sign-in?p10_username=ADMIN" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/gvenzl/r/apex/workspace-sign-in/administration-sign-in?p10_username=ADMIN\', \'DB_GVENZL_APEX_ADMIN\', \'ADMIN\', event)" title="Instance Admin">⚙️ APEX Admin (ADMIN) ↗</a>')
+            ep_links.append('<a href="https://localhost:8448/ords/gvenzl/user_developer/sign-in?username=USER_DEVELOPER&r=_sdw" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/gvenzl/user_developer/sign-in?username=USER_DEVELOPER&r=_sdw\', \'DB_GVENZL_DEV\', \'USER_DEVELOPER\', event)" data-i18n-title="tip_db_actions_wait" title="Database Actions (warmup ~1 min)">📊 DB Actions (DEV) ↗</a>')
+            ep_links.append('<a href="https://localhost:8448/ords/gvenzl/dba_admin/sign-in?username=DBA_ADMIN&r=_sdw" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/gvenzl/dba_admin/sign-in?username=DBA_ADMIN&r=_sdw\', \'DB_GVENZL_DBA_ADMIN\', \'DBA_ADMIN\', event)" data-i18n-title="tip_db_actions_wait" title="Database Actions (warmup ~1 min)">📊 DB Actions (DBA_ADMIN) ↗</a>')
+            ep_links.append('<a href="https://localhost:8448/ords/gvenzl/" target="_blank" class="btn-endpoint" title="ORDS Landing for Gvenzl">🌐 ORDS (gvenzl) ↗</a>')
+        elif b_num == 4:
+            ep_links.append('<a href="https://localhost:8448/ords/adb/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company=ADB_WORKSPACE&f4550_p1_username=DEV" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/adb/r/apex/workspace-sign-in/oracle-apex-sign-in?f4550_p1_company=ADB_WORKSPACE&f4550_p1_username=DEV\', \'DB_ADB_DEV\', \'DEV\', event)" title="Developer Workspace (ADB_WORKSPACE)">🛠️ APEX Workspace (DEV) ↗</a>')
+            ep_links.append('<a href="https://localhost:8448/ords/adb/r/apex/workspace-sign-in/administration-sign-in?p10_username=ADMIN" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/adb/r/apex/workspace-sign-in/administration-sign-in?p10_username=ADMIN\', \'DB_ADB_APEX_ADMIN\', \'ADMIN\', event)" title="Instance Admin">⚙️ APEX Admin (ADMIN) ↗</a>')
+            ep_links.append('<a href="https://localhost:8448/ords/adb/user_developer/sign-in?username=USER_DEVELOPER&r=_sdw" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/adb/user_developer/sign-in?username=USER_DEVELOPER&r=_sdw\', \'DB_ADB_DEV\', \'USER_DEVELOPER\', event)" data-i18n-title="tip_db_actions_wait" title="Database Actions (warmup ~1 min)">📊 DB Actions (DEV) ↗</a>')
+            ep_links.append('<a href="https://localhost:8448/ords/adb/dba_admin/sign-in?username=DBA_ADMIN&r=_sdw" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'https://localhost:8448/ords/adb/dba_admin/sign-in?username=DBA_ADMIN&r=_sdw\', \'DB_ADB_DBA_ADMIN\', \'DBA_ADMIN\', event)" data-i18n-title="tip_db_actions_wait" title="Database Actions (warmup ~1 min)">📊 DB Actions (DBA_ADMIN) ↗</a>')
+            ep_links.append('<a href="https://localhost:8448/ords/adb/" target="_blank" class="btn-endpoint" title="ORDS Landing for ADB">🌐 ORDS (adb) ↗</a>')
         elif b_num == 5:
-            ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_DEVELOPER\', \'bip_developer\', event)" style="border-color:rgba(56,189,248,0.5); color:#38bdf8;">🎨 Developer Portal (bip_developer) ↗</a>')
-            ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_USER\', \'bip_user\', event)" style="border-color:rgba(74,222,128,0.5); color:#4ade80;">👤 User Portal (bip_user) ↗</a>')
-            ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_ADMIN\', \'bip_admin\', event)" style="border-color:rgba(251,146,60,0.5); color:#fb923c;">📑 Admin Portal (bip_admin) ↗</a>')
-            ep_links.append(f'<a href="http://localhost:{pub_port}/console" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/console\', \'DB_PUBLISHER_SYS\', \'weblogic\', event)" style="color:#fbbf24;">⚙️ WebLogic Admin Console ↗</a>')
+            ep_links.append(f'<a href="http://localhost:8089/api/publisher/open?user=bip_developer" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_DEVELOPER\', \'bip_developer\', event)" style="border-color:rgba(56,189,248,0.5); color:#38bdf8;">🎨 Developer Portal (bip_developer) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:8089/api/publisher/open?user=bip_user" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_USER\', \'bip_user\', event)" style="border-color:rgba(74,222,128,0.5); color:#4ade80;">👤 User Portal (bip_user) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:8089/api/publisher/open?user=bip_admin" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'PUBLISHER_ADMIN\', \'bip_admin\', event)" style="border-color:rgba(251,146,60,0.5); color:#fb923c;">📑 Admin Portal (bip_admin) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver/signout.jsp" target="_blank" class="btn-endpoint" style="border-color:rgba(248,113,113,0.5); color:#f87171;" title="Lõpeta ja tühista aktiivne WebLogic sessioon brauseris">🚪 Sign Out (Puhasta sessioon) ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{pub_admin_port}/console" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_admin_port}/console\', \'DB_PUBLISHER_SYS\', \'weblogic\', event)" style="color:#fbbf24;">⚙️ WebLogic Admin Console ↗</a>')
+            ep_links.append('<button type="button" class="btn-endpoint" onclick="openReportStudioModal()" style="border-color:rgba(168,85,247,0.6); color:#c084fc; background:rgba(168,85,247,0.1); font-weight:600;"><span>🎨</span> <span data-i18n="btn_report_lab">Aruannete Labor</span> ↗</button>')
         elif b_num == 6:
             ep_links.append(f'<a href="http://localhost:{forms_runtime_port}/forms/frmservlet?form=test.fmx" target="_blank" class="btn-endpoint" style="color:#4ade80;">🟢 Forms Test Form ↗</a>')
             ep_links.append(f'<a href="http://localhost:{forms_vnc_port}/vnc.html" target="_blank" class="btn-endpoint" style="color:#38bdf8;">🎨 Forms Builder GUI (noVNC) ↗</a>')
             ep_links.append(f'<a href="http://localhost:{forms_wls_port}/console" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{forms_wls_port}/console\', \'DB_FORMS_SYS\', \'weblogic\', event)" style="color:#fbbf24;">⚙️ WebLogic Console ↗</a>')
         elif b_num == 7:
             ep_links.append('<a href="http://localhost:9502/xmlpserver" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:9502/xmlpserver\', \'DB_PUBLISHER_SYS\', \'Administrator\', event)" style="color:#fb923c;">📑 Analytics Publisher ↗</a>')
-            ep_links.append('<a href="http://localhost:9001/forms/frmservlet?form=test.fmx" target="_blank" class="btn-endpoint" style="color:#4ade80;">🟢 Forms Test Form ↗</a>')
+            ep_links.append(f'<a href="http://localhost:9001/forms/frmservlet?form=test.fmx" target="_blank" class="btn-endpoint" style="color:#4ade80;">🟢 Forms Test Form ↗</a>')
             ep_links.append('<a href="http://localhost:6082/vnc.html" target="_blank" class="btn-endpoint" style="color:#38bdf8;">🎨 Forms Builder GUI ↗</a>')
             ep_links.append('<a href="http://localhost:7001/console" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:7001/console\', \'DB_FORMS_SYS\', \'weblogic\', event)" style="color:#fbbf24;">⚙️ Unified WLS Console ↗</a>')
+            ep_links.append('<button type="button" class="btn-endpoint" onclick="openReportStudioModal()" style="border-color:rgba(168,85,247,0.6); color:#c084fc; background:rgba(168,85,247,0.1); font-weight:600;"><span>🎨</span> <span data-i18n="btn_report_lab">Aruannete Labor</span> ↗</button>')
         elif b_num == 8:
             ep_links.append(f'<a href="http://localhost:{ide_port}/?folder=/workspace" target="_blank" class="btn-endpoint" style="border-color:rgba(192,132,252,0.5); color:#c084fc;">💻 Open VS Code Web IDE ↗</a>')
         elif b_num == 9:
+            ep_links.append('<button type="button" class="btn-endpoint btn-endpoint-primary-cta" onclick="openReportStudioModal()" style="border-color:#c084fc; color:#ffffff; background:linear-gradient(135deg, rgba(168,85,247,0.85) 0%, rgba(126,34,206,0.95) 100%); font-weight:700; box-shadow:0 2px 10px rgba(168,85,247,0.35);"><span>⚡</span> <span data-i18n="btn_report_lab">Aruannete Labor</span> <span>(Fast-Render) ↗</span></button>')
             ep_links.append(f'<a href="http://localhost:{designer_port}/vnc.html" target="_blank" class="btn-endpoint" style="border-color:rgba(244,114,182,0.5); color:#f472b6;">🎨 Open Template Designer GUI ↗</a>')
         elif b_num == 10:
             ep_links.append('<a href="https://localhost:8448/ords/_/landing" target="_blank" class="btn-endpoint" style="color:#06b6d4;">🔗 Central ORDS Landing ↗</a>')
             ep_links.append('<a href="https://localhost:8448/ords/" target="_blank" class="btn-endpoint">🌐 Remote Routing Edge ↗</a>')
         elif b_num == 11:
             ep_links.append(f'<a href="http://localhost:{pub_port}/xmlpserver" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/xmlpserver\', \'DB_PUBLISHER_SYS\', \'Administrator\', event)" style="color:#fb923c;">📑 Open Analytics Publisher (BIP) ↗</a>')
-            ep_links.append(f'<a href="http://localhost:{pub_port}/console" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_port}/console\', \'DB_PUBLISHER_SYS\', \'weblogic\', event)" style="color:#fbbf24;">⚙️ WebLogic Admin Console ↗</a>')
+            ep_links.append(f'<a href="http://localhost:{pub_admin_port}/console" target="_blank" class="btn-endpoint" onclick="openServiceWithCredentials(\'http://localhost:{pub_admin_port}/console\', \'DB_PUBLISHER_SYS\', \'weblogic\', event)" style="color:#fbbf24;">⚙️ WebLogic Admin Console ↗</a>')
+            ep_links.append('<button type="button" class="btn-endpoint" onclick="openReportStudioModal()" style="border-color:rgba(168,85,247,0.6); color:#c084fc; background:rgba(168,85,247,0.1); font-weight:600;"><span>🎨</span> <span data-i18n="btn_report_lab">Aruannete Labor</span> ↗</button>')
 
-        # Actions: State-sensitive Action Button ("⚙️ Haldus & Taastamine" vs "⚡ Käivita & Juhi") + Icon Copy Button
-        copy_tip = "tip_copy_stop_cmd" if is_up and b_num > 0 else "tip_copy_deploy_cmd"
-        copy_title = "Kopeeri peatamiskäsk" if is_up and b_num > 0 else "Kopeeri juurutamiskäsk"
+        # Actions: Two equal-width action buttons (Architecture & Operations/Management)
         if is_up:
             btn_label_key = "btn_manage_ops_active"
             btn_label_txt = "⚙️ Haldus & Taastamine"
@@ -250,10 +280,11 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
             btn_label_key = "btn_manage_ops_offline"
             btn_label_txt = "⚡ Käivita & Juhi"
             btn_cls = "btn-primary"
-        action_main_html = f'<button type="button" class="btn {btn_cls} btn-action-main btn-service-switch" onclick="openBlueprintModal({b_num}, \'ops\')"><span data-i18n="{btn_label_key}">{btn_label_txt}</span></button>'
+        btn_arch_html = f'<button type="button" class="btn btn-secondary btn-action-arch" onclick="openBlueprintModal({b_num}, \'arch\')"><span>📐</span> <span data-i18n="modal_tab_arch">Arhitektuur</span></button>'
+        btn_ops_html = f'<button type="button" class="btn {btn_cls} btn-action-main btn-service-switch" onclick="openBlueprintModal({b_num}, \'ops\')"><span data-i18n="{btn_label_key}">{btn_label_txt}</span></button>'
         action_btns_html = f"""
-            {action_main_html}
-            <button type="button" class="btn btn-secondary btn-icon btn-bp-copy" onclick="handleCopyBpCmd({b_num}, this)" data-i18n-title="{copy_tip}" title="{copy_title}"><span>📋</span></button>
+            {btn_arch_html}
+            {btn_ops_html}
         """
         testing_badge_html = ""
         if b.get("testing", False) or b_num in [10, 11]:
@@ -278,12 +309,7 @@ def render_service_cards(bp_list, active_bp_num, running_containers_initial, all
                         <p class=\"card-desc\" data-bp-desc=\"{b_num}\">{d_et}</p>
                         {chips_html}
                         <div class=\"card-meta\">
-                            <span>⚡ RAM: <code>{b.get('ram', '2-3 GB')}</code> &nbsp;|&nbsp; 🔑 <span data-i18n=\"meta_accounts\">Kontosid</span>: <code>{len(b.get('users', []))}</code></span>
-                            <div style=\"display:flex; align-items:center; gap:8px;\">
-                                <a href=\"javascript:void(0)\" onclick=\"openBlueprintModal({b_num}, 'arch')\" class=\"card-meta-link\" style=\"font-size:0.8rem; color:#38bdf8; display:inline-flex; align-items:center; gap:3px;\" title=\"Vaata arhitektuuri ja topoloogiat\"><span>📐</span> <span data-i18n=\"modal_tab_arch\">Arhitektuur</span> ↗</a>
-                                <span style=\"color:#475569; font-size:0.8rem;\">|</span>
-                                <a href=\"javascript:void(0)\" onclick=\"openBlueprintModal({b_num}, 'ops')\" class=\"card-meta-link\" style=\"font-size:0.8rem; color:#c084fc; display:inline-flex; align-items:center; gap:3px;\" title=\"Vaata käivitusi ja haldust\"><span>⚡</span> <span data-i18n=\"modal_tab_ops\">Haldus</span> ↗</a>
-                            </div>
+                            <span class=\"bp-card-ram-line\" data-bp=\"{b_num}\">⚡ RAM: <code>~{b.get('ram', '2-3 GB').replace('~', '')}</code><span class=\"bp-live-ram-pill\" id=\"bp-live-ram-{b_num}\"> · <span style=\"color:#94a3b8;\">⚪ <span data-i18n=\"status_stopped\">Seisatud</span></span></span> &nbsp;|&nbsp; 🔑 <span data-i18n=\"meta_accounts\">Kontosid</span>: <code>{len(b.get('users', []))}</code></span>
                         </div>
                         <div class=\"card-endpoints-flex\">{''.join(ep_links)}</div>
                     </div>

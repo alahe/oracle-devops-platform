@@ -84,8 +84,6 @@ def parse_blueprint_env_and_metadata(bp_file, b_num):
 
     # 1. ORDS Gateway
     ords_p = env_v.get("ORDS_PROFILE")
-    if not ords_p and (b_num in [0, 1, 2, 3, 4, 10]) and env_v.get("MAIN_DB_PROFILE", "").upper() != "NONE":
-        ords_p = "ords-image"
     if ords_p and ords_p.upper() != "NONE":
         p_data = load_yaml_profile(ords_p)
         ords_cfg = p_data.get("ords", {})
@@ -295,6 +293,7 @@ def parse_blueprint_env_and_metadata(bp_file, b_num):
     if pub_p and pub_p.upper() != "NONE":
         p_cfg = load_yaml_profile(pub_p).get("publisher", {})
         h_port = p_cfg.get("http_port", 9502)
+        adm_port = p_cfg.get("admin_port", 9500)
         all_users.append({
             "db": "app-publisher",
             "username": "Administrator",
@@ -313,8 +312,36 @@ def parse_blueprint_env_and_metadata(bp_file, b_num):
             "scope": "console",
             "wallet_alias": "DB_PUBLISHER_SYS",
             "color": "#fbbf24",
-            "login_url": f"http://localhost:{h_port}/console"
+            "login_url": f"http://localhost:{adm_port}/console"
         })
+
+        for pu in p_cfg.get("users", []):
+            pu_name = pu.get("username", "")
+            if not pu_name:
+                continue
+            pu_alias = pu.get("wallet_alias", f"PUBLISHER_{pu_name.upper()}")
+            pu_roles = ", ".join(pu.get("roles", []))
+            
+            if "DEVELOPER" in pu_name.upper():
+                pu_color = "#38bdf8"
+                pu_title = "🎨 Publisher Developer Portal"
+            elif "ADMIN" in pu_name.upper():
+                pu_color = "#fb923c"
+                pu_title = "⚙️ Publisher Admin Portal"
+            else:
+                pu_color = "#4ade80"
+                pu_title = "👤 Publisher User Portal"
+
+            all_users.append({
+                "db": "app-publisher",
+                "username": pu_name,
+                "portal_title": pu_title,
+                "role": pu_roles or "XMLP_USER",
+                "scope": "xmlpserver",
+                "wallet_alias": pu_alias,
+                "color": pu_color,
+                "login_url": f"http://localhost:{h_port}/xmlpserver"
+            })
 
     if forms_p and forms_p.upper() != "NONE":
         f_cfg = load_yaml_profile(forms_p).get("forms", {})

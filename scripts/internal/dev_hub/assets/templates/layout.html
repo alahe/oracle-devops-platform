@@ -6,6 +6,9 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <meta name="dev-hub-version" content="%PLATFORM_VERSION%">
+    <meta name="dev-hub-build-timestamp" content="%BUILD_TIMESTAMP%">
+    <meta name="dev-hub-git-commit" content="%GIT_COMMIT%">
     <title>Oracle DevOps Platform - Developer Hub</title>
     <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
@@ -27,6 +30,17 @@
                     <span data-i18n="nav_back">Tagasi</span>
                 </button>
                 <h1>🚀 Oracle DevOps Platform</h1>
+                <span class="version-badge" id="platform-version-badge" onclick="openVersionInspectorModal()" title="Klõpsa: Versiooni ja vahemälu inspektor (Version & Cache Inspector)" style="font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; transition: all 0.2s ease;">
+                    <span style="width: 7px; height: 7px; border-radius: 50%; background: #38bdf8; display: inline-block;"></span>
+                    <span id="platform-global-version">v%PLATFORM_VERSION%</span>
+                    <span id="bridge-header-status" style="color: #94a3b8; font-weight: 500; margin-left: 2px;">• Bridge Offline</span>
+                </span>
+                <!-- In-App Cache-Buster Hard Reload Button (Trick #1) -->
+                <button class="cache-reload-btn" id="cache-reload-btn" onclick="triggerDevHubHardReload(event)" title="Värskenda vahemäluta (Hard Reload / Shift+R)" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; border-radius: 9999px; padding: 3px 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s ease;">
+                    <span class="reload-spin-icon" style="display: inline-block;">🔄</span>
+                    <span data-i18n="btn_hard_reload">Värskenda</span>
+                    <kbd style="background: rgba(0,0,0,0.3); border: 1px solid rgba(56,189,248,0.3); border-radius: 4px; padding: 1px 4px; font-size: 0.65rem; color: #94a3b8; margin-left: 2px;">⇧R</kbd>
+                </button>
             </div>
             <p data-i18n="header_subtitle">Unified Command Center, Real-Time Service Health & Multilingual Architecture Portal</p>
         </div>
@@ -98,6 +112,23 @@
                         </div>
                     </a>
 
+                    <!-- Zone 1.5: Getting Started & Presentation -->
+                    <div class="dropdown-section-title" data-i18n="section_onboarding_pres">Getting Started &amp; Presentation</div>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="switchTab('tab-presentation')">
+                        <span class="item-icon">📽️</span>
+                        <div class="item-text">
+                            <span class="item-title" data-i18n="menu_presentation_title">Architecture Overview Deck (13 Slides)</span>
+                            <span class="item-desc" data-i18n="menu_presentation_desc">Executive &amp; Technical presentation with 3-step roadmap</span>
+                        </div>
+                    </a>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="switchTab('tab-onboarding')">
+                        <span class="item-icon">🚀</span>
+                        <div class="item-text">
+                            <span class="item-title" data-i18n="menu_onboarding_title">Developer Quickstart &amp; Onboarding</span>
+                            <span class="item-desc" data-i18n="menu_onboarding_desc">Zero-to-Hero step-by-step launch walkthrough</span>
+                        </div>
+                    </a>
+
                     <!-- Zone 2: Knowledge Base & Reference -->
                     <div class="dropdown-section-title" data-i18n="section_knowledge_resources">Knowledge Base & Reference</div>
                     <a href="javascript:void(0)" class="dropdown-item" onclick="openFaqFromMenu()">
@@ -138,12 +169,6 @@
                 </div>
             </div>
 
-            <!-- Architecture Glossary Trigger Button -->
-            <button class="glossary-nav-btn" id="glossary-nav-btn" onclick="openGlossaryModal()" title="Architecture Glossary & Acronyms (Press '?' or 'g')">
-                <span class="glossary-btn-icon">📖</span>
-                <span data-i18n="nav_glossary">Sõnastik</span>
-                <kbd class="shortcut-badge">?</kbd>
-            </button>
 
             <div class="lang-switcher">
                 <button class="lang-btn active" id="btn-en" onclick="setLanguage('en')">🇬🇧 EN</button>
@@ -156,16 +181,14 @@
         </div>
     </header>
 
-    <!-- Navigation Tabs -->
+    <!-- Navigation Tabs (Golden 7 Standard) -->
     <nav class="tabs-nav">
         <button class="tab-btn active" onclick="switchTab('tab-services')">🚀 <span data-i18n="tab_cockpit">Juhtpaneel</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-podman')">🐳 <span data-i18n="tab_podman">Podman</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-presentation')">📽️ <span data-i18n="tab_presentation">Overview</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-onboarding')">🚀 <span data-i18n="tab_onboarding">Alustamine</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-docs')">📚 <span data-i18n="tab_docs">Dokumendid</span></button>
-        <button class="tab-btn" onclick="switchTab('tab-skills')">🧠 <span data-i18n="tab_skills">AI Oskused</span></button>
         <button class="tab-btn" onclick="switchTab('tab-devops')">⚡ <span data-i18n="tab_devops">DevOps</span></button>
+        <button class="tab-btn" onclick="switchTab('tab-podman')">🐳 <span data-i18n="tab_podman">Podman</span></button>
+        <button class="tab-btn" onclick="switchTab('tab-specs')">📋 <span data-i18n="tab_specs">Spetsid &amp; AI</span></button>
         <button class="tab-btn" onclick="switchTab('tab-testing')">🧪 <span data-i18n="tab_testing">Testimine</span></button>
+        <button class="tab-btn" onclick="switchTab('tab-docs')">📚 <span data-i18n="tab_docs">Dokumendid</span></button>
         <button class="tab-btn" onclick="switchTab('tab-benchmarks')">📊 <span data-i18n="tab_benchmarks">Logid</span></button>
     </nav>
 
@@ -173,13 +196,12 @@
     <div id="tab-services" class="tab-content active">
         <div class="section-title">
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-                <span data-i18n="title_endpoints">🌐 Live Services & Access Portals</span>
+                <span data-i18n="title_endpoints">🌐 Services Cockpit</span>
                 <span id="cockpit-ram-indicator" class="ram-indicator-badge ram-ok" title="Estimated RAM consumption vs Host RAM">
-                    <span>💾</span> <span id="cockpit-ram-text">RAM: ~3.0 GB / 16.0 GB</span>
+                    <span id="cockpit-ram-text">📦 ~3.0 GB | Vaba: ~5.0 / 8.0 GB</span>
                 </span>
                 <div id="active-containers-pills-row" style="display:inline-flex; gap:6px; flex-wrap:wrap; align-items:center; margin-left:6px;"></div>
             </div>
-            <span style="font-size: 0.8rem; color: #64748b;" data-i18n="auto_refresh_hint">Auto-refreshes every 6 seconds</span>
         </div>
 
         <!-- Action Toolbar: Filters, Search & Profile Manager -->
@@ -215,11 +237,12 @@
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
-                <button type="button" id="ords-autosync-toggle-btn" class="btn-compact btn-compact-secondary" onclick="toggleOrdsAutoSync()" title="Toggle ORDS Pools Auto-Sync" style="font-size:0.75rem; padding:4px 10px; display:inline-flex; align-items:center; gap:5px;">
-                    <span id="ords-autosync-indicator">⚪</span> <span id="ords-autosync-label" data-i18n="ords_autosync_off">Auto-Sync: OFF</span>
+                <button type="button" id="master-autorefresh-btn" class="btn-compact btn-compact-secondary" onclick="toggleMasterAutoRefresh()" title="Lülita kogu lehe reaalajas telemeetria sisse/välja" style="font-size:0.75rem; padding:4px 10px; display:inline-flex; align-items:center; gap:5px;">
+                    <span id="master-autorefresh-dot" style="width:7px; height:7px; border-radius:50%; background:#22c55e; display:inline-block;"></span>
+                    <span id="master-autorefresh-label" data-i18n="master_autorefresh_on">Reaalajas: 5s</span>
                 </button>
-                <button type="button" class="btn-compact btn-compact-secondary" onclick="syncOrdsPools(true)" title="Sync ORDS pools with running databases" style="font-size:0.75rem; padding:4px 10px;">
-                    <span>🔄</span> <span data-i18n="ords_btn_sync">Sync Pools</span>
+                <button type="button" id="master-refresh-btn" class="btn-compact btn-compact-secondary" onclick="masterRefreshNow()" title="Sünkrooni kohe kõik teenused, poolid ja RAM" style="font-size:0.75rem; padding:4px 10px; display:inline-flex; align-items:center; gap:5px;">
+                    <span id="master-refresh-icon">🔄</span> <span data-i18n="btn_sync_now">Sünkrooni kohe</span>
                 </button>
             </div>
         </div>
@@ -435,11 +458,19 @@
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-size: 1.4rem;">🎬</span>
                         <div>
-                            <h2 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin: 0;" data-i18n="deck_main_title">Oracle DevOps Platform — Esitlus ja Ülevaade</h2>
-                            <p style="font-size: 0.78rem; color: #94a3b8; margin: 2px 0 0 0;" data-i18n="deck_subtitle">Visioon, arhitektuur, rollipõhised väärtused ja tööload</p>
+                            <h2 style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; margin: 0;" id="deck-display-title" data-i18n="deck_main_title">Oracle DevOps Platform — Esitlus ja Ülevaade</h2>
+                            <p style="font-size: 0.78rem; color: #94a3b8; margin: 2px 0 0 0;" id="deck-display-subtitle" data-i18n="deck_subtitle">Visioon, arhitektuur, rollipõhised väärtused ja tööload</p>
                         </div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <div class="deck-selector-pills" style="display: inline-flex; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 3px; gap: 4px;">
+                            <button class="role-track-btn active" id="deck-btn-platform" onclick="switchPresentationDeck('platform')" style="font-size: 0.78rem; padding: 5px 12px; border-radius: 6px;">
+                                <span>🌐</span> <span data-i18n="deck_opt_platform">Platvormi Üldülevaade (13)</span>
+                            </button>
+                            <button class="role-track-btn" id="deck-btn-forms" onclick="switchPresentationDeck('forms')" style="font-size: 0.78rem; padding: 5px 12px; border-radius: 6px;">
+                                <span>📑</span> <span data-i18n="deck_opt_forms">Forms Moderniseerimine (13)</span>
+                            </button>
+                        </div>
                         <button class="btn btn-secondary" onclick="openSlideModal()" style="padding: 5px 12px; font-size: 0.78rem;" title="Ava täisekraani esitlus (Kinorežiim)">
                             <span>🖥️</span> <span data-i18n="btn_fullscreen">Täisekraan</span>
                         </button>
@@ -448,7 +479,7 @@
 
                 <!-- UNIFIED 42px CONTROL BAR WITH ROLE TRACKS -->
                 <div class="deck-unified-bar" id="deck-unified-bar">
-                    <div class="role-tracks-group">
+                    <div class="role-tracks-group" id="deck-role-tracks-group">
                         <span class="role-track-label" style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-right: 4px;">Rada:</span>
                         <button class="role-track-btn active" id="track-btn-all" onclick="filterSlideTrack('all')">
                             <span>🌟</span> <span data-i18n="track_all">Kõik (13)</span>
@@ -532,11 +563,22 @@
                         <span class="slide-dot" onclick="goToSlide(9)"></span>
                         <span class="slide-dot" onclick="goToSlide(10)"></span>
                         <span class="slide-dot" onclick="goToSlide(11)"></span>
+                        <span class="slide-dot" onclick="goToSlide(12)"></span>
                     </div>
                 </div>
                 <button class="btn btn-primary" id="btn-next-slide" onclick="nextSlide()" style="padding: 8px 16px; font-weight: 600;">
                     <span data-i18n="btn_next_slide">Järgmine Slaid</span> <span>▶</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- DYNAMIC TEXTUAL SUMMARY BELOW SLIDE DECK -->
+        <div id="deck-textual-summary" class="deck-textual-summary-wrapper" style="margin-top: 24px;">
+            <div id="deck-summary-forms" style="display: none;">
+                %FORMS_SUMMARY_HTML%
+            </div>
+            <div id="deck-summary-platform" style="display: block;">
+                <!-- Platform summary rendered if needed -->
             </div>
         </div>
     </div>
@@ -547,30 +589,29 @@
     <!-- TAB: SNAPSHOTS & DR HUB -->
     <div id="tab-snapshots" class="tab-content">
         <div class="section-title">
-            <span data-i18n="title_snapshots_hub">💾 Golden Snapshots & Instant Disaster Recovery (~15s)</span>
-            <span style="font-size: 0.8rem; color: #64748b;">15-Second Instant Recovery vs 4-5 Minute Cold Setup</span>
+            <span data-i18n="title_snapshots_hub">💾 Golden Snapshots & Disaster Recovery</span>
+            <span style="font-size: 0.8rem; color: #64748b;" data-i18n="subtitle_snapshots_hub">FastStart Snapshot Recovery vs Cold Setup</span>
         </div>
 
         <!-- BENCHMARK COMPARISON BAR -->
         <div class="card" style="border: 1px solid rgba(34, 197, 94, 0.4); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%); margin-bottom: 24px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
-                <h4 style="color: #4ade80; margin: 0; font-size: 1.05rem;">⚡ Ajakulu Võrdlus: Kiirtaastamine vs Külm Paigaldus</h4>
-                <span class="badge badge-success" style="font-size: 0.8rem; font-weight: 700;">94% Kiirem Taastamine (~15s)</span>
+                <h4 style="color: #4ade80; margin: 0; font-size: 1.05rem;" data-i18n="snap_bench_title">⚡ Ajakulu Mõõdikud: Kiirtaastamine ja Paigaldus</h4>
+                <span class="badge badge-success" style="font-size: 0.8rem; font-weight: 700;" data-i18n="snap_badge_faststart">FastStart Taastamine</span>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <div style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 12px;">
-                    <div style="font-size: 0.85rem; color: #94a3b8;">🚀 Golden Snapshot FastStart (Pass 2 / DR)</div>
-                    <div style="font-size: 1.5rem; font-weight: 800; color: #4ade80; margin: 4px 0;">~15 – 22 sekundit</div>
-                    <div style="font-size: 0.75rem; color: #cbd5e1;">Taastab valmis Oracle andmemahu + APEX + kasutajad + paroolide rotatsiooni</div>
+                    <div style="font-size: 0.85rem; color: #94a3b8;" data-i18n="snap_faststart_label">🚀 Golden Snapshot FastStart (Pass 2 / DR)</div>
+                    <div id="snap-stat-restore-dur" style="font-size: 1.5rem; font-weight: 800; color: #4ade80; margin: 4px 0;">Telemeetria</div>
+                    <div style="font-size: 0.75rem; color: #cbd5e1;" data-i18n="snap_faststart_desc">Taastab valmis Oracle andmemahu + APEX + kasutajad ja turvalise ühenduvuse</div>
                 </div>
                 <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 12px;">
-                    <div style="font-size: 0.85rem; color: #94a3b8;">❄️ Täielik Külm Paigaldus Nullist (Pass 1)</div>
-                    <div style="font-size: 1.5rem; font-weight: 800; color: #f87171; margin: 4px 0;">~3m 45s – 5m 20s</div>
-                    <div style="font-size: 0.75rem; color: #cbd5e1;">Tõmbab imagid, initsialiseerib baasid, kompileerib APEX PL/SQL mootori</div>
+                    <div style="font-size: 0.85rem; color: #94a3b8;" data-i18n="snap_cold_label">❄️ Täielik Külm Paigaldus Nullist (Pass 1)</div>
+                    <div id="snap-stat-cold-dur" style="font-size: 1.5rem; font-weight: 800; color: #f87171; margin: 4px 0;">Telemeetria</div>
+                    <div style="font-size: 0.75rem; color: #cbd5e1;" data-i18n="snap_cold_desc">Nullist andmebaasi loomine, APEX engine, ORDS konfiguratsioon ja skeemid</div>
                 </div>
             </div>
         </div>
-
         <!-- SNAPSHOT MANAGER INTERACTIVE CARD -->
         <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35); margin-bottom: 28px; background: rgba(15, 23, 42, 0.7);">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
@@ -1179,6 +1220,7 @@
                     <button class="btn btn-sm" id="btn-docs-cat-devops" onclick="filterDocsCategory('devops')" style="padding:3px 8px; font-size:0.72rem;" data-i18n="docs_cat_devops">Scripts</button>
                     <button class="btn btn-sm" id="btn-docs-cat-web" onclick="filterDocsCategory('web')" style="padding:3px 8px; font-size:0.72rem;" data-i18n="docs_cat_web">Services</button>
                     <button class="btn btn-sm" id="btn-docs-cat-trouble" onclick="filterDocsCategory('trouble')" style="padding:3px 8px; font-size:0.72rem;" data-i18n="docs_cat_trouble">Troubleshooting</button>
+                    <button class="btn btn-sm" id="btn-docs-cat-specs" onclick="filterDocsCategory('specs')" style="padding:3px 8px; font-size:0.72rem;" data-i18n="docs_cat_specs">📋 Specs & SDD</button>
                 </div>
                 <nav class="docs-nav-list" id="docs-sidebar-nav"></nav>
             </aside>
@@ -1201,8 +1243,229 @@
         </div>
     </div>
 
-    <!-- TAB: AI SKILLS & ARCHITECTURE INTELLIGENCE -->
-    <div id="tab-skills" class="tab-content">
+    <!-- TAB: SPEC-DRIVEN DEVELOPMENT (SDD) & AI COCKPIT -->
+    <div id="tab-specs" class="tab-content">
+        <!-- Hero Header & Methodology Badges -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+                    <span style="font-size: 1.6rem;">📋</span>
+                    <h2 style="font-size: 1.4rem; font-weight: 700; color: #f8fafc; margin: 0;" data-i18n="specs_hero_title">Spetsifikatsioonipõhine Arendus &amp; AI Koosteliin</h2>
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 0.75rem; padding: 2px 8px; border-radius: 9999px;">SDD &amp; Agentic Assembly Line</span>
+                </div>
+                <p style="color: #94a3b8; font-size: 0.88rem; margin: 0;" data-i18n="specs_hero_subtitle">Elavad spetsifikatsioonid (REQ/DES/TSK), Self-Contained Systems (SCS) piirid ja AI agentide koosteliin.</p>
+            </div>
+            
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <div class="skills-stat-pill">
+                    <span style="color: #94a3b8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">SCS Domeenid</span>
+                    <span style="font-weight: 700; color: #38bdf8;" id="specs-count-domains">4 Domeeni (Triad)</span>
+                </div>
+                <div class="skills-stat-pill">
+                    <span style="color: #94a3b8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">AI Oskused</span>
+                    <span style="font-weight: 700; color: #a855f7;">18 Oskust</span>
+                </div>
+                <div class="skills-stat-pill">
+                    <span style="color: #94a3b8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">Jälgitavus</span>
+                    <span style="font-weight: 700; color: #10b981;">100% Pass</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Toolbar: Mode Switcher -->
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div class="skills-view-switcher" style="margin: 0;">
+                <button class="skills-view-btn active" id="specs-mode-btn-triad" onclick="switchSpecsMode('triad')">
+                    <span>📜</span> <span data-i18n="specs_subtab_specs">SCS Spetsifikatsioonid (Triad)</span>
+                </button>
+                <button class="skills-view-btn" id="specs-mode-btn-skills" onclick="switchSpecsMode('skills')">
+                    <span>🧠</span> <span data-i18n="specs_subtab_skills">AI Oskuste Maatriks (18 Skills)</span>
+                </button>
+                <button class="skills-view-btn" id="specs-mode-btn-trace" onclick="switchSpecsMode('trace')">
+                    <span>🧪</span> <span data-i18n="specs_subtab_traceability">Jälgitavus &amp; Seansid</span>
+                </button>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button class="btn-compact btn-compact-secondary" onclick="navigateToDoc('spec-driven-development')" style="font-size: 0.8rem;">
+                    <span>📖</span> <span>SDD Metoodikajuhend</span>
+                </button>
+                <button class="btn-compact btn-compact-primary" onclick="runSpecsTraceabilityAudit()" style="font-size: 0.8rem;">
+                    <span>🧪</span> <span data-i18n="specs_btn_run_trace">Käivita Traceability audit</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- MODE 1: SCS SPECIFICATIONS TRIAD -->
+        <div id="specs-mode-triad-pane" style="display: block;">
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                <!-- Card 1: devops-portal -->
+                <div class="card" style="border-left: 4px solid #38bdf8; background: rgba(15, 23, 42, 0.7);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:1.4rem;">⚡</span>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:#f8fafc;">devops-portal</h3>
+                                <span style="font-size:0.75rem; color:#94a3b8;">Dev Hub &amp; Docked Console</span>
+                            </div>
+                        </div>
+                        <span class="badge badge-success" style="font-size:0.72rem;">Tootmises</span>
+                    </div>
+                    <p style="font-size:0.82rem; color:#94a3b8; margin-bottom:14px; min-height: 38px;">
+                        Juhtpaneel, asünkroonne sildserver, elutsüklistuudiod ja dokitav ring-buffer terminal.
+                    </p>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('devops-portal', 'requirements')">📜 REQ</button>
+                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('devops-portal', 'design')">🏛️ DES</button>
+                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('devops-portal', 'tasks')">📋 TSK</button>
+                    </div>
+                </div>
+
+                <!-- Card 2: wallet-security -->
+                <div class="card" style="border-left: 4px solid #a855f7; background: rgba(15, 23, 42, 0.7);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:1.4rem;">🔐</span>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:#f8fafc;">wallet-security</h3>
+                                <span style="font-size:0.75rem; color:#94a3b8;">Zero-Trust SEPS Auto-Login</span>
+                            </div>
+                        </div>
+                        <span class="badge badge-success" style="font-size:0.72rem;">Tootmises</span>
+                    </div>
+                    <p style="font-size:0.82rem; color:#94a3b8; margin-bottom:14px; min-height: 38px;">
+                        Oracle SEPS auto-login wallet, AES-256 krüpteering kettal, JIT mälusisene dekrüpteerimine.
+                    </p>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('wallet-security', 'requirements')">📜 REQ</button>
+                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('wallet-security', 'design')">🏛️ DES</button>
+                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('wallet-security', 'tasks')">📋 TSK</button>
+                    </div>
+                </div>
+
+                <!-- Card 3: golden-snapshots -->
+                <div class="card" style="border-left: 4px solid #22c55e; background: rgba(15, 23, 42, 0.7);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:1.4rem;">💾</span>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:#f8fafc;">golden-snapshots</h3>
+                                <span style="font-size:0.75rem; color:#94a3b8;">Instant Disaster Recovery</span>
+                            </div>
+                        </div>
+                        <span class="badge badge-success" style="font-size:0.72rem;">Tootmises</span>
+                    </div>
+                    <p style="font-size:0.82rem; color:#94a3b8; margin-bottom:14px; min-height: 38px;">
+                        Tehinguline quiesce, andmeköidete arhiveerimine ja ~15–20s FastStart kiirtaastus.
+                    </p>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('golden-snapshots', 'requirements')">📜 REQ</button>
+                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('golden-snapshots', 'design')">🏛️ DES</button>
+                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('golden-snapshots', 'tasks')">📋 TSK</button>
+                    </div>
+                </div>
+
+                <!-- Card 4: blueprints-topology -->
+                <div class="card" style="border-left: 4px solid #eab308; background: rgba(15, 23, 42, 0.7);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:1.4rem;">🏗️</span>
+                            <div>
+                                <h3 style="margin:0; font-size:1.05rem; color:#f8fafc;">blueprints-topology</h3>
+                                <span style="font-size:0.75rem; color:#94a3b8;">12 Mudelit &amp; Port Isolation</span>
+                            </div>
+                        </div>
+                        <span class="badge badge-success" style="font-size:0.72rem;">Tootmises</span>
+                    </div>
+                    <p style="font-size:0.82rem; color:#94a3b8; margin-bottom:14px; min-height: 38px;">
+                        12 kanoonilist blueprinti (0–11), tuumikbaasi kaitse (Core Base) ja konfliktivaba pordieraldus.
+                    </p>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('blueprints-topology', 'requirements')">📜 REQ</button>
+                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('blueprints-topology', 'design')">🏛️ DES</button>
+                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('blueprints-topology', 'tasks')">📋 TSK</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Master-Detail Spec Reader -->
+            <div id="specs-viewer-card" class="card" style="border: 1px solid var(--border); padding: 20px; background: rgba(15, 23, 42, 0.65);">
+                <!-- Toolbar Header -->
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span id="specs-viewer-icon" style="font-size:1.6rem;">📜</span>
+                        <div>
+                            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                <h3 id="specs-viewer-title" style="margin:0; font-size:1.15rem; color:#f8fafc;">devops-portal • Nõuete Spetsifikatsioon (REQ)</h3>
+                                <span id="specs-viewer-badge" class="badge badge-primary" style="font-size:0.72rem;">SCS Triad</span>
+                            </div>
+                            <span id="specs-viewer-meta" style="font-size:0.8rem; color:#38bdf8; font-family: ui-monospace, monospace;">docs/specs/devops-portal/requirements.md</span>
+                        </div>
+                    </div>
+                    <!-- Action Toolbar -->
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <!-- Density Toggle -->
+                        <div style="display:flex; background: rgba(3,7,18,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 2px;">
+                            <button id="spec-density-btn-comfort" class="btn-xs active" onclick="setSpecDensity('comfortable')" title="Õhuline vaade (Spacious reading)">✨ Õhuline</button>
+                            <button id="spec-density-btn-compact" class="btn-xs" onclick="setSpecDensity('compact')" title="Kompaktne vaade (Compact density)">📄 Kompaktne</button>
+                        </div>
+                        <!-- Focus Mode Button -->
+                        <button class="btn btn-sm btn-secondary" onclick="toggleSpecFocusMode()" title="Fookusvaade / Täisekraan (Distraction-free reader)">
+                            <span>📖</span> <span data-i18n="spec_btn_focus">Fookus</span>
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="openCurrentSpecInDocsTab()">
+                            <span>📑</span> <span data-i18n="spec_btn_open_docs">Ava Dokkides</span>
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="copyCurrentSpecContent()">
+                            <span>📋</span> <span data-i18n="spec_btn_copy_md">Kopeeri</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Master-Detail Container -->
+                <div class="spec-master-detail" id="spec-master-detail-container">
+                    <!-- Left Column: Sticky TOC Sidebar -->
+                    <aside class="spec-toc-sidebar" id="spec-toc-sidebar">
+                        <div class="spec-sidebar-header">
+                            <span class="spec-sidebar-title"><span>📑</span> Sisukord</span>
+                            <span id="spec-reading-time" style="font-size: 0.72rem; color: #94a3b8;">~2 min lugemist</span>
+                        </div>
+
+                        <!-- In-Reader Triad Switcher -->
+                        <div>
+                            <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; font-weight: 600;">Triad Tüüp</div>
+                            <div class="spec-triad-pills">
+                                <button class="spec-triad-btn active" id="spec-triad-btn-req" onclick="switchCurrentSpecType('requirements')">📜 REQ</button>
+                                <button class="spec-triad-btn" id="spec-triad-btn-des" onclick="switchCurrentSpecType('design')">🏛️ DES</button>
+                                <button class="spec-triad-btn" id="spec-triad-btn-tsk" onclick="switchCurrentSpecType('tasks')">📋 TSK</button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Section Navigator -->
+                        <nav>
+                            <ul class="spec-toc-list" id="spec-toc-list">
+                                <!-- Populated dynamically from document headings -->
+                            </ul>
+                        </nav>
+
+                        <!-- In-Spec Quick Filter -->
+                        <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06);">
+                            <input type="text" id="spec-filter-input" placeholder="Otsi spetsifikatsioonist..." oninput="filterSpecContent(this.value)" style="width: 100%; font-size: 0.76rem; padding: 6px 8px; border-radius: 6px; background: rgba(3,7,18,0.6); border: 1px solid var(--border); color: #f8fafc;">
+                        </div>
+                    </aside>
+
+                    <!-- Right Column: Reading Canvas (Optimal Measure) -->
+                    <main class="spec-canvas-container">
+                        <div id="specs-viewer-content" class="spec-reading-canvas">
+                            <!-- Dynamically populated & enhanced with chips, gherkin cards, glossary grid -->
+                        </div>
+                    </main>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODE 2: AI SKILLS CONTAINER -->
+        <div id="specs-mode-skills-pane" style="display: none;">
+
         <!-- Hero Header & Telemetry Badges -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
             <div>
@@ -1327,7 +1590,58 @@
                 <div id="skills-tasks-table-container"></div>
             </div>
         </div>
+
+        </div>
+
+        <!-- MODE 3: TRACEABILITY MATRIX & TRAILS -->
+        <div id="specs-mode-trace-pane" style="display: none;">
+            <div class="card" style="margin-bottom: 20px; padding: 20px;">
+                <h3 style="margin: 0 0 12px 0; font-size: 1.15rem; color: #f8fafc; display: flex; align-items: center; gap: 10px;">
+                    <span>🧪</span> <span>Nõuete ja Testide Jälgitavuse Maatriks (Traceability Matrix)</span>
+                </h3>
+                <p style="margin: 0 0 16px 0; font-size: 0.84rem; color: #94a3b8;">
+                    Iga nõue (REQ) on kaetud automatiseeritud testi ja käitumusliku vastuvõtukriteeriumiga (Given/When/Then).
+                </p>
+                <div class="table-responsive">
+                    <table class="data-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Nõue (REQ)</th>
+                                <th>SCS Domeen</th>
+                                <th>Kirjeldus &amp; Kriteerium</th>
+                                <th>Testi Skript</th>
+                                <th>Kvaliteedivärav</th>
+                                <th>Staatus</th>
+                            </tr>
+                        </thead>
+                        <tbody id="specs-traceability-tbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" style="padding: 20px;">
+                <h3 style="margin: 0 0 12px 0; font-size: 1.15rem; color: #f8fafc; display: flex; align-items: center; gap: 10px;">
+                    <span>🧠</span> <span>Agendi Seansirada (Agentic Assembly Line Trails)</span>
+                </h3>
+                <p style="margin: 0 0 16px 0; font-size: 0.84rem; color: #94a3b8;">
+                    Deterministlikult Git-hallatud arendusseansside logid, tõendid ja otsused (.agents/trails/).
+                </p>
+                <div style="display: flex; gap: 10px; align-items: center; background: rgba(15, 23, 42, 0.6); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border);">
+                    <span style="font-size: 1.3rem;">📄</span>
+                    <div style="flex: 1;">
+                        <strong style="color: #f8fafc; font-size: 0.9rem;">2026-09-13-devops-ux-and-sdd-assembly-line.md</strong>
+                        <p style="margin: 2px 0 0 0; font-size: 0.78rem; color: #94a3b8;">DevOps UX moderniseerimine, dokitud konsool, SDD triad ja 5 kvaliteediväravat.</p>
+                    </div>
+                    <button class="btn btn-sm btn-secondary" onclick="navigateToDoc('agent-trail-latest')">Ava Seansirada ↗</button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- TAB: AI SKILLS & ARCHITECTURE INTELLIGENCE (Redirects to Specs & AI) -->
+    <div id="tab-skills" style="display: none;"></div>    </div>
 
     <!-- TAB 5: DEVOPS & CLI COMMANDS -->
     <div id="tab-devops" class="tab-content">
@@ -1457,7 +1771,34 @@
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Spec-Driven Development (SDD) Triad Quick Access Ribbon (Rules 17-19) -->
+        <div class="sdd-triad-ribbon" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 10px 16px; margin: 14px 0 18px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.25rem;">📋</span>
+                <div>
+                    <div style="font-size: 0.88rem; font-weight: 600; color: #f8fafc;" data-i18n="sdd_ribbon_title">Spetsifikatsioonipõhine Arendus (SDD Triad) • devops-portal</div>
+                    <div style="font-size: 0.72rem; color: #94a3b8;" data-i18n="sdd_ribbon_sub">Julian Wood (SDD) • Simon Martinelli (SCS) • Thomas Dohmke (Assembly Line &amp; 5 Gates)</div>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-sm" onclick="navigateToDoc('spec-devops-portal-req')" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; font-size: 0.76rem; padding: 4px 10px; border-radius: 6px; font-weight: 500;" title="Vaata funktsionaalseid nõudeid (Given/When/Then)">
+                    📜 <span data-i18n="sdd_btn_req">Nõuded (REQ)</span>
+                </button>
+                <button type="button" class="btn btn-sm" onclick="navigateToDoc('spec-devops-portal-des')" style="background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4); color: #c084fc; font-size: 0.76rem; padding: 4px 10px; border-radius: 6px; font-weight: 500;" title="Vaata SCS piiritletud konteksti ja arhitektuuri">
+                    🏛️ <span data-i18n="sdd_btn_des">Disain (SCS)</span>
+                </button>
+                <button type="button" class="btn btn-sm" onclick="navigateToDoc('spec-devops-portal-tsk')" style="background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.4); color: #4ade80; font-size: 0.76rem; padding: 4px 10px; border-radius: 6px; font-weight: 500;" title="Vaata ülesannete jälgitavuse maatriksit">
+                    📋 <span data-i18n="sdd_btn_tsk">Ülesanded (TSK)</span>
+                </button>
+                <button type="button" class="btn btn-sm" onclick="navigateToDoc('agent-trail-latest')" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; font-size: 0.76rem; padding: 4px 10px; border-radius: 6px; font-weight: 500;" title="Vaata agendi seansirada ja 5 kvaliteediväravat">
+                    🧠 <span data-i18n="sdd_btn_trail">Seansirada (Git)</span>
+                </button>
+                <button type="button" class="btn btn-sm" onclick="navigateToDoc('spec-driven-development')" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: #e2e8f0; font-size: 0.76rem; padding: 4px 10px; border-radius: 6px;" title="Loe täielikku SDD ja Assembly Line juhendit">
+                    📖 <span data-i18n="sdd_btn_guide">Metoodikajuhend</span> ↗
+                </button>
+            </div>
+        </div>
 
         <!-- DevOps Search and Filter Toolbar -->
         <div class="devops-filter-bar" style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 10px 16px;">
@@ -1471,10 +1812,12 @@
             </div>
             <div class="bp-filters" id="devops-category-filters" style="margin-bottom: 0; gap: 6px;">
                 <button type="button" class="bp-filter-btn active" onclick="filterDevOpsCategory('all', this)" data-i18n="filter_all_cards">🌟 Kõik</button>
-                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('diag', this)" data-i18n="devops_filter_diag">🩺 Diagnostika & Tervis</button>
-                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('wallet', this)" data-i18n="devops_filter_wallet">🔐 Wallet & Turvalisus</button>
-                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('lifecycle', this)" data-i18n="devops_filter_lifecycle">🔄 Elutsükkel & Taaste</button>
-                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('enterprise', this)" data-i18n="devops_filter_enterprise">🏢 Ettevõte & Windows</button>
+                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('pinned', this)" data-i18n="devops_filter_pinned">⭐ Lemmikud (<span id="devops-pinned-count">0</span>)</button>
+                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('lifecycle', this)" data-i18n="devops_filter_lifecycle">🔄 Paigaldus & Lähtestus</button>
+                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('wallet', this)" data-i18n="devops_filter_wallet">🔐 Wallet, Kasutajad & SQL</button>
+                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('mgmt', this)" data-i18n="devops_filter_mgmt">🛠️ Tuumiktööriistad</button>
+                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('snapshots', this)" data-i18n="devops_filter_snapshots">📸 Snapshotid & Sertifikaadid</button>
+                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('diag', this)" data-i18n="devops_filter_diag">🩺 Diagnostika</button>
             </div>
         </div>
 
@@ -1485,33 +1828,377 @@
             <button type="button" class="btn btn-secondary" onclick="resetDevOpsFilters()" style="font-size: 0.8rem; padding: 6px 14px;" data-i18n="btn_reset_filters">↺ Tühjenda filtrid</button>
         </div>
 
+        <!-- QUICK ACTION RECIPES (1-CLICK WORKFLOWS) -->
+        <div id="devops-recipes-bar" class="devops-recipes-bar">
+            <div class="devops-recipe-card" onclick="runDevOpsRecipe('fast-start')" title="Lähtesta keskkond ja taasta kiirelt kuldsest tõmmisest">
+                <div class="recipe-icon">⚡</div>
+                <div class="recipe-content">
+                    <div class="recipe-title" data-i18n="recipe_faststart_title">Puhas kiirkäivitus</div>
+                    <div class="recipe-desc" data-i18n="recipe_faststart_desc">Reset ➔ FastStart (-s) ➔ Tervisekontroll</div>
+                </div>
+                <span class="recipe-badge">~20s</span>
+            </div>
+            <div class="devops-recipe-card" onclick="runDevOpsRecipe('onboard-dev')" title="Loo uus arendaja skeem ja registreeri ühendused">
+                <div class="recipe-icon">👤</div>
+                <div class="recipe-content">
+                    <div class="recipe-title" data-i18n="recipe_onboard_title">Uus arendaja</div>
+                    <div class="recipe-desc" data-i18n="recipe_onboard_desc">Loo dev_user ➔ VS Code ühendused</div>
+                </div>
+                <span class="recipe-badge">~10s</span>
+            </div>
+            <div class="devops-recipe-card" onclick="runDevOpsRecipe('full-diag')" title="Käivita täielik teenuste, rahakoti ja koodi turvakontroll">
+                <div class="recipe-icon">🩺</div>
+                <div class="recipe-content">
+                    <div class="recipe-title" data-i18n="recipe_diag_title">Täielik diagnostika</div>
+                    <div class="recipe-desc" data-i18n="recipe_diag_desc">URL-id ➔ SEPS Wallet ➔ Pre-commit audit</div>
+                </div>
+                <span class="recipe-badge">~15s</span>
+            </div>
+            <div class="devops-recipe-card" onclick="runDevOpsRecipe('golden-snap')" title="Salvesta töötavatest konteineritest kuldne tõmmis">
+                <div class="recipe-icon">📸</div>
+                <div class="recipe-content">
+                    <div class="recipe-title" data-i18n="recipe_snap_title">Kuldne hetktõmmis</div>
+                    <div class="recipe-desc" data-i18n="recipe_snap_desc">Loo Golden Snapshot ➔ Tõenda tervist</div>
+                </div>
+                <span class="recipe-badge">~30s</span>
+            </div>
+        </div>
+
         <div class="grid" id="devops-cards-grid">
-            <div class="card" data-cat="diag">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_health">🌐 Service Health Diagnostics</h4>
-                <p data-i18n="desc_devops_health">Test active web service HTTP/HTTPS endpoints (APEX, ORDS, Forms, Publisher).</p>
+            <!-- 0A. SETUP STUDIO (GUIDED CONSTRAINT-BASED INSTALLER - ADR 0017) -->
+            <div class="card studio-card card-action" id="card-studio-setup" data-cat="lifecycle" style="grid-column: 1 / -1;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.25rem;">🚀</span>
+                        <h4 style="margin: 0; color: #38bdf8;" data-i18n="studio_setup_title">Keskkonna Paigalduse Stuudio (Setup Studio)</h4>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 12px;" data-i18n="studio_setup_desc">
+                    Vali vajalik paigaldusrežiim. Nutikad piirangud välistavad vigased parameetrite kombinatsioonid (nt -s vs --fresh) automaatselt.
+                </p>
+
+                <!-- Studio Mode Pills -->
+                <div class="studio-pills" id="setup-studio-pills" style="margin-bottom: 12px;">
+                    <div class="studio-pill active" onclick="selectSetupStudioMode('full', this)">
+                        <input type="radio" name="setup_mode" id="setup-mode-full" checked>
+                        <div class="pill-label">
+                            <span style="font-weight: 600;" data-i18n="studio_setup_mode_full">🚀 Täispaigaldus</span>
+                            <span class="pill-badge">Standard</span>
+                        </div>
+                    </div>
+                    <div class="studio-pill" onclick="selectSetupStudioMode('fast', this)">
+                        <input type="radio" name="setup_mode" id="setup-mode-fast">
+                        <div class="pill-label">
+                            <span style="font-weight: 600;" data-i18n="studio_setup_mode_fast">⚡ FastStart (-s)</span>
+                            <span class="pill-badge">~15s</span>
+                        </div>
+                    </div>
+                    <div class="studio-pill" onclick="selectSetupStudioMode('fresh', this)">
+                        <input type="radio" name="setup_mode" id="setup-mode-fresh">
+                        <div class="pill-label">
+                            <span style="font-weight: 600;" data-i18n="studio_setup_mode_fresh">🌱 Puhas algus (--fresh)</span>
+                            <span class="pill-badge">No-Snap</span>
+                        </div>
+                    </div>
+                    <div class="studio-pill" onclick="selectSetupStudioMode('dryrun', this)">
+                        <input type="radio" name="setup_mode" id="setup-mode-dryrun">
+                        <div class="pill-label">
+                            <span style="font-weight: 600;" data-i18n="studio_setup_mode_dryrun">🔍 Simulatsioon (--dry-run)</span>
+                            <span class="pill-badge">Test-Only</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Studio Options -->
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px; font-size: 0.8rem; color: #cbd5e1; flex-wrap: wrap;">
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="setup-opt-yes" checked onchange="updateSetupStudioCliPreview()">
+                        <span data-i18n="studio_opt_unattended">Mitteinteraktiivne / automaatkinnitus (-y)</span>
+                    </label>
+                </div>
+
+                <!-- Live Impact Preview Box -->
+                <div class="studio-impact-box" id="setup-studio-impact" style="margin-bottom: 12px;">
+                    <span style="color: #38bdf8; font-weight: 600;">ℹ️ Mõju süsteemile:</span>
+                    <span id="setup-studio-impact-text">Käivitab aktiivse blueprinti konteinerid, andmebaasi PDB-d ja ORDS/APEX teenused täismahus.</span>
+                </div>
+
+                <!-- Live CLI Preview Box -->
+                <div class="code-box" style="margin-bottom: 12px; position: relative;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    <span id="setup-studio-cmd-preview">./scripts/setup-all.sh -y</span>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-primary" id="btn-run-setup-studio" onclick="runSetupStudio(this)">
+                        <span>▶️</span> <span data-i18n="studio_btn_run_setup">Käivita valitud režiimis</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="explainStudioCmdWithAi('setup')" title="Küsi Copilotilt või Antigravitylt käsu selgitust">
+                        <span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 0B. RESET STUDIO (SEMANTIC SAFETY & PURGE OPTIONS - ADR 0017) -->
+            <div class="card studio-card card-destructive" id="card-studio-reset" data-cat="lifecycle" style="grid-column: 1 / -1;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.25rem;">🔄</span>
+                        <h4 style="margin: 0; color: #f87171;" data-i18n="studio_reset_title">Keskkonna Lähtestamise Stuudio (Reset Studio)</h4>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 12px;" data-i18n="studio_reset_desc">
+                    Seiska ja eemalda konteinerid turvaliselt. Vali kas tavaline taaskäivitus või sügav andmepuhastus.
+                </p>
+
+                <!-- Studio Mode Pills -->
+                <div class="studio-pills" id="reset-studio-pills" style="margin-bottom: 12px;">
+                    <div class="studio-pill active" onclick="selectResetStudioMode('std', this)">
+                        <input type="radio" name="reset_mode" id="reset-mode-std" checked>
+                        <div class="pill-label">
+                            <span style="font-weight: 600;" data-i18n="studio_reset_mode_std">🔄 Standardne lähtestus</span>
+                            <span class="pill-badge">Säilitab andmed</span>
+                        </div>
+                    </div>
+                    <div class="studio-pill" onclick="selectResetStudioMode('deep', this)">
+                        <input type="radio" name="reset_mode" id="reset-mode-deep">
+                        <div class="pill-label">
+                            <span style="font-weight: 600;" data-i18n="studio_reset_mode_deep">💣 Sügav süsteemipuhastus (--system)</span>
+                            <span class="pill-badge" style="background: rgba(239, 68, 68, 0.25); color: #fca5a5;">Zero-Trace</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selective Cleanup Options -->
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px; font-size: 0.8rem; color: #cbd5e1; flex-wrap: wrap;">
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="reset-opt-clean-logs" onchange="updateResetStudioCliPreview()">
+                        <span data-i18n="studio_opt_clean_logs">Puhasta ka logid (--clean-logs)</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="reset-opt-clean-certs" onchange="updateResetStudioCliPreview()">
+                        <span data-i18n="studio_opt_clean_certs">Puhasta ka sertifikaadid (--clean-certs)</span>
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="reset-opt-yes" checked onchange="updateResetStudioCliPreview()">
+                        <span data-i18n="studio_opt_unattended">Mitteinteraktiivne (-y)</span>
+                    </label>
+                </div>
+
+                <!-- Live Impact Preview Box -->
+                <div class="studio-impact-box" id="reset-studio-impact" style="margin-bottom: 12px; border-color: rgba(239, 68, 68, 0.3);">
+                    <span style="color: #f87171; font-weight: 600;">ℹ️ Mõju süsteemile:</span>
+                    <span id="reset-studio-impact-text">Seiskab aktiivse blueprinti konteinerid ja eemaldab profiili võrgud, kuid säilitab andmebaasi kettaköited ja SEPS Walleti.</span>
+                </div>
+
+                <!-- 2-Step Confirmation Gate for Destructive Action -->
+                <div class="confirm-gate-box" id="reset-studio-confirm-gate" style="margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <span>⚠️</span>
+                        <strong style="color: #fca5a5;" data-i18n="studio_confirm_deep_title">Hoiatus: Pöördumatu toiming!</strong>
+                    </div>
+                    <div style="margin-bottom: 8px;" data-i18n="studio_confirm_deep_desc">
+                        Sügav süsteemipuhastus eemaldab KÕIK andmemahud (volumes), konteinerid ja lokaalsed andmed.
+                    </div>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: #fff; font-weight: 600;">
+                        <input type="checkbox" id="reset-studio-confirm-check" onchange="toggleResetStudioExecuteButton()">
+                        <span data-i18n="studio_confirm_agree">Mõistan mõju ja soovin jätkata süvapuhastusega</span>
+                    </label>
+                </div>
+
+                <!-- Live CLI Preview Box -->
+                <div class="code-box" style="margin-bottom: 12px; position: relative;">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    <span id="reset-studio-cmd-preview">./scripts/reset-all.sh -y</span>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-primary" id="btn-run-reset-studio" style="background: #dc2626; border-color: #b91c1c;" onclick="runResetStudio(this)">
+                        <span>💣</span> <span data-i18n="studio_btn_run_reset">Käivita lähtestus</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="explainStudioCmdWithAi('reset')" title="Küsi Copilotilt või Antigravitylt käsu selgitust">
+                        <span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 1. SETUP-ALL (Full Automated Setup) -->
+            <div class="card card-action" id="card-devops-setup-full" data-cat="lifecycle">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_setup_full">🚀 Automated Full Environment Setup</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_setup_full">Deploy and configure active blueprint containers, databases, and ORDS/APEX in unattended mode.</p>
                 <div class="code-box">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-                    ./scripts/check-urls.sh
+                    ./scripts/setup-all.sh -y
                 </div>
                 <div style="margin-top: 10px;">
-                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('check-urls', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button class="btn btn-primary" onclick="copySnippetText('./scripts/setup-all.sh -y'); showToast('📋 Kopeeritud: ./scripts/setup-all.sh -y')"><span>📋</span> <span data-i18n="btn_copy_cmd">Kopeeri käsk</span></button>
+                </div>
+            </div>
+
+            <!-- 2. SETUP-ALL FAST (From Golden Snapshot) -->
+            <div class="card card-action" id="card-devops-setup-snapshot" data-cat="lifecycle">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_setup_snapshot">⚡ Fast-Start from Golden Snapshot</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_setup_snapshot">Restore database state instantly (~15s) from pre-compressed Golden Snapshot without re-downloading or compiling.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/setup-all.sh -s -y
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary" onclick="copySnippetText('./scripts/setup-all.sh -s -y'); showToast('📋 Kopeeritud: ./scripts/setup-all.sh -s -y')"><span>📋</span> <span data-i18n="btn_copy_cmd">Kopeeri käsk</span></button>
+                </div>
+            </div>
+
+            <!-- 3. SETUP-ALL DRY-RUN -->
+            <div class="card card-safe" id="card-devops-setup-dryrun" data-cat="lifecycle">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_setup_dryrun">🔍 Setup Dry-Run Simulation</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_setup_dryrun">Validates prerequisites, ports, compose overrides, and YAML profiles without launching containers.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/setup-all.sh --dry-run
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('setup-dryrun', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card" data-cat="wallet">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_wallet">🔑 Check SEPS Wallet Connections</h4>
-                <p data-i18n="desc_devops_wallet">Test SEPS Wallet database auto-login connections and TNS alias reachability.</p>
+
+            <!-- 4. SETUP-ALL HELP -->
+            <div class="card card-safe" id="card-devops-setup-help" data-cat="lifecycle">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_setup_help">📖 Setup CLI Options & Help</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_setup_help">Inspect all available command-line flags (-b, -tb, -s, -fs, --fresh, --dry-run, -l).</p>
                 <div class="code-box">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-                    ./scripts/check-wallet.sh
+                    ./scripts/setup-all.sh --help
                 </div>
                 <div style="margin-top: 10px;">
-                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('check-wallet', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('setup-help', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card" data-cat="wallet">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_list_pwd">📋 Read Wallet Credentials</h4>
+
+            <!-- 5. RESET-ALL (Fast Reset) -->
+            <div class="card card-destructive" id="card-devops-reset-all" data-cat="lifecycle">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_reset_all">🔄 Standard Fast Environment Reset</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_reset_all">Stops and removes active blueprint containers and profiles while safely preserving SEPS Wallet and snapshots.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/reset-all.sh -y
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('reset-all', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 6. RESET-ALL SYSTEM (Deep System Purge) -->
+            <div class="card card-destructive" id="card-devops-reset-system" data-cat="lifecycle">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_reset_system">💣 Deep System Reset (Volumes & Networks)</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_reset_system">Performs complete zero-trace purge: removes all platform containers, Podman storage volumes, and subnets.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/reset-all.sh --system -y
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('reset-system', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 7. RESET-ALL CLEAN LOGS -->
+            <div class="card card-destructive" id="card-devops-reset-clean-logs" data-cat="lifecycle">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_reset_clean_logs">🧹 Reset Containers & Clean Logs</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_reset_clean_logs">Stops active container stack and cleans historical execution logs under install_logs/.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/reset-all.sh --clean-logs -y
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('reset-clean-logs', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 8. RESET-ALL HELP -->
+            <div class="card card-safe" id="card-devops-reset-help" data-cat="lifecycle">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_reset_help">📖 Reset CLI Options & Selective Cleanup</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_reset_help">Inspect selective reset targets: container name, --profile, --system, --clean-certs, --clean-logs.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/reset-all.sh --help
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('reset-help', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 9. WALLET: READ CREDENTIALS -->
+            <div class="card card-safe" id="card-devops-get-passwords" data-cat="wallet">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_list_pwd">📋 Read Wallet Credentials</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
                 <p data-i18n="desc_devops_list_pwd">Query or inspect decrypted credentials from SEPS Wallet safely in-memory.</p>
                 <div class="code-box">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
@@ -1522,8 +2209,63 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card" data-cat="diag">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_register_conn">💻 Register VS Code Connections</h4>
+
+            <!-- 10. WALLET: ROTATE PASSWORD -->
+            <div class="card card-action" id="card-devops-rotate-dev" data-cat="wallet">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_rotate">🔄 Zero-Downtime Password Rotation</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_rotate">Rotates user passwords across Database, Podman Secrets, and SEPS Wallet for this blueprint.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/rotate-password.sh db-proxy dev
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('rotate-dev', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 11. WALLET: CREATE DEVELOPER -->
+            <div class="card card-action" id="card-devops-create-dev-user" data-cat="wallet">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_create_dev">👤 Provision Developer Database Schema</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_create_dev">Creates a developer user schema with tablespace quota, developer privileges, and registers into SEPS Wallet.</p>
+                
+                <!-- Dynamic Username Input Field -->
+                <div style="margin: 10px 0; display: flex; align-items: center; gap: 8px;">
+                    <label for="devops-input-create-dev" style="font-size: 0.78rem; color: #94a3b8;" data-i18n="label_username">Kasutajanimi:</label>
+                    <input type="text" id="devops-input-create-dev" value="dev_user" placeholder="nt: dev_anna" oninput="updateCreateDeveloperPreview()" style="background: #030712; border: 1px solid var(--border); color: #f8fafc; padding: 5px 8px; border-radius: 6px; font-size: 0.8rem; width: 140px;">
+                </div>
+
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    <span id="devops-cmd-create-dev">./scripts/create-developer.sh dev_user</span>
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runCreateDeveloper(this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 12. WALLET: REGISTER VS CODE CONNECTIONS -->
+            <div class="card card-action" id="card-devops-register-connections" data-cat="wallet">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_register_conn">💻 Register VS Code Connections</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
                 <p data-i18n="desc_devops_register_conn">Register database connections in VS Code Oracle SQL Developer extension & OS Keychain.</p>
                 <div class="code-box">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
@@ -1534,117 +2276,115 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card" data-cat="lifecycle">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_lifecycle_full">🔄 Dev-Hub Blueprints 0-9 Lifecycle Test</h4>
-                <p data-i18n="desc_devops_lifecycle_full">Tests the complete 3-step lifecycle: Start, Stop, and Fast-Start across Blueprints 0 through 9 via Bridge API.</p>
+
+            <!-- 13. WALLET: SQLCL TERMINAL -->
+            <div class="card card-action" id="card-devops-sqlcl" data-cat="wallet">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_sqlcl">💻 Passwordless SQLcl CLI Terminal</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_sqlcl">Launch official Oracle SQLcl CLI using auto-login SEPS Wallet alias (zero plaintext password).</p>
                 <div class="code-box">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-                    ./tests/test-devhub-lifecycle-full.sh --all --dry-run
+                    ./scripts/sqlcl.sh /@DB_PROXY_DEV
                 </div>
                 <div style="margin-top: 10px;">
-                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('test-devhub-lifecycle-dryrun', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button class="btn btn-primary" onclick="copySnippetText('./scripts/sqlcl.sh /@DB_PROXY_DEV'); showToast('📋 Kopeeritud: ./scripts/sqlcl.sh /@DB_PROXY_DEV')"><span>📋</span> <span data-i18n="btn_copy_cmd">Kopeeri käsk</span></button>
                 </div>
-                <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card" data-cat="enterprise">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_windows_dryrun">🪟 Windows & WSL2 Dry-Run Diagnostics</h4>
-                <p data-i18n="desc_devops_windows_dryrun">Non-destructive 10-step compatibility check: WSL2 ext4, RAM, Hyper-V ports, CRLF, proxy, and SEPS Wallet.</p>
+
+            <!-- 14. MGMT: START CONTAINERS -->
+            <div class="card card-action" id="card-devops-start-containers" data-cat="mgmt">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_start_containers">🐳 Start & Orchestrate Container Stack</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_start_containers">Starts or resumes the container stack for active blueprint according to resolved port topology.</p>
                 <div class="code-box">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-                    ./scripts/test-windows-dryrun.sh
+                    ./scripts/start-containers.sh
                 </div>
                 <div style="margin-top: 10px;">
-                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('windows-dryrun', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('start-containers', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card" data-cat="enterprise">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_onboard_ent">🏢 Enterprise Artifactory & Proxy Status</h4>
-                <p data-i18n="desc_devops_onboard_ent">Inspect corporate registry mappings, corporate CA bundle, and profile patching status.</p>
+
+            <!-- MGMT: DEV HUB BRIDGE SERVER -->
+            <div class="card card-action" id="card-devops-start-bridge" data-cat="mgmt">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_start_bridge">🔄 Dev Hub Bridge Server & Hot-Reload</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_start_bridge">Starts, restarts, and monitors the Dev Hub background bridge server. Includes automatic hot-reload on file changes.</p>
                 <div class="code-box">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-                    ./scripts/onboard-enterprise.sh --status
+                    ./scripts/start-bridge.sh --restart
                 </div>
                 <div style="margin-top: 10px;">
-                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('onboard-enterprise', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('start-bridge', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card" data-cat="enterprise">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_security_audit">🛡️ Enterprise Security Audit</h4>
-                <p data-i18n="desc_devops_security_audit">16-point security audit across 7 tiers (OWASP Top 10, CIS Oracle DB, CIS Podman, Zero-Trust, DORA & PCI-DSS).</p>
+
+            <!-- 15. MGMT: BLUEPRINT STATUS -->
+            <div class="card card-safe" id="card-devops-deploy-status" data-cat="mgmt">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_deploy">🚀 Blueprint Deployment & Status</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_deploy">Inspect active architecture blueprint status, topology configuration, and health.</p>
                 <div class="code-box">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-                    ./scripts/test-security-audit.sh
-                </div>
-                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('security-audit', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
-                    <button type="button" class="btn btn-secondary" onclick="openDocFromMenu('security-audit')" style="font-size: 0.8rem; padding: 6px 12px;"><span>📖</span> <span data-i18n="btn_view_report">Vaata raportit</span></button>
-                </div>
-                <div class="devops-console" style="display:none;"></div>
-            </div>
-            <div class="card" data-cat="lifecycle">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_test_ci">🧪 Local CI/CD Platform Pipeline</h4>
-                <p data-i18n="desc_devops_test_ci">Simulates offline CI/CD pipeline: validates scripts, environment variables, and platform integrity.</p>
-                <div class="code-box">
-                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-                    ./scripts/test-local-ci.sh
+                    ./scripts/deploy-blueprint.sh --status
                 </div>
                 <div style="margin-top: 10px;">
-                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('test-ci', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('deploy-status', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card" data-cat="diag">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_test_containers">🐳 Container Health & Sockets</h4>
-                <p data-i18n="desc_devops_test_containers">Inspects active Podman containers, open socket ports, and resource health in real-time.</p>
+
+            <!-- 16. MGMT: CODEBASE HEALTH & STATS -->
+            <div class="card card-safe" id="card-devops-report-repo-stats" data-cat="mgmt">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_repo_stats">📈 Codebase Health & Telemetry Reporter</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_repo_stats">Scans repository files, calculates maintainable SLOC, test density ratio, and outputs JSON/Markdown reports.</p>
                 <div class="code-box">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-                    ./tests/test-containers-live.sh
+                    ./scripts/report-repo-stats.sh
                 </div>
                 <div style="margin-top: 10px;">
-                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('test-containers', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('report-repo-stats', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card" data-cat="diag">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_test_mermaid">📊 Validate Architecture Diagrams (Mermaid)</h4>
-                <p data-i18n="desc_devops_test_mermaid">Validates Mermaid architecture diagrams, Markdown transformation, SVG rendering engine, and 6-language toolbars.</p>
-                <div class="code-box">
-                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-                    ./tests/unit/test-devhub-mermaid-rendering.sh
+
+            <!-- 17. MGMT: CLEAN LOGS -->
+            <div class="card card-destructive" id="card-devops-clean-logs" data-cat="mgmt">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_clean_logs">🧹 Clean Execution Logs</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
                 </div>
-                <div style="margin-top: 10px;">
-                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('test-mermaid', this)"><span>▶️</span> <span data-i18n="btn_devops_test_mermaid">Kontrolli diagramme</span></button>
-                </div>
-                <div class="devops-console" style="display:none;"></div>
-            </div>
-            <div class="card" data-cat="diag">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_test_precommit">🛡️ Git Pre-Commit & Pre-Push Security Guard</h4>
-                <p data-i18n="desc_devops_test_precommit">Fast 6-phase audit before commit/push: Zero-Trust secrets, GDPR/PII leaks, hashed company info, Rule 13 portability, script syntax, and CRLF line endings.</p>
-                <div class="code-box">
-                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-                    ./scripts/check-pre-commit.sh --full
-                </div>
-                <div style="margin-top: 10px;">
-                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('check-precommit', this)"><span>▶️</span> <span data-i18n="btn_devops_test_precommit">Kontrolli koodi</span></button>
-                </div>
-                <div class="devops-console" style="display:none;"></div>
-            </div>
-            <div class="card" data-cat="wallet">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_trust_cert">🔒 Trust SSL/TLS Certificate in OS</h4>
-                <p data-i18n="desc_devops_trust_cert">Installs local Dev Root CA certificate into user trust store for zero-warning HTTPS.</p>
-                <div class="code-box">
-                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-                    ./scripts/certs/trust-local-cert-mac.sh
-                </div>
-                <div style="margin-top: 10px;">
-                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('trust-cert', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
-                </div>
-                <div class="devops-console" style="display:none;"></div>
-            </div>
-            <div class="card" data-cat="diag">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_clean_logs">🧹 Clean Execution Logs</h4>
                 <p data-i18n="desc_devops_clean_logs">Cleans up temporary files and rotates execution logs under install_logs/.</p>
                 <div class="code-box">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
@@ -1655,9 +2395,57 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card" data-cat="lifecycle">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_createsnap">📸 Create New Golden Snapshots</h4>
-                <p data-i18n="desc_devops_createsnap">Generate new byte-for-byte compressed Golden Snapshot from running containers.</p>
+
+            <!-- 18. MGMT: CLEAN CERTS -->
+            <div class="card card-destructive" id="card-devops-clean-certs" data-cat="mgmt">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_clean_certs">🔑 Clean Generated SSL Certificates</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_clean_certs">Removes locally generated SSL certificates and keys from config/certs/ for a clean rebuild.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/clean-certs.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('clean-certs', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 19. MGMT: ENTERPRISE ARTIFACTORY STATUS -->
+            <div class="card card-safe" id="card-devops-onboard-enterprise" data-cat="mgmt">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_onboard_ent">🏢 Enterprise Artifactory & Proxy Status</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_onboard_ent">Inspect corporate registry mappings, corporate CA bundle, and profile patching status.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/onboard-enterprise.sh --status
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('onboard-enterprise', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 20. SNAPSHOTS: CREATE GOLDEN SNAPSHOT -->
+            <div class="card card-action" id="card-devops-create-snapshot" data-cat="snapshots">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_createsnap">📸 Save Platform Golden Snapshot</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_createsnap">Generate byte-for-byte compressed Golden Snapshot from running containers.</p>
                 <div class="code-box">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/snapshots/create-golden-snapshots.sh
@@ -1667,15 +2455,123 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
-            <div class="card" data-cat="lifecycle">
-                <h4 style="color: var(--primary); margin-bottom: 8px;" data-i18n="title_devops_deploy">🚀 Blueprint Deployment & Status</h4>
-                <p data-i18n="desc_devops_deploy">Inspect active architecture blueprint status, topology configuration, and health.</p>
+
+            <!-- 21. SNAPSHOTS: RESTORE GOLDEN SNAPSHOT -->
+            <div class="card card-action" id="card-devops-restore-snapshot" data-cat="snapshots">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_restore_snap">⚡ Restore Platform Golden Snapshot</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_restore_snap">Restores database state from existing compressed Golden Snapshot in ~15 seconds.</p>
                 <div class="code-box">
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
-                    ./scripts/deploy-blueprint.sh --status
+                    ./scripts/snapshots/restore-golden-snapshots.sh --auto -b 0
                 </div>
                 <div style="margin-top: 10px;">
-                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('deploy-status', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('restore-snapshot', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 22. SNAPSHOTS: CLEAN SNAPSHOTS -->
+            <div class="card card-destructive" id="card-devops-clean-snapshots" data-cat="snapshots">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_clean_snap">🗑️ Clean Golden Snapshots Directory</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_clean_snap">Deletes outdated database snapshots under snapshots/ to reclaim host disk space.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/snapshots/clean-golden-snapshots.sh -y
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('clean-snapshots', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 23. SNAPSHOTS: TRUST SSL CERT -->
+            <div class="card card-action" id="card-devops-trust-cert" data-cat="snapshots">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_trust_cert">🔒 Trust SSL/TLS Certificate in OS</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_trust_cert">Installs local Dev Root CA certificate into user trust store for zero-warning HTTPS.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/certs/trust-local-cert-mac.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('trust-cert', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 24. DIAG: SERVICE HEALTH DIAGNOSTICS -->
+            <div class="card card-safe" id="card-devops-check-urls" data-cat="diag">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_health">🌐 Service Health Diagnostics</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_health">Test active web service HTTP/HTTPS endpoints (APEX, ORDS, Forms, Publisher).</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/check-urls.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('check-urls', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 25. DIAG: CHECK WALLET -->
+            <div class="card card-safe" id="card-devops-check-wallet" data-cat="diag">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_wallet">🔑 Check SEPS Wallet Connections</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_wallet">Test SEPS Wallet database auto-login connections and TNS alias reachability.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/check-wallet.sh
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('check-wallet', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
+            <!-- 26. DIAG: PRE-COMMIT SECURITY GUARD -->
+            <div class="card card-safe" id="card-devops-check-precommit" data-cat="diag">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_test_precommit">🛡️ Git Pre-Commit & Pre-Push Security Guard</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_test_precommit">Fast 6-phase audit before commit/push: Zero-Trust secrets, GDPR/PII leaks, hashed company info, Rule 13 portability, script syntax, and CRLF line endings.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./scripts/check-pre-commit.sh --full
+                </div>
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('check-precommit', this)"><span>▶️</span> <span data-i18n="btn_devops_test_precommit">Kontrolli koodi</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -1985,36 +2881,45 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
     <!-- Blueprint Architecture & Operations Modal Dialog -->
     <div id="bp-modal-backdrop" class="modal-backdrop" onclick="closeBlueprintModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                        <h3 id="bp-modal-title" style="color: var(--primary); font-size: 1.25rem; margin: 0;">Blueprint Architecture & Topology</h3>
+            <!-- Sticky Header Container: locks header and tabs together during vertical scroll -->
+            <div class="modal-sticky-header">
+                <div class="modal-header">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <h3 id="bp-modal-title" style="color: var(--primary); font-size: 1.25rem; margin: 0;">Blueprint Architecture & Topology</h3>
+                            <span id="bp-modal-status-badge" class="badge" style="font-size: 0.76rem; padding: 3px 8px; display: inline-flex; align-items: center; gap: 5px;"></span>
+                            <span id="bp-modal-ords-pool-badge" class="badge" style="display: none; font-size: 0.74rem; padding: 3px 8px;"></span>
+                        </div>
+                        <div id="bp-modal-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;"></div>
+                        <div id="bp-modal-header-containers" style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 6px;"></div>
                     </div>
-                    <p id="bp-modal-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;"></p>
+                    <button class="modal-close-btn" onclick="closeBlueprintModal()" title="Close dialog">✕</button>
                 </div>
-                <button class="modal-close-btn" onclick="closeBlueprintModal()" title="Close dialog">✕</button>
-            </div>
 
-            <!-- Tab Navigation Bar -->
-            <div class="modal-tabs" id="bp-modal-tabs">
-                <button class="modal-tab-btn active" id="tab-btn-bp-arch" onclick="switchBlueprintModalTab('arch')">
-                    <span>📐</span> <span data-i18n="modal_tab_arch">Arhitektuur & Topoloogia</span>
-                </button>
-                <button class="modal-tab-btn" id="tab-btn-bp-guides" onclick="switchBlueprintModalTab('guides')">
-                    <span>📖</span> <span data-i18n="modal_tab_guides">Juhendid & Töövoog</span>
-                </button>
-                <button class="modal-tab-btn" id="tab-btn-bp-users" onclick="switchBlueprintModalTab('users')">
-                    <span>🔑</span> <span data-i18n="modal_tab_users">Kasutajad & Turvalisus</span>
-                </button>
-                <button class="modal-tab-btn" id="tab-btn-bp-ops" onclick="switchBlueprintModalTab('ops')">
-                    <span>⚡</span> <span data-i18n="modal_tab_ops">Käivitused & Haldus</span>
-                </button>
-                <button class="modal-tab-btn" id="tab-btn-bp-diag" onclick="switchBlueprintModalTab('diag')">
-                    <span>🧪</span> <span data-i18n="modal_tab_diag">Testimine & Diagnostika</span>
-                </button>
-                <button class="modal-tab-btn" id="tab-btn-bp-logs" onclick="switchBlueprintModalTab('logs')">
-                    <span>📄</span> <span data-i18n="modal_tab_logs">Logid & Teostused</span>
-                </button>
+                <!-- Tab Navigation Bar -->
+                <div class="modal-tabs" id="bp-modal-tabs">
+                    <button class="modal-tab-btn active" id="tab-btn-bp-arch" onclick="switchBlueprintModalTab('arch')">
+                        <span>📐</span> <span data-i18n="modal_tab_arch">Arhitektuur</span>
+                    </button>
+                    <button class="modal-tab-btn" id="tab-btn-bp-guides" onclick="switchBlueprintModalTab('guides')">
+                        <span>📖</span> <span data-i18n="modal_tab_guides">Juhendid</span>
+                    </button>
+                    <button class="modal-tab-btn" id="tab-btn-bp-ops" onclick="switchBlueprintModalTab('ops')">
+                        <span>⚡</span> <span data-i18n="modal_tab_ops">Haldus</span>
+                    </button>
+                    <button class="modal-tab-btn" id="tab-btn-bp-users" onclick="switchBlueprintModalTab('users')">
+                        <span>🔑</span> <span data-i18n="modal_tab_users">Kasutajad</span>
+                    </button>
+                    <button class="modal-tab-btn" id="tab-btn-bp-config" onclick="switchBlueprintModalTab('config')">
+                        <span>⚙️</span> <span data-i18n="modal_tab_config">Seadistus</span>
+                    </button>
+                    <button class="modal-tab-btn" id="tab-btn-bp-diag" onclick="switchBlueprintModalTab('diag')">
+                        <span>🧪</span> <span data-i18n="modal_tab_diag">Testimine</span>
+                    </button>
+                    <button class="modal-tab-btn" id="tab-btn-bp-logs" onclick="switchBlueprintModalTab('logs')">
+                        <span>📄</span> <span data-i18n="modal_tab_logs">Logid</span>
+                    </button>
+                </div>
             </div>
 
             <div class="modal-body">
@@ -2034,16 +2939,65 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                         <pre id="bp-modal-mermaid-raw" class="mermaid-raw-code" style="display: none; border-radius: var(--radius-md); margin-top: 10px;"></pre>
                     </div>
 
-                    <!-- 2. Hardware & Resource Usage (Clean 4-card grid) -->
-                    <div class="modal-section" style="margin-top: 22px;">
-                        <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 1.05rem;" data-i18n="modal_sec_resources">💾 Hardware & Resource Requirements</h4>
-                        <div id="bp-modal-resources" class="grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 0;"></div>
-                    </div>
-
                     <!-- 3. Components and Network Ports -->
                     <div class="modal-section" style="margin-top: 22px;">
                         <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 1.05rem;" data-i18n="modal_sec_components">📦 Containers, Services & Port Bindings</h4>
                         <div id="bp-modal-components" class="table-responsive" style="margin-bottom: 0;"></div>
+                    </div>
+                </div>
+
+                <!-- TAB: Configuration & Profiles -->
+                <div id="bp-modal-tab-config" class="bp-tab-content" style="display: none;">
+                    <div class="modal-section">
+                        <!-- Top Toolbar & File Selector -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h4 style="color: var(--primary); margin: 0; font-size: 1.05rem;" data-i18n="modal_sec_config_profiles">⚙️ Blueprint Configuration & Profiles</h4>
+                                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 2px;" data-i18n="modal_sub_config_profiles">Inspect and edit blueprint .env variables and referenced YAML profiles.</div>
+                            </div>
+                            <!-- Action Buttons -->
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-sm btn-secondary" id="btn-bp-config-copy" onclick="copyBlueprintConfigContent()" title="Copy content to clipboard">
+                                    <span>📋</span> <span data-i18n="btn_copy_config">Kopeeri</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-secondary" id="btn-bp-config-toggle-edit" onclick="toggleBlueprintConfigEdit()" title="Toggle edit mode">
+                                    <span id="bp-config-edit-icon">✏️</span> <span id="bp-config-edit-text" data-i18n="btn_edit_mode">Muuda</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary" id="btn-bp-config-save" onclick="saveBlueprintConfigActiveFile()" style="display: none;" title="Save changes to file">
+                                    <span>💾</span> <span data-i18n="btn_save_config">Salvesta muudatused</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-secondary" id="btn-bp-config-revert" onclick="revertBlueprintConfigContent()" style="display: none;" title="Revert to original">
+                                    <span>🔄</span> <span data-i18n="btn_revert_config">Taasta</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- File Selector Pills -->
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="config_selector_label">Vali fail vaatamiseks / muutmiseks:</div>
+                            <div id="bp-config-files-list" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                        </div>
+
+                        <!-- Active File Path & Mode Banner -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-bottom: none; border-radius: var(--radius-md) var(--radius-md) 0 0; padding: 8px 14px; font-size: 0.8rem;">
+                            <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                                <span id="bp-config-file-icon">📁</span>
+                                <code id="bp-config-active-path" style="color: #38bdf8; font-size: 0.8rem; font-family: ui-monospace, monospace;"></code>
+                                <span id="bp-config-mode-badge" class="badge" style="background: rgba(148, 163, 184, 0.15); color: #cbd5e1; font-size: 0.7rem;">Vaaterežiim</span>
+                            </div>
+                            <div id="bp-config-status-msg" style="font-size: 0.78rem; color: #94a3b8;"></div>
+                        </div>
+
+                        <!-- Code Editor Textarea -->
+                        <div style="position: relative;">
+                            <textarea id="bp-config-editor-textarea" readonly spellcheck="false" style="width: 100%; min-height: 420px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.84rem; line-height: 1.5; background: #030712; color: #f1f5f9; border: 1px solid var(--border); border-radius: 0 0 var(--radius-md) var(--radius-md); padding: 14px; box-sizing: border-box; resize: vertical; tab-size: 2; outline: none;"></textarea>
+                        </div>
+
+                        <!-- Variables & Resolved Profiles Table / Info -->
+                        <div style="margin-top: 18px;">
+                            <h5 style="color: var(--primary); font-size: 0.92rem; margin-bottom: 8px;" data-i18n="config_vars_overview_title">📋 Blueprint Variables & Referenced Profiles</h5>
+                            <div id="bp-config-vars-container" class="table-responsive"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -2090,24 +3044,8 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
 
                 <!-- TAB 3: Operations & Execution (Control Center) -->
                 <div id="bp-modal-tab-ops" class="bp-tab-content">
-                    <!-- Stack Status Header -->
-                    <div class="modal-section" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                            <div>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span id="bp-ops-status-dot" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #94a3b8;"></span>
-                                    <strong id="bp-ops-target-title" style="font-size: 1.05rem; color: #f8fafc;">Blueprint Stack</strong>
-                                    <span id="bp-ops-status-badge" class="badge" style="background: rgba(148,163,184,0.15); color: #94a3b8; font-size: 0.78rem;">STOPPED</span>
-                                </div>
-                                <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 4px;" id="bp-ops-target-desc">Käivita või peata selle arhitektuurikavandi konteinerid ja teenused.</div>
-                            </div>
-                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;" id="bp-ops-container-badges"></div>
-                        </div>
-                    </div>
-
                     <!-- Unified Actions Grid (Lifecycle & Disaster Recovery) -->
                     <div class="modal-section" style="margin-bottom: 22px;">
-                        <h4 style="color: var(--primary); margin-bottom: 12px; font-size: 1.05rem;" id="bp-modal-actions-heading" data-i18n="modal_actions_heading">⚡ Operations, Lifecycle & Disaster Recovery</h4>
                         <div id="bp-modal-actions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;"></div>
                     </div>
 
@@ -2135,22 +3073,22 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                         <div id="bp-modal-diag-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;"></div>
                     </div>
 
-                    <!-- Benchmarks & Performance Metrics -->
-                    <div class="modal-section" style="margin-bottom: 22px;">
-                        <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 1.05rem;" data-i18n="modal_sec_benchmarks">⏱️ Benchmark & Performance History</h4>
-                        <div id="bp-modal-benchmarks" style="background: #090d16; border: 1px solid var(--border); border-radius: 8px; padding: 14px;"></div>
-                    </div>
-
-                    <!-- Execution Logs -->
-                    <div class="modal-section" style="margin-bottom: 22px;">
-                        <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 1.05rem;" data-i18n="modal_sec_logs">📄 Latest Execution Log</h4>
-                        <div id="bp-modal-logs" style="background: #090d16; border: 1px solid var(--border); border-radius: 8px; padding: 14px;"></div>
+                    <!-- Quick Navigation to Logs & Benchmarks -->
+                    <div class="modal-section" style="background: rgba(15, 23, 42, 0.4); border: 1px dashed var(--border); border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 22px;">
+                        <div style="font-size: 0.82rem; color: #94a3b8;">
+                            <span>📊</span> <span data-i18n="diag_logs_hint">Põhjalikud paigalduslogid, sammude ajakulu ja varukoopiate ajalugu asuvad vahelehel:</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="switchBlueprintModalTab('logs')">
+                            <span>📄</span> <span data-i18n="btn_goto_logs">Vaata kõiki logisid & mõõdikuid ↗️</span>
+                        </button>
                     </div>
                 </div>
 
                 <!-- TAB 5: Blueprint Execution Logs (Master-Detail Split-View) -->
                 <div id="bp-modal-tab-logs" class="bp-tab-content">
                     <div class="modal-section" style="margin-bottom: 0;">
+                        <!-- Benchmarks Summary Bar -->
+                        <div id="bp-modal-benchmarks" style="background: #090d16; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;"></div>
                         <!-- Filter Toolbar: Categories, Search, Refresh -->
                         <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 14px; background: rgba(15, 23, 42, 0.5); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
                             <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
@@ -2437,6 +3375,8 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
         <div style="display: flex; align-items: center; gap: 8px;">
             <span>© 2026 Oracle DevOps Platform</span>
             <span>•</span>
+            <span class="platform-version-badge" id="footer-platform-version" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.78rem;" title="Platform Single Source of Truth Version">v%PLATFORM_VERSION%</span>
+            <span>•</span>
             <span>Zero-Trust Enterprise Architecture</span>
         </div>
     </footer>
@@ -2681,8 +3621,8 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
             <button class="modal-close-btn" onclick="closeOracleResourcesModal()" title="Sulge (Esc)">✕</button>
         </div>
 
-        <div class="oracle-resources-modal-toolbar">
-            <div class="oracle-resources-search-box">
+        <div class="oracle-resources-modal-toolbar" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div class="oracle-resources-search-box" style="flex: 1; min-width: 220px;">
                 <span class="search-icon">🔍</span>
                 <input type="text" id="oracle-resources-search-input" placeholder="Search Oracle container images, downloads, or portals..." data-i18n-placeholder="resources_search_placeholder" oninput="filterOracleResourcesCards()" autocomplete="off" />
                 <button id="oracle-resources-clear-search" class="clear-btn" onclick="clearOracleResourcesSearch()" style="display: none;">✕</button>
@@ -2690,6 +3630,9 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
             <div class="oracle-resources-categories-bar" id="oracle-resources-categories-bar">
                 <!-- Categories injected dynamically -->
             </div>
+            <button type="button" class="btn btn-primary" onclick="openAddOracleResourceModal()" style="font-size: 0.8rem; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                <span>➕</span> <span data-i18n="btn_add_resource">Lisa uus viide</span>
+            </button>
         </div>
 
         <div class="oracle-resources-modal-body" id="oracle-resources-cards-container">
@@ -2699,12 +3642,66 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
         <div class="oracle-resources-modal-footer">
             <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted);">
                 <span>🛡️</span>
-                <span data-i18n="resources_modal_footer_hint">Official Oracle references only • No external third-party mirrors</span>
+                <span data-i18n="resources_modal_footer_hint">Official Oracle references & custom verified links</span>
             </div>
             <div style="font-size: 0.82rem; color: #94a3b8; font-weight: 600;">
                 <span id="oracle-resources-counter">0 resources</span>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- ADD / EDIT REFERENCE MODAL -->
+<div id="oracle-resource-form-modal" class="modal-backdrop" onclick="closeOracleResourceFormModal(event)" style="display: none; z-index: 10500;">
+    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 520px; padding: 24px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: #0f172a;">
+        <div class="modal-header" style="margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.3rem;">📑</span>
+                <h3 id="oracle-resource-form-title" style="margin: 0; color: #38bdf8; font-size: 1.15rem;" data-i18n="modal_add_ref_title">Lisa uus viide</h3>
+            </div>
+            <button class="modal-close-btn" onclick="closeOracleResourceFormModal()">✕</button>
+        </div>
+        <form id="oracle-resource-form" onsubmit="handleSaveOracleResource(event)" style="display: flex; flex-direction: column; gap: 12px;">
+            <input type="hidden" id="res-form-id" value="" />
+            <div>
+                <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;" data-i18n="res_form_name">Pealkiri / Nimetus *</label>
+                <input type="text" id="res-form-name" required placeholder="nt. Oracle APEX Dokumentatsioon" style="width: 100%; padding: 7px 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; font-size: 0.85rem;" />
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;" data-i18n="res_form_url">URL / Veebiaadress *</label>
+                <input type="url" id="res-form-url" required placeholder="https://docs.oracle.com/..." style="width: 100%; padding: 7px 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; font-size: 0.85rem;" />
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <div style="flex: 1;">
+                    <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;" data-i18n="res_form_category">Kategooria *</label>
+                    <select id="res-form-category" style="width: 100%; padding: 7px 10px; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; font-size: 0.85rem;">
+                        <option value="containers">Konteinerid (OCR)</option>
+                        <option value="downloads">Allalaadimised & Patches</option>
+                        <option value="portals">Portaalid & Dokumendid</option>
+                    </select>
+                </div>
+                <div style="width: 120px;">
+                    <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;" data-i18n="res_form_badge">Märgis (Badge)</label>
+                    <input type="text" id="res-form-badge" placeholder="OCR / DOC" style="width: 100%; padding: 7px 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; font-size: 0.85rem;" />
+                </div>
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;" data-i18n="res_form_desc">Kirjeldus</label>
+                <textarea id="res-form-desc" rows="2" placeholder="Lühikirjeldus..." style="width: 100%; padding: 7px 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; font-size: 0.85rem; resize: vertical;"></textarea>
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;" data-i18n="res_form_usecase">🎯 Roll / Kasutusotstarve</label>
+                <input type="text" id="res-form-usecase" placeholder="nt. Ametlikud viited ja juhendid" style="width: 100%; padding: 7px 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; font-size: 0.85rem;" />
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;" data-i18n="res_form_cmd">Käsk (CLI / Pull command, valikuline)</label>
+                <input type="text" id="res-form-cmd" placeholder="nt. podman pull ..." style="width: 100%; padding: 7px 10px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; color: #f8fafc; font-size: 0.85rem; font-family: monospace;" />
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+                <button type="button" class="btn btn-secondary" onclick="closeOracleResourceFormModal()" data-i18n="btn_cancel">Tühista</button>
+                <button type="submit" class="btn btn-primary" data-i18n="btn_save">Salvesta</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -2832,13 +3829,523 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
     </div>
 </div>
 
+<!-- PUBLISHER REPORT STUDIO (REPORT LAB) MODAL -->
+<div id="report-studio-modal-backdrop" class="modal-backdrop" onclick="closeReportStudioModal(event)">
+    <div id="report-studio-modal-card" class="modal-content report-studio-modal-card" style="max-width: 1440px; width: 96vw; height: 90vh; max-height: 94vh; display: flex; flex-direction: column; overflow: hidden; background: #0f172a; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="modal-header" style="padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.7);">
+            <div>
+                <h3 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; color: #f8fafc;">
+                    <span>🎨</span> <span data-i18n="report_lab_title">Analytics Publisher Aruannete Labor</span>
+                    <span class="badge" style="background: rgba(168,85,247,0.2); color:#c084fc; border:1px solid rgba(168,85,247,0.4); font-size:0.75rem; padding:2px 8px;">Fast-Render & Deploy</span>
+                </h3>
+                <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #94a3b8;" data-i18n="report_lab_subtitle">
+                    Kujunda, testi ja paigalda Pixel-Perfect RTF malle vahetu integreeritud PDF eelvaatega.
+                </p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <button id="btn-report-studio-max" class="btn-icon" onclick="toggleReportStudioMaximize()" style="background:none; border:none; color:#94a3b8; font-size:1.15rem; cursor:pointer; padding: 4px 6px;" title="Täisekraan (⛶)">⛶</button>
+                <button class="modal-close-btn" onclick="closeReportStudioModal(event)" style="background:none; border:none; color:#94a3b8; font-size:1.2rem; cursor:pointer; padding: 4px 6px;">✕</button>
+            </div>
+        </div>
+
+        <!-- Body: 2 Columns -->
+        <div style="display: flex; flex: 1; min-height: 480px; overflow: hidden; background: #0b1329;">
+            <!-- Left Pane: Template Controls -->
+            <div style="width: 360px; min-width: 310px; border-right: 1px solid var(--border); padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; background: rgba(15, 23, 42, 0.6);">
+                <!-- Template Selection -->
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 5px;">
+                        📄 <span data-i18n="report_select_template">Vali Aruande Mall</span>
+                    </label>
+                    <select id="report-template-select" onchange="onReportTemplateChange()" style="width: 100%; background: #1e293b; color: #f8fafc; border: 1px solid var(--border); padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;">
+                        <option value="">Laadin malle...</option>
+                    </select>
+
+                    <!-- Template Info Card -->
+                    <div id="report-template-info-card" style="display: none; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56,189,248,0.25); border-radius: 6px; padding: 8px 10px; font-size: 0.76rem; color: #94a3b8; margin-top: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span id="tpl-info-type" class="badge" style="background: rgba(168,85,247,0.15); color: #c084fc; font-size: 0.68rem; padding: 1px 6px;">RTF Template</span>
+                            <button type="button" class="btn-xs btn-secondary" onclick="copyReportTemplatePath()" style="padding: 1px 6px; font-size: 0.7rem;" title="Kopeeri failitee" data-i18n="btn_copy_path">📋 Kopeeri tee</button>
+                        </div>
+                        <div id="tpl-info-path" style="font-family: monospace; color: #cbd5e1; word-break: break-all; font-size: 0.72rem;">templates/publisher/...</div>
+                        <div id="tpl-info-target-wrap" style="display: none; margin-top: 4px; font-size: 0.72rem; color: #64748b;">🎯 <span id="tpl-info-target" style="font-family: monospace; color: #38bdf8;"></span></div>
+                    </div>
+                </div>
+
+                <!-- XML Test Data Selection -->
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 5px;">
+                        📦 <span data-i18n="report_select_data">Vali XML Testandmed</span>
+                    </label>
+                    <select id="report-data-select" onchange="onReportDataChange()" style="width: 100%; background: #1e293b; color: #f8fafc; border: 1px solid var(--border); padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;">
+                        <option value="">Vali esmalt mall...</option>
+                    </select>
+                </div>
+
+                <!-- Locale Selection -->
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 5px;">
+                        🌐 <span data-i18n="report_select_locale">Keel / Locale</span>
+                    </label>
+                    <select id="report-locale-select" style="width: 100%; background: #1e293b; color: #f8fafc; border: 1px solid var(--border); padding: 8px 10px; border-radius: 6px; font-size: 0.85rem;">
+                        <option value="et">🇪🇪 Eesti (et)</option>
+                        <option value="en">🇬🇧 English (en)</option>
+                        <option value="fi">🇫🇮 Suomi (fi)</option>
+                        <option value="sv">🇸🇪 Svenska (sv)</option>
+                        <option value="lv">🇱🇻 Latviešu (lv)</option>
+                        <option value="lt">🇱🇹 Lietuvių (lt)</option>
+                    </select>
+                </div>
+
+                <!-- Action Buttons: 2-tier pipeline -->
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+                    <button id="btn-render-preview" class="btn btn-primary" onclick="renderReportPreview()" style="display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; padding: 11px; font-size: 0.92rem; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border-color: #38bdf8;" title="Kiir-eelvaade (Ctrl + Enter)">
+                        <span>⚡</span> <span data-i18n="btn_quick_preview">Kiir-eelvaade</span>
+                        <kbd style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-family: monospace; border: 1px solid rgba(255,255,255,0.25); color: #e0f2fe;">Ctrl+↵</kbd>
+                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="btn-audit-a11y" class="btn btn-secondary" onclick="auditReportAccessibility()" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 6px; font-size: 0.78rem; border-color: rgba(74,222,128,0.4); color: #4ade80;">
+                            <span>♿</span> <span data-i18n="btn_audit_a11y">Audit (PDF/UA-1)</span>
+                        </button>
+                        <button id="btn-deploy-server" class="btn btn-secondary" onclick="deployReportToServer()" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 6px; font-size: 0.78rem; border-color: rgba(56,189,248,0.5); color: #38bdf8;">
+                            <span>🚀</span> <span data-i18n="btn_deploy_publisher">Paigalda serverisse</span>
+                        </button>
+                    </div>
+                    <button id="btn-test-e2e" class="btn btn-secondary" onclick="runPublisherE2ETest()" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px; font-size: 0.82rem; font-weight: 600; border-color: rgba(245,158,11,0.5); color: #fbbf24; background: rgba(245,158,11,0.1);" title="Käivita E2E Test (Blueprint 5 nõutav)">
+                        <span>🧪</span> <span data-i18n="btn_run_e2e_test">Käivita E2E Test & Kontroll</span>
+                    </button>
+                </div>
+
+                <!-- Structured Status Card -->
+                <div id="report-status-card" style="display: none; margin-top: 4px; padding: 10px 12px; border-radius: 8px; font-size: 0.82rem; line-height: 1.4; border: 1px solid var(--border);">
+                    <div style="display: flex; align-items: flex-start; gap: 8px;">
+                        <span id="report-status-icon" style="font-size: 1.15rem; line-height: 1;">✅</span>
+                        <div style="flex: 1; min-width: 0;">
+                            <div id="report-status-title" style="font-weight: 600; font-size: 0.84rem; margin-bottom: 2px;"></div>
+                            <div id="report-status-meta" style="font-size: 0.74rem; opacity: 0.85;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsible Technical Console Drawer -->
+                <div id="report-console-drawer" style="display: none; margin-top: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <button type="button" class="btn-xs btn-secondary" onclick="toggleReportConsoleDrawer()" id="btn-toggle-report-console" style="display: flex; align-items: center; gap: 4px; font-size: 0.72rem; padding: 3px 8px;">
+                            <span>📋</span> <span data-i18n="btn_toggle_console">Tehniline logi</span> <span id="report-console-caret">▼</span>
+                        </button>
+                        <div style="display: flex; gap: 4px;">
+                            <button type="button" class="btn-xs btn-secondary" onclick="copyReportConsoleLog()" title="Kopeeri logi" style="font-size: 0.7rem; padding: 2px 6px;" data-i18n="btn_copy_log">📋 Kopeeri</button>
+                            <button type="button" class="btn-xs btn-secondary" onclick="clearReportConsoleLog()" title="Tühjenda" style="font-size: 0.7rem; padding: 2px 6px;" data-i18n="btn_clear_log">🗑️</button>
+                        </div>
+                    </div>
+                    <pre id="report-console-pre" style="display: none; background: #030712; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; font-size: 0.72rem; font-family: monospace; max-height: 240px; overflow-y: auto; color: #a3e635; margin: 0; white-space: pre-wrap; word-break: break-all;"></pre>
+                </div>
+            </div>
+
+            <!-- Right Pane: Tabbed Workspace -->
+            <div style="flex: 1; display: flex; flex-direction: column; background: #0f172a; position: relative; overflow: hidden;">
+                <!-- Workspace Toolbar with 3 Tabs -->
+                <div style="padding: 8px 16px; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <!-- Workspace Tabs -->
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                        <button id="btn-tab-report-pdf" class="btn-compact" onclick="switchReportViewTab('pdf')" style="background: rgba(56,189,248,0.2); border-color: rgba(56,189,248,0.5); color: #38bdf8; font-weight: 600;">
+                            <span>📄</span> <span data-i18n="tab_view_pdf">PDF Eelvaade</span>
+                        </button>
+                        <button id="btn-tab-report-rtf" class="btn-compact" onclick="switchReportViewTab('rtf')" style="background: rgba(255,255,255,0.05); border-color: var(--border); color: #94a3b8;">
+                            <span>📝</span> <span data-i18n="tab_view_rtf">RTF Mall</span>
+                        </button>
+                        <button id="btn-tab-report-xml" class="btn-compact" onclick="switchReportViewTab('xml')" style="background: rgba(255,255,255,0.05); border-color: var(--border); color: #94a3b8;">
+                            <span>📦</span> <span data-i18n="tab_view_xml">XML Andmed</span>
+                        </button>
+                        <button id="btn-tab-report-audit" class="btn-compact" onclick="switchReportViewTab('audit')" style="background: rgba(255,255,255,0.05); border-color: var(--border); color: #94a3b8;">
+                            <span>♿</span> <span data-i18n="tab_view_audit">Ligipääsetavuse Audit</span>
+                        </button>
+                        <button id="btn-tab-report-e2e" class="btn-compact" onclick="switchReportViewTab('e2e')" style="background: rgba(255,255,255,0.05); border-color: var(--border); color: #94a3b8;">
+                            <span>🧪</span> <span data-i18n="tab_view_e2e">E2E Tulemus</span>
+                        </button>
+                    </div>
+
+                    <!-- Right Meta & Actions -->
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span id="report-viewer-meta" class="badge" style="display: none; background: rgba(56,189,248,0.15); color: #38bdf8; font-size: 0.72rem; font-weight: 600;"></span>
+                        <a id="btn-pdf-fullscreen" href="javascript:void(0)" target="_blank" class="btn-compact" style="display: none; background: rgba(255,255,255,0.08); color: #f8fafc;" title="Ava PDF uues aknas">
+                            <span>↗</span> <span data-i18n="btn_open_fullscreen">Uues aknas</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Tab 1: PDF Viewer Container -->
+                <div id="report-pdf-frame-container" style="flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                    <div id="report-empty-state" style="text-align: center; padding: 40px; color: #64748b;">
+                        <div style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;">📄</div>
+                        <h4 style="margin: 0 0 6px 0; color: #94a3b8; font-weight: 500;" data-i18n="report_empty_title">Vali vasakult mall ja klõpsa "Kiir-eelvaade"</h4>
+                        <p style="margin: 0; font-size: 0.8rem; color: #64748b;" data-i18n="report_empty_subtitle">PDF genereeritakse reaalajas ja kuvatakse otse siin aknas ilma allalaadimisteta.</p>
+                    </div>
+                    <div id="report-loading-state" style="display: none; text-align: center; padding: 40px; color: #38bdf8;">
+                        <div class="spinner" style="margin: 0 auto 16px auto; width: 40px; height: 40px; border-width: 3px;"></div>
+                        <h4 id="report-loading-text" style="margin: 0; font-weight: 500;">Genereerin PDF eelvaadet...</h4>
+                    </div>
+                    <iframe id="report-pdf-frame" src="" style="display: none; width: 100%; height: 100%; border: none; background: #1e293b;"></iframe>
+                </div>
+
+                <!-- Tab: RTF Template Inspector Container -->
+                <div id="report-rtf-container" style="display: none; flex: 1; flex-direction: column; overflow: hidden; background: #0b1329; padding: 12px; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; font-size: 0.78rem; color: #94a3b8; flex-wrap: wrap; gap: 6px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span>📝</span> <span data-i18n="report_rtf_active_file">Aktiivne RTF mall:</span>
+                            <span id="report-rtf-path-display" style="font-family: monospace; color: #c084fc; font-weight: 600;"></span>
+                        </div>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <label style="display: flex; align-items: center; gap: 4px; font-size: 0.72rem; color: #cbd5e1; cursor: pointer; user-select: none;">
+                                <input type="checkbox" id="chk-rtf-tags-only" onchange="toggleRtfTagsFilter()" style="cursor: pointer;">
+                                <span data-i18n="report_rtf_tags_only">Ainult XDO väljad</span>
+                            </label>
+                            <button type="button" class="btn-xs btn-primary" onclick="openTemplateInDesigner(event)" style="font-size: 0.72rem; padding: 3px 8px; display: flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); border-color: #c084fc; color: #fff; cursor: pointer;" title="Ava ja redigeeri malli otse noVNC töölaual (LibreOffice Writer)">
+                                <span>🎨</span> <span data-i18n="btn_open_designer">Ava Designeris</span>
+                            </button>
+                        </div>
+                    </div>
+                    <pre id="report-rtf-pre" style="flex: 1; overflow: auto; background: #030712; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 0; font-family: monospace; font-size: 0.76rem; color: #e2e8f0; white-space: pre-wrap; word-break: break-all;"></pre>
+                </div>
+
+                <!-- Tab 2: XML Data Inspector Container -->
+                <div id="report-xml-container" style="display: none; flex: 1; flex-direction: column; overflow: hidden; background: #0b1329; padding: 12px; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; font-size: 0.78rem; color: #94a3b8;">
+                        <div>
+                            <span>📦</span> <span data-i18n="report_xml_active_file">Aktiivne XML testandmefail:</span>
+                            <span id="report-xml-path-display" style="font-family: monospace; color: #38bdf8; margin-left: 6px;"></span>
+                        </div>
+                        <button type="button" class="btn-xs btn-secondary" onclick="copyReportXmlContent()" style="font-size: 0.72rem; padding: 3px 8px;" data-i18n="btn_copy_xml">📋 Kopeeri XML</button>
+                    </div>
+                    <pre id="report-xml-pre" style="flex: 1; overflow: auto; background: #030712; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 0; font-family: monospace; font-size: 0.78rem; color: #38bdf8; white-space: pre-wrap; word-break: break-all;"></pre>
+                </div>
+
+                <!-- Tab 3: Accessibility Audit Scorecard & Report Container -->
+                <div id="report-audit-container" style="display: none; flex: 1; flex-direction: column; overflow-y: auto; background: #0b1329; padding: 16px; gap: 14px;">
+                    <div id="report-audit-empty" style="text-align: center; padding: 40px; color: #64748b;">
+                        <div style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;">♿</div>
+                        <h4 style="margin: 0 0 6px 0; color: #94a3b8; font-weight: 500;" data-i18n="report_audit_empty_title">Ligipääsetavuse audit pole veel käivitatud</h4>
+                        <p style="margin: 0; font-size: 0.8rem; color: #64748b;" data-i18n="report_audit_empty_subtitle">Tee esmalt "Kiir-eelvaade" ja klõpsa seejärel "Audit (PDF/UA-1)".</p>
+                    </div>
+
+                    <div id="report-audit-results" style="display: none; flex-direction: column; gap: 14px;">
+                        <!-- Scorecard Banner -->
+                        <div id="report-audit-banner" style="padding: 14px 18px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span id="report-audit-banner-icon" style="font-size: 1.8rem;">✅</span>
+                                <div>
+                                    <h4 id="report-audit-banner-title" style="margin: 0; font-size: 1.05rem;">PDF/UA-1 & WCAG 2.1 AA Vastav</h4>
+                                    <p id="report-audit-banner-sub" style="margin: 3px 0 0 0; font-size: 0.78rem; opacity: 0.9;">Täielik masinloetavus ja ekraanilugeja tugi tagatud</p>
+                                </div>
+                            </div>
+                            <span id="report-audit-score-badge" class="badge" style="font-size: 0.85rem; padding: 4px 10px; font-weight: 700;">100% PASS</span>
+                        </div>
+
+                        <!-- 4 Pillars Checklist Cards -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8;" data-i18n="a11y_check_tagged">🏷️ Tagged PDF struktuur</div>
+                                <div id="a11y-val-tagged" style="font-size: 0.95rem; font-weight: 700; color: #4ade80; margin-top: 4px;">✅ Kehtiv</div>
+                            </div>
+                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8;" data-i18n="a11y_check_headings">📑 Pealkirjade hierarhia (H1-H3)</div>
+                                <div id="a11y-val-headings" style="font-size: 0.95rem; font-weight: 700; color: #4ade80; margin-top: 4px;">✅ Kehtiv</div>
+                            </div>
+                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8;" data-i18n="a11y_check_tables">📊 Tabelite päised & TH elemendid</div>
+                                <div id="a11y-val-tables" style="font-size: 0.95rem; font-weight: 700; color: #4ade80; margin-top: 4px;">✅ Kehtiv</div>
+                            </div>
+                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+                                <div style="font-size: 0.75rem; color: #94a3b8;" data-i18n="a11y_check_alttext">🖼️ Alt-tekstid & Kontrast</div>
+                                <div id="a11y-val-alttext" style="font-size: 0.95rem; font-weight: 700; color: #4ade80; margin-top: 4px;">✅ Kehtiv</div>
+                            </div>
+                        </div>
+
+                        <!-- Raw Technical Output -->
+                        <div>
+                            <div style="font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;" data-i18n="a11y_tech_details">Detailne auditi aruanne:</div>
+                            <pre id="report-audit-pre" style="background: #030712; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 0; font-family: monospace; font-size: 0.74rem; color: #a3e635; white-space: pre-wrap; word-break: break-all; max-height: 260px; overflow-y: auto;"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: E2E Verification & Audit Panel -->
+                <div id="report-e2e-container" style="display: none; flex: 1; flex-direction: column; overflow-y: auto; background: #0b1329; padding: 16px; gap: 14px;">
+                    <div id="report-e2e-empty" style="text-align: center; padding: 40px; color: #64748b;">
+                        <div style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;">🧪</div>
+                        <h4 style="margin: 0 0 6px 0; color: #94a3b8; font-weight: 500;" data-i18n="report_e2e_empty_title">E2E testi pole veel käivitatud</h4>
+                        <p style="margin: 0; font-size: 0.8rem; color: #64748b;" data-i18n="report_e2e_empty_subtitle">Klõpsa vasakul "🧪 Käivita E2E Test & Kontroll". Nõutav on Blueprint 5.</p>
+                    </div>
+
+                    <div id="report-e2e-results" style="display: none; flex-direction: column; gap: 14px;">
+                        <!-- Status Banner -->
+                        <div id="report-e2e-banner" style="padding: 14px 18px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span id="report-e2e-banner-icon" style="font-size: 1.8rem;">🎉</span>
+                                <div>
+                                    <h4 id="report-e2e-banner-title" style="margin: 0; font-size: 1.05rem; color: #4ade80;">E2E Test Edukalt Läbitud</h4>
+                                    <p id="report-e2e-banner-sub" style="margin: 3px 0 0 0; font-size: 0.78rem; opacity: 0.9; color: #cbd5e1;">Sisu verifitseeritud ja PDF/UA-1 ligipääsetavus kinnitatud</p>
+                                </div>
+                            </div>
+                            <span id="report-e2e-badge" class="badge" style="font-size: 0.85rem; padding: 4px 10px; font-weight: 700; background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4);">PASS</span>
+                        </div>
+
+                        <!-- 3 Direct Action Links -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <a id="link-e2e-rtf" href="javascript:void(0)" onclick="switchReportViewTab('rtf')" class="btn btn-secondary" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; font-size: 0.82rem;" title="Vaata lähte-RTF malli">
+                                <span>📄</span> <span>Lähte-RTF mall</span>
+                            </a>
+                            <a id="link-e2e-pdf" href="javascript:void(0)" target="_blank" class="btn btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; font-size: 0.82rem;" title="Ava genereeritud PDF">
+                                <span>📑</span> <span>Genereeritud PDF</span>
+                            </a>
+                            <!-- Split-Action Button for Publisher Portal & Report -->
+                            <div id="e2e-web-split-container" style="position: relative; display: flex;">
+                                <button type="button" id="btn-e2e-open-report" class="btn btn-secondary" onclick="openE2EReportInPortal('bip_developer', 'report', event)" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; font-size: 0.82rem; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none;" title="Ava raport veebis arendajana (bip_developer)">
+                                    <span>🌐</span> <span id="btn-e2e-open-report-text" data-i18n="btn_open_report_web">Ava Raport veebis</span>
+                                </button>
+                                <button type="button" id="btn-e2e-open-menu" class="btn btn-secondary" onclick="toggleE2EPublisherMenu(event)" style="padding: 10px 10px; font-size: 0.82rem; border-top-left-radius: 0; border-bottom-left-radius: 0;" title="Vali roll või peaportaal">
+                                    <span>▼</span>
+                                </button>
+
+                                <!-- Dropdown Menu -->
+                                <div id="e2e-publisher-dropdown" style="display: none; position: absolute; top: calc(100% + 4px); right: 0; min-width: 250px; background: #0f172a; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); z-index: 50; padding: 6px 0;">
+                                    <div style="padding: 6px 12px; font-size: 0.72rem; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="label_open_report_as">Ava raport rollis:</div>
+                                    <button type="button" class="dropdown-item" onclick="openE2EReportInPortal('bip_developer', 'report', event)" style="width: 100%; text-align: left; padding: 8px 14px; background: none; border: none; color: #38bdf8; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                        <span>🎨</span> <span>bip_developer (Arendaja)</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item" onclick="openE2EReportInPortal('bip_user', 'report', event)" style="width: 100%; text-align: left; padding: 8px 14px; background: none; border: none; color: #4ade80; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                        <span>👤</span> <span>bip_user (Tavakasutaja)</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item" onclick="openE2EReportInPortal('bip_admin', 'report', event)" style="width: 100%; text-align: left; padding: 8px 14px; background: none; border: none; color: #fb923c; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                        <span>⚙️</span> <span>bip_admin (Administraator)</span>
+                                    </button>
+                                    <button type="button" class="dropdown-item" onclick="openE2EReportInPortal('weblogic', 'report', event)" style="width: 100%; text-align: left; padding: 8px 14px; background: none; border: none; color: #f43f5e; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                        <span>👑</span> <span>weblogic (Superadmin)</span>
+                                    </button>
+                                    <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
+                                    <div style="padding: 6px 12px; font-size: 0.72rem; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="label_open_portal_home">Või ava peaportaal:</div>
+                                    <button type="button" class="dropdown-item" onclick="openE2EReportInPortal('bip_developer', 'home', event)" style="width: 100%; text-align: left; padding: 8px 14px; background: none; border: none; color: #cbd5e1; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                                        <span>🏠</span> <span data-i18n="label_publisher_home_portal">Publisheri Peaportaal (/xmlpserver)</span>
+                                    </button>
+                                    <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
+                                    <a href="http://localhost:9502/xmlpserver/signout.jsp" target="_blank" class="dropdown-item" style="width: 100%; text-align: left; padding: 8px 14px; background: none; border: none; color: #f87171; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none;" data-i18n-title="tip_signout_clear" title="Lõpeta ja tühista aktiivne WebLogic sessioon brauseris">
+                                        <span>🚪</span> <span data-i18n="btn_signout_clear">Sign Out (Puhasta sessioon) ↗</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Execution Log Output -->
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <div style="font-size: 0.8rem; font-weight: 600; color: #cbd5e1;" data-i18n="e2e_tech_output">E2E Testi täitmislogi:</div>
+                                <button type="button" class="btn-xs btn-secondary" onclick="copyE2EConsoleLog()" style="display: flex; align-items: center; gap: 4px; font-size: 0.72rem; padding: 2px 8px;" title="Kopeeri täitmislogi">
+                                    <span>📋</span> <span data-i18n="btn_copy_log">Kopeeri Logi</span>
+                                </button>
+                            </div>
+                            <pre id="report-e2e-pre" style="background: #030712; border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin: 0; font-family: monospace; font-size: 0.76rem; line-height: 1.45; color: #a3e635; white-space: pre-wrap; word-break: break-all; max-height: 420px; min-height: 200px; overflow-y: auto;"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- GITHUB COPILOT FLOATING TRIGGER BUTTON -->
+<div id="copilot-floating-container" class="copilot-floating-container">
+    <button id="copilot-trigger-btn" class="copilot-trigger-btn" onclick="toggleCopilotDrawer()" title="GitHub Copilot AI Assistant (⌘J / Ctrl+J)">
+        <span class="copilot-btn-icon">🤖</span>
+        <span class="copilot-btn-text" data-i18n="copilot_btn_label">Copilot AI</span>
+        <span class="copilot-status-dot" id="copilot-status-dot" title="Status"></span>
+        <kbd class="copilot-shortcut-badge">⌘J</kbd>
+    </button>
+</div>
+
+<!-- GITHUB COPILOT SLIDE-OUT DRAWER / FULLSCREEN MODAL -->
+<div id="copilot-drawer-backdrop" class="copilot-drawer-backdrop" onclick="closeCopilotDrawer(event)">
+    <div id="copilot-drawer" class="copilot-drawer" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="copilot-header">
+            <div class="copilot-header-left">
+                <span class="copilot-avatar" id="copilot-avatar-icon">🤖</span>
+                <div class="copilot-title-box">
+                    <div class="copilot-title" id="copilot-drawer-title-text" data-i18n="copilot_drawer_title">GitHub Copilot Assistant</div>
+                    <div class="copilot-subtitle" id="copilot-header-status">
+                        <span id="copilot-status-indicator" class="status-dot dot-init"></span>
+                        <span id="copilot-status-text" data-i18n="copilot_status_offline">Local Knowledge Base (Offline)</span>
+                    </div>
+                </div>
+            </div>
+            <!-- AI Provider Selector Switch -->
+            <div class="copilot-provider-selector" id="copilot-provider-selector">
+                <button type="button" class="copilot-provider-btn active" id="ai-provider-copilot" onclick="switchAiProvider('copilot')">
+                    <span>🐙</span> <span data-i18n="copilot_provider_copilot">GitHub Copilot</span>
+                </button>
+                <button type="button" class="copilot-provider-btn" id="ai-provider-antigravity" onclick="switchAiProvider('antigravity')">
+                    <span>✨</span> <span data-i18n="copilot_provider_antigravity">Google Antigravity</span>
+                </button>
+            </div>
+            <div class="copilot-header-actions">
+                <button class="copilot-action-btn" onclick="toggleCopilotFullscreen()" id="copilot-fullscreen-btn" title="Laienda täisvaatesse">⛶</button>
+                <button class="copilot-action-btn" onclick="clearCopilotHistory()" title="Tühjenda vestlus" data-i18n-title="copilot_clear_chat">🗑️</button>
+                <button class="copilot-action-btn copilot-close-btn" onclick="toggleCopilotDrawer(false)" title="Sulge">✕</button>
+            </div>
+        </div>
+
+        <!-- Quick Prompts Pill Carousel -->
+        <div class="copilot-quick-prompts" id="copilot-quick-prompts">
+            <button class="quick-prompt-chip" onclick="sendQuickPrompt(this)" data-i18n="copilot_quick_blueprint">🚀 Kuidas käivitada Blueprint 5?</button>
+            <button class="quick-prompt-chip" onclick="sendQuickPrompt(this)" data-i18n="copilot_quick_wallet">🔑 Kuidas leida paroolid (SEPS Wallet)?</button>
+            <button class="quick-prompt-chip" onclick="sendQuickPrompt(this)" data-i18n="copilot_quick_publisher">📄 Kuidas muuta Publisheri RTF malle?</button>
+            <button class="quick-prompt-chip" onclick="sendQuickPrompt(this)" data-i18n="copilot_quick_testing">🧪 Kuidas käivitada teste ja lokaalset CI-d?</button>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="copilot-messages" id="copilot-messages">
+            <!-- Dynamically populated -->
+        </div>
+
+        <!-- Footer / Input Box -->
+        <div class="copilot-footer">
+            <div class="copilot-input-row">
+                <textarea id="copilot-user-input" class="copilot-textarea" rows="1" placeholder="Küsi Copilotilt blueprintide, walleti, RTF mallide, testide kohta... (Enter saadab)" data-i18n-placeholder="copilot_input_placeholder" onkeydown="handleCopilotInputKey(event)"></textarea>
+                <button id="copilot-send-btn" class="copilot-send-btn" onclick="submitCopilotQuery()" title="Saada">
+                    <span>➤</span>
+                </button>
+            </div>
+            <div class="copilot-footer-toolbar">
+                <div class="copilot-export-buttons">
+                    <button class="btn btn-xs btn-secondary copilot-vscode-btn" id="copilot-vscode-btn" onclick="exportToVsCodeCopilot()" title="Ava küsimus ja repo kontekst VS Code Copilotis">
+                        <span>💻</span> <span data-i18n="copilot_btn_vscode">Ava VS Code Copilotis</span>
+                    </button>
+                    <button class="btn btn-xs btn-secondary copilot-antigravity-btn" id="copilot-antigravity-btn" onclick="exportToAntigravity()" title="Ava küsimus ja repo kontekst Google Antigravitys">
+                        <span>✨</span> <span data-i18n="copilot_btn_antigravity">Ava Antigravitys</span>
+                    </button>
+                </div>
+                <div class="copilot-model-badge" id="copilot-model-badge">
+                    <span>Model: gpt-4o</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DOCKED TERMINAL DRAWER (VS CODE STYLE CONSOLE - ADR 0017) -->
+<div id="devops-docked-terminal" class="devops-docked-terminal">
+    <div class="devops-terminal-resize-bar" id="devops-terminal-resize-handle" title="Lohista kõrguse muutmiseks"></div>
+    <div class="devops-terminal-header">
+        <div class="devops-terminal-title-group">
+            <span id="devops-docked-icon">⚡</span>
+            <span id="devops-docked-title">DevOps Console</span>
+            <span id="devops-docked-timer" class="devops-terminal-timer-badge">⏱️ 0.0s</span>
+            <span id="devops-docked-status" class="badge" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; font-size: 0.72rem;">⚪ Ootel</span>
+        </div>
+        <div class="devops-terminal-actions">
+            <button type="button" class="devops-terminal-btn ai-btn" id="devops-docked-ai-btn" onclick="askAiAboutCurrentTerminalError()" style="display: none;" title="Küsi Copilotilt või Antigravitylt lahendust sellele veale">
+                <span>🤖</span> <span data-i18n="devops_btn_ask_ai">Küsi AI-lt lahendust</span>
+            </button>
+            <button type="button" class="devops-terminal-btn" onclick="copyDockedTerminalOutput()" title="Kopeeri terminali väljund">
+                <span>📋</span> <span data-i18n="btn_copy">Kopeeri</span>
+            </button>
+            <button type="button" class="devops-terminal-btn" id="devops-docked-fullscreen-btn" onclick="toggleDockedTerminalFullscreen()" title="Laienda täisekraanile">
+                <span>⛶</span>
+            </button>
+            <button type="button" class="devops-terminal-btn" onclick="closeDockedTerminal()" title="Sulge terminal (Esc)">
+                <span>✕</span>
+            </button>
+        </div>
+    </div>
+    <pre id="devops-docked-pre" class="devops-terminal-body"></pre>
+</div>
+
+<!-- VERSION & CACHE INSPECTOR MODAL -->
+<div id="version-inspector-modal-backdrop" class="modal-backdrop" onclick="closeVersionInspectorModal(event)" style="display: none; z-index: 999999;">
+    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 620px; background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);">
+        <div class="modal-header" style="border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding: 16px 20px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.6rem;">🔍</span>
+                <div>
+                    <h3 style="color: #38bdf8; font-size: 1.2rem; margin: 0;" data-i18n="version_inspector_title">Platform Version & Cache Inspector</h3>
+                    <p style="color: #94a3b8; font-size: 0.82rem; margin: 2px 0 0 0;" data-i18n="version_inspector_subtitle">Verify browser cache synchronization with repository Single Source of Truth</p>
+                </div>
+            </div>
+            <button class="modal-close-btn" onclick="closeVersionInspectorModal()" title="Sulge (Esc)">✕</button>
+        </div>
+
+        <div style="padding: 20px;">
+            <!-- Metadata Grid -->
+            <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #94a3b8; font-size: 0.85rem;" data-i18n="version_label_ssot">Platvormi versioon (SSOT):</span>
+                    <span style="background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.4); color: #4ade80; font-weight: 700; padding: 3px 12px; border-radius: 9999px; font-family: ui-monospace, monospace; font-size: 0.88rem;" id="modal-platform-version">v%PLATFORM_VERSION%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #94a3b8; font-size: 0.85rem;" data-i18n="version_label_build">Kompileerimise aeg:</span>
+                    <span style="color: #f1f5f9; font-family: ui-monospace, monospace; font-size: 0.82rem;" id="modal-build-time">%BUILD_TIMESTAMP%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #94a3b8; font-size: 0.85rem;" data-i18n="version_label_commit">Git Commit Hash:</span>
+                    <span style="color: #38bdf8; font-family: ui-monospace, monospace; font-size: 0.82rem;" id="modal-git-commit">%GIT_COMMIT%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                    <span style="color: #94a3b8; font-size: 0.85rem;" data-i18n="version_label_url">Brauseri URL:</span>
+                    <span style="color: #cbd5e1; font-family: ui-monospace, monospace; font-size: 0.76rem; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="modal-browser-url">...</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #94a3b8; font-size: 0.85rem;" data-i18n="version_label_cache">Vahemälu staatus:</span>
+                    <span style="color: #38bdf8; font-size: 0.82rem; font-weight: 600;" id="modal-cache-status">Aktiivne</span>
+                </div>
+            </div>
+
+            <!-- Sync Status Box -->
+            <div id="modal-sync-alert" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.35); border-radius: 8px; padding: 12px 16px; margin-bottom: 18px; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.3rem;">✅</span>
+                <div style="font-size: 0.85rem; color: #86efac;" data-i18n="version_inspector_sync_ok">Brauseris jooksev versioon vastab 100% repositooriumi tõeallikale.</div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button onclick="triggerDevHubHardReload()" style="width: 100%; padding: 11px 18px; background: linear-gradient(135deg, #0284c7, #0369a1); border: 1px solid rgba(56,189,248,0.5); border-radius: 8px; color: #ffffff; font-weight: 700; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);">
+                    <span>🔄</span>
+                    <span data-i18n="version_inspector_btn_reload">Värskenda ilma vahemäluta (Hard Reload)</span>
+                    <kbd style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; padding: 2px 6px; font-size: 0.72rem;">Shift+R</kbd>
+                </button>
+
+                <div style="background: #020617; border: 1px solid #1e293b; border-radius: 8px; padding: 12px 16px;">
+                    <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 8px;" data-i18n="version_inspector_cli_label">Terminali CLI värskenduskäsk (Chrome automaatne reload):</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
+                        <code style="color: #38bdf8; font-family: ui-monospace, monospace; font-size: 0.85rem;">./scripts/refresh-devhub.sh</code>
+                        <button onclick="copyToClipboard('./scripts/refresh-devhub.sh'); if(typeof showToast==='function') showToast('📋 Käsk kopeeritud!', 'success');" style="background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.4); color: #38bdf8; padding: 4px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer;">📋 <span data-i18n="btn_copy">Kopeeri</span></button>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
+                        <code style="color: #4ade80; font-family: ui-monospace, monospace; font-size: 0.82rem;">./scripts/bump-iteration.sh</code>
+                        <button onclick="copyToClipboard('./scripts/bump-iteration.sh'); if(typeof showToast==='function') showToast('📋 Käsk kopeeritud!', 'success');" style="background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: #4ade80; padding: 4px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer;">➕ Iteratsioon (+1)</button>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                        <code style="color: #c084fc; font-family: ui-monospace, monospace; font-size: 0.82rem;">./scripts/release.sh --dry-run</code>
+                        <button onclick="copyToClipboard('./scripts/release.sh --dry-run'); if(typeof showToast==='function') showToast('📋 Käsk kopeeritud!', 'success');" style="background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); color: #c084fc; padding: 4px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer;">🚀 Reliisi eelvaade</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+const PLATFORM_VERSION = "%PLATFORM_VERSION%";
+window.PLATFORM_VERSION = PLATFORM_VERSION;
+const PLATFORM_BUILD_TIMESTAMP = "%BUILD_TIMESTAMP%";
+window.PLATFORM_BUILD_TIMESTAMP = PLATFORM_BUILD_TIMESTAMP;
+const PLATFORM_GIT_COMMIT = "%GIT_COMMIT%";
+window.PLATFORM_GIT_COMMIT = PLATFORM_GIT_COMMIT;
 const ACTIVE_BP_NUM = %ACTIVE_BP_NUM%;
 const DOCS_DATA = %DOCS_DATA_JSON%;
 const BLUEPRINTS_DATA = %BLUEPRINTS_DATA_JSON%;
 const ACTIVE_BP_MERMAID = %ACTIVE_BP_MERMAID_JSON%;
 const BENCHMARKS_DATA = %BENCHMARKS_DATA_JSON%;
 const RESET_BENCHMARKS_DATA = %RESET_BENCHMARKS_DATA_JSON%;
+const SNAPSHOT_BENCHMARKS_DATA = %SNAPSHOT_BENCHMARKS_DATA_JSON%;
 const LOGS_DATA = %LOGS_DATA_JSON%;
 const TEST_SUITES_DATA = %TEST_SUITES_JSON%;
 const TEST_REPORTS_DATA = %TEST_REPORTS_JSON%;
@@ -2854,8 +4361,10 @@ const PROFILES_DATA = %PROFILES_DATA_JSON%;
 const SKILLS_DATA = %SKILLS_DATA_JSON%;
 const SKILLS_TASKS_DATA = %SKILLS_TASKS_JSON%;
 const SKILLS_MERMAID = %SKILLS_MERMAID_JSON%;
+const BLUEPRINT_RAM_BENCHMARKS = %BLUEPRINT_RAM_BENCHMARKS_JSON%;
 const GLOBAL_SEARCH_INDEX = %SEARCH_INDEX_JSON%;
 window.GLOBAL_SEARCH_INDEX = GLOBAL_SEARCH_INDEX;
+window.BLUEPRINT_RAM_BENCHMARKS = BLUEPRINT_RAM_BENCHMARKS;
 window.TEST_SUITES_DATA = TEST_SUITES_DATA;
 window.TEST_REPORTS_DATA = TEST_REPORTS_DATA;
 window.TEST_COVERAGE_DATA = TEST_COVERAGE_DATA;
@@ -2893,6 +4402,8 @@ let CACHED_PROFILES = window.PROFILES_DATA || [];
 
 let currentSlideIdx = 0;
 const SLIDES_CONTENT = %SLIDES_CONTENT_JSON%;
+const FORMS_SLIDES_CONTENT = %FORMS_SLIDES_CONTENT_JSON%;
+const FORMS_ROLE_TRACKS = %FORMS_ROLE_TRACKS_JSON%;
 const totalSlides = Object.keys(SLIDES_CONTENT).length || 13;
 const LOCAL_PASSWORDS = %PASSWORDS_MAP_JSON%;
 

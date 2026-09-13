@@ -124,6 +124,24 @@ except Exception:
                     except Exception:
                         pass
 
+        # Query publisher and forms middleware aliases directly
+        middleware_aliases = [
+            "PUBLISHER_DEVELOPER",
+            "PUBLISHER_USER",
+            "PUBLISHER_ADMIN",
+            "DB_PUBLISHER_SYS",
+            "DB_FORMS_SYS"
+        ]
+        for ma in middleware_aliases:
+            if ma not in pwd_map or not pwd_map[ma]:
+                try:
+                    res = subprocess.run([str(get_pwd_script), ma, "-p"], capture_output=True, text=True, timeout=5)
+                    val = res.stdout.strip()
+                    if val and not val.startswith("❌") and not val.startswith("Error"):
+                        pwd_map[ma] = val
+                except Exception:
+                    pass
+
     # 2. Extract dynamically from running container wallet via mkstore in-memory (fallback)
     for db_info in all_dbs:
         c_name = db_info.get("c_name", "")
@@ -185,6 +203,19 @@ except Exception:
                             if "DB_PROXY_VIEWER" not in pwd_map: pwd_map["DB_PROXY_VIEWER"] = s_data
                         elif s_name in ["proxy_sys_password", "proxy_db_sys_password"]:
                             if "DB_PROXY_SYS" not in pwd_map: pwd_map["DB_PROXY_SYS"] = s_data
+                        elif s_name in ["publisher_developer_password", "publisher_dev_password"]:
+                            pwd_map["PUBLISHER_DEVELOPER"] = s_data
+                            pwd_map["DB_PUBLISHER_DEV"] = s_data
+                            pwd_map["DB_PUBLISHER_DEVELOPER"] = s_data
+                        elif s_name in ["publisher_user_password", "publisher_app_password"]:
+                            pwd_map["PUBLISHER_USER"] = s_data
+                            pwd_map["DB_PUBLISHER_USER"] = s_data
+                            pwd_map["DB_PUBLISHER_APP"] = s_data
+                        elif s_name in ["publisher_admin_password"]:
+                            pwd_map["PUBLISHER_ADMIN"] = s_data
+                            pwd_map["DB_PUBLISHER_ADMIN"] = s_data
+                        elif s_name in ["publisher_db_sys_password"]:
+                            pwd_map["DB_PUBLISHER_SYS"] = s_data
     except Exception:
         pass
         

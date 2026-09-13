@@ -17,6 +17,11 @@ SCRIPT_DOC_PATTERNS = [
         "doc_key": "glossary",
         "title": "Architecture Glossary & Acronyms"
     }),
+    (r"^test-(spec-traceability|sdd.*)\.sh$", {
+        "doc_file": "docs/spec-driven-development-and-assembly-line.md",
+        "doc_key": "spec_driven_development",
+        "title": "Spec-Driven Development, SCS & Assembly Line"
+    }),
     (r"^(test|report)-(repo-stats|devhub-mermaid-rendering|devhub-search-and-filters|devhub-testing-tab|dev-hub-generation|i18n-translations|filename-portability|multilingual-support|live-platform|pre-commit.*|devhub-doc-links|title-capitalization.*)\.sh$", {
         "doc_file": "docs/testing-framework-and-devhub.md",
         "doc_key": "testing_framework",

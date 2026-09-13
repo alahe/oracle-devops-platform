@@ -1,4 +1,25 @@
 #!/usr/bin/env bash
-# Auto-generated pre-push hook
+# ==============================================================================
+# Git Pre-Push Hook (Rule 16 — Automated Semantic Release & Pre-Push Quality Gate)
+# ==============================================================================
+set -euo pipefail
+
 ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+
+# 1. Run Full Security & Core Unit Verification Checks
 "$ROOT_DIR/scripts/check-pre-commit.sh" --full
+
+# 2. Check if an active 4-part development iteration exists in VERSION
+VERSION_FILE="$ROOT_DIR/VERSION"
+if [[ -f "$VERSION_FILE" && -f "$ROOT_DIR/scripts/release.sh" ]]; then
+  CUR_VER="$(tr -d '[:space:]' < "$VERSION_FILE")"
+  IFS='.' read -r -a PARTS <<< "$CUR_VER"
+  
+  if [[ "${#PARTS[@]}" -ge 4 ]]; then
+    echo "=================================================================="
+    echo "🚀 PRE-PUSH: Tuvastati aktiivne tööiteratsioon v${CUR_VER}"
+    echo "   Käivitan automaatse semantilise reliisi analüüsi..."
+    echo "=================================================================="
+    "$ROOT_DIR/scripts/release.sh" --auto
+  fi
+fi

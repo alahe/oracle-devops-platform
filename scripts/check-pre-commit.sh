@@ -94,12 +94,24 @@ ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 EOF
   chmod +x "$HOOKS_DIR/pre-commit"
 
-  # Ensure pre-push hook exists
+  # Ensure pre-push hook exists (with Rule 16 semantic release support)
   cat << 'EOF' > "$HOOKS_DIR/pre-push"
 #!/usr/bin/env bash
-# Auto-generated pre-push hook
+# Auto-generated pre-push hook (Rule 16 — Automated Semantic Release & Pre-Push Quality Gate)
+set -euo pipefail
 ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 "$ROOT_DIR/scripts/check-pre-commit.sh" --full
+
+VERSION_FILE="$ROOT_DIR/VERSION"
+if [[ -f "$VERSION_FILE" && -f "$ROOT_DIR/scripts/release.sh" ]]; then
+  CUR_VER="$(tr -d '[:space:]' < "$VERSION_FILE")"
+  IFS='.' read -r -a PARTS <<< "$CUR_VER"
+  if [[ "${#PARTS[@]}" -ge 4 ]]; then
+    echo "🚀 PRE-PUSH: Tuvastati aktiivne tööiteratsioon v${CUR_VER}"
+    echo "   Käivitan automaatse semantilise reliisi analüüsi..."
+    "$ROOT_DIR/scripts/release.sh" --auto
+  fi
+fi
 EOF
   chmod +x "$HOOKS_DIR/pre-push"
 
@@ -473,6 +485,10 @@ if [ "$MODE" = "full" ] && [ $EXIT_CODE -eq 0 ]; then
   
   if [ -f "$WORKSPACE_DIR/tests/unit/test-filename-portability.sh" ]; then
     bash "$WORKSPACE_DIR/tests/unit/test-filename-portability.sh"
+  fi
+
+  if [ -f "$WORKSPACE_DIR/tests/unit/test-container-naming-isolation.sh" ]; then
+    bash "$WORKSPACE_DIR/tests/unit/test-container-naming-isolation.sh"
   fi
 
   if [ -f "$WORKSPACE_DIR/tests/unit/test-dev-hub-generation.sh" ]; then

@@ -95,6 +95,7 @@ All scripts, wrappers, and connection generators must adhere to **6 stability co
 4. **POSIX & Shell Compatibility:** Do not use non-portable bashisms (like `${ALIAS,,}` or `declare -A`) that fail under `/bin/bash` 3.2 on macOS or `/bin/sh` / `zsh`. Use portable `tr '[:upper:]' '[:lower:]'` and standard arrays.
 5. **Multi-Shell Registration:** Auto-export `TNS_ADMIN` and alias `sql` across all shell profiles (`~/.zshrc`, `~/.zshenv`, `~/.bashrc`, `~/.bash_profile`) and maintain the wrapper at `~/Applications/sqlcl/bin/sql`.
 6. **Exclusive SQLcl Usage Contract (Strict Prohibition of Legacy SQL*Plus):** SQLcl (`sql`) is the mandatory standard database CLI across all platform automation scripts (`apply-profile-users.sh`, `create-developer.sh`, `init-db-instance.sh`), user provisioning, schema migrations, and CI/CD pipelines. Legacy `sqlplus` is prohibited in automation scripts. In containerized databases, invoke the embedded SQLcl binary at `/opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql -s / as sysdba`. For host and cloud ADB execution, invoke via `./scripts/sqlcl.sh /@ALIAS` or ephemeral container (`container-registry.oracle.com/database/sqlcl:latest`), leveraging Oracle SEPS auto-login wallet.
+   - **Official Rule 6 Exemption (APEX Core Engine & Patch Bundle Execution):** Official Oracle APEX core engine installation (`apxins.sql`, `apxrtins.sql`) and bundle patch set exception execution (`catpatch.sql`, `apxpatch.sql`) inside containerized databases (`db-proxy`, `db-alise`, etc.) are explicitly EXEMPT from the JVM SQLcl requirement. These vendor scripts compile tens of thousands of metadata objects, which inside a resource-constrained database container (e.g. 3072M limit) exhaust JVM heap/native memory and trigger Linux kernel OOM killer (`Killed`, exit code 137). In-container APEX core engine and patch execution MUST invoke the native C-binary `$ORACLE_HOME/bin/sqlplus -s / as sysdba`, ensuring minimal footprint (~15MB RAM), rock-solid stability, and zero OOM risk.
 
 ---
 
@@ -282,3 +283,107 @@ To guarantee reliable execution across corporate-managed Windows workstations (I
    - Windows 11 `.wslconfig` must configure `networkingMode=mirrored` and `dnsTunneling=true` to prevent corporate VPN clients (AnyConnect, GlobalProtect) from dropping WSL2 DNS resolution.
    - Hyper-V excluded port ranges (`netsh interface ipv4 show excludedportrange protocol=tcp`) must be inspected during pre-flight checks to prevent container port binding collisions on platform ports (1531–1537, 8088, 8448, 9502, 6083).
 
+---
+
+## 15. Exact Container Name Matching & Substring Isolation Rule
+
+To eliminate false positive container discoveries, orphaned waiting loops, and unintended skips caused by substring collisions across overlapping blueprint container names (e.g. `app-publisher-designer` falsely matching `app-publisher`, `db-proxy-standalone` matching `db-proxy`, `app-forms-publisher` matching `app-forms` or `app-publisher`, `db-forms-publisher` matching `db-forms` or `db-publisher`):
+
+1. **Strict Prohibition on Unanchored Container Name Grepping:**
+   - Automation scripts, health checks, installers, and test matrices **MUST NEVER** pipe `podman ps` output into unanchored substring filters (such as `grep "app-publisher"`, `grep "$CONTAINER"`, or `podman ps --filter name=X` which performs a loose substring match in Podman CLI).
+   - If piping container names, the search MUST be strictly anchored at both ends using `grep -q -E "^${CONTAINER}\$"` or `grep -qx "$CONTAINER"`.
+
+2. **Standardized State Inspection Helpers (`scripts/internal/common.sh`):**
+   - Container running, health, and presence checks MUST exclusively use the unified helper functions defined in `scripts/internal/common.sh`:
+     - `is_container_running "<name>"`: Uses exact `podman inspect --format='{{.State.Status}}' "$name"` == `running`.
+     - `is_container_healthy "<name>"`: Inspects exact health status (`healthy` or `none`).
+     - `is_container_present "<name>"`: Uses exact `podman container exists "$name"`.
+     - `container_exact_grep "<name>"`: Validates streaming container lists using anchored `grep -q -E "^${cname}\$"`.
+
+3. **Precise Multi-Database Exclusions:**
+   - Inverted filters (such as skipping publisher databases during APEX installation) **MUST NEVER** use broad substrings like `grep -v "publisher"`, which inadvertently excludes multi-service databases like `db-forms-publisher`.
+   - Exclusions must explicitly anchor the target database: `grep -E -v '^db-publisher\|'`.
+
+4. **Automated CI & Pre-Commit Enforcement:**
+   - Every file added or modified in the repository must be verified by `tests/unit/test-container-naming-isolation.sh` during local CI (`scripts/test-local-ci.sh`, step 0.1c) and pre-commit checks (`scripts/check-pre-commit.sh --full`).
+
+---
+
+## 16. Mandatory Platform Version Bumping, Spec Maintenance & Dev Hub Invalidation Rule
+
+To eliminate stale browser cache, guarantee full traceability, and harmonize "Vibe Coding" agility with Enterprise Release Governance:
+
+1. **4-Part Iteration Bumping on Discrete Changes (`MAJOR.MINOR.PATCH.BUILD`):**
+   - During active development, **EVERY discrete plan step, task completion, or functional modification MUST bump the 4th iteration number** in the root `VERSION` file (`2.5.0.1` $\rightarrow$ `2.5.0.2` $\rightarrow$ `2.5.0.3`) via `./scripts/bump-iteration.sh`.
+   - Each iteration bump automatically triggers background compilation of `docs/dev-hub.html`, providing instant visual feedback in Dev Hub's version inspector without manual developer intervention.
+   - **Mandatory Dry-Run Verification & Local Commit Invariant:** Every completed task iteration MUST be verified via dry-run tests (`./tests/unit/test-semantic-versioning.sh`, `./scripts/release.sh --dry-run`, `./scripts/check-pre-commit.sh`) and committed to local Git immediately (`git commit -m "feat(...): ... (iter vX.Y.Z.W)"`). This establishes an immutable local safety checkpoint before any further code is written.
+
+2. **Mandatory Specification Review & Synchronization (`docs/specs/<domain>/`):**
+   - Whenever any UI layout, CLI flags, business requirements, or architectural boundaries change, the corresponding domain specification (`docs/specs/<domain>/requirements.md`, `design.md`, `tasks.md`) **MUST BE REVIEWED AND SYNCHRONIZED in the exact same step**.
+   - Code and living specifications must never diverge.
+
+3. **Automated Semantic Release on `git push` (Conventional Commits):**
+   - Development commits must adhere to Conventional Commits (`feat:`, `fix:`, `refactor:`, `BREAKING CHANGE:`).
+   - Before pushing to the remote repository, the pre-push hook (`.githooks/pre-push` or `./scripts/release.sh`) performs automated semantic analysis on all commits since the last release tag:
+     - `BREAKING CHANGE:` / `feat!:` $\rightarrow$ **MAJOR bump** (`X.0.0`)
+     - `feat:` / new capabilities $\rightarrow$ **MINOR bump** (`x.Y.0`)
+     - `fix:` / `perf:` / `refactor:` $\rightarrow$ **PATCH bump** (`x.y.Z`)
+   - Normalizes the `VERSION` file to the clean 3-part SemVer (`v2.5.0`), generates `CHANGELOG.md` release notes, creates an annotated Git tag, and seeds the next development iteration at `2.5.0.1`.
+   - Standalone manual release execution is always available via `./scripts/release.sh` or the Dev Hub 1-click button.
+
+4. **Dual Header & Footer Visibility Invariant:**
+   - The platform version **MUST BE VISIBLY DISPLAYED IN BOTH**:
+     - **Sticky Navigation Header (`#platform-global-version`)**: `🚀 Oracle DevOps Platform • v<VERSION> • Bridge v<VERSION> Online`.
+     - **Platform Footer (`#footer-platform-version`)**: Inside the bottom attribution bar (`© 2026 Oracle DevOps Platform • v<VERSION> • Zero-Trust Enterprise Architecture`).
+   - Any developer or user can immediately visually confirm whether their browser is displaying the freshly compiled build or serving stale cached HTML.
+
+5. **Compiler & Bridge Dynamic Synchronization:**
+   - `scripts/internal/dev_hub/compiler.py` must read the version directly from `VERSION` and inject `%PLATFORM_VERSION%` into `docs/dev-hub.html`.
+   - `scripts/internal/dev-hub-bridge.py` must read `VERSION` dynamically on every `/api/version` and `/api/health` request, ensuring the live bridge daemon and static HTML remain in 100% lockstep without manual version duplication.
+---
+
+## 17. Spec-Driven Development (SDD) & Pre-Implementation Contradiction Invariant
+
+To eliminate "vibe coding" hallucinations, unverified assumptions, and costly runtime failures (Julian Wood, AWS):
+
+1. **No Code Without Approved Specifications (`docs/specs/<domain>/`):**
+   - Autonomous AI agents and developers **MUST NEVER begin writing or modifying application source code** before formal specifications are defined under `docs/specs/<domain>/`:
+     - `requirements.md`: Business context, domain glossary, and formal acceptance criteria in Given/When/Then (Gherkin) format, including negative paths and edge cases.
+     - `design.md`: Architectural component layout, API/CLI contracts, database schemas, and sequence diagrams.
+     - `tasks.md`: Atomic, independently verifiable implementation steps.
+2. **Mandatory Pre-Implementation Contradiction Analysis:**
+   - Before implementation begins, the AI agent must perform a formal contradiction analysis in `requirements.md` checking for mutually exclusive parameter combinations (e.g. `-s` vs `--fresh`), contradictory states, or unrealistic performance SLAs.
+3. **Spec-to-Code Traceability:**
+   - Every implementation task in `tasks.md` must link to its corresponding `[REQ-XX]` requirement and define an exact automated verification command.
+
+---
+
+## 18. Self-Contained Systems (SCS) & Asynchronous Data Sovereignty Rule
+
+To prevent the formation of a "Distributed Big Ball of Mud" and maximize AI context window utility (Simon Martinelli, martinelli.ch; David Parnas 1972):
+
+1. **Autonomous Bounded Contexts (SCS):**
+   - Systems and modules (e.g., Dev Hub Portal, ALIS Core, Analytics Publisher, Forms Modernization) must operate as Self-Contained Systems containing their own UI, business logic, and database sovereignty (dedicated Oracle PDB).
+2. **Prohibition of Synchronous Distributed Locks & RPC Chains:**
+   - In business workflows, systems **MUST NEVER rely on synchronous cross-database 2-phase commit (2PC) distributed locks or blocking RPC cascades**.
+   - Cross-system data integration must be achieved via **asynchronous data replication** (materialized views, pull/push schedules, or event logs) or clean UI-level deep linking. Local data redundancy is explicitly allowed and preferred for resilience.
+3. **AI Context Window Budgeting:**
+   - Every SCS module's specifications and critical interfaces must be bounded so that a complete vertical slice (UI, logic, DDL) fits within a standard AI context window (< 300 lines of spec per domain), allowing end-to-end reasoning without hallucination.
+
+---
+
+## 19. Agentic Assembly Line, Ralph Loops & Session Trails Invariant
+
+To transition from passive code-generation to autonomous verification and institutional memory (Thomas Dohmke, Entire.io / GitHub):
+
+1. **Autonomous Eneseparanduse Tsükkel (Ralph Loop):**
+   - When automated tests, builds, or CI checks fail, AI agents must execute an autonomous repair loop: inspect failure logs (`install_logs/`), diagnose the root cause, formulate and apply a targeted patch, and re-execute the verification command without requiring manual human copy-pasting.
+2. **The 5 Immutable Quality Gates (Evaluation Gates):**
+   - Every pull request, release, or blueprint build must satisfy 5 automated gates before merge:
+     - 🛡️ **Gate 1: Security & Zero-Trust** (SEPS Wallet, regex sanitization, zero plaintext secrets).
+     - 🧪 **Gate 2: Functional Correctness** (100% test pass rate across all active test suites).
+     - 🌐 **Gate 3: Multilingual Symmetry** (100% parity across EN, ET, FI, SV, LV, LT via `test-multilingual-support.sh`).
+     - 💻 **Gate 4: Cross-Platform Portability** (Rule 13 compliance across Windows, macOS, Linux via `test-filename-portability.sh`).
+     - ⚡ **Gate 5: Performance & Recovery SLA** (FastStart recovery within $\le 20$s).
+3. **Institutional Memory & Session Trails (`.agents/trails/`):**
+   - Key architectural changes and complex agentic refactorings must be persisted as structured markdown trails in `.agents/trails/trail_YYYYMMDD_*.md`, recording the original intent, AI model used, Ralph Loops traversed, and decisions made.

@@ -444,6 +444,306 @@ DOC_SPECS = [
             "lv": "docs/lv/oracle-resources-and-downloads.md",
             "lt": "docs/lt/oracle-resources-and-downloads.md"
         }
+    },
+    {
+        "id": "devhub-copilot",
+        "rel": "docs/devhub-copilot-assistant.md",
+        "titles": {
+            "en": "🤖 GitHub Copilot Assistant & Zero-Trust RAG",
+            "et": "🤖 GitHub Copilot assistent & Zero-Trust RAG",
+            "fi": "🤖 GitHub Copilot -avustaja & Zero-Trust RAG",
+            "sv": "🤖 GitHub Copilot-assistent & Zero-Trust RAG",
+            "lv": "🤖 GitHub Copilot asistents & Zero-Trust RAG",
+            "lt": "🤖 GitHub Copilot asistentas & Zero-Trust RAG"
+        },
+        "files": {
+            "en": "docs/devhub-copilot-assistant.md",
+            "et": "docs/et/devhub-copilot-assistant.md",
+            "fi": "docs/fi/devhub-copilot-assistant.md",
+            "sv": "docs/sv/devhub-copilot-assistant.md",
+            "lv": "docs/lv/devhub-copilot-assistant.md",
+            "lt": "docs/lt/devhub-copilot-assistant.md"
+        }
+    },
+    {
+        "id": "spec-driven-development",
+        "rel": "docs/spec-driven-development-and-assembly-line.md",
+        "titles": {
+            "en": "📋 Spec-Driven Development (SDD), SCS & Assembly Line",
+            "et": "📋 Spetsifikatsioonipõhine arendus (SDD), SCS & Agentne konveier",
+            "fi": "📋 Spesifikaatiolähtöinen kehitys (SDD), SCS & Liukuhihna",
+            "sv": "📋 Specifikationsdriven utveckling (SDD), SCS & Monteringslinje",
+            "lv": "📋 Uz specifikācijām balstīta izstrāde (SDD), SCS & Konveijers",
+            "lt": "📋 Specifikacijomis grįstas vystymas (SDD), SCS & Konvejeris"
+        },
+        "files": {
+            "en": "docs/spec-driven-development-and-assembly-line.md",
+            "et": "docs/et/spec-driven-development-and-assembly-line.md",
+            "fi": "docs/fi/spec-driven-development-and-assembly-line.md",
+            "sv": "docs/sv/spec-driven-development-and-assembly-line.md",
+            "lv": "docs/lv/spec-driven-development-and-assembly-line.md",
+            "lt": "docs/lt/spec-driven-development-and-assembly-line.md"
+        }
+    },
+    {
+        "id": "spec-devops-portal-req",
+        "rel": "docs/specs/devops-portal/requirements.md",
+        "titles": {
+            "en": "📜 Spec: DevOps Portal — Requirements (Given/When/Then)",
+            "et": "📜 Spetsifikatsioon: DevOps Juhtpaneel — Nõuded",
+            "fi": "📜 Spesifikaatio: DevOps-portaali — Vaatimukset",
+            "sv": "📜 Specifikation: DevOps-portal — Krav",
+            "lv": "📜 Specifikācija: DevOps portāls — Prasības",
+            "lt": "📜 Specifikacija: DevOps portalas — Reikalavimai"
+        },
+        "files": {
+            "en": "docs/specs/devops-portal/requirements.md",
+            "et": "docs/specs/devops-portal/requirements.md",
+            "fi": "docs/specs/devops-portal/requirements.md",
+            "sv": "docs/specs/devops-portal/requirements.md",
+            "lv": "docs/specs/devops-portal/requirements.md",
+            "lt": "docs/specs/devops-portal/requirements.md"
+        }
+    },
+    {
+        "id": "spec-devops-portal-des",
+        "rel": "docs/specs/devops-portal/design.md",
+        "titles": {
+            "en": "🏛️ Spec: DevOps Portal — SCS Architecture & Design",
+            "et": "🏛️ Spetsifikatsioon: DevOps Juhtpaneel — Disain & SCS",
+            "fi": "🏛️ Spesifikaatio: DevOps-portaali — Arkkitehtuuri & SCS",
+            "sv": "🏛️ Specifikation: DevOps-portal — Design & SCS",
+            "lv": "🏛️ Specifikācija: DevOps portāls — Dizains & SCS",
+            "lt": "🏛️ Specifikacija: DevOps portalas — Architektūra & SCS"
+        },
+        "files": {
+            "en": "docs/specs/devops-portal/design.md",
+            "et": "docs/specs/devops-portal/design.md",
+            "fi": "docs/specs/devops-portal/design.md",
+            "sv": "docs/specs/devops-portal/design.md",
+            "lv": "docs/specs/devops-portal/design.md",
+            "lt": "docs/specs/devops-portal/design.md"
+        }
+    },
+    {
+        "id": "spec-devops-portal-tsk",
+        "rel": "docs/specs/devops-portal/tasks.md",
+        "titles": {
+            "en": "📋 Spec: DevOps Portal — Traceability Matrix & Tasks",
+            "et": "📋 Spetsifikatsioon: DevOps Juhtpaneel — Jälgitavus & Ülesanded",
+            "fi": "📋 Spesifikaatio: DevOps-portaali — Jäljitettävyys & Tehtävät",
+            "sv": "📋 Specifikation: DevOps-portal — Spårbarhet & Uppgifter",
+            "lv": "📋 Specifikācija: DevOps portāls — Izsekojamība & Uzdevumi",
+            "lt": "📋 Specifikacija: DevOps portalas — Atsekamumas ir Užduotys"
+        },
+        "files": {
+            "en": "docs/specs/devops-portal/tasks.md",
+            "et": "docs/specs/devops-portal/tasks.md",
+            "fi": "docs/specs/devops-portal/tasks.md",
+            "sv": "docs/specs/devops-portal/tasks.md",
+            "lv": "docs/specs/devops-portal/tasks.md",
+            "lt": "docs/specs/devops-portal/tasks.md"
+        }
+    },
+    {
+        "id": "spec-wallet-security-req",
+        "rel": "docs/specs/wallet-security/requirements.md",
+        "titles": {
+            "en": "🔐 Spec: Zero-Trust SEPS Wallet — Requirements",
+            "et": "🔐 Spetsifikatsioon: Zero-Trust SEPS Wallet — Nõuded",
+            "fi": "🔐 Spesifikaatio: Zero-Trust SEPS Wallet — Vaatimukset",
+            "sv": "🔐 Specifikation: Zero-Trust SEPS Wallet — Krav",
+            "lv": "🔐 Specifikācija: Zero-Trust SEPS Wallet — Prasības",
+            "lt": "🔐 Specifikacija: Zero-Trust SEPS Wallet — Reikalavimai"
+        },
+        "files": {
+            "en": "docs/specs/wallet-security/requirements.md",
+            "et": "docs/specs/wallet-security/requirements.md",
+            "fi": "docs/specs/wallet-security/requirements.md",
+            "sv": "docs/specs/wallet-security/requirements.md",
+            "lv": "docs/specs/wallet-security/requirements.md",
+            "lt": "docs/specs/wallet-security/requirements.md"
+        }
+    },
+    {
+        "id": "spec-wallet-security-des",
+        "rel": "docs/specs/wallet-security/design.md",
+        "titles": {
+            "en": "🏛️ Spec: Zero-Trust SEPS Wallet — Design & SCS",
+            "et": "🏛️ Spetsifikatsioon: Zero-Trust SEPS Wallet — Disain & SCS",
+            "fi": "🏛️ Spesifikaatio: Zero-Trust SEPS Wallet — Arkkitehtuuri",
+            "sv": "🏛️ Specifikation: Zero-Trust SEPS Wallet — Design",
+            "lv": "🏛️ Specifikācija: Zero-Trust SEPS Wallet — Dizains",
+            "lt": "🏛️ Specifikacija: Zero-Trust SEPS Wallet — Architektūra"
+        },
+        "files": {
+            "en": "docs/specs/wallet-security/design.md",
+            "et": "docs/specs/wallet-security/design.md",
+            "fi": "docs/specs/wallet-security/design.md",
+            "sv": "docs/specs/wallet-security/design.md",
+            "lv": "docs/specs/wallet-security/design.md",
+            "lt": "docs/specs/wallet-security/design.md"
+        }
+    },
+    {
+        "id": "spec-wallet-security-tsk",
+        "rel": "docs/specs/wallet-security/tasks.md",
+        "titles": {
+            "en": "📋 Spec: Zero-Trust SEPS Wallet — Traceability & Tasks",
+            "et": "📋 Spetsifikatsioon: Zero-Trust SEPS Wallet — Jälgitavus",
+            "fi": "📋 Spesifikaatio: Zero-Trust SEPS Wallet — Tehtävät",
+            "sv": "📋 Specifikation: Zero-Trust SEPS Wallet — Uppgifter",
+            "lv": "📋 Specifikācija: Zero-Trust SEPS Wallet — Uzdevumi",
+            "lt": "📋 Specifikacija: Zero-Trust SEPS Wallet — Užduotys"
+        },
+        "files": {
+            "en": "docs/specs/wallet-security/tasks.md",
+            "et": "docs/specs/wallet-security/tasks.md",
+            "fi": "docs/specs/wallet-security/tasks.md",
+            "sv": "docs/specs/wallet-security/tasks.md",
+            "lv": "docs/specs/wallet-security/tasks.md",
+            "lt": "docs/specs/wallet-security/tasks.md"
+        }
+    },
+    {
+        "id": "spec-golden-snapshots-req",
+        "rel": "docs/specs/golden-snapshots/requirements.md",
+        "titles": {
+            "en": "⚡ Spec: Golden Snapshots — Requirements",
+            "et": "⚡ Spetsifikatsioon: Kuldsete hetktõmmiste nõuded",
+            "fi": "⚡ Spesifikaatio: Kultaiset tilannevedokset — Vaatimukset",
+            "sv": "⚡ Specifikation: Gyllene ögonblicksbilder — Krav",
+            "lv": "⚡ Specifikācija: Zelta momentuzņēmumi — Prasības",
+            "lt": "⚡ Specifikacija: Auksinės momentinės kopijos — Reikalavimai"
+        },
+        "files": {
+            "en": "docs/specs/golden-snapshots/requirements.md",
+            "et": "docs/specs/golden-snapshots/requirements.md",
+            "fi": "docs/specs/golden-snapshots/requirements.md",
+            "sv": "docs/specs/golden-snapshots/requirements.md",
+            "lv": "docs/specs/golden-snapshots/requirements.md",
+            "lt": "docs/specs/golden-snapshots/requirements.md"
+        }
+    },
+    {
+        "id": "spec-golden-snapshots-des",
+        "rel": "docs/specs/golden-snapshots/design.md",
+        "titles": {
+            "en": "🏛️ Spec: Golden Snapshots — Architecture & Recovery",
+            "et": "🏛️ Spetsifikatsioon: Kuldsete hetktõmmiste disain",
+            "fi": "🏛️ Spesifikaatio: Kultaiset tilannevedokset — Arkkitehtuuri",
+            "sv": "🏛️ Specifikation: Gyllene ögonblicksbilder — Design",
+            "lv": "🏛️ Specifikācija: Zelta momentuzņēmumi — Dizains",
+            "lt": "🏛️ Specifikacija: Auksinės momentinės kopijos — Architektūra"
+        },
+        "files": {
+            "en": "docs/specs/golden-snapshots/design.md",
+            "et": "docs/specs/golden-snapshots/design.md",
+            "fi": "docs/specs/golden-snapshots/design.md",
+            "sv": "docs/specs/golden-snapshots/design.md",
+            "lv": "docs/specs/golden-snapshots/design.md",
+            "lt": "docs/specs/golden-snapshots/design.md"
+        }
+    },
+    {
+        "id": "spec-golden-snapshots-tsk",
+        "rel": "docs/specs/golden-snapshots/tasks.md",
+        "titles": {
+            "en": "📋 Spec: Golden Snapshots — Traceability & Tasks",
+            "et": "📋 Spetsifikatsioon: Kuldsete hetktõmmiste ülesanded",
+            "fi": "📋 Spesifikaatio: Kultaiset tilannevedokset — Tehtävät",
+            "sv": "📋 Specifikation: Gyllene ögonblicksbilder — Uppgifter",
+            "lv": "📋 Specifikācija: Zelta momentuzņēmumi — Uzdevumi",
+            "lt": "📋 Specifikacija: Auksinės momentinės kopijos — Užduotys"
+        },
+        "files": {
+            "en": "docs/specs/golden-snapshots/tasks.md",
+            "et": "docs/specs/golden-snapshots/tasks.md",
+            "fi": "docs/specs/golden-snapshots/tasks.md",
+            "sv": "docs/specs/golden-snapshots/tasks.md",
+            "lv": "docs/specs/golden-snapshots/tasks.md",
+            "lt": "docs/specs/golden-snapshots/tasks.md"
+        }
+    },
+    {
+        "id": "spec-blueprints-topology-req",
+        "rel": "docs/specs/blueprints-topology/requirements.md",
+        "titles": {
+            "en": "🏗️ Spec: Blueprints & Topology — Requirements",
+            "et": "🏗️ Spetsifikatsioon: Blueprintide & Topoloogia nõuded",
+            "fi": "🏗️ Spesifikaatio: Mallit & Topologia — Vaatimukset",
+            "sv": "🏗️ Specifikation: Ritningar & Topologi — Krav",
+            "lv": "🏗️ Specifikācija: Rasējumi & Topoloģija — Prasības",
+            "lt": "🏗️ Specifikacija: Brėžiniai ir Topologija — Reikalavimai"
+        },
+        "files": {
+            "en": "docs/specs/blueprints-topology/requirements.md",
+            "et": "docs/specs/blueprints-topology/requirements.md",
+            "fi": "docs/specs/blueprints-topology/requirements.md",
+            "sv": "docs/specs/blueprints-topology/requirements.md",
+            "lv": "docs/specs/blueprints-topology/requirements.md",
+            "lt": "docs/specs/blueprints-topology/requirements.md"
+        }
+    },
+    {
+        "id": "spec-blueprints-topology-des",
+        "rel": "docs/specs/blueprints-topology/design.md",
+        "titles": {
+            "en": "🏛️ Spec: Blueprints & Topology — Design & Ports",
+            "et": "🏛️ Spetsifikatsioon: Blueprintide & Topoloogia disain",
+            "fi": "🏛️ Spesifikaatio: Mallit & Topologia — Arkkitehtuuri",
+            "sv": "🏛️ Specifikation: Ritningar & Topologi — Design",
+            "lv": "🏛️ Specifikācija: Rasējumi & Topoloģija — Dizains",
+            "lt": "🏛️ Specifikacija: Brėžiniai ir Topologija — Architektūra"
+        },
+        "files": {
+            "en": "docs/specs/blueprints-topology/design.md",
+            "et": "docs/specs/blueprints-topology/design.md",
+            "fi": "docs/specs/blueprints-topology/design.md",
+            "sv": "docs/specs/blueprints-topology/design.md",
+            "lv": "docs/specs/blueprints-topology/design.md",
+            "lt": "docs/specs/blueprints-topology/design.md"
+        }
+    },
+    {
+        "id": "spec-blueprints-topology-tsk",
+        "rel": "docs/specs/blueprints-topology/tasks.md",
+        "titles": {
+            "en": "📋 Spec: Blueprints & Topology — Traceability & Tasks",
+            "et": "📋 Spetsifikatsioon: Blueprintide & Topoloogia ülesanded",
+            "fi": "📋 Spesifikaatio: Mallit & Topologia — Tehtävät",
+            "sv": "📋 Specifikation: Ritningar & Topologi — Uppgifter",
+            "lv": "📋 Specifikācija: Rasējumi & Topoloģija — Uzdevumi",
+            "lt": "📋 Specifikacija: Brėžiniai ir Topologija — Užduotys"
+        },
+        "files": {
+            "en": "docs/specs/blueprints-topology/tasks.md",
+            "et": "docs/specs/blueprints-topology/tasks.md",
+            "fi": "docs/specs/blueprints-topology/tasks.md",
+            "sv": "docs/specs/blueprints-topology/tasks.md",
+            "lv": "docs/specs/blueprints-topology/tasks.md",
+            "lt": "docs/specs/blueprints-topology/tasks.md"
+        }
+    },
+    {
+        "id": "agent-trail-latest",
+        "rel": ".agents/trails/2026-09-13-devops-ux-and-sdd-assembly-line.md",
+        "titles": {
+            "en": "🧠 Agent Session Trail: DevOps UX & SDD Assembly Line",
+            "et": "🧠 Agendi seansirada: DevOps UX & SDD konveier",
+            "fi": "🧠 Agentin istuntoloki: DevOps UX & SDD-liukuhihna",
+            "sv": "🧠 Agentens sessionsspår: DevOps UX & SDD-monteringslinje",
+            "lv": "🧠 Aģenta sesijas žurnāls: DevOps UX & SDD konveijers",
+            "lt": "🧠 Agento sesijos žurnalas: DevOps UX ir SDD konvejeris"
+        },
+        "files": {
+            "en": ".agents/trails/2026-09-13-devops-ux-and-sdd-assembly-line.md",
+            "et": ".agents/trails/2026-09-13-devops-ux-and-sdd-assembly-line.md",
+            "fi": ".agents/trails/2026-09-13-devops-ux-and-sdd-assembly-line.md",
+            "sv": ".agents/trails/2026-09-13-devops-ux-and-sdd-assembly-line.md",
+            "lv": ".agents/trails/2026-09-13-devops-ux-and-sdd-assembly-line.md",
+            "lt": ".agents/trails/2026-09-13-devops-ux-and-sdd-assembly-line.md"
+        }
     }
 ]
 
@@ -541,7 +841,7 @@ BP_CATALOG = {
         "lt": ("Publisher šablonų kūrėjas", "HTML5 noVNC darbalaukio konteineris prievade 6083: LibreOffice Writer 3 langų studija (pirminis SSoT), Evince live PDF peržiūra ir XML inspektorius. Pasirinktinai: MS Word per Wine.")
     },
     10: {
-        "cat": "gateway", "ram": "1 GB", "conts": "app-ords", "testing": True,
+        "cat": "gateway", "ram": "1 GB", "conts": "app-ords-remote", "testing": True,
         "en": ("Remote ORDS Gateway & Edge Proxy (Testing / In Progress)", "Standalone ORDS HTTP/HTTPS gateway container boots on port 8088/8448. Note: In testing & refinement — edge proxy routing and live connectivity to remote cloud/enterprise databases is under active development."),
         "et": ("Kaughaldus ORDS lüüs & edge proxy (testimisel / täiustamisel)", "Iseseisev ORDS HTTP/HTTPS konteiner käivitub pordil 8088/8448. Märkus: Testimisel ja täiustamisel — väline lüüs ja ühendus kauge pilve- või serveriandmebaasidega on aktiivses arenduses ja kontrollimisel."),
         "fi": ("Etä-ORDS-yhdyskäytävä & edge proxy (testauksessa / kehitteillä)", "Erillinen ORDS HTTP/HTTPS -kontti käynnistyy portissa 8088/8448. Huomautus: Testauksessa ja kehitteillä — yhdyskäytävän reititys etätietokantoihin on aktiivisessa kehityksessä."),
@@ -550,7 +850,7 @@ BP_CATALOG = {
         "lt": ("Nuotolinis ORDS šliuzas & edge proxy (testuojama / tobulinama)", "Atskiras ORDS HTTP/HTTPS konteineris pasileidžia prievade 8088/8448. Pastaba: Testuojama ir tobulinama — šliuzo maršrutizavimas į nuotolines duomenų bazes yra tobulinamas.")
     },
     11: {
-        "cat": "gateway", "ram": "3-4 GB", "conts": "app-publisher", "testing": True,
+        "cat": "gateway", "ram": "3-4 GB", "conts": "app-publisher-remote", "testing": True,
         "en": ("Remote Analytics Publisher Server (Testing / In Progress)", "Analytics Publisher container boots on port 9502. Note: In testing & refinement — document report generation against remote enterprise databases without local DB is under active development."),
         "et": ("Kaughaldus Analytics Publisher server (testimisel / täiustamisel)", "Analytics Publisher konteiner käivitub pordil 9502. Märkus: Testimisel ja täiustamisel — aruannete genereerimine kaugete ettevõtte andmebaaside vastu ilma kohaliku baasita on aktiivses arenduses ja kontrollimisel."),
         "fi": ("Etä-Analytics Publisher -palvelin (testauksessa / kehitteillä)", "Analytics Publisher -kontti käynnistyy portissa 9502. Huomautus: Testauksessa ja kehitteillä — raporttien generointi etätietokantoja vasten ilman paikallista DB:tä on kehitteillä."),
@@ -801,19 +1101,19 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                                                             'sv': 'Höga kostnader',
                                                                             'lv': 'Lieli zaudējumi',
                                                                             'lt': 'Didelės išlaidos'}},
-                                                              {   'icon': '🤖',
-                                                                  'title': {   'en': 'AI &amp; Agents Blocked',
-                                                                               'et': 'AI ja agendid blokeeritud',
-                                                                               'fi': 'Tekoäly ja agentit estetty',
-                                                                               'sv': 'AI och agenter blockerade',
-                                                                               'lv': 'AI un aģenti bloķēti',
-                                                                               'lt': 'AI ir agentai blokuojami'},
-                                                                  'sub': {   'en': 'No test sandbox',
-                                                                             'et': 'Puudub testliivakast',
-                                                                             'fi': 'Ei testiympäristöä',
-                                                                             'sv': 'Ingen testmiljö',
-                                                                             'lv': 'Nav testa smilškastes',
-                                                                             'lt': 'Nėra testų bazės'}}]},
+                                                             {   'icon': '🤖',
+                                                                 'title': {   'en': 'AI &amp; Agents Blocked',
+                                                                              'et': 'AI ja agendid blokeeritud',
+                                                                              'fi': 'Tekoäly ja agentit estetty',
+                                                                              'sv': 'AI och agenter blockerade',
+                                                                              'lv': 'AI un aģenti bloķēti',
+                                                                              'lt': 'AI ir agentai blokuojami'},
+                                                                 'sub': {   'en': 'No test sandbox',
+                                                                            'et': 'Puudub testliivakast',
+                                                                            'fi': 'Ei testiympäristöä',
+                                                                            'sv': 'Ingen testmiljö',
+                                                                            'lv': 'Nav testa smilškastes',
+                                                                            'lt': 'Nėra testų bazės'}}]},
                                      'good': {   'label': {   'en': '✅ ORACLE DEVOPS PLATFORM (INSTANT & AUTONOMOUS)',
                                                               'et': '✅ UUS PLATVORM (KOHENE JA AUTONOOMNE)',
                                                               'fi': '✅ UUSI ALUSTA (VÄLITÖN JA AUTONOMINEN)',
@@ -965,20 +1265,38 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                               'sistēmās.',
                                         'lt': 'Negalima laisvai pasirinkti versijų be ilgų laukimo eilių bilietų '
                                               'sistemose.'}},
-                         {   'icon': '🤖',
-                             'kpi': '100% ISOLATSIOON',
-                             'title': {   'en': 'Isolated Sandbox for VS Code, AI &amp; Autonomous Agents',
-                                          'et': 'VS Code, AI ja Agentide Isoleeritud Sandbox',
-                                          'fi': 'Eristetty Sandbox VS Code-, Tekoäly- ja Agenttitestaukseen',
-                                          'sv': 'Isolerad Sandbox för VS Code, AI &amp; Autonoma Agenter',
-                                          'lv': 'Izolēta smilškaste VS Code, AI un autonomiem aģentiem',
-                                          'lt': 'Izoliuota smėliadėžė VS Code, AI ir autonominiams agentams'},
-                             'desc': {   'en': 'AI coding agents (Claude, Cursor, Copilot, Devin) and automated test suites require a private, clean Oracle DB. The platform provisions an isolated local sandbox with ~15s rollback, enabling autonomous agents to run SQLcl migrations and tests without touching shared databases.',
-                                         'et': 'AI koodiassistentidel (Claude, Cursor, Copilot, Devin) ja autonoomsetel agentidel puudub ligipääs puhtale Oracle baasile. Platvorm tagab eraldatud lokaalse liivakasti ja ~15s kiirtaaste, võimaldades agentidel käivitada SQLcl migratsioone ja automaatteste teisi segamata.',
-                                         'fi': 'Tekoälyavustajat (Claude, Cursor, Copilot, Devin) ja autonomiset agentit tarvitsevat puhtaan Oracle-kannan. Alusta tarjoaa eristetyn paikallisen hiekkalaatikon ja ~15s palautuksen, jotta agentit voivat ajaa SQLcl-migraatioita ja testejä häiritsemättä muita.',
-                                         'sv': 'AI-assistenter (Claude, Cursor, Copilot, Devin) och autonoma agenter behöver en ren Oracle-databas. Plattformen tillhandahåller en isolerad lokal sandlåda och ~15s återställning så att agenter kan köra SQLcl-migreringar och automatiserade tester riskfritt.',
-                                         'lv': 'AI asistentiem (Claude, Cursor, Copilot, Devin) un autonomiem aģentiem nepieciešama tīra Oracle datubāze. Platforma nodrošina izolētu lokālu smilškasti un ~15s atjaunošanu, ļaujot aģentiem izpildīt SQLcl migrācijas un testus, netraucējot citus.',
-                                         'lt': 'AI asistentams (Claude, Cursor, Copilot, Devin) ir autonominiams agentams reikalinga švari Oracle duomenų bazė. Platforma suteikia izoliuotą vietinę smėliadėžę su ~15s atstatymu, leidžiančią agentams vykdyti SQLcl migracijas ir testus netrukdant kitiems.'}}],
+                        {   'icon': '🤖',
+                            'kpi': '100% ISOLATSIOON',
+                            'title': {   'en': 'Isolated Sandbox for VS Code, AI &amp; Autonomous Agents',
+                                         'et': 'VS Code, AI ja Agentide Isoleeritud Sandbox',
+                                         'fi': 'Eristetty Sandbox VS Code-, Tekoäly- ja Agenttitestaukseen',
+                                         'sv': 'Isolerad Sandbox för VS Code, AI &amp; Autonoma Agenter',
+                                         'lv': 'Izolēta smilškaste VS Code, AI un autonomiem aģentiem',
+                                         'lt': 'Izoliuota smėliadėžė VS Code, AI ir autonominiams agentams'},
+                            'desc': {   'en': 'AI coding agents (Claude, Cursor, Copilot, Devin) and automated test '
+                                              'suites require a private, clean Oracle DB. The platform provisions an '
+                                              'isolated local sandbox with ~15s rollback, enabling autonomous agents '
+                                              'to run SQLcl migrations and tests without touching shared databases.',
+                                        'et': 'AI koodiassistentidel (Claude, Cursor, Copilot, Devin) ja autonoomsetel '
+                                              'agentidel puudub ligipääs puhtale Oracle baasile. Platvorm tagab '
+                                              'eraldatud lokaalse liivakasti ja ~15s kiirtaaste, võimaldades agentidel '
+                                              'käivitada SQLcl migratsioone ja automaatteste teisi segamata.',
+                                        'fi': 'Tekoälyavustajat (Claude, Cursor, Copilot, Devin) ja autonomiset '
+                                              'agentit tarvitsevat puhtaan Oracle-kannan. Alusta tarjoaa eristetyn '
+                                              'paikallisen hiekkalaatikon ja ~15s palautuksen, jotta agentit voivat '
+                                              'ajaa SQLcl-migraatioita ja testejä häiritsemättä muita.',
+                                        'sv': 'AI-assistenter (Claude, Cursor, Copilot, Devin) och autonoma agenter '
+                                              'behöver en ren Oracle-databas. Plattformen tillhandahåller en isolerad '
+                                              'lokal sandlåda och ~15s återställning så att agenter kan köra '
+                                              'SQLcl-migreringar och automatiserade tester riskfritt.',
+                                        'lv': 'AI asistentiem (Claude, Cursor, Copilot, Devin) un autonomiem aģentiem '
+                                              'nepieciešama tīra Oracle datubāze. Platforma nodrošina izolētu lokālu '
+                                              'smilškasti un ~15s atjaunošanu, ļaujot aģentiem izpildīt SQLcl '
+                                              'migrācijas un testus, netraucējot citus.',
+                                        'lt': 'AI asistentams (Claude, Cursor, Copilot, Devin) ir autonominiams '
+                                              'agentams reikalinga švari Oracle duomenų bazė. Platforma suteikia '
+                                              'izoliuotą vietinę smėliadėžę su ~15s atstatymu, leidžiančią agentams '
+                                              'vykdyti SQLcl migracijas ir testus netrukdant kitiems.'}}],
            'speaker_notes': {   'en': '🎯 Core Takeaway: Bottlenecks in shared environments cost companies thousands of '
                                       'engineering hours every month.<br/>💡 Talking Points: Contrast the pain of '
                                       'shared central instances with personal isolated containers. Mention how a '
@@ -1011,12 +1329,214 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                       'Palyginkite bendrus serverius su izoliuotais konteineriais. Viena klaida '
                                       'sustabdo visos komandos darbą.<br/>⚠️ Ką akcentuoti: Priklausomybių pašalinimas '
                                       'tiesiogiai padidina pristatymo greitį.'}},
-    3: {   'badge': {   'en': '💼 SLIDE 3 / 13 • BUSINESS LEADER &amp; CIO',
-                        'et': '💼 SLAID 3 / 13 • ÄRIJUHT JA CIO',
-                        'fi': '💼 DIA 3 / 13 • LIIKETOIMINTAJOHTAJA &amp; CIO',
-                        'sv': '💼 BILD 3 / 13 • VERKSAMHETSLEDARE &amp; CIO',
-                        'lv': '💼 SLAIDS 3 / 13 • BIZNESA VADĪTĀJS UN CIO',
-                        'lt': '💼 SKAIDRĖ 3 / 13 • VERSLO VADOVAS IR CIO'},
+    3: {   'badge': {   'en': '🚀 SLIDE 3 / 13 • GET STARTED &amp; ROADMAP',
+                        'et': '🚀 SLAID 3 / 13 • ALUSTAMINE JA TEEKOND',
+                        'fi': '🚀 DIA 3 / 13 • ALOITUS &amp; POLKU',
+                        'sv': '🚀 BILD 3 / 13 • KOM IGÅNG &amp; KARTA',
+                        'lv': '🚀 SLAIDS 3 / 13 • SĀKUMS UN CEĻVEDIS',
+                        'lt': '🚀 SKAIDRĖ 3 / 13 • PRADŽIA IR PLANAS'},
+           'title': {   'en': 'How to Get Started Immediately',
+                        'et': 'Kuidas kohe alustada',
+                        'fi': 'Miten aloittaa heti',
+                        'sv': 'Hur du kommer igång direkt',
+                        'lv': 'Kā nekavējoties sākt darbu',
+                        'lt': 'Kaip pradėti nedelsiant'},
+           'lead': {   'en': '3 interactive execution steps, quick navigation to Dev Hub tools, and official Oracle '
+                             'documentation resources.',
+                       'et': '3 interaktiivset sammu, kiirnupud Dev Hubi sektsioonidesse ja ametlikud Oracle '
+                             'dokumentatsiooni veebilingid.',
+                       'fi': '3 interaktiivista vaihetta, pikanäppäimet Dev Hubiin ja viralliset '
+                             'Oracle-dokumentaatiolinkit.',
+                       'sv': '3 interaktiva steg, snabbnavigering till Dev Hub och officiella '
+                             'Oracle-dokumentationsresurser.',
+                       'lv': '3 interaktīvi soļi, ātrās saites uz Dev Hub rīkiem un oficiālās Oracle dokumentācijas '
+                             'saites.',
+                       'lt': '3 interaktyvūs žingsniai, greitas perėjimas į Dev Hub ir oficialios Oracle '
+                             'dokumentacijos nuorodos.'},
+           'diagram': {   'label': {   'en': '🚀 3-STEP INSTANT ONBOARDING ROADMAP',
+                                       'et': '🚀 3-SAMMULINE KIIRE KÄIVITUSTEEKOND',
+                                       'fi': '🚀 3-VAIHEINEN NOPEA KÄYNNISTYSKAAVIO',
+                                       'sv': '🚀 3-STEGS SNABBSTARTKARTA',
+                                       'lv': '🚀 3-SOĻU ĀTRĀS PALAIŠANAS CEĻVEDIS',
+                                       'lt': '🚀 3-ŽINGSNIŲ GREITO PALEIDIMO ŽEMĖLAPIS'},
+                          'nodes': [   {   'icon': '1️⃣',
+                                           'title': {   'en': '1. Launch Core',
+                                                        'et': '1. Käivita virn',
+                                                        'fi': '1. Käynnistä pino',
+                                                        'sv': '1. Starta stacken',
+                                                        'lv': '1. Palaist steku',
+                                                        'lt': '1. Paleisti sistemą'},
+                                           'sub': {   'en': './scripts/setup-all.sh',
+                                                      'et': './scripts/setup-all.sh',
+                                                      'fi': './scripts/setup-all.sh',
+                                                      'sv': './scripts/setup-all.sh',
+                                                      'lv': './scripts/setup-all.sh',
+                                                      'lt': './scripts/setup-all.sh'},
+                                           'type': 'default'},
+                                       {   'icon': '2️⃣',
+                                           'title': {   'en': '2. Toggle BP',
+                                                        'et': '2. Vali blueprint',
+                                                        'fi': '2. Valitse malli',
+                                                        'sv': '2. Byt ritning',
+                                                        'lv': '2. Pārslēgt rasējumu',
+                                                        'lt': '2. Pasirinkti brėžinį'},
+                                           'sub': {   'en': './scripts/module-toggle.sh',
+                                                      'et': './scripts/module-toggle.sh',
+                                                      'fi': './scripts/module-toggle.sh',
+                                                      'sv': './scripts/module-toggle.sh',
+                                                      'lv': './scripts/module-toggle.sh',
+                                                      'lt': './scripts/module-toggle.sh'},
+                                           'type': 'active'},
+                                       {   'icon': '3️⃣',
+                                           'title': {   'en': '3. Test Suite',
+                                                        'et': '3. Käivita testid',
+                                                        'fi': '3. Suorita testit',
+                                                        'sv': '3. Kör testsvit',
+                                                        'lv': '3. Palaist testus',
+                                                        'lt': '3. Paleisti testus'},
+                                           'sub': {   'en': './scripts/test-apex-suite.sh',
+                                                      'et': './scripts/test-apex-suite.sh',
+                                                      'fi': './scripts/test-apex-suite.sh',
+                                                      'sv': './scripts/test-apex-suite.sh',
+                                                      'lv': './scripts/test-apex-suite.sh',
+                                                      'lt': './scripts/test-apex-suite.sh'},
+                                           'type': 'accent'},
+                                       {   'icon': '🎉',
+                                           'title': {   'en': 'Ready to Build',
+                                                        'et': 'Valmis arenduseks',
+                                                        'fi': 'Valmis kehitykseen',
+                                                        'sv': 'Redo för utveckling',
+                                                        'lv': 'Gatavs darbam',
+                                                        'lt': 'Paruošta kūrimui'},
+                                           'sub': {   'en': 'Dev Hub at :8088',
+                                                      'et': 'Dev Hub pordil :8088',
+                                                      'fi': 'Dev Hub portissa :8088',
+                                                      'sv': 'Dev Hub på :8088',
+                                                      'lv': 'Dev Hub portā :8088',
+                                                      'lt': 'Dev Hub porte :8088'},
+                                           'type': 'success'}],
+                          'title': {   'en': 'Developer Quick-Start Milestones',
+                                       'et': 'Arendaja kiirstardi verstapostid',
+                                       'fi': 'Kehittäjän pikastartin virstanpylväät',
+                                       'sv': 'Milstolpar för snabbstart för utvecklare',
+                                       'lv': 'Izstrādātāja ātrā starta atskaites punkti',
+                                       'lt': 'Kūrėjo greito starto etapai'}},
+           'cards': [   {   'icon': '1️⃣',
+                            'kpi': 'SAMM 1',
+                            'title': {   'en': '1. Launch Core Stack',
+                                         'et': '1. Käivita keskkond',
+                                         'fi': '1. Käynnistä ympäristö',
+                                         'sv': '1. Starta miljön',
+                                         'lv': '1. Palaist vidi',
+                                         'lt': '1. Paleisti aplinką'},
+                            'desc': {   'en': 'Deploy core database &amp; ORDS:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
+                                        'et': 'Paigalda andmebaas ja teenused:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
+                                        'fi': 'Asenna tietokanta ja palvelut:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
+                                        'sv': 'Installera databas och tjänster:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
+                                        'lv': 'Uzstādīt datubāzi un pakalpojumus:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
+                                        'lt': 'Įdiegti duomenų bazę ir paslaugas:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/setup-all.sh</code>'},
+                            'command': './scripts/setup-all.sh'},
+                        {   'icon': '2️⃣',
+                            'kpi': 'SAMM 2',
+                            'title': {   'en': '2. Toggle Blueprint',
+                                         'et': '2. Vali blueprint',
+                                         'fi': '2. Valitse arkkitehtuurimalli',
+                                         'sv': '2. Byt arkitekturritning',
+                                         'lv': '2. Pārslēgt rasējumu',
+                                         'lt': '2. Pasirinkti brėžinį'},
+                            'desc': {   'en': 'Switch architecture stack:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
+                                        'et': 'Vali sobiv arhitektuuripinu:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
+                                        'fi': 'Vaihda kokoonpanoa:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
+                                        'sv': 'Växla konfiguration:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
+                                        'lv': 'Mainīt profilu:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
+                                        'lt': 'Pakeisti profilį:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/module-toggle.sh</code>'},
+                            'command': './scripts/module-toggle.sh'},
+                        {   'icon': '3️⃣',
+                            'kpi': 'SAMM 3',
+                            'title': {   'en': '3. Run Automated Tests',
+                                         'et': '3. Käivita testid',
+                                         'fi': '3. Suorita testit',
+                                         'sv': '3. Kör testsvit',
+                                         'lv': '3. Palaist testus',
+                                         'lt': '3. Paleisti testus'},
+                            'desc': {   'en': 'Automated end-to-end verification:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
+                                        'et': 'Täisautomaatne testimine:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
+                                        'fi': 'Täysautomaattinen testaus:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
+                                        'sv': 'Automatiserad verifiering:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
+                                        'lv': 'Automatizēta pārbaude:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
+                                        'lt': 'Automatizuotas testavimas:<br/><code '
+                                              'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>'},
+                            'command': './scripts/test-apex-suite.sh'}],
+           'oracle_links': [   {   'title': '📋 Spec-Driven Dev (SDD) & Assembly Line',
+                                   'url': 'docs/spec-driven-development-and-assembly-line.md'},
+                               {'title': 'Oracle 23ai Free DB', 'url': 'https://www.oracle.com/database/free/'},
+                               {   'title': 'Oracle APEX 26.1 & APEXlang',
+                                   'url': 'https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/'},
+                               {   'title': 'Oracle REST Data Services (ORDS)',
+                                   'url': 'https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/'},
+                               {   'title': 'Oracle SQLcl & Liquibase',
+                                   'url': 'https://docs.oracle.com/en/database/oracle/sql-developer-command-line/'},
+                               {   'title': 'Oracle Autonomous Database',
+                                   'url': 'https://docs.oracle.com/en/cloud/paas/autonomous-database/'},
+                               {   'title': 'Analytics Publisher & Forms',
+                                   'url': 'https://docs.oracle.com/en/middleware/'}],
+           'speaker_notes': {   'en': '🎯 Core Takeaway: Starting is completely frictionless: run setup-all.sh and you '
+                                      'have a production-grade stack running in minutes.<br/>💡 Talking Points: '
+                                      'Demonstrate the 1-click copy buttons. Invite audience to explore the Live '
+                                      'Services, Blueprints, and DevOps tabs right here in Dev Hub.<br/>⚠️ Key '
+                                      'Emphasis: Point out the curated official Oracle documentation links for teams '
+                                      'wanting to deep-dive into APEXlang, ORDS, or Autonomous Database.',
+                                'et': '🎯 Peamine sõnum: Alustamine on täiesti vaevatu: käivita setup-all.sh ja '
+                                      'enterprise-tasemel virn töötab minutitega.<br/>💡 Esitaja rääkimispunktid: '
+                                      'Demonstreeri 1-klikiga kopeeritavaid käske. Kutsu kuulajaid avama Teenuste, '
+                                      'Blueprintide ja DevOps vahekaarte otse siinsamas Dev Hubis.<br/>⚠️ Mida '
+                                      'rõhutada: Too välja ametlikud Oracle dokumentatsiooni veebilingid neile, kes '
+                                      'soovivad süveneda APEXlangi, ORDS-i või Autonomous Database võimalustesse.',
+                                'fi': '🎯 Pääviesti: Aloittaminen on vaivatonta: aja setup-all.sh ja yritystason pino '
+                                      'on pystyssä minuuteissa.<br/>💡 Puhujan muistiinpanot: Näytä komentojen '
+                                      '1-klikkauksen kopiointi. Ohjaa yleisö tutustumaan Palvelut- ja '
+                                      'Mallit-välilehtiin suoraan Dev Hubissa.<br/>⚠️ Tärkeä painotus: Korosta '
+                                      'virallisia Oracle-dokumentaatiolinkkejä niille, jotka haluavat perehtyä '
+                                      'APEXlangiin ja ORDS:iin tarkemmin.',
+                                'sv': '🎯 Huvudbudskap: Att komma igång är helt friktionsfritt: kör setup-all.sh och du '
+                                      'har en enterprise-stack på några minuter.<br/>💡 Talarpunkter: Demonstrera '
+                                      'snabbkopiering av kommandon. Bjud in åhörarna att utforska Tjänster, Ritningar '
+                                      'och DevOps-flikarna i Dev Hub.<br/>⚠️ Vad som bör betonas: Hänvisa till de '
+                                      'officiella Oracle-dokumentationslänkarna för fördjupning i APEXlang och ORDS.',
+                                'lv': '🎯 Galvenais vēstījums: Sākt ir ļoti vienkārši: palaidiet setup-all.sh un '
+                                      'uzņēmuma līmeņa steks darbojas minūtēs.<br/>💡 Runātāja piezīmes: Demonstrējiet '
+                                      'komandu kopēšanu ar vienu klikšķi. Aiciniet apskatīt Pakalpojumu un Rasējumu '
+                                      'sadaļas Dev Hub.<br/>⚠️ Ko uzsvērt: Norādiet uz oficiālajām Oracle '
+                                      'dokumentācijas saitēm tālākai APEXlang un ORDS apguvei.',
+                                'lt': '🎯 Pagrindinė žinutė: Pradėti yra itin paprasta: paleiskite setup-all.sh ir '
+                                      'įmonės lygio sistema veikia per kelias minutes.<br/>💡 Pranešėjo pastabos: '
+                                      'Pademonstruokite komandų kopijavimą vienu paspaudimu. Pakvieskite išbandyti '
+                                      'Paslaugų ir Brėžinių skiltis Dev Hub.<br/>⚠️ Ką akcentuoti: Nukreipkite į '
+                                      'oficialias Oracle dokumentacijos nuorodas išsamiam APEXlang ir ORDS '
+                                      'tyrinėjimui.'}},
+    4: {   'badge': {   'en': '💼 SLIDE 4 / 13 • BUSINESS LEADER &amp; CIO',
+                        'et': '💼 SLAID 4 / 13 • ÄRIJUHT JA CIO',
+                        'fi': '💼 DIA 4 / 13 • LIIKETOIMINTAJOHTAJA &amp; CIO',
+                        'sv': '💼 BILD 4 / 13 • VERKSAMHETSLEDARE &amp; CIO',
+                        'lv': '💼 SLAIDS 4 / 13 • BIZNESA VADĪTĀJS UN CIO',
+                        'lt': '💼 SKAIDRĖ 4 / 13 • VERSLO VADOVAS IR CIO'},
            'title': {   'en': '0€ Dev Licenses, Faster Time-to-Market &amp; Lower TCO',
                         'et': '0€ arenduslitsentsid, kiirem turulejõudmine ja madalam TCO',
                         'fi': '0€ kehityslisenssit, nopeampi markkinoilletulo ja alhaisempi TCO',
@@ -1195,12 +1715,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                       'sudaryti iki 40% Oracle biudžeto. Free DB visiškai panaikina šias '
                                       'išlaidas.<br/>⚠️ Ką akcentuoti: Prototipai ir vidiniai įrankiai gali būti '
                                       'paleidžiami gamyboje be didelių finansinių įsipareigojimų.'}},
-    4: {   'badge': {   'en': '👨\u200d💻 SLIDE 4 / 13 • SOFTWARE DEVELOPER',
-                        'et': '👨\u200d💻 SLAID 4 / 13 • TARKVARAARENDAJA JA ARHITEKT',
-                        'fi': '👨\u200d💻 DIA 4 / 13 • OHJELMISTOKEHTTÄJÄ &amp; ARKKITEHTI',
-                        'sv': '👨\u200d💻 BILD 4 / 13 • PROGRAMVARUUTVECKLARE &amp; ARKITEKT',
-                        'lv': '👨\u200d💻 SLAIDS 4 / 13 • PROGRAMMATŪRAS IZSTRĀDĀTĀJS',
-                        'lt': '👨\u200d💻 SKAIDRĖ 4 / 13 • PROGRAMINĖS ĮRANGOS KŪRĖJAS'},
+    5: {   'badge': {   'en': '👨\u200d💻 SLIDE 5 / 13 • SOFTWARE DEVELOPER',
+                        'et': '👨\u200d💻 SLAID 5 / 13 • TARKVARAARENDAJA JA ARHITEKT',
+                        'fi': '👨\u200d💻 DIA 5 / 13 • OHJELMISTOKEHTTÄJÄ &amp; ARKKITEHTI',
+                        'sv': '👨\u200d💻 BILD 5 / 13 • PROGRAMVARUUTVECKLARE &amp; ARKITEKT',
+                        'lv': '👨\u200d💻 SLAIDS 5 / 13 • PROGRAMMATŪRAS IZSTRĀDĀTĀJS',
+                        'lt': '👨\u200d💻 SKAIDRĖ 5 / 13 • PROGRAMINĖS ĮRANGOS KŪRĖJAS'},
            'title': {   'en': 'Developer Autonomy, Speed &amp; Declarative APEXlang',
                         'et': 'Arendaja autonoomia, kiirus ja deklaratiivne APEXlang',
                         'fi': 'Kehittäjän autonomia, nopeus ja deklaratiivinen APEXlang',
@@ -1376,12 +1896,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                       'programuotojai priima drąsesnius sprendimus. Pabrėžkite APEXlang Gite.<br/>⚠️ '
                                       'Ką akcentuoti: Darbas be interneto užtikrina nepertraukiamą produktyvumą bet '
                                       'kokiomis sąlygomis.'}},
-    5: {   'badge': {   'en': '🚀 SLIDE 5 / 13 • DEVOPS &amp; CI/CD',
-                        'et': '🚀 SLAID 5 / 13 • DEVOPS JA CI/CD INSENER',
-                        'fi': '🚀 DIA 5 / 13 • DEVOPS &amp; CI/CD -INSINÖÖRI',
-                        'sv': '🚀 BILD 5 / 13 • DEVOPS &amp; CI/CD-INGENJÖR',
-                        'lv': '🚀 SLAIDS 5 / 13 • DEVOPS UN CI/CD INŽENIERIS',
-                        'lt': '🚀 SKAIDRĖ 5 / 13 • DEVOPS IR CI/CD INŽINIERIUS'},
+    6: {   'badge': {   'en': '🚀 SLIDE 6 / 13 • DEVOPS &amp; CI/CD',
+                        'et': '🚀 SLAID 6 / 13 • DEVOPS JA CI/CD INSENER',
+                        'fi': '🚀 DIA 6 / 13 • DEVOPS &amp; CI/CD -INSINÖÖRI',
+                        'sv': '🚀 BILD 6 / 13 • DEVOPS &amp; CI/CD-INGENJÖR',
+                        'lv': '🚀 SLAIDS 6 / 13 • DEVOPS UN CI/CD INŽENIERIS',
+                        'lt': '🚀 SKAIDRĖ 6 / 13 • DEVOPS IR CI/CD INŽINIERIUS'},
            'title': {   'en': 'Everything-as-Code &amp; Predictable CI/CD Pipelines',
                         'et': 'Kõik on kood (Git) ja etteaimatavad CI/CD torud',
                         'fi': 'Kaikki koodina (Git) ja ennustettavat CI/CD-putket',
@@ -1493,12 +2013,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                       '(--rm), kuris automatiškai sunaikina testų konteinerius ir atmintį baigus '
                                       'darbą.<br/>⚠️ Ką akcentuoti: SQLcl Liquibase automatizuoja pakeitimų patikrą ir '
                                       'sulaiko klaidingas schemas prieš merge į pagrindinę šaką.'}},
-    6: {   'badge': {   'en': '🛡️ SLIDE 6 / 13 • DBA &amp; SECURITY OFFICER',
-                        'et': '🛡️ SLAID 6 / 13 • DBA JA TURVAJUHT',
-                        'fi': '🛡️ DIA 6 / 13 • DBA &amp; TIETOTURVAJOHTAJA',
-                        'sv': '🛡️ BILD 6 / 13 • DBA &amp; SÄKERHETSANSVARIG',
-                        'lv': '🛡️ SLAIDS 6 / 13 • DBA UN DROŠĪBAS VADĪTĀJS',
-                        'lt': '🛡️ SKAIDRĖ 6 / 13 • DBA IR SAUGUMO VADOVAS'},
+    7: {   'badge': {   'en': '🛡️ SLIDE 7 / 13 • DBA &amp; SECURITY OFFICER',
+                        'et': '🛡️ SLAID 7 / 13 • DBA JA TURVAJUHT',
+                        'fi': '🛡️ DIA 7 / 13 • DBA &amp; TIETOTURVAJOHTAJA',
+                        'sv': '🛡️ BILD 7 / 13 • DBA &amp; SÄKERHETSANSVARIG',
+                        'lv': '🛡️ SLAIDS 7 / 13 • DBA UN DROŠĪBAS VADĪTĀJS',
+                        'lt': '🛡️ SKAIDRĖ 7 / 13 • DBA IR SAUGUMO VADOVAS'},
            'title': {   'en': 'Zero-Trust Hardening, SEPS Wallet &amp; Production Parity',
                         'et': 'Zero-Trust turvalisus, SEPS Wallet ja toodangupariteet',
                         'fi': 'Zero-Trust-tietoturva, SEPS Wallet ja tuotantopariteetti',
@@ -1611,12 +2131,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                       'kompiuteriuose kelia didelę audito riziką. SEPS Wallet suteikia gamybos lygio '
                                       'saugumą vietiškai.<br/>⚠️ Ką akcentuoti: Slaptažodžių rotacija vyksta be '
                                       'prastovų ir be kodo keitimo, nes visur naudojami TNS aliasai.'}},
-    7: {   'badge': {   'en': '🧩 SLIDE 7 / 13 • MODULAR SERVICES',
-                        'et': '🧩 SLAID 7 / 13 • MODULAARSED TEENUSED',
-                        'fi': '🧩 DIA 7 / 13 • MODULAARISET PALVELUT',
-                        'sv': '🧩 BILD 7 / 13 • MODULÄRA TJÄNSTER',
-                        'lv': '🧩 SLAIDS 7 / 13 • MODULĀRI PAKALPOJUMI',
-                        'lt': '🧩 SKAIDRĖ 7 / 13 • MODULINĖS PASLAUGOS'},
+    8: {   'badge': {   'en': '🧩 SLIDE 8 / 13 • MODULAR SERVICES',
+                        'et': '🧩 SLAID 8 / 13 • MODULAARSED TEENUSED',
+                        'fi': '🧩 DIA 8 / 13 • MODULAARISET PALVELUT',
+                        'sv': '🧩 BILD 8 / 13 • MODULÄRA TJÄNSTER',
+                        'lv': '🧩 SLAIDS 8 / 13 • MODULĀRI PAKALPOJUMI',
+                        'lt': '🧩 SKAIDRĖ 8 / 13 • MODULINĖS PASLAUGOS'},
            'title': {   'en': '8 Modular Services Across 4 Architecture Tiers',
                         'et': '8 modulaarset teenust neljas arhitektuurikihis',
                         'fi': '8 modulaarista palvelua neljässä arkkitehtuurikerroksessa',
@@ -1721,12 +2241,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                          'sv': 'Nivå 4: Web-IDE &amp; fjärrgateways (OCI)',
                                          'lv': 'Slānis 4: Web-IDE un attālās vārtejas / OCI tilts',
                                          'lt': 'Lygmuo 4: Web-IDE ir nuotoliniai vartai / OCI tiltas'},
-                            'desc': {   'en': '<b>Web-IDE:</b> VS Code, Python, Antigravity AI, local CI '
-                                              'emulation for locked-down corporate PCs.<br/><b>Remote Gateways:</b> '
-                                              'Direct mTLS bridge to OCI Autonomous Database.',
-                                        'et': '<b>Web-IDE:</b> VS Code, Python, Antigravity AI ja CI '
-                                              'emulatsioon rangetele töökohapoliitikatele.<br/><b>Kaugväravad:</b> '
-                                              'Turvaline mTLS sild OCI Autonomous Database pilve.',
+                            'desc': {   'en': '<b>Web-IDE:</b> VS Code, Python, Antigravity AI, local CI emulation for '
+                                              'locked-down corporate PCs.<br/><b>Remote Gateways:</b> Direct mTLS '
+                                              'bridge to OCI Autonomous Database.',
+                                        'et': '<b>Web-IDE:</b> VS Code, Python, Antigravity AI ja CI emulatsioon '
+                                              'rangetele töökohapoliitikatele.<br/><b>Kaugväravad:</b> Turvaline mTLS '
+                                              'sild OCI Autonomous Database pilve.',
                                         'fi': '<b>Web-IDE:</b> VS Code, Python, Antigravity AI ja CI-emulaatio '
                                               'tiukkoihin työpaikkakäytäntöihin.<br/><b>Etäyhdyskäytävät:</b> Suora '
                                               'mTLS-silta OCI Autonomous Database -pilveen.',
@@ -1776,12 +2296,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                       'problemą, kai įmonės kompiuteriuose draudžiama diegti programas.<br/>⚠️ Ką '
                                       'akcentuoti: Paminėkite, kad Publisher Designer ir Antigravity AI šiuo metu yra '
                                       'bandomojoje fazėje.'}},
-    8: {   'badge': {   'en': '🐳 SLIDE 8 / 13 • PODMAN &amp; HYBRID CLOUD',
-                        'et': '🐳 SLAID 8 / 13 • PODMAN JA HÜBRIIDPILV',
-                        'fi': '🐳 DIA 8 / 13 • PODMAN &amp; HYBRIDI-PILVI',
-                        'sv': '🐳 BILD 8 / 13 • PODMAN &amp; HYBRIDMOLN',
-                        'lv': '🐳 SLAIDS 8 / 13 • PODMAN UN HIBRĪDA MĀKONIS',
-                        'lt': '🐳 SKAIDRĖ 8 / 13 • PODMAN IR HIBRIDINIS DEBESIS'},
+    9: {   'badge': {   'en': '🐳 SLIDE 9 / 13 • PODMAN &amp; HYBRID CLOUD',
+                        'et': '🐳 SLAID 9 / 13 • PODMAN JA HÜBRIIDPILV',
+                        'fi': '🐳 DIA 9 / 13 • PODMAN &amp; HYBRIDI-PILVI',
+                        'sv': '🐳 BILD 9 / 13 • PODMAN &amp; HYBRIDMOLN',
+                        'lv': '🐳 SLAIDS 9 / 13 • PODMAN UN HIBRĪDA MĀKONIS',
+                        'lt': '🐳 SKAIDRĖ 9 / 13 • PODMAN IR HIBRIDINIS DEBESIS'},
            'title': {   'en': 'Podman Infrastructure Cockpit &amp; Hybrid Cloud Migration',
                         'et': 'Podman taristu juhtimine ja hübriidne pilvemigratsioon',
                         'fi': 'Podman-infrastruktuurin hallinta ja hybridi-pilvimigraatio',
@@ -1893,130 +2413,130 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                       'Pabrėžkite naują Podman skiltį Dev Hub, kuri leidžia valdyti konteinerius be '
                                       'komandinės eilutės.<br/>⚠️ Ką akcentuoti: Rootless konteineriai atitinka '
                                       'griežčiausius saugumo reikalavimus, kur Docker daemon yra draudžiamas.'}},
-    9: {   'badge': {   'en': '🔐 SLIDE 9 / 13 • ZERO-TRUST ARCHITECTURE',
-                        'et': '🔐 SLAID 9 / 13 • ZERO-TRUST ARHITEKTUUR',
-                        'fi': '🔐 DIA 9 / 13 • ZERO-TRUST -ARKKITEHTUURI',
-                        'sv': '🔐 BILD 9 / 13 • ZERO-TRUST-ARKITEKTUR',
-                        'lv': '🔐 SLAIDS 9 / 13 • ZERO-TRUST ARHITEKTŪRA',
-                        'lt': '🔐 SKAIDRĖ 9 / 13 • ZERO-TRUST ARCHITEKTŪRA'},
-           'title': {   'en': 'Oracle SEPS Wallet &amp; Passwordless Connectivity',
-                        'et': 'Oracle SEPS Wallet ja paroolivaba autentimine',
-                        'fi': 'Oracle SEPS Wallet ja salasanaton yhteys',
-                        'sv': 'Oracle SEPS Wallet och lösenordsfri anslutning',
-                        'lv': 'Oracle SEPS Wallet un bezparoļu autentifikācija',
-                        'lt': 'Oracle SEPS Wallet ir beslaptažodis prisijungimas'},
-           'lead': {   'en': 'Hardware-grade credential isolation: AES-256 encrypted auto-login wallet with zero '
-                             'plaintext on disk.',
-                       'et': 'Paroolivaba autentimine: AES-256 krüpteeritud auto-login wallet ja null parooli failides '
-                             'või koodis.',
-                       'fi': 'Yritystason salasanasuojaus: AES-256-salattu auto-login wallet ilman selkokielisiä '
-                             'salasanoja levyllä.',
-                       'sv': 'Hårdvaruklassad isolering av autentiseringsuppgifter: AES-256-krypterad auto-login '
-                             'wallet utan klartext på disk.',
-                       'lv': 'Augstākā līmeņa noslēpumu izolācija: AES-256 šifrēts auto-login maks bez atklāta teksta '
-                             'failiem diskā.',
-                       'lt': 'Aukščiausio lygio duomenų izoliacija: AES-256 šifruota auto-login piniginė be atviro '
-                             'teksto diske.'},
-           'cards': [   {   'icon': '🛡️',
-                            'kpi': 'AES-256',
-                            'title': {   'en': 'Auto-Login Wallet (cwallet.sso)',
-                                         'et': 'Auto-Login Wallet (cwallet.sso)',
-                                         'fi': 'Auto-Login Wallet (cwallet.sso)',
-                                         'sv': 'Auto-Login Wallet (cwallet.sso)',
-                                         'lv': 'Auto-Login maks (cwallet.sso)',
-                                         'lt': 'Auto-Login piniginė (cwallet.sso)'},
-                            'desc': {   'en': 'CLI and apps connect securely using TNS alias: <code>sql '
-                                              '/@DB_ALISE_DEV</code>. Just-In-Time AES-256 in-memory decryption only.',
-                                        'et': 'Kõik tööriistad kasutavad TNS aliast: <code>sql /@DB_ALISE_DEV</code>. '
-                                              'Parool dekrüpteeritakse automaatselt ainult mälus.',
-                                        'fi': 'Yhteydet muodostetaan suojatusti TNS-aliaksella: <code>sql '
-                                              '/@DB_ALISE_DEV</code>. Vain muistissa tapahtuva AES-256-purku.',
-                                        'sv': 'Verktyg ansluter säkert via TNS-alias: <code>sql /@DB_ALISE_DEV</code>. '
-                                              'AES-256-dekryptering sker enbart i RAM.',
-                                        'lv': 'Rīki pieslēdzas droši ar TNS aizstājējvārdu: <code>sql '
-                                              '/@DB_ALISE_DEV</code>. AES-256 atšifrēšana notiek tikai operatīvajā '
-                                              'atmiņā.',
-                                        'lt': 'Įrankiai jungiasi saugiai naudodami TNS aliasą: <code>sql '
-                                              '/@DB_ALISE_DEV</code>. AES-256 iššifravimas atliekamas tik RAM '
-                                              'atmintyje.'}},
-                        {   'icon': '🧠',
-                            'kpi': '0 PLAIN DISK',
-                            'title': {   'en': 'RAM-Only Secret Storage',
-                                         'et': 'Mälupõhine saladuste hoidla (tmpfs)',
-                                         'fi': 'Vain muistissa säilytettävät salaisuudet',
-                                         'sv': 'Endast i RAM-minne (tmpfs)',
-                                         'lv': 'Tikai atmiņā glabāti noslēpumi',
-                                         'lt': 'Tik atmintyje saugomos paslaptys'},
-                            'desc': {   'en': 'Administrator credentials mounted via Podman Secrets directly into '
-                                              'container tmpfs memory; never written to storage.',
-                                        'et': 'Administraatorite paroolid süstitakse Podman Secrets kaudu otse '
-                                              'konteineri mällu (tmpfs), mitte kunagi failina kettale.',
-                                        'fi': 'Ylläpitäjän salasanat liitetään Podman Secretsin kautta suoraan kontin '
-                                              'tmpfs-muistiin, ei koskaan levylle.',
-                                        'sv': 'Administratörsuppgifter monteras via Podman Secrets direkt i '
-                                              'containerns tmpfs-minne, aldrig till disk.',
-                                        'lv': 'Paroles tiek ievadītas ar Podman Secrets tieši konteinera tmpfs atmiņā, '
-                                              'nekad diskā.',
-                                        'lt': 'Administratoriaus slaptažodžiai perduodami per Podman Secrets tiesiai į '
-                                              'tmpfs atmintį, niekada ne į diską.'}},
-                        {   'icon': '🔄',
-                            'kpi': 'ZERO DOWNTIME',
-                            'title': {   'en': 'Zero-Downtime Credential Rotation',
-                                         'et': 'Paroolide rotatsioon ilma seisakuta',
-                                         'fi': 'Katkoton salasanarotaatio',
-                                         'sv': 'Lösenordsrotation utan avbrott',
-                                         'lv': 'Paroļu rotācija bez dīkstāves',
-                                         'lt': 'Slaptažodžių rotacija be prastovų'},
-                            'desc': {   'en': 'Rotate passwords across database and SEPS Wallet simultaneously with '
-                                              '<code>./scripts/rotate-password.sh</code>.',
-                                        'et': 'Uuenda andmebaasi ja Walleti paroole samaaegselt ühe käsuga '
-                                              '<code>./scripts/rotate-password.sh</code>.',
-                                        'fi': 'Päivitä salasanat tietokantaan ja SEPS Walletiin samanaikaisesti '
-                                              'komennolla <code>./scripts/rotate-password.sh</code>.',
-                                        'sv': 'Rotera lösenord i databas och SEPS Wallet synkront med '
-                                              '<code>./scripts/rotate-password.sh</code>.',
-                                        'lv': 'Atjauniniet paroles datubāzē un makā reizē ar '
-                                              '<code>./scripts/rotate-password.sh</code>.',
-                                        'lt': 'Atnaujinkite slaptažodžius DB ir SEPS Wallet vienu metu su '
-                                              '<code>./scripts/rotate-password.sh</code>.'}}],
-           'speaker_notes': {   'en': '🎯 Core Takeaway: Zero passwords in source code, scripts, environment variables, '
-                                      'or disk files — period.<br/>💡 Talking Points: Walk through the 4-step diagram: '
-                                      'the developer never knows or types the password; SQLcl queries cwallet.sso '
-                                      'directly into RAM.<br/>⚠️ Key Emphasis: Mention that if an attacker copies the '
-                                      'code repository or gains terminal access, there are no plaintext passwords to '
-                                      'steal.',
-                                'et': '🎯 Peamine sõnum: Null parooli lähtekoodis, skriptides, keskkonnamuutujates ega '
-                                      'kettal – eranditeta.<br/>💡 Esitaja rääkimispunktid: Selgita 4-sammulist '
-                                      'diagrammi: arendaja ei pea teadma ega sisestama salasõna; SQLcl loeb '
-                                      'cwallet.sso-st andmed otse RAM-i.<br/>⚠️ Mida rõhutada: Isegi kui keegi '
-                                      'kopeerib koodirepo või saab ligipääsu kettale, pole seal ühtegi parooli, mida '
-                                      'varastada.',
-                                'fi': '🎯 Pääviesti: Nolla salasanaa lähdekoodissa, skripteissä tai levyllä – '
-                                      'poikkeuksetta.<br/>💡 Puhujan muistiinpanot: Käy läpi 4-vaiheinen kaavio: '
-                                      'kehittäjän ei tarvitse tietää salasanoja; SQLcl lukee tiedot suoraan '
-                                      'RAM-muistiin.<br/>⚠️ Tärkeä painotus: Vaikka repositorio vuotaisi, koodissa ei '
-                                      'ole ainoatakaan selkokielistä salasanaa.',
-                                'sv': '🎯 Huvudbudskap: Noll lösenord i källkod, skript eller filer på disk – utan '
-                                      'undantag.<br/>💡 Talarpunkter: Gå igenom 4-stegsdiagrammet: utvecklaren behöver '
-                                      'aldrig skriva lösenord; SQLcl hämtar uppgifterna direkt till RAM.<br/>⚠️ Vad '
-                                      'som bör betonas: Även om källkod eller filer kopieras finns det inga '
-                                      'klartextlösenord att stjäla.',
-                                'lv': '🎯 Galvenais vēstījums: Nulle paroļu kodā, skriptos vai diska failos – bez '
-                                      'izņēmumiem.<br/>💡 Runātāja piezīmes: Paskaidrojiet 4 soļu diagrammu: '
-                                      'programmētājs nezina paroles; SQLcl tās nolasa tieši operatīvajā atmiņā.<br/>⚠️ '
-                                      'Ko uzsvērt: Pat ja koda repozitorijs tiek nokopēts, tajā nav nevienas atklāta '
-                                      'teksta paroles.',
-                                'lt': '🎯 Pagrindinė žinutė: Jokių slaptažodžių kode, skriptuose ar diske – be jokių '
-                                      'išimčių.<br/>💡 Pranešėjo pastabos: Paaiškinkite 4 žingsnių diagramą: '
-                                      'programuotojas neveda slaptažodžio; SQLcl jį nuskaito tiesiai į RAM.<br/>⚠️ Ką '
-                                      'akcentuoti: Net jei repozitorija būtų nukopijuota, joje nėra jokių atviro '
-                                      'teksto slaptažodžių.'}},
-    10: {   'badge': {   'en': '⚡ SLIDE 10 / 13 • DISASTER RECOVERY',
-                         'et': '⚡ SLAID 10 / 13 • KIIRTAASTE JA TURVALISUS',
-                         'fi': '⚡ DIA 10 / 13 • KATASTROFIPALAUTUS',
-                         'sv': '⚡ BILD 10 / 13 • KATASTROFÅTERSTÄLLNING',
-                         'lv': '⚡ SLAIDS 10 / 13 • AVĀRIJAS ATJAUNOŠANA',
-                         'lt': '⚡ SKAIDRĖ 10 / 13 • AVARINIS ATKŪRIMAS'},
+    10: {   'badge': {   'en': '🔐 SLIDE 10 / 13 • ZERO-TRUST ARCHITECTURE',
+                         'et': '🔐 SLAID 10 / 13 • ZERO-TRUST ARHITEKTUUR',
+                         'fi': '🔐 DIA 10 / 13 • ZERO-TRUST -ARKKITEHTUURI',
+                         'sv': '🔐 BILD 10 / 13 • ZERO-TRUST-ARKITEKTUR',
+                         'lv': '🔐 SLAIDS 10 / 13 • ZERO-TRUST ARHITEKTŪRA',
+                         'lt': '🔐 SKAIDRĖ 10 / 13 • ZERO-TRUST ARCHITEKTŪRA'},
+            'title': {   'en': 'Oracle SEPS Wallet &amp; Passwordless Connectivity',
+                         'et': 'Oracle SEPS Wallet ja paroolivaba autentimine',
+                         'fi': 'Oracle SEPS Wallet ja salasanaton yhteys',
+                         'sv': 'Oracle SEPS Wallet och lösenordsfri anslutning',
+                         'lv': 'Oracle SEPS Wallet un bezparoļu autentifikācija',
+                         'lt': 'Oracle SEPS Wallet ir beslaptažodis prisijungimas'},
+            'lead': {   'en': 'Hardware-grade credential isolation: AES-256 encrypted auto-login wallet with zero '
+                              'plaintext on disk.',
+                        'et': 'Paroolivaba autentimine: AES-256 krüpteeritud auto-login wallet ja null parooli '
+                              'failides või koodis.',
+                        'fi': 'Yritystason salasanasuojaus: AES-256-salattu auto-login wallet ilman selkokielisiä '
+                              'salasanoja levyllä.',
+                        'sv': 'Hårdvaruklassad isolering av autentiseringsuppgifter: AES-256-krypterad auto-login '
+                              'wallet utan klartext på disk.',
+                        'lv': 'Augstākā līmeņa noslēpumu izolācija: AES-256 šifrēts auto-login maks bez atklāta teksta '
+                              'failiem diskā.',
+                        'lt': 'Aukščiausio lygio duomenų izoliacija: AES-256 šifruota auto-login piniginė be atviro '
+                              'teksto diske.'},
+            'cards': [   {   'icon': '🛡️',
+                             'kpi': 'AES-256',
+                             'title': {   'en': 'Auto-Login Wallet (cwallet.sso)',
+                                          'et': 'Auto-Login Wallet (cwallet.sso)',
+                                          'fi': 'Auto-Login Wallet (cwallet.sso)',
+                                          'sv': 'Auto-Login Wallet (cwallet.sso)',
+                                          'lv': 'Auto-Login maks (cwallet.sso)',
+                                          'lt': 'Auto-Login piniginė (cwallet.sso)'},
+                             'desc': {   'en': 'CLI and apps connect securely using TNS alias: <code>sql '
+                                               '/@DB_ALISE_DEV</code>. Just-In-Time AES-256 in-memory decryption only.',
+                                         'et': 'Kõik tööriistad kasutavad TNS aliast: <code>sql /@DB_ALISE_DEV</code>. '
+                                               'Parool dekrüpteeritakse automaatselt ainult mälus.',
+                                         'fi': 'Yhteydet muodostetaan suojatusti TNS-aliaksella: <code>sql '
+                                               '/@DB_ALISE_DEV</code>. Vain muistissa tapahtuva AES-256-purku.',
+                                         'sv': 'Verktyg ansluter säkert via TNS-alias: <code>sql '
+                                               '/@DB_ALISE_DEV</code>. AES-256-dekryptering sker enbart i RAM.',
+                                         'lv': 'Rīki pieslēdzas droši ar TNS aizstājējvārdu: <code>sql '
+                                               '/@DB_ALISE_DEV</code>. AES-256 atšifrēšana notiek tikai operatīvajā '
+                                               'atmiņā.',
+                                         'lt': 'Įrankiai jungiasi saugiai naudodami TNS aliasą: <code>sql '
+                                               '/@DB_ALISE_DEV</code>. AES-256 iššifravimas atliekamas tik RAM '
+                                               'atmintyje.'}},
+                         {   'icon': '🧠',
+                             'kpi': '0 PLAIN DISK',
+                             'title': {   'en': 'RAM-Only Secret Storage',
+                                          'et': 'Mälupõhine saladuste hoidla (tmpfs)',
+                                          'fi': 'Vain muistissa säilytettävät salaisuudet',
+                                          'sv': 'Endast i RAM-minne (tmpfs)',
+                                          'lv': 'Tikai atmiņā glabāti noslēpumi',
+                                          'lt': 'Tik atmintyje saugomos paslaptys'},
+                             'desc': {   'en': 'Administrator credentials mounted via Podman Secrets directly into '
+                                               'container tmpfs memory; never written to storage.',
+                                         'et': 'Administraatorite paroolid süstitakse Podman Secrets kaudu otse '
+                                               'konteineri mällu (tmpfs), mitte kunagi failina kettale.',
+                                         'fi': 'Ylläpitäjän salasanat liitetään Podman Secretsin kautta suoraan kontin '
+                                               'tmpfs-muistiin, ei koskaan levylle.',
+                                         'sv': 'Administratörsuppgifter monteras via Podman Secrets direkt i '
+                                               'containerns tmpfs-minne, aldrig till disk.',
+                                         'lv': 'Paroles tiek ievadītas ar Podman Secrets tieši konteinera tmpfs '
+                                               'atmiņā, nekad diskā.',
+                                         'lt': 'Administratoriaus slaptažodžiai perduodami per Podman Secrets tiesiai '
+                                               'į tmpfs atmintį, niekada ne į diską.'}},
+                         {   'icon': '🔄',
+                             'kpi': 'ZERO DOWNTIME',
+                             'title': {   'en': 'Zero-Downtime Credential Rotation',
+                                          'et': 'Paroolide rotatsioon ilma seisakuta',
+                                          'fi': 'Katkoton salasanarotaatio',
+                                          'sv': 'Lösenordsrotation utan avbrott',
+                                          'lv': 'Paroļu rotācija bez dīkstāves',
+                                          'lt': 'Slaptažodžių rotacija be prastovų'},
+                             'desc': {   'en': 'Rotate passwords across database and SEPS Wallet simultaneously with '
+                                               '<code>./scripts/rotate-password.sh</code>.',
+                                         'et': 'Uuenda andmebaasi ja Walleti paroole samaaegselt ühe käsuga '
+                                               '<code>./scripts/rotate-password.sh</code>.',
+                                         'fi': 'Päivitä salasanat tietokantaan ja SEPS Walletiin samanaikaisesti '
+                                               'komennolla <code>./scripts/rotate-password.sh</code>.',
+                                         'sv': 'Rotera lösenord i databas och SEPS Wallet synkront med '
+                                               '<code>./scripts/rotate-password.sh</code>.',
+                                         'lv': 'Atjauniniet paroles datubāzē un makā reizē ar '
+                                               '<code>./scripts/rotate-password.sh</code>.',
+                                         'lt': 'Atnaujinkite slaptažodžius DB ir SEPS Wallet vienu metu su '
+                                               '<code>./scripts/rotate-password.sh</code>.'}}],
+            'speaker_notes': {   'en': '🎯 Core Takeaway: Zero passwords in source code, scripts, environment '
+                                       'variables, or disk files — period.<br/>💡 Talking Points: Walk through the '
+                                       '4-step diagram: the developer never knows or types the password; SQLcl queries '
+                                       'cwallet.sso directly into RAM.<br/>⚠️ Key Emphasis: Mention that if an '
+                                       'attacker copies the code repository or gains terminal access, there are no '
+                                       'plaintext passwords to steal.',
+                                 'et': '🎯 Peamine sõnum: Null parooli lähtekoodis, skriptides, keskkonnamuutujates ega '
+                                       'kettal – eranditeta.<br/>💡 Esitaja rääkimispunktid: Selgita 4-sammulist '
+                                       'diagrammi: arendaja ei pea teadma ega sisestama salasõna; SQLcl loeb '
+                                       'cwallet.sso-st andmed otse RAM-i.<br/>⚠️ Mida rõhutada: Isegi kui keegi '
+                                       'kopeerib koodirepo või saab ligipääsu kettale, pole seal ühtegi parooli, mida '
+                                       'varastada.',
+                                 'fi': '🎯 Pääviesti: Nolla salasanaa lähdekoodissa, skripteissä tai levyllä – '
+                                       'poikkeuksetta.<br/>💡 Puhujan muistiinpanot: Käy läpi 4-vaiheinen kaavio: '
+                                       'kehittäjän ei tarvitse tietää salasanoja; SQLcl lukee tiedot suoraan '
+                                       'RAM-muistiin.<br/>⚠️ Tärkeä painotus: Vaikka repositorio vuotaisi, koodissa ei '
+                                       'ole ainoatakaan selkokielistä salasanaa.',
+                                 'sv': '🎯 Huvudbudskap: Noll lösenord i källkod, skript eller filer på disk – utan '
+                                       'undantag.<br/>💡 Talarpunkter: Gå igenom 4-stegsdiagrammet: utvecklaren behöver '
+                                       'aldrig skriva lösenord; SQLcl hämtar uppgifterna direkt till RAM.<br/>⚠️ Vad '
+                                       'som bör betonas: Även om källkod eller filer kopieras finns det inga '
+                                       'klartextlösenord att stjäla.',
+                                 'lv': '🎯 Galvenais vēstījums: Nulle paroļu kodā, skriptos vai diska failos – bez '
+                                       'izņēmumiem.<br/>💡 Runātāja piezīmes: Paskaidrojiet 4 soļu diagrammu: '
+                                       'programmētājs nezina paroles; SQLcl tās nolasa tieši operatīvajā '
+                                       'atmiņā.<br/>⚠️ Ko uzsvērt: Pat ja koda repozitorijs tiek nokopēts, tajā nav '
+                                       'nevienas atklāta teksta paroles.',
+                                 'lt': '🎯 Pagrindinė žinutė: Jokių slaptažodžių kode, skriptuose ar diske – be jokių '
+                                       'išimčių.<br/>💡 Pranešėjo pastabos: Paaiškinkite 4 žingsnių diagramą: '
+                                       'programuotojas neveda slaptažodžio; SQLcl jį nuskaito tiesiai į RAM.<br/>⚠️ Ką '
+                                       'akcentuoti: Net jei repozitorija būtų nukopijuota, joje nėra jokių atviro '
+                                       'teksto slaptažodžių.'}},
+    11: {   'badge': {   'en': '⚡ SLIDE 11 / 13 • DISASTER RECOVERY',
+                         'et': '⚡ SLAID 11 / 13 • KIIRTAASTE JA TURVALISUS',
+                         'fi': '⚡ DIA 11 / 13 • KATASTROFIPALAUTUS',
+                         'sv': '⚡ BILD 11 / 13 • KATASTROFÅTERSTÄLLNING',
+                         'lv': '⚡ SLAIDS 11 / 13 • AVĀRIJAS ATJAUNOŠANA',
+                         'lt': '⚡ SKAIDRĖ 11 / 13 • AVARINIS ATKŪRIMAS'},
             'title': {   'en': 'Golden Snapshots: Deterministic 1–2 Min Recovery',
                          'et': 'Golden Snapshots: deterministlik 1–2 minuti kiirtaaste',
                          'fi': 'Golden Snapshots: deterministinen 1–2 minuutin pikapalautus',
@@ -2189,12 +2709,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                        'pilnas konteinerių sustabdymas, tomo atkūrimas ir DB paleidimas trunka 1–2 '
                                        'minutes.<br/>⚠️ Ką akcentuoti: CI/CD sistema naudoja šį mechanizmą prieš '
                                        'kiekvieną testą, garantuodama 100% atkuriamumą.'}},
-    11: {   'badge': {   'en': '💎 SLIDE 11 / 13 • LOW-CODE AS CODE &amp; APEXLANG',
-                         'et': '💎 SLAID 11 / 13 • LOW-CODE KOODINA JA APEXLANG',
-                         'fi': '💎 DIA 11 / 13 • LOW-CODE KOODINA &amp; APEXLANG',
-                         'sv': '💎 BILD 11 / 13 • LÅGKOD SOM KOD &amp; APEXLANG',
-                         'lv': '💎 SLAIDS 11 / 13 • LOW-CODE KĀ KODS &amp; APEXLANG',
-                         'lt': '💎 SKAIDRĖ 11 / 13 • LOW-CODE KAIP KODAS IR APEXLANG'},
+    12: {   'badge': {   'en': '💎 SLIDE 12 / 13 • LOW-CODE AS CODE &amp; APEXLANG',
+                         'et': '💎 SLAID 12 / 13 • LOW-CODE KOODINA JA APEXLANG',
+                         'fi': '💎 DIA 12 / 13 • LOW-CODE KOODINA &amp; APEXLANG',
+                         'sv': '💎 BILD 12 / 13 • LÅGKOD SOM KOD &amp; APEXLANG',
+                         'lv': '💎 SLAIDS 12 / 13 • LOW-CODE KĀ KODS &amp; APEXLANG',
+                         'lt': '💎 SKAIDRĖ 12 / 13 • LOW-CODE KAIP KODAS IR APEXLANG'},
             'title': {   'en': 'Application Intent vs. Imperative Code: Eliminating Code Ownership Burden',
                          'et': 'Rakenduse kavatsus vs toorkood: Koodi omamise koormuse välistamine',
                          'fi': 'Sovelluksen tarkoitus vs raakakoodi: Koodin omistustaakan poistaminen',
@@ -2481,12 +3001,12 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                        '(APEXlang).<br/>⚠️ Ką akcentuoti: Marc Sewtz ir Justin Miller "Low-Code as '
                                        'Code" vizija: .apx specifikacija Gite užtikrina DevOps greitį be kodo gedimo '
                                        'rizikos.'}},
-    12: {   'badge': {   'en': '🎯 SLIDE 12 / 13 • ARCHITECT &amp; DBA Q&amp;A',
-                         'et': '🎯 SLAID 12 / 13 • KRIITILISED K&amp;V ARHITEKTILT JA DBA-LT',
-                         'fi': '🎯 DIA 12 / 13 • ARKKITEHDIN &amp; DBA:N K&amp;V',
-                         'sv': '🎯 BILD 12 / 13 • ARKITEKT- OCH DBA-FRÅGOR',
-                         'lv': '🎯 SLAIDS 12 / 13 • ARHITEKTA UN DBA J&amp;A',
-                         'lt': '🎯 SKAIDRĖ 12 / 13 • ARCHITEKTO IR DBA K&amp;A'},
+    13: {   'badge': {   'en': '🎯 SLIDE 13 / 13 • ARCHITECT Q&amp;A &amp; RESOURCES',
+                         'et': '🎯 SLAID 13 / 13 • ARHITEKTI KKK JA VIITED',
+                         'fi': '🎯 DIA 13 / 13 • ARKKITEHDIN UKK &amp; LINKIT',
+                         'sv': '🎯 BILD 13 / 13 • ARKITEKT Q&amp;A &amp; LÄNKAR',
+                         'lv': '🎯 SLAIDS 13 / 13 • ARHITEKTA J&amp;A UN SAITES',
+                         'lt': '🎯 SKAIDRĖ 13 / 13 • ARCHITEKTO D.U.K. IR NUORODOS'},
             'title': {   'en': 'Critical Architect &amp; DBA Questions Answered',
                          'et': 'Vastused arhitektide ja DBA-de kriitilistele küsimustele',
                          'fi': 'Vastaukset arkkitehdin ja DBA:n kriittisiin kysymyksiin',
@@ -2568,7 +3088,40 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                          'lv': 'A: Oficiālais SQLcl 26.2 APEXlang DSL (<code>.apx</code>), AST '
                                                'pārbaudes, Liquibase un bezparoļu SEPS Wallet.',
                                          'lt': 'A: Oficialus SQLcl 26.2 APEXlang DSL (<code>.apx</code>), AST patikra, '
-                                               'Liquibase ir beslaptažodis SEPS Wallet.'}}],
+                                               'Liquibase ir beslaptažodis SEPS Wallet.'}},
+                         {   'icon': '🏭',
+                             'kpi': 'SDD &amp; GATES',
+                             'title': {   'en': 'Q: How do we transition from Vibe Coding to Viable Code?',
+                                          'et': 'K: Kuidas tagatakse üleminek vibe-codingult tootmiskõlblikule '
+                                                'koodile?',
+                                          'fi': 'K: Miten taataan siirtymä kokeilusta tuotantolaatuiseen koodiin?',
+                                          'sv': 'F: Hur säkerställs övergången till produktionsfärdig kod?',
+                                          'lv': 'J: Kā tiek nodrošināta pāreja uz ražošanai gatavu kodu?',
+                                          'lt': 'K: Kaip užtikrinamas perėjimas prie gamybai paruošto kodo?'},
+                             'desc': {   'en': 'A: Via Spec-Driven Development (Julian Wood SDD Triad), Self-Contained '
+                                               'Systems (Simon Martinelli SCS &amp; PDB sovereignty), and Agentic '
+                                               'Assembly Line (Thomas Dohmke Ralph Loops &amp; Git trails). Verified '
+                                               'by 5 Quality Gates.',
+                                         'et': 'V: Läbi spetsifikatsioonipõhise arenduse (Julian Wood SDD triood), '
+                                               'isehalduslike süsteemide (Simon Martinelli SCS &amp; PDB suveräänsus) '
+                                               'ning agentse konveieri (Thomas Dohmke Ralph Loops &amp; Git '
+                                               'seansirajad). Kinnitatud 5 kvaliteediväravaga.',
+                                         'fi': 'V: Spesifikaatiolähtöisen kehityksen (Julian Wood SDD), itsenäisten '
+                                               'järjestelmien (Simon Martinelli SCS) ja agenttiliukuhihnan (Thomas '
+                                               'Dohmke Ralph Loops &amp; Git-lokit) kautta. Vahvistettu 5 '
+                                               'laatuportilla.',
+                                         'sv': 'S: Genom specifikationsdriven utveckling (Julian Wood SDD), '
+                                               'självständiga system (Simon Martinelli SCS) och den agentiska '
+                                               'monteringslinjen (Thomas Dohmke Ralph Loops &amp; Git-spår). '
+                                               'Verifierad med 5 grindar.',
+                                         'lv': 'A: Izmantojot specifikācijās balstītu izstrādi (Julian Wood SDD), '
+                                               'pašpietiekamas sistēmas (Simon Martinelli SCS) un aģentu konveijeru '
+                                               '(Thomas Dohmke Ralph Loops &amp; Git žurnāli). Apstiprināts ar 5 '
+                                               'vārtiem.',
+                                         'lt': 'A: Taikant specifikacijomis grįstą vystymą (Julian Wood SDD), '
+                                               'savarankiškas sistemas (Simon Martinelli SCS) ir agentų konvejerį '
+                                               '(Thomas Dohmke Ralph Loops &amp; Git žurnalai). Patvirtinta 5 '
+                                               'vartais.'}}],
             'speaker_notes': {   'en': '🎯 Core Takeaway: Enterprise architects value solutions that eliminate code '
                                        'maintenance debt. APEX replaces massive raw code generation with concise, '
                                        'declarative blueprints.<br/>💡 Talking Points: Emphasize the "code ownership '
@@ -2623,163 +3176,10 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                        'palaikymo. APEX atveju blueprint veikia kaip specifikacijos kalba (APEXlang), '
                                        'o saugumas ir sesijų valdymas yra integruoti tiesiogiai į branduolį.<br/>⚠️ Ką '
                                        'akcentuoti: Free DB suteikia 0ms delsos aplinką; gamybinės apkrovos sklandžiai '
-                                       'perkeliamos į Autonomous Database be kodo perdarymo.'}},
-    13: {   'badge': {   'en': '🚀 SLIDE 13 / 13 • GET STARTED &amp; LINKS',
-                         'et': '🚀 SLAID 13 / 13 • ALUSTAMINE JA LINGID',
-                         'fi': '🚀 DIA 13 / 13 • ALOITUS &amp; LINKIT',
-                         'sv': '🚀 BILD 13 / 13 • KOM IGÅNG &amp; LÄNKAR',
-                         'lv': '🚀 SLAIDS 13 / 13 • SĀKUMS UN SAITES',
-                         'lt': '🚀 SKAIDRĖ 13 / 13 • PRADŽIA IR NUORODOS'},
-            'title': {   'en': 'How to Get Started Immediately',
-                         'et': 'Kuidas kohe alustada',
-                         'fi': 'Miten aloittaa heti',
-                         'sv': 'Hur du kommer igång direkt',
-                         'lv': 'Kā nekavējoties sākt darbu',
-                         'lt': 'Kaip pradėti nedelsiant'},
-            'lead': {   'en': '3 interactive execution steps, quick navigation to Dev Hub tools, and official Oracle '
-                              'documentation resources.',
-                        'et': '3 interaktiivset sammu, kiirnupud Dev Hubi sektsioonidesse ja ametlikud Oracle '
-                              'dokumentatsiooni veebilingid.',
-                        'fi': '3 interaktiivista vaihetta, pikanäppäimet Dev Hubiin ja viralliset '
-                              'Oracle-dokumentaatiolinkit.',
-                        'sv': '3 interaktiva steg, snabbnavigering till Dev Hub och officiella '
-                              'Oracle-dokumentationsresurser.',
-                        'lv': '3 interaktīvi soļi, ātrās saites uz Dev Hub rīkiem un oficiālās Oracle dokumentācijas '
-                              'saites.',
-                        'lt': '3 interaktyvūs žingsniai, greitas perėjimas į Dev Hub ir oficialios Oracle '
-                              'dokumentacijos nuorodos.'},
-            'diagram': {   'label': {   'en': '🚀 3-STEP INSTANT ONBOARDING ROADMAP',
-                                        'et': '🚀 3-SAMMULINE KIIRE KÄIVITUSTEEKOND',
-                                        'fi': '🚀 3-VAIHEINEN NOPEA KÄYNNISTYSKAAVIO',
-                                        'sv': '🚀 3-STEGS SNABBSTARTKARTA',
-                                        'lv': '🚀 3-SOĻU ĀTRĀS PALAIŠANAS CEĻVEDIS',
-                                        'lt': '🚀 3-ŽINGSNIŲ GREITO PALEIDIMO ŽEMĖLAPIS'},
-                           'nodes': [   {   'icon': '1️⃣',
-                                            'title': {   'en': '1. Launch Core',
-                                                         'et': '1. Käivita virn',
-                                                         'fi': '1. Käynnistä pino',
-                                                         'sv': '1. Starta stacken',
-                                                         'lv': '1. Palaist steku',
-                                                         'lt': '1. Paleisti sistemą'},
-                                            'sub': {   'en': './scripts/setup-all.sh',
-                                                       'et': './scripts/setup-all.sh',
-                                                       'fi': './scripts/setup-all.sh',
-                                                       'sv': './scripts/setup-all.sh',
-                                                       'lv': './scripts/setup-all.sh',
-                                                       'lt': './scripts/setup-all.sh'},
-                                            'type': 'default'},
-                                        {   'icon': '2️⃣',
-                                            'title': {   'en': '2. Toggle BP',
-                                                         'et': '2. Vali blueprint',
-                                                         'fi': '2. Valitse malli',
-                                                         'sv': '2. Byt ritning',
-                                                         'lv': '2. Pārslēgt rasējumu',
-                                                         'lt': '2. Pasirinkti brėžinį'},
-                                            'sub': {   'en': './scripts/module-toggle.sh',
-                                                       'et': './scripts/module-toggle.sh',
-                                                       'fi': './scripts/module-toggle.sh',
-                                                       'sv': './scripts/module-toggle.sh',
-                                                       'lv': './scripts/module-toggle.sh',
-                                                       'lt': './scripts/module-toggle.sh'},
-                                            'type': 'active'},
-                                        {   'icon': '3️⃣',
-                                            'title': {   'en': '3. Test Suite',
-                                                         'et': '3. Käivita testid',
-                                                         'fi': '3. Suorita testit',
-                                                         'sv': '3. Kör testsvit',
-                                                         'lv': '3. Palaist testus',
-                                                         'lt': '3. Paleisti testus'},
-                                            'sub': {   'en': './scripts/test-apex-suite.sh',
-                                                       'et': './scripts/test-apex-suite.sh',
-                                                       'fi': './scripts/test-apex-suite.sh',
-                                                       'sv': './scripts/test-apex-suite.sh',
-                                                       'lv': './scripts/test-apex-suite.sh',
-                                                       'lt': './scripts/test-apex-suite.sh'},
-                                            'type': 'accent'},
-                                        {   'icon': '🎉',
-                                            'title': {   'en': 'Ready to Build',
-                                                         'et': 'Valmis arenduseks',
-                                                         'fi': 'Valmis kehitykseen',
-                                                         'sv': 'Redo för utveckling',
-                                                         'lv': 'Gatavs darbam',
-                                                         'lt': 'Paruošta kūrimui'},
-                                            'sub': {   'en': 'Dev Hub at :8088',
-                                                       'et': 'Dev Hub pordil :8088',
-                                                       'fi': 'Dev Hub portissa :8088',
-                                                       'sv': 'Dev Hub på :8088',
-                                                       'lv': 'Dev Hub portā :8088',
-                                                       'lt': 'Dev Hub porte :8088'},
-                                            'type': 'success'}],
-                           'title': {   'en': 'Developer Quick-Start Milestones',
-                                        'et': 'Arendaja kiirstardi verstapostid',
-                                        'fi': 'Kehittäjän pikastartin virstanpylväät',
-                                        'sv': 'Milstolpar för snabbstart för utvecklare',
-                                        'lv': 'Izstrādātāja ātrā starta atskaites punkti',
-                                        'lt': 'Kūrėjo greito starto etapai'}},
-            'cards': [   {   'icon': '1️⃣',
-                             'kpi': 'SAMM 1',
-                             'title': {   'en': '1. Launch Core Stack',
-                                          'et': '1. Käivita keskkond',
-                                          'fi': '1. Käynnistä ympäristö',
-                                          'sv': '1. Starta miljön',
-                                          'lv': '1. Palaist vidi',
-                                          'lt': '1. Paleisti aplinką'},
-                             'desc': {   'en': 'Deploy core database &amp; ORDS:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
-                                         'et': 'Paigalda andmebaas ja teenused:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
-                                         'fi': 'Asenna tietokanta ja palvelut:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
-                                         'sv': 'Installera databas och tjänster:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
-                                         'lv': 'Uzstādīt datubāzi un pakalpojumus:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/setup-all.sh</code>',
-                                         'lt': 'Įdiegti duomenų bazę ir paslaugas:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/setup-all.sh</code>'},
-                             'command': './scripts/setup-all.sh'},
-                         {   'icon': '2️⃣',
-                             'kpi': 'SAMM 2',
-                             'title': {   'en': '2. Toggle Blueprint',
-                                          'et': '2. Vali blueprint',
-                                          'fi': '2. Valitse arkkitehtuurimalli',
-                                          'sv': '2. Byt arkitekturritning',
-                                          'lv': '2. Pārslēgt rasējumu',
-                                          'lt': '2. Pasirinkti brėžinį'},
-                             'desc': {   'en': 'Switch architecture stack:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
-                                         'et': 'Vali sobiv arhitektuuripinu:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
-                                         'fi': 'Vaihda kokoonpanoa:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
-                                         'sv': 'Växla konfiguration:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
-                                         'lv': 'Mainīt profilu:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/module-toggle.sh</code>',
-                                         'lt': 'Pakeisti profilį:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/module-toggle.sh</code>'},
-                             'command': './scripts/module-toggle.sh'},
-                         {   'icon': '3️⃣',
-                             'kpi': 'SAMM 3',
-                             'title': {   'en': '3. Run Automated Tests',
-                                          'et': '3. Käivita testid',
-                                          'fi': '3. Suorita testit',
-                                          'sv': '3. Kör testsvit',
-                                          'lv': '3. Palaist testus',
-                                          'lt': '3. Paleisti testus'},
-                             'desc': {   'en': 'Automated end-to-end verification:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
-                                         'et': 'Täisautomaatne testimine:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
-                                         'fi': 'Täysautomaattinen testaus:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
-                                         'sv': 'Automatiserad verifiering:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
-                                         'lv': 'Automatizēta pārbaude:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>',
-                                         'lt': 'Automatizuotas testavimas:<br/><code '
-                                               'style="color:#38bdf8;">./scripts/test-apex-suite.sh</code>'},
-                             'command': './scripts/test-apex-suite.sh'}],
-            'oracle_links': [   {'title': 'Oracle 23ai Free DB', 'url': 'https://www.oracle.com/database/free/'},
+                                       'perkeliamos į Autonomous Database be kodo perdarymo.'},
+            'oracle_links': [   {   'title': '📋 Spec-Driven Dev (SDD) & Assembly Line',
+                                    'url': 'docs/spec-driven-development-and-assembly-line.md'},
+                                {'title': 'Oracle 23ai Free DB', 'url': 'https://www.oracle.com/database/free/'},
                                 {   'title': 'Oracle APEX 26.1 & APEXlang',
                                     'url': 'https://docs.oracle.com/en/database/oracle/apex/26.1/apxln/'},
                                 {   'title': 'Oracle REST Data Services (ORDS)',
@@ -2789,38 +3189,4 @@ SLIDES_CONTENT = {   1: {   'badge': {   'en': '🌟 SLIDE 1 / 13 • VISION &am
                                 {   'title': 'Oracle Autonomous Database',
                                     'url': 'https://docs.oracle.com/en/cloud/paas/autonomous-database/'},
                                 {   'title': 'Analytics Publisher & Forms',
-                                    'url': 'https://docs.oracle.com/en/middleware/'}],
-            'speaker_notes': {   'en': '🎯 Core Takeaway: Starting is completely frictionless: run setup-all.sh and you '
-                                       'have a production-grade stack running in minutes.<br/>💡 Talking Points: '
-                                       'Demonstrate the 1-click copy buttons. Invite audience to explore the Live '
-                                       'Services, Blueprints, and DevOps tabs right here in Dev Hub.<br/>⚠️ Key '
-                                       'Emphasis: Point out the curated official Oracle documentation links for teams '
-                                       'wanting to deep-dive into APEXlang, ORDS, or Autonomous Database.',
-                                 'et': '🎯 Peamine sõnum: Alustamine on täiesti vaevatu: käivita setup-all.sh ja '
-                                       'enterprise-tasemel virn töötab minutitega.<br/>💡 Esitaja rääkimispunktid: '
-                                       'Demonstreeri 1-klikiga kopeeritavaid käske. Kutsu kuulajaid avama Teenuste, '
-                                       'Blueprintide ja DevOps vahekaarte otse siinsamas Dev Hubis.<br/>⚠️ Mida '
-                                       'rõhutada: Too välja ametlikud Oracle dokumentatsiooni veebilingid neile, kes '
-                                       'soovivad süveneda APEXlangi, ORDS-i või Autonomous Database võimalustesse.',
-                                 'fi': '🎯 Pääviesti: Aloittaminen on vaivatonta: aja setup-all.sh ja yritystason pino '
-                                       'on pystyssä minuuteissa.<br/>💡 Puhujan muistiinpanot: Näytä komentojen '
-                                       '1-klikkauksen kopiointi. Ohjaa yleisö tutustumaan Palvelut- ja '
-                                       'Mallit-välilehtiin suoraan Dev Hubissa.<br/>⚠️ Tärkeä painotus: Korosta '
-                                       'virallisia Oracle-dokumentaatiolinkkejä niille, jotka haluavat perehtyä '
-                                       'APEXlangiin ja ORDS:iin tarkemmin.',
-                                 'sv': '🎯 Huvudbudskap: Att komma igång är helt friktionsfritt: kör setup-all.sh och '
-                                       'du har en enterprise-stack på några minuter.<br/>💡 Talarpunkter: Demonstrera '
-                                       'snabbkopiering av kommandon. Bjud in åhörarna att utforska Tjänster, Ritningar '
-                                       'och DevOps-flikarna i Dev Hub.<br/>⚠️ Vad som bör betonas: Hänvisa till de '
-                                       'officiella Oracle-dokumentationslänkarna för fördjupning i APEXlang och ORDS.',
-                                 'lv': '🎯 Galvenais vēstījums: Sākt ir ļoti vienkārši: palaidiet setup-all.sh un '
-                                       'uzņēmuma līmeņa steks darbojas minūtēs.<br/>💡 Runātāja piezīmes: Demonstrējiet '
-                                       'komandu kopēšanu ar vienu klikšķi. Aiciniet apskatīt Pakalpojumu un Rasējumu '
-                                       'sadaļas Dev Hub.<br/>⚠️ Ko uzsvērt: Norādiet uz oficiālajām Oracle '
-                                       'dokumentācijas saitēm tālākai APEXlang un ORDS apguvei.',
-                                 'lt': '🎯 Pagrindinė žinutė: Pradėti yra itin paprasta: paleiskite setup-all.sh ir '
-                                       'įmonės lygio sistema veikia per kelias minutes.<br/>💡 Pranešėjo pastabos: '
-                                       'Pademonstruokite komandų kopijavimą vienu paspaudimu. Pakvieskite išbandyti '
-                                       'Paslaugų ir Brėžinių skiltis Dev Hub.<br/>⚠️ Ką akcentuoti: Nukreipkite į '
-                                       'oficialias Oracle dokumentacijos nuorodas išsamiam APEXlang ir ORDS '
-                                       'tyrinėjimui.'}}}
+                                    'url': 'https://docs.oracle.com/en/middleware/'}]}}

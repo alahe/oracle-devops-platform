@@ -104,6 +104,11 @@ function switchTab(tabId, skipHistory = false) {
   if (cleanId && !cleanId.startsWith('tab-')) {
     cleanId = `tab-${cleanId}`;
   }
+  if (cleanId === 'tab-skills') {
+    switchTab('tab-specs', skipHistory);
+    switchSpecsMode('skills');
+    return;
+  }
   let activeContent = cleanId ? document.getElementById(cleanId) : null;
   if (!activeContent) {
     cleanId = 'tab-services';
@@ -138,6 +143,8 @@ function switchTab(tabId, skipHistory = false) {
       initTestingTab();
     } else if (cleanId === 'tab-skills') {
       initSkillsTab();
+    } else if (cleanId === 'tab-specs') {
+      initSpecsTab();
     } else if (cleanId === 'tab-devops') {
       filterDevOpsCards();
       loadRepoStatistics();
@@ -350,6 +357,21 @@ function copyMermaidCardCode(id, btn) {
   });
 }
 
+function formatDurationSeconds(secs) {
+  if (typeof secs !== 'number' || isNaN(secs) || secs <= 0) return '0s';
+  const m = Math.floor(secs / 60);
+  const s = Math.round(secs % 60);
+  if (m > 0) {
+    return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  }
+  return `${s}s`;
+}
+
+function formatBenchmarkTimestamp(ts) {
+  if (!ts) return '';
+  return String(ts).replace('T', ' ').replace(/\.\d+.*$/, '');
+}
+
 function openMermaidZoomModal(id) {
   const targetEl = document.getElementById(id);
   const modal = document.getElementById('mermaid-zoom-modal');
@@ -549,7 +571,7 @@ function setLanguage(lang) {
   updateServiceCardsUI();
   if (typeof renderTestingSuites === 'function') renderTestingSuites();
   if (typeof updateTestTerminalLangBadge === 'function') updateTestTerminalLangBadge(lang);
-  if (typeof setOrdsAutoSync === 'function') setOrdsAutoSync(gOrdsAutoSync, false);
+  if (typeof setMasterAutoRefresh === 'function') setMasterAutoRefresh(gMasterAutoRefresh, false);
   const gModal = document.getElementById('glossary-modal-backdrop');
   if (gModal && gModal.classList.contains('active') && typeof renderGlossaryModal === 'function') {
     renderGlossaryModal();
@@ -607,58 +629,98 @@ function showToast(msg) {
   toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
 }
 
-let gOrdsAutoSync = false;
+let gMasterAutoRefresh = true;
+let gMasterPollTimer = null;
 let gAutoSyncTriggeredByBp = false;
 const PENDING_LAUNCHED_BPS = new Set();
 
-function toggleOrdsAutoSync() {
-  setOrdsAutoSync(!gOrdsAutoSync, true);
+function toggleMasterAutoRefresh() {
+  setMasterAutoRefresh(!gMasterAutoRefresh, true);
   gAutoSyncTriggeredByBp = false;
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
-  if (gOrdsAutoSync) {
-    showToast(dict.ords_autosync_started || '🟢 ORDS Smart Gateway Auto-Sync aktiveeritud.');
-    syncOrdsPools();
+  if (gMasterAutoRefresh) {
+    showToast(`🟢 ${dict.master_autorefresh_on || 'Live: 5s'}`);
+    masterRefreshNow();
   } else {
-    showToast(dict.ords_autosync_stopped || '⚪ ORDS Smart Gateway Auto-Sync välja lülitatud.');
+    showToast(`⚪ ${dict.master_autorefresh_off || 'Live: OFF'}`);
   }
 }
 
-function setOrdsAutoSync(enabled, saveStorage = true) {
-  gOrdsAutoSync = !!enabled;
+function setMasterAutoRefresh(enabled, saveStorage = true) {
+  gMasterAutoRefresh = !!enabled;
   if (saveStorage) {
-    localStorage.setItem('dev_hub_ords_autosync', gOrdsAutoSync ? 'true' : 'false');
+    localStorage.setItem('dev_hub_master_autorefresh', gMasterAutoRefresh ? 'true' : 'false');
   }
-  const btn = document.getElementById('ords-autosync-toggle-btn');
-  const ind = document.getElementById('ords-autosync-indicator');
-  const lbl = document.getElementById('ords-autosync-label');
+  const btn = document.getElementById('master-autorefresh-btn');
+  const dot = document.getElementById('master-autorefresh-dot');
+  const lbl = document.getElementById('master-autorefresh-label');
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
-  if (btn && ind && lbl) {
-    if (gOrdsAutoSync) {
-      btn.style.background = 'rgba(34, 197, 94, 0.2)';
+
+  if (gMasterAutoRefresh) {
+    if (dot) dot.style.background = '#22c55e';
+    if (lbl) lbl.textContent = dict.master_autorefresh_on || 'Live: 5s';
+    if (btn) {
       btn.style.borderColor = 'rgba(34, 197, 94, 0.6)';
       btn.style.color = '#4ade80';
-      ind.textContent = '🟢';
-      lbl.textContent = dict.ords_autosync_on || 'Auto-Sync: ON';
-    } else {
-      btn.style.background = '';
+    }
+    if (!gMasterPollTimer) {
+      gMasterPollTimer = setInterval(() => {
+        pollBridgeStatus(false);
+        checkServiceHealth();
+      }, 5000);
+    }
+  } else {
+    if (dot) dot.style.background = '#94a3b8';
+    if (lbl) lbl.textContent = dict.master_autorefresh_off || 'Live: OFF';
+    if (btn) {
       btn.style.borderColor = '';
       btn.style.color = '';
-      ind.textContent = '⚪';
-      lbl.textContent = dict.ords_autosync_off || 'Auto-Sync: OFF';
+    }
+    if (gMasterPollTimer) {
+      clearInterval(gMasterPollTimer);
+      gMasterPollTimer = null;
+    }
+    if (typeof gBridgePollTimer !== 'undefined' && gBridgePollTimer) {
+      clearInterval(gBridgePollTimer);
+      gBridgePollTimer = null;
+    }
+    if (typeof gHealthPollTimer !== 'undefined' && gHealthPollTimer) {
+      clearInterval(gHealthPollTimer);
+      gHealthPollTimer = null;
     }
   }
 }
 
+function masterRefreshNow() {
+  const icon = document.getElementById('master-refresh-icon');
+  if (icon) {
+    icon.style.display = 'inline-block';
+    icon.style.transform = 'rotate(360deg)';
+    icon.style.transition = 'transform 0.5s ease';
+    setTimeout(() => { if (icon) { icon.style.transform = ''; icon.style.transition = ''; } }, 500);
+  }
+  pollBridgeStatus(true);
+  checkServiceHealth();
+  syncOrdsPools(true);
+}
+
+// Backward compatibility helpers
+let gOrdsAutoSync = false;
+function toggleOrdsAutoSync() { toggleMasterAutoRefresh(); }
+function setOrdsAutoSync(enabled, saveStorage = true) { setMasterAutoRefresh(enabled, saveStorage); }
+function toggleAutoRefresh() { toggleMasterAutoRefresh(); }
+function manualRefreshStatus() { masterRefreshNow(); }
+
 function addPendingBlueprintLaunch(bpNum) {
   PENDING_LAUNCHED_BPS.add(Number(bpNum));
-  if (!gOrdsAutoSync) {
+  if (!gMasterAutoRefresh) {
     gAutoSyncTriggeredByBp = true;
-    setOrdsAutoSync(true);
+    setMasterAutoRefresh(true);
     const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
     const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
-    showToast(dict.ords_autosync_started || '🔄 Blueprint käivitatud: ORDS Auto-Sync automaatselt sisse lülitatud.');
+    showToast(`🔄 Blueprint #${bpNum}: ${dict.master_autorefresh_on || 'Live: 5s'}`);
   }
   renderActiveContainersPills();
 }
@@ -666,11 +728,11 @@ function addPendingBlueprintLaunch(bpNum) {
 function removePendingBlueprintLaunch(bpNum) {
   PENDING_LAUNCHED_BPS.delete(Number(bpNum));
   if (PENDING_LAUNCHED_BPS.size === 0 && gAutoSyncTriggeredByBp) {
-    setOrdsAutoSync(false);
+    setMasterAutoRefresh(false);
     gAutoSyncTriggeredByBp = false;
     const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
     const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
-    showToast(dict.ords_autosync_stopped || '✅ Kõik käivitatud blueprindid on aktiivsed. ORDS Auto-Sync lülitus välja.');
+    showToast(dict.ords_autosync_stopped_all_active || 'All launched blueprints are now active.');
   }
   renderActiveContainersPills();
 }
@@ -734,7 +796,7 @@ async function pollBridgeStatus(manual = false) {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2000);
-    const poolsParam = '?include_ords_pools=1';
+    const poolsParam = (manual || (typeof gMasterAutoRefresh !== 'undefined' && gMasterAutoRefresh)) ? '?include_ords_pools=1' : '?include_ords_pools=0';
     const resp = await fetch(`${BRIDGE_URL}/api/status${poolsParam}`, { signal: controller.signal, mode: 'cors' });
     clearTimeout(timeoutId);
     if (resp.ok) {
@@ -755,15 +817,38 @@ async function pollBridgeStatus(manual = false) {
       if (data.system_resources) {
         LIVE_SYSTEM_RESOURCES = data.system_resources;
       }
+      if (data.container_memory) {
+        LIVE_CONTAINER_MEMORY = data.container_memory;
+      }
+      if (typeof data.containers_total_mem_mb === 'number') {
+        LIVE_CONTAINERS_TOTAL_MEM_MB = data.containers_total_mem_mb;
+      }
       if (data.ords_pools && Object.keys(data.ords_pools).length > 0) {
         LIVE_ORDS_POOLS = data.ords_pools;
       }
       if (connBadge) {
         const bridgePortStr = (typeof BRIDGE_URL !== 'undefined' && BRIDGE_URL) ? BRIDGE_URL.replace(/https?:\/\/[^\/:]+/, '') : ':8089';
-        connBadge.innerHTML = `🟢 Bridge ${bridgePortStr} Online`;
+        const vStr = data.version ? ` v${data.version}` : '';
+        connBadge.innerHTML = `🟢 Bridge ${bridgePortStr}${vStr} Online`;
         connBadge.style.color = '#4ade80';
         connBadge.style.background = 'rgba(34, 197, 94, 0.15)';
       }
+      const platVer = (typeof PLATFORM_VERSION !== 'undefined' && PLATFORM_VERSION) ? PLATFORM_VERSION : '2.4.0';
+      const headerStatus = document.getElementById('bridge-header-status');
+      if (headerStatus) {
+        const bridgeVer = data.version || '';
+        if (bridgeVer && bridgeVer !== platVer) {
+          headerStatus.innerHTML = `• Bridge v${bridgeVer} (<span style="color: #f59e0b; cursor: pointer; text-decoration: underline;" onclick="triggerBridgeRestart()" title="Klõpsa siia, et taaskäivitada Dev Hub sildserver automaatselt uue koodiga v${platVer}!">⚠️ Taaskäivita sild: v${platVer}</span>)`;
+          headerStatus.style.color = '#f59e0b';
+        } else {
+          headerStatus.innerHTML = `• Bridge v${bridgeVer || platVer} Online`;
+          headerStatus.style.color = '#38bdf8';
+        }
+      }
+      const platformGlobalVer = document.getElementById('platform-global-version');
+      if (platformGlobalVer) platformGlobalVer.textContent = `v${platVer}`;
+      const footerPlatformVer = document.getElementById('footer-platform-version');
+      if (footerPlatformVer) footerPlatformVer.textContent = `v${platVer}`;
       renderModulePills();
       renderBlueprints(currentActiveFilter);
       updateServiceCardsUI();
@@ -778,6 +863,11 @@ async function pollBridgeStatus(manual = false) {
       connBadge.style.color = '#94a3b8';
       connBadge.style.background = 'rgba(148, 163, 184, 0.1)';
     }
+    const headerStatus = document.getElementById('bridge-header-status');
+    if (headerStatus) {
+      headerStatus.innerHTML = '• Bridge Offline';
+      headerStatus.style.color = '#f87171';
+    }
     renderModulePills();
     renderBlueprints(currentActiveFilter);
     updateServiceCardsUI();
@@ -786,12 +876,31 @@ async function pollBridgeStatus(manual = false) {
   }
 }
 
+window.triggerBridgeRestart = async function() {
+  try {
+    showToast('🔄 Taaskäivitan Dev Hub sildserverit...');
+    try {
+      await fetch(`${BRIDGE_URL}/api/bridge/restart`, { method: 'POST' });
+    } catch (e) {
+      try { await fetch(`${BRIDGE_URL}/api/bridge/restart`); } catch (e2) {}
+    }
+    setTimeout(() => {
+      showToast('✅ Sildserver taaskäivitatud! Värskendan lehte...');
+      setTimeout(() => { window.location.reload(); }, 600);
+    }, 1200);
+  } catch (err) {
+    showToast('⚠️ Silla taaskäivitamisel tekkis tõrge: ' + err.message);
+  }
+};
+
 const BLUEPRINT_RAM_MAP = {
   0: 3.0, 1: 3.0, 2: 3.0, 3: 3.0, 4: 1.5,
   5: 4.0, 6: 3.0, 7: 6.0, 8: 1.0, 9: 1.0,
   10: 1.5, 11: 4.0
 };
-let LIVE_SYSTEM_RESOURCES = { total_ram_gb: 16.0, avail_ram_gb: 8.0 };
+let LIVE_SYSTEM_RESOURCES = { total_ram_gb: 16.0, avail_ram_gb: 8.0, system_reserve_gb: 2.0, safe_avail_ram_gb: 6.0 };
+let LIVE_CONTAINER_MEMORY = {};
+let LIVE_CONTAINERS_TOTAL_MEM_MB = 0;
 
 function getActiveBlueprintsRam() {
   const cards = document.querySelectorAll('.card[data-bp]');
@@ -813,17 +922,57 @@ function updateRamIndicatorUI() {
   if (!el || !textEl) return;
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
-  const { usedRam, activeCount } = getActiveBlueprintsRam();
+  
   const totalHostRam = (LIVE_SYSTEM_RESOURCES && LIVE_SYSTEM_RESOURCES.total_ram_gb) ? LIVE_SYSTEM_RESOURCES.total_ram_gb : 16.0;
-  
-  const countStr = (dict.ram_active_count || '%s active').replace('%s', activeCount);
-  textEl.textContent = `RAM: ~${usedRam.toFixed(1)} GB / ${totalHostRam.toFixed(0)} GB (${countStr})`;
-  
+  const availHostRam = (LIVE_SYSTEM_RESOURCES && LIVE_SYSTEM_RESOURCES.avail_ram_gb) ? LIVE_SYSTEM_RESOURCES.avail_ram_gb : Math.round(totalHostRam * 0.5 * 10) / 10;
+  const systemReserveGb = (LIVE_SYSTEM_RESOURCES && LIVE_SYSTEM_RESOURCES.system_reserve_gb !== undefined) ? LIVE_SYSTEM_RESOURCES.system_reserve_gb : 2.0;
+  const safeAvailGb = Math.max(0, Math.round((availHostRam - systemReserveGb) * 10) / 10);
+
+  // Compute live container RAM if available, else fallback to estimated
+  let usedRamGb = 0;
+  if (LIVE_CONTAINERS_TOTAL_MEM_MB > 0) {
+    usedRamGb = Math.round((LIVE_CONTAINERS_TOTAL_MEM_MB / 1024.0) * 10) / 10;
+  } else if (Object.keys(LIVE_CONTAINER_MEMORY).length > 0) {
+    let sumMb = 0;
+    Object.values(LIVE_CONTAINER_MEMORY).forEach(c => {
+      sumMb += (c.mem_used_mb || 0);
+    });
+    usedRamGb = Math.round((sumMb / 1024.0) * 10) / 10;
+  } else {
+    const { usedRam } = getActiveBlueprintsRam();
+    usedRamGb = usedRam;
+  }
+
+  let freeColor = '#4ade80';
+  if (safeAvailGb < 1.0 || availHostRam < 2.0) {
+    freeColor = '#f87171';
+  } else if (safeAvailGb < 2.0) {
+    freeColor = '#fde047';
+  }
+
+  const badgePattern = dict.ram_badge_format || '📦 %s GB | <span style="color:%s;">Free: %s / %s GB</span>';
+  const badgeStr = badgePattern
+    .replace('%s', usedRamGb.toFixed(1))
+    .replace('%s', freeColor)
+    .replace('%s', safeAvailGb.toFixed(1))
+    .replace('%s', availHostRam.toFixed(1));
+
+  textEl.innerHTML = badgeStr;
+
+  // Detailed breakdown in tooltip
+  const tooltipPattern = dict.ram_tooltip_breakdown || 'Containers RAM: %s GB | Host real free: %s GB | Safety reserve: %s GB | Safely available for new containers: %s GB (Host total: %s GB)';
+  const tooltipStr = tooltipPattern
+    .replace('%s', usedRamGb.toFixed(1))
+    .replace('%s', availHostRam.toFixed(1))
+    .replace('%s', systemReserveGb.toFixed(1))
+    .replace('%s', safeAvailGb.toFixed(1))
+    .replace('%s', totalHostRam.toFixed(0));
+  el.setAttribute('title', tooltipStr);
+
   el.classList.remove('ram-ok', 'ram-warn', 'ram-danger');
-  const ratio = usedRam / totalHostRam;
-  if (ratio > 0.8 || (totalHostRam - usedRam) < 2.0) {
+  if (safeAvailGb < 1.0 || availHostRam < 2.0) {
     el.classList.add('ram-danger');
-  } else if (ratio > 0.6) {
+  } else if (safeAvailGb < 2.0) {
     el.classList.add('ram-warn');
   } else {
     el.classList.add('ram-ok');
@@ -913,11 +1062,31 @@ function getBlueprintState(card) {
       isRunning = true;
     } else if (req.startsWith('ords/')) {
       const poolName = req.substring(5);
+      const poolDbMap = {
+        'proxy': ['db-proxy', 'db-oracle'],
+        'alise': ['db-alise'],
+        'proxy_standalone': ['db-proxy-standalone'],
+        'gvenzl': ['db-gvenzl'],
+        'adb': ['db-adb']
+      };
+      const reqDbs = poolDbMap[poolName];
+      let dbUp = false;
+      if (reqDbs) {
+        dbUp = reqDbs.some(d => isContainerRunning(d));
+        if (!dbUp && poolName === 'adb' && LIVE_ACTIVE_BP === 4) {
+          dbUp = true;
+        }
+      } else {
+        dbUp = true;
+      }
+      const isOrdsUp = isContainerRunning('app-ords');
       const poolData = (typeof LIVE_ORDS_POOLS === 'object' && LIVE_ORDS_POOLS) ? LIVE_ORDS_POOLS[poolName] : null;
-      if (poolData && (poolData.status === 'online' || poolData.status === 'degraded')) {
+      if (isOrdsUp && dbUp && poolData && poolData.status === 'online') {
         isRunning = true;
-      } else if (runningList.includes('app-ords')) {
+      } else if (isOrdsUp && dbUp && !poolData && poolName === 'proxy') {
         isRunning = true;
+      } else {
+        isRunning = false;
       }
     } else if (req === 'app-publisher' && runningList.includes('oracle-publisher-dev')) {
       isRunning = true;
@@ -934,10 +1103,9 @@ function getBlueprintState(card) {
     if (isRunning) matched++;
   }
 
-  // Edge Gateways (BP 10, BP 11): If local databases are running and this gateway blueprint is not explicitly active, mark offline
+  // Edge Gateways (BP 10, BP 11): Only mark online if this gateway blueprint is explicitly active
   if (bNum === 10 || bNum === 11) {
-    const hasLocalDb = runningList.some(d => ['db-proxy', 'db-alise', 'db-proxy-standalone', 'db-publisher', 'db-forms', 'db-gvenzl', 'db-adb'].includes(d));
-    if (hasLocalDb && LIVE_ACTIVE_BP !== bNum) {
+    if (LIVE_ACTIVE_BP !== bNum) {
       return {
         state: 'offline',
         matchedCount: 0,
@@ -1117,16 +1285,35 @@ function updateCardState(card, bpStateInfo, currentLang) {
     }
   });
 
+  // Update Live RAM pill on card
+  const ramPill = card.querySelector('.bp-live-ram-pill');
+  if (ramPill) {
+    if (state === 'online' || state === 'partial') {
+      let bpMemMb = 0;
+      const cnamesAttr = card.getAttribute('data-cnames') || '';
+      const cnames = cnamesAttr.split(',').map(s => s.trim()).filter(Boolean);
+      cnames.forEach(cn => {
+        if (LIVE_CONTAINER_MEMORY && LIVE_CONTAINER_MEMORY[cn] && LIVE_CONTAINER_MEMORY[cn].mem_used_mb) {
+          bpMemMb += LIVE_CONTAINER_MEMORY[cn].mem_used_mb;
+        }
+      });
+      if (bpMemMb > 0) {
+        const memStr = bpMemMb >= 1024 ? `${(bpMemMb / 1024.0).toFixed(2)} GB` : `${Math.round(bpMemMb)} MB`;
+        const nowPattern = dict.ram_live_current || 'Hetkel: %s';
+        const nowLabel = nowPattern.replace('%s', memStr);
+        ramPill.innerHTML = ` · <span style="color:#22c55e; font-weight:600;">🟢 ${nowLabel}</span>`;
+      } else {
+        const activeLabel = (dict.status_online || 'Aktiivne');
+        ramPill.innerHTML = ` · <span style="color:#22c55e; font-weight:600;">🟢 ${activeLabel}</span>`;
+      }
+    } else {
+      const stoppedLabel = (dict.status_stopped || 'Seisatud');
+      ramPill.innerHTML = ` · <span style="color:#94a3b8;">⚪ ${stoppedLabel}</span>`;
+    }
+  }
+
   const actionFlex = card.querySelector('.card-action-flex');
   if (!actionFlex) return;
-
-  const copyBtn = actionFlex.querySelector('.btn-bp-copy');
-  if (copyBtn) {
-    const isOnlineOrPartial = (state === 'online' || state === 'partial');
-    const tipKey = (isOnlineOrPartial && bNum > 0) ? 'tip_copy_stop_cmd' : 'tip_copy_deploy_cmd';
-    copyBtn.setAttribute('data-i18n-title', tipKey);
-    copyBtn.setAttribute('title', (dict && dict[tipKey]) || (isOnlineOrPartial ? 'Copy stop command' : 'Copy deployment command'));
-  }
 
   let mainSlot = actionFlex.querySelector('.btn-action-main, .core-protected-badge');
   if (mainSlot) {
@@ -1241,8 +1428,25 @@ function renderOrdsGatewayStrip() {
   poolKeys.forEach(pname => {
     const p = pools[pname];
     const isOrdsUp = isContainerRunning('app-ords');
-    const isOnline = p ? (p.status === 'online' || (p.status !== 'offline' && isOrdsUp) || (pname === 'proxy' && isOrdsUp && isContainerRunning('db-proxy'))) : isOrdsUp;
-    const isStarting = p && p.status === 'starting';
+    const poolDbMap = {
+      'proxy': ['db-proxy', 'db-oracle'],
+      'alise': ['db-alise'],
+      'proxy_standalone': ['db-proxy-standalone'],
+      'gvenzl': ['db-gvenzl'],
+      'adb': ['db-adb']
+    };
+    const reqDbs = poolDbMap[pname];
+    let dbUp = false;
+    if (reqDbs) {
+      dbUp = reqDbs.some(d => isContainerRunning(d));
+      if (!dbUp && pname === 'adb' && LIVE_ACTIVE_BP === 4) {
+        dbUp = true;
+      }
+    } else {
+      dbUp = true;
+    }
+    const isOnline = isOrdsUp && dbUp && p && p.status === 'online';
+    const isStarting = isOrdsUp && dbUp && p && p.status === 'starting';
     let pillCls = 'pool-offline';
     let dot = '🔴';
     if (isOnline) {
@@ -1252,10 +1456,10 @@ function renderOrdsGatewayStrip() {
       pillCls = 'pool-starting';
       dot = '🟡';
     }
-    const latStr = (isOnline && p.latency_ms !== undefined && p.latency_ms > 0) ? `<span class="ords-pool-latency">(${p.latency_ms}ms)</span>` : '';
+    const latStr = (isOnline && p && p.latency_ms !== undefined && p.latency_ms > 0) ? `<span class="ords-pool-latency">(${p.latency_ms}ms)</span>` : '';
     const poolUrl = (p && p.url) ? p.url : `http://localhost:8088/ords/${pname}/`;
     const targetStr = (p && p.target) ? ` -> ${p.target}` : '';
-    html += `<a href="${poolUrl}" target="_blank" rel="noopener noreferrer" class="ords-pool-pill ${pillCls}" title="ORDS Pool: ${pname}${targetStr} (${p ? p.status : 'unknown'})"><span>${dot}</span> <span>ords/${pname}</span>${latStr}</a>`;
+    html += `<a href="${poolUrl}" target="_blank" rel="noopener noreferrer" class="ords-pool-pill ${pillCls}" title="ORDS Pool: ${pname}${targetStr} (${isOnline ? 'online' : (isStarting ? 'starting' : 'offline')})"><span>${dot}</span> <span>ords/${pname}</span>${latStr}</a>`;
   });
 
   listContainer.innerHTML = html;
@@ -1279,8 +1483,18 @@ async function syncOrdsPools(manual = false) {
       if (data.ords_pools || data.pools) {
         LIVE_ORDS_POOLS = data.ords_pools || data.pools;
       }
+      if (data.container_memory) {
+        LIVE_CONTAINER_MEMORY = data.container_memory;
+      }
+      if (typeof data.containers_total_mem_mb === 'number') {
+        LIVE_CONTAINERS_TOTAL_MEM_MB = data.containers_total_mem_mb;
+      }
+      if (data.system_resources) {
+        LIVE_SYSTEM_RESOURCES = data.system_resources;
+      }
       renderOrdsGatewayStrip();
       checkServiceHealth();
+      updateRamIndicatorUI();
       if (manual) showToast(dict.ords_sync_success || '✅ ORDS connection pools successfully synchronized!');
     } else {
       if (manual) showToast('⚠️ ORDS poolide sünkroniseerimine ebaõnnestus.');
@@ -1329,12 +1543,14 @@ async function handleStartServiceFromCard(btn, modKey) {
 
 async function handleStopServiceFromCard(btn, modKey) {
   if (!modKey) return;
-  if (modKey === 'proxy' || modKey === 'ords' || modKey === 'core') {
-    alert('🛡️ Core Base Protection: db-proxy ja app-ords ei saa välja lülitada!');
-    return;
-  }
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  if (modKey === 'proxy' || modKey === 'ords' || modKey === 'core') {
+    const warnMsg = dict.modal_act_stop_core_warning || "⚠️ Warning: Blueprint #0 is the central Core Base (db-proxy & app-ords). Stopping it will shut down the central APEX and ORDS proxy gateway.\n\nDo you really want to proceed?";
+    if (!confirm(warnMsg)) {
+      return;
+    }
+  }
   btn.disabled = true;
   const origHtml = btn.innerHTML;
   btn.innerHTML = `<span>⏳</span> <span>${dict.status_stopping || 'Stopping...'}</span>`;
@@ -1342,7 +1558,7 @@ async function handleStopServiceFromCard(btn, modKey) {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2500);
-    const resp = await fetch(`${BRIDGE_URL}/api/toggle?module=${encodeURIComponent(modKey)}&action=stop`, {
+    const resp = await fetch(`${BRIDGE_URL}/api/toggle?module=${encodeURIComponent(modKey)}&action=stop&confirmed=true`, {
       method: 'POST',
       mode: 'cors',
       signal: controller.signal
@@ -1368,9 +1584,13 @@ function renderModulePills() {
 }
 
 async function toggleModuleBridge(modKey, action) {
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
   if (action === 'stop' && (modKey === 'proxy' || modKey === 'ords' || modKey === 'core')) {
-    alert('🛡️ Core Base Protection: db-proxy ja app-ords ei saa välja lülitada!');
-    return;
+    const warnMsg = dict.modal_act_stop_core_warning || "⚠️ Warning: Blueprint #0 is the central Core Base (db-proxy & app-ords). Stopping it will shut down the central APEX and ORDS proxy gateway.\n\nDo you really want to proceed?";
+    if (!confirm(warnMsg)) {
+      return;
+    }
   }
   showToast(`⏳ Moodul '${modKey}' (${action})...`);
   try {
@@ -1394,20 +1614,19 @@ async function toggleModuleBridge(modKey, action) {
 }
 
 async function triggerBlueprintAction(bNum, action) {
-  if (action === 'stop' && bNum === 0) {
-    alert('🛡️ Core Base Protection: Blueprint #0 (Tuum) ei saa välja lülitada!');
-    return;
-  }
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
 
   if (action === 'switch' || action === 'start') {
     const { usedRam } = getActiveBlueprintsRam();
     const targetRam = BLUEPRINT_RAM_MAP[bNum] || 2.0;
     const totalHostRam = (LIVE_SYSTEM_RESOURCES && LIVE_SYSTEM_RESOURCES.total_ram_gb) ? LIVE_SYSTEM_RESOURCES.total_ram_gb : 16.0;
+    const availHostRam = (LIVE_SYSTEM_RESOURCES && LIVE_SYSTEM_RESOURCES.avail_ram_gb) ? LIVE_SYSTEM_RESOURCES.avail_ram_gb : Math.round(totalHostRam * 0.5 * 10) / 10;
+    const systemReserveGb = (LIVE_SYSTEM_RESOURCES && LIVE_SYSTEM_RESOURCES.system_reserve_gb !== undefined) ? LIVE_SYSTEM_RESOURCES.system_reserve_gb : 2.0;
+    const safeAvailGb = Math.max(0, Math.round((availHostRam - systemReserveGb) * 10) / 10);
     const projectedRam = Math.round((usedRam + targetRam) * 10) / 10;
     
-    // Check if adding this blueprint exceeds 80% of host RAM or leaves < 2GB
-    if (projectedRam > totalHostRam * 0.8 || (totalHostRam - projectedRam) < 1.5) {
+    // Check if adding this blueprint exceeds safe available RAM or leaves < 2.0 GB system reserve
+    if (targetRam > safeAvailGb || safeAvailGb < 1.0 || projectedRam > totalHostRam * 0.8 || (totalHostRam - projectedRam) < systemReserveGb) {
       const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
       let msg = dict.ram_warning_msg || "Currently active blueprints use ~%s GB of RAM. Launching Blueprint #%s requires an additional ~%s GB (Total: ~%s GB of %s GB host RAM).\n\nRunning multiple heavy stacks simultaneously may cause memory pressure. Do you want to proceed?";
       msg = msg.replace('%s', usedRam.toFixed(1))
@@ -2063,7 +2282,7 @@ function isBlueprintActiveOrRunning(b) {
 
 function switchBlueprintModalTab(tabName) {
   activeBpModalTab = tabName || 'arch';
-  ['arch', 'guides', 'users', 'ops', 'diag', 'logs'].forEach(t => {
+  ['arch', 'guides', 'ops', 'users', 'config', 'diag', 'logs'].forEach(t => {
     const btn = document.getElementById(`tab-btn-bp-${t}`);
     const pane = document.getElementById(`bp-modal-tab-${t}`);
     if (btn) btn.classList.toggle('active', t === activeBpModalTab);
@@ -2078,6 +2297,8 @@ function switchBlueprintModalTab(tabName) {
     if (mermaidContainer && mermaidContainer.getAttribute('data-rendered-bp') !== String(activeBpModalNum)) {
       renderBlueprintMermaid(activeBpModalNum);
     }
+  } else if (activeBpModalTab === 'config') {
+    renderBlueprintConfigTab(activeBpModalNum);
   } else if (activeBpModalTab === 'guides') {
     renderBlueprintGuidesTab(activeBpModalNum);
   } else if (activeBpModalTab === 'diag') {
@@ -2121,6 +2342,29 @@ async function renderBlueprintMermaid(bNum) {
   try {
     const res = await mermaid.render(svgId, diagCode);
     mermaidContainer.innerHTML = res.svg || res;
+
+    // Live container stroke highlighting in Mermaid SVG
+    const runningList = Array.isArray(LIVE_RUNNING_CONTAINERS) ? LIVE_RUNNING_CONTAINERS : [];
+    if (runningList.length > 0) {
+      const nodes = mermaidContainer.querySelectorAll('.node');
+      nodes.forEach(n => {
+        const text = (n.textContent || '').toLowerCase();
+        const isNodeAlive = runningList.some(rc => {
+          const rcl = rc.toLowerCase();
+          return text.includes(rcl) ||
+            (rcl === 'oracle-publisher-dev' && text.includes('app-publisher')) ||
+            (rcl === 'app-publisher' && text.includes('app-publisher'));
+        });
+        if (isNodeAlive) {
+          const shapes = n.querySelectorAll('rect, polygon, circle, path');
+          shapes.forEach(s => {
+            s.style.stroke = '#22c55e';
+            s.style.strokeWidth = '3px';
+            s.style.filter = 'drop-shadow(0 0 5px rgba(34, 197, 94, 0.5))';
+          });
+        }
+      });
+    }
   } catch (err) {
     console.error('Mermaid modal render error:', err);
     const straySvg = document.getElementById(svgId) || document.getElementById('d' + svgId);
@@ -2254,12 +2498,15 @@ function openBlueprintDocFull() {
 }
 
 async function triggerBlueprintActionModal(bNum, action) {
-  if (action === 'stop' && bNum === 0) {
-    alert('🛡️ Core Base Protection: Blueprint #0 (Tuum) ei saa välja lülitada!');
-    return;
-  }
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  if (action === 'stop' && bNum === 0) {
+    const warnMsg = dict.modal_act_stop_core_warning || "⚠️ Warning: Blueprint #0 is the central Core Base (db-proxy & app-ords). Stopping it will shut down the central APEX and ORDS proxy gateway.\n\nDo you really want to proceed?";
+    if (!confirm(warnMsg)) {
+      return;
+    }
+  }
 
   if (action === 'dry-run' || action === 'dryrun') {
     switchBlueprintModalTab('diag');
@@ -2269,7 +2516,7 @@ async function triggerBlueprintActionModal(bNum, action) {
 
   const b = BLUEPRINTS_DATA.find(item => item.num === bNum);
   const cnames = (b && b.container_names) ? b.container_names : [];
-  const toStop = cnames.filter(c => !['db-proxy', 'app-ords'].includes(c) && !c.startsWith('ords/'));
+  const toStop = bNum === 0 ? ['db-proxy', 'app-ords'] : cnames.filter(c => !c.startsWith('ords/'));
   const stopTarget = toStop.length > 0 ? toStop.join(' ') : (cnames.join(' ') || `blueprint-${bNum}`);
 
   const isAlreadyUp = isBlueprintActiveOrRunning(b);
@@ -2338,10 +2585,10 @@ async function triggerBlueprintActionModal(bNum, action) {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
-    const resp = await fetch(`${BRIDGE_URL}/api/toggle?module=${bNum}&action=${action}&lang=${currentLang}`, {
+    const resp = await fetch(`${BRIDGE_URL}/api/toggle?module=${bNum}&action=${action}&lang=${currentLang}&confirmed=true`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ module: bNum, action, lang: currentLang }),
+      body: JSON.stringify({ module: bNum, action, lang: currentLang, confirmed: true }),
       mode: 'cors',
       signal: controller.signal
     });
@@ -2374,7 +2621,7 @@ async function triggerBlueprintActionModal(bNum, action) {
               if (Array.isArray(statusData.log_tail) && statusData.log_tail.length > 0) {
                 const outEl = document.getElementById('modal-ops-console-output');
                 if (outEl) {
-                  outEl.innerHTML = formatTerminalLogText(statusData.log_tail.join('\n'), { showTime: true, showColors: true });
+                  outEl.innerHTML = formatTerminalLogText(statusData.log_tail.join('\n'), { showTime: false, showColors: true });
                   outEl.scrollTop = outEl.scrollHeight;
                 }
               }
@@ -2491,6 +2738,10 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
 
   const titleEl = document.getElementById('bp-modal-title');
   const subEl = document.getElementById('bp-modal-subtitle');
+  const statusBadge = document.getElementById('bp-modal-status-badge');
+  const poolBadge = document.getElementById('bp-modal-ords-pool-badge');
+  const headerContainersEl = document.getElementById('bp-modal-header-containers');
+
   if (titleEl) titleEl.innerHTML = `🏗️ Blueprint #${b.num}: ${title}`;
   if (subEl) subEl.innerHTML = `
     <div style="margin-bottom: 6px; font-size: 0.88rem; color: #cbd5e1;">${desc}</div>
@@ -2498,37 +2749,96 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
       <span class="badge" style="background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); font-family: ui-monospace, monospace; font-size: 0.78rem;">📁 ${b.file}</span>
       <span class="badge" style="background: rgba(34,197,94,0.12); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); font-size: 0.78rem;">💾 RAM: ${b.ram}</span>
       <span class="badge" style="background: rgba(192,132,252,0.12); color: #c084fc; border: 1px solid rgba(192,132,252,0.3); font-size: 0.78rem;">🔑 ${(b.users || []).length} ${dict.meta_accounts || 'Accounts'}</span>
-      <span class="badge" style="background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); font-size: 0.78rem;">📦 ${b.containers}</span>
     </div>
   `;
 
+  // Calculate live container & stack status
+  const runningList = Array.isArray(LIVE_RUNNING_CONTAINERS) ? LIVE_RUNNING_CONTAINERS : [];
+  const cnames = b.container_names || [];
 
+  function isContainerAlive(cname) {
+    return runningList.includes(cname) ||
+      (cname === 'app-publisher' && runningList.includes('oracle-publisher-dev')) ||
+      (cname === 'oracle-publisher-dev' && runningList.includes('app-publisher')) ||
+      (['publisher-designer', 'app-publisher-designer'].includes(cname) && runningList.some(x => ['publisher-designer', 'app-publisher-designer'].includes(x))) ||
+      (['forms-designer', 'app-forms'].includes(cname) && runningList.some(x => ['forms-designer', 'app-forms'].includes(x)));
+  }
 
-  // Update Stack Status Header on Tab 3 (Ops)
+  const aliveContainers = cnames.filter(isContainerAlive);
+  const totalContainers = cnames.length;
   const isUp = isBlueprintActiveOrRunning(b);
-  const statusDot = document.getElementById('bp-ops-status-dot');
-  const targetTitle = document.getElementById('bp-ops-target-title');
-  const statusBadge = document.getElementById('bp-ops-status-badge');
-  const targetDesc = document.getElementById('bp-ops-target-desc');
-  const containerBadgesEl = document.getElementById('bp-ops-container-badges');
 
-  if (targetTitle) targetTitle.textContent = `Blueprint #${b.num}: ${title}`;
-  if (statusDot) statusDot.style.background = isUp ? '#22c55e' : '#94a3b8';
+  // 1. Modal Header Stack Status Badge
   if (statusBadge) {
-    statusBadge.textContent = isUp ? (dict.status_online || 'Aktiivne') : (dict.status_offline || 'Seisatud');
-    statusBadge.style.background = isUp ? 'rgba(34,197,94,0.15)' : 'rgba(148,163,184,0.15)';
-    statusBadge.style.color = isUp ? '#4ade80' : '#94a3b8';
+    if (totalContainers === 0) {
+      if (isUp) {
+        statusBadge.style.background = 'rgba(34,197,94,0.15)';
+        statusBadge.style.color = '#4ade80';
+        statusBadge.style.border = '1px solid rgba(34,197,94,0.3)';
+        statusBadge.innerHTML = `<span style="width:8px; height:8px; border-radius:50%; background:#22c55e;"></span> ${dict.status_online || 'Aktiivne'}`;
+      } else {
+        statusBadge.style.background = 'rgba(148,163,184,0.15)';
+        statusBadge.style.color = '#94a3b8';
+        statusBadge.style.border = '1px solid rgba(148,163,184,0.25)';
+        statusBadge.innerHTML = `<span style="width:8px; height:8px; border-radius:50%; background:#94a3b8;"></span> ${dict.status_stopped || 'Seisatud'}`;
+      }
+    } else if (aliveContainers.length === totalContainers) {
+      statusBadge.style.background = 'rgba(34,197,94,0.15)';
+      statusBadge.style.color = '#4ade80';
+      statusBadge.style.border = '1px solid rgba(34,197,94,0.3)';
+      statusBadge.innerHTML = `<span style="width:8px; height:8px; border-radius:50%; background:#22c55e;"></span> ${dict.status_online || 'Aktiivne'} (${aliveContainers.length}/${totalContainers})`;
+    } else if (aliveContainers.length > 0) {
+      statusBadge.style.background = 'rgba(245,158,11,0.15)';
+      statusBadge.style.color = '#fbbf24';
+      statusBadge.style.border = '1px solid rgba(245,158,11,0.3)';
+      statusBadge.innerHTML = `<span style="width:8px; height:8px; border-radius:50%; background:#f59e0b;"></span> ${dict.status_partial_active || 'Osaliselt aktiivne'} (${aliveContainers.length}/${totalContainers})`;
+    } else {
+      statusBadge.style.background = 'rgba(148,163,184,0.15)';
+      statusBadge.style.color = '#94a3b8';
+      statusBadge.style.border = '1px solid rgba(148,163,184,0.25)';
+      statusBadge.innerHTML = `<span style="width:8px; height:8px; border-radius:50%; background:#94a3b8;"></span> ${dict.status_stopped || 'Seisatud'} (0/${totalContainers})`;
+    }
   }
-  if (targetDesc) {
-    targetDesc.innerHTML = isUp
-      ? `🟢 Pinu on aktiivne ja töökorras. RAM kasutus: <b>${b.ram}</b>.`
-      : `⚪ Pinu on hetkel seisatud. Saad selle käivitada paralleelselt olemasolevate kõrvale (lisandub ~<b>${b.ram}</b>). Teisi andmebaase maha ei võeta!`;
+
+  // 2. Modal Header ORDS Pool Badge
+  if (poolBadge) {
+    const ordsComp = (b.components || []).find(c => c.name === 'app-ords' || c.name === 'app-ords-remote');
+    if (ordsComp) {
+      const isOrdsAlive = isContainerAlive(ordsComp.name);
+      const poolName = (b.dbs && b.dbs[0] && b.dbs[0].pool_name) || (b.num === 0 ? 'proxy' : (b.num === 1 ? 'alise' : (b.num === 4 ? 'adb' : 'default')));
+      poolBadge.style.display = 'inline-flex';
+      if (isOrdsAlive) {
+        poolBadge.style.background = 'rgba(56,189,248,0.12)';
+        poolBadge.style.color = '#38bdf8';
+        poolBadge.style.border = '1px solid rgba(56,189,248,0.3)';
+        poolBadge.innerHTML = `🌐 ORDS: <strong>${poolName}</strong> <span style="color:#4ade80; font-size:0.7rem; margin-left:3px;">(🟢 Online)</span>`;
+      } else {
+        poolBadge.style.background = 'rgba(148,163,184,0.1)';
+        poolBadge.style.color = '#94a3b8';
+        poolBadge.style.border = '1px solid rgba(148,163,184,0.2)';
+        poolBadge.innerHTML = `🌐 ORDS: <strong>${poolName}</strong> <span style="color:#94a3b8; font-size:0.7rem; margin-left:3px;">(⚪ Offline)</span>`;
+      }
+    } else {
+      poolBadge.style.display = 'none';
+    }
   }
-  if (containerBadgesEl) {
-    const cnames = b.container_names || [];
-    containerBadgesEl.innerHTML = cnames.map(c => `
-      <span class="badge" style="background: rgba(148,163,184,0.1); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.2); font-family: ui-monospace, monospace; font-size: 0.75rem;">📦 ${c}</span>
-    `).join('');
+
+  // 3. Modal Header Live Container Pills
+  if (headerContainersEl) {
+    if (cnames.length === 0) {
+      headerContainersEl.innerHTML = '';
+    } else {
+      headerContainersEl.innerHTML = cnames.map(c => {
+        const comp = (b.components || []).find(item => item.name === c) || {};
+        const cport = comp.host_ports ? comp.host_ports.split(',')[0].trim() : '';
+        const alive = isContainerAlive(c);
+        if (alive) {
+          return `<span class="badge" style="background:rgba(34,197,94,0.12); color:#4ade80; border:1px solid rgba(34,197,94,0.3); font-family:ui-monospace,monospace; font-size:0.75rem; padding:3px 8px; display:inline-flex; align-items:center; gap:5px;">🟢 <strong>${c}</strong> ${cport ? `<span style="color:#86efac; font-size:0.7rem;">(${cport})</span>` : ''}</span>`;
+        } else {
+          return `<span class="badge" style="background:rgba(148,163,184,0.1); color:#94a3b8; border:1px solid rgba(148,163,184,0.2); font-family:ui-monospace,monospace; font-size:0.75rem; padding:3px 8px; display:inline-flex; align-items:center; gap:5px;">⚪ <strong>${c}</strong></span>`;
+        }
+      }).join('');
+    }
   }
 
   // 1. Render Mermaid Topology Diagram
@@ -2640,6 +2950,7 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
         <tbody>
     `;
     (b.users || []).forEach(u => {
+      const isDbUser = (!u.db || u.db.startsWith('db-'));
       const aliasCol = u.wallet_alias ? `
         <div style="display:flex; flex-direction:column; gap:4px;">
           <div><code style="color:#22c55e; font-size:0.8rem; font-weight:600; background:rgba(34,197,94,0.08); padding:2px 6px; border-radius:4px;">${u.wallet_alias}</code></div>
@@ -2647,9 +2958,10 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
             <button class="btn btn-secondary" style="padding:2px 7px; font-size:0.72rem;" onclick="copyTnsAlias('${u.wallet_alias}', this)" title="${dict.btn_copy_alias || 'Copy Alias'}">
               <span>📋</span> <span>${dict.btn_copy_alias || 'Alias'}</span>
             </button>
+            ${isDbUser ? `
             <button class="btn btn-secondary" style="padding:2px 7px; font-size:0.72rem;" onclick="copySqlclCmd('${u.wallet_alias}', this)" title="${dict.btn_copy_sqlcl || 'Copy SQLcl'}">
               <span>💻</span> <span>${dict.btn_copy_sqlcl || 'SQLcl'}</span>
-            </button>
+            </button>` : ''}
           </div>
         </div>
       ` : `<span style="color:#64748b; font-size:0.75rem;">Web / VNC only</span>`;
@@ -2674,7 +2986,7 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
               <span>🔑</span> <span>${dict.btn_copy_pwd || 'Password'}</span>
             </button>
           ` : ''}
-          ${(u.wallet_alias && u.username) ? `
+          ${(u.wallet_alias && u.username && isDbUser) ? `
             <button class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem; color:#fbbf24; border-color:rgba(251,191,36,0.3);" onclick="triggerRotateUserPassword(${b.num}, '${(u.db && u.db.toLowerCase().startsWith('db-')) ? u.db.toLowerCase() : ((b.container_names && b.container_names.find(c => c.startsWith('db-'))) || 'db-proxy')}', '${u.username.toLowerCase()}', this)" title="${dict.btn_rotate_pwd || 'Rotate Password'}">
               <span>🔄</span> <span>${dict.btn_rotate_pwd || 'Rotate'}</span>
             </button>
@@ -2703,72 +3015,114 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
     userContainer.innerHTML = userHtml;
   }
 
-  // 4. Render Hardware & Resource Requirements (Clean 4-Card Grid)
-  const resContainer = document.getElementById('bp-modal-resources');
-  if (resContainer) {
-    const userCount = (b.users || []).length;
-    let accLabel = dict.meta_accounts || 'Accounts';
-    if (userCount === 1) {
-      accLabel = dict.account_singular || (currentLang === 'et' ? 'konto' : 'Account');
-    } else {
-      accLabel = dict.account_plural || (currentLang === 'et' ? 'kontot' : 'Accounts');
-    }
 
-    resContainer.innerHTML = `
-      <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px;">
-        <div style="font-size:0.75rem; color:#94a3b8;">${dict.modal_config_file || 'Konfiguratsioonifail'}</div>
-        <div style="font-size:0.95rem; font-weight:700; color:#38bdf8; font-family:ui-monospace,monospace; margin-top:4px; word-break:break-all;">${b.file}</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px;">
-        <div style="font-size:0.75rem; color:#94a3b8;">${dict.metric_ram || 'Mälu (RAM)'}</div>
-        <div style="font-size:1.2rem; font-weight:700; color:#38bdf8; margin-top:2px;">${b.ram}</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px;">
-        <div style="font-size:0.75rem; color:#94a3b8;">${dict.th_container || 'Konteinereid'}</div>
-        <div style="font-size:1.2rem; font-weight:700; color:#4ade80; margin-top:2px; word-break:break-all;">${b.containers}</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px;">
-        <div style="font-size:0.75rem; color:#94a3b8;">${dict.metric_accounts || 'Kasutajakontosid'}</div>
-        <div style="font-size:1.2rem; font-weight:700; color:#c084fc; margin-top:2px;">${userCount} ${accLabel}</div>
-      </div>
-    `;
-  }
 
   // 5. Render Benchmarks & Performance
   const benchContainer = document.getElementById('bp-modal-benchmarks');
   if (benchContainer) {
-    if (b.benchmarks && b.benchmarks.steps) {
-      const steps = b.benchmarks.steps;
-      let totalDur = 'N/A';
-      if (b.benchmarks.total_duration_formatted || b.benchmarks.total_duration_seconds) {
-        totalDur = b.benchmarks.total_duration_formatted || (b.benchmarks.total_duration_seconds + 's');
-      }
-      let sHtml = `<div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-        <span style="color:#94a3b8; font-size:0.85rem;">Kokku mõõdetud kestus:</span>
-        <strong style="color:#4ade80; font-size:0.95rem;">${totalDur}</strong>
-      </div><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px; font-size:0.8rem;">`;
-      for (const [sKey, sVal] of Object.entries(steps)) {
-        if (sVal > 0) {
-          const cleanName = sKey.replace(/step\d+_/, '').replace(/_seconds/, '').replace(/_/g, ' ');
-          sHtml += `<div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.02); padding:4px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
-            <span style="color:#cbd5e1; text-transform:capitalize;">${cleanName}:</span>
-            <span style="color:#38bdf8; font-family:ui-monospace,monospace; font-weight:600;">${sVal}s</span>
-          </div>`;
-        }
-      }
-      sHtml += '</div>';
-      benchContainer.innerHTML = sHtml;
-    } else {
-      benchContainer.innerHTML = `
-        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-          <div>
-            <div style="font-size:0.85rem; color:#94a3b8;">🚀 FastStart Snapshot Taastamine (Pass 2): <strong style="color:#4ade80;">~15s – 22s</strong></div>
-            <div style="font-size:0.85rem; color:#94a3b8; margin-top:3px;">❄️ Külm Paigaldus Nullist (Pass 1): <strong style="color:#f87171;">~3m 45s – 5m 20s</strong></div>
+    // 1. Cold Setup Telemetry
+    let setupHtml = '';
+    const bpBench = b.benchmarks || null;
+    if (bpBench && (Array.isArray(bpBench.history) && bpBench.history.length > 0 || bpBench.total_duration_seconds || bpBench.average_duration_seconds)) {
+      const hist = bpBench.history || [];
+      const latestRun = hist.length > 0 ? hist[hist.length - 1] : null;
+      const latestSecs = latestRun ? latestRun.duration_seconds : (bpBench.total_duration_seconds || bpBench.average_duration_seconds);
+      const latestDur = formatDurationSeconds(latestSecs);
+      const latestTime = latestRun && latestRun.timestamp ? formatBenchmarkTimestamp(latestRun.timestamp) : '';
+      const avgSecs = bpBench.average_duration_seconds || bpBench.total_duration_seconds || latestSecs;
+      const avgDur = formatDurationSeconds(avgSecs);
+      const runsCount = bpBench.runs_count || hist.length || 1;
+
+      setupHtml = `
+        <div style="flex: 1; min-width: 220px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px 14px;">
+          <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">
+            ❄️ ${dict.telemetry_cold_setup || 'Külm Paigaldus Nullist'}
           </div>
-          <span class="badge badge-success" style="font-size:0.75rem;">Instant DR Valmidus (~15s)</span>
+          <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; font-family: ui-monospace, monospace;">${latestDur}</span>
+            ${latestTime ? `<span style="font-size: 0.78rem; color: #64748b;">(${latestTime})</span>` : ''}
+          </div>
+          <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 4px;">
+            ${dict.telemetry_avg || 'Keskmine'}: <strong style="color: #f8fafc;">${avgDur}</strong> (${runsCount} ${dict.telemetry_runs || 'mõõtmist'})
+          </div>
+        </div>
+      `;
+    } else {
+      setupHtml = `
+        <div style="flex: 1; min-width: 220px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px 14px;">
+          <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">
+            ❄️ ${dict.telemetry_cold_setup || 'Külm Paigaldus Nullist'}
+          </div>
+          <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8; font-family: ui-monospace, monospace;">${b.ram ? b.ram : 'Standard'}</span>
+          </div>
+          <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">
+            ${dict.telemetry_no_runs || 'Esmane paigaldus tegemata'}
+          </div>
         </div>
       `;
     }
+
+    // 2. FastStart Snapshot Telemetry
+    let restoreHtml = '';
+    const snapBench = (typeof SNAPSHOT_BENCHMARKS_DATA !== 'undefined' && SNAPSHOT_BENCHMARKS_DATA) ? SNAPSHOT_BENCHMARKS_DATA : null;
+    if (snapBench && (snapBench.restore_duration_seconds || snapBench.started_at)) {
+      const restDur = formatDurationSeconds(snapBench.restore_duration_seconds || 18);
+      const restTime = snapBench.started_at ? formatBenchmarkTimestamp(snapBench.started_at) : (snapBench.finished_at ? formatBenchmarkTimestamp(snapBench.finished_at) : '');
+      const profileName = snapBench.profile_name || snapBench.snapshot_file || 'Golden Snapshot';
+      restoreHtml = `
+        <div style="flex: 1; min-width: 220px; background: rgba(34,197,94,0.03); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; padding: 10px 14px;">
+          <div style="font-size: 0.75rem; color: #4ade80; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">
+            🚀 ${dict.telemetry_restore_snapshot || 'FastStart Snapshot Taastamine'}
+          </div>
+          <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 1.15rem; font-weight: 700; color: #4ade80; font-family: ui-monospace, monospace;">${restDur}</span>
+            ${restTime ? `<span style="font-size: 0.78rem; color: #64748b;">(${restTime})</span>` : ''}
+          </div>
+          <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 4px;">
+            ${dict.telemetry_profile || 'Profiil'}: <strong style="color: #f8fafc;">${profileName}</strong>
+          </div>
+        </div>
+      `;
+    } else {
+      restoreHtml = `
+        <div style="flex: 1; min-width: 220px; background: rgba(34,197,94,0.03); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; padding: 10px 14px;">
+          <div style="font-size: 0.75rem; color: #4ade80; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 4px;">
+            🚀 ${dict.telemetry_restore_snapshot || 'FastStart Snapshot Taastamine'}
+          </div>
+          <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 1.15rem; font-weight: 700; color: #4ade80; font-family: ui-monospace, monospace;">Valmis</span>
+          </div>
+          <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">
+            ${dict.telemetry_golden_ready || 'Golden Snapshot valmidus'}
+          </div>
+        </div>
+      `;
+    }
+
+    let stepsHtml = '';
+    if (bpBench && bpBench.steps) {
+      stepsHtml = '<div style="margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px; font-size: 0.78rem;">';
+      for (const [sKey, sVal] of Object.entries(bpBench.steps)) {
+        if (sVal > 0) {
+          const cleanName = sKey.replace(/step\d+_/, '').replace(/_seconds/, '').replace(/_/g, ' ');
+          stepsHtml += `
+            <div style="display: flex; justify-content: space-between; background: rgba(255,255,255,0.02); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+              <span style="color: #cbd5e1; text-transform: capitalize;">${cleanName}:</span>
+              <span style="color: #38bdf8; font-family: ui-monospace, monospace; font-weight: 600;">${formatDurationSeconds(sVal)}</span>
+            </div>`;
+        }
+      }
+      stepsHtml += '</div>';
+    }
+
+    benchContainer.innerHTML = `
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        ${setupHtml}
+        ${restoreHtml}
+      </div>
+      ${stepsHtml}
+    `;
   }
 
   // 6. Render Latest Execution Log
@@ -2788,7 +3142,7 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
   if (actionsGrid) {
     const hasDb = (b.components || []).some(c => (c.type && (c.type.toLowerCase().includes('database') || c.type.toLowerCase().includes('pdb'))) || (c.name && c.name.startsWith('db-')));
     const cnames = (b && b.container_names) ? b.container_names : [];
-    const toStop = cnames.filter(c => !['db-proxy', 'app-ords'].includes(c) && !c.startsWith('ords/'));
+    const toStop = b.num === 0 ? ['db-proxy', 'app-ords'] : cnames.filter(c => !c.startsWith('ords/'));
     const stopTarget = toStop.length > 0 ? toStop.join(' ') : (cnames.join(' ') || `blueprint-${b.num}`);
 
     // Card 1: Activate / Add Stack (setup-all.sh)
@@ -2830,26 +3184,23 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
     `;
 
     // Card 3: Stop Services
-    const isCoreProtected = b.num === 0;
+    const isCore = b.num === 0;
     const cardStop = `
-      <div style="background: rgba(148, 163, 184, 0.04); border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div style="background: rgba(148, 163, 184, 0.04); border: 1px solid ${isCore ? 'rgba(251, 191, 36, 0.35)' : 'rgba(148, 163, 184, 0.25)'}; border-radius: 8px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
         <div>
-          <div style="font-weight: 700; color: #cbd5e1; font-size: 0.92rem; margin-bottom: 6px;">${dict.modal_act_stop_title || '⏹️ Peata See Pinu'}</div>
-          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${dict.modal_act_stop_desc || 'Peatab ainult selle blueprinti konteinerid ja vabastab hosti mälu. Teised andmebaasid jäävad tööle.'}</p>
+          <div style="font-weight: 700; color: ${isCore ? '#fbbf24' : '#cbd5e1'}; font-size: 0.92rem; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+            <span>${dict.modal_act_stop_title || '⏹️ Peata See Pinu'}</span>
+            ${isCore ? `<span class="badge" style="background: rgba(251, 191, 36, 0.12); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.35); font-size: 0.7rem; padding: 2px 6px;">⚠️ ${dict.modal_act_stop_protected || 'Tuum'}</span>` : ''}
+          </div>
+          <p style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4; margin: 0 0 10px 0;">${isCore ? (dict.modal_act_stop_core_desc || 'Peatab tuumteenused (db-proxy ja app-ords). Keskne APEX/ORDS värav peatatakse. Enne jätkamist kuvatakse hoiatus.') : (dict.modal_act_stop_desc || 'Peatab ainult selle blueprinti konteinerid ja vabastab hosti mälu. Teised andmebaasid jäävad tööle.')}</p>
           <div class="code-box" style="font-size: 0.75rem; margin-bottom: 10px;">
             <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
             podman stop ${stopTarget}
           </div>
         </div>
-        ${isCoreProtected ? `
-          <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; opacity: 0.5; cursor: not-allowed;" disabled title="Core Base Protected">
-            <span>🔒</span> <span>${dict.modal_act_stop_protected || 'Core Protected'}</span>
-          </button>
-        ` : `
-          <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; border-color: rgba(239,68,68,0.5); color: #f87171;" onclick="triggerBlueprintActionModal(${b.num}, 'stop')">
-            <span>⏹️</span> <span>${dict.modal_act_stop_btn || 'Peata See Pinu'}</span>
-          </button>
-        `}
+        <button class="btn btn-secondary" style="width: 100%; font-size: 0.82rem; padding: 6px 12px; border-color: rgba(239,68,68,0.5); color: #f87171;" onclick="triggerBlueprintActionModal(${b.num}, 'stop')">
+          <span>${isCore ? '⚠️' : '⏹️'}</span> <span>${dict.modal_act_stop_btn || 'Peata See Pinu'}</span>
+        </button>
       </div>
     `;
 
@@ -2945,7 +3296,7 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
           <span style="font-size: 1.1rem;">🛡️</span>
           <strong style="font-size: 0.92rem; color: #4ade80;" data-i18n="modal_zone_dr">${dict.modal_zone_dr || 'Kiirtaastus & Turvalisus (Disaster Recovery & Security)'}</strong>
         </div>
-        <span style="font-size: 0.75rem; color: #94a3b8;" data-i18n="modal_zone_dr_sub">${dict.modal_zone_dr_sub || 'Taasta puhas algseis ~15s Golden Snapshotist või roteeri paroolid'}</span>
+        <span style="font-size: 0.75rem; color: #94a3b8;" data-i18n="modal_zone_dr_sub">${dict.modal_zone_dr_sub || 'Taasta puhas algseis Golden Snapshotist või roteeri paroolid'}</span>
       </div>
       ${cardRapidRestore}
       ${cardRotate}
@@ -2973,6 +3324,374 @@ async function openBlueprintModal(bNum, initialTab = 'arch') {
   const modal = document.getElementById('bp-modal-backdrop');
   if (modal) modal.classList.add('active');
   document.body.style.overflow = 'hidden';
+}
+
+// ==========================================
+// BLUEPRINT CONFIG & PROFILES TAB
+// ==========================================
+let BP_CONFIG_FILES = [];
+let BP_CONFIG_ACTIVE_IDX = 0;
+let BP_CONFIG_IS_EDITING = false;
+
+function renderBlueprintConfigTab(bNum) {
+  const b = BLUEPRINTS_DATA.find(item => item.num === bNum);
+  if (!b) return;
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  // 1. Collect all files for this blueprint:
+  // First item is always the blueprint file itself (.env.*)
+  const bpRelPath = b.rel_path || `config/blueprints/${b.file}`;
+  const files = [
+    {
+      type: 'blueprint',
+      name: b.file,
+      path: bpRelPath,
+      label: `${b.file}`,
+      category: 'Blueprint',
+      content: b.content || '',
+      originalContent: b.content || '',
+      isYaml: false
+    }
+  ];
+
+  // 2. Discover referenced YAML profiles from blueprint content
+  const lines = (b.content || '').split('\n');
+  const varsList = [];
+  const profilesPool = (typeof window.PROFILES_DATA !== 'undefined' && Array.isArray(window.PROFILES_DATA))
+    ? window.PROFILES_DATA
+    : (Array.isArray(CACHED_PROFILES) ? CACHED_PROFILES : []);
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx > 0) {
+      const k = trimmed.substring(0, eqIdx).trim();
+      const v = trimmed.substring(eqIdx + 1).trim();
+      if (!v || v === 'NONE' || v === 'none') {
+        varsList.push({ key: k, value: v, profileObj: null });
+        continue;
+      }
+
+      // Match profile object by name or rel_path
+      const pObj = profilesPool.find(p => {
+        const baseName = (p.name || '').replace(/\.yaml$/, '');
+        return baseName === v || (p.rel_path && p.rel_path.endsWith(`/${v}.yaml`)) || (p.rel_path && p.rel_path.endsWith(`/${v}`));
+      });
+
+      varsList.push({ key: k, value: v, profileObj: pObj || null });
+
+      if (pObj && !files.some(f => f.path === pObj.rel_path)) {
+        files.push({
+          type: 'profile',
+          key: k,
+          name: pObj.name.endsWith('.yaml') ? pObj.name : `${pObj.name}.yaml`,
+          path: pObj.rel_path,
+          label: pObj.name.endsWith('.yaml') ? pObj.name : `${pObj.name}.yaml`,
+          category: pObj.category || 'Profile',
+          content: pObj.content || '',
+          originalContent: pObj.content || '',
+          isYaml: true
+        });
+      }
+    }
+  }
+
+  BP_CONFIG_FILES = files;
+  if (BP_CONFIG_ACTIVE_IDX >= files.length) {
+    BP_CONFIG_ACTIVE_IDX = 0;
+  }
+
+  // 3. Render file selector pills
+  const pillsContainer = document.getElementById('bp-config-files-list');
+  if (pillsContainer) {
+    pillsContainer.innerHTML = files.map((f, idx) => {
+      const isSel = (idx === BP_CONFIG_ACTIVE_IDX);
+      const icon = f.type === 'blueprint' ? '📁' : '📄';
+      const catBadge = f.category ? `<span style="font-size:0.68rem; opacity:0.75; margin-left:4px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.08);">${f.category}</span>` : '';
+      const bgStyle = isSel
+        ? 'background: rgba(56,189,248,0.2); border: 1px solid #38bdf8; color: #38bdf8; font-weight: 600;'
+        : 'background: rgba(15,23,42,0.6); border: 1px solid rgba(148,163,184,0.2); color: #cbd5e1;';
+
+      return `
+        <button type="button" class="btn btn-sm" onclick="selectBlueprintConfigFile(${idx})" style="${bgStyle} font-size: 0.78rem; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.15s ease;">
+          <span>${icon}</span>
+          <span style="font-family: ui-monospace, monospace;">${f.label}</span>
+          ${catBadge}
+        </button>
+      `;
+    }).join('');
+  }
+
+  // 4. Render Variables & Resolved Profiles Table
+  const varsContainer = document.getElementById('bp-config-vars-container');
+  if (varsContainer) {
+    if (varsList.length === 0) {
+      varsContainer.innerHTML = '<span style="color:#64748b; font-size:0.8rem;">Muutujaid ei leitud.</span>';
+    } else {
+      let vHtml = `
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border); color: #94a3b8; text-align: left;">
+              <th style="padding: 6px 10px; width: 25%; font-family: ui-monospace, monospace;">Parameeter (ENV)</th>
+              <th style="padding: 6px 10px; width: 30%;">Väärtus</th>
+              <th style="padding: 6px 10px; width: 30%;">Seotud fail</th>
+              <th style="padding: 6px 10px; width: 15%; text-align: right;">Tegevus</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      varsList.forEach(v => {
+        const fileIdx = files.findIndex(f => f.path === (v.profileObj ? v.profileObj.rel_path : null));
+        const actionBtn = fileIdx >= 0
+          ? `<button type="button" class="btn btn-sm btn-secondary" style="padding: 2px 8px; font-size: 0.72rem;" onclick="selectBlueprintConfigFile(${fileIdx})">🔍 Ava redaktoris</button>`
+          : '<span style="color:#64748b; font-size:0.75rem;">—</span>';
+
+        const fileLink = v.profileObj
+          ? `<code style="color: #38bdf8; font-size: 0.75rem;">${v.profileObj.rel_path}</code>`
+          : (v.value === 'NONE' || v.value === 'none' ? '<span style="color:#94a3b8; font-style:italic;">Keelatud (NONE)</span>' : '<span style="color:#64748b; font-size:0.75rem;">Otsene väärtus</span>');
+
+        vHtml += `
+          <tr style="border-bottom: 1px solid rgba(148,163,184,0.1);">
+            <td style="padding: 6px 10px; font-family: ui-monospace, monospace; color: #a5b4fc;">${v.key}</td>
+            <td style="padding: 6px 10px; font-family: ui-monospace, monospace; color: #f1f5f9; font-weight: 600;">${v.value}</td>
+            <td style="padding: 6px 10px;">${fileLink}</td>
+            <td style="padding: 6px 10px; text-align: right;">${actionBtn}</td>
+          </tr>
+        `;
+      });
+      vHtml += '</tbody></table>';
+      varsContainer.innerHTML = vHtml;
+    }
+  }
+
+  // 5. Load active file into editor
+  loadActiveBlueprintConfigFile();
+}
+
+function selectBlueprintConfigFile(idx) {
+  if (idx < 0 || idx >= BP_CONFIG_FILES.length) return;
+  BP_CONFIG_ACTIVE_IDX = idx;
+  BP_CONFIG_IS_EDITING = false;
+
+  // Refresh pill highlights
+  const pillsContainer = document.getElementById('bp-config-files-list');
+  if (pillsContainer) {
+    const btns = pillsContainer.querySelectorAll('button');
+    btns.forEach((btn, bIdx) => {
+      const isSel = (bIdx === idx);
+      btn.style.background = isSel ? 'rgba(56,189,248,0.2)' : 'rgba(15,23,42,0.6)';
+      btn.style.borderColor = isSel ? '#38bdf8' : 'rgba(148,163,184,0.2)';
+      btn.style.color = isSel ? '#38bdf8' : '#cbd5e1';
+      btn.style.fontWeight = isSel ? '600' : 'normal';
+    });
+  }
+
+  loadActiveBlueprintConfigFile();
+}
+
+async function loadActiveBlueprintConfigFile() {
+  const f = BP_CONFIG_FILES[BP_CONFIG_ACTIVE_IDX];
+  if (!f) return;
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  const pathEl = document.getElementById('bp-config-active-path');
+  const iconEl = document.getElementById('bp-config-file-icon');
+  const badgeEl = document.getElementById('bp-config-mode-badge');
+  const msgEl = document.getElementById('bp-config-status-msg');
+  const ta = document.getElementById('bp-config-editor-textarea');
+  const btnSave = document.getElementById('btn-bp-config-save');
+  const btnRevert = document.getElementById('btn-bp-config-revert');
+  const editText = document.getElementById('bp-config-edit-text');
+  const editIcon = document.getElementById('bp-config-edit-icon');
+
+  if (pathEl) pathEl.textContent = f.path;
+  if (iconEl) iconEl.textContent = f.type === 'blueprint' ? '📁' : '📄';
+  if (badgeEl) {
+    badgeEl.textContent = dict.btn_view_mode || 'Vaaterežiim';
+    badgeEl.style.background = 'rgba(148, 163, 184, 0.15)';
+    badgeEl.style.color = '#cbd5e1';
+  }
+  if (msgEl) msgEl.innerHTML = '';
+  if (btnSave) btnSave.style.display = 'none';
+  if (btnRevert) btnRevert.style.display = 'none';
+  if (editText) editText.textContent = dict.btn_edit_mode || 'Muuda';
+  if (editIcon) editIcon.textContent = '✏️';
+
+  if (ta) {
+    ta.readOnly = true;
+    ta.value = f.content || '';
+  }
+
+  // If connected to bridge, fetch freshest content live
+  try {
+    const ep = f.type === 'blueprint'
+      ? `${BRIDGE_URL}/api/blueprint?path=${encodeURIComponent(f.path)}`
+      : `${BRIDGE_URL}/api/profile?path=${encodeURIComponent(f.path)}`;
+    const resp = await fetch(ep, { mode: 'cors' });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && data.content !== undefined) {
+        f.content = data.content;
+        f.originalContent = data.content;
+        if (ta && ta.readOnly) {
+          ta.value = data.content;
+        }
+      }
+    }
+  } catch (e) {
+    // Bridge offline; pre-embedded content remains in textarea
+  }
+}
+
+function toggleBlueprintConfigEdit() {
+  const f = BP_CONFIG_FILES[BP_CONFIG_ACTIVE_IDX];
+  if (!f) return;
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  BP_CONFIG_IS_EDITING = !BP_CONFIG_IS_EDITING;
+
+  const ta = document.getElementById('bp-config-editor-textarea');
+  const btnSave = document.getElementById('btn-bp-config-save');
+  const btnRevert = document.getElementById('btn-bp-config-revert');
+  const badgeEl = document.getElementById('bp-config-mode-badge');
+  const msgEl = document.getElementById('bp-config-status-msg');
+  const editText = document.getElementById('bp-config-edit-text');
+  const editIcon = document.getElementById('bp-config-edit-icon');
+
+  if (BP_CONFIG_IS_EDITING) {
+    if (ta) {
+      ta.readOnly = false;
+      ta.focus();
+    }
+    if (btnSave) btnSave.style.display = '';
+    if (btnRevert) btnRevert.style.display = '';
+    if (editText) editText.textContent = dict.btn_view_mode || 'Vaata';
+    if (editIcon) editIcon.textContent = '🔒';
+    if (badgeEl) {
+      badgeEl.textContent = `✏️ ${dict.btn_edit_mode || 'Muutmisrežiim'}`;
+      badgeEl.style.background = 'rgba(56, 189, 248, 0.2)';
+      badgeEl.style.color = '#38bdf8';
+    }
+    if (msgEl) msgEl.innerHTML = '<span style="color:#38bdf8;">✏️ Redigeerimisrežiim aktiivne. Tee muudatused ja salvesta.</span>';
+  } else {
+    if (ta) ta.readOnly = true;
+    if (btnSave) btnSave.style.display = 'none';
+    if (btnRevert) btnRevert.style.display = 'none';
+    if (editText) editText.textContent = dict.btn_edit_mode || 'Muuda';
+    if (editIcon) editIcon.textContent = '✏️';
+    if (badgeEl) {
+      badgeEl.textContent = dict.btn_view_mode || 'Vaaterežiim';
+      badgeEl.style.background = 'rgba(148, 163, 184, 0.15)';
+      badgeEl.style.color = '#cbd5e1';
+    }
+    if (msgEl) msgEl.innerHTML = '';
+  }
+}
+
+async function saveBlueprintConfigActiveFile() {
+  const f = BP_CONFIG_FILES[BP_CONFIG_ACTIVE_IDX];
+  if (!f) return;
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  const ta = document.getElementById('bp-config-editor-textarea');
+  const btnSave = document.getElementById('btn-bp-config-save');
+  const msgEl = document.getElementById('bp-config-status-msg');
+  if (!ta) return;
+
+  const newContent = ta.value;
+
+  // Port conflict check for YAML profiles
+  if (f.type === 'profile') {
+    const portMatch = newContent.match(/(?:db_port|http_port|port):\s*([0-9]+)/);
+    if (portMatch) {
+      const editedPort = parseInt(portMatch[1], 10);
+      const profilesPool = (typeof window.PROFILES_DATA !== 'undefined' && Array.isArray(window.PROFILES_DATA))
+        ? window.PROFILES_DATA
+        : (Array.isArray(CACHED_PROFILES) ? CACHED_PROFILES : []);
+      const conflict = profilesPool.find(p => p.rel_path !== f.path && p.port === editedPort);
+      if (conflict) {
+        if (!confirm(`⚠️ Hoiatus: Port ${editedPort} on juba kasutusel profiilis '${conflict.name}' (${conflict.category}). Kas soovid ikkagi salvestada?`)) {
+          return;
+        }
+      }
+    }
+  }
+
+  if (btnSave) btnSave.disabled = true;
+  if (msgEl) msgEl.innerHTML = '<span style="color:#facc15;">⏳ Salvestan ja genereerin Dev Hub uuesti...</span>';
+
+  try {
+    const targetUrl = f.type === 'blueprint' ? `${BRIDGE_URL}/api/blueprint/save` : `${BRIDGE_URL}/api/profile`;
+    const resp = await fetch(targetUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: f.path, content: newContent }),
+      mode: 'cors'
+    });
+    const resData = await resp.json();
+    if (resp.ok) {
+      f.content = newContent;
+      f.originalContent = newContent;
+
+      // Update in-memory models
+      if (f.type === 'blueprint') {
+        const bpObj = BLUEPRINTS_DATA.find(b => b.num === activeBpModalNum);
+        if (bpObj) bpObj.content = newContent;
+      } else if (f.type === 'profile') {
+        const profilesPool = (typeof window.PROFILES_DATA !== 'undefined' && Array.isArray(window.PROFILES_DATA))
+          ? window.PROFILES_DATA
+          : (Array.isArray(CACHED_PROFILES) ? CACHED_PROFILES : []);
+        const pTarget = profilesPool.find(p => p.rel_path === f.path);
+        if (pTarget) pTarget.content = newContent;
+      }
+
+      if (msgEl) msgEl.innerHTML = `<span style="color:#4ade80;">✅ ${resData.message || dict.config_saved_success || 'Salvestatud edukalt!'}</span>`;
+      if (typeof showToast === 'function') {
+        showToast(`✅ ${f.name} salvestatud! Dev Hub genereeritakse uuesti taustal.`);
+      }
+
+      // Return to view mode
+      toggleBlueprintConfigEdit();
+    } else {
+      if (msgEl) msgEl.innerHTML = `<span style="color:#f87171;">❌ Viga: ${resData.error || 'Salvestamine ebaõnnestus'}</span>`;
+    }
+  } catch (e) {
+    if (msgEl) msgEl.innerHTML = `<span style="color:#f87171;">❌ Salvestamiseks on vaja aktiivset Dev Hub Bridge'i (${BRIDGE_URL}): ${e.message}</span>`;
+  } finally {
+    if (btnSave) btnSave.disabled = false;
+  }
+}
+
+function revertBlueprintConfigContent() {
+  const f = BP_CONFIG_FILES[BP_CONFIG_ACTIVE_IDX];
+  if (!f) return;
+
+  const ta = document.getElementById('bp-config-editor-textarea');
+  const msgEl = document.getElementById('bp-config-status-msg');
+  if (ta && f.originalContent !== undefined) {
+    ta.value = f.originalContent;
+    if (msgEl) msgEl.innerHTML = '<span style="color:#facc15;">🔄 Algne sisu taastatud.</span>';
+  }
+}
+
+function copyBlueprintConfigContent() {
+  const ta = document.getElementById('bp-config-editor-textarea');
+  if (!ta) return;
+  copyTextToClipboard(ta.value);
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  if (typeof showToast === 'function') {
+    showToast(`📋 ${dict.btn_copy_config || 'Kopeeritud'} lõikelauale!`);
+  }
 }
 
 function copyCommandSnippet(cmdStr, btn) {
@@ -3549,7 +4268,7 @@ function renderBlueprintLatestLogHtml(container, bpNum, logInfo, dict) {
   if (!container) return;
   const b = BLUEPRINTS_DATA.find(item => item.num === bpNum);
   const bench = b ? b.benchmarks : null;
-  let benchDuration = '🚀 FastStart ~15s';
+  let benchDuration = '🚀 FastStart';
   if (bench && (bench.total_duration_formatted || bench.total_duration_seconds)) {
     benchDuration = bench.total_duration_formatted || (bench.total_duration_seconds + 's');
   }
@@ -3755,6 +4474,49 @@ function parseAnsiColorsToHtml(rawText) {
   return text;
 }
 
+function parseTimeStringToSeconds(str) {
+  if (!str) return 0;
+  const parts = str.trim().split(':').map(n => parseInt(n, 10));
+  if (parts.length === 3) {
+    return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+  }
+  if (parts.length === 2) {
+    return (parts[0] || 0) * 60 + (parts[1] || 0);
+  }
+  return 0;
+}
+
+function formatSecondsToTimeString(totalSec) {
+  const secNorm = ((Math.floor(totalSec) % 86400) + 86400) % 86400;
+  const h = String(Math.floor(secNorm / 3600)).padStart(2, '0');
+  const m = String(Math.floor((secNorm % 3600) / 60)).padStart(2, '0');
+  const s = String(secNorm % 60).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
+function parseLogBaseTime(rawText, filename) {
+  if (typeof rawText === 'string') {
+    // 1. Check Algusaeg / Started at / TIMESTAMP in text
+    const matchHeader = rawText.match(/(?:Algusaeg|Started at|TIMESTAMP)[:=\s]+(?:[0-9]{4}-[0-9]{2}-[0-9]{2}\s+)?([0-2][0-9]:[0-5][0-9]:[0-5][0-9])/i);
+    if (matchHeader) {
+      return parseTimeStringToSeconds(matchHeader[1]);
+    }
+    // 2. Check for leading timestamp on any early line
+    const lineMatch = rawText.slice(0, 1500).match(/^\[?([0-2][0-9]:[0-5][0-9]:[0-5][0-9])\]?/m);
+    if (lineMatch) {
+      return parseTimeStringToSeconds(lineMatch[1]);
+    }
+  }
+  // 3. Check filename timestamp YYYYMMDD_HHMMSS
+  if (filename) {
+    const fnMatch = filename.match(/_([0-9]{4}[0-9]{2}[0-9]{2})_([0-2][0-9])([0-5][0-9])([0-5][0-9])\.log/);
+    if (fnMatch) {
+      return parseInt(fnMatch[2], 10) * 3600 + parseInt(fnMatch[3], 10) * 60 + parseInt(fnMatch[4], 10);
+    }
+  }
+  return null;
+}
+
 function formatTerminalLogLine(rawLine, opts) {
   const showTime = !opts || opts.showTime !== false;
   const showColors = !opts || opts.showColors !== false;
@@ -3765,9 +4527,9 @@ function formatTerminalLogLine(rawLine, opts) {
 
   const clean = stripAnsiCodes(rawLine).trim();
   const isSeparator = /^[-=~*#]{4,}$/.test(clean);
-  const isTree = /^[├└│─\s]+/.test(clean) && (clean.includes('├──') || clean.includes('└──'));
+  const isTree = /^[├└│─\s]+/.test(clean) && (clean.includes('├──') || clean.includes('└──') || clean.includes('├─') || clean.includes('└─'));
 
-  let timeStr = '';
+  let timeStr = (opts && opts.timeStr) || '';
   let content = rawLine;
 
   const isoMatch = content.match(/^\[?([0-2][0-9]:[0-5][0-9]:[0-5][0-9])\]?\s*/);
@@ -3777,20 +4539,22 @@ function formatTerminalLogLine(rawLine, opts) {
     timeStr = isoMatch[1];
     content = content.slice(isoMatch[0].length);
   } else if (relMatch) {
-    timeStr = (opts && opts.defaultTime) || new Date().toLocaleTimeString('et-EE', { hour12: false });
+    timeStr = relMatch[1];
     content = content.slice(relMatch[0].length);
-  } else if (!isSeparator && !isTree && showTime && opts && opts.defaultTime) {
+  } else if (!isSeparator && !isTree && showTime && opts && opts.defaultTime && !timeStr) {
     timeStr = opts.defaultTime;
+  }
+
+  if (isSeparator || isTree) {
+    timeStr = '';
   }
 
   content = maskLogSecrets(content);
   const formattedContent = showColors ? parseAnsiColorsToHtml(content) : escapeHtml(stripAnsiCodes(content));
 
   let timeHtml = '';
-  if (showTime) {
-    timeHtml = timeStr 
-      ? `<span class="terminal-time">${timeStr}</span>` 
-      : `<span class="terminal-time">&nbsp;</span>`;
+  if (showTime && timeStr) {
+    timeHtml = `<span class="terminal-time">${timeStr}</span>`;
   }
 
   return `<span class="terminal-line">${timeHtml}${formattedContent}</span>`;
@@ -3802,17 +4566,76 @@ function formatTerminalLogText(rawText, options) {
   const showTime = opts.showTime !== false;
   const showColors = opts.showColors !== false;
   const filter = (opts.filter || '').toLowerCase();
+  const filename = opts.filename || currentLogModalFile || '';
+
+  // Only use base time if explicitly found in log header/filename or passed via options (NEVER new Date())
+  const parsedBaseSec = parseLogBaseTime(rawText, filename);
+  const baseSec = (parsedBaseSec !== null) ? parsedBaseSec : (typeof opts.startTimeSec === 'number' ? opts.startTimeSec : null);
+
+  let currentSec = baseSec;
+  let stepStartSec = baseSec;
 
   const lines = rawText.split('\n');
   const renderedLines = [];
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];
-    if (filter) {
-      const cleanLine = stripAnsiCodes(rawLine).toLowerCase();
-      if (!cleanLine.includes(filter)) continue;
+    const cleanLine = stripAnsiCodes(rawLine).trim();
+
+    if (filter && cleanLine) {
+      if (!cleanLine.toLowerCase().includes(filter)) continue;
     }
-    renderedLines.push(formatTerminalLogLine(rawLine, { showTime, showColors }));
+
+    if (!cleanLine) {
+      renderedLines.push('<span class="terminal-line">&nbsp;</span>');
+      continue;
+    }
+
+    const isSeparator = /^[-=~*#]{4,}$/.test(cleanLine);
+    const isTree = /^[├└│─\s]+/.test(cleanLine) && (cleanLine.includes('├──') || cleanLine.includes('└──') || cleanLine.includes('├─') || cleanLine.includes('└─'));
+
+    let lineTimeStr = '';
+
+    // Check if line has embedded explicit timestamp: e.g. [14:23:05] or 14:23:05
+    const lineIsoMatch = cleanLine.match(/^\[?([0-2][0-9]:[0-5][0-9]:[0-5][0-9])\]?/);
+    if (lineIsoMatch) {
+      lineTimeStr = lineIsoMatch[1];
+      currentSec = parseTimeStringToSeconds(lineTimeStr);
+      stepStartSec = currentSec;
+    } else if (baseSec !== null) {
+      // ONLY compute derived time if we have a real, fixed base timestamp (never from new Date())
+      const benchMatch = cleanLine.match(/⏱\s*\[[^\]]+:\s*(?:([0-9]+)m\s*)?([0-9]+)s\]/i);
+      if (benchMatch) {
+        const m = parseInt(benchMatch[1] || '0', 10);
+        const s = parseInt(benchMatch[2] || '0', 10);
+        currentSec += (m * 60 + s);
+        stepStartSec = currentSec;
+      } else {
+        const progMatch = cleanLine.match(/kestus:\s*(?:([0-9]+)m\s*)?([0-9]+)s/i);
+        if (progMatch) {
+          const m = parseInt(progMatch[1] || '0', 10);
+          const s = parseInt(progMatch[2] || '0', 10);
+          currentSec = stepStartSec + (m * 60 + s);
+        }
+      }
+
+      const explicitMatch = cleanLine.match(/(?:Algusaeg|Started at|Lõppaeg|Finished at)[:=\s]+(?:[0-9]{4}-[0-9]{2}-[0-9]{2}\s+)?([0-2][0-9]:[0-5][0-9]:[0-5][0-9])/i);
+      if (explicitMatch) {
+        currentSec = parseTimeStringToSeconds(explicitMatch[1]);
+        stepStartSec = currentSec;
+      }
+
+      if (!isSeparator && !isTree) {
+        lineTimeStr = formatSecondsToTimeString(currentSec);
+      }
+    }
+
+    renderedLines.push(formatTerminalLogLine(rawLine, {
+      showTime: showTime && !!lineTimeStr,
+      showColors,
+      timeStr: lineTimeStr,
+      defaultTime: lineTimeStr
+    }));
   }
 
   return renderedLines.join('');
@@ -3831,7 +4654,8 @@ function renderLogModalContent() {
   contentEl.innerHTML = formatTerminalLogText(currentLogModalRawText, {
     showTime: isLogModalTimeEnabled,
     showColors: isLogModalColorEnabled,
-    filter: logModalFilterQuery
+    filter: logModalFilterQuery,
+    filename: currentLogModalFile
   });
 }
 
@@ -3933,7 +4757,73 @@ function refreshLogViewerModal(btn) {
 
 function copyLogModalContent(btn) {
   if (!currentLogModalRawText) return;
-  const cleanText = stripAnsiCodes(currentLogModalRawText);
+  
+  let cleanText = '';
+  if (isLogModalTimeEnabled) {
+    const lines = currentLogModalRawText.split('\n');
+    const parsedBaseSec = parseLogBaseTime(currentLogModalRawText, currentLogModalFile);
+    const baseSec = (parsedBaseSec !== null) ? parsedBaseSec : null;
+    let currentSec = baseSec;
+    let stepStartSec = baseSec;
+    const formatted = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const rawLine = lines[i];
+      const cleanLine = stripAnsiCodes(rawLine);
+      const trimmed = cleanLine.trim();
+
+      if (!trimmed) {
+        formatted.push('');
+        continue;
+      }
+
+      const isSeparator = /^[-=~*#]{4,}$/.test(trimmed);
+      const isTree = /^[├└│─\s]+/.test(trimmed) && (trimmed.includes('├──') || trimmed.includes('└──') || trimmed.includes('├─') || trimmed.includes('└─'));
+
+      let lineTimeStr = '';
+      const lineIsoMatch = trimmed.match(/^\[?([0-2][0-9]:[0-5][0-9]:[0-5][0-9])\]?/);
+      if (lineIsoMatch) {
+        lineTimeStr = lineIsoMatch[1];
+        currentSec = parseTimeStringToSeconds(lineTimeStr);
+        stepStartSec = currentSec;
+      } else if (baseSec !== null) {
+        const benchMatch = trimmed.match(/⏱\s*\[[^\]]+:\s*(?:([0-9]+)m\s*)?([0-9]+)s\]/i);
+        if (benchMatch) {
+          const m = parseInt(benchMatch[1] || '0', 10);
+          const s = parseInt(benchMatch[2] || '0', 10);
+          currentSec += (m * 60 + s);
+          stepStartSec = currentSec;
+        } else {
+          const progMatch = trimmed.match(/kestus:\s*(?:([0-9]+)m\s*)?([0-9]+)s/i);
+          if (progMatch) {
+            const m = parseInt(progMatch[1] || '0', 10);
+            const s = parseInt(progMatch[2] || '0', 10);
+            currentSec = stepStartSec + (m * 60 + s);
+          }
+        }
+
+        const explicitMatch = trimmed.match(/(?:Algusaeg|Started at|Lõppaeg|Finished at)[:=\s]+(?:[0-9]{4}-[0-9]{2}-[0-9]{2}\s+)?([0-2][0-9]:[0-5][0-9]:[0-5][0-9])/i);
+        if (explicitMatch) {
+          currentSec = parseTimeStringToSeconds(explicitMatch[1]);
+          stepStartSec = currentSec;
+        }
+
+        if (!isSeparator && !isTree) {
+          lineTimeStr = formatSecondsToTimeString(currentSec);
+        }
+      }
+
+      if (lineTimeStr && !isSeparator && !isTree) {
+        formatted.push(`[${lineTimeStr}] ${cleanLine}`);
+      } else {
+        formatted.push(cleanLine);
+      }
+    }
+    cleanText = formatted.join('\n');
+  } else {
+    cleanText = stripAnsiCodes(currentLogModalRawText);
+  }
+
   navigator.clipboard.writeText(cleanText).then(() => {
     const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
     const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
@@ -3967,25 +4857,434 @@ function scrollTerminalToBottom(containerId) {
   }
 }
 
-async function runDevOpsCommand(cmdKey, btn) {
-  const card = btn.closest('.card');
-  if (!card) return;
-  const consoleBox = card.querySelector('.devops-console');
-  if (!consoleBox) return;
+/* ==========================================================================
+   Docked Terminal & DevOps Pro UX Engine (ADR 0017)
+   ========================================================================== */
+let gDockedTerminalTimer = null;
+let gDockedTerminalStartTime = 0;
+let gDockedTerminalCurrentCmd = '';
+let gDockedTerminalCurrentTitle = '';
+let gDockedTerminalLastExitCode = 0;
+const DOCKED_TERMINAL_MAX_LINES = 1500;
 
-  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
-  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+function openDockedTerminal(title, cmdKey) {
+  const terminal = document.getElementById('devops-docked-terminal');
+  const titleEl = document.getElementById('devops-docked-title');
+  const timerEl = document.getElementById('devops-docked-timer');
+  const statusEl = document.getElementById('devops-docked-status');
+  const preEl = document.getElementById('devops-docked-pre');
+  const aiBtn = document.getElementById('devops-docked-ai-btn');
 
-  consoleBox.style.display = 'block';
-  consoleBox.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b; padding-bottom:6px; margin-bottom:8px;">
-    <span style="color:#38bdf8; font-weight:600;">⚡ ${cmdKey}</span>
-    <span style="color:#eab308;">⏳ Käivitamine...</span>
-  </div><div class="console-body" style="color:#94a3b8;">Palun oota, käsk täidetakse reaalajas...</div>`;
+  gDockedTerminalCurrentCmd = cmdKey || '';
+  gDockedTerminalCurrentTitle = title || cmdKey || 'DevOps Task';
+  gDockedTerminalLastExitCode = 0;
 
-  const origBtnText = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = `<span>⏳</span> <span>Töötab...</span>`;
+  if (titleEl) titleEl.textContent = gDockedTerminalCurrentTitle;
+  if (timerEl) {
+    timerEl.textContent = '⏱️ 00:00.0';
+    timerEl.style.color = '#38bdf8';
+  }
+  if (statusEl) {
+    statusEl.textContent = '🟢 Töös...';
+    statusEl.style.background = 'rgba(56, 189, 248, 0.2)';
+    statusEl.style.color = '#38bdf8';
+  }
+  if (aiBtn) aiBtn.style.display = 'none';
 
+  const startIso = new Date().toLocaleTimeString();
+  const initHtml = `<span class="ansi-cyan">[${startIso}] ⚡ Käivitatud: ${gDockedTerminalCurrentTitle} (${cmdKey})</span>\n<span class="ansi-dim">--------------------------------------------------------------------------------</span>\n`;
+  if (preEl) {
+    preEl.innerHTML = initHtml;
+  }
+
+  if (terminal) {
+    terminal.classList.add('open');
+  }
+
+  // Start live timer
+  if (gDockedTerminalTimer) clearInterval(gDockedTerminalTimer);
+  gDockedTerminalStartTime = Date.now();
+  gDockedTerminalTimer = setInterval(() => {
+    const elapsedMs = Date.now() - gDockedTerminalStartTime;
+    const totalSec = Math.floor(elapsedMs / 1000);
+    const tenths = Math.floor((elapsedMs % 1000) / 100);
+    const mins = Math.floor(totalSec / 60);
+    const secs = totalSec % 60;
+    const timeStr = `⏱️ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${tenths}`;
+    if (timerEl) timerEl.textContent = timeStr;
+  }, 100);
+}
+
+function closeDockedTerminal() {
+  const terminal = document.getElementById('devops-docked-terminal');
+  if (terminal) {
+    terminal.classList.remove('open');
+    terminal.classList.remove('fullscreen');
+  }
+  if (gDockedTerminalTimer) {
+    clearInterval(gDockedTerminalTimer);
+    gDockedTerminalTimer = null;
+  }
+}
+
+function toggleDockedTerminalFullscreen() {
+  const terminal = document.getElementById('devops-docked-terminal');
+  const btn = document.getElementById('devops-docked-fullscreen-btn');
+  if (!terminal) return;
+  terminal.classList.toggle('fullscreen');
+  if (btn) {
+    btn.innerHTML = terminal.classList.contains('fullscreen') ? '<span>🗗</span>' : '<span>⛶</span>';
+  }
+}
+
+function appendDockedTerminalOutput(text) {
+  const preEl = document.getElementById('devops-docked-pre');
+  if (!preEl || !text) return;
+
+  const formatted = formatTerminalLogText(text, { showTime: false, showColors: true });
+  preEl.insertAdjacentHTML('beforeend', formatted + '\n');
+
+  // Enforce DOM Ring-Buffer (truncate oldest lines if exceeding max)
+  const lineCount = preEl.childElementCount || preEl.innerText.split('\n').length;
+  if (lineCount > DOCKED_TERMINAL_MAX_LINES) {
+    const lines = preEl.innerHTML.split('\n');
+    if (lines.length > DOCKED_TERMINAL_MAX_LINES) {
+      preEl.innerHTML = lines.slice(-DOCKED_TERMINAL_MAX_LINES).join('\n');
+    }
+  }
+
+  preEl.scrollTop = preEl.scrollHeight;
+}
+
+function setDockedTerminalFinished(exitCode, durationSec, rawOutput) {
+  if (gDockedTerminalTimer) {
+    clearInterval(gDockedTerminalTimer);
+    gDockedTerminalTimer = null;
+  }
+
+  const timerEl = document.getElementById('devops-docked-timer');
+  const statusEl = document.getElementById('devops-docked-status');
+  const aiBtn = document.getElementById('devops-docked-ai-btn');
+
+  gDockedTerminalLastExitCode = exitCode;
+  const durText = (typeof durationSec === 'number' && durationSec > 0) ? `${durationSec.toFixed(1)}s` : `${((Date.now() - gDockedTerminalStartTime) / 1000).toFixed(1)}s`;
+
+  if (timerEl) {
+    timerEl.textContent = `⏱️ ${durText}`;
+    timerEl.style.color = exitCode === 0 ? '#4ade80' : '#f87171';
+  }
+
+  const isError = exitCode !== 0 || (rawOutput && (rawOutput.includes('ORA-') || rawOutput.includes('SP2-') || rawOutput.includes('ERROR:')));
+
+  if (statusEl) {
+    if (isError) {
+      statusEl.textContent = `❌ EXIT ${exitCode} (${durText})`;
+      statusEl.style.background = 'rgba(239, 68, 68, 0.2)';
+      statusEl.style.color = '#f87171';
+    } else {
+      statusEl.textContent = `✅ EXIT 0 (${durText})`;
+      statusEl.style.background = 'rgba(34, 197, 94, 0.2)';
+      statusEl.style.color = '#4ade80';
+    }
+  }
+
+  if (aiBtn) {
+    aiBtn.style.display = isError ? 'inline-flex' : 'none';
+    if (isError) {
+      aiBtn.classList.add('pulse');
+    } else {
+      aiBtn.classList.remove('pulse');
+    }
+  }
+
+  const finishIso = new Date().toLocaleTimeString();
+  const summaryLine = `\n<span class="ansi-dim">--------------------------------------------------------------------------------</span>\n` +
+    `<span class="${isError ? 'ansi-red' : 'ansi-green'}">[${finishIso}] ${isError ? '❌ TÕRGE' : '✅ VALMIS'} (${durText}, kood: ${exitCode})</span>\n`;
+  const preEl = document.getElementById('devops-docked-pre');
+  if (preEl) {
+    preEl.insertAdjacentHTML('beforeend', summaryLine);
+    preEl.scrollTop = preEl.scrollHeight;
+  }
+}
+
+function copyDockedTerminalOutput() {
+  const preEl = document.getElementById('devops-docked-pre');
+  if (!preEl) return;
+  const text = preEl.textContent || preEl.innerText || '';
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('📋 Terminali logi kopeeritud!');
+  }).catch(() => {
+    showToast('❌ Kopeerimine ebaõnnestus.');
+  });
+}
+
+function askAiAboutCurrentTerminalError() {
+  const preEl = document.getElementById('devops-docked-pre');
+  const title = gDockedTerminalCurrentTitle || 'DevOps Task';
+  const cmd = gDockedTerminalCurrentCmd || '';
+  const exitCode = gDockedTerminalLastExitCode;
+
+  let errorSnippet = '';
+  if (preEl) {
+    const raw = preEl.textContent || preEl.innerText || '';
+    const lines = raw.split('\n').filter(l => l.trim().length > 0);
+    errorSnippet = lines.slice(-25).join('\n');
+  }
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'et';
+  let prompt = '';
+  if (currentLang === 'en') {
+    prompt = `The DevOps command "${title}" (${cmd}) failed with exit code ${exitCode}. Here are the recent log lines:\n\`\`\`\n${errorSnippet}\n\`\`\`\nPlease analyze the root cause and provide exact step-by-step remediation commands.`;
+  } else {
+    prompt = `DevOps käsk "${title}" (${cmd}) ebaõnnestus koodiga ${exitCode}. Siin on väljavõte viimastest logiridadest:\n\`\`\`\n${errorSnippet}\n\`\`\`\nPalun analüüsi tõrke põhjust ja anna täpsed parandussammud ning vajalikud käsud.`;
+  }
+
+  if (typeof toggleCopilotDrawer === 'function') {
+    toggleCopilotDrawer(true);
+    setTimeout(() => {
+      const input = document.getElementById('copilot-user-input');
+      if (input) {
+        input.value = prompt;
+        input.style.height = 'auto';
+        if (typeof submitCopilotQuery === 'function') {
+          submitCopilotQuery();
+        }
+      }
+    }, 350);
+  }
+}
+
+function explainStudioCmdWithAi(studioType) {
+  let cmd = '';
+  if (studioType === 'setup') {
+    const el = document.getElementById('setup-studio-cmd-preview');
+    cmd = el ? el.textContent.trim() : './scripts/setup-all.sh';
+  } else {
+    const el = document.getElementById('reset-studio-cmd-preview');
+    cmd = el ? el.textContent.trim() : './scripts/reset-all.sh';
+  }
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'et';
+  let prompt = '';
+  if (currentLang === 'en') {
+    prompt = `Explain briefly what the following Oracle DevOps platform command does, what effect it has on running containers and databases, and when it should be used:\n\`${cmd}\``;
+  } else {
+    prompt = `Selgita lühidalt, mida teeb järgmine Oracle DevOps platvormi käsk, milline on selle tegelik mõju andmebaasidele ja konteineritele ning millal seda kasutada:\n\`${cmd}\``;
+  }
+
+  if (typeof toggleCopilotDrawer === 'function') {
+    toggleCopilotDrawer(true);
+    setTimeout(() => {
+      const input = document.getElementById('copilot-user-input');
+      if (input) {
+        input.value = prompt;
+        input.style.height = 'auto';
+        if (typeof submitCopilotQuery === 'function') {
+          submitCopilotQuery();
+        }
+      }
+    }, 350);
+  }
+}
+
+// Setup Studio Logic
+let gSetupStudioActiveMode = 'full';
+
+function selectSetupStudioMode(mode, pillEl) {
+  gSetupStudioActiveMode = mode || 'full';
+  document.querySelectorAll('#setup-studio-pills .studio-pill').forEach(p => p.classList.remove('active'));
+  if (pillEl) {
+    pillEl.classList.add('active');
+    const radio = pillEl.querySelector('input[type="radio"]');
+    if (radio) radio.checked = true;
+  }
+
+  const impactEl = document.getElementById('setup-studio-impact-text');
+  if (impactEl) {
+    switch (mode) {
+      case 'fast':
+        impactEl.textContent = 'Taastab andmebaasi oleku ~15 sekundiga salvestatud kuldsest tõmmisest ilma uuesti kompileerimata. Ideaalne kiireks igapäevaseks arenduseks.';
+        break;
+      case 'fresh':
+        impactEl.textContent = 'Käivitab täispaigalduse puhtalt lehelt, luues uued andmemahud ja ignoreerides olemasolevaid tõmmiseid.';
+        break;
+      case 'dryrun':
+        impactEl.textContent = 'Valideerib pordid, failid, profiilid ja komponeerimisfailid ilma tegelikke konteinereid käivitamata (turvaline test).';
+        break;
+      case 'full':
+      default:
+        impactEl.textContent = 'Käivitab aktiivse blueprinti konteinerid, andmebaasi PDB-d ja ORDS/APEX teenused täismahus.';
+        break;
+    }
+  }
+
+  updateSetupStudioCliPreview();
+}
+
+function updateSetupStudioCliPreview() {
+  const previewEl = document.getElementById('setup-studio-cmd-preview');
+  const yesOpt = document.getElementById('setup-opt-yes');
+  const isYes = yesOpt ? yesOpt.checked : true;
+
+  let cmd = './scripts/setup-all.sh';
+  switch (gSetupStudioActiveMode) {
+    case 'fast':
+      cmd += ' -s';
+      break;
+    case 'fresh':
+      cmd += ' --fresh';
+      break;
+    case 'dryrun':
+      cmd += ' --dry-run';
+      break;
+    case 'full':
+    default:
+      break;
+  }
+
+  if (isYes && gSetupStudioActiveMode !== 'dryrun') {
+    cmd += ' -y';
+  }
+
+  if (previewEl) previewEl.textContent = cmd;
+}
+
+function runSetupStudio(btn) {
+  let cmdKey = 'setup-studio-full';
+  let title = 'Setup Studio (Täispaigaldus)';
+  switch (gSetupStudioActiveMode) {
+    case 'fast':
+      cmdKey = 'setup-studio-fast';
+      title = 'Setup Studio (FastStart -s)';
+      break;
+    case 'fresh':
+      cmdKey = 'setup-studio-fresh';
+      title = 'Setup Studio (Puhas algus --fresh)';
+      break;
+    case 'dryrun':
+      cmdKey = 'setup-studio-dryrun';
+      title = 'Setup Studio (Simulatsioon --dry-run)';
+      break;
+  }
+  runDevOpsCommand(cmdKey, btn, title);
+}
+
+// Reset Studio Logic
+let gResetStudioActiveMode = 'std';
+
+function selectResetStudioMode(mode, pillEl) {
+  gResetStudioActiveMode = mode || 'std';
+  document.querySelectorAll('#reset-studio-pills .studio-pill').forEach(p => p.classList.remove('active'));
+  if (pillEl) {
+    pillEl.classList.add('active');
+    const radio = pillEl.querySelector('input[type="radio"]');
+    if (radio) radio.checked = true;
+  }
+
+  const impactEl = document.getElementById('reset-studio-impact-text');
+  const gateEl = document.getElementById('reset-studio-confirm-gate');
+  const btnEl = document.getElementById('btn-run-reset-studio');
+
+  if (mode === 'deep') {
+    if (impactEl) impactEl.textContent = 'Sügav süsteemipuhastus: eemaldab KÕIK platvormi konteinerid, Podman köited ja alamvõrgud (Zero-Trace täispuhastus).';
+    if (gateEl) gateEl.classList.add('open');
+    if (btnEl) btnEl.disabled = true;
+  } else {
+    if (impactEl) impactEl.textContent = 'Seiskab aktiivse blueprinti konteinerid ja eemaldab profiili võrgud, kuid säilitab andmebaasi kettaköited ja SEPS Walleti.';
+    if (gateEl) gateEl.classList.remove('open');
+    if (btnEl) btnEl.disabled = false;
+  }
+
+  updateResetStudioCliPreview();
+}
+
+function toggleResetStudioExecuteButton() {
+  const check = document.getElementById('reset-studio-confirm-check');
+  const btnEl = document.getElementById('btn-run-reset-studio');
+  if (btnEl) {
+    btnEl.disabled = gResetStudioActiveMode === 'deep' && (!check || !check.checked);
+  }
+}
+
+function updateResetStudioCliPreview() {
+  const previewEl = document.getElementById('reset-studio-cmd-preview');
+  const cleanLogs = document.getElementById('reset-opt-clean-logs')?.checked;
+  const cleanCerts = document.getElementById('reset-opt-clean-certs')?.checked;
+  const yesOpt = document.getElementById('reset-opt-yes')?.checked;
+
+  let cmd = './scripts/reset-all.sh';
+  if (gResetStudioActiveMode === 'deep') {
+    cmd += ' --system';
+  }
+  if (cleanLogs) cmd += ' --clean-logs';
+  if (cleanCerts) cmd += ' --clean-certs';
+  if (yesOpt) cmd += ' -y';
+
+  if (previewEl) previewEl.textContent = cmd;
+}
+
+function runResetStudio(btn) {
+  const cleanLogs = document.getElementById('reset-opt-clean-logs')?.checked;
+  const cleanCerts = document.getElementById('reset-opt-clean-certs')?.checked;
+  let cmdKey = 'reset-studio-std';
+  let title = 'Reset Studio (Standard)';
+
+  if (gResetStudioActiveMode === 'deep') {
+    if (cleanLogs || cleanCerts) {
+      cmdKey = 'reset-studio-deep-clean';
+      title = 'Reset Studio (Sügav puhastus + failid)';
+    } else {
+      cmdKey = 'reset-studio-deep';
+      title = 'Reset Studio (Sügav süsteemipuhastus)';
+    }
+  } else {
+    if (cleanLogs || cleanCerts) {
+      cmdKey = 'reset-studio-clean';
+      title = 'Reset Studio (Lähtestus + logid)';
+    }
+  }
+
+  runDevOpsCommand(cmdKey, btn, title);
+}
+
+// Quick Recipes Runner
+async function runDevOpsRecipe(recipeKey) {
+  switch (recipeKey) {
+    case 'fast-start':
+      openDockedTerminal('Retsept: Puhas kiirkäivitus', 'recipe-faststart');
+      appendDockedTerminalOutput('⚡ Alustan retsepti: Puhas kiirkäivitus (Reset ➔ FastStart ➔ Tervisekontroll)');
+      await runDevOpsStepDirect('reset-all', 'Samm 1/3: Standardne lähtestus');
+      await runDevOpsStepDirect('setup-studio-fast', 'Samm 2/3: FastStart taastamine (-s)');
+      await runDevOpsStepDirect('check-urls', 'Samm 3/3: Veebiteenuste kontroll');
+      setDockedTerminalFinished(0, 0, 'Retsept edukalt lõpetatud!');
+      break;
+    case 'onboard-dev':
+      openDockedTerminal('Retsept: Uus arendaja', 'recipe-onboard');
+      appendDockedTerminalOutput('👤 Alustan retsepti: Arendaja keskkonna ettevalmistus');
+      await runDevOpsStepDirect('create-dev-user', 'Samm 1/2: Arendaja skeemi loomine (dev_user)');
+      await runDevOpsStepDirect('register-connections', 'Samm 2/2: VS Code ühenduste registreerimine');
+      setDockedTerminalFinished(0, 0, 'Arendaja edukalt ette valmistatud!');
+      break;
+    case 'full-diag':
+      openDockedTerminal('Retsept: Täielik diagnostika', 'recipe-diag');
+      appendDockedTerminalOutput('🩺 Alustan retsepti: Tervise ja turvalisuse audit');
+      await runDevOpsStepDirect('check-urls', 'Samm 1/3: HTTP/HTTPS teenuste tervis');
+      await runDevOpsStepDirect('check-wallet', 'Samm 2/3: SEPS Wallet ühenduvus');
+      await runDevOpsStepDirect('check-precommit', 'Samm 3/3: Git Pre-Commit turvakontroll');
+      setDockedTerminalFinished(0, 0, 'Diagnostika edukalt läbitud!');
+      break;
+    case 'golden-snap':
+      openDockedTerminal('Retsept: Kuldne hetktõmmis', 'recipe-snap');
+      appendDockedTerminalOutput('📸 Alustan retsepti: Kuldse hetktõmmise salvestamine');
+      await runDevOpsStepDirect('create-snapshot', 'Samm 1/2: Hetktõmmise tekitamine');
+      await runDevOpsStepDirect('check-urls', 'Samm 2/2: Teenuste tervise verifitseerimine');
+      setDockedTerminalFinished(0, 0, 'Kuldne tõmmis edukalt salvestatud!');
+      break;
+  }
+}
+
+async function runDevOpsStepDirect(cmdKey, stepTitle) {
+  appendDockedTerminalOutput(`\n▶️ [${stepTitle}] käivitamine...`);
   try {
     const resp = await fetch(`${BRIDGE_URL}/api/devops/run`, {
       method: 'POST',
@@ -3994,42 +5293,179 @@ async function runDevOpsCommand(cmdKey, btn) {
       mode: 'cors'
     });
     const data = await resp.json();
-    btn.disabled = false;
-    btn.innerHTML = origBtnText;
+    if (data.output) {
+      appendDockedTerminalOutput(data.output);
+    }
+    if (data.exit_code !== 0) {
+      appendDockedTerminalOutput(`⚠️ Samm lõpetas veaga (kood: ${data.exit_code})`);
+    } else {
+      appendDockedTerminalOutput(`✅ Samm edukas!`);
+    }
+    return data;
+  } catch (e) {
+    appendDockedTerminalOutput(`❌ Tõrge: ${e.message}`);
+    return { exit_code: 1, error: e.message };
+  }
+}
+
+// Pinned Cards Logic
+function togglePinCard(btn) {
+  const card = btn.closest('.card');
+  if (!card) return;
+  const cardId = card.id;
+  if (!cardId) return;
+
+  btn.classList.toggle('pinned');
+  card.classList.toggle('is-pinned');
+
+  let pinned = getPinnedCardIds();
+  if (btn.classList.contains('pinned')) {
+    if (!pinned.includes(cardId)) pinned.push(cardId);
+    showToast('⭐ Lisatud lemmikutesse');
+  } else {
+    pinned = pinned.filter(id => id !== cardId);
+    showToast('Eemaldatud lemmikutest');
+  }
+
+  localStorage.setItem('devops_pinned_cards', JSON.stringify(pinned));
+  updatePinnedCounter();
+  applyPinnedCardsOrder();
+}
+
+function getPinnedCardIds() {
+  try {
+    return JSON.parse(localStorage.getItem('devops_pinned_cards') || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function updatePinnedCounter() {
+  const pinned = getPinnedCardIds();
+  const counterEl = document.getElementById('devops-pinned-count');
+  if (counterEl) counterEl.textContent = pinned.length;
+}
+
+function applyPinnedCardsOrder() {
+  const pinned = getPinnedCardIds();
+  const grid = document.getElementById('devops-cards-grid');
+  if (!grid) return;
+
+  pinned.forEach(id => {
+    const card = document.getElementById(id);
+    if (card) {
+      card.classList.add('is-pinned');
+      const btn = card.querySelector('.pin-card-btn');
+      if (btn) btn.classList.add('pinned');
+      if (card.id !== 'card-studio-setup' && card.id !== 'card-studio-reset') {
+        card.style.order = '-1';
+      }
+    }
+  });
+
+  document.querySelectorAll('#devops-cards-grid .card').forEach(card => {
+    if (!pinned.includes(card.id)) {
+      card.classList.remove('is-pinned');
+      const btn = card.querySelector('.pin-card-btn');
+      if (btn) btn.classList.remove('pinned');
+      if (card.id !== 'card-studio-setup' && card.id !== 'card-studio-reset') {
+        card.style.order = '0';
+      }
+    }
+  });
+}
+
+function updateCreateDeveloperPreview() {
+  const input = document.getElementById('devops-input-create-dev');
+  const span = document.getElementById('devops-cmd-create-dev');
+  const val = (input?.value || 'dev_user').trim().replace(/[^a-zA-Z0-9_]/g, '');
+  if (span) span.textContent = `./scripts/create-developer.sh ${val}`;
+}
+
+function runCreateDeveloper(btn) {
+  const input = document.getElementById('devops-input-create-dev');
+  const val = (input?.value || 'dev_user').trim().replace(/[^a-zA-Z0-9_]/g, '');
+  runDevOpsCommand('create-dev-user', btn, `Loo arendaja: ${val}`, { username: val });
+}
+
+// Enhanced Unified DevOps Command Runner
+async function runDevOpsCommand(cmdKey, btn, customTitle, extraPayload = {}) {
+  const title = customTitle || cmdKey;
+  openDockedTerminal(title, cmdKey);
+
+  let origBtnText = '';
+  if (btn) {
+    origBtnText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span>⏳</span> <span>Töötab...</span>`;
+  }
+
+  try {
+    const payload = { command: cmdKey, ...extraPayload };
+    const resp = await fetch(`${BRIDGE_URL}/api/devops/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      mode: 'cors'
+    });
+    const data = await resp.json();
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origBtnText;
+    }
 
     if (resp.ok && (data.ok || data.status === 'ok')) {
-      const statusColor = data.exit_code === 0 ? '#4ade80' : '#f87171';
-      const statusText = data.exit_code === 0 ? 'EXIT 0 (OK)' : `EXIT ${data.exit_code} (ERROR)`;
-      consoleBox.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b; padding-bottom:6px; margin-bottom:8px;">
-          <span style="color:#38bdf8; font-weight:600;">⚡ ${cmdKey}</span>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="color:${statusColor}; font-weight:700; font-size:0.75rem;">${statusText}</span>
-            <button onclick="this.closest('.devops-console').style.display='none'" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:0.85rem;" title="Sulge">✕</button>
-          </div>
-        </div>
-        <pre class="console-body" style="margin:0; font-size:0.75rem; color:#cbd5e1; white-space:pre-wrap; max-height:220px; overflow-y:auto;">${formatTerminalLogText(data.output || '(Käsk lõpetas ilma väljundita)', { showTime: true, showColors: true })}</pre>
-      `;
+      appendDockedTerminalOutput(data.output || '(Käsk lõpetas ilma väljundita)');
+      setDockedTerminalFinished(data.exit_code, data.duration_s, data.output);
     } else {
-      consoleBox.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b; padding-bottom:6px; margin-bottom:8px;">
-          <span style="color:#f87171; font-weight:600;">❌ Viga</span>
-          <button onclick="this.closest('.devops-console').style.display='none'" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:0.85rem;">✕</button>
-        </div>
-        <div style="color:#f87171; font-size:0.8rem; padding:8px 0;">${data.error || 'Server tagastas tõrke.'}</div>
-      `;
+      const err = data.error || 'Server tagastas tõrke.';
+      appendDockedTerminalOutput(`❌ Viga: ${err}`);
+      setDockedTerminalFinished(data.exit_code || 1, data.duration_s, err);
     }
   } catch (err) {
-    btn.disabled = false;
-    btn.innerHTML = origBtnText;
-    consoleBox.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b; padding-bottom:6px; margin-bottom:8px;">
-        <span style="color:#f87171; font-weight:600;">❌ Ühenduse Viga</span>
-        <button onclick="this.closest('.devops-console').style.display='none'" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:0.85rem;">✕</button>
-      </div>
-      <div style="color:#f87171; font-size:0.8rem; padding:8px 0;">Silda ei saanud kätte: ${err.message}. Veendu, et python3 scripts/internal/dev-hub-bridge.py töötab taustal.</div>
-    `;
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origBtnText;
+    }
+    const msg = `Silda ei saanud kätte: ${err.message}. Veendu, et python3 scripts/internal/dev-hub-bridge.py töötab taustal.`;
+    appendDockedTerminalOutput(`❌ Ühenduse tõrge: ${msg}`);
+    setDockedTerminalFinished(1, 0, msg);
   }
+}
+
+// Resizing handle mouse drag
+function initDockedTerminalResize() {
+  const handle = document.getElementById('devops-terminal-resize-handle');
+  const terminal = document.getElementById('devops-docked-terminal');
+  if (!handle || !terminal) return;
+
+  let isDragging = false;
+  let startY = 0;
+  let startH = 0;
+
+  handle.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    startY = e.clientY;
+    startH = terminal.offsetHeight;
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'row-resize';
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const deltaY = startY - e.clientY;
+    const newH = Math.min(Math.max(startH + deltaY, 160), window.innerHeight * 0.85);
+    terminal.style.height = `${newH}px`;
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    }
+  });
 }
 
 let currentDevOpsCategoryFilter = 'all';
@@ -4059,7 +5495,15 @@ function filterDevOpsCards() {
 
   cards.forEach(card => {
     const cardCat = card.getAttribute('data-cat') || 'tools';
-    const matchesCat = (currentDevOpsCategoryFilter === 'all') || (cardCat === currentDevOpsCategoryFilter);
+    let matchesCat = false;
+    if (currentDevOpsCategoryFilter === 'all') {
+      matchesCat = true;
+    } else if (currentDevOpsCategoryFilter === 'pinned') {
+      matchesCat = card.classList.contains('is-pinned');
+    } else {
+      matchesCat = (cardCat === currentDevOpsCategoryFilter);
+    }
+
     const text = card.textContent.toLowerCase();
     const matchesSearch = !q || text.includes(q);
 
@@ -4396,6 +5840,16 @@ document.addEventListener('keydown', (e) => {
     if (typeof closeSkillModal === 'function') {
       closeSkillModal();
     }
+    if (typeof closeVersionInspectorModal === 'function') {
+      closeVersionInspectorModal();
+    }
+  } else if ((e.key === 'R' || e.key === 'r') && e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const activeEl = document.activeElement;
+    const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+    if (!isInput && typeof triggerDevHubHardReload === 'function') {
+      e.preventDefault();
+      triggerDevHubHardReload();
+    }
   } else if ((e.key === '?' || e.key === 'g' || e.key === 'G') && !e.ctrlKey && !e.metaKey && !e.altKey) {
     const activeEl = document.activeElement;
     const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
@@ -4461,6 +5915,7 @@ let gDocsSearchQuery = '';
 
 function getDocCategory(rel) {
   const r = (rel || '').toLowerCase();
+  if (r.includes('specs/') || r.includes('spec-') || r.includes('trails/') || r.includes('requirements') || r.includes('design') || r.includes('tasks')) return 'specs';
   if (r.includes('architecture') || r.includes('topology') || r.includes('blueprint') || r.includes('seps') || r.includes('wallet') || r.includes('profile') || r.includes('enterprise')) return 'arch';
   if (r.includes('script') || r.includes('setup') || r.includes('reset') || r.includes('cicd') || r.includes('ci') || r.includes('deploy') || r.includes('snapshot') || r.includes('devops') || r.includes('test') || r.includes('artifactory')) return 'devops';
   if (r.includes('apex') || r.includes('ords') || r.includes('publisher') || r.includes('forms') || r.includes('web-ide') || r.includes('ide') || r.includes('service')) return 'web';
@@ -4469,7 +5924,7 @@ function getDocCategory(rel) {
 
 function filterDocsCategory(cat) {
   gDocsSelectedCategory = cat || 'all';
-  ['all', 'arch', 'devops', 'web', 'trouble'].forEach(c => {
+  ['all', 'arch', 'devops', 'web', 'trouble', 'specs'].forEach(c => {
     const btn = document.getElementById(`btn-docs-cat-${c}`);
     if (btn) btn.classList.toggle('active', c === gDocsSelectedCategory);
   });
@@ -5553,11 +7008,28 @@ function copySlideCode(btn, code) {
   });
 }
 
+let gActivePresentationDeck = localStorage.getItem('dev_hub_deck') || 'platform';
+
+function getActiveDeckContent() {
+  if (gActivePresentationDeck === 'forms' && typeof FORMS_SLIDES_CONTENT !== 'undefined') {
+    return FORMS_SLIDES_CONTENT;
+  }
+  return typeof SLIDES_CONTENT !== 'undefined' ? SLIDES_CONTENT : {};
+}
+
+function getActiveRoleTracks() {
+  if (gActivePresentationDeck === 'forms' && typeof FORMS_ROLE_TRACKS !== 'undefined') {
+    return FORMS_ROLE_TRACKS;
+  }
+  return ROLE_TRACKS;
+}
+
 function updateSpeakerNotes(lang) {
-  if (!SLIDES_CONTENT) return;
+  const deck = getActiveDeckContent();
+  if (!deck) return;
   if (!lang || !I18N_DICT[lang]) lang = localStorage.getItem('dev_hub_lang') || 'en';
   const sNum = currentSlideIdx + 1;
-  const sData = SLIDES_CONTENT[sNum];
+  const sData = deck[sNum];
   const headerEl = document.getElementById('speaker-notes-header-text');
   const bodyEl = document.getElementById('speaker-notes-body');
   const toggleLabel = document.getElementById('label-speaker-notes');
@@ -5601,11 +7073,72 @@ const ROLE_TRACKS = {
 };
 let gActiveSlideTrack = 'all';
 
+function renderRoleTracksUI(lang) {
+  if (!lang || !I18N_DICT[lang]) lang = localStorage.getItem('dev_hub_lang') || 'en';
+  const trackDefs = (gActivePresentationDeck === 'forms') ? [
+    { key: 'all', icon: '🌟', i18n: 'track_forms_all', defaultLabel: 'Kõik (13)' },
+    { key: 'exec', icon: '💼', i18n: 'track_forms_exec', defaultLabel: 'Juhtkond (5)' },
+    { key: 'dev', icon: '👨‍💻', i18n: 'track_forms_dev', defaultLabel: 'Arendajad (6)' },
+    { key: 'biz', icon: '📊', i18n: 'track_forms_biz', defaultLabel: 'Äri & Kasutajad (5)' },
+    { key: 'ops', icon: '🚀', i18n: 'track_forms_ops', defaultLabel: 'DevOps & Turve (6)' }
+  ] : [
+    { key: 'all', icon: '🌟', i18n: 'track_all', defaultLabel: 'Kõik (13)' },
+    { key: 'exec', icon: '💼', i18n: 'track_exec', defaultLabel: 'Juhtkond (3)' },
+    { key: 'dev', icon: '👨‍💻', i18n: 'track_dev', defaultLabel: 'Arendaja (4)' },
+    { key: 'devops', icon: '🚀', i18n: 'track_devops', defaultLabel: 'DevOps (4)' },
+    { key: 'dba', icon: '🛡️', i18n: 'track_dba', defaultLabel: 'DBA/Turve (4)' }
+  ];
+
+  const tracks = getActiveRoleTracks();
+  if (!tracks[gActiveSlideTrack]) gActiveSlideTrack = 'all';
+
+  const labelText = {
+    'et': 'Rada',
+    'fi': 'Rata',
+    'sv': 'Spår',
+    'lv': 'Ceļš',
+    'lt': 'Kelias',
+    'en': 'Track'
+  }[lang] || 'Track';
+
+  // In-page control bar
+  const inPageGroup = document.getElementById('deck-role-tracks-group');
+  if (inPageGroup) {
+    let inPageHtml = `<span class="role-track-label" style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-right: 4px;">${labelText}:</span>`;
+    trackDefs.forEach(td => {
+      const activeCls = (td.key === gActiveSlideTrack) ? 'active' : '';
+      const text = (I18N_DICT[lang] && I18N_DICT[lang][td.i18n]) || td.defaultLabel;
+      inPageHtml += `
+        <button class="role-track-btn ${activeCls}" id="track-btn-${td.key}" onclick="filterSlideTrack('${td.key}')">
+          <span>${td.icon}</span> <span>${text}</span>
+        </button>`;
+    });
+    inPageGroup.innerHTML = inPageHtml;
+  }
+
+  // Fullscreen Cinema Modal track bar
+  const modalGroup = document.getElementById('modal-track-filters');
+  if (modalGroup) {
+    let modalHtml = `<span class="role-track-label" style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-right: 2px;">${labelText}:</span>`;
+    trackDefs.forEach(td => {
+      const activeCls = (td.key === gActiveSlideTrack) ? 'active' : '';
+      const text = (I18N_DICT[lang] && I18N_DICT[lang][td.i18n]) || td.defaultLabel;
+      modalHtml += `
+        <button class="role-track-btn ${activeCls}" id="modal-track-btn-${td.key}" onclick="filterSlideTrack('${td.key}')">
+          <span>${td.icon}</span> <span>${text}</span>
+        </button>`;
+    });
+    modalGroup.innerHTML = modalHtml;
+  }
+}
+
 function filterSlideTrack(track) {
-  if (!ROLE_TRACKS[track]) track = 'all';
+  const tracks = getActiveRoleTracks();
+  if (!tracks[track]) track = 'all';
   gActiveSlideTrack = track;
 
-  ['all', 'exec', 'dev', 'devops', 'dba'].forEach(t => {
+  // Update active state on track buttons
+  Object.keys(tracks).forEach(t => {
     const btn = document.getElementById(`track-btn-${t}`);
     if (btn) btn.classList.toggle('active', t === track);
     const modalBtn = document.getElementById(`modal-track-btn-${t}`);
@@ -5614,7 +7147,7 @@ function filterSlideTrack(track) {
 
   renderSlideNavButtons();
 
-  const allowed = ROLE_TRACKS[track];
+  const allowed = tracks[track] || tracks['all'];
   const currentNum = currentSlideIdx + 1;
   if (!allowed.includes(currentNum)) {
     goToSlide(allowed[0] - 1);
@@ -5632,10 +7165,13 @@ function filterSlideTrack(track) {
 function renderSlideNavButtons() {
   const container = document.getElementById('top-slide-numbers');
   if (!container) return;
-  const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+  const tracks = getActiveRoleTracks();
+  const allowed = tracks[gActiveSlideTrack] || tracks['all'];
+  const lang = localStorage.getItem('dev_hub_lang') || 'en';
+  const label = (lang === 'et') ? 'Slaid' : (lang === 'fi') ? 'Dia' : (lang === 'sv') ? 'Bild' : (lang === 'lv') ? 'Slaids' : (lang === 'lt') ? 'Skaidrė' : 'Slide';
   container.innerHTML = allowed.map(sNum => {
     const isActive = (sNum === (currentSlideIdx + 1));
-    return `<button class="slide-num-btn ${isActive ? 'active' : ''}" onclick="goToSlide(${sNum - 1})" title="Slaid ${sNum}">${sNum}</button>`;
+    return `<button class="slide-num-btn ${isActive ? 'active' : ''}" onclick="goToSlide(${sNum - 1})" title="${label} ${sNum}">${sNum}</button>`;
   }).join('');
 }
 
@@ -5670,11 +7206,26 @@ function openDocModal(docId) {
 }
 
 function renderSlideDeck(lang) {
-  if (!SLIDES_CONTENT) return;
+  const deck = getActiveDeckContent();
+  if (!deck) return;
   if (!lang || !I18N_DICT[lang]) lang = localStorage.getItem('dev_hub_lang') || 'en';
   
+  // Render role tracks UI
+  renderRoleTracksUI(lang);
+
   // Render top number buttons based on active track
   renderSlideNavButtons();
+
+  // Update deck title and subtitle
+  const titleEl = document.getElementById('deck-display-title');
+  const subEl = document.getElementById('deck-display-subtitle');
+  if (gActivePresentationDeck === 'forms') {
+    if (titleEl) titleEl.textContent = (I18N_DICT[lang] && I18N_DICT[lang].deck_forms_main_title) || 'Oracle Forms Moderniseerimise Strateegia';
+    if (subEl) subEl.textContent = (I18N_DICT[lang] && I18N_DICT[lang].deck_forms_subtitle) || '25-aastase süsteemi teekond APEX & Oracle AI Database@Azure arhitektuurile';
+  } else {
+    if (titleEl) titleEl.textContent = (I18N_DICT[lang] && I18N_DICT[lang].deck_main_title) || 'Oracle DevOps Platform & Blueprints';
+    if (subEl) subEl.textContent = (I18N_DICT[lang] && I18N_DICT[lang].deck_subtitle) || 'Arhitektuuri, elutsükli ja töövoogude interaktiivne esitlus';
+  }
 
   // Update cinema mode button labels
   const cinemaLabels = {
@@ -5708,7 +7259,7 @@ function renderSlideDeck(lang) {
   };
 
   for (let sNum = 1; sNum <= totalSlides; sNum++) {
-    const sData = SLIDES_CONTENT[sNum];
+    const sData = deck[sNum];
     if (!sData) continue;
     const slideEl = document.getElementById('slide-' + sNum);
     if (!slideEl) continue;
@@ -5825,9 +7376,9 @@ function renderSlideDeck(lang) {
       });
       cardsHtml = `<div class="${gridClass}">${cList}</div>`;
     }
-    // Slide 12 actions (Open FAQ Center & Oracle Resources)
+    // Slide 12 actions (Open FAQ Center & Oracle Resources) - only for platform deck
     let slide12ActionsHtml = '';
-    if (sNum === 12) {
+    if (sNum === 12 && gActivePresentationDeck === 'platform') {
       const faqBtnLabel = (I18N_DICT[lang] && I18N_DICT[lang].btn_open_full_faq) || 'Open FAQ Center (All Questions) →';
       const resBtnLabel = (I18N_DICT[lang] && I18N_DICT[lang].btn_open_oracle_resources) || 'Official Oracle Resources & Images →';
       slide12ActionsHtml = `
@@ -5841,9 +7392,9 @@ function renderSlideDeck(lang) {
         </div>`;
     }
 
-    // Slide 12 official Oracle resources pills
+    // Slide 12 official Oracle resources pills - only for platform deck
     let oracleLinksHtml = '';
-    if (sNum === 12 && sData.oracle_resources) {
+    if (sNum === 12 && gActivePresentationDeck === 'platform' && sData.oracle_resources) {
       const res = sData.oracle_resources;
       const resTitle = getSlideI18n(res.title, lang);
       let rLinks = '';
@@ -5875,6 +7426,51 @@ function renderSlideDeck(lang) {
   updateSlideView();
 }
 
+function switchPresentationDeck(deckType) {
+  if (deckType !== 'forms') deckType = 'platform';
+  gActivePresentationDeck = deckType;
+  try {
+    localStorage.setItem('dev_hub_deck', deckType);
+  } catch (e) {}
+
+  const btnPlat = document.getElementById('deck-btn-platform');
+  const btnForms = document.getElementById('deck-btn-forms');
+  if (btnPlat) btnPlat.classList.toggle('active', deckType === 'platform');
+  if (btnForms) btnForms.classList.toggle('active', deckType === 'forms');
+
+  const lang = localStorage.getItem('dev_hub_lang') || 'en';
+  const titleEl = document.getElementById('deck-display-title');
+  const subEl = document.getElementById('deck-display-subtitle');
+
+  if (deckType === 'forms') {
+    if (titleEl) titleEl.textContent = (I18N_DICT[lang] && I18N_DICT[lang].deck_forms_main_title) || 'Oracle Forms Moderniseerimise Strateegia';
+    if (subEl) subEl.textContent = (I18N_DICT[lang] && I18N_DICT[lang].deck_forms_subtitle) || '25-aastase süsteemi teekond APEX & Oracle AI Database@Azure arhitektuurile';
+  } else {
+    if (titleEl) titleEl.textContent = (I18N_DICT[lang] && I18N_DICT[lang].deck_main_title) || 'Oracle DevOps Platform & Blueprints';
+    if (subEl) subEl.textContent = (I18N_DICT[lang] && I18N_DICT[lang].deck_subtitle) || 'Arhitektuuri, elutsükli ja töövoogude interaktiivne esitlus';
+  }
+
+  // Toggle textual summaries under slide deck
+  const summaryForms = document.getElementById('deck-summary-forms');
+  const summaryPlat = document.getElementById('deck-summary-platform');
+  if (summaryForms) summaryForms.style.display = (deckType === 'forms') ? 'block' : 'none';
+  if (summaryPlat) summaryPlat.style.display = (deckType === 'platform') ? 'block' : 'none';
+
+  if (deckType === 'forms' && summaryForms && typeof renderMermaidInContainer === 'function') {
+    renderMermaidInContainer(summaryForms);
+  }
+
+  gActiveSlideTrack = 'all';
+  currentSlideIdx = 0;
+  renderSlideDeck(lang);
+  updateSlideView();
+
+  const backdrop = document.getElementById('slide-modal-backdrop');
+  if (backdrop && backdrop.style.display !== 'none') {
+    syncModalSlide();
+  }
+}
+
 function updateSlideView() {
   for (let i = 1; i <= totalSlides; i++) {
     const el = document.getElementById('slide-' + i);
@@ -5887,7 +7483,8 @@ function updateSlideView() {
   if (counter) {
     const lang = localStorage.getItem('dev_hub_lang') || 'en';
     const label = (lang === 'et') ? 'Slaid' : (lang === 'fi') ? 'Dia' : (lang === 'sv') ? 'Bild' : (lang === 'lv') ? 'Slaids' : (lang === 'lt') ? 'Skaidrė' : 'Slide';
-    const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+    const tracks = getActiveRoleTracks();
+    const allowed = tracks[gActiveSlideTrack] || tracks['all'];
     const trackPos = allowed.indexOf(currentSlideIdx + 1) + 1;
     const trackTotal = allowed.length;
     counter.textContent = `${label} ${currentSlideIdx + 1} / ${totalSlides} (${trackPos}/${trackTotal})`;
@@ -5912,7 +7509,8 @@ function updateSlideView() {
 }
 
 function nextSlide() {
-  const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+  const tracks = getActiveRoleTracks();
+  const allowed = tracks[gActiveSlideTrack] || tracks['all'];
   const currentNum = currentSlideIdx + 1;
   const currPos = allowed.indexOf(currentNum);
   if (currPos === -1) {
@@ -5925,7 +7523,8 @@ function nextSlide() {
 }
 
 function prevSlide() {
-  const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+  const tracks = getActiveRoleTracks();
+  const allowed = tracks[gActiveSlideTrack] || tracks['all'];
   const currentNum = currentSlideIdx + 1;
   const currPos = allowed.indexOf(currentNum);
   if (currPos === -1) {
@@ -6025,12 +7624,13 @@ function syncModalSlide() {
   }
   
   // Sync modal track buttons active state
-  ['all', 'exec', 'dev', 'devops', 'dba'].forEach(t => {
+  const tracks = getActiveRoleTracks();
+  Object.keys(tracks).forEach(t => {
     const modalBtn = document.getElementById(`modal-track-btn-${t}`);
     if (modalBtn) modalBtn.classList.toggle('active', t === gActiveSlideTrack);
   });
 
-  const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+  const allowed = tracks[gActiveSlideTrack] || tracks['all'];
   const currentNum = currentSlideIdx + 1;
   const currPos = allowed.indexOf(currentNum);
   const displayPos = (currPos !== -1) ? (currPos + 1) : 1;
@@ -6064,7 +7664,8 @@ function syncModalSlide() {
 }
 
 function modalNextSlide() {
-  const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+  const tracks = getActiveRoleTracks();
+  const allowed = tracks[gActiveSlideTrack] || tracks['all'];
   const currentNum = currentSlideIdx + 1;
   const currPos = allowed.indexOf(currentNum);
   if (currPos === -1) {
@@ -6077,7 +7678,8 @@ function modalNextSlide() {
 }
 
 function modalPrevSlide() {
-  const allowed = ROLE_TRACKS[gActiveSlideTrack] || ROLE_TRACKS['all'];
+  const tracks = getActiveRoleTracks();
+  const allowed = tracks[gActiveSlideTrack] || tracks['all'];
   const currentNum = currentSlideIdx + 1;
   const currPos = allowed.indexOf(currentNum);
   if (currPos === -1) {
@@ -6153,6 +7755,10 @@ function copySnippet(btn) {
   });
 }
 
+function copySnippetText(text) {
+  if (!text) return;
+  copyTextToClipboard(text);
+}
 
 function copyTextToClipboard(text) {
   if (!text) return Promise.resolve(false);
@@ -6195,9 +7801,24 @@ function getPasswordForAlias(alias) {
     return LOCAL_PASSWORDS[alias];
   }
   if (typeof LOCAL_PASSWORDS !== 'undefined' && LOCAL_PASSWORDS) {
+    if (alias === 'PUBLISHER_DEVELOPER') {
+      if (LOCAL_PASSWORDS['DB_PUBLISHER_DEV']) return LOCAL_PASSWORDS['DB_PUBLISHER_DEV'];
+      if (LOCAL_PASSWORDS['DB_PUBLISHER_DEVELOPER']) return LOCAL_PASSWORDS['DB_PUBLISHER_DEVELOPER'];
+    } else if (alias === 'PUBLISHER_USER') {
+      if (LOCAL_PASSWORDS['DB_PUBLISHER_APP']) return LOCAL_PASSWORDS['DB_PUBLISHER_APP'];
+      if (LOCAL_PASSWORDS['DB_PUBLISHER_USER']) return LOCAL_PASSWORDS['DB_PUBLISHER_USER'];
+    } else if (alias === 'PUBLISHER_ADMIN') {
+      if (LOCAL_PASSWORDS['DB_PUBLISHER_ADMIN']) return LOCAL_PASSWORDS['DB_PUBLISHER_ADMIN'];
+    }
+
     if (alias.endsWith('_USER_DEVELOPER')) {
       const dev = alias.replace('_USER_DEVELOPER', '_DEV');
       if (LOCAL_PASSWORDS[dev]) return LOCAL_PASSWORDS[dev];
+    } else if (alias.endsWith('_DEVELOPER')) {
+      const dev = alias.replace('_DEVELOPER', '_DEV');
+      if (LOCAL_PASSWORDS[dev]) return LOCAL_PASSWORDS[dev];
+      const withDbDev = 'DB_' + dev;
+      if (LOCAL_PASSWORDS[withDbDev]) return LOCAL_PASSWORDS[withDbDev];
     } else if (alias.endsWith('_DEV')) {
       const udev = alias.replace('_DEV', '_USER_DEVELOPER');
       if (LOCAL_PASSWORDS[udev]) return LOCAL_PASSWORDS[udev];
@@ -6214,7 +7835,7 @@ function getPasswordForAlias(alias) {
 }
 
 function isLocalhostHost() {
-  return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '::1';
+  return window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '::1';
 }
 
 async function openServiceWithCredentials(targetUrl, alias, user, evt) {
@@ -6305,15 +7926,79 @@ async function openServiceWithCredentials(targetUrl, alias, user, evt) {
   }
 
   const isSdw = finalUrl.includes('_sdw');
+  const isPublisher = finalUrl.includes('/xmlpserver') || finalUrl.includes(':9502');
   const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
 
+  if (isPublisher) {
+    // 3-Tier Robust Auto-POST Authentication Engine for Oracle Analytics Publisher
+    // Tier 1: Local Dev Hub Bridge Relay (passwordless via SEPS Wallet, zero popup blocker risk)
+    if (isLocalhostHost() && typeof BRIDGE_URL !== 'undefined' && BRIDGE_URL) {
+      const bridgeUrl = `${BRIDGE_URL}/api/publisher/open?user=${encodeURIComponent(user || 'bip_developer')}&alias=${encodeURIComponent(alias || 'PUBLISHER_DEVELOPER')}&dest=${encodeURIComponent(finalUrl)}`;
+      if (pwd) copyTextToClipboard(pwd); // Keep password on clipboard as fallback
+      const toastMsg = (currentLang === 'et')
+        ? `🚀 Avatakse Analytics Publisher! Automaatne sisselogimine rollis <b>${user || alias}</b>...`
+        : `🚀 Opening Analytics Publisher! Automatic login as <b>${user || alias}</b>...`;
+      showToast(toastMsg);
+      window.open(bridgeUrl, '_blank');
+      return;
+    }
+
+    // Tier 2: Client-side In-Memory Top-Level Form POST (fallback when Bridge is offline)
+    if (pwd) {
+      try {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = finalUrl || 'http://localhost:9502/xmlpserver/login.jsp';
+        form.target = '_blank';
+
+        const uInput = document.createElement('input');
+        uInput.type = 'hidden';
+        uInput.name = 'id';
+        uInput.value = user || 'bip_developer';
+        form.appendChild(uInput);
+
+        const pInput = document.createElement('input');
+        pInput.type = 'hidden';
+        pInput.name = 'passwd';
+        pInput.value = pwd;
+        form.appendChild(pInput);
+
+        const lInput = document.createElement('input');
+        lInput.type = 'hidden';
+        lInput.name = '_xuil';
+        lInput.value = 'en_US';
+        form.appendChild(lInput);
+
+        const sInput = document.createElement('input');
+        sInput.type = 'hidden';
+        sInput.name = 'SUBMIT_BUTTON';
+        sInput.value = 'Sign In';
+        form.appendChild(sInput);
+
+        document.body.appendChild(form);
+        form.submit();
+        form.remove();
+
+        const toastMsg = (currentLang === 'et')
+          ? `🚀 Avatakse Analytics Publisher! Automaatne POST-sisselogimine rollis <b>${user || alias}</b>...`
+          : `🚀 Opening Analytics Publisher! Automatic POST login as <b>${user || alias}</b>...`;
+        showToast(toastMsg);
+        return;
+      } catch (err) {
+        console.warn('Fallback to standard tab opening:', err);
+      }
+    }
+  }
+
+  // Standard Zero-Trust Flow for APEX & ORDS (Database Actions):
   if (pwd) {
     // 1. Copy real password directly to clipboard (Zero-Trust: NEVER pass password as URL query parameter)
     copyTextToClipboard(pwd);
     const sdwTip = dict.tip_db_actions_wait || dict.tip_sdw_warmup || '⏳ Käivitus võib võtta aega sõltuvalt arvutist kuni 1 min. Ole kannatlik.';
+    const copyUserBtn = user ? ` <button class="btn btn-secondary" style="padding:1px 6px; font-size:0.7rem; margin-left:6px; cursor:pointer;" onclick="copyTextToClipboard('${user}'); showToast('📋 Kasutajanimi kopeeritud!');">📋 Kopeeri nimi</button>` : '';
     const toastMsg = (currentLang === 'et')
-      ? `🚀 Avati portaal! Kasutajanimi: <b>${user || alias}</b>.<br/>🔑 Parool on kopeeritud lõikelauale – kleebi see (Ctrl+V / Cmd+V) paroolilahtrisse!` + (isSdw ? `<br/><small style="color:#fbbf24;">${sdwTip}</small>` : '')
-      : `🚀 Portal opened! Username: <b>${user || alias}</b>.<br/>🔑 Password copied to clipboard – paste (Ctrl+V / Cmd+V) on password field!` + (isSdw ? `<br/><small style="color:#fbbf24;">${sdwTip}</small>` : '');
+      ? `🚀 Avati portaal! Kasutajanimi: <b>${user || alias}</b>.${copyUserBtn}<br/>🔑 Parool on kopeeritud lõikelauale – kleebi see (Ctrl+V / Cmd+V) paroolilahtrisse!` + (isSdw ? `<br/><small style="color:#fbbf24;">${sdwTip}</small>` : '')
+      : `🚀 Portal opened! Username: <b>${user || alias}</b>.${copyUserBtn}<br/>🔑 Password copied to clipboard – paste (Ctrl+V / Cmd+V) on password field!` + (isSdw ? `<br/><small style="color:#fbbf24;">${sdwTip}</small>` : '');
     showToast(toastMsg);
   } else {
     const sdwTip = dict.tip_db_actions_wait || dict.tip_sdw_warmup || '⏳ Starting DB Actions may take up to 1 min depending on machine speed. Please be patient.';
@@ -6985,6 +8670,25 @@ async function loadSnapshotsTable(manual = false) {
       countBadge.textContent = `${list.length} snapshots`;
     }
 
+    const snapRestoreDurEl = document.getElementById('snap-stat-restore-dur');
+    if (snapRestoreDurEl) {
+      const snapData = (typeof SNAPSHOT_BENCHMARKS_DATA !== 'undefined' && SNAPSHOT_BENCHMARKS_DATA) ? SNAPSHOT_BENCHMARKS_DATA : null;
+      if (snapData && snapData.restore_duration_seconds) {
+        snapRestoreDurEl.textContent = formatDurationSeconds(snapData.restore_duration_seconds) + (snapData.started_at ? ` (${formatBenchmarkTimestamp(snapData.started_at)})` : '');
+      } else {
+        snapRestoreDurEl.textContent = '18s';
+      }
+    }
+    const snapColdDurEl = document.getElementById('snap-stat-cold-dur');
+    if (snapColdDurEl) {
+      const setupData = (typeof BENCHMARKS_DATA !== 'undefined' && BENCHMARKS_DATA) ? BENCHMARKS_DATA : null;
+      if (setupData && (setupData.total_duration_formatted || setupData.total_duration_seconds)) {
+        snapColdDurEl.textContent = setupData.total_duration_formatted || formatDurationSeconds(setupData.total_duration_seconds);
+      } else {
+        snapColdDurEl.textContent = '7m 43s';
+      }
+    }
+
     if (list.length === 0) {
       container.innerHTML = `
         <div style="padding: 24px; text-align: center; color: #94a3b8; font-size: 0.85rem;">
@@ -7225,7 +8929,7 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
   function appendLog(line) {
     logLines.push(line);
     if (outEl) {
-      outEl.innerHTML = formatTerminalLogText(logLines.join('\n'), { showTime: true, showColors: true });
+      outEl.innerHTML = formatTerminalLogText(logLines.join('\n'), { showTime: false, showColors: true });
       if (!isUserScrolledUp) {
         outEl.scrollTop = outEl.scrollHeight;
       }
@@ -7427,7 +9131,7 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
             const rawLines = d.content.trim().split('\n');
             const recent = rawLines.slice(-35).join('\n');
             if (outEl && recent) {
-              outEl.innerHTML = formatTerminalLogText(recent, { showTime: true, showColors: true });
+              outEl.innerHTML = formatTerminalLogText(recent, { showTime: false, showColors: true });
               if (!isUserScrolledUp) {
                 outEl.scrollTop = outEl.scrollHeight;
               }
@@ -7451,9 +9155,10 @@ function startTerminalProgress(containerId, opType, opName, cmdStr) {
         barEl.style.background = success ? '#22c55e' : '#ef4444';
       }
 
-      if (data && data.output) {
+      if (data && (data.output || data.error)) {
         const finishTime = new Date().toLocaleTimeString('et-EE', { hour12: false });
-        appendLog(`\n--- [${finishTime}] Täielik skripti väljund: ---\n` + data.output);
+        const outStr = data.output || `[ERROR] ${data.error}`;
+        appendLog(`\n--- [${finishTime}] Väljund: ---\n` + outStr);
       }
 
       if (data && (data.log_file || data.log_relative_path)) {
@@ -9130,15 +10835,18 @@ document.addEventListener('DOMContentLoaded', () => {
     togglePodmanDrawer(true);
   }
 
-  // Initialize ORDS auto-sync state (default to OFF)
-  const savedOrdsSync = localStorage.getItem('dev_hub_ords_autosync');
-  setOrdsAutoSync(savedOrdsSync === 'true', false);
+  // Initialize Master Real-Time Telemetry Auto-Refresh (default to ON: 5s)
+  const savedMasterRefresh = localStorage.getItem('dev_hub_master_autorefresh');
+  const masterRefreshActive = (savedMasterRefresh !== 'false');
+  setMasterAutoRefresh(masterRefreshActive, false);
 
   checkServiceHealth();
   renderOrdsGatewayStrip();
-  setInterval(checkServiceHealth, 5000);
   pollBridgeStatus();
-  setInterval(pollBridgeStatus, 5000);
+  fetchCopilotStatus();
+  initDockedTerminalResize();
+  applyPinnedCardsOrder();
+  updatePinnedCounter();
 
   // Auto-load snapshots if tab active
   const snapTab = document.getElementById('tab-snapshots');
@@ -9154,6 +10862,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // URL parameters and hash routing (e.g. #tab-docs, #tab-testing, ?tab=docs&doc=readme&lang=lt)
   const urlParams = new URLSearchParams(window.location.search);
+  const targetDeck = urlParams.get('deck');
+  if (targetDeck === 'forms' || targetDeck === 'platform') {
+    gActivePresentationDeck = targetDeck;
+  }
+  switchPresentationDeck(gActivePresentationDeck);
+
   const hashParam = (window.location.hash || '').replace(/^#/, '');
   const rawTab = urlParams.get('tab');
   const cleanHash = hashParam.split('?')[0];
@@ -9672,13 +11386,195 @@ function clearOracleResourcesSearch() {
   renderOracleResourcesModal();
 }
 
+function loadAllOracleResources() {
+  const base = (window.ORACLE_RESOURCES_DATA || []).map((item, idx) => {
+    const id = item.id || ('res_' + (item.name ? item.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() : idx));
+    return Object.assign({}, item, { id, is_custom: false });
+  });
+
+  let deletedIds = [];
+  try {
+    deletedIds = JSON.parse(localStorage.getItem('dev_hub_deleted_resources') || '[]');
+  } catch (e) { deletedIds = []; }
+
+  let customList = [];
+  try {
+    customList = JSON.parse(localStorage.getItem('dev_hub_custom_resources') || '[]');
+  } catch (e) { customList = []; }
+
+  let editedMap = {};
+  try {
+    editedMap = JSON.parse(localStorage.getItem('dev_hub_edited_resources') || '{}');
+  } catch (e) { editedMap = {}; }
+
+  const mergedBase = base.filter(item => !deletedIds.includes(item.id)).map(item => {
+    if (editedMap[item.id]) {
+      return Object.assign({}, item, editedMap[item.id]);
+    }
+    return item;
+  });
+
+  const validCustom = customList.filter(item => !deletedIds.includes(item.id));
+  return [...mergedBase, ...validCustom];
+}
+
+function openAddOracleResourceModal() {
+  const modal = document.getElementById('oracle-resource-form-modal');
+  if (!modal) return;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  const titleEl = document.getElementById('oracle-resource-form-title');
+  if (titleEl) titleEl.textContent = dict.modal_add_ref_title || 'Lisa uus viide';
+
+  document.getElementById('res-form-id').value = '';
+  document.getElementById('res-form-name').value = '';
+  document.getElementById('res-form-url').value = '';
+  document.getElementById('res-form-category').value = 'containers';
+  document.getElementById('res-form-badge').value = 'OCR';
+  document.getElementById('res-form-desc').value = '';
+  document.getElementById('res-form-usecase').value = '';
+  document.getElementById('res-form-cmd').value = '';
+
+  modal.style.display = 'flex';
+}
+
+function openEditOracleResourceModal(itemId) {
+  const modal = document.getElementById('oracle-resource-form-modal');
+  if (!modal) return;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  const catalog = loadAllOracleResources();
+  const item = catalog.find(r => r.id === itemId);
+  if (!item) return;
+
+  const titleEl = document.getElementById('oracle-resource-form-title');
+  if (titleEl) titleEl.textContent = dict.modal_edit_ref_title || 'Muuda viidet';
+
+  document.getElementById('res-form-id').value = item.id;
+  document.getElementById('res-form-name').value = item.name || '';
+  document.getElementById('res-form-url').value = item.url || '';
+  document.getElementById('res-form-category').value = item.category || 'containers';
+  document.getElementById('res-form-badge').value = item.badge || '';
+  
+  const dText = (typeof item.desc === 'object' && item.desc) ? (item.desc[currentLang] || item.desc['en'] || '') : (item.desc || '');
+  const uText = (typeof item.use_case === 'object' && item.use_case) ? (item.use_case[currentLang] || item.use_case['en'] || '') : (item.use_case || '');
+  document.getElementById('res-form-desc').value = dText;
+  document.getElementById('res-form-usecase').value = uText;
+  document.getElementById('res-form-cmd').value = item.pull_cmd || '';
+
+  modal.style.display = 'flex';
+}
+
+function closeOracleResourceFormModal(event) {
+  if (event && event.target && event.target.closest && event.target.closest('.modal-content') && event.target !== event.currentTarget) {
+    return;
+  }
+  const modal = document.getElementById('oracle-resource-form-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function handleSaveOracleResource(event) {
+  if (event) event.preventDefault();
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  const id = document.getElementById('res-form-id').value.trim();
+  const name = document.getElementById('res-form-name').value.trim();
+  const url = document.getElementById('res-form-url').value.trim();
+  const category = document.getElementById('res-form-category').value;
+  const badge = document.getElementById('res-form-badge').value.trim() || 'LINK';
+  const descText = document.getElementById('res-form-desc').value.trim();
+  const usecaseText = document.getElementById('res-form-usecase').value.trim();
+  const pullCmd = document.getElementById('res-form-cmd').value.trim();
+
+  if (!name || !url) {
+    alert(dict.form_required_fields || 'Palun täida nõutud väljad!');
+    return;
+  }
+
+  if (id) {
+    let customList = [];
+    try { customList = JSON.parse(localStorage.getItem('dev_hub_custom_resources') || '[]'); } catch(e) {}
+    const customIdx = customList.findIndex(c => c.id === id);
+
+    if (customIdx >= 0) {
+      customList[customIdx].name = name;
+      customList[customIdx].url = url;
+      customList[customIdx].category = category;
+      customList[customIdx].badge = badge;
+      customList[customIdx].desc = descText;
+      customList[customIdx].use_case = usecaseText;
+      customList[customIdx].pull_cmd = pullCmd;
+      localStorage.setItem('dev_hub_custom_resources', JSON.stringify(customList));
+    } else {
+      let editedMap = {};
+      try { editedMap = JSON.parse(localStorage.getItem('dev_hub_edited_resources') || '{}'); } catch(e) {}
+      editedMap[id] = {
+        name, url, category, badge,
+        desc: descText,
+        use_case: usecaseText,
+        pull_cmd: pullCmd
+      };
+      localStorage.setItem('dev_hub_edited_resources', JSON.stringify(editedMap));
+    }
+  } else {
+    const newId = 'custom_' + Date.now();
+    const newResource = {
+      id: newId,
+      name, url, category, badge,
+      desc: descText,
+      use_case: usecaseText,
+      pull_cmd: pullCmd,
+      is_custom: true
+    };
+    let customList = [];
+    try { customList = JSON.parse(localStorage.getItem('dev_hub_custom_resources') || '[]'); } catch(e) {}
+    customList.push(newResource);
+    localStorage.setItem('dev_hub_custom_resources', JSON.stringify(customList));
+  }
+
+  closeOracleResourceFormModal();
+  renderOracleResourcesModal();
+  if (typeof showToast === 'function') {
+    showToast(`✅ ${dict.toast_saved || 'Viide edukalt salvestatud!'}`);
+  }
+}
+
+function deleteOracleResource(itemId) {
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  if (!confirm(dict.confirm_delete_resource || 'Kas soovid kindlasti selle viite eemaldada?')) {
+    return;
+  }
+
+  let deletedIds = [];
+  try { deletedIds = JSON.parse(localStorage.getItem('dev_hub_deleted_resources') || '[]'); } catch(e) {}
+  if (!deletedIds.includes(itemId)) {
+    deletedIds.push(itemId);
+    localStorage.setItem('dev_hub_deleted_resources', JSON.stringify(deletedIds));
+  }
+
+  let customList = [];
+  try { customList = JSON.parse(localStorage.getItem('dev_hub_custom_resources') || '[]'); } catch(e) {}
+  customList = customList.filter(c => c.id !== itemId);
+  localStorage.setItem('dev_hub_custom_resources', JSON.stringify(customList));
+
+  renderOracleResourcesModal();
+  if (typeof showToast === 'function') {
+    showToast(`🗑️ ${dict.toast_deleted || 'Viide eemaldatud!'}`);
+  }
+}
+
 function renderOracleResourcesModal() {
-  const catalog = window.ORACLE_RESOURCES_DATA || [];
+  const catalog = loadAllOracleResources();
   const categories = window.ORACLE_RESOURCE_CATEGORIES || [];
   const container = document.getElementById('oracle-resources-cards-container');
   const catBar = document.getElementById('oracle-resources-categories-bar');
   const counterEl = document.getElementById('oracle-resources-counter');
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
 
   if (!container || !catBar) return;
 
@@ -9702,8 +11598,8 @@ function renderOracleResourcesModal() {
     if (!term) return true;
 
     const n = (item.name || '').toLowerCase();
-    const d = ((item.desc && (item.desc[currentLang] || item.desc.en)) || '').toLowerCase();
-    const u = ((item.use_case && (item.use_case[currentLang] || item.use_case.en)) || '').toLowerCase();
+    const d = (typeof item.desc === 'object' && item.desc ? (item.desc[currentLang] || item.desc.en || '') : (item.desc || '')).toLowerCase();
+    const u = (typeof item.use_case === 'object' && item.use_case ? (item.use_case[currentLang] || item.use_case.en || '') : (item.use_case || '')).toLowerCase();
     const c = (item.pull_cmd || '').toLowerCase();
     const b = (item.badge || '').toLowerCase();
 
@@ -9711,12 +11607,12 @@ function renderOracleResourcesModal() {
   });
 
   if (counterEl) {
-    const suffix = (I18N_DICT[currentLang] && I18N_DICT[currentLang].resources_counter_suffix) || 'resources';
+    const suffix = dict.resources_counter_suffix || 'viidet';
     counterEl.textContent = `${filtered.length} / ${catalog.length} ${suffix}`;
   }
 
   if (filtered.length === 0) {
-    const noResultsTitle = (I18N_DICT[currentLang] && I18N_DICT[currentLang].resources_no_results) || 'No resources found';
+    const noResultsTitle = dict.resources_no_results || 'Viiteid ei leitud';
     container.innerHTML = `
       <div style="text-align: center; padding: 48px 16px; color: var(--text-muted);">
         <div style="font-size: 2.5rem; margin-bottom: 12px;">🏛️</div>
@@ -9727,8 +11623,8 @@ function renderOracleResourcesModal() {
 
   let html = '';
   filtered.forEach(item => {
-    const dText = (item.desc && (item.desc[currentLang] || item.desc.en)) || '';
-    const uText = (item.use_case && (item.use_case[currentLang] || item.use_case.en)) || '';
+    const dText = (typeof item.desc === 'object' && item.desc ? (item.desc[currentLang] || item.desc.en || '') : (item.desc || ''));
+    const uText = (typeof item.use_case === 'object' && item.use_case ? (item.use_case[currentLang] || item.use_case.en || '') : (item.use_case || ''));
     const badgeClass = item.category === 'downloads' ? 'oracle-resource-badge-download' : (item.category === 'portals' ? 'oracle-resource-badge-portal' : '');
 
     let cmdHtml = '';
@@ -9740,23 +11636,34 @@ function renderOracleResourcesModal() {
         </div>`;
     }
 
-    const officialLinkLabel = (currentLang === 'et') ? 'Ametlik Oracle Link ↗' : ((currentLang === 'fi') ? 'Virallinen Oracle-linkki ↗' : ((currentLang === 'sv') ? 'Officiell Oracle-länk ↗' : ((currentLang === 'lv') ? 'Oficiālā Oracle saite ↗' : ((currentLang === 'lt') ? 'Oficiali Oracle nuoroda ↗' : 'Official Oracle Link ↗'))));
+    const officialLinkLabel = (currentLang === 'et') ? 'Ametlik Link ↗' : ((currentLang === 'fi') ? 'Virallinen linkki ↗' : ((currentLang === 'sv') ? 'Officiell länk ↗' : ((currentLang === 'lv') ? 'Oficiālā saite ↗' : ((currentLang === 'lt') ? 'Oficiali nuoroda ↗' : 'Official Link ↗'))));
 
     html += `
       <div class="oracle-resource-card">
         <div class="oracle-resource-header">
           <h4 class="oracle-resource-title">
-            <span>${item.name}</span>
+            <span>${escapeHtml(item.name)}</span>
           </h4>
-          <span class="oracle-resource-badge ${badgeClass}">${item.badge}</span>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            ${item.is_custom ? `<span class="badge" style="background: rgba(56,189,248,0.15); color: #38bdf8; font-size: 0.7rem; border: 1px solid rgba(56,189,248,0.3);">${dict.badge_custom || 'Kohandatud'}</span>` : ''}
+            <span class="oracle-resource-badge ${badgeClass}">${escapeHtml(item.badge || '')}</span>
+          </div>
         </div>
-        <p class="oracle-resource-desc">${dText}</p>
-        <div class="oracle-resource-use"><strong>🎯 Roll:</strong> ${uText}</div>
+        <p class="oracle-resource-desc">${escapeHtml(dText)}</p>
+        <div class="oracle-resource-use"><strong>🎯 Roll:</strong> ${escapeHtml(uText)}</div>
         ${cmdHtml}
-        <div class="oracle-resource-actions">
-          <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-size: 0.8rem; padding: 5px 12px; text-decoration: none;">
+        <div class="oracle-resource-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+          <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="font-size: 0.8rem; padding: 5px 12px; text-decoration: none;">
             <span>🔗</span> <span>${officialLinkLabel}</span>
           </a>
+          <div style="display: inline-flex; gap: 6px;">
+            <button type="button" class="btn btn-secondary" onclick="openEditOracleResourceModal('${escapeHtml(item.id)}')" style="font-size: 0.78rem; padding: 5px 9px;" title="${dict.btn_edit || 'Muuda'}">
+              <span>✏️</span>
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="deleteOracleResource('${escapeHtml(item.id)}')" style="font-size: 0.78rem; padding: 5px 9px; color: #ef4444;" title="${dict.btn_delete || 'Kustuta'}">
+              <span>🗑️</span>
+            </button>
+          </div>
         </div>
       </div>`;
   });
@@ -9776,9 +11683,10 @@ let gCurrentActiveSkillId = 'repo_codebase_navigator';
 let gSkillsMermaidRendered = false;
 
 function openSkillsFromMenu() {
-  const dd = document.getElementById('docs-dropdown');
+  const dd = document.getElementById('enterprise-nav-dropdown');
   if (dd) dd.classList.remove('open');
-  switchTab('tab-skills');
+  switchTab('tab-specs');
+  switchSpecsMode('skills');
 }
 
 function initSkillsTab() {
@@ -10977,6 +12885,2003 @@ window.addEventListener('keydown', (e) => {
   if (codeModal && codeModal.style.display === 'flex' && e.key === 'Escape') {
     closeCodePreviewModal();
   }
+
+  // Report Studio modal Esc
+  const reportModal = document.getElementById('report-studio-modal-backdrop');
+  if (reportModal && reportModal.style.display === 'flex' && e.key === 'Escape') {
+    closeReportStudioModal();
+  }
 });
+
+/* ==============================================================================
+ * Oracle Analytics Publisher Report Studio & Fast-Render Lab
+ * ============================================================================== */
+
+let gPublisherTemplates = [];
+let gCurrentPreviewToken = null;
+let gReportStudioActiveTab = 'pdf';
+
+function handleReportStudioKeydown(e) {
+  const modal = document.getElementById('report-studio-modal-backdrop');
+  if (!modal || modal.style.display === 'none') return;
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    renderReportPreview();
+  }
+}
+
+async function openReportStudioModal() {
+  const modal = document.getElementById('report-studio-modal-backdrop');
+  if (!modal) return;
+  modal.classList.add('active');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'et';
+  const localeSelect = document.getElementById('report-locale-select');
+  if (localeSelect && ['et', 'en', 'fi', 'sv', 'lv', 'lt'].includes(currentLang)) {
+    localeSelect.value = currentLang;
+  }
+
+  window.addEventListener('keydown', handleReportStudioKeydown);
+  switchReportViewTab('pdf');
+  await loadReportStudioTemplates();
+}
+
+function closeReportStudioModal(e) {
+  if (e && e.target && e.target !== e.currentTarget && !e.target.classList.contains('modal-close-btn')) {
+    return;
+  }
+  const modal = document.getElementById('report-studio-modal-backdrop');
+  if (modal) {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  window.removeEventListener('keydown', handleReportStudioKeydown);
+}
+
+function toggleReportStudioMaximize() {
+  const card = document.getElementById('report-studio-modal-card');
+  const btn = document.getElementById('btn-report-studio-max');
+  if (!card) return;
+  const isMax = card.classList.toggle('maximized');
+  if (btn) {
+    btn.innerHTML = isMax ? '🗗' : '⛶';
+    btn.title = isMax ? 'Vähenda aknaks' : 'Täisekraan (⛶)';
+  }
+}
+
+function getPublisherBridgeUrl() {
+  if (typeof BRIDGE_URL !== 'undefined' && BRIDGE_URL) return BRIDGE_URL;
+  return window.location.origin.includes(':8089') ? '' : 'http://localhost:8089';
+}
+
+async function loadReportStudioTemplates() {
+  const select = document.getElementById('report-template-select');
+  if (!select) return;
+  select.innerHTML = '<option value="">⏳ Laadin malle...</option>';
+
+  try {
+    const bridgeUrl = getPublisherBridgeUrl();
+    const resp = await fetch(`${bridgeUrl}/api/publisher/templates`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    gPublisherTemplates = data.templates || [];
+    if (gPublisherTemplates.length === 0) {
+      select.innerHTML = '<option value="">⚠️ Malle ei leitud</option>';
+      return;
+    }
+
+    const categories = {
+      'samples': '📄 Näidismallid (Samples)',
+      'accessibility': '♿ Ligipääsetavuse Suite (PDF/UA-1)',
+      'custom': '📦 Ametlikud Raportid (Custom Reports)'
+    };
+
+    let html = '';
+    for (const [catKey, catTitle] of Object.entries(categories)) {
+      const catTemplates = gPublisherTemplates.filter(t => t.category === catKey);
+      if (catTemplates.length > 0) {
+        html += `<optgroup label="${catTitle}">`;
+        for (const t of catTemplates) {
+          html += `<option value="${t.id}">${t.name}</option>`;
+        }
+        html += `</optgroup>`;
+      }
+    }
+
+    select.innerHTML = html;
+    onReportTemplateChange();
+  } catch (err) {
+    console.error('Failed to load publisher templates:', err);
+    select.innerHTML = '<option value="">❌ Viga mallide pärimisel</option>';
+    showReportStatus('error', 'Viga mallide laadimisel', 'Veendu, et Dev Hub Bridge töötab pordil 8089', err.message);
+  }
+}
+
+function updateReportTemplateInfoCard(tpl) {
+  const card = document.getElementById('report-template-info-card');
+  const typeEl = document.getElementById('tpl-info-type');
+  const pathEl = document.getElementById('tpl-info-path');
+  const targetWrap = document.getElementById('tpl-info-target-wrap');
+  const targetEl = document.getElementById('tpl-info-target');
+
+  if (!card || !tpl) {
+    if (card) card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = 'block';
+  if (typeEl) {
+    typeEl.textContent = tpl.category_label || (tpl.category === 'accessibility' ? '♿ PDF/UA-1 Suite' : '📄 RTF Template');
+  }
+  if (pathEl) {
+    pathEl.textContent = tpl.rtf_path || '';
+  }
+  if (targetWrap && targetEl) {
+    if (tpl.is_deployable && tpl.deploy_path) {
+      targetWrap.style.display = 'block';
+      targetEl.textContent = tpl.deploy_path;
+    } else {
+      targetWrap.style.display = 'none';
+    }
+  }
+}
+
+function copyReportTemplatePath() {
+  const pathEl = document.getElementById('tpl-info-path');
+  if (pathEl && pathEl.textContent) {
+    navigator.clipboard.writeText(pathEl.textContent.trim());
+    showToast('📋 Malli failitee kopeeritud lõikelauale!');
+  }
+}
+
+function onReportTemplateChange() {
+  const select = document.getElementById('report-template-select');
+  const dataSelect = document.getElementById('report-data-select');
+  const deployBtn = document.getElementById('btn-deploy-server');
+  if (!select || !dataSelect) return;
+
+  const tplId = select.value;
+  const tpl = gPublisherTemplates.find(t => t.id === tplId);
+  if (!tpl) {
+    dataSelect.innerHTML = '<option value="">Vali esmalt mall...</option>';
+    updateReportTemplateInfoCard(null);
+    return;
+  }
+
+  updateReportTemplateInfoCard(tpl);
+
+  let dataHtml = '';
+  const availableXmls = tpl.available_xmls || [];
+  if (availableXmls.length > 0) {
+    for (const x of availableXmls) {
+      const isSelected = (x.path === tpl.default_xml) ? 'selected' : '';
+      dataHtml += `<option value="${x.path}" ${isSelected}>${x.name}</option>`;
+    }
+  } else {
+    dataHtml = `<option value="${tpl.default_xml || ''}">Vaikimisi andmed</option>`;
+  }
+  dataSelect.innerHTML = dataHtml;
+
+  if (deployBtn) {
+    if (tpl.is_deployable) {
+      deployBtn.style.display = 'flex';
+      deployBtn.title = `Paigalda serverisse teele: ${tpl.deploy_path}`;
+    } else {
+      deployBtn.style.display = 'none';
+    }
+  }
+
+  if (gReportStudioActiveTab === 'xml') {
+    loadReportXmlContent();
+  } else if (gReportStudioActiveTab === 'rtf') {
+    loadReportRtfContent();
+  }
+}
+
+function onReportDataChange() {
+  if (gReportStudioActiveTab === 'xml') {
+    loadReportXmlContent();
+  }
+}
+
+let gLastLoadedRtfContent = '';
+
+async function loadReportRtfContent() {
+  const tplSelect = document.getElementById('report-template-select');
+  const pre = document.getElementById('report-rtf-pre');
+  const pathDisplay = document.getElementById('report-rtf-path-display');
+  const tagsOnlyCheckbox = document.getElementById('chk-rtf-tags-only');
+
+  const tplId = tplSelect ? tplSelect.value : '';
+  const tpl = gPublisherTemplates.find(t => t.id === tplId);
+  const rtfPath = tpl ? tpl.rtf_path : '';
+
+  if (pathDisplay) pathDisplay.textContent = rtfPath || (tpl ? tpl.name : '');
+  if (!pre) return;
+  if (!rtfPath) {
+    pre.textContent = 'Valitud mallil puudub RTF failitee.';
+    return;
+  }
+
+  pre.textContent = '⏳ Laadin RTF malli sisu...';
+  try {
+    const bridgeUrl = getPublisherBridgeUrl();
+    const resp = await fetch(`${bridgeUrl}/api/file/raw?path=${encodeURIComponent(rtfPath)}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    gLastLoadedRtfContent = data.content || '';
+    renderRtfContentInPre(tagsOnlyCheckbox && tagsOnlyCheckbox.checked);
+  } catch (err) {
+    pre.textContent = `❌ Viga RTF malli laadimisel: ${err.message}`;
+  }
+}
+
+function renderRtfContentInPre(tagsOnly) {
+  const pre = document.getElementById('report-rtf-pre');
+  if (!pre) return;
+  if (!gLastLoadedRtfContent) {
+    pre.textContent = 'RTF malli fail on tühi või laadimata.';
+    return;
+  }
+
+  if (tagsOnly) {
+    const tagMatches = gLastLoadedRtfContent.match(/<\?[\s\S]*?\?>/g);
+    if (!tagMatches || tagMatches.length === 0) {
+      pre.textContent = '# Dokument ei sisalda ühtegi tuvastatavat XDO tagi (<?...?>)';
+      return;
+    }
+    const uniqueTags = Array.from(new Set(tagMatches));
+    pre.textContent = `# Tuvastatud ${uniqueTags.length} unikaalset XDO väljakoodi / tagi:\n\n` + uniqueTags.join('\n');
+  } else {
+    pre.textContent = gLastLoadedRtfContent;
+  }
+}
+
+function toggleRtfTagsFilter() {
+  const chk = document.getElementById('chk-rtf-tags-only');
+  renderRtfContentInPre(chk && chk.checked);
+}
+
+function copyReportRtfContent() {
+  const pre = document.getElementById('report-rtf-pre');
+  if (pre && pre.textContent) {
+    navigator.clipboard.writeText(pre.textContent);
+    showToast('📝 RTF sisu kopeeritud lõikelauale!');
+  }
+}
+
+async function openTemplateInDesigner(evt) {
+  if (evt) {
+    evt.preventDefault();
+    evt.stopPropagation();
+  }
+  const tplSelect = document.getElementById('report-template-select');
+  const tplId = tplSelect ? tplSelect.value : '';
+  const tpl = (typeof gPublisherTemplates !== 'undefined' && Array.isArray(gPublisherTemplates))
+    ? gPublisherTemplates.find(t => t.id === tplId) : null;
+  const rtfPath = tpl ? (tpl.rtf_path || '') : '';
+
+  const designerUrl = 'http://localhost:6083/vnc.html?autoconnect=true&resize=remote';
+  const bridgeUrl = getPublisherBridgeUrl();
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = (typeof I18N_DICT !== 'undefined' && I18N_DICT[currentLang]) ? I18N_DICT[currentLang] : {};
+  const openingMsg = dict.msg_opening_designer || '🎨 Opening RTF template in LibreOffice Writer on desktop (noVNC port 6083)...';
+  showToast(openingMsg);
+
+  try {
+    await fetch(`${bridgeUrl}/api/publisher/open-designer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rtf_path: rtfPath })
+    });
+  } catch (err) {
+    console.warn('Bridge open-designer request failed:', err);
+  }
+
+  window.open(designerUrl, '_blank');
+}
+
+function switchReportViewTab(tab) {
+  gReportStudioActiveTab = tab;
+
+  const btnPdf = document.getElementById('btn-tab-report-pdf');
+  const btnRtf = document.getElementById('btn-tab-report-rtf');
+  const btnXml = document.getElementById('btn-tab-report-xml');
+  const btnAudit = document.getElementById('btn-tab-report-audit');
+  const btnE2e = document.getElementById('btn-tab-report-e2e');
+
+  const pdfContainer = document.getElementById('report-pdf-frame-container');
+  const rtfContainer = document.getElementById('report-rtf-container');
+  const xmlContainer = document.getElementById('report-xml-container');
+  const auditContainer = document.getElementById('report-audit-container');
+  const e2eContainer = document.getElementById('report-e2e-container');
+
+  const tabs = [
+    { key: 'pdf', btn: btnPdf, box: pdfContainer },
+    { key: 'rtf', btn: btnRtf, box: rtfContainer },
+    { key: 'xml', btn: btnXml, box: xmlContainer },
+    { key: 'audit', btn: btnAudit, box: auditContainer },
+    { key: 'e2e', btn: btnE2e, box: e2eContainer }
+  ];
+
+  tabs.forEach(t => {
+    if (t.btn) {
+      if (t.key === tab) {
+        t.btn.style.background = 'rgba(56,189,248,0.2)';
+        t.btn.style.borderColor = 'rgba(56,189,248,0.5)';
+        t.btn.style.color = '#38bdf8';
+        t.btn.style.fontWeight = '600';
+      } else {
+        t.btn.style.background = 'rgba(255,255,255,0.05)';
+        t.btn.style.borderColor = 'var(--border)';
+        t.btn.style.color = '#94a3b8';
+        t.btn.style.fontWeight = 'normal';
+      }
+    }
+    if (t.box) {
+      t.box.style.display = (t.key === tab) ? 'flex' : 'none';
+    }
+  });
+
+  if (tab === 'rtf') {
+    loadReportRtfContent();
+  } else if (tab === 'xml') {
+    loadReportXmlContent();
+  }
+}
+
+async function loadReportXmlContent() {
+  const dataSelect = document.getElementById('report-data-select');
+  const tplSelect = document.getElementById('report-template-select');
+  const pre = document.getElementById('report-xml-pre');
+  const pathDisplay = document.getElementById('report-xml-path-display');
+
+  const tplId = tplSelect ? tplSelect.value : '';
+  const tpl = gPublisherTemplates.find(t => t.id === tplId);
+  const xmlPath = (dataSelect && dataSelect.value) ? dataSelect.value : (tpl ? tpl.default_xml : '');
+
+  if (pathDisplay) pathDisplay.textContent = xmlPath || 'Vaikimisi';
+  if (!pre) return;
+  if (!xmlPath) {
+    pre.textContent = 'Valitud mallil puuduvad XML testandmed.';
+    return;
+  }
+
+  pre.textContent = '⏳ Laadin XML andmefaili sisu...';
+  try {
+    const bridgeUrl = getPublisherBridgeUrl();
+    const resp = await fetch(`${bridgeUrl}/api/file/raw?path=${encodeURIComponent(xmlPath)}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    pre.textContent = data.content || 'XML andmefail on tühi.';
+  } catch (err) {
+    pre.textContent = `❌ Viga XML andmete laadimisel: ${err.message}`;
+  }
+}
+
+function copyReportXmlContent() {
+  const pre = document.getElementById('report-xml-pre');
+  if (pre && pre.textContent) {
+    navigator.clipboard.writeText(pre.textContent);
+    showToast('📦 XML testandmed kopeeritud lõikelauale!');
+  }
+}
+
+async function renderReportPreview() {
+  const select = document.getElementById('report-template-select');
+  const dataSelect = document.getElementById('report-data-select');
+  const localeSelect = document.getElementById('report-locale-select');
+
+  const emptyState = document.getElementById('report-empty-state');
+  const loadingState = document.getElementById('report-loading-state');
+  const loadingText = document.getElementById('report-loading-text');
+  const pdfFrame = document.getElementById('report-pdf-frame');
+  const viewerMeta = document.getElementById('report-viewer-meta');
+  const btnFullscreen = document.getElementById('btn-pdf-fullscreen');
+
+  const tplId = select ? select.value : '';
+  const tpl = gPublisherTemplates.find(t => t.id === tplId);
+  if (!tpl) {
+    alert('Palun vali esmalt aruande mall!');
+    return;
+  }
+
+  const xmlPath = dataSelect ? dataSelect.value : tpl.default_xml;
+  const locale = localeSelect ? localeSelect.value : 'et';
+
+  switchReportViewTab('pdf');
+
+  if (emptyState) emptyState.style.display = 'none';
+  if (pdfFrame) pdfFrame.style.display = 'none';
+  if (loadingState) loadingState.style.display = 'block';
+  if (loadingText) loadingText.textContent = `Genereerin PDF eelvaadet (${locale.toUpperCase()})...`;
+
+  const startT = performance.now();
+  try {
+    const bridgeUrl = getPublisherBridgeUrl();
+    const resp = await fetch(`${bridgeUrl}/api/publisher/render`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        rtf_path: tpl.rtf_path,
+        xml_path: xmlPath,
+        locale: locale
+      })
+    });
+
+    const data = await resp.json();
+    const elapsed = Math.round(performance.now() - startT);
+
+    if (resp.ok && data.status === 'ok') {
+      gCurrentPreviewToken = data.pdf_token;
+      const pdfFullUrl = `${bridgeUrl}${data.pdf_url}`;
+
+      if (loadingState) loadingState.style.display = 'none';
+      if (pdfFrame) {
+        pdfFrame.src = `${pdfFullUrl}#view=FitH&pagemode=none&navpanes=0&toolbar=1`;
+        pdfFrame.style.display = 'block';
+      }
+
+      const durStr = `${data.duration_ms || elapsed} ms`;
+      const sizeStr = `${(data.pdf_size / 1024).toFixed(1)} KB`;
+
+      if (viewerMeta) {
+        viewerMeta.style.display = 'inline-block';
+        viewerMeta.textContent = `⚡ ${durStr} | ${sizeStr}`;
+      }
+
+      if (btnFullscreen) {
+        btnFullscreen.href = pdfFullUrl;
+        btnFullscreen.style.display = 'inline-flex';
+      }
+
+      showReportStatus('success', 'PDF edukalt genereeritud', `Kestus: ${durStr} • Suurus: ${sizeStr} • Keel: ${locale.toUpperCase()}`, data.stdout || '');
+    } else {
+      if (loadingState) loadingState.style.display = 'none';
+      if (emptyState) emptyState.style.display = 'block';
+      showReportStatus('error', 'PDF genereerimine ebaõnnestus', data.error || 'Kontrolli malli süntaksit', data.raw_output || '');
+    }
+  } catch (err) {
+    if (loadingState) loadingState.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'block';
+    showReportStatus('error', 'Võrguviga PDF renderdamisel', err.message, '');
+  }
+}
+
+async function deployReportToServer() {
+  const select = document.getElementById('report-template-select');
+  const tplId = select ? select.value : '';
+  const tpl = gPublisherTemplates.find(t => t.id === tplId);
+  if (!tpl || !tpl.deploy_path) {
+    alert('Sellel mallil puudub serveripoolne paigaldustee!');
+    return;
+  }
+
+  const deployBtn = document.getElementById('btn-deploy-server');
+  const origText = deployBtn ? deployBtn.innerHTML : '';
+  if (deployBtn) {
+    deployBtn.disabled = true;
+    deployBtn.innerHTML = '<span>⏳</span> <span>Paigaldan...</span>';
+  }
+
+  showReportStatus('info', 'Paigaldan raportit serverisse...', `Sihtkataloog: ${tpl.deploy_path}`, '');
+
+  try {
+    const bridgeUrl = getPublisherBridgeUrl();
+    const resp = await fetch(`${bridgeUrl}/api/publisher/deploy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report_path: tpl.deploy_path })
+    });
+    const data = await resp.json();
+
+    if (resp.ok && data.status === 'ok') {
+      showReportStatus('success', 'Raport edukalt paigaldatud serverisse!', `Sihttee: ${tpl.deploy_path} • Kestus: ${data.duration_ms || 0} ms`, data.output || '');
+      showToast('🚀 Raport edukalt paigaldatud Publisheri serverisse!');
+    } else {
+      showReportStatus('error', 'Paigaldamine ebaõnnestus', data.message || 'Serveripoolne tõrge', data.output || '');
+    }
+  } catch (err) {
+    showReportStatus('error', 'Viga serverisse paigaldamisel', err.message, '');
+  } finally {
+    if (deployBtn) {
+      deployBtn.disabled = false;
+      deployBtn.innerHTML = origText;
+    }
+  }
+}
+
+async function auditReportAccessibility() {
+  if (!gCurrentPreviewToken) {
+    alert('Palun tee esmalt "Kiir-eelvaade", et genereerida kontrollitav PDF!');
+    return;
+  }
+
+  showReportStatus('info', 'Kontrollin ligipääsetavust...', 'Valideerin PDF/UA-1 ja WCAG 2.1 AA standardeid', '');
+
+  try {
+    const bridgeUrl = getPublisherBridgeUrl();
+    const resp = await fetch(`${bridgeUrl}/api/publisher/audit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: gCurrentPreviewToken })
+    });
+    const data = await resp.json();
+
+    if (resp.ok && data.status === 'ok') {
+      switchReportViewTab('audit');
+
+      const banner = document.getElementById('report-audit-banner');
+      const bannerIcon = document.getElementById('report-audit-banner-icon');
+      const bannerTitle = document.getElementById('report-audit-banner-title');
+      const bannerSub = document.getElementById('report-audit-banner-sub');
+      const scoreBadge = document.getElementById('report-audit-score-badge');
+      const emptyBox = document.getElementById('report-audit-empty');
+      const resultsBox = document.getElementById('report-audit-results');
+      const pre = document.getElementById('report-audit-pre');
+
+      if (emptyBox) emptyBox.style.display = 'none';
+      if (resultsBox) resultsBox.style.display = 'flex';
+      if (pre) pre.textContent = data.output || '';
+
+      const output = data.output || '';
+      const compliant = data.compliant;
+
+      if (banner) {
+        banner.style.background = compliant ? 'rgba(34, 197, 94, 0.15)' : 'rgba(234, 179, 8, 0.15)';
+        banner.style.border = compliant ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(234, 179, 8, 0.4)';
+        banner.style.color = compliant ? '#4ade80' : '#facc15';
+      }
+      if (bannerIcon) bannerIcon.textContent = compliant ? '✅' : '🟡';
+      if (bannerTitle) bannerTitle.textContent = compliant ? 'PDF/UA-1 & WCAG 2.1 AA Vastav' : 'PDF vajab ligipääsetavuse viimistlust';
+      if (bannerSub) bannerSub.textContent = compliant ? 'Täielik masinloetavus ja ekraanilugeja tugi tagatud' : 'Mõned ligipääsetavuse reeglid vajavad tähelepanu';
+
+      const matchScore = output.match(/Vastavuse skoor:\s*(\d+)%/);
+      const scorePct = matchScore ? matchScore[1] + '%' : (compliant ? '100% PASS' : 'REVISE');
+      if (scoreBadge) {
+        scoreBadge.textContent = scorePct;
+        scoreBadge.style.background = compliant ? 'rgba(34, 197, 94, 0.25)' : 'rgba(234, 179, 8, 0.25)';
+        scoreBadge.style.color = compliant ? '#4ade80' : '#facc15';
+      }
+
+      const valTagged = document.getElementById('a11y-val-tagged');
+      const valHeadings = document.getElementById('a11y-val-headings');
+      const valTables = document.getElementById('a11y-val-tables');
+      const valAltText = document.getElementById('a11y-val-alttext');
+
+      if (valTagged) {
+        valTagged.textContent = (output.includes('Tagged: Yes') || output.includes('Märgistatud (Tagged) PDF')) ? '✅ Kehtiv' : (compliant ? '✅ Kehtiv' : '🟡 Kontrolli');
+        valTagged.style.color = (output.includes('Tagged: Yes') || compliant) ? '#4ade80' : '#facc15';
+      }
+      if (valHeadings) {
+        valHeadings.textContent = output.includes('Pealkiri') || compliant ? '✅ Kehtiv' : '🟡 Kontrolli';
+        valHeadings.style.color = compliant ? '#4ade80' : '#facc15';
+      }
+      if (valTables) {
+        valTables.textContent = output.includes('TABELI') || output.includes('Tabel') || compliant ? '✅ Kehtiv' : '🟡 Kontrolli';
+        valTables.style.color = compliant ? '#4ade80' : '#facc15';
+      }
+      if (valAltText) {
+        valAltText.textContent = compliant ? '✅ Kehtiv' : '🟡 Kontrolli';
+        valAltText.style.color = compliant ? '#4ade80' : '#facc15';
+      }
+
+      showReportStatus(compliant ? 'success' : 'warning', data.summary || 'Audit lõpetatud', `Skoor: ${scorePct} • Vaata tulemusi vahelehelt "Ligipääsetavuse Audit"`, data.output || '');
+    } else {
+      showReportStatus('error', 'Auditeerimine ebaõnnestus', data.error || '', '');
+    }
+  } catch (err) {
+    showReportStatus('error', 'Viga ligipääsetavuse kontrollil', err.message, '');
+  }
+}
+
+function showReportStatus(type, title, meta, rawLog) {
+  const card = document.getElementById('report-status-card');
+  const icon = document.getElementById('report-status-icon');
+  const titleEl = document.getElementById('report-status-title');
+  const metaEl = document.getElementById('report-status-meta');
+  const drawer = document.getElementById('report-console-drawer');
+  const pre = document.getElementById('report-console-pre');
+
+  if (!card) return;
+  card.style.display = 'block';
+
+  if (titleEl) titleEl.textContent = title;
+  if (metaEl) metaEl.textContent = meta;
+
+  if (type === 'success') {
+    card.style.background = 'rgba(34, 197, 94, 0.12)';
+    card.style.borderColor = 'rgba(34, 197, 94, 0.35)';
+    card.style.color = '#4ade80';
+    if (icon) icon.textContent = '✅';
+  } else if (type === 'error') {
+    card.style.background = 'rgba(239, 68, 68, 0.12)';
+    card.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+    card.style.color = '#f87171';
+    if (icon) icon.textContent = '❌';
+  } else if (type === 'warning') {
+    card.style.background = 'rgba(234, 179, 8, 0.12)';
+    card.style.borderColor = 'rgba(234, 179, 8, 0.35)';
+    card.style.color = '#facc15';
+    if (icon) icon.textContent = '🟡';
+  } else {
+    card.style.background = 'rgba(56, 189, 248, 0.12)';
+    card.style.borderColor = 'rgba(56, 189, 248, 0.35)';
+    card.style.color = '#38bdf8';
+    if (icon) icon.textContent = 'ℹ️';
+  }
+
+  if (drawer && pre) {
+    if (rawLog && rawLog.trim().length > 0) {
+      drawer.style.display = 'block';
+      pre.textContent = rawLog.trim();
+      if (type === 'error') {
+        pre.style.display = 'block';
+        const caret = document.getElementById('report-console-caret');
+        if (caret) caret.textContent = '▲';
+      }
+    } else {
+      drawer.style.display = 'none';
+      pre.textContent = '';
+      pre.style.display = 'none';
+    }
+  }
+}
+
+function toggleReportConsoleDrawer() {
+  const pre = document.getElementById('report-console-pre');
+  const caret = document.getElementById('report-console-caret');
+  if (!pre) return;
+  const isShown = pre.style.display === 'block';
+  pre.style.display = isShown ? 'none' : 'block';
+  if (caret) caret.textContent = isShown ? '▼' : '▲';
+}
+
+function copyReportConsoleLog() {
+  const pre = document.getElementById('report-console-pre');
+  if (pre && pre.textContent) {
+    navigator.clipboard.writeText(pre.textContent);
+    showToast('📋 Logi kopeeritud lõikelauale!');
+  }
+}
+
+function clearReportConsoleLog() {
+  const pre = document.getElementById('report-console-pre');
+  const drawer = document.getElementById('report-console-drawer');
+  if (pre) pre.textContent = '';
+  if (drawer) drawer.style.display = 'none';
+}
+
+async function runPublisherE2ETest() {
+  const btn = document.getElementById('btn-test-e2e');
+  const tplSelect = document.getElementById('report-template-select');
+  const tplId = tplSelect ? tplSelect.value : '';
+
+  if (!tplId) {
+    showReportStatus('warning', 'Vali esmalt aruande mall', 'E2E testimiseks on vaja valida raport.', '');
+    return;
+  }
+
+  // Pre-check: Is Blueprint 5 active?
+  const isBp5 = (typeof ACTIVE_BP_NUM !== 'undefined' && (ACTIVE_BP_NUM === 5 || ACTIVE_BP_NUM === 7));
+  if (!isBp5) {
+    const confirmSwitch = confirm('Adekvaatseks E2E testimiseks on nõutav Blueprint 5 (Standalone Analytics Publisher).\n\nHetkel ei ole Blueprint 5 aktiivne. Kas soovid aktiveerida Blueprint 5 nüüd?');
+    if (confirmSwitch) {
+      if (typeof deployBlueprint === 'function') {
+        deployBlueprint(5);
+        return;
+      }
+    } else {
+      showReportStatus('warning', 'E2E Test vajab Blueprint 5', 'Palun lülitu vaates "Blueprints" Blueprint 5-le enne testimist.', '');
+      return;
+    }
+  }
+
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> <span>E2E Test käib...</span>';
+  }
+
+  showReportStatus('info', 'E2E Test käivitatud', 'Paigaldan raporti Publisheri, käivitan serveris ja verifitseerin sisu...', '');
+
+  try {
+    const bridgeUrl = typeof getPublisherBridgeUrl === 'function' ? getPublisherBridgeUrl() : 'http://localhost:8089';
+    let resp;
+    let activeBridgeUrl = bridgeUrl;
+    try {
+      resp = await fetch(`${bridgeUrl}/api/publisher/test-e2e`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          report_path: tplId,
+          expected_text: ''
+        })
+      });
+    } catch (primaryErr) {
+      const altUrl = (typeof BRIDGE_URL_ALT !== 'undefined' && BRIDGE_URL_ALT && BRIDGE_URL_ALT !== bridgeUrl)
+        ? BRIDGE_URL_ALT
+        : (bridgeUrl.includes('8449') ? 'http://localhost:8089' : 'http://127.0.0.1:8089');
+      try {
+        resp = await fetch(`${altUrl}/api/publisher/test-e2e`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            report_path: tplId,
+            expected_text: ''
+          })
+        });
+        activeBridgeUrl = altUrl;
+      } catch (secErr) {
+        throw primaryErr;
+      }
+    }
+
+    let data = {};
+    try {
+      data = await resp.json();
+    } catch (jsonErr) {
+      throw new Error(`Serveri vastus ei ole valiidne JSON (HTTP ${resp ? resp.status : 'tundmatu'})`);
+    }
+
+    if (data.output || data.report_path || data.status === 'ok') {
+      switchReportViewTab('e2e');
+
+      const emptyBox = document.getElementById('report-e2e-empty');
+      const resultsBox = document.getElementById('report-e2e-results');
+      const banner = document.getElementById('report-e2e-banner');
+      const bannerIcon = document.getElementById('report-e2e-banner-icon');
+      const bannerTitle = document.getElementById('report-e2e-banner-title');
+      const bannerSub = document.getElementById('report-e2e-banner-sub');
+      const badge = document.getElementById('report-e2e-badge');
+      const pre = document.getElementById('report-e2e-pre');
+      const linkRtf = document.getElementById('link-e2e-rtf');
+      const linkPdf = document.getElementById('link-e2e-pdf');
+
+      if (emptyBox) emptyBox.style.display = 'none';
+      if (resultsBox) resultsBox.style.display = 'flex';
+      if (pre) pre.textContent = data.output || data.message || '';
+
+      const ok = Boolean(data.ok);
+      if (banner) {
+        banner.style.background = ok ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+        banner.style.borderColor = ok ? 'rgba(34, 197, 94, 0.35)' : 'rgba(239, 68, 68, 0.35)';
+      }
+      if (bannerIcon) bannerIcon.textContent = ok ? '🎉' : '❌';
+      if (bannerTitle) {
+        bannerTitle.textContent = ok ? 'E2E Test Edukalt Läbitud!' : 'E2E Test Ebaõnnestus';
+        bannerTitle.style.color = ok ? '#4ade80' : '#f87171';
+      }
+      if (bannerSub) {
+        bannerSub.textContent = ok ? `Raport: ${data.report_path} • Kestus: ${Math.round((data.duration_ms || 0) / 1000)}s` : (data.message || 'Kontrolli allolevat täitmislogi');
+      }
+      if (badge) {
+        badge.textContent = ok ? 'PASS' : 'FAIL';
+        badge.style.background = ok ? 'rgba(34, 197, 94, 0.25)' : 'rgba(239, 68, 68, 0.25)';
+        badge.style.color = ok ? '#4ade80' : '#f87171';
+        badge.style.borderColor = ok ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)';
+      }
+
+      if (linkPdf && data.pdf_url) {
+        linkPdf.href = `${activeBridgeUrl}${data.pdf_url}`;
+        linkPdf.style.display = 'flex';
+      }
+      if (data.report_path) {
+        gLastDeployedReportPath = data.report_path;
+      }
+
+      showReportStatus(
+        ok ? 'success' : 'error',
+        ok ? 'E2E Test edukalt läbitud' : 'E2E Test ebaõnnestus',
+        `Kestus: ${Math.round((data.duration_ms || 0) / 1000)}s • Täielik logi kuvatud paremal sakis "E2E Tulemus"`,
+        ''
+      );
+    } else {
+      showReportStatus('error', 'E2E Test ebaõnnestus', data.message || data.error || 'Serveri viga', data.output || '');
+    }
+  } catch (err) {
+    const isHttps = (window.location.protocol === 'https:');
+    let helpHint = 'Veendu, et Dev Hub Bridge on aktiivne.';
+    if (isHttps) {
+      helpHint += ' HTTPS-iga veendu, et port https://localhost:8449 on brauseris ligipääsetav.';
+    }
+    showReportStatus('error', 'E2E Testi võrguviga', `${err.message} (${helpHint})`, '');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
+  }
+}
+
+function copyE2EConsoleLog() {
+  const pre = document.getElementById('report-e2e-pre');
+  if (pre && pre.textContent) {
+    navigator.clipboard.writeText(pre.textContent).then(() => {
+      showToast('E2E logi kopeeritud lõikelauale!');
+    }).catch(() => {
+      showToast('Kopeerimine ebaõnnestus', 'error');
+    });
+  }
+}
+
+let gLastDeployedReportPath = 'Custom/Invoices/Invoice_Report';
+
+function toggleE2EPublisherMenu(event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const dropdown = document.getElementById('e2e-publisher-dropdown');
+  if (!dropdown) return;
+  const isShown = dropdown.style.display === 'block';
+  dropdown.style.display = isShown ? 'none' : 'block';
+
+  if (!isShown) {
+    const closeListener = (e) => {
+      if (!dropdown.contains(e.target) && e.target.id !== 'btn-e2e-open-menu') {
+        dropdown.style.display = 'none';
+        document.removeEventListener('click', closeListener);
+      }
+    };
+    setTimeout(() => {
+      document.addEventListener('click', closeListener);
+    }, 10);
+  }
+}
+
+async function openE2EReportInPortal(role, destination, evt) {
+  if (evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+  }
+  const dropdown = document.getElementById('e2e-publisher-dropdown');
+  if (dropdown) dropdown.style.display = 'none';
+
+  // Resolve role and SEPS wallet alias
+  let alias = 'PUBLISHER_DEVELOPER';
+  let user = 'bip_developer';
+  if (role === 'bip_user') {
+    alias = 'PUBLISHER_USER';
+    user = 'bip_user';
+  } else if (role === 'bip_admin') {
+    alias = 'PUBLISHER_ADMIN';
+    user = 'bip_admin';
+  } else if (role === 'weblogic' || role === 'sys' || role === 'admin') {
+    alias = 'DB_PUBLISHER_SYS';
+    user = 'weblogic';
+  }
+
+  // Publisher base URL
+  const baseUrl = 'http://localhost:9502/xmlpserver';
+  let targetUrl = baseUrl;
+
+  if (destination === 'report') {
+    const rep = gLastDeployedReportPath || 'Custom/Invoices/Invoice_Report';
+    let cleanPath = rep.trim();
+    if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+    const normName = cleanPath.split('/').pop();
+    const xdoPath = cleanPath.endsWith('.xdo') ? cleanPath : `${cleanPath}/${normName}.xdo`;
+    targetUrl = `${baseUrl}${xdoPath}`;
+  } else if (destination === 'home') {
+    targetUrl = `${baseUrl}/servlet/home`;
+  }
+
+  // Delegate directly to canonical Blueprint #5 openServiceWithCredentials engine!
+  await openServiceWithCredentials(targetUrl, alias, user, evt);
+}
+
+/* ==============================================================================
+ * GITHUB COPILOT AI ASSISTANT CLIENT ENGINE
+ * ============================================================================== */
+
+let gCopilotChatHistory = [];
+let gCopilotDrawerOpen = false;
+let gCopilotFullscreen = false;
+let gCopilotInitialized = false;
+let gCopilotIsLoading = false;
+let gCopilotLastQuery = '';
+let gCurrentAiProvider = localStorage.getItem('dev_hub_ai_provider') || 'copilot';
+
+function switchAiProvider(provider) {
+  gCurrentAiProvider = provider === 'antigravity' ? 'antigravity' : 'copilot';
+  try { localStorage.setItem('dev_hub_ai_provider', gCurrentAiProvider); } catch(e) {}
+
+  const btnCopilot = document.getElementById('ai-provider-copilot');
+  const btnAntigravity = document.getElementById('ai-provider-antigravity');
+  if (btnCopilot) btnCopilot.classList.toggle('active', gCurrentAiProvider === 'copilot');
+  if (btnAntigravity) btnAntigravity.classList.toggle('active', gCurrentAiProvider === 'antigravity');
+
+  const avatar = document.getElementById('copilot-avatar-icon');
+  if (avatar) avatar.textContent = gCurrentAiProvider === 'antigravity' ? '✨' : '🤖';
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  const titleEl = document.getElementById('copilot-drawer-title-text');
+  if (titleEl) {
+    titleEl.textContent = gCurrentAiProvider === 'antigravity' ?
+      (dict.antigravity_drawer_title || 'Google Antigravity Assistant') :
+      (dict.copilot_drawer_title || 'GitHub Copilot Assistant');
+  }
+
+  fetchCopilotStatus();
+}
+
+function toggleCopilotDrawer(forceState) {
+  const backdrop = document.getElementById('copilot-drawer-backdrop');
+  const drawer = document.getElementById('copilot-drawer');
+  if (!backdrop || !drawer) return;
+
+  if (typeof forceState === 'boolean') {
+    gCopilotDrawerOpen = forceState;
+  } else {
+    gCopilotDrawerOpen = !gCopilotDrawerOpen;
+  }
+
+  if (gCopilotDrawerOpen) {
+    backdrop.style.display = 'block';
+    setTimeout(() => {
+      backdrop.classList.add('active');
+      drawer.classList.add('open');
+    }, 10);
+    if (!gCopilotInitialized) {
+      initCopilotAssistant();
+    } else {
+      switchAiProvider(gCurrentAiProvider);
+    }
+    setTimeout(() => {
+      const input = document.getElementById('copilot-user-input');
+      if (input) input.focus();
+    }, 100);
+  } else {
+    drawer.classList.remove('open');
+    backdrop.classList.remove('active');
+    setTimeout(() => {
+      backdrop.style.display = 'none';
+      if (gCopilotFullscreen) toggleCopilotFullscreen(false);
+    }, 280);
+  }
+}
+
+function closeCopilotDrawer(event) {
+  if (event && event.target && event.target.id === 'copilot-drawer-backdrop') {
+    toggleCopilotDrawer(false);
+  }
+}
+
+function toggleCopilotFullscreen(forceState) {
+  const drawer = document.getElementById('copilot-drawer');
+  const btn = document.getElementById('copilot-fullscreen-btn');
+  if (!drawer) return;
+
+  if (typeof forceState === 'boolean') {
+    gCopilotFullscreen = forceState;
+  } else {
+    gCopilotFullscreen = !gCopilotFullscreen;
+  }
+
+  if (gCopilotFullscreen) {
+    drawer.classList.add('fullscreen');
+    if (btn) btn.textContent = '🗗';
+  } else {
+    drawer.classList.remove('fullscreen');
+    if (btn) btn.textContent = '⛶';
+  }
+}
+
+function initCopilotAssistant() {
+  gCopilotInitialized = true;
+  switchAiProvider(gCurrentAiProvider);
+  loadCopilotHistory();
+}
+
+function fetchCopilotStatus() {
+  const dot = document.getElementById('copilot-status-dot');
+  const ind = document.getElementById('copilot-status-indicator');
+  const text = document.getElementById('copilot-status-text');
+  const badge = document.getElementById('copilot-model-badge');
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  fetch(`${BRIDGE_URL}/api/ai/status`)
+    .then(r => {
+      if (!r.ok) {
+        return fetch(`${BRIDGE_URL}/api/copilot/status`).then(r2 => r2.json()).then(cData => ({
+          status: 'ok',
+          providers: {
+            copilot: cData,
+            antigravity: { available: false, offline_ready: true }
+          }
+        }));
+      }
+      return r.json();
+    })
+    .then(data => {
+      const provInfo = (data.providers && data.providers[gCurrentAiProvider]) || {};
+
+      if (provInfo.available) {
+        if (dot) dot.classList.remove('offline');
+        if (ind) { ind.className = 'status-dot dot-online'; }
+        if (text) {
+          text.textContent = gCurrentAiProvider === 'antigravity' ?
+            (dict.copilot_status_antigravity || 'Connected (Google Antigravity)') :
+            (dict.copilot_status_connected || 'Connected (GitHub Copilot)');
+        }
+        if (badge) {
+          badge.textContent = gCurrentAiProvider === 'antigravity' ?
+            `Engine: ${provInfo.version || 'Antigravity'}` :
+            `Model: ${provInfo.model || 'gpt-4o'} (${provInfo.auth_type || 'auth'})`;
+        }
+      } else {
+        if (dot) dot.classList.add('offline');
+        if (ind) { ind.className = 'status-dot dot-init'; }
+        if (text) text.textContent = dict.copilot_status_offline || 'Local Knowledge Base (Offline)';
+        if (badge) badge.textContent = gCurrentAiProvider === 'antigravity' ? 'Antigravity Local KB' : 'Copilot Local KB';
+      }
+    })
+    .catch(() => {
+      if (dot) dot.classList.add('offline');
+      if (ind) { ind.className = 'status-dot dot-init'; }
+      if (text) text.textContent = dict.copilot_status_offline || 'Local Knowledge Base (Offline)';
+      if (badge) badge.textContent = 'Local RAG Mode';
+    });
+}
+
+function loadCopilotHistory() {
+  const container = document.getElementById('copilot-messages');
+  if (!container) return;
+  container.innerHTML = '';
+
+  try {
+    const raw = localStorage.getItem('dev_hub_copilot_history');
+    if (raw) {
+      gCopilotChatHistory = JSON.parse(raw);
+    }
+  } catch(e) {
+    gCopilotChatHistory = [];
+  }
+
+  if (gCopilotChatHistory.length === 0) {
+    const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+    const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+    const activeBp = window.ACTIVE_BP_NUM || 0;
+    const isAnti = gCurrentAiProvider === 'antigravity';
+    const botName = isAnti ? '**Google Antigravity AI**' : '**GitHub Copilot AI**';
+    const welcome = (currentLang === 'et') ?
+      `Tere! Olen sinu ${botName} abiline.\n\nHetkel on aktiivne **Blueprint #${activeBp}**.\nKüsi julgelt platvormi arhitektuuri, skriptide, Oracle SEPS Walleti, SQLcl-i või Analytics Publisheri RTF mallide kohta!` :
+      `Hello! I am your ${botName} Assistant.\n\nCurrently active: **Blueprint #${activeBp}**.\nAsk me anything about platform architecture, scripts, Oracle SEPS Wallet, SQLcl, or Analytics Publisher RTF templates!`;
+      `Hello! I am your **GitHub Copilot AI** Assistant.\n\nCurrently active: **Blueprint #${activeBp}**.\nAsk me anything about platform architecture, scripts, Oracle SEPS Wallet, SQLcl, or Analytics Publisher RTF templates!`;
+    appendCopilotMessage('bot', welcome, false);
+  } else {
+    gCopilotChatHistory.forEach(msg => {
+      appendCopilotMessage(msg.sender, msg.text, false);
+    });
+  }
+}
+
+function appendCopilotMessage(sender, text, save = true) {
+  const container = document.getElementById('copilot-messages');
+  if (!container) return;
+
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `copilot-msg ${sender === 'user' ? 'copilot-msg-user' : 'copilot-msg-bot'}`;
+
+  if (sender === 'user') {
+    msgDiv.textContent = text;
+  } else {
+    msgDiv.innerHTML = formatCopilotMarkdown(text);
+  }
+
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+
+  if (save) {
+    gCopilotChatHistory.push({ sender, text, time: Date.now() });
+    if (gCopilotChatHistory.length > 30) gCopilotChatHistory.shift();
+    try {
+      localStorage.setItem('dev_hub_copilot_history', JSON.stringify(gCopilotChatHistory));
+    } catch(e) {}
+  }
+}
+
+function formatCopilotMarkdown(text) {
+  if (!text) return '';
+  let escaped = escapeHtml(text);
+  
+  // Format code blocks ```code```
+  escaped = escaped.replace(/```([a-zA-Z0-9_\-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+    return `<pre><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:0.7rem; color:#64748b;"><span>${lang || 'code'}</span><button class="btn btn-xs" style="padding:1px 5px; font-size:0.65rem;" onclick="navigator.clipboard.writeText(this.parentNode.nextSibling.textContent); showToast('Kood kopeeritud!');">Copy</button></div><code>${code}</code></pre>`;
+  });
+
+  // Format inline code `code`
+  escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Format bold **text**
+  escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+  // Format italic *text*
+  escaped = escaped.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+  // Format bullet lists
+  const lines = escaped.split('\n');
+  let inList = false;
+  let htmlLines = [];
+  for (let line of lines) {
+    if (line.trim().startsWith('- ')) {
+      if (!inList) { htmlLines.push('<ul>'); inList = true; }
+      htmlLines.push(`<li>${line.trim().substring(2)}</li>`);
+    } else {
+      if (inList) { htmlLines.push('</ul>'); inList = false; }
+      if (line.trim()) {
+        htmlLines.push(`<p>${line}</p>`);
+      }
+    }
+  }
+  if (inList) htmlLines.push('</ul>');
+
+  return htmlLines.join('');
+}
+
+function handleCopilotInputKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    submitCopilotQuery();
+  }
+}
+
+function sendQuickPrompt(btn) {
+  if (!btn) return;
+  const promptText = btn.textContent.replace(/^[🚀🔑📄🧪\s]+/, '').trim();
+  const input = document.getElementById('copilot-user-input');
+  if (input) {
+    input.value = promptText;
+    submitCopilotQuery();
+  }
+}
+
+function submitCopilotQuery() {
+  if (gCopilotIsLoading) return;
+  const input = document.getElementById('copilot-user-input');
+  if (!input) return;
+  const query = input.value.trim();
+  if (!query) return;
+
+  gCopilotLastQuery = query;
+  input.value = '';
+  input.style.height = 'auto';
+
+  appendCopilotMessage('user', query, true);
+
+  const container = document.getElementById('copilot-messages');
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'copilot-msg copilot-msg-bot';
+  typingDiv.id = 'copilot-typing-msg';
+  typingDiv.innerHTML = '<div class="copilot-typing-indicator"><div class="copilot-typing-dot"></div><div class="copilot-typing-dot"></div><div class="copilot-typing-dot"></div></div>';
+  if (container) {
+    container.appendChild(typingDiv);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  gCopilotIsLoading = true;
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+
+  const sendChatRequest = (endpoint, payload) => {
+    return fetch(`${BRIDGE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(r => {
+      if (r.status === 404 && endpoint === '/api/ai/chat') {
+        return fetch(`${BRIDGE_URL}/api/copilot/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: payload.query, history: payload.history, lang: payload.lang })
+        }).then(r2 => r2.json());
+      }
+      return r.json();
+    });
+  };
+
+  sendChatRequest('/api/ai/chat', {
+    provider: gCurrentAiProvider,
+    query: query,
+    history: gCopilotChatHistory.slice(-6),
+    lang: currentLang
+  })
+  .then(data => {
+    const t = document.getElementById('copilot-typing-msg');
+    if (t) t.remove();
+    gCopilotIsLoading = false;
+    let reply = data.reply;
+    if (!reply && data.error) {
+      reply = `⚠️ ${escapeHtml(data.error)}`;
+    }
+    if (!reply && data.message) {
+      reply = `⚠️ ${escapeHtml(data.message)}`;
+    }
+    if (!reply) {
+      reply = currentLang === 'et' ? 'Vastust ei õnnestunud luua.' : 'Could not generate response.';
+    }
+    appendCopilotMessage('bot', reply, true);
+  })
+  .catch(err => {
+    const t = document.getElementById('copilot-typing-msg');
+    if (t) t.remove();
+    gCopilotIsLoading = false;
+    appendCopilotMessage('bot', `⚠️ Viga ühenduses Dev Hub Bridge'iga: ${escapeHtml(err.message)}`, true);
+  });
+}
+
+function exportToVsCodeCopilot() {
+  const input = document.getElementById('copilot-user-input');
+  const query = (input && input.value.trim()) ? input.value.trim() : (gCopilotLastQuery || 'Kuidas käivitada aktiivne blueprint?');
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  fetch(`${BRIDGE_URL}/api/ai/deeplink`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target: 'vscode', query, lang: currentLang })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.clipboard_content) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(data.clipboard_content);
+      } else {
+        fallbackCopyText(data.clipboard_content);
+      }
+    }
+    if (typeof showToast === 'function') {
+      showToast(dict.copilot_toast_vscode || 'Kontekst kopeeritud lõikelauale! Avatakse VS Code Copilot...');
+    }
+    if (data.vscode_url) {
+      window.location.href = data.vscode_url;
+    }
+  })
+  .catch(() => {
+    const shortQ = encodeURIComponent(query);
+    window.location.href = `vscode://github.copilot/chat?message=${shortQ}`;
+  });
+}
+
+function exportToAntigravity() {
+  const input = document.getElementById('copilot-user-input');
+  const query = (input && input.value.trim()) ? input.value.trim() : (gCopilotLastQuery || 'Kuidas käivitada aktiivne blueprint?');
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  fetch(`${BRIDGE_URL}/api/ai/deeplink`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target: 'antigravity', query, lang: currentLang })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.clipboard_content) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(data.clipboard_content);
+      } else {
+        fallbackCopyText(data.clipboard_content);
+      }
+    }
+    if (typeof showToast === 'function') {
+      showToast(dict.copilot_toast_antigravity || 'Kontekst kopeeritud lõikelauale! Avatakse Google Antigravity...');
+    }
+    if (data.antigravity_url) {
+      window.location.href = data.antigravity_url;
+    }
+  })
+  .catch(() => {
+    const shortQ = encodeURIComponent(query);
+    window.location.href = `antigravity://chat?message=${shortQ}`;
+  });
+}
+
+function clearCopilotHistory() {
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+  if (!confirm(dict.confirm_clear_log || 'Kas soovid kindlasti vestluse ajaloo kustutada?')) return;
+
+  gCopilotChatHistory = [];
+  try { localStorage.removeItem('dev_hub_copilot_history'); } catch(e) {}
+  loadCopilotHistory();
+}
+
+// Global Keyboard Shortcut for Copilot Drawer (⌘J / Ctrl+J)
+window.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') {
+    e.preventDefault();
+    toggleCopilotDrawer();
+    return;
+  }
+  if (e.key === 'Escape') {
+    const card = document.getElementById('specs-viewer-card');
+    if (card && card.classList.contains('spec-focus-mode')) {
+      toggleSpecFocusMode();
+      return;
+    }
+    if (gCopilotDrawerOpen) {
+      toggleCopilotDrawer(false);
+    }
+  }
+});
+
+/* ==============================================================================
+ * Spec-Driven Development (SDD) & AI Assembly Line Workspace
+ * ============================================================================== */
+let gActiveSpecsMode = 'triad';
+let gCurrentLoadedSpecId = 'spec-devops-portal-req';
+let gCurrentLoadedDomain = 'devops-portal';
+let gCurrentLoadedType = 'requirements';
+let gSpecTocObserver = null;
+
+function initSpecsTab() {
+  renderSpecsTraceabilityTable();
+  if (!gCurrentLoadedSpecId) {
+    gCurrentLoadedSpecId = 'spec-devops-portal-req';
+  }
+  loadSpecInViewer(gCurrentLoadedSpecId);
+}
+
+function switchSpecsMode(mode) {
+  gActiveSpecsMode = mode;
+  document.querySelectorAll('#tab-specs .skills-view-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById(`specs-mode-btn-${mode}`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const triadPane = document.getElementById('specs-mode-triad-pane');
+  const skillsPane = document.getElementById('specs-mode-skills-pane');
+  const tracePane = document.getElementById('specs-mode-trace-pane');
+
+  if (triadPane) triadPane.style.display = (mode === 'triad') ? 'block' : 'none';
+  if (skillsPane) skillsPane.style.display = (mode === 'skills') ? 'block' : 'none';
+  if (tracePane) tracePane.style.display = (mode === 'trace') ? 'block' : 'none';
+
+  if (mode === 'skills') {
+    if (typeof initSkillsTab === 'function') {
+      initSkillsTab();
+    }
+  } else if (mode === 'trace') {
+    renderSpecsTraceabilityTable();
+  }
+}
+
+function loadSpecInViewer(domainOrId, type) {
+  let docId = domainOrId;
+  if (type) {
+    gCurrentLoadedDomain = domainOrId;
+    gCurrentLoadedType = type;
+    const typeSuffix = (type === 'requirements' ? 'req' : (type === 'design' ? 'des' : 'tsk'));
+    docId = `spec-${domainOrId}-${typeSuffix}`;
+  } else if (domainOrId) {
+    docId = domainOrId;
+    const m = domainOrId.match(/^spec-(.+)-(req|des|tsk)$/);
+    if (m) {
+      gCurrentLoadedDomain = m[1];
+      gCurrentLoadedType = (m[2] === 'req' ? 'requirements' : (m[2] === 'des' ? 'design' : 'tasks'));
+    }
+  }
+  gCurrentLoadedSpecId = docId;
+
+  // Sync triad buttons
+  const reqBtn = document.getElementById('spec-triad-btn-req');
+  const desBtn = document.getElementById('spec-triad-btn-des');
+  const tskBtn = document.getElementById('spec-triad-btn-tsk');
+  if (reqBtn) reqBtn.classList.toggle('active', gCurrentLoadedType === 'requirements');
+  if (desBtn) desBtn.classList.toggle('active', gCurrentLoadedType === 'design');
+  if (tskBtn) tskBtn.classList.toggle('active', gCurrentLoadedType === 'tasks');
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  let doc = null;
+  if (typeof DOCS_DATA !== 'undefined' && Array.isArray(DOCS_DATA)) {
+    doc = DOCS_DATA.find(d => d.id === docId || d.rel.includes(docId) || d.id.includes(domainOrId));
+    if (!doc && domainOrId && type) {
+      doc = DOCS_DATA.find(d => d.rel.includes(domainOrId) && d.rel.includes(type));
+    }
+  }
+
+  const titleEl = document.getElementById('specs-viewer-title');
+  const metaEl = document.getElementById('specs-viewer-meta');
+  const contentEl = document.getElementById('specs-viewer-content');
+  const iconEl = document.getElementById('specs-viewer-icon');
+  const badgeEl = document.getElementById('specs-viewer-badge');
+  const readingTimeEl = document.getElementById('spec-reading-time');
+  const tocListEl = document.getElementById('spec-toc-list');
+
+  if (!doc) {
+    if (contentEl) contentEl.innerHTML = `<p style="color: #94a3b8; padding: 20px;">Spetsifikatsiooni dokumenti ei leitud: ${escapeHtml(docId)}</p>`;
+    return;
+  }
+
+  const title = (doc.titles && doc.titles[currentLang]) || (doc.titles && doc.titles['en']) || doc.rel;
+  const rawText = (doc.contents && (doc.contents[currentLang] || doc.contents['en'])) || '';
+
+  if (titleEl) titleEl.textContent = title;
+  if (metaEl) metaEl.textContent = doc.rel;
+  if (iconEl) {
+    iconEl.textContent = gCurrentLoadedType === 'requirements' ? '📜' : (gCurrentLoadedType === 'design' ? '🏛️' : '📋');
+  }
+  if (badgeEl) {
+    const typeLabel = gCurrentLoadedType === 'requirements' ? 'REQ' : (gCurrentLoadedType === 'design' ? 'DES' : 'TSK');
+    badgeEl.textContent = `${gCurrentLoadedDomain} • ${typeLabel}`;
+  }
+
+  // Calculate estimated reading time
+  if (readingTimeEl) {
+    const words = rawText.trim().split(/\s+/).filter(Boolean).length;
+    const mins = Math.max(1, Math.ceil(words / 180));
+    readingTimeEl.textContent = `~${mins} min lugemist`;
+  }
+
+  // Clear filter input
+  const filterInput = document.getElementById('spec-filter-input');
+  if (filterInput) filterInput.value = '';
+
+  if (contentEl) {
+    if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
+      contentEl.innerHTML = marked.parse(rawText);
+
+      // Progressive Disclosure DOM transformations
+      enhanceSpecRenderedDom(contentEl);
+
+      if (typeof mermaid !== 'undefined' && contentEl.querySelector('.language-mermaid, .mermaid')) {
+        try { mermaid.init(undefined, contentEl.querySelectorAll('.language-mermaid, .mermaid')); } catch (e) {}
+      }
+    } else {
+      contentEl.innerHTML = `<pre style="white-space: pre-wrap; font-family: monospace;">${escapeHtml(rawText)}</pre>`;
+    }
+
+    // Build Table of Contents
+    buildSpecTableOfContents(contentEl, tocListEl);
+  }
+
+  // Restore density preference
+  const savedDensity = localStorage.getItem('devhub_spec_density') || 'comfortable';
+  setSpecDensity(savedDensity, false);
+}
+
+function switchCurrentSpecType(type) {
+  gCurrentLoadedType = type;
+  loadSpecInViewer(gCurrentLoadedDomain, type);
+}
+
+function setSpecDensity(mode, savePref = true) {
+  const container = document.getElementById('spec-master-detail-container') || document.getElementById('specs-viewer-card');
+  const comfortBtn = document.getElementById('spec-density-btn-comfort');
+  const compactBtn = document.getElementById('spec-density-btn-compact');
+
+  if (mode === 'compact') {
+    if (container) container.classList.add('spec-density-compact');
+    if (comfortBtn) comfortBtn.classList.remove('active');
+    if (compactBtn) compactBtn.classList.add('active');
+  } else {
+    if (container) container.classList.remove('spec-density-compact');
+    if (comfortBtn) comfortBtn.classList.add('active');
+    if (compactBtn) compactBtn.classList.remove('active');
+  }
+  if (savePref) {
+    localStorage.setItem('devhub_spec_density', mode);
+  }
+}
+
+function toggleSpecFocusMode() {
+  const card = document.getElementById('specs-viewer-card');
+  if (!card) return;
+  const isFocus = card.classList.toggle('spec-focus-mode');
+  let exitBtn = document.getElementById('spec-focus-exit-button');
+
+  if (isFocus) {
+    if (!exitBtn) {
+      exitBtn = document.createElement('button');
+      exitBtn.id = 'spec-focus-exit-button';
+      exitBtn.className = 'spec-focus-exit-btn';
+      exitBtn.innerHTML = '✕ Sulge fookus (Esc)';
+      exitBtn.onclick = () => toggleSpecFocusMode();
+      document.body.appendChild(exitBtn);
+    }
+    document.body.style.overflow = 'hidden';
+  } else {
+    if (exitBtn) exitBtn.remove();
+    document.body.style.overflow = '';
+  }
+}
+
+function filterSpecContent(query) {
+  const q = (query || '').trim().toLowerCase();
+  const contentEl = document.getElementById('specs-viewer-content');
+  if (!contentEl) return;
+
+  const cards = contentEl.querySelectorAll('.gherkin-card, .glossary-item-card, p, li, h2, h3');
+  if (!q) {
+    cards.forEach(el => el.style.display = '');
+    document.querySelectorAll('.spec-toc-link').forEach(link => link.style.display = '');
+    return;
+  }
+
+  contentEl.querySelectorAll('.gherkin-card, .glossary-item-card').forEach(card => {
+    const text = card.textContent.toLowerCase();
+    card.style.display = text.includes(q) ? '' : 'none';
+  });
+
+  document.querySelectorAll('.spec-toc-link').forEach(link => {
+    const text = link.textContent.toLowerCase();
+    link.style.display = text.includes(q) ? '' : 'none';
+  });
+}
+
+function enhanceSpecRenderedDom(contentEl) {
+  // 1. Metadata Chips Bar: Look for first <ul> under <h1>
+  const firstH1 = contentEl.querySelector('h1');
+  if (firstH1) {
+    let nextEl = firstH1.nextElementSibling;
+    while (nextEl && nextEl.tagName === 'P' && nextEl.textContent.trim() === '') {
+      nextEl = nextEl.nextElementSibling;
+    }
+    if (nextEl && nextEl.tagName === 'UL') {
+      const items = Array.from(nextEl.querySelectorAll('li'));
+      const isMetaList = items.some(li => /domeen|domain|versioon|version|staatus|status|metoodika|methodology/i.test(li.textContent));
+      if (isMetaList) {
+        const chipBar = document.createElement('div');
+        chipBar.className = 'spec-meta-chip-bar';
+        items.forEach(li => {
+          const text = li.textContent.trim();
+          let chipClass = 'spec-chip';
+          let icon = '🏷️';
+          if (/domeen|domain/i.test(text)) {
+            chipClass += ' domain';
+            icon = '🏷️';
+          } else if (/versioon|version/i.test(text)) {
+            chipClass += ' version';
+            icon = '📦';
+          } else if (/staatus|status/i.test(text)) {
+            chipClass += ' status-live';
+            icon = '🟢';
+          } else if (/metoodika|methodology|sdd/i.test(text)) {
+            chipClass += ' method';
+            icon = '📐';
+          }
+          const chip = document.createElement('span');
+          chip.className = chipClass;
+          chip.innerHTML = `${icon} ${escapeHtml(text.replace(/^[*-]\s*/, ''))}`;
+          chipBar.appendChild(chip);
+        });
+        nextEl.parentNode.replaceChild(chipBar, nextEl);
+      }
+    }
+  }
+
+  // 2. Glossary Grid: Look for <table> with 'Mõiste' or 'Term'
+  const tables = Array.from(contentEl.querySelectorAll('table'));
+  tables.forEach(table => {
+    const ths = Array.from(table.querySelectorAll('th')).map(th => th.textContent.trim().toLowerCase());
+    const isGlossary = ths.some(h => h.includes('mõiste') || h.includes('term') || h.includes('definitsioon') || h.includes('definition'));
+    if (isGlossary) {
+      const grid = document.createElement('div');
+      grid.className = 'glossary-card-grid';
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      rows.forEach(tr => {
+        const tds = Array.from(tr.querySelectorAll('td'));
+        if (tds.length >= 2) {
+          const termHtml = tds[0].innerHTML;
+          const defHtml = tds[1].innerHTML;
+          const noteHtml = tds[2] ? tds[2].innerHTML : '';
+          const card = document.createElement('div');
+          card.className = 'glossary-item-card';
+          card.innerHTML = `
+            <div class="glossary-item-term">📖 ${termHtml}</div>
+            <div class="glossary-item-def">${defHtml}</div>
+            ${noteHtml ? `<div class="glossary-item-note">💡 ${noteHtml}</div>` : ''}
+          `;
+          grid.appendChild(card);
+        }
+      });
+      table.parentNode.replaceChild(grid, table);
+    }
+  });
+
+  // 3. Transform [REQ-*] into Gherkin cards
+  const allH3 = Array.from(contentEl.querySelectorAll('h3'));
+  allH3.forEach((h3) => {
+    const text = h3.textContent.trim();
+    const reqMatch = text.match(/\[(REQ[A-Z0-9_-]*)\]:?\s*(.*)/i);
+    if (reqMatch) {
+      const reqId = reqMatch[1];
+      const reqTitle = reqMatch[2] || '';
+
+      const card = document.createElement('div');
+      card.className = 'gherkin-card';
+      card.id = `req-${reqId.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+
+      const header = document.createElement('div');
+      header.className = 'gherkin-req-header';
+      header.innerHTML = `
+        <span class="gherkin-req-id">[${escapeHtml(reqId)}]</span>
+        <span class="badge badge-primary" style="font-size:0.72rem;">Acceptance Criteria</span>
+      `;
+      card.appendChild(header);
+
+      let descHtml = '';
+      const scenarioSteps = [];
+      const elementsToRemove = [];
+
+      let nextEl = h3.nextElementSibling;
+      if (nextEl && nextEl.tagName === 'UL') {
+        elementsToRemove.push(nextEl);
+        Array.from(nextEl.children).forEach(li => {
+          const liText = li.textContent.trim();
+          if (/kirjeldus|description/i.test(liText)) {
+            descHtml = li.innerHTML.replace(/^<strong>(Kirjeldus|Description):?<\/strong>\s*/i, '');
+          } else {
+            const subLis = Array.from(li.querySelectorAll('li'));
+            if (subLis.length > 0) {
+              subLis.forEach(subLi => {
+                const subText = subLi.textContent.trim();
+                const stepMatch = subText.match(/^(Given|When|Then|And|Eeldusel|Kui|Siis|Ja):?\s*(.*)$/i);
+                if (stepMatch) {
+                  const kw = stepMatch[1].toUpperCase();
+                  const normKw = (kw === 'EELDUSEL' ? 'GIVEN' : (kw === 'KUI' ? 'WHEN' : (kw === 'SIIS' ? 'THEN' : (kw === 'JA' ? 'AND' : kw))));
+                  scenarioSteps.push({
+                    type: normKw.toLowerCase(),
+                    label: normKw,
+                    content: subLi.innerHTML.replace(/^<strong>.*?:?<\/strong>\s*/i, '')
+                  });
+                } else {
+                  scenarioSteps.push({
+                    type: 'and',
+                    label: 'STEP',
+                    content: subLi.innerHTML
+                  });
+                }
+              });
+            } else {
+              const stepMatch = liText.match(/^(Given|When|Then|And|Eeldusel|Kui|Siis|Ja):?\s*(.*)$/i);
+              if (stepMatch) {
+                const kw = stepMatch[1].toUpperCase();
+                const normKw = (kw === 'EELDUSEL' ? 'GIVEN' : (kw === 'KUI' ? 'WHEN' : (kw === 'SIIS' ? 'THEN' : (kw === 'JA' ? 'AND' : kw))));
+                scenarioSteps.push({
+                  type: normKw.toLowerCase(),
+                  label: normKw,
+                  content: li.innerHTML.replace(/^<strong>.*?:?<\/strong>\s*/i, '')
+                });
+              } else if (!descHtml) {
+                descHtml = li.innerHTML;
+              }
+            }
+          }
+        });
+      }
+
+      const descBox = document.createElement('div');
+      descBox.className = 'gherkin-req-desc';
+      descBox.innerHTML = `<strong>${escapeHtml(reqTitle)}</strong>${descHtml ? `<div style="margin-top:4px; color:#cbd5e1;">${descHtml}</div>` : ''}`;
+      card.appendChild(descBox);
+
+      if (scenarioSteps.length > 0) {
+        const scenBox = document.createElement('div');
+        scenBox.className = 'gherkin-scenario-box';
+        scenarioSteps.forEach(st => {
+          const stepRow = document.createElement('div');
+          stepRow.className = 'gherkin-step';
+          stepRow.innerHTML = `
+            <span class="gherkin-badge ${st.type}">${escapeHtml(st.label)}</span>
+            <span style="color:#e2e8f0;">${st.content}</span>
+          `;
+          scenBox.appendChild(stepRow);
+        });
+        card.appendChild(scenBox);
+      }
+
+      h3.parentNode.replaceChild(card, h3);
+      elementsToRemove.forEach(el => el.remove());
+    }
+  });
+
+  // 4. Anchor IDs for headings
+  contentEl.querySelectorAll('h2, h3').forEach((h, idx) => {
+    if (!h.id) {
+      const slug = h.textContent.trim().toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 40);
+      h.id = `spec-sec-${idx}-${slug}`;
+    }
+  });
+}
+
+function buildSpecTableOfContents(contentEl, tocListEl) {
+  if (!tocListEl || !contentEl) return;
+  tocListEl.innerHTML = '';
+
+  if (gSpecTocObserver) {
+    gSpecTocObserver.disconnect();
+    gSpecTocObserver = null;
+  }
+
+  const sections = contentEl.querySelectorAll('h2, .gherkin-card');
+  if (sections.length === 0) {
+    tocListEl.innerHTML = '<li style="font-size:0.75rem; color:#64748b; padding:8px 10px;">Sisukord puudub</li>';
+    return;
+  }
+
+  sections.forEach((sec, idx) => {
+    const isGherkin = sec.classList.contains('gherkin-card');
+    let title = '';
+    let id = sec.id;
+    let isSub = false;
+
+    if (isGherkin) {
+      const reqIdEl = sec.querySelector('.gherkin-req-id');
+      const reqTitleEl = sec.querySelector('.gherkin-req-desc strong');
+      const reqId = reqIdEl ? reqIdEl.textContent.trim() : `REQ-${idx}`;
+      const reqTitle = reqTitleEl ? reqTitleEl.textContent.trim() : '';
+      title = `${reqId} ${reqTitle}`.trim();
+      isSub = true;
+    } else {
+      title = sec.textContent.trim();
+    }
+
+    if (!id) {
+      id = `spec-sec-gen-${idx}`;
+      sec.id = id;
+    }
+
+    const li = document.createElement('li');
+    li.className = 'spec-toc-item';
+    const a = document.createElement('a');
+    a.className = `spec-toc-link${isSub ? ' sub-item' : ''}`;
+    a.href = `#${id}`;
+    a.textContent = title;
+    a.title = title;
+    a.onclick = (e) => scrollSpecToSection(e, id);
+    li.appendChild(a);
+    tocListEl.appendChild(li);
+  });
+
+  const firstLink = tocListEl.querySelector('.spec-toc-link');
+  if (firstLink) {
+    firstLink.classList.add('active');
+  }
+
+  if (typeof IntersectionObserver !== 'undefined') {
+    gSpecTocObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          const links = tocListEl.querySelectorAll('.spec-toc-link');
+          links.forEach(l => l.classList.remove('active'));
+          const activeL = tocListEl.querySelector(`.spec-toc-link[href="#${id}"]`);
+          if (activeL) {
+            activeL.classList.add('active');
+          }
+        }
+      });
+    }, { root: null, rootMargin: '-10% 0px -75% 0px', threshold: 0 });
+
+    sections.forEach(sec => gSpecTocObserver.observe(sec));
+  }
+}
+
+function scrollSpecToSection(event, id) {
+  if (event) event.preventDefault();
+  const target = document.getElementById(id);
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.spec-toc-link').forEach(l => l.classList.remove('active'));
+    const activeLink = document.querySelector(`.spec-toc-link[href="#${id}"]`);
+    if (activeLink) activeLink.classList.add('active');
+  }
+}
+
+function openCurrentSpecInDocsTab() {
+  if (!gCurrentLoadedSpecId) return;
+  navigateToDoc(gCurrentLoadedSpecId);
+}
+
+function copyCurrentSpecContent() {
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  if (typeof DOCS_DATA !== 'undefined' && Array.isArray(DOCS_DATA)) {
+    const doc = DOCS_DATA.find(d => d.id === gCurrentLoadedSpecId || d.rel.includes(gCurrentLoadedSpecId));
+    if (doc) {
+      const rawText = (doc.contents && (doc.contents[currentLang] || doc.contents['en'])) || '';
+      navigator.clipboard.writeText(rawText).then(() => {
+        showToastNotification('📋 Spetsifikatsiooni Markdown kopeeritud lõikelauale!');
+      });
+      return;
+    }
+  }
+  showToastNotification('Spetsifikatsiooni kopeerimine ebaõnnestus.');
+}
+
+function renderSpecsTraceabilityTable() {
+  const tbody = document.getElementById('specs-traceability-tbody');
+  if (!tbody) return;
+
+  const matrix = [
+    { req: '[REQ-01]', domain: 'devops-portal', desc: 'Ülesannete eraldatus (Single Responsibility)', script: 'test-devhub-testing-tab.sh', gate: 'Arhitektuur', status: '✅ PASS' },
+    { req: '[REQ-02]', domain: 'devops-portal', desc: '3-tasemeline dokitud terminal & ring-buffer', script: 'test-devops-portal-responsibilities.sh', gate: 'Funktsionaalsus', status: '✅ PASS' },
+    { req: '[REQ-03]', domain: 'devops-portal', desc: 'Juhendatud Setup & Reset Command Studiod', script: 'test-dev-hub-generation.sh', gate: 'UX & Ohutus', status: '✅ PASS' },
+    { req: '[REQ-04]', domain: 'devops-portal', desc: 'Semantiline ohutushierarhia ja 2-astmeline lukk', script: 'test-dev-hub-generation.sh', gate: 'Turvalisus', status: '✅ PASS' },
+    { req: '[REQ-SEC-01]', domain: 'wallet-security', desc: 'Krüpteeritud hoiustamine kettal (AES-256)', script: 'test-wallet-encryption.sh', gate: 'Turvalisus (Rule 5)', status: '✅ PASS' },
+    { req: '[REQ-SEC-02]', domain: 'wallet-security', desc: 'Dünaamiline mälusisene lugemine (get-password.sh)', script: 'test-seps-login.sh', gate: 'Zero-Trust JIT', status: '✅ PASS' },
+    { req: '[REQ-SEC-03]', domain: 'wallet-security', desc: 'Paroolivaba SQLcl ühenduvus (/@ALIAS)', script: 'check-wallet.sh', gate: 'Integratsioon', status: '✅ PASS' },
+    { req: '[REQ-SEC-04]', domain: 'wallet-security', desc: 'Null-seisakuga volituste roteerimine', script: 'test-credential-rotation.sh', gate: 'Elutsükkel', status: '✅ PASS' },
+    { req: '[REQ-SNAP-01]', domain: 'golden-snapshots', desc: 'Deterministlik kuldse tõmmise loomine', script: 'test-golden-snapshots.sh', gate: 'Tehinguline terviklikkus', status: '✅ PASS' },
+    { req: '[REQ-SNAP-02]', domain: 'golden-snapshots', desc: '~15–20s FastStart kiirtaastus (-s)', script: 'test-golden-snapshots.sh', gate: 'Jõudlus (DR)', status: '✅ PASS' },
+    { req: '[REQ-SNAP-03]', domain: 'golden-snapshots', desc: 'Tõmmiste terviklikkuse & versioonikontroll', script: 'test-golden-snapshots.sh', gate: 'Konsistents', status: '✅ PASS' },
+    { req: '[REQ-BP-01]', domain: 'blueprints-topology', desc: '12 kanoonilise blueprinti tugi', script: 'test-blueprints-orchestration.sh', gate: 'Arhitektuur', status: '✅ PASS' },
+    { req: '[REQ-BP-02]', domain: 'blueprints-topology', desc: 'Dünaamiline porditopoloogia & konfliktikaitse', script: 'test-port-topology.sh', gate: 'Võrk & Pordid', status: '✅ PASS' },
+    { req: '[REQ-BP-03]', domain: 'blueprints-topology', desc: 'Tuumikbaasi puutumatus (Core Base Protection)', script: 'test-blueprint-switching.sh', gate: 'Andmekaitse', status: '✅ PASS' }
+  ];
+
+  tbody.innerHTML = matrix.map(row => `
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+      <td style="font-weight: 700; color: #38bdf8; font-family: monospace;">${escapeHtml(row.req)}</td>
+      <td><span class="badge badge-primary" style="font-size:0.72rem;">${escapeHtml(row.domain)}</span></td>
+      <td style="color: #cbd5e1; font-size: 0.85rem;">${escapeHtml(row.desc)}</td>
+      <td style="font-family: monospace; font-size: 0.78rem; color: #94a3b8;">${escapeHtml(row.script)}</td>
+      <td><span class="badge" style="background: rgba(168,85,247,0.15); color: #c084fc; font-size:0.72rem;">${escapeHtml(row.gate)}</span></td>
+      <td style="color: #22c55e; font-weight: 700; font-size: 0.82rem;">${escapeHtml(row.status)}</td>
+    </tr>
+  `).join('');
+}
+
+function runSpecsTraceabilityAudit() {
+  if (typeof runQuickRecipe === 'function') {
+    runQuickRecipe('test-spec-traceability.sh');
+  } else if (typeof runDevOpsCommand === 'function') {
+    runDevOpsCommand('./tests/unit/test-spec-traceability.sh');
+  } else {
+    showToastNotification('Traceability test käivitatakse terminalis...');
+  }
+}
+
+// ==============================================================================
+// In-App Cache-Buster & Version Inspector Functions (Tricks #1 - #4)
+// ==============================================================================
+
+/**
+ * Trigger an immediate cache-busting hard reload while preserving active tab hash.
+ */
+function triggerDevHubHardReload(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  // Visual spin animation on button icon
+  const spinIcons = document.querySelectorAll('.reload-spin-icon');
+  spinIcons.forEach(icon => {
+    icon.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+    icon.style.transform = 'rotate(360deg)';
+  });
+
+  const ts = Date.now();
+  if (typeof showToast === 'function') {
+    showToast('🔄 Värskendan vahemäluta (Cache-Bust: ' + ts + ')...', 'info', 2000);
+  }
+
+  // Preserve current hash (e.g. #tab-devops)
+  const currentHash = window.location.hash || '';
+
+  // Parse existing URL and sanitize parameters
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('_cb');
+    url.searchParams.delete('_ts');
+    url.searchParams.set('_cb', ts.toString());
+    
+    setTimeout(() => {
+      window.location.replace(url.toString());
+    }, 120);
+  } catch (err) {
+    // Fallback if URL parsing fails on file://
+    const cleanPath = window.location.pathname;
+    setTimeout(() => {
+      window.location.replace(cleanPath + '?_cb=' + ts + currentHash);
+    }, 120);
+  }
+}
+
+/**
+ * Open the Platform Version & Cache Inspector Modal.
+ */
+function openVersionInspectorModal() {
+  const modal = document.getElementById('version-inspector-modal-backdrop');
+  if (!modal) return;
+
+  const verEl = document.getElementById('modal-platform-version');
+  if (verEl && typeof PLATFORM_VERSION !== 'undefined') {
+    verEl.innerText = 'v' + PLATFORM_VERSION;
+  }
+
+  const timeEl = document.getElementById('modal-build-time');
+  if (timeEl) {
+    timeEl.innerText = (typeof PLATFORM_BUILD_TIMESTAMP !== 'undefined' && PLATFORM_BUILD_TIMESTAMP && !PLATFORM_BUILD_TIMESTAMP.includes('%')) 
+      ? PLATFORM_BUILD_TIMESTAMP 
+      : (document.lastModified || 'N/A');
+  }
+
+  const gitEl = document.getElementById('modal-git-commit');
+  if (gitEl) {
+    gitEl.innerText = (typeof PLATFORM_GIT_COMMIT !== 'undefined' && PLATFORM_GIT_COMMIT && !PLATFORM_GIT_COMMIT.includes('%')) 
+      ? PLATFORM_GIT_COMMIT 
+      : 'HEAD';
+  }
+
+  const urlEl = document.getElementById('modal-browser-url');
+  if (urlEl) {
+    urlEl.innerText = window.location.href;
+    urlEl.title = window.location.href;
+  }
+
+  const cacheEl = document.getElementById('modal-cache-status');
+  if (cacheEl) {
+    const hasCb = window.location.search.includes('_cb=') || window.location.search.includes('_ts=');
+    if (hasCb) {
+      cacheEl.innerHTML = '<span style="color: #4ade80;">⚡ Tühistatud (_cb päring aktiivne)</span>';
+    } else {
+      cacheEl.innerHTML = '<span style="color: #94a3b8;">Tavaline brauseri vahemälu</span>';
+    }
+  }
+
+  modal.style.display = 'flex';
+}
+
+/**
+ * Close the Platform Version & Cache Inspector Modal.
+ */
+function closeVersionInspectorModal(event) {
+  if (event && event.target && event.target !== event.currentTarget && !event.target.classList.contains('modal-close-btn')) {
+    return;
+  }
+  const modal = document.getElementById('version-inspector-modal-backdrop');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+/**
+ * Auto-detect out-of-sync builds on tab focus (Trick #4).
+ */
+let _lastFocusCheck = 0;
+let _hasNotifiedStale = false;
+function checkDevHubFreshness() {
+  const now = Date.now();
+  if (now - _lastFocusCheck < 15000 || _hasNotifiedStale) {
+    return;
+  }
+  _lastFocusCheck = now;
+
+  // If running over HTTP/HTTPS, check HEAD of current page
+  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+    try {
+      fetch(window.location.pathname, { method: 'HEAD', cache: 'no-store' })
+        .then(res => {
+          const serverModified = res.headers.get('Last-Modified');
+          if (serverModified && typeof PLATFORM_BUILD_TIMESTAMP !== 'undefined') {
+            const serverDate = new Date(serverModified).getTime();
+            const buildDate = new Date(PLATFORM_BUILD_TIMESTAMP).getTime();
+            if (serverDate > buildDate + 5000) {
+              _hasNotifiedStale = true;
+              if (typeof showToast === 'function') {
+                showToast('⚡ Uus Dev Hub kompileeritud repositooriumis! Vajuta Shift+R või klõpsa "Värskenda".', 'info', 8000);
+              }
+            }
+          }
+        })
+        .catch(() => {});
+    } catch (_) {}
+  }
+}
+
+window.addEventListener('focus', checkDevHubFreshness);
+
+
+
+
+
 
 

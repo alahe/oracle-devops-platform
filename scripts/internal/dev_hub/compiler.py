@@ -8,6 +8,7 @@ import glob
 import re
 import json
 import sys
+import subprocess
 from pathlib import Path
 from datetime import datetime
 
@@ -16,6 +17,7 @@ if __package__ is None or __package__ == '':
     if parent_dir not in sys.path:
         sys.path.insert(0, parent_dir)
     from dev_hub.catalog import DOC_SPECS, BP_CATALOG, SLIDES_CONTENT
+    from dev_hub.forms_modernization import FORMS_SLIDES_CONTENT, FORMS_ROLE_TRACKS, FORMS_SUMMARY_HTML
     from dev_hub.topology import load_yaml_profile, generate_active_blueprint_mermaid, get_all_profiles_metadata
     from dev_hub.parser import parse_blueprint_env_and_metadata
     from dev_hub.diagnostics import (
@@ -41,6 +43,7 @@ if __package__ is None or __package__ == '':
     from dev_hub.search import generate_search_index
 else:
     from .catalog import DOC_SPECS, BP_CATALOG, SLIDES_CONTENT
+    from .forms_modernization import FORMS_SLIDES_CONTENT, FORMS_ROLE_TRACKS, FORMS_SUMMARY_HTML
     from .topology import load_yaml_profile, generate_active_blueprint_mermaid, get_all_profiles_metadata
     from .parser import parse_blueprint_env_and_metadata
     from .diagnostics import (
@@ -428,15 +431,31 @@ def build_dev_hub(output_file=None, workspace_dir=None):
     # 9.5 Scan static ORDS pools for initial bootstrap
     ords_pools_init = {}
     ords_db_dir = os.path.join(ws, "config", "ords", "proxy", "databases")
+    pool_db_map = {
+        "proxy": ["db-proxy", "db-oracle"],
+        "alise": ["db-alise"],
+        "proxy_standalone": ["db-proxy-standalone"],
+        "gvenzl": ["db-gvenzl"],
+        "adb": ["db-adb"],
+    }
     if os.path.exists(ords_db_dir):
         for p in sorted(os.listdir(ords_db_dir)):
             if p == "default":
                 continue
             pdir = os.path.join(ords_db_dir, p)
             if os.path.isdir(pdir) and os.path.exists(os.path.join(pdir, "pool.xml")):
+                req_dbs = pool_db_map.get(p)
+                is_pool_online = False
+                if "app-ords" in running_containers:
+                    if req_dbs:
+                        is_pool_online = any(d in running_containers for d in req_dbs)
+                        if not is_pool_online and p == "adb" and active_bp_num == 4:
+                            is_pool_online = True
+                    else:
+                        is_pool_online = True
                 ords_pools_init[p] = {
                     "configured": True,
-                    "status": "online" if "app-ords" in running_containers else "offline",
+                    "status": "online" if is_pool_online else "offline",
                     "url": f"http://localhost:8088/ords/{p}/",
                     "latency_ms": 0
                 }
@@ -468,8 +487,42 @@ def build_dev_hub(output_file=None, workspace_dir=None):
     # 9.10 Universal Omnisearch Pre-Indexed Catalog
     search_index_data = generate_search_index(ws)
 
+    # 9.11 Blueprint RAM Benchmarks
+    ram_benchmarks_file = os.path.join(ws, "metrics", "blueprint_ram_benchmarks.json")
+    ram_benchmarks_data = {}
+    if os.path.isfile(ram_benchmarks_file):
+        try:
+            with open(ram_benchmarks_file, "r", encoding="utf-8") as rf:
+                ram_benchmarks_data = json.load(rf)
+        except Exception:
+            pass
+
+    # 9.12 Platform Version (Single Source of Truth)
+    version_file = os.path.join(ws, "VERSION")
+    platform_version = "2.3.0"
+    if os.path.isfile(version_file):
+        try:
+            with open(version_file, "r", encoding="utf-8") as vf:
+                platform_version = vf.read().strip()
+        except Exception:
+            pass
+
+    # Build timestamp and git commit hash
+    build_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    git_commit = "unknown"
+    try:
+        git_commit = subprocess.check_output(
+            ["git", "-C", ws, "rev-parse", "--short", "HEAD"],
+            stderr=subprocess.DEVNULL
+        ).decode("utf-8").strip()
+    except Exception:
+        pass
+
     # 10. Assemble Standalone HTML
     replacements = {
+        "%PLATFORM_VERSION%": platform_version,
+        "%BUILD_TIMESTAMP%": build_timestamp,
+        "%GIT_COMMIT%": git_commit,
         "%STYLE_CSS%": style_css,
         "%APP_JS%": app_js,
         "%I18N_JS%": i18n_js,
@@ -483,12 +536,16 @@ def build_dev_hub(output_file=None, workspace_dir=None):
         "%ACTIVE_BP_MERMAID_JSON%": json.dumps(active_bp_mermaid_dict),
         "%BENCHMARKS_DATA_JSON%": json.dumps(benchmarks_raw["setup"]),
         "%RESET_BENCHMARKS_DATA_JSON%": json.dumps(benchmarks_raw["reset"]),
+        "%SNAPSHOT_BENCHMARKS_DATA_JSON%": json.dumps(benchmarks_raw.get("snapshots") or {}, ensure_ascii=False),
         "%LOGS_DATA_JSON%": json.dumps(benchmarks_raw["logs"]),
         "%RUNNING_CONTAINERS_JSON%": json.dumps(list(running_containers)),
         "%ORDS_POOLS_JSON%": json.dumps(ords_pools_init),
         "%LIVE_MODULES_JSON%": json.dumps(live_modules),
         "%SLIDES_CONTENT_JSON%": json.dumps(SLIDES_CONTENT),
-        "%PASSWORDS_MAP_JSON%": json.dumps(passwords_map),
+        "%FORMS_SLIDES_CONTENT_JSON%": json.dumps(FORMS_SLIDES_CONTENT, ensure_ascii=False),
+        "%FORMS_ROLE_TRACKS_JSON%": json.dumps(FORMS_ROLE_TRACKS, ensure_ascii=False),
+        "%FORMS_SUMMARY_HTML%": FORMS_SUMMARY_HTML,
+        "%PASSWORDS_MAP_JSON%": "{}",
         "%TEST_SUITES_JSON%": json.dumps(test_suites_data, ensure_ascii=False),
         "%TEST_REPORTS_JSON%": json.dumps(test_reports_data, ensure_ascii=False),
         "%TEST_COVERAGE_JSON%": json.dumps(test_coverage_data, ensure_ascii=False),
@@ -502,7 +559,8 @@ def build_dev_hub(output_file=None, workspace_dir=None):
         "%SKILLS_DATA_JSON%": json.dumps(skills_catalog_data, ensure_ascii=False),
         "%SKILLS_MERMAID_JSON%": json.dumps(skills_mermaid_code, ensure_ascii=False),
         "%SKILLS_TASKS_JSON%": json.dumps(skills_tasks_data, ensure_ascii=False),
-        "%SEARCH_INDEX_JSON%": json.dumps(search_index_data, ensure_ascii=False)
+        "%SEARCH_INDEX_JSON%": json.dumps(search_index_data, ensure_ascii=False),
+        "%BLUEPRINT_RAM_BENCHMARKS_JSON%": json.dumps(ram_benchmarks_data, ensure_ascii=False)
     }
 
     final_html = layout_tpl
