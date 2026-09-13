@@ -382,6 +382,13 @@ async function renderMermaidInContainer(container) {
 
     const svgId = 'svg-' + uniqueId;
     try {
+      if (typeof mermaid.parse === 'function') {
+        try {
+          await mermaid.parse(rawCode);
+        } catch (parseErr) {
+          throw new Error((parseErr && (parseErr.str || parseErr.message)) || 'Mermaid süntaksi viga');
+        }
+      }
       const res = await mermaid.render(svgId, rawCode);
       if (targetEl) {
         targetEl.innerHTML = res.svg || res;
@@ -580,13 +587,98 @@ function renderMermaidDiagrams(lang) {
   initMermaidGlobal();
 }
 
+let gSecondaryLang = localStorage.getItem('dev_hub_secondary_lang') || 'et';
+
+const LANG_METADATA = {
+  en: { flag: '🇬🇧', code: 'EN', name: 'English' },
+  et: { flag: '🇪🇪', code: 'ET', name: 'Eesti' },
+  fi: { flag: '🇫🇮', code: 'FI', name: 'Suomi' },
+  sv: { flag: '🇸🇪', code: 'SV', name: 'Svenska' },
+  lv: { flag: '🇱🇻', code: 'LV', name: 'Latviešu' },
+  lt: { flag: '🇱🇹', code: 'LT', name: 'Lietuvių' }
+};
+
+function updateHybridLangUI(currentLang) {
+  // If current language is not English and not current secondary, promote it to secondary
+  if (currentLang !== 'en' && currentLang !== gSecondaryLang) {
+    gSecondaryLang = currentLang;
+    localStorage.setItem('dev_hub_secondary_lang', currentLang);
+  }
+
+  // Update secondary button
+  const secBtn = document.getElementById('btn-secondary');
+  if (secBtn && LANG_METADATA[gSecondaryLang]) {
+    secBtn.innerHTML = `${LANG_METADATA[gSecondaryLang].flag} ${LANG_METADATA[gSecondaryLang].code}`;
+    secBtn.title = LANG_METADATA[gSecondaryLang].name;
+    secBtn.setAttribute('data-lang', gSecondaryLang);
+  }
+
+  // Remove active from all language buttons
+  document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+
+  // Set active class
+  if (currentLang === 'en') {
+    const enBtn = document.getElementById('btn-en');
+    if (enBtn) enBtn.classList.add('active');
+  } else if (currentLang === gSecondaryLang) {
+    if (secBtn) secBtn.classList.add('active');
+  } else {
+    const directBtn = document.getElementById('btn-' + currentLang);
+    if (directBtn) directBtn.classList.add('active');
+  }
+
+  // Update dropdown items to display all 4 other languages
+  const menu = document.getElementById('lang-dropdown-menu');
+  if (menu) {
+    const candidateLangs = ['et', 'fi', 'sv', 'lv', 'lt'].filter(l => l !== gSecondaryLang);
+    menu.innerHTML = candidateLangs.map(l => {
+      const meta = LANG_METADATA[l];
+      return `<button type="button" class="lang-menu-item" data-lang="${l}" onclick="selectDropdownLanguage('${l}')">
+        <span class="lang-flag">${meta.flag}</span>
+        <span class="lang-name">${meta.name}</span>
+        <span class="lang-code">(${meta.code})</span>
+      </button>`;
+    }).join('');
+  }
+}
+
+function toggleLangDropdown(event) {
+  if (event) event.stopPropagation();
+  const menu = document.getElementById('lang-dropdown-menu');
+  if (!menu) return;
+  const isVisible = (menu.style.display === 'block');
+  menu.style.display = isVisible ? 'none' : 'block';
+}
+
+function selectDropdownLanguage(lang) {
+  gSecondaryLang = lang;
+  localStorage.setItem('dev_hub_secondary_lang', lang);
+  const menu = document.getElementById('lang-dropdown-menu');
+  if (menu) menu.style.display = 'none';
+  setLanguage(lang);
+}
+
+// Global click listener to close language dropdown if clicked outside
+document.addEventListener('click', (e) => {
+  const wrapper = document.getElementById('lang-dropdown-wrapper');
+  const menu = document.getElementById('lang-dropdown-menu');
+  if (menu && wrapper && !wrapper.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
+
+function navigateToPinnedHome() {
+  const homeTab = localStorage.getItem('dev_hub_home_tab') || 'tab-services';
+  if (typeof switchTab === 'function') {
+    switchTab(homeTab);
+  }
+}
+
 function setLanguage(lang) {
   if (!I18N_DICT[lang]) lang = 'en';
   localStorage.setItem('dev_hub_lang', lang);
   
-  document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-  const activeBtn = document.getElementById('btn-' + lang);
-  if (activeBtn) activeBtn.classList.add('active');
+  updateHybridLangUI(lang);
   
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
@@ -5457,6 +5549,290 @@ function runResetStudio(btn) {
   runDevOpsCommand(cmdKey, btn, title);
 }
 
+// Quick Recipes Metadata & Inspector Modal
+const DEVOPS_RECIPES_META = {
+  'fast-start': {
+    icon: '⚡',
+    title: {
+      en: 'Clean Fast-Start',
+      et: 'Puhas kiirkäivitus',
+      fi: 'Puhdas pikakäynnistys',
+      sv: 'Ren snabbstart',
+      lv: 'Tīrs ātrais starts',
+      lt: 'Švarus greitas paleidimas'
+    },
+    desc: {
+      en: 'Completely resets container state and restores the Golden Snapshot database in ~20 seconds, followed by comprehensive web service health checks.',
+      et: 'Lähtestab täielikult konteinerite oleku ja taastab Kuldse hetktõmmise andmebaasi ~20 sekundiga, millele järgneb veebiteenuste tervisekontroll.',
+      fi: 'Palauttaa konttien tilan ja Kultaisen tilannevedoksen ~20 sekunnissa, jota seuraa verkkopalveluiden kuntotarkastus.',
+      sv: 'Återställer behållarna och gyllene ögonblicksbilden på ~20 sekunder, följt av hälsokontroll.',
+      lv: 'Pilnībā atiestata konteinerus un atjauno zelta momentuzņēmumu ~20 sekundēs, veicot veselības pārbaudi.',
+      lt: 'Visiškai atstato konteinerius ir atkuria auksinę momentinę kopiją per ~20s bei atlieka sveikatos patikrą.'
+    },
+    risk: 'destructive',
+    riskLabel: {
+      en: '⚠️ Destructive',
+      et: '⚠️ Destruktiivne',
+      fi: '⚠️ Tuhoava',
+      sv: '⚠️ Förstörande',
+      lv: '⚠️ Destruktīvs',
+      lt: '⚠️ Destruktyvus'
+    },
+    time: '~20s',
+    warning: true,
+    steps: [
+      { num: 1, title: 'Standardne lähtestus (reset-all)', cmd: './scripts/reset-all.sh', desc: 'Peatab ja puhastab aktiivsed konteinerid' },
+      { num: 2, title: 'FastStart taastamine (setup -s)', cmd: './scripts/setup-all.sh -s', desc: 'Käivitab andmebaasi kuldsest hetktõmmisest' },
+      { num: 3, title: 'Veebiteenuste kontroll (check-urls)', cmd: './scripts/check-urls.sh', desc: 'Verifitseerib HTTP/HTTPS lõpp-punktid' }
+    ]
+  },
+  'onboard-dev': {
+    icon: '👤',
+    title: {
+      en: 'Developer Onboarding',
+      et: 'Uus arendaja',
+      fi: 'Uuden kehittäjän perehdytys',
+      sv: 'Introduktion av utvecklare',
+      lv: 'Izstrādātāja sagatavošana',
+      lt: 'Kūrėjo paruošimas'
+    },
+    desc: {
+      en: 'Provisions a dedicated developer schema with privileges and registers connection profiles into VS Code Oracle extension.',
+      et: 'Loob andmebaasi arendaja skeemi vajalike õigustega ning registreerib ühendused VS Code Oracle laienduses.',
+      fi: 'Luo kehittäjän skeeman tarvittavilla oikeuksilla ja rekisteröi yhteydet VS Codeen.',
+      sv: 'Skapar utvecklarschema med behörigheter och registrerar anslutningar i VS Code.',
+      lv: 'Izveido izstrādātāja shēmu un reģistrē savienojumus VS Code paplašinājumā.',
+      lt: 'Sukuria kūrėjo schemą ir užregistruoja ryšius VS Code plėtinyje.'
+    },
+    risk: 'action',
+    riskLabel: {
+      en: '⚡ Action',
+      et: '⚡ Tegevus',
+      fi: '⚡ Toiminto',
+      sv: '⚡ Åtgärd',
+      lv: '⚡ Darbība',
+      lt: '⚡ Veiksmas'
+    },
+    time: '~10s',
+    warning: false,
+    steps: [
+      { num: 1, title: 'Arendaja skeemi loomine (create-dev-user)', cmd: './scripts/create-developer.sh dev_user', desc: 'Genereerib kasutaja ja lisab Walletisse' },
+      { num: 2, title: 'VS Code ühenduste registreerimine', cmd: './scripts/register-connections.sh', desc: 'Ekspordib TNS aliased arendaja IDE-sse' }
+    ]
+  },
+  'full-diag': {
+    icon: '🩺',
+    title: {
+      en: 'Full Diagnostics & Audit',
+      et: 'Täielik diagnostika',
+      fi: 'Täysi diagnostiikka ja auditointi',
+      sv: 'Fullständig diagnostik och revision',
+      lv: 'Pilna diagnostika un audits',
+      lt: 'Pilna diagnostika ir auditas'
+    },
+    desc: {
+      en: 'Runs non-destructive health checks across HTTP endpoints, SEPS auto-login wallet credentials, and Git pre-commit security.',
+      et: 'Käivitab ohutud tervisekontrollid veebiteenustele, SEPS auto-login walletile ja Git pre-commit turvafiltritele.',
+      fi: 'Suorittaa vaarattomat kuntotarkastukset HTTP-päätepisteille, SEPS-lompakolle ja Git-tarkastuksille.',
+      sv: 'Kör ofarliga hälsokontroller för HTTP-slutpunkter, SEPS-plånbok och Git pre-commit.',
+      lv: 'Veic drošas veselības pārbaudes HTTP galapunktiem, SEPS maciņam un Git pārbaudēm.',
+      lt: 'Atlieka saugias sveikatos patikras HTTP prieigos taškams, SEPS piniginei ir Git patikroms.'
+    },
+    risk: 'safe',
+    riskLabel: {
+      en: '🛡️ Safe',
+      et: '🛡️ Ohutu',
+      fi: '🛡️ Turvallinen',
+      sv: '🛡️ Säker',
+      lv: '🛡️ Drošs',
+      lt: '🛡️ Saugus'
+    },
+    time: '~15s',
+    warning: false,
+    steps: [
+      { num: 1, title: 'HTTP/HTTPS teenuste tervis (check-urls)', cmd: './scripts/check-urls.sh', desc: 'Kontrollib APEX, ORDS ja Web IDE vastuseid' },
+      { num: 2, title: 'SEPS Wallet ühenduvus (check-wallet)', cmd: './scripts/check-wallet.sh', desc: 'Verifitseerib paroolita sqlcl ühendused' },
+      { num: 3, title: 'Git Pre-Commit kontroll (check-precommit)', cmd: './scripts/check-pre-commit.sh', desc: 'Auditeerib saladusi ja kaasaskantavust' }
+    ]
+  },
+  'golden-snap': {
+    icon: '📸',
+    title: {
+      en: 'Golden Snapshot Creation',
+      et: 'Kuldne hetktõmmis',
+      fi: 'Kultainen tilannevedos',
+      sv: 'Gyllene ögonblicksbild',
+      lv: 'Zelta momentuzņēmums',
+      lt: 'Auksinė momentinė kopija'
+    },
+    desc: {
+      en: 'Safely quiesces the database, creates a compressed cold backup snapshot of data volumes, and verifies service health.',
+      et: 'Paneb andmebaasi turvaliselt seisma, arhiveerib andmeköited tihendatud külmtõmmiseks ning kontrollib tervist.',
+      fi: 'Asettaa tietokannan turvalliseen tilaan, arkistoi datavolyymit ja tarkistaa tilan.',
+      sv: 'Pausar databasen säkert, arkiverar datavolymer och verifierar hälsan.',
+      lv: 'Droši nopauzē datubāzi, arhivē datu sējumus un pārbauda veselību.',
+      lt: 'Saugiai pristabdo duomenų bazę, suarchyvuoja duomenų tomus ir patikrina sveikatą.'
+    },
+    risk: 'backup',
+    riskLabel: {
+      en: '📸 Backup',
+      et: '📸 Tagavara',
+      fi: '📸 Varmuuskopio',
+      sv: '📸 Säkerhetskopia',
+      lv: '📸 Rezerves kopija',
+      lt: '📸 Atsarginė kopija'
+    },
+    time: '~30s',
+    warning: false,
+    steps: [
+      { num: 1, title: 'Hetktõmmise tekitamine (create-snapshot)', cmd: './scripts/snapshots/create-golden-snapshots.sh', desc: 'Tehinguline quiesce ja tar.gz arhiiv' },
+      { num: 2, title: 'Teenuste tervise verifitseerimine (check-urls)', cmd: './scripts/check-urls.sh', desc: 'Veendub, et teenused on peale tõmmist töös' }
+    ]
+  }
+};
+
+let gActiveRecipeKey = null;
+
+function openDevOpsRecipeModal(recipeKey) {
+  const meta = DEVOPS_RECIPES_META[recipeKey];
+  if (!meta) return;
+
+  gActiveRecipeKey = recipeKey;
+  const lang = localStorage.getItem('dev_hub_lang') || 'et';
+  const dict = (typeof I18N_DICT !== 'undefined' && (I18N_DICT[lang] || I18N_DICT['en'])) || {};
+
+  const modal = document.getElementById('devops-recipe-modal');
+  const iconEl = document.getElementById('recipe-modal-icon');
+  const titleEl = document.getElementById('recipe-modal-title');
+  const riskBadgeEl = document.getElementById('recipe-modal-risk-badge');
+  const timeBadgeEl = document.getElementById('recipe-modal-time-badge');
+  const descEl = document.getElementById('recipe-modal-desc');
+  const stepsEl = document.getElementById('recipe-modal-steps');
+  const warningEl = document.getElementById('recipe-modal-warning');
+
+  const titleText = (meta.title && (meta.title[lang] || meta.title['en'])) || recipeKey;
+  const descText = (meta.desc && (meta.desc[lang] || meta.desc['en'])) || '';
+  const riskText = (meta.riskLabel && (meta.riskLabel[lang] || meta.riskLabel['en'])) || meta.risk;
+
+  if (iconEl) iconEl.textContent = meta.icon;
+  if (titleEl) titleEl.textContent = `${titleText}`;
+  if (descEl) descEl.textContent = descText;
+  if (timeBadgeEl) timeBadgeEl.textContent = meta.time;
+
+  if (riskBadgeEl) {
+    riskBadgeEl.textContent = riskText;
+    riskBadgeEl.className = 'safety-badge ' + (meta.risk === 'destructive' ? 'destructive' : (meta.risk === 'safe' ? 'safe' : 'action'));
+  }
+
+  if (warningEl) {
+    warningEl.style.display = meta.warning ? 'block' : 'none';
+  }
+
+  if (stepsEl) {
+    stepsEl.innerHTML = meta.steps.map(s => `
+      <div class="recipe-step-item">
+        <div class="recipe-step-num">${s.num}</div>
+        <div class="recipe-step-info">
+          <div class="recipe-step-title">${escapeHtml(s.title)} <span style="font-weight:normal; color:#94a3b8; font-size:0.75rem;">— ${escapeHtml(s.desc)}</span></div>
+          <div class="recipe-step-cmd"><code>${escapeHtml(s.cmd)}</code></div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+  }
+}
+
+function closeDevOpsRecipeModal(event) {
+  if (event && event.target && event.target.id !== 'devops-recipe-modal') {
+    return;
+  }
+  const modal = document.getElementById('devops-recipe-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+  gActiveRecipeKey = null;
+}
+
+function copyActiveRecipeCommands() {
+  if (!gActiveRecipeKey) return;
+  const meta = DEVOPS_RECIPES_META[gActiveRecipeKey];
+  if (!meta || !Array.isArray(meta.steps)) return;
+
+  const cmds = meta.steps.map(s => s.cmd).join(' && \\\n');
+  const lang = localStorage.getItem('dev_hub_lang') || 'et';
+  const dict = (typeof I18N_DICT !== 'undefined' && (I18N_DICT[lang] || I18N_DICT['en'])) || {};
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(cmds).then(() => {
+      const msg = dict.recipe_toast_copied || 'Retsepti käsud kopeeritud töölauale!';
+      if (typeof showDevHubToast === 'function') {
+        showDevHubToast(msg, 'success');
+      } else {
+        alert(msg);
+      }
+    }).catch(() => {
+      prompt('Kopeeri käsud käsitsi:', cmds);
+    });
+  } else {
+    prompt('Kopeeri käsud käsitsi:', cmds);
+  }
+}
+
+function askAiAboutActiveRecipe() {
+  if (!gActiveRecipeKey) return;
+  const meta = DEVOPS_RECIPES_META[gActiveRecipeKey];
+  if (!meta) return;
+
+  const lang = localStorage.getItem('dev_hub_lang') || 'et';
+  const recipeTitle = (meta.title && (meta.title[lang] || meta.title['en'])) || gActiveRecipeKey;
+  const cmds = meta.steps.map(s => `${s.num}. ${s.cmd} (${s.title})`).join('\n');
+
+  let prompt = '';
+  if (lang === 'en') {
+    prompt = `Please explain the DevOps recipe "${recipeTitle}".\nPipeline commands:\n${cmds}\n\n- What is the exact execution flow and purpose of each step?\n- What are the prerequisites and system dependencies?\n- What risks exist (e.g. data loss, port conflicts) and how does the platform mitigate them?\n- How can I verify that the recipe succeeded?`;
+  } else {
+    prompt = `Palun selgita DevOps retsepti "${recipeTitle}".\nSammud ja käsud:\n${cmds}\n\n- Mis on iga sammu täpne eesmärk ja teostusvoog?\n- Millised on eeldused ja süsteemsed sõltuvused?\n- Millised riskid kaasnevad (nt andmekadu, pordikonfliktid) ja kuidas platvorm neid maandab?\n- Kuidas veenduda, et retsept õnnestus edukalt?`;
+  }
+
+  closeDevOpsRecipeModal();
+
+  if (typeof toggleCopilotDrawer === 'function') {
+    toggleCopilotDrawer(true);
+    setTimeout(() => {
+      const input = document.getElementById('copilot-user-input');
+      if (input) {
+        input.value = prompt;
+        input.style.height = 'auto';
+        if (typeof submitCopilotQuery === 'function') {
+          submitCopilotQuery();
+        }
+      }
+    }, 350);
+  }
+}
+
+function executeActiveRecipeConfirmed() {
+  if (!gActiveRecipeKey) return;
+  const recipeKey = gActiveRecipeKey;
+
+  if (recipeKey === 'fast-start') {
+    const lang = localStorage.getItem('dev_hub_lang') || 'et';
+    const dict = (typeof I18N_DICT !== 'undefined' && (I18N_DICT[lang] || I18N_DICT['en'])) || {};
+    const confirmMsg = dict.recipe_confirm_faststart || 'TÄHELEPANU: Puhas kiirkäivitus lähtestab konteinerid ja taastab andmebaasi kuldsest tõmmisest. Kas soovid jätkata?';
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+  }
+
+  closeDevOpsRecipeModal();
+  runDevOpsRecipe(recipeKey);
+}
+
 // Quick Recipes Runner
 async function runDevOpsRecipe(recipeKey) {
   switch (recipeKey) {
@@ -5518,7 +5894,10 @@ async function runDevOpsStepDirect(cmdKey, stepTitle) {
   }
 }
 
-// Pinned Cards Logic
+// Pinned Cards & DevOps Filtering Logic
+let gActiveDevOpsCategory = 'all';
+let gDevOpsSearchQuery = '';
+
 function togglePinCard(btn) {
   const card = btn.closest('.card');
   if (!card) return;
@@ -5531,15 +5910,20 @@ function togglePinCard(btn) {
   let pinned = getPinnedCardIds();
   if (btn.classList.contains('pinned')) {
     if (!pinned.includes(cardId)) pinned.push(cardId);
+    btn.textContent = '⭐';
+    btn.title = 'Eemalda lemmikutest';
     showToast('⭐ Lisatud lemmikutesse');
   } else {
     pinned = pinned.filter(id => id !== cardId);
+    btn.textContent = '☆';
+    btn.title = 'Märgi lemmikuks';
     showToast('Eemaldatud lemmikutest');
   }
 
   localStorage.setItem('devops_pinned_cards', JSON.stringify(pinned));
   updatePinnedCounter();
   applyPinnedCardsOrder();
+  applyDevOpsCardsFilter();
 }
 
 function getPinnedCardIds() {
@@ -5554,6 +5938,11 @@ function updatePinnedCounter() {
   const pinned = getPinnedCardIds();
   const counterEl = document.getElementById('devops-pinned-count');
   if (counterEl) counterEl.textContent = pinned.length;
+  const allEl = document.getElementById('devops-all-count');
+  if (allEl) {
+    const totalCards = document.querySelectorAll('#devops-cards-grid .card').length;
+    allEl.textContent = totalCards || 29;
+  }
 }
 
 function applyPinnedCardsOrder() {
@@ -5566,7 +5955,11 @@ function applyPinnedCardsOrder() {
     if (card) {
       card.classList.add('is-pinned');
       const btn = card.querySelector('.pin-card-btn');
-      if (btn) btn.classList.add('pinned');
+      if (btn) {
+        btn.classList.add('pinned');
+        btn.textContent = '⭐';
+        btn.title = 'Eemalda lemmikutest';
+      }
       if (card.id !== 'card-studio-setup' && card.id !== 'card-studio-reset') {
         card.style.order = '-1';
       }
@@ -5577,12 +5970,148 @@ function applyPinnedCardsOrder() {
     if (!pinned.includes(card.id)) {
       card.classList.remove('is-pinned');
       const btn = card.querySelector('.pin-card-btn');
-      if (btn) btn.classList.remove('pinned');
+      if (btn) {
+        btn.classList.remove('pinned');
+        btn.textContent = '☆';
+        btn.title = 'Märgi lemmikuks';
+      }
       if (card.id !== 'card-studio-setup' && card.id !== 'card-studio-reset') {
         card.style.order = '0';
       }
     }
   });
+}
+
+function filterDevOpsCategory(cat, btn) {
+  gActiveDevOpsCategory = cat;
+  document.querySelectorAll('.devops-filter-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  applyDevOpsCardsFilter();
+}
+
+function filterDevOpsCardsSearch(query) {
+  gDevOpsSearchQuery = (query || '').toLowerCase().trim();
+  applyDevOpsCardsFilter();
+}
+
+function applyDevOpsCardsFilter() {
+  const cards = document.querySelectorAll('#devops-cards-grid .card');
+  const pinnedIds = getPinnedCardIds();
+  let visibleCount = 0;
+
+  cards.forEach(card => {
+    const isPinned = pinnedIds.includes(card.id);
+    const cat = card.getAttribute('data-cat') || '';
+    const text = card.textContent.toLowerCase();
+
+    let matchesCat = true;
+    if (gActiveDevOpsCategory === 'all') {
+      matchesCat = true;
+    } else if (gActiveDevOpsCategory === 'pinned') {
+      matchesCat = isPinned;
+    } else {
+      matchesCat = (cat === gActiveDevOpsCategory);
+    }
+
+    let matchesSearch = true;
+    if (gDevOpsSearchQuery) {
+      matchesSearch = text.includes(gDevOpsSearchQuery);
+    }
+
+    if (matchesCat && matchesSearch) {
+      card.style.display = '';
+      visibleCount++;
+    } else {
+      card.style.display = 'none';
+    }
+  });
+
+  let emptyBox = document.getElementById('devops-cards-empty');
+  if (!emptyBox) {
+    emptyBox = document.createElement('div');
+    emptyBox.id = 'devops-cards-empty';
+    emptyBox.style.gridColumn = '1 / -1';
+    emptyBox.style.textAlign = 'center';
+    emptyBox.style.padding = '40px 20px';
+    emptyBox.style.color = 'var(--text-muted)';
+    emptyBox.style.background = 'rgba(15, 23, 42, 0.4)';
+    emptyBox.style.borderRadius = 'var(--radius-lg)';
+    emptyBox.style.border = '1px dashed var(--border)';
+    const grid = document.getElementById('devops-cards-grid');
+    if (grid) grid.appendChild(emptyBox);
+  }
+
+  if (visibleCount === 0) {
+    emptyBox.style.display = 'block';
+    if (gActiveDevOpsCategory === 'pinned') {
+      emptyBox.innerHTML = `
+        <div style="font-size: 2rem; margin-bottom: 8px;">⭐</div>
+        <h4 style="color: #f8fafc; margin: 0 0 6px 0;">Lemmikuid pole veel märgitud</h4>
+        <p style="font-size: 0.85rem; max-width: 480px; margin: 0 auto; color: #94a3b8;">
+          Klõpsa mistahes käsu kaardil olevale tähekesele (☆), et lisada see oma personaalsesse kiirpaneeli.
+        </p>
+      `;
+    } else {
+      emptyBox.innerHTML = `
+        <div style="font-size: 2rem; margin-bottom: 8px;">🔍</div>
+        <h4 style="color: #f8fafc; margin: 0 0 6px 0;">Ühtegi käsku ei leitud</h4>
+        <p style="font-size: 0.85rem; color: #94a3b8;">Proovi teist otsingusõna või vali kategooriaks "Kõik".</p>
+      `;
+    }
+  } else {
+    emptyBox.style.display = 'none';
+  }
+}
+
+function explainDevOpsCardWithAi(buttonEl) {
+  const card = buttonEl ? buttonEl.closest('.card') : null;
+  if (!card) return;
+
+  const titleEl = card.querySelector('h4, h3, .recipe-title');
+  const title = titleEl ? titleEl.textContent.trim() : 'DevOps Command';
+  
+  const descEl = card.querySelector('p, .recipe-desc');
+  const desc = descEl ? descEl.textContent.trim() : '';
+
+  const codeBox = card.querySelector('.code-box');
+  let cmd = '';
+  if (codeBox) {
+    const clone = codeBox.cloneNode(true);
+    const copyBtn = clone.querySelector('.copy-btn');
+    if (copyBtn) copyBtn.remove();
+    cmd = clone.textContent.trim();
+  }
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'et';
+  let prompt = '';
+  if (currentLang === 'en') {
+    prompt = `Explain the following Oracle DevOps Platform command and workflow:\n\n**Card:** ${title}\n**Command:** \`${cmd}\`\n${desc ? `**Context:** ${desc}\n` : ''}\nPlease explain:\n1. What does this command do and how does it work?\n2. In what scenario or lifecycle phase should it be executed?\n3. Key prerequisites or safety considerations.\n4. Common troubleshooting tips if it encounters issues.`;
+  } else if (currentLang === 'fi') {
+    prompt = `Selitä seuraava Oracle DevOps -alustan komento ja työnkulku:\n\n**Kortti:** ${title}\n**Komento:** \`${cmd}\`\n${desc ? `**Konteksti:** ${desc}\n` : ''}\nKerro lyhyesti:\n1. Mitä tämä komento tekee ja miten se toimii?\n2. Missä tilanteessa sitä tulisi käyttää?\n3. Tärkeimmät edellytykset ja turvallisuusnäkökohdat.\n4. Yleisimmät vianmääritysvinkit.`;
+  } else if (currentLang === 'sv') {
+    prompt = `Förklara följande kommando och arbetsflöde för Oracle DevOps-plattformen:\n\n**Kort:** ${title}\n**Kommando:** \`${cmd}\`\n${desc ? `**Kontext:** ${desc}\n` : ''}\nFörklara kort:\n1. Vad gör det här kommandot och hur fungerar det?\n2. I vilket scenario bör det användas?\n3. Viktiga förutsättningar och säkerhetsaspekter.\n4. Vanliga felsökningstips.`;
+  } else if (currentLang === 'lv') {
+    prompt = `Paskaidrojiet šo Oracle DevOps platformas komandu un darbplūsmu:\n\n**Kartīte:** ${title}\n**Komanda:** \`${cmd}\`\n${desc ? `**Konteksts:** ${desc}\n` : ''}\nLūdzu, paskaidrojiet:\n1. Ko šī komanda dara un kā tā darbojas?\n2. Kādā situācijā to vajadzētu izmantot?\n3. Galvenie priekšnosacījumi un drošības apsvērumi.\n4. Biežākie problēmu novēršanas padomi.`;
+  } else if (currentLang === 'lt') {
+    prompt = `Paaiškinkite šią „Oracle DevOps“ platformos komandą ir darbo eigą:\n\n**Kortelė:** ${title}\n**Komanda:** \`${cmd}\`\n${desc ? `**Kontekstas:** ${desc}\n` : ''}\nPrašome paaiškinti:\n1. Ką daro ši komanda ir kaip ji veikia?\n2. Kokioje situacijoje ją reikėtų naudoti?\n3. Pagrindinės sąlygos ir saugumo aspektai.\n4. Dažniausi trikčių šalinimo patarimai.`;
+  } else {
+    // Default Estonian (et)
+    prompt = `Selgita järgmist Oracle DevOps platvormi käsku ja töökäiku:\n\n**Kaart:** ${title}\n**Käsk:** \`${cmd}\`\n${desc ? `**Kontekst:** ${desc}\n` : ''}\nKirjelda lühidalt:\n1. Mida see käsk teeb ja kuidas see töötab?\n2. Millises olukorras või elutsükli faasis seda kasutada?\n3. Peamised eeldused ja ohutusnõuded.\n4. Tavalised tõrked ja kuidas neid lahendada.`;
+  }
+
+  if (typeof toggleCopilotDrawer === 'function') {
+    toggleCopilotDrawer(true);
+    setTimeout(() => {
+      const input = document.getElementById('copilot-user-input');
+      if (input) {
+        input.value = prompt;
+        input.style.height = 'auto';
+        if (typeof submitCopilotQuery === 'function') {
+          submitCopilotQuery();
+        }
+      }
+    }, 350);
+  }
 }
 
 function updateCreateDeveloperPreview() {
@@ -6076,6 +6605,9 @@ document.addEventListener('keydown', (e) => {
       const sInput = document.getElementById('skills-search-input');
       if (sInput) setTimeout(() => sInput.focus(), 60);
     }
+  } else if ((e.key === 'h' || e.key === 'H') && e.altKey) {
+    e.preventDefault();
+    navigateToPinnedHome();
   }
 });
 
@@ -6177,7 +6709,7 @@ function renderDocsNav(selectedIdx) {
   } else if (DOCS_DATA.length > 0 && sidebar.children[0]) {
     const firstBtn = sidebar.querySelector(`.docs-nav-item[data-doc-idx="${currentSelectedDocIdx}"]`) || sidebar.children[0];
     const targetIdx = Number(firstBtn.getAttribute('data-doc-idx') || 0);
-    loadDocContent(targetIdx, firstBtn);
+    loadDocContent(targetIdx, firstBtn, true);
   }
 }
 
@@ -10104,6 +10636,9 @@ function renderTestingSuites(suites) {
                 <span>▶️</span>
               </button>
             ` : ''}
+            <button type="button" class="btn-compact btn-compact-secondary" onclick="askAiAboutTestSuite('${suite.key}')" title="${dict.tip_test_ai || 'Küsi Copilotilt nõu selle testimiskomplekti või valitud skripti kohta'}" style="font-size:0.75rem; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
+              <span>🤖</span> <span>${dict.btn_test_ai || 'AI'}</span>
+            </button>
           </div>
           <button type="button" class="btn-compact btn-compact-primary" onclick="runTestSuite('${suite.key}')">
             <span>▶️</span> <span>${dict.btn_run_suite || 'Käivita kõik'}</span>
@@ -10570,6 +11105,48 @@ function runTestFromModal(suiteKey, scriptName) {
   const term = document.getElementById('testing-terminal-output');
   if (term) {
     term.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function askAiAboutTestSuite(suiteKey) {
+  const suites = (typeof TEST_SUITES_DATA !== 'undefined' ? TEST_SUITES_DATA : window.TEST_SUITES_DATA) || {};
+  const suite = suites[suiteKey] || {};
+  const lang = localStorage.getItem('dev_hub_lang') || 'et';
+  const dict = (typeof I18N_DICT !== 'undefined' && (I18N_DICT[lang] || I18N_DICT['en'])) || {};
+  const suiteTitle = dict['test_suite_' + suiteKey + '_title'] || suite.title || suiteKey;
+  const suiteCmd = suite.cmd || `./scripts/test-local-ci.sh --suite ${suiteKey}`;
+
+  // Check if a specific single script is selected in the card dropdown
+  const selectEl = document.getElementById(`select-suite-${suiteKey}`);
+  const selectedScript = (selectEl && selectEl.value) ? selectEl.value : null;
+
+  let prompt = '';
+  if (selectedScript) {
+    if (lang === 'en') {
+      prompt = `Please explain the test script "${selectedScript}" from suite "${suiteTitle}".\n- What does it validate and what scenarios are covered?\n- What are the prerequisites (containers, wallet credentials, environment)?\n- How should common test failures be investigated or debugged?`;
+    } else {
+      prompt = `Palun selgita testikomplekti "${suiteTitle}" skripti "${selectedScript}".\n- Mida see testib ja milliseid stsenaariume see katab?\n- Millised on eeldused (konteinerid, wallet volitused, keskkond)?\n- Kuidas tüüpilisi tõrkeid uurida ja parandada?`;
+    }
+  } else {
+    if (lang === 'en') {
+      prompt = `Please provide an overview and execution guidance for test suite "${suiteTitle}" (${suiteCmd}).\n- What components, blueprints, and flows does this suite validate?\n- What are the required containers and pre-conditions before running?\n- What are recommended troubleshooting steps if tests fail?`;
+    } else {
+      prompt = `Palun anna ülevaade ja käivitusjuhised testikomplektile "${suiteTitle}" (${suiteCmd}).\n- Milliseid komponente, blueprinte ja töövooge see komplekt valideerib?\n- Millised on vajalikud konteinerid ja eeltingimused enne käivitamist?\n- Millised on soovitatavad tõrkeotsingu sammud, kui test ebaõnnestub?`;
+    }
+  }
+
+  if (typeof toggleCopilotDrawer === 'function') {
+    toggleCopilotDrawer(true);
+    setTimeout(() => {
+      const input = document.getElementById('copilot-user-input');
+      if (input) {
+        input.value = prompt;
+        input.style.height = 'auto';
+        if (typeof submitCopilotQuery === 'function') {
+          submitCopilotQuery();
+        }
+      }
+    }, 350);
   }
 }
 
@@ -11080,45 +11657,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const hashParam = (window.location.hash || '').replace(/^#/, '');
   const rawTab = urlParams.get('tab');
+  let targetDoc = urlParams.get('doc');
   const cleanHash = hashParam.split('?')[0];
+
+  let pinnedHome = null;
+  let lastActive = null;
+  try {
+    pinnedHome = localStorage.getItem('dev_hub_home_tab');
+    lastActive = localStorage.getItem('dev_hub_last_active_tab');
+  } catch (e) {}
+
   let targetTab = null;
+  // 1. Explicit query parameter ?tab=
   if (rawTab) {
     targetTab = rawTab.startsWith('tab-') ? rawTab : `tab-${rawTab}`;
-  } else if (cleanHash) {
-    targetTab = cleanHash.startsWith('tab-') ? cleanHash : (cleanHash === 'docs' ? 'tab-docs' : (cleanHash === 'testing' ? 'tab-testing' : (cleanHash === 'services' ? 'tab-services' : null)));
+  } 
+  // 2. Explicit query parameter ?doc=
+  else if (targetDoc) {
+    targetTab = 'tab-docs';
   }
+  // 3. User's Pinned Home Tab (priority on cold start over restored hash)
+  else if (pinnedHome && pinnedHome !== 'auto' && document.getElementById(pinnedHome)) {
+    targetTab = pinnedHome;
+  }
+  // 4. URL Hash fragment (if user navigated to specific #tab-...)
+  else if (cleanHash && document.getElementById(cleanHash.startsWith('tab-') ? cleanHash : `tab-${cleanHash}`)) {
+    targetTab = cleanHash.startsWith('tab-') ? cleanHash : `tab-${cleanHash}`;
+    if (!targetDoc && window.location.hash.includes('?doc=')) {
+      targetDoc = decodeURIComponent(window.location.hash.split('?doc=')[1].split('&')[0].split('#')[0]);
+    }
+  }
+  // 5. Smart Adaptive Memory (last visited tab)
+  else if (lastActive && document.getElementById(lastActive)) {
+    targetTab = lastActive;
+  }
+  // 6. Default Cockpit
+  else {
+    targetTab = 'tab-services';
+  }
+
   const targetLang = urlParams.get('lang');
   if (targetLang && ['en', 'et', 'fi', 'sv', 'lv', 'lt'].includes(targetLang)) {
     setLanguage(targetLang);
   }
-  // LAHENDUS 4: Kuldne Hübriid Landing Resolution (Home Pin > Smart Memory > Cockpit)
-  if (!targetTab) {
-    try {
-      const pinnedHome = localStorage.getItem('dev_hub_home_tab');
-      const lastActive = localStorage.getItem('dev_hub_last_active_tab');
-      if (pinnedHome && pinnedHome !== 'auto' && document.getElementById(pinnedHome)) {
-        targetTab = pinnedHome;
-      } else if (lastActive && document.getElementById(lastActive)) {
-        targetTab = lastActive;
-      } else {
-        targetTab = 'tab-services';
-      }
-    } catch (e) {
-      targetTab = 'tab-services';
-    }
-  }
 
-  if (targetTab) {
-    switchTab(targetTab, true);
-  } else {
-    switchTab('tab-services', true);
-  }
+  switchTab(targetTab, true);
   updateHomeTabPinUI(targetTab);
-  let targetDoc = urlParams.get('doc');
-  if (!targetDoc && window.location.hash.includes('?doc=')) {
-    targetDoc = decodeURIComponent(window.location.hash.split('?doc=')[1].split('&')[0].split('#')[0]);
-  }
-  if (targetDoc && typeof DOCS_DATA !== 'undefined') {
+
+  if (targetTab === 'tab-docs' && targetDoc && typeof DOCS_DATA !== 'undefined') {
     setTimeout(() => navigateToDoc(targetDoc), 120);
   }
 
@@ -14455,8 +15041,24 @@ function initSpecsTab() {
   renderSpecsTraceabilityTable();
   if (!gCurrentLoadedSpecId) {
     gCurrentLoadedSpecId = 'spec-devops-portal-req';
+    gCurrentLoadedDomain = 'devops-portal';
+    gCurrentLoadedType = 'requirements';
   }
   loadSpecInViewer(gCurrentLoadedSpecId);
+  syncSpecCardActiveStates();
+}
+
+function syncSpecCardActiveStates() {
+  document.querySelectorAll('.spec-domain-card').forEach(card => {
+    const domain = card.getAttribute('data-domain-card') || card.getAttribute('data-spec-domain');
+    card.classList.toggle('active-spec-card', domain === gCurrentLoadedDomain);
+  });
+  document.querySelectorAll('.spec-card-btn').forEach(btn => {
+    const domain = btn.getAttribute('data-spec-domain');
+    const type = btn.getAttribute('data-spec-type');
+    const isActive = (domain === gCurrentLoadedDomain && type === gCurrentLoadedType);
+    btn.classList.toggle('active', isActive);
+  });
 }
 
 function switchSpecsMode(mode) {
@@ -14482,7 +15084,7 @@ function switchSpecsMode(mode) {
   }
 }
 
-function loadSpecInViewer(domainOrId, type) {
+function loadSpecInViewer(domainOrId, type, shouldScroll = false) {
   let docId = domainOrId;
   if (type) {
     gCurrentLoadedDomain = domainOrId;
@@ -14499,7 +15101,7 @@ function loadSpecInViewer(domainOrId, type) {
   }
   gCurrentLoadedSpecId = docId;
 
-  // Sync triad buttons
+  // Sync triad buttons in reader sidebar
   const reqBtn = document.getElementById('spec-triad-btn-req');
   const desBtn = document.getElementById('spec-triad-btn-des');
   const tskBtn = document.getElementById('spec-triad-btn-tsk');
@@ -14507,12 +15109,22 @@ function loadSpecInViewer(domainOrId, type) {
   if (desBtn) desBtn.classList.toggle('active', gCurrentLoadedType === 'design');
   if (tskBtn) tskBtn.classList.toggle('active', gCurrentLoadedType === 'tasks');
 
+  // Sync top 4 domain cards and their REQ/DES/TSK buttons
+  syncSpecCardActiveStates();
+
   const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
   let doc = null;
   if (typeof DOCS_DATA !== 'undefined' && Array.isArray(DOCS_DATA)) {
-    doc = DOCS_DATA.find(d => d.id === docId || d.rel.includes(docId) || d.id.includes(domainOrId));
+    // 1. Exact ID match first (prevents premature prefix match across documents)
+    doc = DOCS_DATA.find(d => d.id === docId);
+    // 2. Exact filename / rel match
+    if (!doc) {
+      doc = DOCS_DATA.find(d => d.rel && (d.rel.endsWith(`/${docId}.md`) || d.rel === `${docId}.md` || d.rel.includes(docId)));
+    }
+    // 3. Domain + type fallback
     if (!doc && domainOrId && type) {
-      doc = DOCS_DATA.find(d => d.rel.includes(domainOrId) && d.rel.includes(type));
+      const typeSuffix = (type === 'requirements' ? 'req' : (type === 'design' ? 'des' : 'tsk'));
+      doc = DOCS_DATA.find(d => d.rel && d.rel.includes(domainOrId) && (d.rel.includes(type) || d.rel.includes(typeSuffix)));
     }
   }
 
@@ -14574,6 +15186,13 @@ function loadSpecInViewer(domainOrId, type) {
   // Restore density preference
   const savedDensity = localStorage.getItem('devhub_spec_density') || 'comfortable';
   setSpecDensity(savedDensity, false);
+
+  if (shouldScroll) {
+    const viewerCard = document.getElementById('specs-viewer-card');
+    if (viewerCard) {
+      viewerCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 }
 
 function switchCurrentSpecType(type) {
@@ -14995,23 +15614,38 @@ function triggerDevHubHardReload(event) {
 
   // Preserve current hash (e.g. #tab-devops)
   const currentHash = window.location.hash || '';
+  const isHttp = (window.location.protocol === 'http:' || window.location.protocol === 'https:');
 
-  // Parse existing URL and sanitize parameters
-  try {
-    const url = new URL(window.location.href);
-    url.searchParams.delete('_cb');
-    url.searchParams.delete('_ts');
-    url.searchParams.set('_cb', ts.toString());
-    
-    setTimeout(() => {
-      window.location.replace(url.toString());
-    }, 120);
-  } catch (err) {
-    // Fallback if URL parsing fails on file://
-    const cleanPath = window.location.pathname;
-    setTimeout(() => {
-      window.location.replace(cleanPath + '?_cb=' + ts + currentHash);
-    }, 120);
+  if (isHttp) {
+    // 🛡️ ORDS & HTTP Guardrail: Do NOT append ?_cb= to path on ORDS (8448/8088),
+    // because ORDS Jetty standalone docroot does not match query strings and 302-redirects to /ords/_/landing.
+    // Instead, issue cache-evicting fetch request, then perform native reload while preserving current tab.
+    try {
+      fetch(window.location.pathname, { method: 'HEAD', cache: 'reload' })
+        .catch(() => {})
+        .finally(() => {
+          window.location.reload();
+        });
+    } catch (e) {
+      window.location.reload();
+    }
+  } else {
+    // Local filesystem (file://) mode: append _cb query parameter to force Chrome to re-read disk content
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('_cb');
+      url.searchParams.delete('_ts');
+      url.searchParams.set('_cb', ts.toString());
+      
+      setTimeout(() => {
+        window.location.replace(url.toString());
+      }, 120);
+    } catch (err) {
+      const cleanPath = window.location.pathname;
+      setTimeout(() => {
+        window.location.replace(cleanPath + '?_cb=' + ts + currentHash);
+      }, 120);
+    }
   }
 }
 

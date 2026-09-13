@@ -22,33 +22,26 @@
 <body>
 
 <!-- Header -->
+    <!-- Header -->
     <header class="header">
         <div class="header-brand">
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                <button id="nav-back-btn" class="nav-back-btn" onclick="navigateBack()" title="Tagasi eelmisele vaatele (Alt+Left)" style="display: none;">
-                    <span class="nav-back-icon">⬅️</span>
-                    <span data-i18n="nav_back">Tagasi</span>
-                </button>
-                <h1>🚀 Oracle DevOps Platform</h1>
-                <span class="version-badge" id="platform-version-badge" onclick="openVersionInspectorModal()" title="Klõpsa: Versiooni ja vahemälu inspektor (Version & Cache Inspector)" style="font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; transition: all 0.2s ease;">
-                    <span style="width: 7px; height: 7px; border-radius: 50%; background: #38bdf8; display: inline-block;"></span>
-                    <span id="platform-global-version">v%PLATFORM_VERSION%</span>
-                    <span id="bridge-header-status" style="color: #94a3b8; font-weight: 500; margin-left: 2px;">• Bridge Offline</span>
-                </span>
-                <!-- In-App Cache-Buster Hard Reload Button (Trick #1) -->
-                <button class="cache-reload-btn" id="cache-reload-btn" onclick="triggerDevHubHardReload(event)" title="Värskenda vahemäluta (Hard Reload / Shift+R)" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; border-radius: 9999px; padding: 3px 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s ease;">
-                    <span class="reload-spin-icon" style="display: inline-block;">🔄</span>
-                    <span data-i18n="btn_hard_reload">Värskenda</span>
-                    <kbd style="background: rgba(0,0,0,0.3); border: 1px solid rgba(56,189,248,0.3); border-radius: 4px; padding: 1px 4px; font-size: 0.65rem; color: #94a3b8; margin-left: 2px;">⇧R</kbd>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <a href="javascript:void(0)" onclick="navigateToPinnedHome()" class="brand-title-link" id="brand-home-link" title="Mine kinnitatud avavaatele (Alt+H)" style="text-decoration: none; color: inherit; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <span style="font-size: 1.4rem;">🚀</span>
+                    <h1 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: #f8fafc; letter-spacing: -0.02em; white-space: nowrap;">Oracle DevOps Platform</h1>
+                </a>
+                <!-- In-App Cache-Buster Hard Reload Icon Button -->
+                <button type="button" class="cache-reload-icon-btn" id="cache-reload-btn" onclick="triggerDevHubHardReload(event)" title="Värskenda vahemäluta (Hard Reload / Shift+R)" data-tooltip="Värskenda (⇧R)">
+                    <span class="reload-spin-icon" style="font-size: 0.95rem; display: inline-block;">🔄</span>
                 </button>
             </div>
-            <p data-i18n="header_subtitle">Unified Command Center, Real-Time Service Health & Multilingual Architecture Portal</p>
+            <p data-i18n="header_subtitle" style="margin: 3px 0 0 0; font-size: 0.78rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 520px;">Unified Command Center, Real-Time Service Health &amp; Multilingual Architecture Portal</p>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <div class="header-actions" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
             <!-- Universal Omnisearch Trigger Button -->
             <button class="global-search-btn" id="global-search-btn" onclick="openGlobalSearchModal()" title="Otsi repositooriumist (⌘K või /)">
                 <span class="search-icon">🔍</span>
-                <span class="search-placeholder" data-i18n="search_placeholder_btn">Otsi repositooriumist...</span>
+                <span class="search-placeholder" data-i18n="search_placeholder_btn">Otsi...</span>
                 <kbd class="shortcut-badge">⌘K</kbd>
             </button>
 
@@ -176,14 +169,33 @@
                 </div>
             </div>
 
-
-            <div class="lang-switcher">
-                <button class="lang-btn active" id="btn-en" onclick="setLanguage('en')">🇬🇧 EN</button>
-                <button class="lang-btn" id="btn-et" onclick="setLanguage('et')">🇪🇪 ET</button>
-                <button class="lang-btn" id="btn-fi" onclick="setLanguage('fi')">🇫🇮 FI</button>
-                <button class="lang-btn" id="btn-sv" onclick="setLanguage('sv')">🇸🇪 SV</button>
-                <button class="lang-btn" id="btn-lv" onclick="setLanguage('lv')">🇱🇻 LV</button>
-                <button class="lang-btn" id="btn-lt" onclick="setLanguage('lt')">🇱🇹 LT</button>
+            <!-- Hybrid Language Switcher (EN + Local Active + Dropdown for other 4) -->
+            <div class="lang-hybrid-switcher" id="lang-hybrid-switcher">
+                <button class="lang-btn active" id="btn-en" onclick="setLanguage('en')" title="English">🇬🇧 EN</button>
+                <button class="lang-btn" id="btn-secondary" onclick="setLanguage(gSecondaryLang)" title="Eesti">🇪🇪 ET</button>
+                <div class="lang-dropdown-wrapper" id="lang-dropdown-wrapper">
+                    <button type="button" class="lang-dropdown-btn" id="lang-dropdown-btn" onclick="toggleLangDropdown(event)" title="Vali muu keel / More languages">
+                        <span id="lang-dropdown-icon">🌐</span>
+                        <span class="dropdown-caret">▼</span>
+                    </button>
+                    <div class="lang-dropdown-menu" id="lang-dropdown-menu" style="display: none;">
+                        <button type="button" class="lang-menu-item" data-lang="fi" onclick="selectDropdownLanguage('fi')">
+                            <span class="lang-flag">🇫🇮</span> <span class="lang-name">Suomi</span> <span class="lang-code">(FI)</span>
+                        </button>
+                        <button type="button" class="lang-menu-item" data-lang="sv" onclick="selectDropdownLanguage('sv')">
+                            <span class="lang-flag">🇸🇪</span> <span class="lang-name">Svenska</span> <span class="lang-code">(SV)</span>
+                        </button>
+                        <button type="button" class="lang-menu-item" data-lang="lv" onclick="selectDropdownLanguage('lv')">
+                            <span class="lang-flag">🇱🇻</span> <span class="lang-name">Latviešu</span> <span class="lang-code">(LV)</span>
+                        </button>
+                        <button type="button" class="lang-menu-item" data-lang="lt" onclick="selectDropdownLanguage('lt')">
+                            <span class="lang-flag">🇱🇹</span> <span class="lang-name">Lietuvių</span> <span class="lang-code">(LT)</span>
+                        </button>
+                        <button type="button" class="lang-menu-item" data-lang="et" onclick="selectDropdownLanguage('et')" id="lang-menu-item-et" style="display: none;">
+                            <span class="lang-flag">🇪🇪</span> <span class="lang-name">Eesti</span> <span class="lang-code">(ET)</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
@@ -1315,7 +1327,7 @@
         <div id="specs-mode-triad-pane" style="display: block;">
             <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px;">
                 <!-- Card 1: devops-portal -->
-                <div class="card" style="border-left: 4px solid #38bdf8; background: rgba(15, 23, 42, 0.7);">
+                <div class="card spec-domain-card" data-domain-card="devops-portal" style="border-left: 4px solid #38bdf8; background: rgba(15, 23, 42, 0.7); transition: all 0.25s ease;">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <span style="font-size:1.4rem;">⚡</span>
@@ -1330,14 +1342,14 @@
                         Juhtpaneel, asünkroonne sildserver, elutsüklistuudiod ja dokitav ring-buffer terminal.
                     </p>
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('devops-portal', 'requirements')">📜 REQ</button>
-                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('devops-portal', 'design')">🏛️ DES</button>
-                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('devops-portal', 'tasks')">📋 TSK</button>
+                        <button class="btn btn-sm btn-secondary spec-card-btn" data-spec-domain="devops-portal" data-spec-type="requirements" data-i18n-title="tip_spec_req" title="[REQ] Nõuete spetsifikatsioon (Given/When/Then)" onclick="loadSpecInViewer('devops-portal', 'requirements', true)">📜 REQ</button>
+                        <button class="btn btn-sm btn-secondary spec-card-btn" data-spec-domain="devops-portal" data-spec-type="design" data-i18n-title="tip_spec_des" title="[DES] Arhitektuuri ja disaini spetsifikatsioon (SCS/Mermaid)" onclick="loadSpecInViewer('devops-portal', 'design', true)">🏛️ DES</button>
+                        <button class="btn btn-sm btn-secondary spec-card-btn" data-spec-domain="devops-portal" data-spec-type="tasks" data-i18n-title="tip_spec_tsk" title="[TSK] Ülesannete ja jälgitavuse maatriks (DoD/Traceability)" onclick="loadSpecInViewer('devops-portal', 'tasks', true)">📋 TSK</button>
                     </div>
                 </div>
 
                 <!-- Card 2: wallet-security -->
-                <div class="card" style="border-left: 4px solid #a855f7; background: rgba(15, 23, 42, 0.7);">
+                <div class="card spec-domain-card" data-domain-card="wallet-security" style="border-left: 4px solid #a855f7; background: rgba(15, 23, 42, 0.7); transition: all 0.25s ease;">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <span style="font-size:1.4rem;">🔐</span>
@@ -1352,14 +1364,14 @@
                         Oracle SEPS auto-login wallet, AES-256 krüpteering kettal, JIT mälusisene dekrüpteerimine.
                     </p>
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('wallet-security', 'requirements')">📜 REQ</button>
-                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('wallet-security', 'design')">🏛️ DES</button>
-                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('wallet-security', 'tasks')">📋 TSK</button>
+                        <button class="btn btn-sm btn-secondary spec-card-btn" data-spec-domain="wallet-security" data-spec-type="requirements" data-i18n-title="tip_spec_req" title="[REQ] Nõuete spetsifikatsioon (Given/When/Then)" onclick="loadSpecInViewer('wallet-security', 'requirements', true)">📜 REQ</button>
+                        <button class="btn btn-sm btn-secondary spec-card-btn" data-spec-domain="wallet-security" data-spec-type="design" data-i18n-title="tip_spec_des" title="[DES] Arhitektuuri ja disaini spetsifikatsioon (SCS/Mermaid)" onclick="loadSpecInViewer('wallet-security', 'design', true)">🏛️ DES</button>
+                        <button class="btn btn-sm btn-secondary spec-card-btn" data-spec-domain="wallet-security" data-spec-type="tasks" data-i18n-title="tip_spec_tsk" title="[TSK] Ülesannete ja jälgitavuse maatriks (DoD/Traceability)" onclick="loadSpecInViewer('wallet-security', 'tasks', true)">📋 TSK</button>
                     </div>
                 </div>
 
                 <!-- Card 3: golden-snapshots -->
-                <div class="card" style="border-left: 4px solid #22c55e; background: rgba(15, 23, 42, 0.7);">
+                <div class="card spec-domain-card" data-domain-card="golden-snapshots" style="border-left: 4px solid #22c55e; background: rgba(15, 23, 42, 0.7); transition: all 0.25s ease;">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <span style="font-size:1.4rem;">💾</span>
@@ -1374,14 +1386,14 @@
                         Tehinguline quiesce, andmeköidete arhiveerimine ja ~15–20s FastStart kiirtaastus.
                     </p>
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('golden-snapshots', 'requirements')">📜 REQ</button>
-                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('golden-snapshots', 'design')">🏛️ DES</button>
-                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('golden-snapshots', 'tasks')">📋 TSK</button>
+                        <button class="btn btn-sm btn-secondary spec-card-btn" data-spec-domain="golden-snapshots" data-spec-type="requirements" data-i18n-title="tip_spec_req" title="[REQ] Nõuete spetsifikatsioon (Given/When/Then)" onclick="loadSpecInViewer('golden-snapshots', 'requirements', true)">📜 REQ</button>
+                        <button class="btn btn-sm btn-secondary spec-card-btn" data-spec-domain="golden-snapshots" data-spec-type="design" data-i18n-title="tip_spec_des" title="[DES] Arhitektuuri ja disaini spetsifikatsioon (SCS/Mermaid)" onclick="loadSpecInViewer('golden-snapshots', 'design', true)">🏛️ DES</button>
+                        <button class="btn btn-sm btn-secondary spec-card-btn" data-spec-domain="golden-snapshots" data-spec-type="tasks" data-i18n-title="tip_spec_tsk" title="[TSK] Ülesannete ja jälgitavuse maatriks (DoD/Traceability)" onclick="loadSpecInViewer('golden-snapshots', 'tasks', true)">📋 TSK</button>
                     </div>
                 </div>
 
                 <!-- Card 4: blueprints-topology -->
-                <div class="card" style="border-left: 4px solid #eab308; background: rgba(15, 23, 42, 0.7);">
+                <div class="card spec-domain-card" data-domain-card="blueprints-topology" style="border-left: 4px solid #eab308; background: rgba(15, 23, 42, 0.7); transition: all 0.25s ease;">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <span style="font-size:1.4rem;">🏗️</span>
@@ -1396,9 +1408,9 @@
                         12 kanoonilist blueprinti (0–11), tuumikbaasi kaitse (Core Base) ja konfliktivaba pordieraldus.
                     </p>
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('blueprints-topology', 'requirements')">📜 REQ</button>
-                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('blueprints-topology', 'design')">🏛️ DES</button>
-                        <button class="btn btn-sm btn-secondary" onclick="loadSpecInViewer('blueprints-topology', 'tasks')">📋 TSK</button>
+                        <button class="btn btn-sm btn-secondary spec-card-btn" data-spec-domain="blueprints-topology" data-spec-type="requirements" data-i18n-title="tip_spec_req" title="[REQ] Nõuete spetsifikatsioon (Given/When/Then)" onclick="loadSpecInViewer('blueprints-topology', 'requirements', true)">📜 REQ</button>
+                        <button class="btn btn-sm btn-secondary spec-card-btn" data-spec-domain="blueprints-topology" data-spec-type="design" data-i18n-title="tip_spec_des" title="[DES] Arhitektuuri ja disaini spetsifikatsioon (SCS/Mermaid)" onclick="loadSpecInViewer('blueprints-topology', 'design', true)">🏛️ DES</button>
+                        <button class="btn btn-sm btn-secondary spec-card-btn" data-spec-domain="blueprints-topology" data-spec-type="tasks" data-i18n-title="tip_spec_tsk" title="[TSK] Ülesannete ja jälgitavuse maatriks (DoD/Traceability)" onclick="loadSpecInViewer('blueprints-topology', 'tasks', true)">📋 TSK</button>
                     </div>
                 </div>
             </div>
@@ -1450,9 +1462,9 @@
                         <div>
                             <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; font-weight: 600;">Triad Tüüp</div>
                             <div class="spec-triad-pills">
-                                <button class="spec-triad-btn active" id="spec-triad-btn-req" onclick="switchCurrentSpecType('requirements')">📜 REQ</button>
-                                <button class="spec-triad-btn" id="spec-triad-btn-des" onclick="switchCurrentSpecType('design')">🏛️ DES</button>
-                                <button class="spec-triad-btn" id="spec-triad-btn-tsk" onclick="switchCurrentSpecType('tasks')">📋 TSK</button>
+                                <button class="spec-triad-btn active" id="spec-triad-btn-req" data-i18n-title="tip_spec_req" title="[REQ] Nõuete spetsifikatsioon (Given/When/Then)" onclick="switchCurrentSpecType('requirements')">📜 REQ</button>
+                                <button class="spec-triad-btn" id="spec-triad-btn-des" data-i18n-title="tip_spec_des" title="[DES] Arhitektuuri ja disaini spetsifikatsioon (SCS/Mermaid)" onclick="switchCurrentSpecType('design')">🏛️ DES</button>
+                                <button class="spec-triad-btn" id="spec-triad-btn-tsk" data-i18n-title="tip_spec_tsk" title="[TSK] Ülesannete ja jälgitavuse maatriks (DoD/Traceability)" onclick="switchCurrentSpecType('tasks')">📋 TSK</button>
                             </div>
                         </div>
 
@@ -1657,7 +1669,7 @@
     </div>
 
     <!-- TAB: AI SKILLS & ARCHITECTURE INTELLIGENCE (Redirects to Specs & AI) -->
-    <div id="tab-skills" style="display: none;"></div>    </div>
+    <div id="tab-skills" style="display: none;"></div>
 
     <!-- TAB 5: DEVOPS & CLI COMMANDS -->
     <div id="tab-devops" class="tab-content">
@@ -1787,6 +1799,7 @@
                 </div>
             </div>
         </div>
+        </div>
 
         <!-- Spec-Driven Development (SDD) Triad Quick Access Ribbon (Rules 17-19) -->
         <div class="sdd-triad-ribbon" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 10px 16px; margin: 14px 0 18px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
@@ -1846,37 +1859,82 @@
 
         <!-- QUICK ACTION RECIPES (1-CLICK WORKFLOWS) -->
         <div id="devops-recipes-bar" class="devops-recipes-bar">
-            <div class="devops-recipe-card" onclick="runDevOpsRecipe('fast-start')" title="Lähtesta keskkond ja taasta kiirelt kuldsest tõmmisest">
+            <div class="devops-recipe-card" onclick="openDevOpsRecipeModal('fast-start')" title="Vaata retsepti detaile ja käivita: Puhas kiirkäivitus">
                 <div class="recipe-icon">⚡</div>
                 <div class="recipe-content">
                     <div class="recipe-title" data-i18n="recipe_faststart_title">Puhas kiirkäivitus</div>
                     <div class="recipe-desc" data-i18n="recipe_faststart_desc">Reset ➔ FastStart (-s) ➔ Tervisekontroll</div>
                 </div>
-                <span class="recipe-badge">~20s</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="recipe-badge">~20s</span>
+                    <span class="recipe-preview-pill">ℹ️ Eelvaade</span>
+                </div>
             </div>
-            <div class="devops-recipe-card" onclick="runDevOpsRecipe('onboard-dev')" title="Loo uus arendaja skeem ja registreeri ühendused">
+            <div class="devops-recipe-card" onclick="openDevOpsRecipeModal('onboard-dev')" title="Vaata retsepti detaile ja käivita: Uus arendaja">
                 <div class="recipe-icon">👤</div>
                 <div class="recipe-content">
                     <div class="recipe-title" data-i18n="recipe_onboard_title">Uus arendaja</div>
                     <div class="recipe-desc" data-i18n="recipe_onboard_desc">Loo dev_user ➔ VS Code ühendused</div>
                 </div>
-                <span class="recipe-badge">~10s</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="recipe-badge">~10s</span>
+                    <span class="recipe-preview-pill">ℹ️ Eelvaade</span>
+                </div>
             </div>
-            <div class="devops-recipe-card" onclick="runDevOpsRecipe('full-diag')" title="Käivita täielik teenuste, rahakoti ja koodi turvakontroll">
+            <div class="devops-recipe-card" onclick="openDevOpsRecipeModal('full-diag')" title="Vaata retsepti detaile ja käivita: Täielik diagnostika">
                 <div class="recipe-icon">🩺</div>
                 <div class="recipe-content">
                     <div class="recipe-title" data-i18n="recipe_diag_title">Täielik diagnostika</div>
                     <div class="recipe-desc" data-i18n="recipe_diag_desc">URL-id ➔ SEPS Wallet ➔ Pre-commit audit</div>
                 </div>
-                <span class="recipe-badge">~15s</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="recipe-badge">~15s</span>
+                    <span class="recipe-preview-pill">ℹ️ Eelvaade</span>
+                </div>
             </div>
-            <div class="devops-recipe-card" onclick="runDevOpsRecipe('golden-snap')" title="Salvesta töötavatest konteineritest kuldne tõmmis">
+            <div class="devops-recipe-card" onclick="openDevOpsRecipeModal('golden-snap')" title="Vaata retsepti detaile ja käivita: Kuldne hetktõmmis">
                 <div class="recipe-icon">📸</div>
                 <div class="recipe-content">
                     <div class="recipe-title" data-i18n="recipe_snap_title">Kuldne hetktõmmis</div>
                     <div class="recipe-desc" data-i18n="recipe_snap_desc">Loo Golden Snapshot ➔ Tõenda tervist</div>
                 </div>
-                <span class="recipe-badge">~30s</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span class="recipe-badge">~30s</span>
+                    <span class="recipe-preview-pill">ℹ️ Eelvaade</span>
+                </div>
+            </div>
+        </div>
+
+                <!-- DevOps Cards Toolbar (Search, Category Filters & Favorites) -->
+        <div class="devops-toolbar" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 16px 0; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="filter-pill devops-filter-pill active" id="filter-devops-all" onclick="filterDevOpsCategory('all', this)">
+                    <span data-i18n="filter_all_cards">🌟 Kõik</span>
+                    <span class="pill-badge" id="devops-all-count">29</span>
+                </button>
+                <button type="button" class="filter-pill devops-filter-pill" id="filter-devops-favorites" onclick="filterDevOpsCategory('pinned', this)">
+                    <span data-i18n="devops_filter_pinned">⭐ Lemmikud</span>
+                    <span class="pill-badge" id="devops-pinned-count">0</span>
+                </button>
+                <button type="button" class="filter-pill devops-filter-pill" onclick="filterDevOpsCategory('lifecycle', this)">
+                    <span data-i18n="devops_filter_lifecycle">🔄 Elutsükkel</span>
+                </button>
+                <button type="button" class="filter-pill devops-filter-pill" onclick="filterDevOpsCategory('wallet', this)">
+                    <span data-i18n="devops_filter_wallet">🔐 Wallet &amp; Turvalisus</span>
+                </button>
+                <button type="button" class="filter-pill devops-filter-pill" onclick="filterDevOpsCategory('mgmt', this)">
+                    <span data-i18n="devops_filter_mgmt">🛠️ Tuumiktööriistad</span>
+                </button>
+                <button type="button" class="filter-pill devops-filter-pill" onclick="filterDevOpsCategory('snapshots', this)">
+                    <span data-i18n="devops_filter_snapshots">📸 Snapshotid</span>
+                </button>
+                <button type="button" class="filter-pill devops-filter-pill" onclick="filterDevOpsCategory('diag', this)">
+                    <span data-i18n="devops_filter_diag">🩺 Tervis &amp; Diag</span>
+                </button>
+            </div>
+            <div style="position: relative; min-width: 240px;">
+                <input type="text" id="devops-cards-search" class="search-input" placeholder="Filtreeri käske..." data-i18n-placeholder="search_devops_ph" oninput="filterDevOpsCardsSearch(this.value)" style="width: 100%; padding: 6px 10px 6px 30px; font-size: 0.8rem; border-radius: 6px; border: 1px solid var(--border); background: #0b0f19; color: #f8fafc; outline: none;">
+                <span style="position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: var(--text-dim);">🔍</span>
             </div>
         </div>
 
@@ -1890,7 +1948,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 12px;" data-i18n="studio_setup_desc">
@@ -1969,7 +2027,7 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 12px;" data-i18n="studio_reset_desc">
@@ -2054,7 +2112,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_setup_full">🚀 Automated Full Environment Setup</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_setup_full">Deploy and configure active blueprint containers, databases, and ORDS/APEX in unattended mode.</p>
@@ -2062,8 +2120,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/setup-all.sh -y
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary" onclick="copySnippetText('./scripts/setup-all.sh -y'); showToast('📋 Kopeeritud: ./scripts/setup-all.sh -y')"><span>📋</span> <span data-i18n="btn_copy_cmd">Kopeeri käsk</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
             </div>
 
@@ -2073,7 +2132,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_setup_snapshot">⚡ Fast-Start from Golden Snapshot</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_setup_snapshot">Restore database state instantly (~15s) from pre-compressed Golden Snapshot without re-downloading or compiling.</p>
@@ -2081,8 +2140,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/setup-all.sh -s -y
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary" onclick="copySnippetText('./scripts/setup-all.sh -s -y'); showToast('📋 Kopeeritud: ./scripts/setup-all.sh -s -y')"><span>📋</span> <span data-i18n="btn_copy_cmd">Kopeeri käsk</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
             </div>
 
@@ -2092,7 +2152,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_setup_dryrun">🔍 Setup Dry-Run Simulation</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_setup_dryrun">Validates prerequisites, ports, compose overrides, and YAML profiles without launching containers.</p>
@@ -2100,8 +2160,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/setup-all.sh --dry-run
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('setup-dryrun', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2112,7 +2173,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_setup_help">📖 Setup CLI Options & Help</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_setup_help">Inspect all available command-line flags (-b, -tb, -s, -fs, --fresh, --dry-run, -l).</p>
@@ -2120,8 +2181,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/setup-all.sh --help
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('setup-help', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2132,7 +2194,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_reset_all">🔄 Standard Fast Environment Reset</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_reset_all">Stops and removes active blueprint containers and profiles while safely preserving SEPS Wallet and snapshots.</p>
@@ -2140,8 +2202,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/reset-all.sh -y
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('reset-all', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2152,7 +2215,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_reset_system">💣 Deep System Reset (Volumes & Networks)</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_reset_system">Performs complete zero-trace purge: removes all platform containers, Podman storage volumes, and subnets.</p>
@@ -2160,8 +2223,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/reset-all.sh --system -y
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('reset-system', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2172,7 +2236,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_reset_clean_logs">🧹 Reset Containers & Clean Logs</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_reset_clean_logs">Stops active container stack and cleans historical execution logs under install_logs/.</p>
@@ -2180,8 +2244,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/reset-all.sh --clean-logs -y
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('reset-clean-logs', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2192,7 +2257,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_reset_help">📖 Reset CLI Options & Selective Cleanup</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_reset_help">Inspect selective reset targets: container name, --profile, --system, --clean-certs, --clean-logs.</p>
@@ -2200,8 +2265,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/reset-all.sh --help
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('reset-help', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2212,7 +2278,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_list_pwd">📋 Read Wallet Credentials</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_list_pwd">Query or inspect decrypted credentials from SEPS Wallet safely in-memory.</p>
@@ -2220,8 +2286,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/get-password.sh --list
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('get-passwords', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2232,7 +2299,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_rotate">🔄 Zero-Downtime Password Rotation</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_rotate">Rotates user passwords across Database, Podman Secrets, and SEPS Wallet for this blueprint.</p>
@@ -2240,8 +2307,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/rotate-password.sh db-proxy dev
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('rotate-dev', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2252,7 +2320,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_create_dev">👤 Provision Developer Database Schema</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_create_dev">Creates a developer user schema with tablespace quota, developer privileges, and registers into SEPS Wallet.</p>
@@ -2267,8 +2335,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     <span id="devops-cmd-create-dev">./scripts/create-developer.sh dev_user</span>
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runCreateDeveloper(this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2279,7 +2348,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_register_conn">💻 Register VS Code Connections</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_register_conn">Register database connections in VS Code Oracle SQL Developer extension & OS Keychain.</p>
@@ -2287,8 +2356,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/register-connections.sh
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('register-connections', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2299,7 +2369,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_sqlcl">💻 Passwordless SQLcl CLI Terminal</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_sqlcl">Launch official Oracle SQLcl CLI using auto-login SEPS Wallet alias (zero plaintext password).</p>
@@ -2307,8 +2377,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/sqlcl.sh /@DB_PROXY_DEV
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary" onclick="copySnippetText('./scripts/sqlcl.sh /@DB_PROXY_DEV'); showToast('📋 Kopeeritud: ./scripts/sqlcl.sh /@DB_PROXY_DEV')"><span>📋</span> <span data-i18n="btn_copy_cmd">Kopeeri käsk</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
             </div>
 
@@ -2318,7 +2389,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_start_containers">🐳 Start & Orchestrate Container Stack</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_start_containers">Starts or resumes the container stack for active blueprint according to resolved port topology.</p>
@@ -2326,8 +2397,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/start-containers.sh
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('start-containers', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2338,7 +2410,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_start_bridge">🔄 Dev Hub Bridge Server & Hot-Reload</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_start_bridge">Starts, restarts, and monitors the Dev Hub background bridge server. Includes automatic hot-reload on file changes.</p>
@@ -2346,8 +2418,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/start-bridge.sh --restart
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('start-bridge', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2358,7 +2431,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_deploy">🚀 Blueprint Deployment & Status</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_deploy">Inspect active architecture blueprint status, topology configuration, and health.</p>
@@ -2366,8 +2439,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/deploy-blueprint.sh --status
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('deploy-status', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2378,7 +2452,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_repo_stats">📈 Codebase Health & Telemetry Reporter</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_repo_stats">Scans repository files, calculates maintainable SLOC, test density ratio, and outputs JSON/Markdown reports.</p>
@@ -2386,8 +2460,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/report-repo-stats.sh
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('report-repo-stats', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2398,7 +2473,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_clean_logs">🧹 Clean Execution Logs</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_clean_logs">Cleans up temporary files and rotates execution logs under install_logs/.</p>
@@ -2406,8 +2481,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/clean-logs.sh
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('clean-logs', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2418,7 +2494,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_clean_certs">🔑 Clean Generated SSL Certificates</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_clean_certs">Removes locally generated SSL certificates and keys from config/certs/ for a clean rebuild.</p>
@@ -2426,8 +2502,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/clean-certs.sh
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('clean-certs', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2438,7 +2515,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_onboard_ent">🏢 Enterprise Artifactory & Proxy Status</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_onboard_ent">Inspect corporate registry mappings, corporate CA bundle, and profile patching status.</p>
@@ -2446,8 +2523,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/onboard-enterprise.sh --status
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('onboard-enterprise', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2458,7 +2536,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_createsnap">📸 Save Platform Golden Snapshot</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_createsnap">Generate byte-for-byte compressed Golden Snapshot from running containers.</p>
@@ -2466,8 +2544,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/snapshots/create-golden-snapshots.sh
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('create-snapshot', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2478,7 +2557,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_restore_snap">⚡ Restore Platform Golden Snapshot</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_restore_snap">Restores database state from existing compressed Golden Snapshot in ~15 seconds.</p>
@@ -2486,8 +2565,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/snapshots/restore-golden-snapshots.sh --auto -b 0
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('restore-snapshot', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2498,7 +2578,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_clean_snap">🗑️ Clean Golden Snapshots Directory</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge destructive" data-i18n="badge_destructive">⚠️ Destruktiivne</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_clean_snap">Deletes outdated database snapshots under snapshots/ to reclaim host disk space.</p>
@@ -2506,8 +2586,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/snapshots/clean-golden-snapshots.sh -y
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('clean-snapshots', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2518,7 +2599,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_trust_cert">🔒 Trust SSL/TLS Certificate in OS</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_trust_cert">Installs local Dev Root CA certificate into user trust store for zero-warning HTTPS.</p>
@@ -2526,8 +2607,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/certs/trust-local-cert-mac.sh
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('trust-cert', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2538,7 +2620,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_health">🌐 Service Health Diagnostics</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_health">Test active web service HTTP/HTTPS endpoints (APEX, ORDS, Forms, Publisher).</p>
@@ -2546,8 +2628,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/check-urls.sh
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('check-urls', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2558,7 +2641,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_wallet">🔑 Check SEPS Wallet Connections</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_wallet">Test SEPS Wallet database auto-login connections and TNS alias reachability.</p>
@@ -2566,8 +2649,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/check-wallet.sh
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('check-wallet', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -2578,7 +2662,7 @@
                     <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_test_precommit">🛡️ Git Pre-Commit & Pre-Push Security Guard</h4>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
-                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">⭐</button>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
                     </div>
                 </div>
                 <p data-i18n="desc_devops_test_precommit">Fast 6-phase audit before commit/push: Zero-Trust secrets, GDPR/PII leaks, hashed company info, Rule 13 portability, script syntax, and CRLF line endings.</p>
@@ -2586,8 +2670,9 @@
                     <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
                     ./scripts/check-pre-commit.sh --full
                 </div>
-                <div style="margin-top: 10px;">
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('check-precommit', this)"><span>▶️</span> <span data-i18n="btn_devops_test_precommit">Kontrolli koodi</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
@@ -3391,7 +3476,12 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
         <div style="display: flex; align-items: center; gap: 8px;">
             <span>© 2026 Oracle DevOps Platform</span>
             <span>•</span>
-            <span class="platform-version-badge" id="footer-platform-version" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.78rem;" title="Platform Single Source of Truth Version">v%PLATFORM_VERSION%</span>
+            <span class="platform-version-badge" id="platform-version-badge" onclick="openVersionInspectorModal()" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; padding: 3px 10px; border-radius: 9999px; font-weight: 700; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.78rem; cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 5px;" title="Klõpsa: Versiooni ja vahemälu inspektor">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #38bdf8; display: inline-block;"></span>
+                <span id="platform-global-version">v%PLATFORM_VERSION%</span>
+                <span id="bridge-header-status" style="color: #94a3b8; font-weight: 500; margin-left: 2px;">• Bridge Offline</span>
+            </span>
+            <span id="footer-platform-version" style="display: none;">v%PLATFORM_VERSION%</span>
             <span>•</span>
             <span>Zero-Trust Enterprise Architecture</span>
         </div>
@@ -3841,6 +3931,62 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
         </div>
         <div class="modal-body code-preview-body" style="padding: 16px 20px; max-height: 70vh; overflow-y: auto;">
             <pre style="margin: 0; padding: 14px; background: #0b1120; border: 1px solid #1e293b; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace; font-size: 0.82rem; line-height: 1.5; color: #f8fafc; overflow-x: auto; white-space: pre;"><code id="code-preview-code">Laadimine...</code></pre>
+        </div>
+    </div>
+</div>
+
+<!-- DEVOPS RECIPE INSPECTOR MODAL -->
+<div id="devops-recipe-modal" class="modal-backdrop" onclick="closeDevOpsRecipeModal(event)" style="display: none; z-index: 99999;">
+    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 640px; width: 92%; background: #0f172a; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); overflow: hidden;">
+        <div class="modal-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.7);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="recipe-modal-icon" style="font-size: 1.5rem;">⚡</span>
+                <div>
+                    <h3 id="recipe-modal-title" style="margin: 0; font-size: 1.15rem; color: #f8fafc;">Retsept: Puhas kiirkäivitus</h3>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px;">
+                        <span id="recipe-modal-risk-badge" class="safety-badge action">⚡ Tegevus</span>
+                        <span id="recipe-modal-time-badge" style="font-size: 0.75rem; color: #94a3b8;">~20s</span>
+                    </div>
+                </div>
+            </div>
+            <button class="modal-close-btn" onclick="closeDevOpsRecipeModal()">✕</button>
+        </div>
+        <div class="modal-body" style="padding: 18px 20px;">
+            <p id="recipe-modal-desc" style="font-size: 0.86rem; color: #cbd5e1; margin: 0 0 16px 0; line-height: 1.45;">
+                Kirjeldus
+            </p>
+
+            <div style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.04em;">
+                <span data-i18n="recipe_pipeline_title">Retsepti samm-sammuline konveier:</span>
+            </div>
+            <div id="recipe-modal-steps" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+                <!-- Populated dynamically -->
+            </div>
+
+            <div id="recipe-modal-warning" style="display: none; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; color: #fca5a5; font-size: 0.82rem; font-weight: 600;">
+                    <span>⚠️</span> <span data-i18n="recipe_warning_title">Tähelepanu: See toiming taaskäivitab konteinerid!</span>
+                </div>
+                <div style="font-size: 0.76rem; color: #fecaca; margin-top: 4px;" data-i18n="recipe_warning_desc">
+                    Salvestamata andmed, mida pole commititud või snapshotitud, võidakse kaotada.
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" style="padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: rgba(15, 23, 42, 0.6);">
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" class="btn btn-secondary" onclick="copyActiveRecipeCommands()" style="font-size: 0.8rem; padding: 6px 12px; display: inline-flex; align-items: center; gap: 5px;">
+                    <span>📋</span> <span data-i18n="btn_copy_commands">Kopeeri käsud</span>
+                </button>
+                <button type="button" class="btn btn-compact-ai" onclick="askAiAboutActiveRecipe()" style="font-size: 0.8rem; padding: 6px 12px; display: inline-flex; align-items: center; gap: 5px;">
+                    <span>🤖</span> <span data-i18n="btn_cockpit_ai">Küsi AI-lt</span>
+                </button>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" class="btn btn-secondary" onclick="closeDevOpsRecipeModal()" style="font-size: 0.8rem; padding: 6px 12px;">Loobu</button>
+                <button type="button" id="btn-execute-recipe" class="btn btn-primary" onclick="executeActiveRecipeConfirmed()" style="font-size: 0.8rem; padding: 6px 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>⚡</span> <span data-i18n="btn_execute_recipe">Käivita retsept</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>

@@ -82,22 +82,144 @@
             border-radius: var(--radius-md);
             border: 1px solid var(--border);
         }
+        .lang-hybrid-switcher {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #0b1120;
+            padding: 3px 4px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            position: relative;
+        }
         .lang-btn {
             background: transparent;
             border: none;
             color: var(--text-muted);
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 500;
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
         .lang-btn:hover { color: var(--text-main); background: var(--surface-hover); }
         .lang-btn.active {
             background: var(--primary);
             color: #030712;
             font-weight: 700;
+        }
+        .lang-dropdown-wrapper {
+            position: relative;
+        }
+        .lang-dropdown-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 4px 6px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.82rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            transition: all 0.2s ease;
+        }
+        .lang-dropdown-btn:hover {
+            color: var(--text-main);
+            background: var(--surface-hover);
+        }
+        .lang-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background: #0b1120;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            z-index: 1000;
+            min-width: 145px;
+        }
+        .lang-menu-item {
+            background: transparent;
+            border: none;
+            color: #cbd5e1;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: left;
+            width: 100%;
+            transition: all 0.15s ease;
+        }
+        .lang-menu-item:hover {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+        }
+        .cache-reload-icon-btn {
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #38bdf8;
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .cache-reload-icon-btn:hover {
+            background: rgba(56, 189, 248, 0.25);
+            border-color: #38bdf8;
+            transform: scale(1.05);
+        }
+        .brand-title-link {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .brand-title-link:hover {
+            opacity: 0.9;
+            transform: translateX(2px);
+        }
+        .devops-filter-pill {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .devops-filter-pill:hover {
+            color: #f8fafc;
+            border-color: var(--primary);
+            background: rgba(56, 189, 248, 0.1);
+        }
+        .devops-filter-pill.active {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .devops-filter-pill .pill-badge {
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 10px;
+            padding: 1px 6px;
+            font-size: 0.72rem;
         }
 
         .tabs-nav {
@@ -5751,6 +5873,65 @@ body.copilot-drawer-open.copilot-fullscreen .devops-docked-terminal {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
+.recipe-preview-pill {
+    font-size: 0.7rem;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+.devops-recipe-card:hover .recipe-preview-pill {
+    background: #38bdf8;
+    color: #0f172a;
+}
+.recipe-step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 12px;
+    background: rgba(3, 7, 18, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+}
+.recipe-step-num {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.74rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.recipe-step-content {
+    flex: 1;
+    min-width: 0;
+}
+.recipe-step-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #f8fafc;
+}
+.recipe-step-cmd {
+    font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+    font-size: 0.75rem;
+    color: #38bdf8;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 4px;
+    display: inline-block;
+    word-break: break-all;
+}
+
 /* 4. Semantic Safety Cards */
 .card-safe {
     border-color: rgba(34, 197, 94, 0.3) !important;
@@ -5802,25 +5983,35 @@ body.copilot-drawer-open.copilot-fullscreen .devops-docked-terminal {
     border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
-/* Pin to top button */
+/* Pin to top / Favorite button */
 .pin-card-btn {
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 0.88rem;
-    opacity: 0.35;
-    transition: opacity 0.2s, transform 0.2s;
-    padding: 2px 4px;
+    font-size: 1.05rem;
+    color: #94a3b8;
+    opacity: 0.6;
+    transition: all 0.2s ease;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1;
 }
 
 .pin-card-btn:hover {
-    opacity: 0.9;
-    transform: scale(1.15);
+    opacity: 1;
+    color: #facc15;
+    transform: scale(1.2);
 }
 
 .pin-card-btn.pinned {
     opacity: 1;
-    filter: drop-shadow(0 0 6px rgba(234, 179, 8, 0.6));
+    color: #facc15;
+    filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.7));
+}
+
+.card.is-pinned {
+    border-color: rgba(250, 204, 21, 0.45) !important;
+    box-shadow: 0 0 16px rgba(250, 204, 21, 0.08) !important;
 }
 
 /* Confirmation overlay for destructive actions */
@@ -5903,6 +6094,36 @@ body.copilot-drawer-open.copilot-fullscreen .devops-docked-terminal {
     padding: 4px;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Spec Domain Cards Active States */
+.spec-domain-card {
+    border: 1px solid var(--border);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.spec-domain-card:hover {
+    border-color: rgba(56, 189, 248, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.spec-domain-card.active-spec-card {
+    border-color: #38bdf8 !important;
+    background: rgba(15, 23, 42, 0.95) !important;
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5), 0 8px 30px rgba(56, 189, 248, 0.2) !important;
+}
+.spec-card-btn {
+    transition: all 0.2s ease;
+    border-radius: 6px;
+}
+.spec-card-btn:hover {
+    transform: translateY(-1px);
+}
+.spec-card-btn.active {
+    background: rgba(56, 189, 248, 0.28) !important;
+    border-color: #38bdf8 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4) !important;
 }
 
 .spec-triad-btn {
