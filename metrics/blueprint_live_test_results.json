@@ -1,119 +1,38 @@
 {
-  "timestamp": "2026-09-14 04:09:00",
-  "total_blueprints": 12,
-  "passed": 11,
+  "timestamp": "2026-09-14 08:08:49",
+  "total_blueprints": 3,
+  "passed": 3,
   "failed": 0,
-  "skipped": 1,
-  "total_duration_seconds": 4700,
-  "fast_mode": true,
-  "dry_run": false,
+  "skipped": 0,
+  "total_duration_seconds": 0,
+  "fast_mode": false,
+  "dry_run": true,
   "results": [
-    {
-      "blueprint_num": "0",
-      "name": "0-default-proxy-ords",
-      "status": "PASS",
-      "duration_seconds": 280,
-      "containers": "db-proxy app-ords",
-      "fail_reason": "",
-      "log_file": "install_logs/test_bp_0_live.log"
-    },
-    {
-      "blueprint_num": "1",
-      "name": "1-standalone-alise-db",
-      "status": "PASS",
-      "duration_seconds": 727,
-      "containers": "db-alise app-ords",
-      "fail_reason": "",
-      "log_file": "install_logs/test_bp_1_live.log"
-    },
-    {
-      "blueprint_num": "2",
-      "name": "2-standalone-proxy-db",
-      "status": "PASS",
-      "duration_seconds": 707,
-      "containers": "db-proxy-standalone app-ords",
-      "fail_reason": "",
-      "log_file": "install_logs/test_bp_2_live.log"
-    },
-    {
-      "blueprint_num": "3",
-      "name": "3-standalone-gvenzl-db",
-      "status": "PASS",
-      "duration_seconds": 591,
-      "containers": "db-gvenzl app-ords",
-      "fail_reason": "",
-      "log_file": "install_logs/test_bp_3_live.log"
-    },
-    {
-      "blueprint_num": "4",
-      "name": "4-standalone-autonomous-db",
-      "status": "PASS",
-      "duration_seconds": 211,
-      "containers": "db-adb app-ords",
-      "fail_reason": "",
-      "log_file": "install_logs/test_bp_4_live.log"
-    },
     {
       "blueprint_num": "5",
       "name": "5-standalone-publisher",
       "status": "PASS",
-      "duration_seconds": 759,
+      "duration_seconds": 0,
       "containers": "db-publisher app-publisher",
       "fail_reason": "",
-      "log_file": "install_logs/test_bp_5_live.log"
+      "log_file": ""
     },
     {
       "blueprint_num": "6",
       "name": "6-standalone-forms",
       "status": "PASS",
-      "duration_seconds": 256,
+      "duration_seconds": 0,
       "containers": "db-forms app-forms",
       "fail_reason": "",
-      "log_file": "install_logs/test_bp_6_live.log"
+      "log_file": ""
     },
     {
       "blueprint_num": "7",
       "name": "7-consolidated-forms-publisher",
       "status": "PASS",
-      "duration_seconds": 799,
+      "duration_seconds": 0,
       "containers": "db-forms-publisher app-forms app-publisher",
       "fail_reason": "",
-      "log_file": "install_logs/test_bp_7_live.log"
-    },
-    {
-      "blueprint_num": "8",
-      "name": "8-standalone-web-ide",
-      "status": "PASS",
-      "duration_seconds": 213,
-      "containers": "web-ide-dev",
-      "fail_reason": "",
-      "log_file": "install_logs/test_bp_8_live.log"
-    },
-    {
-      "blueprint_num": "9",
-      "name": "9-standalone-publisher-designer",
-      "status": "PASS",
-      "duration_seconds": 79,
-      "containers": "app-publisher-designer",
-      "fail_reason": "",
-      "log_file": "install_logs/test_bp_9_live.log"
-    },
-    {
-      "blueprint_num": "10",
-      "name": "10-remote-ords",
-      "status": "PASS",
-      "duration_seconds": 78,
-      "containers": "app-ords-remote",
-      "fail_reason": "",
-      "log_file": "install_logs/test_bp_10_live.log"
-    },
-    {
-      "blueprint_num": "11",
-      "name": "11-remote-publisher",
-      "status": "SKIP",
-      "duration_seconds": 0,
-      "containers": "app-publisher-remote",
-      "fail_reason": "External remote database required (excluded per docs/incremental-blueprints-test-plan.md)",
       "log_file": ""
     }
   ]

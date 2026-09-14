@@ -78,8 +78,14 @@ while [[ $# -gt 0 ]]; do
       RUN_DEVHUB=true
       shift
       ;;
-    --lang)
+    -l=*|--lang=*|-language=*|--language=*)
+      TARGET_LANG="${1#*=}"
+      export CLI_LANG="$TARGET_LANG"
+      shift
+      ;;
+    -l|--lang|-language|--language)
       TARGET_LANG="${2:-all}"
+      export CLI_LANG="$TARGET_LANG"
       shift 2
       ;;
     -v|--verbose)
@@ -101,7 +107,8 @@ Options:
   --all            Run all verification suites (default)
   --check-scripts  Run only script messages & i18n engine tests
   --check-docs     Run only documentation language & switcher tests
-  --lang <code>    Filter check by language (en, et, fi, sv, lv, lt, all)
+  -l, --lang <code>, --lang=<code>
+                   Filter check by language (en, et, fi, sv, lv, lt, all)
   -v, --verbose    Show verbose test diagnostics
   --json           Output results as JSON for CI/CD
   -h, --help       Show this help message
@@ -123,6 +130,8 @@ EOF
   esac
 done
 
+TARGET_LANG="$(echo "${TARGET_LANG:-all}" | tr '[:upper:]' '[:lower:]')"
+
 log_ui() {
   if [ "$JSON_MODE" = "false" ]; then
     echo -e "$@"
@@ -141,7 +150,11 @@ fi
 
 log_ui "${CYAN}================================================================================${NC}"
 log_ui "${BOLD}🌐 MULTI-LANGUAGE & i18n COMPLIANCE VERIFICATION SUITE (Rule 9)${NC}"
-log_ui "   Target Scope: 🇬🇧 EN | 🇪🇪 ET | 🇫🇮 FI | 🇸🇪 SV | 🇱🇻 LV | 🇱🇹 LT"
+if [ "$TARGET_LANG" != "all" ]; then
+  log_ui "   Target Scope: Focus Language: [$(echo "$TARGET_LANG" | tr '[:lower:]' '[:upper:]')] (Full 6-Language Invariant)"
+else
+  log_ui "   Target Scope: 🇬🇧 EN | 🇪🇪 ET | 🇫🇮 FI | 🇸🇪 SV | 🇱🇻 LV | 🇱🇹 LT"
+fi
 log_ui "   Workspace:    $WORKSPACE_DIR"
 log_ui "${CYAN}================================================================================${NC}"
 

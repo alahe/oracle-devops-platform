@@ -1,5 +1,75 @@
 [
   {
+    "id": "run_20260914_080633",
+    "timestamp": "2026-09-14 08:06:33",
+    "suite": "tls_security",
+    "target": "tls_security",
+    "duration_sec": 1.5,
+    "exit_code": 1,
+    "status": "FAIL",
+    "log_file": "test_tls_security_20260914_080631.log"
+  },
+  {
+    "id": "run_20260914_080612",
+    "timestamp": "2026-09-14 08:06:12",
+    "suite": "precommit",
+    "target": "precommit",
+    "duration_sec": 30.0,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_precommit_20260914_080542.log"
+  },
+  {
+    "id": "run_20260914_080536",
+    "timestamp": "2026-09-14 08:05:36",
+    "suite": "mermaid",
+    "target": "mermaid",
+    "duration_sec": 25.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_mermaid_20260914_080511.log"
+  },
+  {
+    "id": "run_20260914_080504",
+    "timestamp": "2026-09-14 08:05:04",
+    "suite": "portability",
+    "target": "portability",
+    "duration_sec": 1.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_portability_20260914_080503.log"
+  },
+  {
+    "id": "run_20260914_080451",
+    "timestamp": "2026-09-14 08:04:51",
+    "suite": "windows_enterprise",
+    "target": "windows_enterprise",
+    "duration_sec": 3.0,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_windows_enterprise_20260914_080448.log"
+  },
+  {
+    "id": "run_20260914_080404",
+    "timestamp": "2026-09-14 08:04:04",
+    "suite": "i18n",
+    "target": "i18n",
+    "duration_sec": 1.5,
+    "exit_code": 1,
+    "status": "FAIL",
+    "log_file": "test_i18n_20260914_080402.log"
+  },
+  {
+    "id": "run_20260914_080318",
+    "timestamp": "2026-09-14 08:03:18",
+    "suite": "i18n",
+    "target": "i18n",
+    "duration_sec": 1.5,
+    "exit_code": 1,
+    "status": "FAIL",
+    "log_file": "test_i18n_20260914_080317.log"
+  },
+  {
     "id": "run_20260913_085549",
     "timestamp": "2026-09-13 08:55:49",
     "suite": "title_capitalization",
