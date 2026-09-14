@@ -18,17 +18,23 @@
 - **Oficiālā atsauce / Vikipēdija:** [Oracle Autonomous Database](https://www.oracle.com/autonomous-database/)
 - **Saistītā dokumentācija un skripti:** [docs/remote-multicloud-setup-guide.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/remote-multicloud-setup-guide.md), [scripts/deploy-remote.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/deploy-remote.sh)
 
+### `ADR` — Architecture Decision Record
+- **Definīcija:** Strukturēts dokuments, kurā fiksēts būtisks arhitektūras lēmums, konteksts un sekas.
+- **Loma šajā projektā:** Autoritatīvi lēmumu ieraksti docs/adr/ (piem., ADR 0017), kas nodrošina skaidrus līgumus un komandas saskaņotību.
+- **Oficiālā atsauce / Vikipēdija:** [ADR GitHub Organization](https://adr.github.io/)
+- **Saistītā dokumentācija un skripti:** [docs/adr/0017-devops-tab-ux-and-docked-terminal.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/adr/0017-devops-tab-ux-and-docked-terminal.md), [docs/specs/devops-management-portal-spec.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-management-portal-spec.md)
+
+### `ALISE` — ALISE Business Application Database
+- **Definīcija:** Pielāgota Oracle Free DB 23ai biznesa datubāze pamatskēmām, PL/SQL biznesa loģikai un APEX/ORDS portā 1533.
+- **Loma šajā projektā:** Izmantota kā galvenā biznesa datubāze Blueprint 1 (ALISE DB :1533), nodrošinot shēmu izolāciju.
+- **Oficiālā atsauce / Vikipēdija:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
+- **Saistītā dokumentācija un skripti:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
+
 ### `APEX` — Oracle Application Express
 - **Definīcija:** Oracle low-code tīmekļa lietojumprogrammu izstrādes platforma tieši datubāzē.
 - **Loma šajā projektā:** Galvenā saskarne Proxy DB (ports 8448/8088), pārvaldīta ar APEXlang DSL un Git eksportiem.
 - **Oficiālā atsauce / Vikipēdija:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
 - **Saistītā dokumentācija un skripti:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
-
-### `ALISE` — ALISE biznesa lietojumprogrammu datubāze
-- **Definīcija:** Specializēta Oracle Free DB 23ai datubāzes vide pamatdarbības shēmām, PL/SQL loģikai un APEX/ORDS izpildlaikam portā 1533.
-- **Loma šajā projektā:** Kanoniskā biznesa datubāze Blueprint 1 (:1533) un Blueprint 7/3 sastāvā, nodrošinot pilnīgu shēmu izolāciju no starpniekservera.
-- **Oficiālā atsauce / Vikipēdija:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
-- **Saistītā dokumentācija un skripti:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
 
 ### `APFS` — Apple File System
 - **Definīcija:** Noklusējuma failu sistēma macOS ar SSD optimizāciju un momentuzņēmumiem.
@@ -102,6 +108,12 @@
 - **Oficiālā atsauce / Vikipēdija:** [Wikipedia: Database Administrator](https://en.wikipedia.org/wiki/Database_administrator)
 - **Saistītā dokumentācija un skripti:** [scripts/internal/apply-profile-users.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/apply-profile-users.sh), [scripts/create-developer.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/create-developer.sh)
 
+### `DES` — Software Design Description (IEEE 1016 / SCS Architecture)
+- **Definīcija:** Arhitektūras un tehniskā dizaina specifikācija (saskaņā ar IEEE 1016), kas detalizē sistēmas struktūru, komponentus, datu modeļus, drošības robežas un Mermaid diagrammas.
+- **Loma šajā projektā:** Otrais dokuments SDD triādē (docs/specs/<domain>/design.md), kas nosaka ierobežotus kontekstus, Oracle PDB izkārtojumu un sistēmas robežas.
+- **Oficiālā atsauce / Vikipēdija:** [Wikipedia: Software Design Description (IEEE 1016)](https://en.wikipedia.org/wiki/Software_design_description)
+- **Saistītā dokumentācija un skripti:** [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md), [docs/specs/wallet-security/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/design.md)
+
 ### `DR` — Disaster Recovery
 - **Definīcija:** Procedūras datu un infrastruktūras ātrai atjaunošanai avāriju gadījumā.
 - **Loma šajā projektā:** Realizēts ~15 sekundēs ar Golden Snapshot palīdzību, pilnībā atjaunojot vidi.
@@ -123,6 +135,12 @@
 - **Saistītā dokumentācija un skripti:** [tests/test-browser-login.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/tests/test-browser-login.sh), [docs/devhub-browser-testing-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/devhub-browser-testing-plan.md)
 
 ## F
+
+### `FastStart` — Instant FastStart Recovery (-s)
+- **Definīcija:** Tūlītējs ~15 sekunžu datubāzes atjaunošanas mehānisms ar zelta momentuzņēmumiem.
+- **Loma šajā projektā:** Aktivizējams ar './scripts/setup-all.sh -s', samazinot palaišanas laiku no 7 minūtēm līdz zem 20 sekundēm.
+- **Oficiālā atsauce / Vikipēdija:** [Oracle Fast-Start High Availability](https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/fast-start-failover.html)
+- **Saistītā dokumentācija un skripti:** [scripts/setup-all.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/setup-all.sh), [scripts/snapshots/restore-golden-snapshots.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/snapshots/restore-golden-snapshots.sh)
 
 ### `FAT / NTFS` — File Allocation Table / New Technology File System
 - **Definīcija:** Windows failu sistēmas ar aizliegtajām rakstzīmēm un rezervētajiem ierīču nosaukumiem.
@@ -242,7 +260,7 @@
 
 ### `PDB` — Pluggable Database
 - **Definīcija:** Autonoma shēmu un objektu kopa multitenant arhitektūrā, kas darbojas kā atsevišķa datubāze.
-- **Loma šajā projektā:** Izolē lietojumu datus: FREEPDB1 (APEX), ALISEPDB (bizness), PUBPDB un BIP_PDB.
+- **Loma šajā projektā:** Izolē lietojumu datus: FREEPDB1 (APEX), ALISEPDB (bizness), LIS_PDB un BIP_PDB.
 - **Oficiālā atsauce / Vikipēdija:** [Oracle Pluggable Database (PDB)](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/multitenant-architecture.html)
 - **Saistītā dokumentācija un skripti:** [docs/db-profiles-and-topology.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/db-profiles-and-topology.md), [scripts/internal/resolve-topology.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/resolve-topology.sh)
 
@@ -266,6 +284,12 @@
 - **Oficiālā atsauce / Vikipēdija:** [Oracle Repository Creation Utility Docs](https://docs.oracle.com/en/middleware/fusion-middleware/12.2.1.4/rcuug/)
 - **Saistītā dokumentācija un skripti:** [docs/forms-setup.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/forms-setup.md)
 
+### `REQ` — Requirements Specification (Given/When/Then)
+- **Definīcija:** Formāla programmatūras inženierijas specifikācija, kas fiksē biznesa mērķus, funkcionālās prasības un testējamus Given/When/Then pieņemšanas kritērijus.
+- **Loma šajā projektā:** Pirmais dokuments SDD triādē (docs/specs/<domain>/requirements.md), kas novērš pāragru izstrādi un vada kvalitātes vārtus.
+- **Oficiālā atsauce / Vikipēdija:** [Wikipedia: Software Requirements Specification (SRS)](https://en.wikipedia.org/wiki/Software_requirements_specification)
+- **Saistītā dokumentācija un skripti:** [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md), [docs/specs/wallet-security/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/requirements.md)
+
 ### `REST` — Representational State Transfer
 - **Definīcija:** Stāvokli nesaglabājoša tīmekļa arhitektūra mērogojamu API izveidei caur HTTP.
 - **Loma šajā projektā:** Realizēts ar ORDS AutoREST palīdzību ārējiem pakalpojumiem un mikroservisiem.
@@ -279,6 +303,18 @@
 - **Saistītā dokumentācija un skripti:** [docs/dev-hub.html](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/dev-hub.html)
 
 ## S
+
+### `SCS` — Self-Contained Systems
+- **Definīcija:** Arhitektūras pieeja, kas sadala sistēmu autonomās tīmekļa lietojumprogrammās ar savu loģiku un datubāzi.
+- **Loma šajā projektā:** Nodrošina ierobežotus kontekstus 4 platformas domēniem, kas aprakstīti docs/specs/.
+- **Oficiālā atsauce / Vikipēdija:** [Self-Contained Systems Architecture](https://scs-architecture.org/)
+- **Saistītā dokumentācija un skripti:** [docs/spec-driven-development-and-assembly-line.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/spec-driven-development-and-assembly-line.md), [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md)
+
+### `SDD` — Spec-Driven Development
+- **Definīcija:** Izstrādes metodoloģija, kur precīzas specifikācijas (Given/When/Then) tiek radītas pirms koda rakstīšanas.
+- **Loma šajā projektā:** Nodrošina specifikāciju paneli Dev Hub (#tab-specs) un AI konveijeru ar 5 kvalitātes vārtiem.
+- **Oficiālā atsauce / Vikipēdija:** [Julian Wood: Spec-Driven Development](https://aws.amazon.com/blogs/compute/)
+- **Saistītā dokumentācija un skripti:** [docs/spec-driven-development-and-assembly-line.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/spec-driven-development-and-assembly-line.md), [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md)
 
 ### `SDW` — SQL Developer Web (Database Actions)
 - **Definīcija:** Pārlūka saskarne ORDS ietvaros SQL vaicājumiem, REST pakalpojumiem un uzraudzībai.
@@ -346,7 +382,19 @@
 - **Definīcija:** Oracle tīkla tehnoloģija klientu savienošanai ar datubāzēm.
 - **Loma šajā projektā:** Automātiski konfigurēts tnsnames.ora failā un eksportēts ar TNS_ADMIN.
 - **Oficiālā atsauce / Vikipēdija:** [Wikipedia: Transparent Network Substrate](https://en.wikipedia.org/wiki/Transparent_Network_Substrate)
-- **Saistītā dokumentācija un skripti:** [tnsnames/tnsnames.ora](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/tnsnames/tnsnames.ora), [scripts/register-connections.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/register-connections.sh)
+- **Saistītā dokumentācija un skripti:** [config/tns_admin/tnsnames.ora](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/tns_admin/tnsnames.ora), [scripts/register-connections.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/register-connections.sh)
+
+### `Triad` — Specification Triad (REQ / DES / TSK)
+- **Definīcija:** Trīslīmeņu specifikāciju standarts: Prasības (REQ), SCS dizains (DES) un Uzdevumu matrica (TSK).
+- **Loma šajā projektā:** Nodrošina 100% izsekojamību starp prasībām, arhitektūru un testiem Dev Hub.
+- **Oficiālā atsauce / Vikipēdija:** [Wikipedia: Specification by Example](https://en.wikipedia.org/wiki/Specification_by_example)
+- **Saistītā dokumentācija un skripti:** [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md), [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md), [docs/specs/devops-portal/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/tasks.md)
+
+### `TSK` — Tasks Matrix & Requirements Traceability
+- **Definīcija:** Granulārs uzdevumu sadalījums un izsekojamības matrica, kas saista prasības un dizainu ar izstrādes uzdevumiem, pabeigtības kritērijiem un testiem.
+- **Loma šajā projektā:** Izpildes līgums SDD triādē (docs/specs/<domain>/tasks.md), kas nodrošina aģentu darbplūsmu, DoD validāciju un statusa izsekošanu Dev Hub.
+- **Oficiālā atsauce / Vikipēdija:** [Wikipedia: Requirements Traceability](https://en.wikipedia.org/wiki/Requirements_traceability)
+- **Saistītā dokumentācija un skripti:** [docs/specs/devops-portal/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/tasks.md), [docs/specs/wallet-security/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/tasks.md)
 
 ## U
 

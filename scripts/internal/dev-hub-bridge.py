@@ -3369,9 +3369,19 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 cmd = [ci_path, "--dry-run"] if dry_run else [ci_path]
             elif suite == "coverage":
                 cmd = [os.path.join(WORKSPACE_DIR, "tests", "generate-test-coverage-report.sh")]
+            elif suite == "repo_stats":
+                cmd = [os.path.join(WORKSPACE_DIR, "tests", "report-repo-stats.sh")]
             else:
-                self._send_json({"status": "error", "error": f"Unknown test suite: {suite}"}, cb, status=400)
-                return
+                cat = get_test_suites_catalog()
+                if suite in cat and "cmd" in cat[suite]:
+                    c_parts = cat[suite]["cmd"].strip().split()
+                    c_path = c_parts[0]
+                    if c_path.startswith("./"):
+                        c_path = os.path.join(WORKSPACE_DIR, c_path[2:])
+                    cmd = [c_path] + c_parts[1:]
+                else:
+                    self._send_json({"status": "error", "error": f"Unknown test suite: {suite}"}, cb, status=400)
+                    return
 
         ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         log_name = f"test_{suite}_{ts}.log"

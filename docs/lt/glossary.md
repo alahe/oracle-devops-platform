@@ -18,17 +18,23 @@
 - **Oficiali nuoroda / Vikipedija:** [Oracle Autonomous Database](https://www.oracle.com/autonomous-database/)
 - **Susijusi dokumentacija ir skriptai:** [docs/remote-multicloud-setup-guide.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/remote-multicloud-setup-guide.md), [scripts/deploy-remote.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/deploy-remote.sh)
 
+### `ADR` — Architecture Decision Record
+- **Apibrėžimas:** Struktūrizuotas dokumentas, fiksuojantis esminį architektūrinį sprendimą, jo kontekstą ir pasekmes.
+- **Vaidmuo šiame projekte:** Autoritetingi sprendimai aplanke docs/adr/ (pvz., ADR 0017), užtikrinantys aiškius susitarimus ir AI efektyvumą.
+- **Oficiali nuoroda / Vikipedija:** [ADR GitHub Organization](https://adr.github.io/)
+- **Susijusi dokumentacija ir skriptai:** [docs/adr/0017-devops-tab-ux-and-docked-terminal.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/adr/0017-devops-tab-ux-and-docked-terminal.md), [docs/specs/devops-management-portal-spec.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-management-portal-spec.md)
+
+### `ALISE` — ALISE Business Application Database
+- **Apibrėžimas:** Skirta Oracle Free DB 23ai verslo duomenų bazė pagrindinėms schemoms, PL/SQL logikai ir APEX/ORDS prievade 1533.
+- **Vaidmuo šiame projekte:** Naudojama kaip pagrindinė verslo duomenų bazė Blueprint 1 (ALISE DB :1533), užtikrinant schemų izoliaciją.
+- **Oficiali nuoroda / Vikipedija:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
+- **Susijusi dokumentacija ir skriptai:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
+
 ### `APEX` — Oracle Application Express
 - **Apibrėžimas:** Oracle mažo kodo (low-code) žiniatinklio programų kūrimo platforma duomenų bazėje.
 - **Vaidmuo šiame projekte:** Pagrindinė sąsaja Proxy DB (prievadas 8448/8088), valdoma per APEXlang DSL ir Git eksportą.
 - **Oficiali nuoroda / Vikipedija:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
 - **Susijusi dokumentacija ir skriptai:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
-
-### `ALISE` — ALISE verslo taikomųjų programų duomenų bazė
-- **Apibrėžimas:** Speciali Oracle Free DB 23ai duomenų bazės aplinka verslo schemoms, PL/SQL logikai ir APEX/ORDS vykdymui 1533 prievade.
-- **Vaidmuo šiame projekte:** Kanoninė verslo duomenų bazė Blueprint 1 (:1533) ir Blueprint 7/3 modeliuose, užtikrinanti visišką schemų izoliaciją nuo proxy sluoksnio.
-- **Oficiali nuoroda / Vikipedija:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
-- **Susijusi dokumentacija ir skriptai:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
 
 ### `APFS` — Apple File System
 - **Apibrėžimas:** Numatytoji macOS failų sistema, optimizuota SSD kaupikliams ir momentinėms kopijoms.
@@ -102,6 +108,12 @@
 - **Oficiali nuoroda / Vikipedija:** [Wikipedia: Database Administrator](https://en.wikipedia.org/wiki/Database_administrator)
 - **Susijusi dokumentacija ir skriptai:** [scripts/internal/apply-profile-users.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/apply-profile-users.sh), [scripts/create-developer.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/create-developer.sh)
 
+### `DES` — Software Design Description (IEEE 1016 / SCS Architecture)
+- **Apibrėžimas:** Architektūros ir techninio projektavimo specifikacija (pagal IEEE 1016), aprašanti sistemos struktūrą, komponentus, duomenų modelius, saugumo ribas ir Mermaid diagramas.
+- **Vaidmuo šiame projekte:** Antrasis dokumentas SDD triadoje (docs/specs/<domain>/design.md), apibrėžiantis apribotus kontekstus, Oracle PDB išdėstymą ir sistemos ribas.
+- **Oficiali nuoroda / Vikipedija:** [Wikipedia: Software Design Description (IEEE 1016)](https://en.wikipedia.org/wiki/Software_design_description)
+- **Susijusi dokumentacija ir skriptai:** [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md), [docs/specs/wallet-security/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/design.md)
+
 ### `DR` — Disaster Recovery
 - **Apibrėžimas:** Procesai ir strategijos greitam duomenų ir sistemų atkūrimui po gedimų.
 - **Vaidmuo šiame projekte:** Pasiekiama per ~15 sekundžių su Golden Snapshot pagalba, atkuriant aplinką be bilietų.
@@ -123,6 +135,12 @@
 - **Susijusi dokumentacija ir skriptai:** [tests/test-browser-login.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/tests/test-browser-login.sh), [docs/devhub-browser-testing-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/devhub-browser-testing-plan.md)
 
 ## F
+
+### `FastStart` — Instant FastStart Recovery (-s)
+- **Apibrėžimas:** Greitas ~15 sekundžių duomenų bazės atkūrimo mechanizmas naudojant auksines momentines kopijas.
+- **Vaidmuo šiame projekte:** Aktyvuojama per './scripts/setup-all.sh -s', sutrumpinant paleidimo laiką nuo 7 minučių iki mažiau nei 20 sekundžių.
+- **Oficiali nuoroda / Vikipedija:** [Oracle Fast-Start High Availability](https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/fast-start-failover.html)
+- **Susijusi dokumentacija ir skriptai:** [scripts/setup-all.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/setup-all.sh), [scripts/snapshots/restore-golden-snapshots.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/snapshots/restore-golden-snapshots.sh)
 
 ### `FAT / NTFS` — File Allocation Table / New Technology File System
 - **Apibrėžimas:** Windows failų sistemos su draudžiamais simboliais ir rezervuotais įrenginių pavadinimais.
@@ -242,7 +260,7 @@
 
 ### `PDB` — Pluggable Database
 - **Apibrėžimas:** Autonominis schemų ir objektų rinkinys, veikiantis kaip atskira duomenų bazė.
-- **Vaidmuo šiame projekte:** Izoliuoja sritis: FREEPDB1 (APEX), ALISEPDB (verslas), PUBPDB ir BIP_PDB pagal modelius.
+- **Vaidmuo šiame projekte:** Izoliuoja sritis: FREEPDB1 (APEX), ALISEPDB (verslas), LIS_PDB ir BIP_PDB pagal modelius.
 - **Oficiali nuoroda / Vikipedija:** [Oracle Pluggable Database (PDB)](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/multitenant-architecture.html)
 - **Susijusi dokumentacija ir skriptai:** [docs/db-profiles-and-topology.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/db-profiles-and-topology.md), [scripts/internal/resolve-topology.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/resolve-topology.sh)
 
@@ -266,6 +284,12 @@
 - **Oficiali nuoroda / Vikipedija:** [Oracle Repository Creation Utility Docs](https://docs.oracle.com/en/middleware/fusion-middleware/12.2.1.4/rcuug/)
 - **Susijusi dokumentacija ir skriptai:** [docs/forms-setup.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/forms-setup.md)
 
+### `REQ` — Requirements Specification (Given/When/Then)
+- **Apibrėžimas:** Formali programinės įrangos specifikacija, fiksuojanti verslo tikslus, funkcinius reikalavimus ir testuojamus Given/When/Then priėmimo kriterijus.
+- **Vaidmuo šiame projekte:** Pirmasis dokumentas SDD triadoje (docs/specs/<domain>/requirements.md), užkertantis kelią skubotam programavimui ir valdantis kokybės vartus.
+- **Oficiali nuoroda / Vikipedija:** [Wikipedia: Software Requirements Specification (SRS)](https://en.wikipedia.org/wiki/Software_requirements_specification)
+- **Susijusi dokumentacija ir skriptai:** [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md), [docs/specs/wallet-security/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/requirements.md)
+
 ### `REST` — Representational State Transfer
 - **Apibrėžimas:** Būsenos nesaugantis saityno architektūros modelis keitimuisi duomenimis per HTTP.
 - **Vaidmuo šiame projekte:** Realizuota per ORDS AutoREST sujungiant mikropaslaugas be specialių tvarkyklių.
@@ -279,6 +303,18 @@
 - **Susijusi dokumentacija ir skriptai:** [docs/dev-hub.html](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/dev-hub.html)
 
 ## S
+
+### `SCS` — Self-Contained Systems
+- **Apibrėžimas:** Architektūrinis modelis, skaidantis sistemą į autonomines taikomąsias programas su sava duomenų baze ir sąsaja.
+- **Vaidmuo šiame projekte:** Taikoma apribotiems kontekstams 4 platformos srityse, dokumentuotose docs/specs/.
+- **Oficiali nuoroda / Vikipedija:** [Self-Contained Systems Architecture](https://scs-architecture.org/)
+- **Susijusi dokumentacija ir skriptai:** [docs/spec-driven-development-and-assembly-line.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/spec-driven-development-and-assembly-line.md), [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md)
+
+### `SDD` — Spec-Driven Development
+- **Apibrėžimas:** Programinės įrangos kūrimo metodika, kurioje specifikacijos (Given/When/Then) kuriamos prieš programuojant.
+- **Vaidmuo šiame projekte:** Valdo specifikacijų skydelį Dev Hub (#tab-specs) ir AI surinkimo liniją su 5 kokybės vartais.
+- **Oficiali nuoroda / Vikipedija:** [Julian Wood: Spec-Driven Development](https://aws.amazon.com/blogs/compute/)
+- **Susijusi dokumentacija ir skriptai:** [docs/spec-driven-development-and-assembly-line.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/spec-driven-development-and-assembly-line.md), [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md)
 
 ### `SDW` — SQL Developer Web (Database Actions)
 - **Apibrėžimas:** Naršyklės sąsaja ORDS sistemoje SQL užklausoms, REST paslaugoms ir stebėsenai.
@@ -346,7 +382,19 @@
 - **Apibrėžimas:** Oracle tinklo technologija klientų sujungimui su duomenų bazėmis.
 - **Vaidmuo šiame projekte:** Automatiškai sukonfigūruota tnsnames.ora faile ir eksportuota per TNS_ADMIN.
 - **Oficiali nuoroda / Vikipedija:** [Wikipedia: Transparent Network Substrate](https://en.wikipedia.org/wiki/Transparent_Network_Substrate)
-- **Susijusi dokumentacija ir skriptai:** [tnsnames/tnsnames.ora](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/tnsnames/tnsnames.ora), [scripts/register-connections.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/register-connections.sh)
+- **Susijusi dokumentacija ir skriptai:** [config/tns_admin/tnsnames.ora](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/tns_admin/tnsnames.ora), [scripts/register-connections.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/register-connections.sh)
+
+### `Triad` — Specification Triad (REQ / DES / TSK)
+- **Apibrėžimas:** Trijų lygių specifikacijų standartas: Reikalavimai (REQ), SCS dizainas (DES) ir Užduotys (TSK).
+- **Vaidmuo šiame projekte:** Užtikrina 100% atsekamumą tarp reikalavimų, architektūros ir testų Dev Hub.
+- **Oficiali nuoroda / Vikipedija:** [Wikipedia: Specification by Example](https://en.wikipedia.org/wiki/Specification_by_example)
+- **Susijusi dokumentacija ir skriptai:** [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md), [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md), [docs/specs/devops-portal/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/tasks.md)
+
+### `TSK` — Tasks Matrix & Requirements Traceability
+- **Apibrėžimas:** Išsamus užduočių paskirstymas ir atsekamumo matrica, susiejanti reikalavimus ir projektą su programavimo darbais, DoD ir testavimo komandomis.
+- **Vaidmuo šiame projekte:** Vykdymo sutartis SDD triadoje (docs/specs/<domain>/tasks.md), valdanti autonominių agentų eigą, DoD patikras ir būsenos sekimą Dev Hub.
+- **Oficiali nuoroda / Vikipedija:** [Wikipedia: Requirements Traceability](https://en.wikipedia.org/wiki/Requirements_traceability)
+- **Susijusi dokumentacija ir skriptai:** [docs/specs/devops-portal/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/tasks.md), [docs/specs/wallet-security/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/tasks.md)
 
 ## U
 

@@ -18,16 +18,23 @@
 - **Official / External Reference:** [Oracle Autonomous Database](https://www.oracle.com/autonomous-database/)
 - **Related Documentation & Scripts:** [docs/remote-multicloud-setup-guide.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/remote-multicloud-setup-guide.md), [scripts/deploy-remote.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/deploy-remote.sh)
 
-### `APEX` — Oracle Application Express
-- **Definition:** Oracle's low-code enterprise web application development platform running directly inside the database.
-- **Role in this Project:** Central UI runtime hosted in Proxy DB (port 8448/8088), automated via APEXlang DSL and split SQLcl Git exports.
-- **Official / External Reference:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
-- **Related Documentation & Scripts:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
+### `ADR` — Architecture Decision Record
+- **Definition:** A structured document capturing a significant architectural decision along with its context, options considered, and consequences.
+- **Role in this Project:** Authoritative decision records in docs/adr/ (such as ADR 0017) ensuring thin contracts, team alignment, and zero token saturation.
+- **Official / External Reference:** [ADR GitHub Organization](https://adr.github.io/)
+- **Related Documentation & Scripts:** [docs/adr/0017-devops-tab-ux-and-docked-terminal.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/adr/0017-devops-tab-ux-and-docked-terminal.md), [docs/specs/devops-management-portal-spec.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-management-portal-spec.md)
+
 ### `ALISE` — ALISE Business Application Database
 - **Definition:** Dedicated Oracle Free DB 23ai database environment hosting core business schemas, PL/SQL engines, application tablespaces, and APEX/ORDS runtime on port 1533.
 - **Role in this Project:** Demonstrated as canonical business database in Blueprint 1 (Standalone ALISE DB :1533) and Blueprint 7/3, enforcing complete schema isolation from the proxy layer.
 - **Official / External Reference:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
 - **Related Documentation & Scripts:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
+
+### `APEX` — Oracle Application Express
+- **Definition:** Oracle's low-code enterprise web application development platform running directly inside the database.
+- **Role in this Project:** Central UI runtime hosted in Proxy DB (port 8448/8088), automated via APEXlang DSL and split SQLcl Git exports.
+- **Official / External Reference:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
+- **Related Documentation & Scripts:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
 
 ### `APFS` — Apple File System
 - **Definition:** Default copy-on-write filesystem for macOS optimized for SSD storage, encryption, and snapshots.
@@ -101,6 +108,12 @@
 - **Official / External Reference:** [Wikipedia: Database Administrator](https://en.wikipedia.org/wiki/Database_administrator)
 - **Related Documentation & Scripts:** [scripts/internal/apply-profile-users.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/apply-profile-users.sh), [scripts/create-developer.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/create-developer.sh)
 
+### `DES` — Software Design Description (IEEE 1016 / SCS Architecture)
+- **Definition:** An architectural and technical design specification (conforming to IEEE 1016) detailing system structure, components, data models, security boundaries, and responsive Mermaid sequence diagrams.
+- **Role in this Project:** The second artifact in the SDD Triad (docs/specs/<domain>/design.md) defining bounded contexts, Oracle PDB layouts, and component boundaries across all 12 blueprints.
+- **Official / External Reference:** [Wikipedia: Software Design Description (IEEE 1016)](https://en.wikipedia.org/wiki/Software_design_description)
+- **Related Documentation & Scripts:** [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md), [docs/specs/wallet-security/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/design.md)
+
 ### `DR` — Disaster Recovery
 - **Definition:** Processes and strategies that restore access to applications, data, and IT infrastructure following a catastrophe.
 - **Role in this Project:** Achieved in ~15 seconds via Golden Snapshots (scripts/snapshots/), resetting corrupt environments with zero DBA tickets.
@@ -122,6 +135,12 @@
 - **Related Documentation & Scripts:** [tests/test-browser-login.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/tests/test-browser-login.sh), [docs/devhub-browser-testing-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/devhub-browser-testing-plan.md)
 
 ## F
+
+### `FastStart` — Instant FastStart Recovery (-s)
+- **Definition:** Instant ~15-second database recovery mechanism using pre-initialized data volumes and golden snapshots, bypassing long APEX/ORDS compilation.
+- **Role in this Project:** Activated via './scripts/setup-all.sh -s' or the Quick Recipe bar, slashing cold build times from 7 minutes to under 20 seconds.
+- **Official / External Reference:** [Oracle Fast-Start High Availability](https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/fast-start-failover.html)
+- **Related Documentation & Scripts:** [scripts/setup-all.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/setup-all.sh), [scripts/snapshots/restore-golden-snapshots.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/snapshots/restore-golden-snapshots.sh)
 
 ### `FAT / NTFS` — File Allocation Table / New Technology File System
 - **Definition:** Standard Windows filesystems with reserved characters (<, >, :, ", |, ?, *), trailing dot/space limits, and reserved device names.
@@ -195,7 +214,6 @@
 - **Official / External Reference:** [Wikipedia: Newline (LF)](https://en.wikipedia.org/wiki/Newline)
 - **Related Documentation & Scripts:** [.gitattributes](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/.gitattributes)
 
-
 ## M
 
 ### `mTLS` — Mutual Transport Layer Security
@@ -242,7 +260,7 @@
 
 ### `PDB` — Pluggable Database
 - **Definition:** A self-contained collection of schemas, schema objects, and non-schema objects that appears as a dedicated database.
-- **Role in this Project:** Isolates application domains: FREEPDB1 (Proxy/APEX), ALISEPDB (Business Data), PUBPDB, and BIP_PDB across blueprints.
+- **Role in this Project:** Isolates application domains: FREEPDB1 (Proxy/APEX), ALISEPDB (Business Data), LIS_PDB, and BIP_PDB across blueprints.
 - **Official / External Reference:** [Oracle Pluggable Database (PDB)](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/multitenant-architecture.html)
 - **Related Documentation & Scripts:** [docs/db-profiles-and-topology.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/db-profiles-and-topology.md), [scripts/internal/resolve-topology.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/resolve-topology.sh)
 
@@ -266,6 +284,12 @@
 - **Official / External Reference:** [Oracle Repository Creation Utility Docs](https://docs.oracle.com/en/middleware/fusion-middleware/12.2.1.4/rcuug/)
 - **Related Documentation & Scripts:** [docs/forms-setup.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/forms-setup.md)
 
+### `REQ` — Requirements Specification (Given/When/Then)
+- **Definition:** A formal software engineering specification capturing business intent, functional requirements, scope constraints, and testable Given/When/Then acceptance criteria.
+- **Role in this Project:** The first artifact in the SDD Triad (docs/specs/<domain>/requirements.md) preventing premature implementation and guiding automated quality gates.
+- **Official / External Reference:** [Wikipedia: Software Requirements Specification (SRS)](https://en.wikipedia.org/wiki/Software_requirements_specification)
+- **Related Documentation & Scripts:** [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md), [docs/specs/wallet-security/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/requirements.md)
+
 ### `REST` — Representational State Transfer
 - **Definition:** Stateless, standard HTTP architectural design pattern for building decoupled, scalable web services and APIs.
 - **Role in this Project:** Delivered natively via ORDS AutoREST, connecting APEX, external microservices, and Dev Hub without database drivers.
@@ -279,6 +303,18 @@
 - **Related Documentation & Scripts:** [docs/dev-hub.html](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/dev-hub.html)
 
 ## S
+
+### `SCS` — Self-Contained Systems
+- **Definition:** An architectural approach dividing systems into autonomous web applications, each owning its logic, data storage, and user interface.
+- **Role in this Project:** Enforces bounded contexts across the 4 platform domains (devops-portal, wallet-security, golden-snapshots, blueprints-topology) documented in docs/specs/.
+- **Official / External Reference:** [Self-Contained Systems Architecture](https://scs-architecture.org/)
+- **Related Documentation & Scripts:** [docs/spec-driven-development-and-assembly-line.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/spec-driven-development-and-assembly-line.md), [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md)
+
+### `SDD` — Spec-Driven Development
+- **Definition:** A rigorous software engineering methodology where formal, executable specifications (Given/When/Then) are authored before implementation begins.
+- **Role in this Project:** Powers the platform's Spec-Driven Cockpit in Dev Hub (#tab-specs) and AI Agentic Assembly Line with 5 automated Quality Gates.
+- **Official / External Reference:** [Julian Wood: Spec-Driven Development](https://aws.amazon.com/blogs/compute/)
+- **Related Documentation & Scripts:** [docs/spec-driven-development-and-assembly-line.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/spec-driven-development-and-assembly-line.md), [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md)
 
 ### `SDW` — SQL Developer Web (Database Actions)
 - **Definition:** Browser-based management interface provided by ORDS for executing SQL, data modeling, REST services, and monitoring.
@@ -346,7 +382,19 @@
 - **Definition:** Oracle's proprietary networking technology that enables peer-to-peer connectivity between clients and databases.
 - **Role in this Project:** Auto-configured in tnsnames/tnsnames.ora with aliases like FREEPDB1, ALISEPDB, and automatically exported via TNS_ADMIN.
 - **Official / External Reference:** [Wikipedia: Transparent Network Substrate](https://en.wikipedia.org/wiki/Transparent_Network_Substrate)
-- **Related Documentation & Scripts:** [tnsnames/tnsnames.ora](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/tnsnames/tnsnames.ora), [scripts/register-connections.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/register-connections.sh)
+- **Related Documentation & Scripts:** [config/tns_admin/tnsnames.ora](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/tns_admin/tnsnames.ora), [scripts/register-connections.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/register-connections.sh)
+
+### `Triad` — Specification Triad (REQ / DES / TSK)
+- **Definition:** The three-tier specification standard composed of Requirements (REQ), SCS Design (DES), and Tasks Matrix (TSK).
+- **Role in this Project:** Enforces 100% bidirectional traceability between user stories, container architectures, and verified unit test scripts in Dev Hub.
+- **Official / External Reference:** [Wikipedia: Specification by Example](https://en.wikipedia.org/wiki/Specification_by_example)
+- **Related Documentation & Scripts:** [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md), [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md), [docs/specs/devops-portal/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/tasks.md)
+
+### `TSK` — Tasks Matrix & Requirements Traceability
+- **Definition:** A granular task breakdown and traceability matrix linking requirements and design elements directly to actionable development work, Definition of Done, and test commands.
+- **Role in this Project:** The execution contract in the SDD Triad (docs/specs/<domain>/tasks.md) driving autonomous agent workflows, DoD validations, and status tracking in Dev Hub.
+- **Official / External Reference:** [Wikipedia: Requirements Traceability](https://en.wikipedia.org/wiki/Requirements_traceability)
+- **Related Documentation & Scripts:** [docs/specs/devops-portal/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/tasks.md), [docs/specs/wallet-security/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/tasks.md)
 
 ## U
 

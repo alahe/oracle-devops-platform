@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-09-08T21:22:37.604674",
-  "total_git_files": 1966,
-  "total_lines_of_code": 250042,
+  "timestamp": "2026-09-14T08:24:39.438830",
+  "total_git_files": 2189,
+  "total_lines_of_code": 340066,
   "code_breakdown": {
     "Shell Scripts (.sh, .cmd, .ps1)": {
       "exts": [
@@ -9,22 +9,22 @@
         ".cmd",
         ".ps1"
       ],
-      "files": 254,
-      "loc": 40354
+      "files": 304,
+      "loc": 49974
     },
     "Python (.py)": {
       "exts": [
         ".py"
       ],
-      "files": 21,
-      "loc": 22229
+      "files": 36,
+      "loc": 32112
     },
     "SQL (.sql)": {
       "exts": [
         ".sql"
       ],
-      "files": 10,
-      "loc": 1451
+      "files": 12,
+      "loc": 1530
     },
     "APEXlang DSL (.apx)": {
       "exts": [
@@ -38,22 +38,22 @@
         ".yaml",
         ".yml"
       ],
-      "files": 30,
-      "loc": 1476
+      "files": 33,
+      "loc": 1839
     },
     "JSON Data & Metrics (.json)": {
       "exts": [
         ".json"
       ],
-      "files": 222,
-      "loc": 20785
+      "files": 225,
+      "loc": 21422
     },
     "Markdown Documentation (.md)": {
       "exts": [
         ".md"
       ],
-      "files": 1307,
-      "loc": 90388
+      "files": 1411,
+      "loc": 104413
     },
     "Web Frontend (.html, .js, .css)": {
       "exts": [
@@ -62,26 +62,26 @@
         ".mjs",
         ".css"
       ],
-      "files": 22,
-      "loc": 72663
+      "files": 23,
+      "loc": 128080
     }
   },
   "test_suite": {
-    "unit_tests_count": 102,
-    "unit_tests_loc": 5391,
-    "integration_tests_count": 11,
-    "integration_tests_loc": 783,
+    "unit_tests_count": 127,
+    "unit_tests_loc": 8803,
+    "integration_tests_count": 16,
+    "integration_tests_loc": 1936,
     "suite_tests_count": 19,
-    "suite_tests_loc": 6788,
-    "total_test_scripts": 132,
-    "total_test_loc": 12962,
-    "test_reports_count": 27
+    "suite_tests_loc": 7050,
+    "total_test_scripts": 162,
+    "total_test_loc": 17789,
+    "test_reports_count": 29
   },
   "architecture": {
     "blueprints_count": 12,
     "db_profiles_count": 11,
-    "middleware_profiles_count": 12,
-    "total_profiles_count": 23
+    "middleware_profiles_count": 13,
+    "total_profiles_count": 24
   },
   "localization": {
     "languages": [
@@ -93,20 +93,20 @@
       "lt"
     ],
     "markdown_docs_by_lang": {
-      "en": 960,
-      "et": 72,
-      "fi": 71,
-      "sv": 68,
-      "lv": 68,
-      "lt": 68
+      "en": 1016,
+      "et": 92,
+      "fi": 78,
+      "sv": 75,
+      "lv": 75,
+      "lt": 75
     },
     "devhub_i18n_keys": {
-      "en": 348,
-      "et": 348,
-      "fi": 348,
-      "sv": 348,
-      "lv": 348,
-      "lt": 348
+      "en": 708,
+      "et": 708,
+      "fi": 708,
+      "sv": 708,
+      "lv": 708,
+      "lt": 708
     }
   }
 }

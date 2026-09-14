@@ -1,5 +1,65 @@
 [
   {
+    "id": "run_20260914_081339",
+    "timestamp": "2026-09-14 08:13:39",
+    "suite": "coverage",
+    "target": "coverage",
+    "duration_sec": 54.0,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_coverage_20260914_081245.log"
+  },
+  {
+    "id": "run_20260914_081235",
+    "timestamp": "2026-09-14 08:12:35",
+    "suite": "ci_sim",
+    "target": "ci_sim",
+    "duration_sec": 13.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_ci_sim_20260914_081222.log"
+  },
+  {
+    "id": "run_20260914_081112",
+    "timestamp": "2026-09-14 08:11:12",
+    "suite": "ci_sim",
+    "target": "ci_sim",
+    "duration_sec": 3.0,
+    "exit_code": 1,
+    "status": "FAIL",
+    "log_file": "test_ci_sim_20260914_081109.log"
+  },
+  {
+    "id": "run_20260914_081051",
+    "timestamp": "2026-09-14 08:10:51",
+    "suite": "title_capitalization",
+    "target": "title_capitalization",
+    "duration_sec": 1.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_title_capitalization_20260914_081050.log"
+  },
+  {
+    "id": "run_20260914_081043",
+    "timestamp": "2026-09-14 08:10:43",
+    "suite": "doc_links",
+    "target": "doc_links",
+    "duration_sec": 1.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_doc_links_20260914_081041.log"
+  },
+  {
+    "id": "run_20260914_081024",
+    "timestamp": "2026-09-14 08:10:24",
+    "suite": "security_audit",
+    "target": "security_audit",
+    "duration_sec": 1.5,
+    "exit_code": 0,
+    "status": "PASS",
+    "log_file": "test_security_audit_20260914_081023.log"
+  },
+  {
     "id": "run_20260914_080633",
     "timestamp": "2026-09-14 08:06:33",
     "suite": "tls_security",

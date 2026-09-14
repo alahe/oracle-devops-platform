@@ -18,16 +18,23 @@
 - **Ametlik viide / Vikipeedia:** [Oracle Autonomous Database](https://www.oracle.com/autonomous-database/)
 - **Seotud juhendid ja skriptid:** [docs/remote-multicloud-setup-guide.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/remote-multicloud-setup-guide.md), [scripts/deploy-remote.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/deploy-remote.sh)
 
+### `ADR` — Architecture Decision Record
+- **Definitsioon:** Struktureeritud dokument, mis talletab olulise arhitektuurilise otsuse koos selle konteksti, kaalutud alternatiivide ja tagajärgedega.
+- **Roll ja kasutus selles projektis:** Autoriteetsed otsused kaustas docs/adr/ (nt ADR 0017), mis tagavad saledad lepingud ja väldivad tehisintellekti kontekstireostust.
+- **Ametlik viide / Vikipeedia:** [ADR GitHub Organization](https://adr.github.io/)
+- **Seotud juhendid ja skriptid:** [docs/adr/0017-devops-tab-ux-and-docked-terminal.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/adr/0017-devops-tab-ux-and-docked-terminal.md), [docs/specs/devops-management-portal-spec.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-management-portal-spec.md)
+
+### `ALISE` — ALISE Business Application Database
+- **Definitsioon:** Pühendatud Oracle Free DB 23ai äriandmebaas, mis majutab põhiskeeme, PL/SQL äriloogikat, rakenduste tabeliruume ja sisemist APEX/ORDS käitust pordil 1533.
+- **Roll ja kasutus selles projektis:** Demonstreeritud kanoonilise äriandmebaasina Blueprint 1-s (Eraldiseisev ALISE DB :1533), tagades täieliku skeemi-isolatsiooni proxy väravast.
+- **Ametlik viide / Vikipeedia:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
+- **Seotud juhendid ja skriptid:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
+
 ### `APEX` — Oracle Application Express
 - **Definitsioon:** Oracle madala koodivajadusega (low-code) veebirakenduste arendusplatvorm, mis töötab otse andmebaasi sees.
 - **Roll ja kasutus selles projektis:** Peamine veebiliides Proxy andmebaasis (port 8448/8088), mida juhitakse APEXlang DSL-i ja Git-põhiste SQLcl eksportidega.
 - **Ametlik viide / Vikipeedia:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
 - **Seotud juhendid ja skriptid:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
-### `ALISE` — ALISE äriandmebaas ja rakendusplatvorm
-- **Definitsioon:** Pühendatud Oracle Free DB 23ai äriandmebaas, mis majutab põhiskeeme, PL/SQL äriloogikat, rakenduste tabeliruume ja sisemist APEX/ORDS käitust pordil 1533.
-- **Roll ja kasutus selles projektis:** Demonstreeritud kanoonilise äriandmebaasina Blueprint 1-s (Eraldiseisev ALISE DB :1533), tagades täieliku skeemi-isolatsiooni proxy väravast.
-- **Ametlik viide / Vikipeedia:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
-- **Seotud juhendid ja skriptid:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
 
 ### `APFS` — Apple File System
 - **Definitsioon:** macOS vaikefailisüsteem, optimeeritud SSD-ketastele, krüpteeringule ja tõmmistele (snapshots).
@@ -101,6 +108,12 @@
 - **Ametlik viide / Vikipeedia:** [Wikipedia: Database Administrator](https://en.wikipedia.org/wiki/Database_administrator)
 - **Seotud juhendid ja skriptid:** [scripts/internal/apply-profile-users.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/apply-profile-users.sh), [scripts/create-developer.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/create-developer.sh)
 
+### `DES` — Software Design Description (IEEE 1016 / SCS Architecture)
+- **Definitsioon:** Arhitektuuri- ja tehnilise disaini alusspetsifikatsioon (vastavuses IEEE 1016 standardiga), mis kirjeldab süsteemi struktuuri, komponente, andmemudeleid, turvapiire ja Mermaid diagramme.
+- **Roll ja kasutus selles projektis:** Teine artefakt SDD Kolmikus (docs/specs/<domain>/design.md), mis kehtestab piiritletud kontekstid, Oracle PDB paigutuse ja süsteemipiirid üle kõigi 12 blueprinti.
+- **Ametlik viide / Vikipeedia:** [Wikipedia: Software Design Description (IEEE 1016)](https://en.wikipedia.org/wiki/Software_design_description)
+- **Seotud juhendid ja skriptid:** [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md), [docs/specs/wallet-security/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/design.md)
+
 ### `DR` — Disaster Recovery
 - **Definitsioon:** Protsessid ja strateegiad andmebaasi, andmete ja IT-taristu välkkiireks taastamiseks pärast tõrget või riket.
 - **Roll ja kasutus selles projektis:** Saavutatakse ~15 sekundiga Golden Snapshotide abil (scripts/snapshots/), taastades rikutud keskkonnad piletivabalt.
@@ -122,6 +135,12 @@
 - **Seotud juhendid ja skriptid:** [tests/test-browser-login.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/tests/test-browser-login.sh), [docs/devhub-browser-testing-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/devhub-browser-testing-plan.md)
 
 ## F
+
+### `FastStart` — Instant FastStart Recovery (-s)
+- **Definitsioon:** Kiire ~15-sekundiline andmebaasi taastemehhanism, mis kasutab eelsoojendatud andmemahte ja kuldseid tõmmiseid, vältides pikka paigaldustsüklit.
+- **Roll ja kasutus selles projektis:** Käivitatav käsuga './scripts/setup-all.sh -s' või kiirretseptide ribalt, lühendades külmkäivituse aega 7 minutilt alla 20 sekundi.
+- **Ametlik viide / Vikipeedia:** [Oracle Fast-Start High Availability](https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/fast-start-failover.html)
+- **Seotud juhendid ja skriptid:** [scripts/setup-all.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/setup-all.sh), [scripts/snapshots/restore-golden-snapshots.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/snapshots/restore-golden-snapshots.sh)
 
 ### `FAT / NTFS` — File Allocation Table / New Technology File System
 - **Definitsioon:** Windowsi failisüsteemid, millel on keelatud märgid (<, >, :, ", |, ?, *), tühikud rea lõpus ja reserveeritud nimed (CON, PRN, AUX).
@@ -195,7 +214,6 @@
 - **Ametlik viide / Vikipeedia:** [Wikipedia: Newline (LF)](https://en.wikipedia.org/wiki/Newline)
 - **Seotud juhendid ja skriptid:** [.gitattributes](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/.gitattributes)
 
-
 ## M
 
 ### `mTLS` — Mutual Transport Layer Security
@@ -242,7 +260,7 @@
 
 ### `PDB` — Pluggable Database
 - **Definitsioon:** Isehaldav skeemide ja objektide kogum Oracle multitenant süsteemis, mis käitub nagu eraldiseisev andmebaas.
-- **Roll ja kasutus selles projektis:** Isoleerib domeenid: FREEPDB1 (Proxy/APEX), ALISEPDB (Äriandmed), PUBPDB ja BIP_PDB vastavalt blueprintidele.
+- **Roll ja kasutus selles projektis:** Isoleerib domeenid: FREEPDB1 (Proxy/APEX), ALISEPDB (Äriandmed), LIS_PDB ja BIP_PDB vastavalt blueprintidele.
 - **Ametlik viide / Vikipeedia:** [Oracle Pluggable Database (PDB)](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/multitenant-architecture.html)
 - **Seotud juhendid ja skriptid:** [docs/db-profiles-and-topology.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/db-profiles-and-topology.md), [scripts/internal/resolve-topology.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/resolve-topology.sh)
 
@@ -266,6 +284,12 @@
 - **Ametlik viide / Vikipeedia:** [Oracle Repository Creation Utility Docs](https://docs.oracle.com/en/middleware/fusion-middleware/12.2.1.4/rcuug/)
 - **Seotud juhendid ja skriptid:** [docs/forms-setup.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/forms-setup.md)
 
+### `REQ` — Requirements Specification (Given/When/Then)
+- **Definitsioon:** Tarkvaratehniline alusspetsifikatsioon, mis fikseerib ärilise eesmärgi, funktsionaalsed nõuded, skoopipiirangud ja testitavad Given/When/Then vastuvõtukriteeriumid.
+- **Roll ja kasutus selles projektis:** Esimene artefakt SDD Kolmikus (docs/specs/<domain>/requirements.md), mis hoiab ära enneaegse koodikirjutamise ja juhib automaatseid kvaliteediväravaid.
+- **Ametlik viide / Vikipeedia:** [Wikipedia: Software Requirements Specification (SRS)](https://en.wikipedia.org/wiki/Software_requirements_specification)
+- **Seotud juhendid ja skriptid:** [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md), [docs/specs/wallet-security/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/requirements.md)
+
 ### `REST` — Representational State Transfer
 - **Definitsioon:** Olekuvaba veebiarhitektuuri standard hajutatud, skaleeritavate veebiteenuste ja API-de ehitamiseks üle HTTP.
 - **Roll ja kasutus selles projektis:** Tagatud ORDS AutoREST-i kaudu, sidudes APEX-i, välised mikroteenused ja Dev Hubi ilma spetsiaalsete draiveriteta.
@@ -279,6 +303,18 @@
 - **Seotud juhendid ja skriptid:** [docs/dev-hub.html](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/dev-hub.html)
 
 ## S
+
+### `SCS` — Self-Contained Systems
+- **Definitsioon:** Arhitektuuriline lähenemine, mis jaotab süsteemi autonoomseteks veebirakendusteks, millest igaüks omab oma loogikat, andmebaasi ja kasutajaliidest.
+- **Roll ja kasutus selles projektis:** Kehtestab piiritletud kontekstid 4 platvormi domeenile (devops-portal, wallet-security, golden-snapshots, blueprints-topology), mis on kirjeldatud kaustas docs/specs/.
+- **Ametlik viide / Vikipeedia:** [Self-Contained Systems Architecture](https://scs-architecture.org/)
+- **Seotud juhendid ja skriptid:** [docs/spec-driven-development-and-assembly-line.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/spec-driven-development-and-assembly-line.md), [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md)
+
+### `SDD` — Spec-Driven Development
+- **Definitsioon:** Tarkvaratehniline metoodika, kus täpsed ja käivitatavad spetsifikatsioonid (Given/When/Then) koostatakse enne koodi kirjutamist.
+- **Roll ja kasutus selles projektis:** Juhib Dev Hubi spetsifikatsioonide juhtpaneeli (#tab-specs) ja AI agentide koosteliini koos 5 automatiseeritud kvaliteediväravaga.
+- **Ametlik viide / Vikipeedia:** [Julian Wood: Spec-Driven Development](https://aws.amazon.com/blogs/compute/)
+- **Seotud juhendid ja skriptid:** [docs/spec-driven-development-and-assembly-line.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/spec-driven-development-and-assembly-line.md), [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md)
 
 ### `SDW` — SQL Developer Web (Database Actions)
 - **Definitsioon:** ORDS-i sisseehitatud veebipõhine töölaud SQL päringute, andmemudelite, REST teenuste ja seire haldamiseks.
@@ -346,7 +382,19 @@
 - **Definitsioon:** Oracle võrgutehnoloogia klientrakenduste ja andmebaaside vaheliseks ühenduse loomiseks (tnsnames.ora).
 - **Roll ja kasutus selles projektis:** Automaatselt seadistatud failis tnsnames/tnsnames.ora aliastena (FREEPDB1, ALISEPDB) ning eksporditud TNS_ADMIN abil.
 - **Ametlik viide / Vikipeedia:** [Wikipedia: Transparent Network Substrate](https://en.wikipedia.org/wiki/Transparent_Network_Substrate)
-- **Seotud juhendid ja skriptid:** [tnsnames/tnsnames.ora](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/tnsnames/tnsnames.ora), [scripts/register-connections.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/register-connections.sh)
+- **Seotud juhendid ja skriptid:** [config/tns_admin/tnsnames.ora](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/tns_admin/tnsnames.ora), [scripts/register-connections.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/register-connections.sh)
+
+### `Triad` — Specification Triad (REQ / DES / TSK)
+- **Definitsioon:** Kolmetasemeline spetsifikatsioonistandard, mis koosneb Nõuetest (REQ), SCS Disainist (DES) ja Ülesannete maatriksist (TSK).
+- **Roll ja kasutus selles projektis:** Tagab 100% kahesuunalise jälgitavuse kasutajalugude, arhitektuuri ja automaattestide vahel Dev Hubi vaates.
+- **Ametlik viide / Vikipeedia:** [Wikipedia: Specification by Example](https://en.wikipedia.org/wiki/Specification_by_example)
+- **Seotud juhendid ja skriptid:** [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md), [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md), [docs/specs/devops-portal/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/tasks.md)
+
+### `TSK` — Tasks Matrix & Requirements Traceability
+- **Definitsioon:** Granulaarne ülesannete jaotus ja nõuete jälgitavuse maatriks, mis seob nõuded ja disainielemendid otseselt arendusülesannete, valmiduskriteeriumite ja testikäskudega.
+- **Roll ja kasutus selles projektis:** Täitmise leping SDD Kolmikus (docs/specs/<domain>/tasks.md), mis juhib autonoomseid agenditöid, DoD valideerimist ja olekuseiret Dev Hubis.
+- **Ametlik viide / Vikipeedia:** [Wikipedia: Requirements Traceability](https://en.wikipedia.org/wiki/Requirements_traceability)
+- **Seotud juhendid ja skriptid:** [docs/specs/devops-portal/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/tasks.md), [docs/specs/wallet-security/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/tasks.md)
 
 ## U
 

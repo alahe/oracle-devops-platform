@@ -441,6 +441,33 @@ GLOSSARY_ITEMS = [
         ]
     },
     {
+        "acronym": "DES",
+        "expansion": "Software Design Description (IEEE 1016 / SCS Architecture)",
+        "category": "architecture",
+        "ref_url": "https://en.wikipedia.org/wiki/Software_design_description",
+        "ref_title": "Wikipedia: Software Design Description (IEEE 1016)",
+        "def": {
+            "en": "An architectural and technical design specification (conforming to IEEE 1016) detailing system structure, components, data models, security boundaries, and responsive Mermaid sequence diagrams.",
+            "et": "Arhitektuuri- ja tehnilise disaini alusspetsifikatsioon (vastavuses IEEE 1016 standardiga), mis kirjeldab süsteemi struktuuri, komponente, andmemudeleid, turvapiire ja Mermaid diagramme.",
+            "fi": "Arkkitehtuuri- ja tekninen suunnitteludokumentti (IEEE 1016), joka kuvaa järjestelmän rakenteen, komponentit, tietomallit, turvallisuusrajat ja Mermaid-kaaviot.",
+            "sv": "Ett arkitektur- och tekniskt designdokument (enligt IEEE 1016) som detaljerar systemstruktur, komponenter, datamodeller, säkerhetsgränser och Mermaid-diagram.",
+            "lv": "Arhitektūras un tehniskā dizaina specifikācija (saskaņā ar IEEE 1016), kas detalizē sistēmas struktūru, komponentus, datu modeļus, drošības robežas un Mermaid diagrammas.",
+            "lt": "Architektūros ir techninio projektavimo specifikacija (pagal IEEE 1016), aprašanti sistemos struktūrą, komponentus, duomenų modelius, saugumo ribas ir Mermaid diagramas."
+        },
+        "project_role": {
+            "en": "The second artifact in the SDD Triad (docs/specs/<domain>/design.md) defining bounded contexts, Oracle PDB layouts, and component boundaries across all 12 blueprints.",
+            "et": "Teine artefakt SDD Kolmikus (docs/specs/<domain>/design.md), mis kehtestab piiritletud kontekstid, Oracle PDB paigutuse ja süsteemipiirid üle kõigi 12 blueprinti.",
+            "fi": "SDD-kolmikon toinen osa (docs/specs/<domain>/design.md), joka määrittää itsenäiset kontekstit, PDB-sijoittelun ja järjestelmärajat kaikille 12 blueprintille.",
+            "sv": "Den andra komponenten i SDD-triaden (docs/specs/<domain>/design.md) som etablerar avgränsade kontexter, PDB-layouter och systemgränser.",
+            "lv": "Otrais dokuments SDD triādē (docs/specs/<domain>/design.md), kas nosaka ierobežotus kontekstus, Oracle PDB izkārtojumu un sistēmas robežas.",
+            "lt": "Antrasis dokumentas SDD triadoje (docs/specs/<domain>/design.md), apibrėžiantis apribotus kontekstus, Oracle PDB išdėstymą ir sistemos ribas."
+        },
+        "links": [
+            {"label": "docs/specs/devops-portal/design.md", "url": "docs/specs/devops-portal/design.md"},
+            {"label": "docs/specs/wallet-security/design.md", "url": "docs/specs/wallet-security/design.md"}
+        ]
+    },
+    {
         "acronym": "DSL",
         "expansion": "Domain-Specific Language",
         "category": "tools",
@@ -523,8 +550,8 @@ GLOSSARY_ITEMS = [
         "acronym": "FastStart",
         "expansion": "Instant FastStart Recovery (-s)",
         "category": "database",
-        "ref_url": "docs/devops-lifecycle-guide.md",
-        "ref_title": "DevOps Lifecycle Guide",
+        "ref_url": "https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/fast-start-failover.html",
+        "ref_title": "Oracle Fast-Start High Availability",
         "def": {
             "en": "Instant ~15-second database recovery mechanism using pre-initialized data volumes and golden snapshots, bypassing long APEX/ORDS compilation.",
             "et": "Kiire ~15-sekundiline andmebaasi taastemehhanism, mis kasutab eelsoojendatud andmemahte ja kuldseid tõmmiseid, vältides pikka paigaldustsüklit.",
@@ -1051,6 +1078,33 @@ GLOSSARY_ITEMS = [
         ]
     },
     {
+        "acronym": "REQ",
+        "expansion": "Requirements Specification (Given/When/Then)",
+        "category": "architecture",
+        "ref_url": "https://en.wikipedia.org/wiki/Software_requirements_specification",
+        "ref_title": "Wikipedia: Software Requirements Specification (SRS)",
+        "def": {
+            "en": "A formal software engineering specification capturing business intent, functional requirements, scope constraints, and testable Given/When/Then acceptance criteria.",
+            "et": "Tarkvaratehniline alusspetsifikatsioon, mis fikseerib ärilise eesmärgi, funktsionaalsed nõuded, skoopipiirangud ja testitavad Given/When/Then vastuvõtukriteeriumid.",
+            "fi": "Ohjelmistosuunnittelun perusmäärittely, joka kirjaa liiketoimintatavoitteet, toiminnalliset vaatimukset ja testattavat Given/When/Then -hyväksymiskriteerit.",
+            "sv": "En formell programvaruspecifikation som fångar verksamhetsmål, funktionella krav, avgränsningar och testbara Given/When/Then acceptanskriterier.",
+            "lv": "Formāla programmatūras inženierijas specifikācija, kas fiksē biznesa mērķus, funkcionālās prasības un testējamus Given/When/Then pieņemšanas kritērijus.",
+            "lt": "Formali programinės įrangos specifikacija, fiksuojanti verslo tikslus, funkcinius reikalavimus ir testuojamus Given/When/Then priėmimo kriterijus."
+        },
+        "project_role": {
+            "en": "The first artifact in the SDD Triad (docs/specs/<domain>/requirements.md) preventing premature implementation and guiding automated quality gates.",
+            "et": "Esimene artefakt SDD Kolmikus (docs/specs/<domain>/requirements.md), mis hoiab ära enneaegse koodikirjutamise ja juhib automaatseid kvaliteediväravaid.",
+            "fi": "SDD-kolmikon ensimmäinen dokumentti (docs/specs/<domain>/requirements.md), joka estää ennenaikaisen koodauksen ja ohjaa laatuportteja.",
+            "sv": "Den första komponenten i SDD-triaden (docs/specs/<domain>/requirements.md) som förhindrar förhastad kodning och styr kvalitetsgrindar.",
+            "lv": "Pirmais dokuments SDD triādē (docs/specs/<domain>/requirements.md), kas novērš pāragru izstrādi un vada kvalitātes vārtus.",
+            "lt": "Pirmasis dokumentas SDD triadoje (docs/specs/<domain>/requirements.md), užkertantis kelią skubotam programavimui ir valdantis kokybės vartus."
+        },
+        "links": [
+            {"label": "docs/specs/devops-portal/requirements.md", "url": "docs/specs/devops-portal/requirements.md"},
+            {"label": "docs/specs/wallet-security/requirements.md", "url": "docs/specs/wallet-security/requirements.md"}
+        ]
+    },
+    {
         "acronym": "REST",
         "expansion": "Representational State Transfer",
         "category": "web",
@@ -1451,8 +1505,8 @@ GLOSSARY_ITEMS = [
         "acronym": "Triad",
         "expansion": "Specification Triad (REQ / DES / TSK)",
         "category": "architecture",
-        "ref_url": "docs/spec-driven-development-and-assembly-line.md",
-        "ref_title": "Spec-Driven Development Guide",
+        "ref_url": "https://en.wikipedia.org/wiki/Specification_by_example",
+        "ref_title": "Wikipedia: Specification by Example",
         "def": {
             "en": "The three-tier specification standard composed of Requirements (REQ), SCS Design (DES), and Tasks Matrix (TSK).",
             "et": "Kolmetasemeline spetsifikatsioonistandard, mis koosneb Nõuetest (REQ), SCS Disainist (DES) ja Ülesannete maatriksist (TSK).",
@@ -1473,6 +1527,33 @@ GLOSSARY_ITEMS = [
             {"label": "docs/specs/devops-portal/requirements.md", "url": "docs/specs/devops-portal/requirements.md"},
             {"label": "docs/specs/devops-portal/design.md", "url": "docs/specs/devops-portal/design.md"},
             {"label": "docs/specs/devops-portal/tasks.md", "url": "docs/specs/devops-portal/tasks.md"}
+        ]
+    },
+    {
+        "acronym": "TSK",
+        "expansion": "Tasks Matrix & Requirements Traceability",
+        "category": "architecture",
+        "ref_url": "https://en.wikipedia.org/wiki/Requirements_traceability",
+        "ref_title": "Wikipedia: Requirements Traceability",
+        "def": {
+            "en": "A granular task breakdown and traceability matrix linking requirements and design elements directly to actionable development work, Definition of Done, and test commands.",
+            "et": "Granulaarne ülesannete jaotus ja nõuete jälgitavuse maatriks, mis seob nõuded ja disainielemendid otseselt arendusülesannete, valmiduskriteeriumite ja testikäskudega.",
+            "fi": "Yksityiskohtainen tehtäväjakauma ja jäljitettävyysmatriisi, joka yhdistää vaatimukset ja arkkitehtuurin kehitystehtäviin, valmiusehtoihin ja testeihin.",
+            "sv": "En detaljerad uppgiftsnedbrytning och spårbarhetsmatris som kopplar krav och design till utvecklingsuppgifter, Definition of Done och testkommandon.",
+            "lv": "Granulārs uzdevumu sadalījums un izsekojamības matrica, kas saista prasības un dizainu ar izstrādes uzdevumiem, pabeigtības kritērijiem un testiem.",
+            "lt": "Išsamus užduočių paskirstymas ir atsekamumo matrica, susiejanti reikalavimus ir projektą su programavimo darbais, DoD ir testavimo komandomis."
+        },
+        "project_role": {
+            "en": "The execution contract in the SDD Triad (docs/specs/<domain>/tasks.md) driving autonomous agent workflows, DoD validations, and status tracking in Dev Hub.",
+            "et": "Täitmise leping SDD Kolmikus (docs/specs/<domain>/tasks.md), mis juhib autonoomseid agenditöid, DoD valideerimist ja olekuseiret Dev Hubis.",
+            "fi": "SDD-kolmikon toteutussopimus (docs/specs/<domain>/tasks.md), joka ohjaa tekoälyagenttien työtä, DoD-tarkastuksia ja seurantaa Dev Hubissa.",
+            "sv": "Genomförandekontraktet i SDD-triaden (docs/specs/<domain>/tasks.md) som styr autonoma agentarbetsflöden, DoD-validering och status i Dev Hub.",
+            "lv": "Izpildes līgums SDD triādē (docs/specs/<domain>/tasks.md), kas nodrošina aģentu darbplūsmu, DoD validāciju un statusa izsekošanu Dev Hub.",
+            "lt": "Vykdymo sutartis SDD triadoje (docs/specs/<domain>/tasks.md), valdanti autonominių agentų eigą, DoD patikras ir būsenos sekimą Dev Hub."
+        },
+        "links": [
+            {"label": "docs/specs/devops-portal/tasks.md", "url": "docs/specs/devops-portal/tasks.md"},
+            {"label": "docs/specs/wallet-security/tasks.md", "url": "docs/specs/wallet-security/tasks.md"}
         ]
     },
     {

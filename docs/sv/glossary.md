@@ -18,17 +18,23 @@
 - **Officiell referens / Wikipedia:** [Oracle Autonomous Database](https://www.oracle.com/autonomous-database/)
 - **Relaterade guider och skript:** [docs/remote-multicloud-setup-guide.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/remote-multicloud-setup-guide.md), [scripts/deploy-remote.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/deploy-remote.sh)
 
+### `ADR` — Architecture Decision Record
+- **Definition:** Ett strukturerat dokument som fångar ett viktigt arkitekturbeslut med sammanhang och konsekvenser.
+- **Roll i detta projekt:** Auktoritativa beslut i docs/adr/ (som ADR 0017) som säkerställer tydliga kontrakt och motverkar tokenmättnad.
+- **Officiell referens / Wikipedia:** [ADR GitHub Organization](https://adr.github.io/)
+- **Relaterade guider och skript:** [docs/adr/0017-devops-tab-ux-and-docked-terminal.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/adr/0017-devops-tab-ux-and-docked-terminal.md), [docs/specs/devops-management-portal-spec.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-management-portal-spec.md)
+
+### `ALISE` — ALISE Business Application Database
+- **Definition:** Dedikerad Oracle Free DB 23ai affärsdatabas för verksamhetsscheman, PL/SQL-logik och APEX/ORDS på port 1533.
+- **Roll i detta projekt:** Demonstreras som primär affärsdatabas i Blueprint 1 (ALISE DB :1533) med strikt schemaisolering från proxy.
+- **Officiell referens / Wikipedia:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
+- **Relaterade guider och skript:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
+
 ### `APEX` — Oracle Application Express
 - **Definition:** Oracles low-code utvecklingsplattform för webbapplikationer som körs direkt i databasen.
 - **Roll i detta projekt:** Centralt användargränssnitt i Proxy DB (port 8448/8088), automatiserat via APEXlang DSL och Git-exporter.
 - **Officiell referens / Wikipedia:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
 - **Relaterade guider och skript:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
-
-### `ALISE` — ALISE affärsdatabasmiljö
-- **Definition:** Dedikerad Oracle Free DB 23ai-databas som hanterar affärsscheman, PL/SQL-motorer, tabellutrymmen och APEX/ORDS-körtid på port 1533.
-- **Roll i detta projekt:** Fungerar som kanonisk affärsdatabas i Blueprint 1 (:1533) och Blueprint 7/3, vilket isolerar affärsscheman från proxylagret.
-- **Officiell referens / Wikipedia:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
-- **Relaterade guider och skript:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
 
 ### `APFS` — Apple File System
 - **Definition:** Standardfilsystem för macOS optimerat för SSD-lagring, kryptering och snapshots.
@@ -102,6 +108,12 @@
 - **Officiell referens / Wikipedia:** [Wikipedia: Database Administrator](https://en.wikipedia.org/wiki/Database_administrator)
 - **Relaterade guider och skript:** [scripts/internal/apply-profile-users.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/apply-profile-users.sh), [scripts/create-developer.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/create-developer.sh)
 
+### `DES` — Software Design Description (IEEE 1016 / SCS Architecture)
+- **Definition:** Ett arkitektur- och tekniskt designdokument (enligt IEEE 1016) som detaljerar systemstruktur, komponenter, datamodeller, säkerhetsgränser och Mermaid-diagram.
+- **Roll i detta projekt:** Den andra komponenten i SDD-triaden (docs/specs/<domain>/design.md) som etablerar avgränsade kontexter, PDB-layouter och systemgränser.
+- **Officiell referens / Wikipedia:** [Wikipedia: Software Design Description (IEEE 1016)](https://en.wikipedia.org/wiki/Software_design_description)
+- **Relaterade guider och skript:** [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md), [docs/specs/wallet-security/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/design.md)
+
 ### `DR` — Disaster Recovery
 - **Definition:** Processer för att snabbt återställa data och infrastruktur efter allvarliga incidenter.
 - **Roll i detta projekt:** Uppnås på ~15 sekunder via Golden Snapshots som återställer miljöer utan administration.
@@ -123,6 +135,12 @@
 - **Relaterade guider och skript:** [tests/test-browser-login.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/tests/test-browser-login.sh), [docs/devhub-browser-testing-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/devhub-browser-testing-plan.md)
 
 ## F
+
+### `FastStart` — Instant FastStart Recovery (-s)
+- **Definition:** Snabb ~15 sekunders återställningsmekanism med gyllene snapshots som kringgår långa installationstider.
+- **Roll i detta projekt:** Aktiveras via './scripts/setup-all.sh -s' eller snabbrecept, vilket sänker starttiden från 7 minuter till under 20 sekunder.
+- **Officiell referens / Wikipedia:** [Oracle Fast-Start High Availability](https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/fast-start-failover.html)
+- **Relaterade guider och skript:** [scripts/setup-all.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/setup-all.sh), [scripts/snapshots/restore-golden-snapshots.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/snapshots/restore-golden-snapshots.sh)
 
 ### `FAT / NTFS` — File Allocation Table / New Technology File System
 - **Definition:** Windows-filsystem med strikta begränsningar för otillåtna tecken och reserverade enhetsnamn.
@@ -242,7 +260,7 @@
 
 ### `PDB` — Pluggable Database
 - **Definition:** Självgående databasinstans i Oracles multitenant-arkitektur som fungerar som en isolerad databas.
-- **Roll i detta projekt:** Isolerar applikationsdomäner: FREEPDB1 (Proxy), ALISEPDB (Affärsdata), PUBPDB och BIP_PDB.
+- **Roll i detta projekt:** Isolerar applikationsdomäner: FREEPDB1 (Proxy), ALISEPDB (Affärsdata), LIS_PDB och BIP_PDB.
 - **Officiell referens / Wikipedia:** [Oracle Pluggable Database (PDB)](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/multitenant-architecture.html)
 - **Relaterade guider och skript:** [docs/db-profiles-and-topology.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/db-profiles-and-topology.md), [scripts/internal/resolve-topology.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/resolve-topology.sh)
 
@@ -266,6 +284,12 @@
 - **Officiell referens / Wikipedia:** [Oracle Repository Creation Utility Docs](https://docs.oracle.com/en/middleware/fusion-middleware/12.2.1.4/rcuug/)
 - **Relaterade guider och skript:** [docs/forms-setup.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/forms-setup.md)
 
+### `REQ` — Requirements Specification (Given/When/Then)
+- **Definition:** En formell programvaruspecifikation som fångar verksamhetsmål, funktionella krav, avgränsningar och testbara Given/When/Then acceptanskriterier.
+- **Roll i detta projekt:** Den första komponenten i SDD-triaden (docs/specs/<domain>/requirements.md) som förhindrar förhastad kodning och styr kvalitetsgrindar.
+- **Officiell referens / Wikipedia:** [Wikipedia: Software Requirements Specification (SRS)](https://en.wikipedia.org/wiki/Software_requirements_specification)
+- **Relaterade guider och skript:** [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md), [docs/specs/wallet-security/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/requirements.md)
+
 ### `REST` — Representational State Transfer
 - **Definition:** Tillståndslös arkitekturmodell för att bygga skalbara webbtjänster och API:er över HTTP.
 - **Roll i detta projekt:** Levereras via ORDS AutoREST och ansluter mikrotjänster och Dev Hub utan databasdrivrutiner.
@@ -279,6 +303,18 @@
 - **Relaterade guider och skript:** [docs/dev-hub.html](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/dev-hub.html)
 
 ## S
+
+### `SCS` — Self-Contained Systems
+- **Definition:** Ett arkitekturmönster som delar upp systemet i autonoma webbapplikationer med egen logik, databas och gränssnitt.
+- **Roll i detta projekt:** Tillämpar avgränsade kontexter över de 4 plattformsdomänerna som dokumenteras i docs/specs/.
+- **Officiell referens / Wikipedia:** [Self-Contained Systems Architecture](https://scs-architecture.org/)
+- **Relaterade guider och skript:** [docs/spec-driven-development-and-assembly-line.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/spec-driven-development-and-assembly-line.md), [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md)
+
+### `SDD` — Spec-Driven Development
+- **Definition:** En utvecklingsmetod där formella specifikationer (Given/When/Then) skapas innan implementationen påbörjas.
+- **Roll i detta projekt:** Drivkraften bakom specifikationspanelen i Dev Hub (#tab-specs) och AI-monteringslinjen med 5 kvalitetsgrindar.
+- **Officiell referens / Wikipedia:** [Julian Wood: Spec-Driven Development](https://aws.amazon.com/blogs/compute/)
+- **Relaterade guider och skript:** [docs/spec-driven-development-and-assembly-line.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/spec-driven-development-and-assembly-line.md), [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md)
 
 ### `SDW` — SQL Developer Web (Database Actions)
 - **Definition:** Webbläsarbaserat gränssnitt i ORDS för att köra SQL, bygga REST-tjänster och övervaka databasen.
@@ -346,7 +382,19 @@
 - **Definition:** Oracles nätverksteknologi för anslutning mellan klienter och databaser via tnsnames.ora.
 - **Roll i detta projekt:** Konfigureras automatiskt i tnsnames.ora och exporteras via TNS_ADMIN till alla terminaler.
 - **Officiell referens / Wikipedia:** [Wikipedia: Transparent Network Substrate](https://en.wikipedia.org/wiki/Transparent_Network_Substrate)
-- **Relaterade guider och skript:** [tnsnames/tnsnames.ora](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/tnsnames/tnsnames.ora), [scripts/register-connections.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/register-connections.sh)
+- **Relaterade guider och skript:** [config/tns_admin/tnsnames.ora](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/tns_admin/tnsnames.ora), [scripts/register-connections.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/register-connections.sh)
+
+### `Triad` — Specification Triad (REQ / DES / TSK)
+- **Definition:** Trestegs specifikationsstandard bestående av Krav (REQ), SCS-design (DES) och Uppgiftsmatris (TSK).
+- **Roll i detta projekt:** Garanterar 100% spårbarhet mellan användarberättelser, arkitektur och tester i Dev Hub.
+- **Officiell referens / Wikipedia:** [Wikipedia: Specification by Example](https://en.wikipedia.org/wiki/Specification_by_example)
+- **Relaterade guider och skript:** [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md), [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md), [docs/specs/devops-portal/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/tasks.md)
+
+### `TSK` — Tasks Matrix & Requirements Traceability
+- **Definition:** En detaljerad uppgiftsnedbrytning och spårbarhetsmatris som kopplar krav och design till utvecklingsuppgifter, Definition of Done och testkommandon.
+- **Roll i detta projekt:** Genomförandekontraktet i SDD-triaden (docs/specs/<domain>/tasks.md) som styr autonoma agentarbetsflöden, DoD-validering och status i Dev Hub.
+- **Officiell referens / Wikipedia:** [Wikipedia: Requirements Traceability](https://en.wikipedia.org/wiki/Requirements_traceability)
+- **Relaterade guider och skript:** [docs/specs/devops-portal/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/tasks.md), [docs/specs/wallet-security/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/tasks.md)
 
 ## U
 

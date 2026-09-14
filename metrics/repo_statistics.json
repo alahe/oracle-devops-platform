@@ -1,40 +1,40 @@
 {
   "metadata": {
-    "generated_at": "2026-09-14T00:44:14.858053",
-    "scan_duration_ms": 194,
+    "generated_at": "2026-09-14T08:25:29.938949",
+    "scan_duration_ms": 357,
     "generator": "scripts/internal/generate-repo-report.py",
     "workspace_root": "/Users/allanlahe/Oracle/oracle-free-db-in-prod"
   },
   "maintainable_core": {
-    "total_files": 570,
-    "total_lines": 115975,
-    "maintainable_sloc": 99308,
-    "test_sloc": 13742,
-    "functional_sloc": 85566,
-    "test_density_percent": 16.1,
-    "avg_sloc_per_file": 174.2
+    "total_files": 592,
+    "total_lines": 120213,
+    "maintainable_sloc": 102536,
+    "test_sloc": 15517,
+    "functional_sloc": 87019,
+    "test_density_percent": 17.8,
+    "avg_sloc_per_file": 173.2
   },
   "gross_repository": {
-    "total_files": 2073,
-    "total_gross_lines": 363637,
-    "generated_and_metrics_files": 1503,
-    "generated_and_metrics_lines": 247662
+    "total_files": 2189,
+    "total_gross_lines": 374929,
+    "generated_and_metrics_files": 1597,
+    "generated_and_metrics_lines": 254716
   },
   "architecture_components": {
     "blueprints_count": 12,
     "database_profiles_count": 11,
     "cli_user_tools_count": 31,
     "internal_engine_scripts_count": 53,
-    "test_scripts_count": 191
+    "test_scripts_count": 205
   },
   "language_breakdown": {
     "Shell / Bash": {
-      "files": 277,
-      "lines": 45950,
-      "sloc": 36231,
-      "blank": 5517,
-      "comment": 4202,
-      "percent_of_sloc": 36.5
+      "files": 296,
+      "lines": 49492,
+      "sloc": 38885,
+      "blank": 6001,
+      "comment": 4606,
+      "percent_of_sloc": 37.9
     },
     "Web Templates (HTML/JS/CSS)": {
       "files": 5,
@@ -42,23 +42,23 @@
       "sloc": 35132,
       "blank": 2418,
       "comment": 496,
-      "percent_of_sloc": 35.4
+      "percent_of_sloc": 34.3
     },
     "Python": {
-      "files": 28,
-      "lines": 19796,
-      "sloc": 18371,
-      "blank": 1129,
-      "comment": 296,
+      "files": 31,
+      "lines": 20483,
+      "sloc": 18936,
+      "blank": 1209,
+      "comment": 338,
       "percent_of_sloc": 18.5
     },
     "Markdown Docs": {
       "files": 182,
-      "lines": 8354,
-      "sloc": 6361,
+      "lines": 8361,
+      "sloc": 6368,
       "blank": 1993,
       "comment": 0,
-      "percent_of_sloc": 6.4
+      "percent_of_sloc": 6.2
     },
     "SQL / PLSQL": {
       "files": 7,
@@ -78,8 +78,8 @@
     },
     "Other": {
       "files": 30,
-      "lines": 464,
-      "sloc": 412,
+      "lines": 466,
+      "sloc": 414,
       "blank": 52,
       "comment": 0,
       "percent_of_sloc": 0.4
@@ -136,16 +136,16 @@
     },
     {
       "path": "scripts/internal/dev-hub-bridge.py",
-      "sloc": 3521,
-      "total_lines": 3927,
+      "sloc": 3531,
+      "total_lines": 3937,
       "language": "Python"
     }
   ],
   "git": {
-    "total_commits": 84,
-    "last_commit_hash": "d4aa3cd9",
-    "last_commit_date": "2026-09-13T15:56:44+03:00",
-    "last_commit_message": "feat(devhub): fix specs triad switching, add 2-stage recipe safety inspector & testing AI button (v2.5.0.5)",
+    "total_commits": 88,
+    "last_commit_hash": "d913a93d",
+    "last_commit_date": "2026-09-14T08:10:12+03:00",
+    "last_commit_message": "fix(i18n): support inline --lang=<code/all> flag and update test execution metrics",
     "last_commit_author": "lahe",
     "active_branches": 3,
     "active_tags": 0,

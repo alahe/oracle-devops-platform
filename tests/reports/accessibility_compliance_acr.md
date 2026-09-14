@@ -2,8 +2,8 @@
 ## Oracle Analytics Publisher Document Generation Platform
 
 - **Report Standard:** ISO 14289-1 (PDF/UA-1), EN 301 549, WCAG 2.1 Level AA, Section 508
-- **Evaluation Date:** 2026-09-14T05:08:51Z
-- **Git Commit:** `6db20f7e`
+- **Evaluation Date:** 2026-09-14T05:19:18Z
+- **Git Commit:** `d913a93d`
 - **Compliance Rate:** **100%** (3 of 3 test cases passing)
 - **Quality Gate:** Zero-Tolerance Hard Blocker (Exit 1 on failure)
 
@@ -26,8 +26,8 @@ All evaluated templates incorporate:
 
 | Case Identifier | Description | Standards Evaluated | Conformance Status | Test Duration |
 | :--- | :--- | :--- | :--- | :--- |
-| `01-standard-invoice` | Standard Accessible Electronic Invoice | ISO 14289-1 (PDF/UA-1) & WCAG 2.1 AA | **PASSED** | 0s |
-| `02-multipage-table-report` | Multi-Page Accessible Inventory Audit Report | ISO 14289-1 (PDF/UA-1) & WCAG 2.1 AA | **PASSED** | 1s |
+| `01-standard-invoice` | Standard Accessible Electronic Invoice | ISO 14289-1 (PDF/UA-1) & WCAG 2.1 AA | **PASSED** | 1s |
+| `02-multipage-table-report` | Multi-Page Accessible Inventory Audit Report | ISO 14289-1 (PDF/UA-1) & WCAG 2.1 AA | **PASSED** | 0s |
 | `03-summary-financial-report` | Quarterly Accessible Financial Summary Report | ISO 14289-1 (PDF/UA-1) & WCAG 2.1 AA | **PASSED** | 0s |
 
 ---

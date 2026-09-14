@@ -97,11 +97,17 @@ resolve_tls_mode() {
   fi
 
   # --------------------------------------------------------------------------
-  # STEP 2: Check for Enterprise Internal CA (Variant 2)
+  # STEP 2: Check for Enterprise Internal CA / Corporate PKI (Variant 2)
   # --------------------------------------------------------------------------
-  if [ "$RESOLVED_TLS_MODE" = "UNKNOWN" ] && [ "${USE_CORP_INTERNAL_CA:-false}" = "true" ]; then
-    if [ -f "$certs_dir/corp_internal_ca.crt" ] && [ -f "$certs_dir/corp_internal_key.key" ]; then
-      RESOLVED_TLS_MODE="CORP_INTERNAL_CA"
+  if [ "$RESOLVED_TLS_MODE" = "UNKNOWN" ] && { [ "${CORP_PKI_ENABLED:-false}" = "true" ] || [ "${USE_CORP_INTERNAL_CA:-false}" = "true" ] || [ -f "$certs_dir/corp/corp_cert.crt" ] || [ -f "$certs_dir/corp_internal_ca.crt" ]; }; then
+    if [ -f "$certs_dir/corp/corp_cert.crt" ] && [ -f "$certs_dir/corp/corp_key.key" ]; then
+      RESOLVED_TLS_MODE="CORP_PKI"
+      RESOLVED_SSL_CERT="$certs_dir/corp/corp_cert.crt"
+      RESOLVED_SSL_KEY="$certs_dir/corp/corp_key.key"
+      RESOLVED_TLS_REASON="Detected Enterprise Internal PKI certificates"
+      [ -f "$certs_dir/corp/corp_ca.crt" ] && RESOLVED_SSL_CA="$certs_dir/corp/corp_ca.crt"
+    elif [ -f "$certs_dir/corp_internal_ca.crt" ] && [ -f "$certs_dir/corp_internal_key.key" ]; then
+      RESOLVED_TLS_MODE="CORP_PKI"
       RESOLVED_SSL_CERT="$certs_dir/corp_internal_ca.crt"
       RESOLVED_SSL_KEY="$certs_dir/corp_internal_key.key"
       RESOLVED_TLS_REASON="Detected Enterprise Internal PKI certificates"
@@ -113,18 +119,18 @@ resolve_tls_mode() {
   # STEP 3: Check for User CA / Local Dev CA (Variant 3)
   # --------------------------------------------------------------------------
   if [ "$RESOLVED_TLS_MODE" = "UNKNOWN" ]; then
-    if [ -f "$certs_dir/user_ca/localhost.crt" ] && [ -f "$certs_dir/user_ca/localhost.key" ]; then
-      RESOLVED_TLS_MODE="USER_CA"
+    if [ -f "$certs_dir/user_ca/localhost.crt" ] && [ -f "$certs_dir/user_ca/localhost.key" ] && [ -f "$certs_dir/user_ca/localCA.pem" ]; then
+      RESOLVED_TLS_MODE="USER_LOCAL_CA"
       RESOLVED_SSL_CERT="$certs_dir/user_ca/localhost.crt"
       RESOLVED_SSL_KEY="$certs_dir/user_ca/localhost.key"
+      RESOLVED_SSL_CA="$certs_dir/user_ca/localCA.pem"
       RESOLVED_TLS_REASON="Detected User / Local Dev Root CA certificates"
-      [ -f "$certs_dir/user_ca/localCA.pem" ] && RESOLVED_SSL_CA="$certs_dir/user_ca/localCA.pem"
-    elif [ -f "$certs_dir/localhost.crt" ] && [ -f "$certs_dir/localhost.key" ]; then
-      RESOLVED_TLS_MODE="USER_CA"
+    elif [ -f "$certs_dir/localhost.crt" ] && [ -f "$certs_dir/localhost.key" ] && [ -f "$certs_dir/localCA.pem" ]; then
+      RESOLVED_TLS_MODE="USER_LOCAL_CA"
       RESOLVED_SSL_CERT="$certs_dir/localhost.crt"
       RESOLVED_SSL_KEY="$certs_dir/localhost.key"
+      RESOLVED_SSL_CA="$certs_dir/localCA.pem"
       RESOLVED_TLS_REASON="Detected local dev CA certificates"
-      [ -f "$certs_dir/localCA.pem" ] && RESOLVED_SSL_CA="$certs_dir/localCA.pem"
     fi
   fi
 
@@ -137,27 +143,37 @@ resolve_tls_mode() {
       RESOLVED_SSL_CERT="$certs_dir/self_signed/self_signed.crt"
       RESOLVED_SSL_KEY="$certs_dir/self_signed/self_signed.key"
       RESOLVED_TLS_REASON="Detected self-signed fallback certificates"
+    elif [ -f "$certs_dir/localhost.crt" ] && [ -f "$certs_dir/localhost.key" ]; then
+      RESOLVED_TLS_MODE="SELF_SIGNED"
+      RESOLVED_SSL_CERT="$certs_dir/localhost.crt"
+      RESOLVED_SSL_KEY="$certs_dir/localhost.key"
+      RESOLVED_TLS_REASON="Detected self-signed fallback certificates"
     fi
   fi
 
   # --------------------------------------------------------------------------
   # STEP 5: Policy Level Verification vs Target Blueprint
   # --------------------------------------------------------------------------
-  local target_policy="${TLS_POLICY_LEVEL:-standard}"
+  local target_policy="${TLS_ALLOWED_LEVEL:-${TLS_POLICY_LEVEL:-permissive}}"
   local policy_violation=false
 
   case "$target_policy" in
-    strict_prod)
-      if [ "$RESOLVED_TLS_MODE" != "PUBLIC_CA" ] && [ "$RESOLVED_TLS_MODE" != "CUSTOM_CERT" ]; then
+    strict_prod|strict_public)
+      if [ "$RESOLVED_TLS_MODE" != "PUBLIC_CA" ] && [ "$RESOLVED_TLS_MODE" != "CUSTOM_CERT" ] && [ "$RESOLVED_TLS_MODE" != "PUBLIC_DNS" ]; then
         policy_violation=true
       fi
       ;;
-    corp_enforced)
+    corp_enforced|corporate_pki)
+      if [ "$RESOLVED_TLS_MODE" != "CUSTOM_CERT" ] && [ "$RESOLVED_TLS_MODE" != "PUBLIC_CA" ] && [ "$RESOLVED_TLS_MODE" != "PUBLIC_DNS" ] && [ "$RESOLVED_TLS_MODE" != "CORP_PKI" ] && [ "$RESOLVED_TLS_MODE" != "CORP_INTERNAL_CA" ]; then
+        policy_violation=true
+      fi
+      ;;
+    trusted_local)
       if [ "$RESOLVED_TLS_MODE" = "SELF_SIGNED" ] || [ "$RESOLVED_TLS_MODE" = "UNKNOWN" ]; then
         policy_violation=true
       fi
       ;;
-    standard|permissive|*)
+    standard|permissive|allow_self_signed|auto|*)
       policy_violation=false
       ;;
   esac
@@ -165,21 +181,21 @@ resolve_tls_mode() {
   if [ "$policy_violation" = "true" ]; then
     echo ""
     echo -e "${RED}╔══════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${RED}║ ❌ TLS POLICY ERROR: Blueprint requires higher TLS level than current environment provides!    ║${NC}"
+    echo -e "${RED}║ ❌ TLS POLICY ERROR / TLS NÕUETE VIGA: Blueprint requires higher TLS level than environment! ║${NC}"
     echo -e "${RED}╠══════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
-    printf "║ • Required level:  %-73s ║\n" "${CYAN}${target_policy}${NC}"
-    printf "║ • Detected level:  %-73s ║\n" "${YELLOW}${RESOLVED_TLS_MODE} (${RESOLVED_TLS_REASON})${NC}"
+    printf "║ • Required level / Nõutav tase:     %-57s ║\n" "${CYAN}${target_policy}${NC}"
+    printf "║ • Detected level / Tuvastatud tase: %-57s ║\n" "${YELLOW}${RESOLVED_TLS_MODE} (${RESOLVED_TLS_REASON})${NC}"
     echo -e "${RED}║                                                                                              ║${NC}"
-    echo -e "${RED}║ 🛠 USER RESOLUTION OPTIONS:                                                                 ║${NC}"
+    echo -e "${RED}║ 🛠 USER RESOLUTION OPTIONS / LAHENDUSVARIANDID KASUTAJALE:                                   ║${NC}"
     echo -e "${RED}║                                                                                              ║${NC}"
-    echo -e "${RED}║ 1. [FASTEST] Copy valid certificate and private key to:                                      ║${NC}"
+    echo -e "${RED}║ 1. [FASTEST/KIIREIM] Copy valid certificate and private key to:                              ║${NC}"
     echo -e "${RED}║    📁 config/certs/custom/tls.crt                                                            ║${NC}"
     echo -e "${RED}║    📁 config/certs/custom/tls.key                                                            ║${NC}"
     echo -e "${RED}║                                                                                              ║${NC}"
-    echo -e "${RED}║ 2. [CORP NETWORK] Connect to VPN and pull internal PKI cert:                                 ║${NC}"
+    echo -e "${RED}║ 2. [CORP NETWORK/ETTEVÕTE] Connect to VPN and pull internal PKI cert:                        ║${NC}"
     echo -e "${RED}║    👉 ./scripts/certs/sync-corp-cert.sh                                                      ║${NC}"
     echo -e "${RED}║                                                                                              ║${NC}"
-    echo -e "${RED}║ 3. [LOCAL DEV] If developing on personal workstation, add to .env:                           ║${NC}"
+    echo -e "${RED}║ 3. [LOCAL DEV/LOKAALNE] If developing on workstation, add to .env:                           ║${NC}"
     echo -e "${RED}║    👉 TLS_ALLOWED_LEVEL=permissive                                                           ║${NC}"
     echo -e "${RED}╚══════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""

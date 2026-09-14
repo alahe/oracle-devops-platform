@@ -18,17 +18,23 @@
 - **Virallinen viite / Wikipedia:** [Oracle Autonomous Database](https://www.oracle.com/autonomous-database/)
 - **Liittyvät ohjeet ja skriptit:** [docs/remote-multicloud-setup-guide.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/remote-multicloud-setup-guide.md), [scripts/deploy-remote.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/deploy-remote.sh)
 
+### `ADR` — Architecture Decision Record
+- **Määritelmä:** Strukturoitu dokumentti, joka tallentaa merkittävän arkkitehtuuripäätöksen perusteluineen ja seurauksineen.
+- **Rooli tässä projektissa:** Viralliset arkkitehtuuripäätökset kansiossa docs/adr/ (kuten ADR 0017) varmistavat selkeät sopimukset ja AI-tehokkuuden.
+- **Virallinen viite / Wikipedia:** [ADR GitHub Organization](https://adr.github.io/)
+- **Liittyvät ohjeet ja skriptit:** [docs/adr/0017-devops-tab-ux-and-docked-terminal.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/adr/0017-devops-tab-ux-and-docked-terminal.md), [docs/specs/devops-management-portal-spec.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-management-portal-spec.md)
+
+### `ALISE` — ALISE Business Application Database
+- **Määritelmä:** Erillinen Oracle Free DB 23ai -liiketoimintatietokanta liiketoimintaskeemoille, PL/SQL-koodille ja APEX/ORDS-palveluille portissa 1533.
+- **Rooli tässä projektissa:** Käytössä ensisijaisena liiketoimintatietokantana Blueprint 1:ssä (ALISE DB :1533) eristäen skeemat välityspalvelimesta.
+- **Virallinen viite / Wikipedia:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
+- **Liittyvät ohjeet ja skriptit:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
+
 ### `APEX` — Oracle Application Express
 - **Määritelmä:** Oraclen low-code-sovelluskehitysalusta yrityssovelluksille suoraan tietokannan sisällä.
 - **Rooli tässä projektissa:** Keskeinen käyttöliittymä Proxy DB:ssä (portti 8448/8088), ohjataan APEXlang DSL:llä ja Git-vienneillä.
 - **Virallinen viite / Wikipedia:** [Wikipedia: Oracle APEX](https://en.wikipedia.org/wiki/Oracle_APEX)
 - **Liittyvät ohjeet ja skriptit:** [docs/apex-devhub-test-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/apex-devhub-test-plan.md), [scripts/internal/install-apex.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/install-apex.sh)
-
-### `ALISE` — ALISE-liiketoimintatietokanta
-- **Määritelmä:** Erillinen Oracle Free DB 23ai -tietokantaympäristö ydinliiketoimintasovelluksille, PL/SQL-koodille ja APEX/ORDS-rajapinnoille portissa 1533.
-- **Rooli tässä projektissa:** Toimii malliliiketoimintatietokantana malleissa Blueprint 1 (:1533) ja Blueprint 7/3, eristäen liiketoimintaskeemat proksikerroksesta.
-- **Virallinen viite / Wikipedia:** [Wikipedia: Enterprise Application Software](https://en.wikipedia.org/wiki/Enterprise_software)
-- **Liittyvät ohjeet ja skriptit:** [config/blueprints/.env.1-standalone-alise-db](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/blueprints/.env.1-standalone-alise-db), [config/profiles/databases/db-alise-oracle.yaml](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/profiles/databases/db-alise-oracle.yaml)
 
 ### `APFS` — Apple File System
 - **Määritelmä:** macOS-käyttöjärjestelmän moderni tiedostojärjestelmä SSD-levyille ja pikavedoksille.
@@ -102,6 +108,12 @@
 - **Virallinen viite / Wikipedia:** [Wikipedia: Database Administrator](https://en.wikipedia.org/wiki/Database_administrator)
 - **Liittyvät ohjeet ja skriptit:** [scripts/internal/apply-profile-users.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/apply-profile-users.sh), [scripts/create-developer.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/create-developer.sh)
 
+### `DES` — Software Design Description (IEEE 1016 / SCS Architecture)
+- **Määritelmä:** Arkkitehtuuri- ja tekninen suunnitteludokumentti (IEEE 1016), joka kuvaa järjestelmän rakenteen, komponentit, tietomallit, turvallisuusrajat ja Mermaid-kaaviot.
+- **Rooli tässä projektissa:** SDD-kolmikon toinen osa (docs/specs/<domain>/design.md), joka määrittää itsenäiset kontekstit, PDB-sijoittelun ja järjestelmärajat kaikille 12 blueprintille.
+- **Virallinen viite / Wikipedia:** [Wikipedia: Software Design Description (IEEE 1016)](https://en.wikipedia.org/wiki/Software_design_description)
+- **Liittyvät ohjeet ja skriptit:** [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md), [docs/specs/wallet-security/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/design.md)
+
 ### `DR` — Disaster Recovery
 - **Määritelmä:** Menetelmät ja valmiudet järjestelmien ja datan palauttamiseksi vakavien häiriöiden jälkeen.
 - **Rooli tässä projektissa:** Toteutetaan ~15 sekunnissa Golden Snapshot -pikapalautuksella (scripts/snapshots/) ilman DBA-tikettejä.
@@ -123,6 +135,12 @@
 - **Liittyvät ohjeet ja skriptit:** [tests/test-browser-login.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/tests/test-browser-login.sh), [docs/devhub-browser-testing-plan.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/devhub-browser-testing-plan.md)
 
 ## F
+
+### `FastStart` — Instant FastStart Recovery (-s)
+- **Määritelmä:** Nopea ~15 sekunnin tietokannan palautusmekanismi kultaisten pikavedosten avulla ilman pitkää asennusta.
+- **Rooli tässä projektissa:** Käynnistetään komennolla './scripts/setup-all.sh -s' tai pikareseptipalkista, nopeuttaen käynnistyksen 7 minuutista alle 20 sekuntiin.
+- **Virallinen viite / Wikipedia:** [Oracle Fast-Start High Availability](https://docs.oracle.com/en/database/oracle/oracle-database/19/haovw/fast-start-failover.html)
+- **Liittyvät ohjeet ja skriptit:** [scripts/setup-all.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/setup-all.sh), [scripts/snapshots/restore-golden-snapshots.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/snapshots/restore-golden-snapshots.sh)
 
 ### `FAT / NTFS` — File Allocation Table / New Technology File System
 - **Määritelmä:** Windows-tiedostojärjestelmät, joissa on varattuja merkkejä ja laitenimiä (CON, PRN, AUX).
@@ -242,7 +260,7 @@
 
 ### `PDB` — Pluggable Database
 - **Määritelmä:** Itsenäinen skeemojen ja objektien kokonaisuus, joka näkyy asiakkaille erillisenä tietokantana.
-- **Rooli tässä projektissa:** Eristää sovellusalueet: FREEPDB1 (Proxy/APEX), ALISEPDB (Liiketoimintadata), PUBPDB ja BIP_PDB.
+- **Rooli tässä projektissa:** Eristää sovellusalueet: FREEPDB1 (Proxy/APEX), ALISEPDB (Liiketoimintadata), LIS_PDB jne.
 - **Virallinen viite / Wikipedia:** [Oracle Pluggable Database (PDB)](https://docs.oracle.com/en/database/oracle/oracle-database/23/cncpt/multitenant-architecture.html)
 - **Liittyvät ohjeet ja skriptit:** [docs/db-profiles-and-topology.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/db-profiles-and-topology.md), [scripts/internal/resolve-topology.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/internal/resolve-topology.sh)
 
@@ -266,6 +284,12 @@
 - **Virallinen viite / Wikipedia:** [Oracle Repository Creation Utility Docs](https://docs.oracle.com/en/middleware/fusion-middleware/12.2.1.4/rcuug/)
 - **Liittyvät ohjeet ja skriptit:** [docs/forms-setup.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/forms-setup.md)
 
+### `REQ` — Requirements Specification (Given/When/Then)
+- **Määritelmä:** Ohjelmistosuunnittelun perusmäärittely, joka kirjaa liiketoimintatavoitteet, toiminnalliset vaatimukset ja testattavat Given/When/Then -hyväksymiskriteerit.
+- **Rooli tässä projektissa:** SDD-kolmikon ensimmäinen dokumentti (docs/specs/<domain>/requirements.md), joka estää ennenaikaisen koodauksen ja ohjaa laatuportteja.
+- **Virallinen viite / Wikipedia:** [Wikipedia: Software Requirements Specification (SRS)](https://en.wikipedia.org/wiki/Software_requirements_specification)
+- **Liittyvät ohjeet ja skriptit:** [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md), [docs/specs/wallet-security/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/requirements.md)
+
 ### `REST` — Representational State Transfer
 - **Määritelmä:** Tilaton arkkitehtuurimalli hajautettujen verkkopalveluiden ja rajapintojen rakentamiseen HTTP:n yli.
 - **Rooli tässä projektissa:** Toteutettu ORDS AutoREST -toiminnolla yhdistäen palvelut ilman raskaita tietokanta-ajureita.
@@ -279,6 +303,18 @@
 - **Liittyvät ohjeet ja skriptit:** [docs/dev-hub.html](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/dev-hub.html)
 
 ## S
+
+### `SCS` — Self-Contained Systems
+- **Määritelmä:** Arkkitehtuurimalli, joka jakaa järjestelmän itsenäisiin osajärjestelmiin omalla datalla ja käyttöliittymällä.
+- **Rooli tässä projektissa:** Määrittää itsenäiset rajatut kontekstit 4 alustan osa-alueelle kansiossa docs/specs/.
+- **Virallinen viite / Wikipedia:** [Self-Contained Systems Architecture](https://scs-architecture.org/)
+- **Liittyvät ohjeet ja skriptit:** [docs/spec-driven-development-and-assembly-line.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/spec-driven-development-and-assembly-line.md), [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md)
+
+### `SDD` — Spec-Driven Development
+- **Määritelmä:** Ohjelmistokehitysmenetelmä, jossa vaatimukset ja spesifikaatiot (Given/When/Then) laaditaan ennen toteutusta.
+- **Rooli tässä projektissa:** Ohjaa Dev Hubin spesifikaationäkymää (#tab-specs) ja tekoälyliukuhihnaa 5 automaattisella laatuportilla.
+- **Virallinen viite / Wikipedia:** [Julian Wood: Spec-Driven Development](https://aws.amazon.com/blogs/compute/)
+- **Liittyvät ohjeet ja skriptit:** [docs/spec-driven-development-and-assembly-line.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/spec-driven-development-and-assembly-line.md), [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md)
 
 ### `SDW` — SQL Developer Web (Database Actions)
 - **Määritelmä:** ORDS-palvelun selainpohjainen käyttöliittymä SQL-kyselyille, REST-määrityksille ja tietokannan valvonnalle.
@@ -346,7 +382,19 @@
 - **Määritelmä:** Oraclen verkkoteknologia asiakassovellusten ja tietokantojen väliseen viestintään.
 - **Rooli tässä projektissa:** Määritetty automaattisesti tnsnames/tnsnames.ora -tiedostoon ja jaettu TNS_ADMIN-muuttujalla.
 - **Virallinen viite / Wikipedia:** [Wikipedia: Transparent Network Substrate](https://en.wikipedia.org/wiki/Transparent_Network_Substrate)
-- **Liittyvät ohjeet ja skriptit:** [tnsnames/tnsnames.ora](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/tnsnames/tnsnames.ora), [scripts/register-connections.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/register-connections.sh)
+- **Liittyvät ohjeet ja skriptit:** [config/tns_admin/tnsnames.ora](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/config/tns_admin/tnsnames.ora), [scripts/register-connections.sh](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/scripts/register-connections.sh)
+
+### `Triad` — Specification Triad (REQ / DES / TSK)
+- **Määritelmä:** Kolmitasoinen spesifikaatiomalli, joka koostuu vaatimuksista (REQ), SCS-arkkitehtuurista (DES) ja tehtävistä (TSK).
+- **Rooli tässä projektissa:** Varmistaa 100% jäljitettävyyden vaatimusten, arkkitehtuurin ja automaattitestien välillä.
+- **Virallinen viite / Wikipedia:** [Wikipedia: Specification by Example](https://en.wikipedia.org/wiki/Specification_by_example)
+- **Liittyvät ohjeet ja skriptit:** [docs/specs/devops-portal/requirements.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/requirements.md), [docs/specs/devops-portal/design.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/design.md), [docs/specs/devops-portal/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/tasks.md)
+
+### `TSK` — Tasks Matrix & Requirements Traceability
+- **Määritelmä:** Yksityiskohtainen tehtäväjakauma ja jäljitettävyysmatriisi, joka yhdistää vaatimukset ja arkkitehtuurin kehitystehtäviin, valmiusehtoihin ja testeihin.
+- **Rooli tässä projektissa:** SDD-kolmikon toteutussopimus (docs/specs/<domain>/tasks.md), joka ohjaa tekoälyagenttien työtä, DoD-tarkastuksia ja seurantaa Dev Hubissa.
+- **Virallinen viite / Wikipedia:** [Wikipedia: Requirements Traceability](https://en.wikipedia.org/wiki/Requirements_traceability)
+- **Liittyvät ohjeet ja skriptit:** [docs/specs/devops-portal/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/devops-portal/tasks.md), [docs/specs/wallet-security/tasks.md](file:///Users/allanlahe/Oracle/oracle-free-db-in-prod/docs/specs/wallet-security/tasks.md)
 
 ## U
 
