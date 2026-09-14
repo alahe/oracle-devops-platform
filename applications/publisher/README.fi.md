@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📊 Oracle Analytics Publisher Sovellukset ja Luettelo (`applications/publisher/`)
+# 📊 Oracle Analytics Publisher sovellukset ja luettelo (`applications/publisher/`)
 
 Tämä hakemisto on **yhtenäinen totuuden lähde (SSoT)** Oracle Analytics Publisher -raporteille, pikselintarkoille RTF-malleille ja tietomalleille. Hakemistorakenne vastaa palvelimen luetteloa 1:1 (`/Custom/<Toimialue>/<Raportti>/`).
 

@@ -1,4 +1,4 @@
-# Blueprints ja Dünaamiline Porditopoloogia — Tehniline Disain (Technical Design)
+# Blueprints ja dünaamiline porditopoloogia — tehniline disain (Technical Design)
 
 - **Domeen (SCS):** `blueprints-topology`
 - **Viidatud Nõuded:** `docs/specs/blueprints-topology/requirements.md`

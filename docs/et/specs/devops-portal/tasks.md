@@ -1,4 +1,4 @@
-# DevOps Juhtpaneel — Teostusülesanded ja Verifitseerimine (Implementation Tasks)
+# DevOps juhtpaneel — teostusülesanded ja verifitseerimine (Implementation Tasks)
 
 - **Domeen (SCS):** `devops-portal`
 - **Viidatud Nõuded:** `docs/specs/devops-portal/requirements.md`

@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📊 Oracle Analytics Publisher Lietotnes un Katalogs (`applications/publisher/`)
+# 📊 Oracle Analytics Publisher lietotnes un katalogs (`applications/publisher/`)
 
 Šis direktorijs ir **vienotais patiesības avots (SSoT)** Oracle Analytics Publisher pārskatiem, pikseļu precīzām RTF veidnēm un datu modeļiem. Mape atbilst servera katalogam 1:1 (`/Custom/<Nozare>/<Pārskats>/`).
 

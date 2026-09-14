@@ -1,4 +1,4 @@
-# Kuldsete Hetktõmmiste Katastroofitaastus — Tehniline Disain (Technical Design)
+# Kuldsete hetktõmmiste katastroofitaastus — tehniline disain (Technical Design)
 
 - **Domeen (SCS):** `golden-snapshots`
 - **Viidatud Nõuded:** `docs/specs/golden-snapshots/requirements.md`

@@ -1,4 +1,4 @@
-# 17. DevOps Vahelehe UX Moderniseerimine, Dokitav Terminal ja Reeglipõhised Command Studiod
+# 17. DevOps Tab UX Modernization, Docked Terminal and Rule-Based Command Studios
 
 - **Staatus:** Heaks kiidetud (Accepted)
 - **Kuupäev:** 2026-09-13

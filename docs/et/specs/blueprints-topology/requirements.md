@@ -1,4 +1,4 @@
-# Blueprints ja Dünaamiline Porditopoloogia — Nõuete Spetsifikatsioon (Requirements)
+# Blueprints ja dünaamiline porditopoloogia — nõuete spetsifikatsioon (Requirements)
 
 - **Domeen (SCS):** `blueprints-topology`
 - **Versioon:** `1.0.0`

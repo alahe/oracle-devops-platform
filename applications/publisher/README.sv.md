@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📊 Oracle Analytics Publisher Applikationer och Katalog (`applications/publisher/`)
+# 📊 Oracle Analytics Publisher applikationer och katalog (`applications/publisher/`)
 
 Denna katalog är **enda sanningskällan (SSoT)** för Oracle Analytics Publisher-rapporter, pixelperfekta RTF-mallar och datamodeller. Mappstrukturen speglar serverns katalog 1:1 (`/Custom/<Domän>/<Rapport>/`).
 

@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../spec-driven-development-and-assembly-line.md) | [ 🇪🇪 Eesti ](../et/spec-driven-development-and-assembly-line.md) | [ 🇫🇮 Suomi ](../fi/spec-driven-development-and-assembly-line.md) | [ 🇸🇪 Svenska ](../sv/spec-driven-development-and-assembly-line.md) | [ 🇱🇻 Latviešu ](../lv/spec-driven-development-and-assembly-line.md) | [ 🇱🇹 Lietuvių ](spec-driven-development-and-assembly-line.md)
 
-# Specifikacijomis Grįstas Vystymas (SDD), Savarankiškos Sistemos (SCS) ir Agentų Konvejeris
+# Specifikacijomis grįstas vystymas (SDD), savarankiškos sistemos (SCS) ir agentų konvejeris
 
 > **Architektūros standartas perėjimui prie gamybai paruošto (viable) kodo Oracle DevOps platformoje**
 

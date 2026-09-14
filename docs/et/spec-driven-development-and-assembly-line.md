@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../spec-driven-development-and-assembly-line.md) | [ 🇪🇪 Eesti ](spec-driven-development-and-assembly-line.md) | [ 🇫🇮 Suomi ](../fi/spec-driven-development-and-assembly-line.md) | [ 🇸🇪 Svenska ](../sv/spec-driven-development-and-assembly-line.md) | [ 🇱🇻 Latviešu ](../lv/spec-driven-development-and-assembly-line.md) | [ 🇱🇹 Lietuvių ](../lt/spec-driven-development-and-assembly-line.md)
 
-# Spetsifikatsioonipõhine Arendus (SDD), Isehalduslikud Süsteemid (SCS) ja Agentne Konveier
+# Spetsifikatsioonipõhine arendus (SDD), isehalduslikud süsteemid (SCS) ja agentne konveier
 
 > **Arhitektuuristandard ja tegevusjuhend üleminekuks vibe-codingult tootmiskõlblikule (viable) koodile Oracle DevOps platvormil**
 

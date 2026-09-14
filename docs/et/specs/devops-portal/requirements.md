@@ -1,4 +1,4 @@
-# DevOps Juhtpaneel — Nõuete Spetsifikatsioon (Requirements Specification)
+# DevOps juhtpaneel — nõuete spetsifikatsioon (Requirements Specification)
 
 - **Domeen (SCS):** `devops-portal` (Dev Hub vahekaart `⚡ DevOps`)
 - **Versioon:** `1.1.0`

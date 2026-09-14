@@ -1,4 +1,4 @@
-# Oracle Analytics Publisher mallbyggare & tillgänglighetsguide: LibreOffice Writer 3-Pane Studio (Primär) & MS Word KVM/Wine (Valfri)
+# Oracle Analytics Publisher mallbyggare & tillgänglighetsguide: LibreOffice Writer 3-Pane Studio (primär) & MS Word KVM/Wine (valfri)
 
 [ 🇬🇧 English ](../publisher-template-builder-guide.md) | [ 🇪🇪 Eesti ](../et/publisher-template-builder-guide.md) | [ 🇫🇮 Suomi ](../fi/publisher-template-builder-guide.md) | [ 🇸🇪 Svenska ](publisher-template-builder-guide.md) | [ 🇱🇻 Latviešu ](../lv/publisher-template-builder-guide.md) | [ 🇱🇹 Lietuvių ](../lt/publisher-template-builder-guide.md)
 

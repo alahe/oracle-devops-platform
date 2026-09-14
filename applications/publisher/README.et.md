@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📊 Oracle Analytics Publisher Rakendused ja Kataloog (`applications/publisher/`)
+# 📊 Oracle Analytics Publisher rakendused ja kataloog (`applications/publisher/`)
 
 See kataloog on **ühtne tõeallikas (SSoT)** Oracle Analytics Publisheri aruannetele, pikslitäpsetele RTF mallidele ja andmemudelitele. Kaustapuu peegeldab serveri kataloogi 1:1 (`/Custom/<Valdkond>/<Raport>/`).
 

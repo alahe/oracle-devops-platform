@@ -1,4 +1,4 @@
-# Oracle Analytics Publisher šablonų kūrėjas ir prieinamumo gidas: LibreOffice Writer 3-Pane Studio (Pirminis) & MS Word KVM/Wine (Pasirinktinis)
+# Oracle Analytics Publisher šablonų kūrėjas ir prieinamumo gidas: LibreOffice Writer 3-Pane Studio (pirminis) & MS Word KVM/Wine (pasirinktinis)
 
 [ 🇬🇧 English ](../publisher-template-builder-guide.md) | [ 🇪🇪 Eesti ](../et/publisher-template-builder-guide.md) | [ 🇫🇮 Suomi ](../fi/publisher-template-builder-guide.md) | [ 🇸🇪 Svenska ](../sv/publisher-template-builder-guide.md) | [ 🇱🇻 Latviešu ](../lv/publisher-template-builder-guide.md) | [ 🇱🇹 Lietuvių ](publisher-template-builder-guide.md)
 

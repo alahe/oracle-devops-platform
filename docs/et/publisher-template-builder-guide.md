@@ -1,4 +1,4 @@
-# Oracle Analytics Publisher malli kujundaja ja ligipääsetavuse juhend: LibreOffice Writer 3-Pane Studio (Esmane) ja MS Word KVM/Wine (Valikuline)
+# Oracle Analytics Publisher malli kujundaja ja ligipääsetavuse juhend: LibreOffice Writer 3-Pane Studio (esmane) ja MS Word KVM/Wine (valikuline)
 
 [ 🇬🇧 English ](../publisher-template-builder-guide.md) | [ 🇪🇪 Eesti ](publisher-template-builder-guide.md) | [ 🇫🇮 Suomi ](../fi/publisher-template-builder-guide.md) | [ 🇸🇪 Svenska ](../sv/publisher-template-builder-guide.md) | [ 🇱🇻 Latviešu ](../lv/publisher-template-builder-guide.md) | [ 🇱🇹 Lietuvių ](../lt/publisher-template-builder-guide.md)
 

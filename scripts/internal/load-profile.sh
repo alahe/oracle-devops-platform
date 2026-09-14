@@ -154,7 +154,7 @@ lines = [
     f"export PROFILE_APEX_WORKSPACE={q(workspace_val or 'PROXY_WORKSPACE')}",
     # Publisher
     f"export PROFILE_PUBLISHER_ENABLED={q(str(pub.get('enabled', False)).lower())}",
-    f"export PROFILE_PUBLISHER_CONTAINER_NAME={q(pub.get('container_name', 'app_publisher'))}",
+    f"export PROFILE_PUBLISHER_CONTAINER_NAME={q(pub.get('container_name', 'app-publisher'))}",
     f"export PROFILE_PUBLISHER_HTTP_PORT={q(pub.get('http_port', 9502))}",
     f"export PROFILE_PUBLISHER_HTTPS_PORT={q(pub.get('https_port', 9503))}",
     f"export PROFILE_PUBLISHER_RCU_PREFIX={q(pub.get('rcu_prefix', 'OAS'))}",

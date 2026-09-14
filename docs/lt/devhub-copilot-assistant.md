@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../devhub-copilot-assistant.md) | [ 🇪🇪 Eesti ](../et/devhub-copilot-assistant.md) | [ 🇫🇮 Suomi ](../fi/devhub-copilot-assistant.md) | [ 🇸🇪 Svenska ](../sv/devhub-copilot-assistant.md) | [ 🇱🇻 Latviešu ](../lv/devhub-copilot-assistant.md) | [ 🇱🇹 Lietuvių ](devhub-copilot-assistant.md)
 
-# 🤖 Dev Hub Daugiatinklis AI asistentas (Copilot + Antigravity) ir Zero-Trust RAG vadovas
+# 🤖 Dev Hub daugiatinklis AI asistentas (Copilot + Antigravity) ir Zero-Trust RAG vadovas
 
 Šis vadovas dokumentuoja Developer Hub (`docs/dev-hub.html`) integruotą **daugiatinklį AI asistentą**, palaikantį tiek **GitHub Copilot**, tiek **Google Antigravity**, 5 Taisyklės Zero-Trust saugumo kontrolę, autonominę vietinę žinių bazę ir 1-spustelėjimo tiltus į „VS Code Copilot Chat“ bei „Antigravity“.
 

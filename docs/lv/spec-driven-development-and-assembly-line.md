@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../spec-driven-development-and-assembly-line.md) | [ 🇪🇪 Eesti ](../et/spec-driven-development-and-assembly-line.md) | [ 🇫🇮 Suomi ](../fi/spec-driven-development-and-assembly-line.md) | [ 🇸🇪 Svenska ](../sv/spec-driven-development-and-assembly-line.md) | [ 🇱🇻 Latviešu ](spec-driven-development-and-assembly-line.md) | [ 🇱🇹 Lietuvių ](../lt/spec-driven-development-and-assembly-line.md)
 
-# Uz Specifikācijām Balstīta Izstrāde (SDD), Pašpietiekamas Sistēmas (SCS) un Aģentu Konveijers
+# Uz specifikācijām balstīta izstrāde (SDD), pašpietiekamas sistēmas (SCS) un aģentu konveijers
 
 > **Arhitektūras standarts pārejai uz ražošanai gatavu (viable) kodu Oracle DevOps platformā**
 

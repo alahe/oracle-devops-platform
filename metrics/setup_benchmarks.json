@@ -1,7 +1,7 @@
 {
-  "last_updated": "2026-09-10T12:57:44Z",
-  "total_duration_seconds": 709,
-  "total_duration_formatted": "11m 49s",
+  "last_updated": "2026-09-14T00:53:50Z",
+  "total_duration_seconds": 786,
+  "total_duration_formatted": "13m 6s",
   "parameters": {
     "is_local": "true",
     "db_host": "localhost",
@@ -12,27 +12,18 @@
   },
   "steps": {
     "step1_container_images_pull_seconds": 3,
-    "step2_ords_download_seconds": 0,
-    "step3_apex_download_unzip_seconds": 0,
-    "step4_container_startup_seconds": 152,
-    "step4_5_wallet_tns_config_seconds": 55,
-    "step5_ords_service_seconds": 0,
+    "step2_ords_download_seconds": 1,
+    "step3_apex_download_unzip_seconds": 16,
+    "step4_container_startup_seconds": 125,
+    "step4_5_wallet_tns_config_seconds": 51,
+    "step5_ords_service_seconds": 1,
     "step5_5_liquibase_migration_seconds": 0,
     "step6_apex_copy_container_seconds": 20,
     "step7_apex_engine_install_seconds": 348,
     "step8_ords_config_seconds": 10,
-    "step9_publisher_install_seconds": 451,
-    "step10_deploy_apex_apps_seconds": 0,
+    "step9_publisher_install_seconds": 0,
+    "step10_deploy_apex_apps_seconds": 1,
     "step11_snapshot_seconds": 0
   },
-  "test_local_ci_duration_seconds": 3,
-  "publisher_e2e_last_run": {
-    "timestamp": "20260913_073854",
-    "duration_seconds": 6,
-    "status": "SUCCESS",
-    "report": "Custom/Invoices/Invoice_Report",
-    "content_verified": true,
-    "a11y_score": 16,
-    "a11y_passed": false
-  }
+  "test_local_ci_duration_seconds": 3
 }

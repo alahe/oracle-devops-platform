@@ -1,9 +1,10 @@
 # 🧪 Master Blueprint Live Testing Summary Report
 
-- **Date:** 2026-09-08 15:24:02
+- **Date:** 2026-09-14 04:07:33
 - **Total Tested:** 3
 - **Passed:** 3 (✅)
 - **Failed:** 0 (❌)
+- **Skipped:** 0 (⏭️)
 - **Total Duration:** 1s
 - **Fast Mode:** No
 - **Dry Run:** Yes
@@ -16,4 +17,4 @@
 | :---: | :--- | :--- | :---: | :---: | :--- |
 | **5** | `5-standalone-publisher` | `db-publisher app-publisher` | 1s | ✅ PASS | All assertions verified |
 | **6** | `6-standalone-forms` | `db-forms app-forms` | 0s | ✅ PASS | All assertions verified |
-| **7** | `7-consolidated-forms-publisher` | `db-publisher app-forms app-publisher` | 0s | ✅ PASS | All assertions verified |
+| **7** | `7-consolidated-forms-publisher` | `db-forms-publisher app-forms app-publisher` | 0s | ✅ PASS | All assertions verified |

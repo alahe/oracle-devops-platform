@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
 
-# 📊 Oracle Analytics Publisher Programos ir Katalogas (`applications/publisher/`)
+# 📊 Oracle Analytics Publisher programos ir katalogas (`applications/publisher/`)
 
 Šis katalogas yra **vienintelis tiesos šaltinis (SSoT)** Oracle Analytics Publisher ataskaitoms, tiksliems RTF šablonams ir duomenų modeliams. Aplankų struktūra atitinka serverio katalogą 1:1 (`/Custom/<Sritis>/<Ataskaita>/`).
 

@@ -8,13 +8,13 @@
 
 | Parameeter | Väärtus |
 | :--- | :--- |
-| **Käivitamise Kellaaeg** | `2026-09-08 15:24:49 EEST` |
+| **Käivitamise Kellaaeg** | `2026-09-14 04:08:26 EEST` |
 | **Käivitaja Kasutaja** | `allanlahe` |
 | **Aktiivne Profiil** | `proxy-standard-gvenzl` |
 | **Integratsioonitestid** | ✅ 12 / 12 Läbitud |
-| **Ühikutestid (Unit Tests)** | ✅ 67 / 67 Läbitud |
-| **Skriptide Kaetus** | 🟢 100% (67 skripti kaetud) |
-| **Kogu Testi Kestus** | `153s` |
+| **Ühikutestid (Unit Tests)** | ✅ 71 / 71 Läbitud |
+| **Skriptide Kaetus** | 🟢 100% (71 skripti kaetud) |
+| **Kogu Testi Kestus** | `154s` |
 | **Kõikide Testide Olek** | ✅ **PASSED (100%)** |
 
 ---
@@ -33,7 +33,7 @@
 10. **Konteineriseeritud Web IDE:** `tests/integration/test-web-ide-container.sh` (✅ PASSED)
 11. **Mitmekeelsus & i18n Sünkronisatsioon (Rule 9):** `tests/test-multilingual-support.sh` (✅ PASSED)
 12. **Failinimede Teisaldatavus (Rule 13):** `tests/unit/test-filename-portability.sh` (✅ PASSED)
-13. **Eraldiseisvad Ühikutestid:** `tests/unit/test-script-*.sh` (67 testi - ✅ PASSED)
+13. **Eraldiseisvad Ühikutestid:** `tests/unit/test-script-*.sh` (71 testi - ✅ PASSED)
 
 ---
 

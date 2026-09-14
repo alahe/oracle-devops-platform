@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../spec-driven-development-and-assembly-line.md) | [ 🇪🇪 Eesti ](../et/spec-driven-development-and-assembly-line.md) | [ 🇫🇮 Suomi ](../fi/spec-driven-development-and-assembly-line.md) | [ 🇸🇪 Svenska ](spec-driven-development-and-assembly-line.md) | [ 🇱🇻 Latviešu ](../lv/spec-driven-development-and-assembly-line.md) | [ 🇱🇹 Lietuvių ](../lt/spec-driven-development-and-assembly-line.md)
 
-# Specifikationsdriven Utveckling (SDD), Självständiga System (SCS) och Agentisk Monteringslinje
+# Specifikationsdriven utveckling (SDD), självständiga system (SCS) och agentisk monteringslinje
 
 > **Arkitekturstandard för övergång från experimentell kodning till produktionsfärdig (viable) kod på Oracle DevOps-plattformen**
 

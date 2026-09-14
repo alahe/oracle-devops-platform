@@ -48,8 +48,8 @@ check_ports_and_analyze_network() {
     echo "${PROFILE_ORDS_CONTAINER_NAME:-app-ords}:${ORDS_SSL:-8448}:ORDS-HTTPS" >> "$temp_file"
   fi
   if [ "${SKIP_PUBLISHER:-false}" = "false" ] && { [ "${ANY_PUB_ENABLED:-false}" = "true" ] || [ "${PUBLISHER_ENABLED:-false}" = "true" ]; }; then
-    echo "${PUBLISHER_CONTAINER_NAME:-app_publisher}:${PUBLISHER_HTTP_PORT:-9502}:Publisher-HTTP" >> "$temp_file"
-    echo "${PUBLISHER_CONTAINER_NAME:-app_publisher}:${PUBLISHER_HTTPS_PORT:-9503}:Publisher-HTTPS" >> "$temp_file"
+    echo "${PUBLISHER_CONTAINER_NAME:-app-publisher}:${PUBLISHER_HTTP_PORT:-9502}:Publisher-HTTP" >> "$temp_file"
+    echo "${PUBLISHER_CONTAINER_NAME:-app-publisher}:${PUBLISHER_HTTPS_PORT:-9503}:Publisher-HTTPS" >> "$temp_file"
   fi
   load_web_ide_profile >/dev/null 2>&1 || true
   if [ "${SKIP_WEB_IDE:-false}" = "false" ] && [ "${WEB_IDE_ENABLED:-false}" = "true" ]; then

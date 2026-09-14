@@ -1,4 +1,4 @@
-# Oracle Analytics Publisher veidņu veidotājs & piekļūstamības rokasgrāmata: LibreOffice Writer 3-Pane Studio (Primārais) & MS Word KVM/Wine (Neobligāts)
+# Oracle Analytics Publisher veidņu veidotājs & piekļūstamības rokasgrāmata: LibreOffice Writer 3-Pane Studio (primārais) & MS Word KVM/Wine (neobligāts)
 
 [ 🇬🇧 English ](../publisher-template-builder-guide.md) | [ 🇪🇪 Eesti ](../et/publisher-template-builder-guide.md) | [ 🇫🇮 Suomi ](../fi/publisher-template-builder-guide.md) | [ 🇸🇪 Svenska ](../sv/publisher-template-builder-guide.md) | [ 🇱🇻 Latviešu ](publisher-template-builder-guide.md) | [ 🇱🇹 Lietuvių ](../lt/publisher-template-builder-guide.md)
 

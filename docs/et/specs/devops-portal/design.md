@@ -1,4 +1,4 @@
-# DevOps Juhtpaneel — Tehniline Disain ja Arhitektuur (Technical Design)
+# DevOps juhtpaneel — tehniline disain ja arhitektuur (Technical Design)
 
 - **Domeen (SCS):** `devops-portal`
 - **Viidatud Nõuded:** `docs/specs/devops-portal/requirements.md`

@@ -1,4 +1,4 @@
-# Zero-Trust SEPS Wallet — Teostusülesanded ja Verifitseerimine (Implementation Tasks)
+# Zero-Trust SEPS Wallet — teostusülesanded ja verifitseerimine (Implementation Tasks)
 
 - **Domeen (SCS):** `wallet-security`
 - **Viidatud Nõuded:** `docs/specs/wallet-security/requirements.md`

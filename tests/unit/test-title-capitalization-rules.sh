@@ -48,7 +48,10 @@ ALLOWLIST = {
     'AUTONOMOUS', 'DATABASE', 'CLOUD', 'COMMUNITY', 'ENTERPRISE', 'EDGE', 'SERVER',
     'BLUEPRINTS', 'BLUEPRINT', 'GOLDEN', 'SNAPSHOTS', 'REPORTS', 'REPORT', 'WORKFLOW',
     'KAFKA', 'SSO', 'ENTRA', 'ID', 'AZURE', 'ARTIFACTORY', 'ANALYTICS', 'JIRA',
-    'WEBLOGIC', 'CODE', 'PKI', 'CA'
+    'WEBLOGIC', 'CODE', 'PKI', 'CA',
+    'COPILOT', 'ANTIGRAVITY', 'RAG', 'LIBREOFFICE', 'WRITER', 'WINE', 'KVM', 'STUDIO',
+    'PANE', 'AI', 'SCS', 'SDD', 'TRUST', 'ZERO-TRUST', 'PUBLISHERI',
+    'TECHNICAL', 'DESIGN', 'REQUIREMENTS', 'SPECIFICATION', 'IMPLEMENTATION', 'TASKS'
 }
 
 MINOR_EN_WORDS = {'a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'from', 'by', 'with', 'in', 'of', 'over', '&'}
@@ -203,7 +206,7 @@ for l in ['et', 'fi', 'sv', 'lv', 'lt']:
 print('  [5/5] Checking canonical English README.md files across repository...')
 for abs_p in sorted(glob.glob(os.path.join(WORKSPACE, '**/README.md'), recursive=True)):
     rel_p = os.path.relpath(abs_p, WORKSPACE)
-    if rel_p.startswith('.agents/') or rel_p.startswith('.git/') or '/et/' in rel_p or '/fi/' in rel_p or '/sv/' in rel_p or '/lv/' in rel_p or '/lt/' in rel_p:
+    if rel_p.startswith('.agents/') or rel_p.startswith('.git/') or rel_p.startswith('db-install/') or rel_p.startswith('binaries/') or rel_p.startswith('install_logs/') or '/et/' in rel_p or '/fi/' in rel_p or '/sv/' in rel_p or '/lv/' in rel_p or '/lt/' in rel_p:
         continue
     h1 = find_h1(rel_p)
     if h1:

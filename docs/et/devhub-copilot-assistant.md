@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../devhub-copilot-assistant.md) | [ 🇪🇪 Eesti ](devhub-copilot-assistant.md) | [ 🇫🇮 Suomi ](../fi/devhub-copilot-assistant.md) | [ 🇸🇪 Svenska ](../sv/devhub-copilot-assistant.md) | [ 🇱🇻 Latviešu ](../lv/devhub-copilot-assistant.md) | [ 🇱🇹 Lietuvių ](../lt/devhub-copilot-assistant.md)
 
-# 🤖 Dev Hub Mitmik-Mootoriga AI Assistent (Copilot + Antigravity) ja Zero-Trust RAG Juhend
+# 🤖 Dev Hub mitmik-mootoriga AI assistent (Copilot + Antigravity) ja Zero-Trust RAG juhend
 
 Käesolev juhend dokumenteerib Developer Hubi (`docs/dev-hub.html`) integreeritud **mitmik-mootoriga AI assistendi**, mis toetab nii **GitHub Copilotit** kui ka **Google Antigravityt**, selle Reegel 5 Zero-Trust turvakontrolle, võrguühenduseta (offline) lokaalset teadmusbaasi ning 1-klikiga eksporti nii VS Code Copilot Chati kui ka Antigravity töölauarakendusse.
 

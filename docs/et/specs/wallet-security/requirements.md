@@ -1,4 +1,4 @@
-# Zero-Trust SEPS Wallet — Nõuete Spetsifikatsioon (Requirements Specification)
+# Zero-Trust SEPS Wallet — nõuete spetsifikatsioon (Requirements Specification)
 
 - **Domeen (SCS):** `wallet-security`
 - **Versioon:** `1.0.0`

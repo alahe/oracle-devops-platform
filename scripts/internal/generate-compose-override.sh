@@ -385,12 +385,17 @@ EOF
 done
 
 if [ "${#active_instances[@]}" -eq 0 ] && is_ords_enabled; then
-  ords_http_val="${ORDS_HTTP_PORT:-8088}"
-  ords_ssl_val="${ORDS_HTTPS_PORT:-8448}"
+  if declare -f load_ords_profile >/dev/null 2>&1; then
+    load_ords_profile "${ORDS_PROFILE:-ords-image}"
+  fi
+  ords_http_val="${ORDS_HTTP_PORT:-${PROFILE_ORDS_HTTP_PORT:-8088}}"
+  ords_ssl_val="${ORDS_HTTPS_PORT:-${PROFILE_ORDS_HTTPS_PORT:-8448}}"
+  ords_c_name="${PROFILE_ORDS_CONTAINER_NAME:-app-ords}"
+  ords_svc_name="${PROFILE_ORDS_SERVICE_NAME:-app-ords}"
   cat <<EOF >> "$OVERRIDE_FILE"
-  app-ords:
+  ${ords_svc_name}:
     image: ${PROFILE_ORDS_CONTAINER_IMAGE:-container-registry.oracle.com/database/ords:latest}
-    container_name: app-ords
+    container_name: ${ords_c_name}
     ports:
       - "${ords_http_val}:${ords_http_val}"
       - "${ords_ssl_val}:${ords_ssl_val}"

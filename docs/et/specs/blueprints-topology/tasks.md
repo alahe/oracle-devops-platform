@@ -1,4 +1,4 @@
-# Blueprints ja Dünaamiline Porditopoloogia — Teostusülesanded (Implementation Tasks)
+# Blueprints ja dünaamiline porditopoloogia — teostusülesanded (Implementation Tasks)
 
 - **Domeen (SCS):** `blueprints-topology`
 - **Viidatud Nõuded:** `docs/specs/blueprints-topology/requirements.md`

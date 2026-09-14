@@ -470,11 +470,11 @@ DOC_SPECS = [
         "rel": "docs/spec-driven-development-and-assembly-line.md",
         "titles": {
             "en": "📋 Spec-Driven Development (SDD), SCS & Assembly Line",
-            "et": "📋 Spetsifikatsioonipõhine arendus (SDD), SCS & Agentne konveier",
-            "fi": "📋 Spesifikaatiolähtöinen kehitys (SDD), SCS & Liukuhihna",
-            "sv": "📋 Specifikationsdriven utveckling (SDD), SCS & Monteringslinje",
-            "lv": "📋 Uz specifikācijām balstīta izstrāde (SDD), SCS & Konveijers",
-            "lt": "📋 Specifikacijomis grįstas vystymas (SDD), SCS & Konvejeris"
+            "et": "📋 Spetsifikatsioonipõhine arendus (SDD), SCS & agentne konveier",
+            "fi": "📋 Spesifikaatiolähtöinen kehitys (SDD), SCS & liukuhihna",
+            "sv": "📋 Specifikationsdriven utveckling (SDD), SCS & monteringslinje",
+            "lv": "📋 Uz specifikācijām balstīta izstrāde (SDD), SCS & konveijers",
+            "lt": "📋 Specifikacijomis grįstas vystymas (SDD), SCS & konvejeris"
         },
         "files": {
             "en": "docs/spec-driven-development-and-assembly-line.md",
@@ -490,11 +490,11 @@ DOC_SPECS = [
         "rel": "docs/specs/devops-portal/requirements.md",
         "titles": {
             "en": "📜 Spec: DevOps Portal — Requirements (Given/When/Then)",
-            "et": "📜 Spetsifikatsioon: DevOps Juhtpaneel — Nõuded",
-            "fi": "📜 Spesifikaatio: DevOps-portaali — Vaatimukset",
-            "sv": "📜 Specifikation: DevOps-portal — Krav",
-            "lv": "📜 Specifikācija: DevOps portāls — Prasības",
-            "lt": "📜 Specifikacija: DevOps portalas — Reikalavimai"
+            "et": "📜 Spetsifikatsioon: DevOps juhtpaneel — nõuded",
+            "fi": "📜 Spesifikaatio: DevOps-portaali — vaatimukset",
+            "sv": "📜 Specifikation: DevOps-portal — krav",
+            "lv": "📜 Specifikācija: DevOps portāls — prasības",
+            "lt": "📜 Specifikacija: DevOps portalas — reikalavimai"
         },
         "files": {
             "en": "docs/specs/devops-portal/requirements.md",
@@ -510,11 +510,11 @@ DOC_SPECS = [
         "rel": "docs/specs/devops-portal/design.md",
         "titles": {
             "en": "🏛️ Spec: DevOps Portal — SCS Architecture & Design",
-            "et": "🏛️ Spetsifikatsioon: DevOps Juhtpaneel — Disain & SCS",
-            "fi": "🏛️ Spesifikaatio: DevOps-portaali — Arkkitehtuuri & SCS",
-            "sv": "🏛️ Specifikation: DevOps-portal — Design & SCS",
-            "lv": "🏛️ Specifikācija: DevOps portāls — Dizains & SCS",
-            "lt": "🏛️ Specifikacija: DevOps portalas — Architektūra & SCS"
+            "et": "🏛️ Spetsifikatsioon: DevOps juhtpaneel — disain & SCS",
+            "fi": "🏛️ Spesifikaatio: DevOps-portaali — arkkitehtuuri & SCS",
+            "sv": "🏛️ Specifikation: DevOps-portal — design & SCS",
+            "lv": "🏛️ Specifikācija: DevOps portāls — dizains & SCS",
+            "lt": "🏛️ Specifikacija: DevOps portalas — architektūra & SCS"
         },
         "files": {
             "en": "docs/specs/devops-portal/design.md",
@@ -530,11 +530,11 @@ DOC_SPECS = [
         "rel": "docs/specs/devops-portal/tasks.md",
         "titles": {
             "en": "📋 Spec: DevOps Portal — Traceability Matrix & Tasks",
-            "et": "📋 Spetsifikatsioon: DevOps Juhtpaneel — Jälgitavus & Ülesanded",
-            "fi": "📋 Spesifikaatio: DevOps-portaali — Jäljitettävyys & Tehtävät",
-            "sv": "📋 Specifikation: DevOps-portal — Spårbarhet & Uppgifter",
-            "lv": "📋 Specifikācija: DevOps portāls — Izsekojamība & Uzdevumi",
-            "lt": "📋 Specifikacija: DevOps portalas — Atsekamumas ir Užduotys"
+            "et": "📋 Spetsifikatsioon: DevOps juhtpaneel — jälgitavus & ülesanded",
+            "fi": "📋 Spesifikaatio: DevOps-portaali — jäljitettävyys & tehtävät",
+            "sv": "📋 Specifikation: DevOps-portal — spårbarhet & uppgifter",
+            "lv": "📋 Specifikācija: DevOps portāls — izsekojamība & uzdevumi",
+            "lt": "📋 Specifikacija: DevOps portalas — atsekamumas ir užduotys"
         },
         "files": {
             "en": "docs/specs/devops-portal/tasks.md",
@@ -550,11 +550,11 @@ DOC_SPECS = [
         "rel": "docs/specs/wallet-security/requirements.md",
         "titles": {
             "en": "🔐 Spec: Zero-Trust SEPS Wallet — Requirements",
-            "et": "🔐 Spetsifikatsioon: Zero-Trust SEPS Wallet — Nõuded",
-            "fi": "🔐 Spesifikaatio: Zero-Trust SEPS Wallet — Vaatimukset",
-            "sv": "🔐 Specifikation: Zero-Trust SEPS Wallet — Krav",
-            "lv": "🔐 Specifikācija: Zero-Trust SEPS Wallet — Prasības",
-            "lt": "🔐 Specifikacija: Zero-Trust SEPS Wallet — Reikalavimai"
+            "et": "🔐 Spetsifikatsioon: Zero-Trust SEPS Wallet — nõuded",
+            "fi": "🔐 Spesifikaatio: Zero-Trust SEPS Wallet — vaatimukset",
+            "sv": "🔐 Specifikation: Zero-Trust SEPS Wallet — krav",
+            "lv": "🔐 Specifikācija: Zero-Trust SEPS Wallet — prasības",
+            "lt": "🔐 Specifikacija: Zero-Trust SEPS Wallet — reikalavimai"
         },
         "files": {
             "en": "docs/specs/wallet-security/requirements.md",
@@ -570,11 +570,11 @@ DOC_SPECS = [
         "rel": "docs/specs/wallet-security/design.md",
         "titles": {
             "en": "🏛️ Spec: Zero-Trust SEPS Wallet — Design & SCS",
-            "et": "🏛️ Spetsifikatsioon: Zero-Trust SEPS Wallet — Disain & SCS",
-            "fi": "🏛️ Spesifikaatio: Zero-Trust SEPS Wallet — Arkkitehtuuri",
-            "sv": "🏛️ Specifikation: Zero-Trust SEPS Wallet — Design",
-            "lv": "🏛️ Specifikācija: Zero-Trust SEPS Wallet — Dizains",
-            "lt": "🏛️ Specifikacija: Zero-Trust SEPS Wallet — Architektūra"
+            "et": "🏛️ Spetsifikatsioon: Zero-Trust SEPS Wallet — disain & SCS",
+            "fi": "🏛️ Spesifikaatio: Zero-Trust SEPS Wallet — arkkitehtuuri",
+            "sv": "🏛️ Specifikation: Zero-Trust SEPS Wallet — design",
+            "lv": "🏛️ Specifikācija: Zero-Trust SEPS Wallet — dizains",
+            "lt": "🏛️ Specifikacija: Zero-Trust SEPS Wallet — architektūra"
         },
         "files": {
             "en": "docs/specs/wallet-security/design.md",
@@ -590,11 +590,11 @@ DOC_SPECS = [
         "rel": "docs/specs/wallet-security/tasks.md",
         "titles": {
             "en": "📋 Spec: Zero-Trust SEPS Wallet — Traceability & Tasks",
-            "et": "📋 Spetsifikatsioon: Zero-Trust SEPS Wallet — Jälgitavus",
-            "fi": "📋 Spesifikaatio: Zero-Trust SEPS Wallet — Tehtävät",
-            "sv": "📋 Specifikation: Zero-Trust SEPS Wallet — Uppgifter",
-            "lv": "📋 Specifikācija: Zero-Trust SEPS Wallet — Uzdevumi",
-            "lt": "📋 Specifikacija: Zero-Trust SEPS Wallet — Užduotys"
+            "et": "📋 Spetsifikatsioon: Zero-Trust SEPS Wallet — jälgitavus",
+            "fi": "📋 Spesifikaatio: Zero-Trust SEPS Wallet — tehtävät",
+            "sv": "📋 Specifikation: Zero-Trust SEPS Wallet — uppgifter",
+            "lv": "📋 Specifikācija: Zero-Trust SEPS Wallet — uzdevumi",
+            "lt": "📋 Specifikacija: Zero-Trust SEPS Wallet — užduotys"
         },
         "files": {
             "en": "docs/specs/wallet-security/tasks.md",
@@ -610,11 +610,11 @@ DOC_SPECS = [
         "rel": "docs/specs/golden-snapshots/requirements.md",
         "titles": {
             "en": "⚡ Spec: Golden Snapshots — Requirements",
-            "et": "⚡ Spetsifikatsioon: Kuldsete hetktõmmiste nõuded",
-            "fi": "⚡ Spesifikaatio: Kultaiset tilannevedokset — Vaatimukset",
-            "sv": "⚡ Specifikation: Gyllene ögonblicksbilder — Krav",
-            "lv": "⚡ Specifikācija: Zelta momentuzņēmumi — Prasības",
-            "lt": "⚡ Specifikacija: Auksinės momentinės kopijos — Reikalavimai"
+            "et": "⚡ Spetsifikatsioon: kuldsete hetktõmmiste nõuded",
+            "fi": "⚡ Spesifikaatio: kultaiset tilannevedokset — vaatimukset",
+            "sv": "⚡ Specifikation: gyllene ögonblicksbilder — krav",
+            "lv": "⚡ Specifikācija: zelta momentuzņēmumi — prasības",
+            "lt": "⚡ Specifikacija: auksinės momentinės kopijos — reikalavimai"
         },
         "files": {
             "en": "docs/specs/golden-snapshots/requirements.md",
@@ -630,11 +630,11 @@ DOC_SPECS = [
         "rel": "docs/specs/golden-snapshots/design.md",
         "titles": {
             "en": "🏛️ Spec: Golden Snapshots — Architecture & Recovery",
-            "et": "🏛️ Spetsifikatsioon: Kuldsete hetktõmmiste disain",
-            "fi": "🏛️ Spesifikaatio: Kultaiset tilannevedokset — Arkkitehtuuri",
-            "sv": "🏛️ Specifikation: Gyllene ögonblicksbilder — Design",
-            "lv": "🏛️ Specifikācija: Zelta momentuzņēmumi — Dizains",
-            "lt": "🏛️ Specifikacija: Auksinės momentinės kopijos — Architektūra"
+            "et": "🏛️ Spetsifikatsioon: kuldsete hetktõmmiste disain",
+            "fi": "🏛️ Spesifikaatio: kultaiset tilannevedokset — arkkitehtuuri",
+            "sv": "🏛️ Specifikation: gyllene ögonblicksbilder — design",
+            "lv": "🏛️ Specifikācija: zelta momentuzņēmumi — dizains",
+            "lt": "🏛️ Specifikacija: auksinės momentinės kopijos — architektūra"
         },
         "files": {
             "en": "docs/specs/golden-snapshots/design.md",
@@ -650,11 +650,11 @@ DOC_SPECS = [
         "rel": "docs/specs/golden-snapshots/tasks.md",
         "titles": {
             "en": "📋 Spec: Golden Snapshots — Traceability & Tasks",
-            "et": "📋 Spetsifikatsioon: Kuldsete hetktõmmiste ülesanded",
-            "fi": "📋 Spesifikaatio: Kultaiset tilannevedokset — Tehtävät",
-            "sv": "📋 Specifikation: Gyllene ögonblicksbilder — Uppgifter",
-            "lv": "📋 Specifikācija: Zelta momentuzņēmumi — Uzdevumi",
-            "lt": "📋 Specifikacija: Auksinės momentinės kopijos — Užduotys"
+            "et": "📋 Spetsifikatsioon: kuldsete hetktõmmiste ülesanded",
+            "fi": "📋 Spesifikaatio: kultaiset tilannevedokset — tehtävät",
+            "sv": "📋 Specifikation: gyllene ögonblicksbilder — uppgifter",
+            "lv": "📋 Specifikācija: zelta momentuzņēmumi — uzdevumi",
+            "lt": "📋 Specifikacija: auksinės momentinės kopijos — užduotys"
         },
         "files": {
             "en": "docs/specs/golden-snapshots/tasks.md",
@@ -670,11 +670,11 @@ DOC_SPECS = [
         "rel": "docs/specs/blueprints-topology/requirements.md",
         "titles": {
             "en": "🏗️ Spec: Blueprints & Topology — Requirements",
-            "et": "🏗️ Spetsifikatsioon: Blueprintide & Topoloogia nõuded",
-            "fi": "🏗️ Spesifikaatio: Mallit & Topologia — Vaatimukset",
-            "sv": "🏗️ Specifikation: Ritningar & Topologi — Krav",
-            "lv": "🏗️ Specifikācija: Rasējumi & Topoloģija — Prasības",
-            "lt": "🏗️ Specifikacija: Brėžiniai ir Topologija — Reikalavimai"
+            "et": "🏗️ Spetsifikatsioon: blueprintide ja topoloogia nõuded",
+            "fi": "🏗️ Spesifikaatio: mallit ja topologia — vaatimukset",
+            "sv": "🏗️ Specifikation: ritningar & topologi — krav",
+            "lv": "🏗️ Specifikācija: rasējumi & topoloģija — prasības",
+            "lt": "🏗️ Specifikacija: brėžiniai ir topologija — reikalavimai"
         },
         "files": {
             "en": "docs/specs/blueprints-topology/requirements.md",
@@ -690,11 +690,11 @@ DOC_SPECS = [
         "rel": "docs/specs/blueprints-topology/design.md",
         "titles": {
             "en": "🏛️ Spec: Blueprints & Topology — Design & Ports",
-            "et": "🏛️ Spetsifikatsioon: Blueprintide & Topoloogia disain",
-            "fi": "🏛️ Spesifikaatio: Mallit & Topologia — Arkkitehtuuri",
-            "sv": "🏛️ Specifikation: Ritningar & Topologi — Design",
-            "lv": "🏛️ Specifikācija: Rasējumi & Topoloģija — Dizains",
-            "lt": "🏛️ Specifikacija: Brėžiniai ir Topologija — Architektūra"
+            "et": "🏛️ Spetsifikatsioon: blueprintide ja topoloogia disain",
+            "fi": "🏛️ Spesifikaatio: mallit ja topologia — arkkitehtuuri",
+            "sv": "🏛️ Specifikation: ritningar & topologi — design",
+            "lv": "🏛️ Specifikācija: rasējumi & topoloģija — dizains",
+            "lt": "🏛️ Specifikacija: brėžiniai ir topologija — architektūra"
         },
         "files": {
             "en": "docs/specs/blueprints-topology/design.md",
@@ -710,11 +710,11 @@ DOC_SPECS = [
         "rel": "docs/specs/blueprints-topology/tasks.md",
         "titles": {
             "en": "📋 Spec: Blueprints & Topology — Traceability & Tasks",
-            "et": "📋 Spetsifikatsioon: Blueprintide & Topoloogia ülesanded",
-            "fi": "📋 Spesifikaatio: Mallit & Topologia — Tehtävät",
-            "sv": "📋 Specifikation: Ritningar & Topologi — Uppgifter",
-            "lv": "📋 Specifikācija: Rasējumi & Topoloģija — Uzdevumi",
-            "lt": "📋 Specifikacija: Brėžiniai ir Topologija — Užduotys"
+            "et": "📋 Spetsifikatsioon: blueprintide ja topoloogia ülesanded",
+            "fi": "📋 Spesifikaatio: mallit ja topologia — tehtävät",
+            "sv": "📋 Specifikation: ritningar & topologi — uppgifter",
+            "lv": "📋 Specifikācija: rasējumi & topoloģija — uzdevumi",
+            "lt": "📋 Specifikacija: brėžiniai ir topologija — užduotys"
         },
         "files": {
             "en": "docs/specs/blueprints-topology/tasks.md",

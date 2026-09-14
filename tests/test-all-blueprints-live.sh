@@ -197,6 +197,7 @@ fi
 TOTAL_TESTS=${#BLUEPRINT_FILES[@]}
 PASSED_TESTS=0
 FAILED_TESTS=0
+SKIPPED_TESTS=0
 RESULTS_JSON="[]"
 
 echo -e "${CYAN}==================================================================${NC}"
@@ -251,28 +252,42 @@ for idx in "${!BLUEPRINT_FILES[@]}"; do
     echo -e "   🔍 [3/3] Simulating port allocation & topology mapping..."
     sleep 0.2
   else
-    if [ "${NO_RESET:-false}" != "true" ]; then
-      echo -e "   🧹 [1/5] Resetting existing environment (clean slate)..."
-      "$WORKSPACE_DIR/scripts/reset-all.sh" all --force >/dev/null 2>&1 || true
-      if command -v podman &>/dev/null; then
-        for lc in $(podman ps -a --format '{{.Names}}' 2>/dev/null | grep -E '^(db-|app-|web-ide|oracle-)' || true); do
-          podman rm -f "$lc" >/dev/null 2>&1 || true
-        done
+    if [ "$bp_num" = "11" ]; then
+      # Blueprint 11 is an external remote cloud publisher per docs/incremental-blueprints-test-plan.md
+      # Check if external remote database host is configured and reachable
+      if [ -z "${REMOTE_DB_HOST:-}" ]; then
+        echo -e "   ℹ️  Blueprint 11 requires an external remote database (excluded from local CI per docs/incremental-blueprints-test-plan.md)."
+        TEST_STATUS="SKIP"
+        FAIL_REASON="External remote database required (excluded per docs/incremental-blueprints-test-plan.md)"
       fi
-    else
-      echo -e "   ⚡ [1/5] Preserving existing containers (--no-reset mode)..."
     fi
 
-    echo -e "   ⚡ [2/5] Deploying Blueprint ${bp_num} (setup-all.sh)..."
-    SETUP_ARGS=("-b" "$bp_num")
-    [ "$FAST_MODE" = "true" ] && SETUP_ARGS+=("--fast" "--from-snapshot")
+    if [ "$TEST_STATUS" != "SKIP" ]; then
+      if [ "${NO_RESET:-false}" != "true" ]; then
+        echo -e "   🧹 [1/5] Resetting existing environment (clean slate)..."
+        "$WORKSPACE_DIR/scripts/reset-all.sh" all --force >/dev/null 2>&1 || true
+        if command -v podman &>/dev/null; then
+          for lc in $(podman ps -a --format '{{.Names}}' 2>/dev/null | grep -E '^(db-|app-|web-ide|oracle-)' || true); do
+            podman rm -f "$lc" >/dev/null 2>&1 || true
+          done
+        fi
+      else
+        echo -e "   ⚡ [1/5] Preserving existing containers (--no-reset mode)..."
+      fi
 
-    SETUP_LOG="$WORKSPACE_DIR/install_logs/test_bp_${bp_num}_$(date +%Y%m%d_%H%M%S).log"
-    LOG_FILE="$SETUP_LOG"
+      echo -e "   ⚡ [2/5] Deploying Blueprint ${bp_num} (setup-all.sh)..."
+      SETUP_ARGS=("-b" "$bp_num")
+      [ "$FAST_MODE" = "true" ] && SETUP_ARGS+=("--fast" "--from-snapshot")
 
-    if ! "$WORKSPACE_DIR/scripts/setup-all.sh" "${SETUP_ARGS[@]}" > "$SETUP_LOG" 2>&1; then
-      TEST_STATUS="FAIL"
-      FAIL_REASON="setup-all.sh failed with exit code $?"
+      SETUP_LOG="$WORKSPACE_DIR/install_logs/test_bp_${bp_num}_$(date +%Y%m%d_%H%M%S).log"
+      LOG_FILE="$SETUP_LOG"
+
+      SETUP_RC=0
+      "$WORKSPACE_DIR/scripts/setup-all.sh" "${SETUP_ARGS[@]}" > "$SETUP_LOG" 2>&1 || SETUP_RC=$?
+      if [ $SETUP_RC -ne 0 ]; then
+        TEST_STATUS="FAIL"
+        FAIL_REASON="setup-all.sh failed with exit code $SETUP_RC"
+      fi
     fi
 
     if [ "$TEST_STATUS" = "PASS" ]; then
@@ -308,19 +323,52 @@ for idx in "${!BLUEPRINT_FILES[@]}"; do
       echo -e "   🌐 [4/5] Asserting Network Endpoints & Ports..."
       # If Web IDE is expected, verify HTTP 8090
       if [[ " ${expected_conts[*]} " =~ " web-ide-dev " ]]; then
-        http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8090/ 2>/dev/null || echo "000")
+        http_code=$(curl --noproxy "*" -s -o /dev/null -w "%{http_code}" http://localhost:8090/ 2>/dev/null)
+        http_code="${http_code:-000}"
         if [ "$http_code" != "200" ] && [ "$http_code" != "302" ]; then
           TEST_STATUS="FAIL"
           FAIL_REASON="Web IDE port 8090 endpoint check failed (HTTP $http_code)."
         fi
       fi
 
+      # If Publisher Designer is expected, verify HTTP 6083
+      if [[ " ${expected_conts[*]} " =~ " app-publisher-designer " ]]; then
+        designer_code=$(curl --noproxy "*" -s -o /dev/null -w "%{http_code}" http://localhost:6083/vnc.html 2>/dev/null)
+        designer_code="${designer_code:-000}"
+        if [ "$designer_code" != "200" ] && [ "$designer_code" != "302" ]; then
+          TEST_STATUS="FAIL"
+          FAIL_REASON="Publisher Designer port 6083 check failed (HTTP $designer_code)."
+        fi
+      fi
+
       # If ORDS is expected, verify HTTPS 8448
-      if [[ " ${expected_conts[*]} " =~ " app-ords " ]]; then
-        ords_code=$(curl -s -k -o /dev/null -w "%{http_code}" https://localhost:8448/dev-hub.html 2>/dev/null || echo "000")
+      if [[ " ${expected_conts[*]} " =~ " app-ords " ]] || [[ " ${expected_conts[*]} " =~ " app-ords-remote " ]]; then
+        ords_code=$(curl --noproxy "*" -s -k -o /dev/null -w "%{http_code}" https://localhost:8448/dev-hub.html 2>/dev/null)
+        ords_code="${ords_code:-000}"
         if [ "$ords_code" != "200" ] && [ "$ords_code" != "301" ] && [ "$ords_code" != "302" ] && [ "$ords_code" != "307" ] && [ "$ords_code" != "308" ]; then
           TEST_STATUS="FAIL"
           FAIL_REASON="ORDS Dev Hub port 8448 check failed (HTTP $ords_code)."
+        fi
+      fi
+
+      # If Publisher is expected, verify HTTP 9502
+      if [[ " ${expected_conts[*]} " =~ " app-publisher " ]] || [[ " ${expected_conts[*]} " =~ " app-publisher-remote " ]]; then
+        pub_p="${PUBLISHER_HTTP_PORT:-9502}"
+        pub_code=$(curl --noproxy "*" -s -o /dev/null -w "%{http_code}" "http://localhost:${pub_p}/xmlpserver" 2>/dev/null)
+        pub_code="${pub_code:-000}"
+        if [[ ! "$pub_code" =~ ^(200|301|302|303|307|401|403)$ ]]; then
+          TEST_STATUS="FAIL"
+          FAIL_REASON="Analytics Publisher port ${pub_p} check failed (HTTP $pub_code)."
+        fi
+      fi
+
+      # If Forms is expected, verify HTTP 9001
+      if [[ " ${expected_conts[*]} " =~ " app-forms " ]]; then
+        forms_code=$(curl --noproxy "*" -s -o /dev/null -w "%{http_code}" http://localhost:9001/forms/frmservlet 2>/dev/null)
+        forms_code="${forms_code:-000}"
+        if [ "$forms_code" != "200" ] && [ "$forms_code" != "302" ] && [ "$forms_code" != "404" ]; then
+          TEST_STATUS="FAIL"
+          FAIL_REASON="Forms Runtime port 9001 check failed (HTTP $forms_code)."
         fi
       fi
     fi
@@ -329,14 +377,25 @@ for idx in "${!BLUEPRINT_FILES[@]}"; do
       echo -e "   🔐 [5/5] Asserting SEPS Wallet & SQLcl Database Query..."
       for c in "${expected_conts[@]}"; do
         if [[ "$c" == "db-"* ]]; then
-          db_check_res=$(podman exec -i "$c" bash -c '
-            in_sql=$(ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1)
-            if [ -n "$in_sql" ]; then
-              "$in_sql" -s / as sysdba << "SQLEOF" 2>/dev/null
-SELECT sys_context('\''USERENV\'', '\''CON_NAME\'') FROM dual;
+          db_check_res=$(podman exec -i "$c" bash << 'EOF' 2>/dev/null || echo "FAILED"
+in_sql=$(ls -d /opt/oracle/product/*/dbhomeFree/sqlcl/bin/sql 2>/dev/null | head -n 1)
+if [ -n "$in_sql" ] && [ -x "$in_sql" ]; then
+  "$in_sql" -s / as sysdba << 'SQLEOF' 2>/dev/null
+SELECT sys_context('USERENV', 'CON_NAME') FROM dual;
 EXIT;
 SQLEOF
-            fi' 2>/dev/null || echo "FAILED"
+elif [ -n "${ORACLE_HOME:-}" ] && [ -x "$ORACLE_HOME/bin/sqlplus" ]; then
+  "$ORACLE_HOME/bin/sqlplus" -s / as sysdba << 'SQLEOF' 2>/dev/null
+SELECT sys_context('USERENV', 'CON_NAME') FROM dual;
+EXIT;
+SQLEOF
+elif [ -x /opt/oracle/product/*/dbhomeFree/bin/sqlplus ]; then
+  /opt/oracle/product/*/dbhomeFree/bin/sqlplus -s / as sysdba << 'SQLEOF' 2>/dev/null
+SELECT sys_context('USERENV', 'CON_NAME') FROM dual;
+EXIT;
+SQLEOF
+fi
+EOF
           )
           if [[ "$db_check_res" != *"CDB\$ROOT"* ]] && [[ "$db_check_res" != *"FREEPDB1"* ]]; then
             TEST_STATUS="FAIL"
@@ -354,6 +413,10 @@ SQLEOF
   if [ "$TEST_STATUS" = "PASS" ]; then
     echo -e "   ${GREEN}✅ PASS: Blueprint ${bp_num} (${bp_name}) verified in ${TEST_DURATION}s!${NC}"
     PASSED_TESTS=$((PASSED_TESTS + 1))
+  elif [ "$TEST_STATUS" = "SKIP" ]; then
+    echo -e "   ${YELLOW}⏭️  SKIP: Blueprint ${bp_num} (${bp_name}) skipped in ${TEST_DURATION}s!${NC}"
+    echo -e "   ${YELLOW}   Reason: ${FAIL_REASON}${NC}"
+    SKIPPED_TESTS=$((SKIPPED_TESTS + 1))
   else
     echo -e "   ${RED}❌ FAIL: Blueprint ${bp_num} (${bp_name}) failed in ${TEST_DURATION}s!${NC}"
     echo -e "   ${RED}   Reason: ${FAIL_REASON}${NC}"
@@ -388,6 +451,7 @@ MASTER_REPORT_JSON=$(jq -n \
   --arg total "$TOTAL_TESTS" \
   --arg passed "$PASSED_TESTS" \
   --arg failed "$FAILED_TESTS" \
+  --arg skipped "$SKIPPED_TESTS" \
   --arg duration "$TOTAL_SUITE_DURATION" \
   --arg fast "$FAST_MODE" \
   --arg dry "$DRY_RUN" \
@@ -397,6 +461,7 @@ MASTER_REPORT_JSON=$(jq -n \
     total_blueprints: ($total | tonumber),
     passed: ($passed | tonumber),
     failed: ($failed | tonumber),
+    skipped: ($skipped | tonumber),
     total_duration_seconds: ($duration | tonumber),
     fast_mode: ($fast == "true"),
     dry_run: ($dry == "true"),
@@ -414,6 +479,7 @@ cat << MD_EOF > "$REPORT_MD"
 - **Total Tested:** ${TOTAL_TESTS}
 - **Passed:** ${PASSED_TESTS} (✅)
 - **Failed:** ${FAILED_TESTS} (❌)
+- **Skipped:** ${SKIPPED_TESTS} (⏭️)
 - **Total Duration:** ${TOTAL_SUITE_DURATION}s
 - **Fast Mode:** $([ "$FAST_MODE" = "true" ] && echo "Yes (Golden Snapshots)" || echo "No")
 - **Dry Run:** $([ "$DRY_RUN" = "true" ] && echo "Yes" || echo "No")
@@ -437,6 +503,8 @@ for row in $(echo "$RESULTS_JSON" | jq -r '.[] | @base64'); do
   
   if [ "$r_st" = "PASS" ]; then
     st_icon="✅ PASS"
+  elif [ "$r_st" = "SKIP" ]; then
+    st_icon="⏭️ SKIP"
   else
     st_icon="❌ FAIL"
   fi
@@ -449,6 +517,7 @@ echo -e "${BOLD}🏁 MASTER BLUEPRINT LIVE TEST SUITE COMPLETED${NC}"
 echo -e "${CYAN}==================================================================${NC}"
 echo -e "📊 Total Tested:    ${BOLD}${TOTAL_TESTS}${NC}"
 echo -e "✅ Passed:          ${GREEN}${PASSED_TESTS}${NC}"
+echo -e "⏭️  Skipped:         ${YELLOW}${SKIPPED_TESTS}${NC}"
 echo -e "❌ Failed:          $([ "$FAILED_TESTS" -eq 0 ] && echo "${GREEN}0${NC}" || echo "${RED}${FAILED_TESTS}${NC}")"
 echo -e "⏱  Total Duration:  ${BOLD}${TOTAL_SUITE_DURATION}s${NC}"
 echo -e "📝 Markdown Report: ${CYAN}[Report](file://${REPORT_MD})${NC}"

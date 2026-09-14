@@ -1,4 +1,4 @@
-# Session Trail: DevOps Pro UX, Dokitud Terminal ja SDD Assembly Line
+# Session Trail: DevOps Pro UX, Docked Terminal and SDD Assembly Line
 
 - **Kuupäev:** 2026-09-13
 - **Teema:** Dev Hub `⚡ DevOps` vahelehe UX moderniseerimine, dokitud terminal, Command Studiod ja Spec-Driven Development (SDD) raamistiku juurutamine

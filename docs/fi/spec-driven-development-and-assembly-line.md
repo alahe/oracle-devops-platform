@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../spec-driven-development-and-assembly-line.md) | [ 🇪🇪 Eesti ](../et/spec-driven-development-and-assembly-line.md) | [ 🇫🇮 Suomi ](spec-driven-development-and-assembly-line.md) | [ 🇸🇪 Svenska ](../sv/spec-driven-development-and-assembly-line.md) | [ 🇱🇻 Latviešu ](../lv/spec-driven-development-and-assembly-line.md) | [ 🇱🇹 Lietuvių ](../lt/spec-driven-development-and-assembly-line.md)
 
-# Spesifikaatiolähtöinen Kehitys (SDD), Itsenäiset Järjestelmät (SCS) ja Agenttiliukuhihna
+# Spesifikaatiolähtöinen kehitys (SDD), itsenäiset järjestelmät (SCS) ja agenttiliukuhihna
 
 > **Arkkitehtuuristandardi siirtymiseen kokeellisesta koodauksesta tuotantolaatuiseen (viable) koodiin Oracle DevOps -alustalla**
 

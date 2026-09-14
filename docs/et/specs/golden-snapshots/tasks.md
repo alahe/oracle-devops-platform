@@ -1,4 +1,4 @@
-# Kuldsete Hetktõmmiste Katastroofitaastus — Teostusülesanded (Implementation Tasks)
+# Kuldsete hetktõmmiste katastroofitaastus — teostusülesanded (Implementation Tasks)
 
 - **Domeen (SCS):** `golden-snapshots`
 - **Viidatud Nõuded:** `docs/specs/golden-snapshots/requirements.md`

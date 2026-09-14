@@ -1,4 +1,4 @@
-# Zero-Trust SEPS Wallet — Tehniline Disain ja Arhitektuur (Technical Design)
+# Zero-Trust SEPS Wallet — tehniline disain ja arhitektuur (Technical Design)
 
 - **Domeen (SCS):** `wallet-security`
 - **Viidatud Nõuded:** `docs/specs/wallet-security/requirements.md`

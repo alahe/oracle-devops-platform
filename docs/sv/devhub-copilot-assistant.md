@@ -1,6 +1,6 @@
 [ 🇬🇧 English ](../devhub-copilot-assistant.md) | [ 🇪🇪 Eesti ](../et/devhub-copilot-assistant.md) | [ 🇫🇮 Suomi ](../fi/devhub-copilot-assistant.md) | [ 🇸🇪 Svenska ](devhub-copilot-assistant.md) | [ 🇱🇻 Latviešu ](../lv/devhub-copilot-assistant.md) | [ 🇱🇹 Lietuvių ](../lt/devhub-copilot-assistant.md)
 
-# 🤖 Dev Hub Flerleverantörs AI-assistent (Copilot + Antigravity) och Zero-Trust RAG-guide
+# 🤖 Dev Hub flerleverantörs AI-assistent (Copilot + Antigravity) och Zero-Trust RAG-guide
 
 Denna guide dokumenterar Developer Hubs (`docs/dev-hub.html`) **flerleverantörs AI-assistent**, med stöd för både **GitHub Copilot** och **Google Antigravity**, Regel 5 Zero-Trust-säkerhetskontroller, offline-kunskapsbas samt 1-klicks broar till VS Code Copilot Chat och Antigravity.
 

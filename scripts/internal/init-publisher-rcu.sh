@@ -63,33 +63,49 @@ BEGIN
 END;
 /
 
--- Clean up any incomplete previous schemas if rerun
+-- Check if RCU schemas already exist
+DECLARE
+  v_count NUMBER;
+  v_force VARCHAR2(10) := '${FORCE_RCU:-false}';
 BEGIN
-  FOR s IN (SELECT sid, serial# FROM v\$session WHERE username LIKE '${RCU_PREFIX}_%') LOOP
+  SELECT COUNT(*) INTO v_count FROM dba_users WHERE username LIKE '${RCU_PREFIX}_%';
+  IF v_count > 0 AND v_force = 'false' THEN
+    -- Schemas exist: preserve tables and synchronize passwords to current SYS_PWD
+    FOR u IN (SELECT username FROM dba_users WHERE username LIKE '${RCU_PREFIX}_%') LOOP
+      BEGIN
+        EXECUTE IMMEDIATE 'ALTER USER ' || u.username || ' IDENTIFIED BY "${SYS_PWD}" ACCOUNT UNLOCK';
+        DBMS_OUTPUT.PUT_LINE('Synchronized password for existing RCU schema: ' || u.username);
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END;
+    END LOOP;
+  ELSIF v_force = 'true' THEN
+    -- Force mode: Clean up old schemas and tablespaces
+    FOR s IN (SELECT sid, serial# FROM v\$session WHERE username LIKE '${RCU_PREFIX}_%') LOOP
+      BEGIN
+        EXECUTE IMMEDIATE 'ALTER SYSTEM DISCONNECT SESSION ''' || s.sid || ',' || s.serial# || ''' IMMEDIATE';
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END;
+    END LOOP;
+    FOR u IN (SELECT username FROM dba_users WHERE username LIKE '${RCU_PREFIX}_%') LOOP
+      BEGIN
+        EXECUTE IMMEDIATE 'DROP USER ' || u.username || ' CASCADE';
+        DBMS_OUTPUT.PUT_LINE('Cleaned old RCU schema: ' || u.username);
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END;
+    END LOOP;
     BEGIN
-      EXECUTE IMMEDIATE 'ALTER SYSTEM DISCONNECT SESSION ''' || s.sid || ',' || s.serial# || ''' IMMEDIATE';
+      EXECUTE IMMEDIATE 'DELETE FROM schema_version_registry WHERE mrc_name = ''${RCU_PREFIX}''';
+      COMMIT;
     EXCEPTION WHEN OTHERS THEN NULL;
     END;
-  END LOOP;
-  FOR u IN (SELECT username FROM dba_users WHERE username LIKE '${RCU_PREFIX}_%') LOOP
-    BEGIN
-      EXECUTE IMMEDIATE 'DROP USER ' || u.username || ' CASCADE';
-      DBMS_OUTPUT.PUT_LINE('Cleaned old RCU schema: ' || u.username);
-    EXCEPTION WHEN OTHERS THEN NULL;
-    END;
-  END LOOP;
-  BEGIN
-    EXECUTE IMMEDIATE 'DELETE FROM schema_version_registry WHERE mrc_name = ''${RCU_PREFIX}''';
-    COMMIT;
-  EXCEPTION WHEN OTHERS THEN NULL;
-  END;
-  FOR tbs IN (SELECT tablespace_name FROM dba_tablespaces WHERE tablespace_name LIKE '${RCU_PREFIX}_%') LOOP
-    BEGIN
-      EXECUTE IMMEDIATE 'DROP TABLESPACE ' || tbs.tablespace_name || ' INCLUDING CONTENTS AND DATAFILES CASCADE CONSTRAINTS';
-      DBMS_OUTPUT.PUT_LINE('Cleaned old RCU tablespace: ' || tbs.tablespace_name);
-    EXCEPTION WHEN OTHERS THEN NULL;
-    END;
-  END LOOP;
+    FOR tbs IN (SELECT tablespace_name FROM dba_tablespaces WHERE tablespace_name LIKE '${RCU_PREFIX}_%') LOOP
+      BEGIN
+        EXECUTE IMMEDIATE 'DROP TABLESPACE ' || tbs.tablespace_name || ' INCLUDING CONTENTS AND DATAFILES CASCADE CONSTRAINTS';
+        DBMS_OUTPUT.PUT_LINE('Cleaned old RCU tablespace: ' || tbs.tablespace_name);
+      EXCEPTION WHEN OTHERS THEN NULL;
+      END;
+    END LOOP;
+  END IF;
 END;
 /
 EXIT;

@@ -1,4 +1,4 @@
-# Kuldsete Hetktõmmiste Katastroofitaastus — Nõuete Spetsifikatsioon (Requirements)
+# Kuldsete hetktõmmiste katastroofitaastus — nõuete spetsifikatsioon (Requirements)
 
 - **Domeen (SCS):** `golden-snapshots`
 - **Versioon:** `1.0.0`

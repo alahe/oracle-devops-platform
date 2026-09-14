@@ -24,6 +24,8 @@ config/wallet-*/*
 !config/wallet-*/.gitkeep
 config/ords/*/**
 !config/ords/.gitkeep
+config/publisher/**
+!config/publisher/.gitkeep
 
 # 3. SSL/TLS Certificates, Private Keys & Local Root CAs
 config/certs/*.crt

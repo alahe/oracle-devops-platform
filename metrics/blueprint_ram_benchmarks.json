@@ -1,7 +1,7 @@
 {
   "system_safety_reserve_gb": 2.0,
   "description": "Blueprint memory benchmarks: expected range, measured startup RAM, and runtime RAM",
-  "last_updated": "2026-09-14T00:44:09.503647",
+  "last_updated": "2026-09-14T03:54:07.989813",
   "blueprints": {
     "0": {
       "name": "default-proxy-ords",
@@ -10,9 +10,9 @@
         "app-ords"
       ],
       "expected_ram_range_gb": "2-3 GB",
-      "startup_ram_mb": 1550,
-      "runtime_ram_mb": 1476,
-      "last_measured": "2026-09-14T00:44:09.503627"
+      "startup_ram_mb": 1314,
+      "runtime_ram_mb": 1314,
+      "last_measured": "2026-09-14T03:54:07.989813"
     },
     "1": {
       "name": "standalone-alise",
@@ -20,9 +20,9 @@
         "db-alise"
       ],
       "expected_ram_range_gb": "2-3 GB",
-      "startup_ram_mb": 1400,
-      "runtime_ram_mb": 1600,
-      "last_measured": null
+      "startup_ram_mb": 504,
+      "runtime_ram_mb": 504,
+      "last_measured": "2026-09-14T01:47:15.432445"
     },
     "2": {
       "name": "standalone-proxy-sso",
@@ -40,9 +40,9 @@
         "db-gvenzl"
       ],
       "expected_ram_range_gb": "2-3 GB",
-      "startup_ram_mb": 1350,
-      "runtime_ram_mb": 1500,
-      "last_measured": null
+      "startup_ram_mb": 457,
+      "runtime_ram_mb": 457,
+      "last_measured": "2026-09-14T02:20:58.014500"
     },
     "4": {
       "name": "micro-db-slim",
@@ -61,9 +61,9 @@
         "app-publisher"
       ],
       "expected_ram_range_gb": "3-5 GB",
-      "startup_ram_mb": 4200,
-      "runtime_ram_mb": 5450,
-      "last_measured": "2026-09-13T09:36:07.660903"
+      "startup_ram_mb": 5887,
+      "runtime_ram_mb": 5887,
+      "last_measured": "2026-09-14T03:08:17.751306"
     },
     "6": {
       "name": "enterprise-bi-warehouse",
@@ -92,9 +92,9 @@
         "web-ide-dev"
       ],
       "expected_ram_range_gb": "1-2 GB",
-      "startup_ram_mb": 650,
-      "runtime_ram_mb": 820,
-      "last_measured": null
+      "startup_ram_mb": 97,
+      "runtime_ram_mb": 97,
+      "last_measured": "2026-09-14T01:11:30.320388"
     },
     "9": {
       "name": "standalone-publisher-designer",
@@ -102,9 +102,9 @@
         "app-publisher-designer"
       ],
       "expected_ram_range_gb": "1-2 GB",
-      "startup_ram_mb": 160,
+      "startup_ram_mb": 176,
       "runtime_ram_mb": 176,
-      "last_measured": "2026-09-10T19:48:00Z"
+      "last_measured": "2026-09-14T01:13:09.478102"
     },
     "10": {
       "name": "remote-ords-gateway",
@@ -112,9 +112,9 @@
         "app-ords-remote"
       ],
       "expected_ram_range_gb": "1-2 GB",
-      "startup_ram_mb": 850,
-      "runtime_ram_mb": 1030,
-      "last_measured": null
+      "startup_ram_mb": 488,
+      "runtime_ram_mb": 488,
+      "last_measured": "2026-09-14T01:18:44.673440"
     },
     "11": {
       "name": "remote-publisher-reporting",

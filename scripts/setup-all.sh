@@ -850,7 +850,7 @@ if [ "$IS_LOCAL" = "true" ]; then
           db_port=$(grep -A 10 "$tc:" "$WORKSPACE_DIR/podman-compose.override.yml" 2>/dev/null | grep -E '^[[:space:]]+-[[:space:]]+"[0-9]+:' | sed -E 's/.*"([0-9]+):.*/\1/' || echo "")
           [ -n "$db_port" ] && target_ports+=("$db_port")
           ;;
-        app-ords)
+        app-ords|app-ords-*)
           target_ports+=("${ORDS_PORT:-8088}" "${ORDS_SSL_PORT:-8448}")
           ;;
         web-ide-dev)
@@ -859,7 +859,7 @@ if [ "$IS_LOCAL" = "true" ]; then
         app-publisher-designer)
           target_ports+=("${PUBLISHER_DESIGNER_HTTP_PORT:-6083}" "${PUBLISHER_DESIGNER_VNC_PORT:-5903}")
           ;;
-        app-publisher)
+        app-publisher|app-publisher-*)
           target_ports+=("${PUBLISHER_HTTP_PORT:-9704}")
           ;;
         app-forms|forms-dev)
@@ -878,7 +878,7 @@ if [ "$IS_LOCAL" = "true" ]; then
         continue
       fi
       # Protect Core Base and Web Gateway containers
-      if [[ "$active_c" == "app-ords" ]]; then
+      if [[ "$active_c" =~ ^app-ords(-.*)?$ ]]; then
         continue
       fi
       if [[ "$active_c" =~ ^(app-.*|web-ide-.*|ords-standalone-.*)$ ]]; then
@@ -1000,8 +1000,9 @@ if ! is_ords_enabled || [ "$IS_LOCAL" = "false" ]; then
 else
   ords_h_port="${ORDS_HTTP_PORT:-${PROFILE_ORDS_HTTP_PORT:-8088}}"
   print_header "5" "$(msg_str "STEP_5_TITLE" "$ords_h_port")" "step5_ords_service_seconds" "1s"
-  if podman container exists app-ords 2>/dev/null; then
-    podman restart app-ords >/dev/null 2>&1 || true
+  target_ords_c="${PROFILE_ORDS_CONTAINER_NAME:-app-ords}"
+  if podman container exists "$target_ords_c" 2>/dev/null; then
+    podman restart "$target_ords_c" >/dev/null 2>&1 || true
   fi
   STEP5_ORDS_SECS=$(( $(date +%s) - STEP5_START ))
   STEP5_TIME=$(format_duration $STEP5_ORDS_SECS)
@@ -1077,9 +1078,10 @@ if [ -n "$ACTIVE_INST_LIST" ] && [ -x "$SCRIPT_DIR/internal/apply-profile-users.
   done
 fi
 
-if is_ords_enabled && podman container exists app-ords 2>/dev/null; then
+target_ords_c="${PROFILE_ORDS_CONTAINER_NAME:-app-ords}"
+if is_ords_enabled && podman container exists "$target_ords_c" 2>/dev/null; then
   echo -e "🔄 $(msg_str "ORDS_RESTARTING_POOLS")"
-  podman restart app-ords >/dev/null 2>&1 || true
+  podman restart "$target_ords_c" >/dev/null 2>&1 || true
   sleep 8
 fi
 

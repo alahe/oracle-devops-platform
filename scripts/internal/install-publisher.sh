@@ -219,16 +219,17 @@ if [ "$INSTALL_MODE" = "container" ]; then
       echo -e "${RED}$(msg_str "PUB_BUILD_FAILED" "$BUILD_STATUS" "$LOG_FILE")${NC}"
     fi
   fi
+  pub_c_name="${PROFILE_PUBLISHER_CONTAINER_NAME:-app-publisher}"
   # Ensure clean container initialization if WebLogic domain was not completed
-  if podman container exists app-publisher 2>/dev/null; then
-    if ! podman exec app-publisher test -f /u01/oracle/user_projects/domains/bi/config/config.xml 2>/dev/null; then
+  if podman container exists "$pub_c_name" 2>/dev/null; then
+    if ! podman exec "$pub_c_name" test -f /u01/oracle/user_projects/domains/bi/config/config.xml 2>/dev/null; then
       echo -e "   ⚠️ Incomplete WebLogic domain detected — recreating container with environment secrets..."
-      podman rm -f app-publisher >/dev/null 2>&1 || true
+      podman rm -f "$pub_c_name" >/dev/null 2>&1 || true
     fi
   fi
 
-  if ! podman ps --format "{{.Names}}" 2>/dev/null | grep -q -E "^app-publisher$"; then
-    echo -e "🚀 Starting Analytics Publisher container (${CYAN}app-publisher${NC})..."
+  if ! podman ps --format "{{.Names}}" 2>/dev/null | grep -q -E "^${pub_c_name}$"; then
+    echo -e "🚀 Starting Analytics Publisher container (${CYAN}${pub_c_name}${NC})..."
     
     TARGET_PUB_DB=$(resolve_service_target_db "publisher")
     TARGET_PUB_DB="${TARGET_PUB_DB:-db-proxy}"
@@ -240,7 +241,7 @@ if [ "$INSTALL_MODE" = "container" ]; then
       podman start "$TARGET_PUB_DB" >/dev/null 2>&1 || true
     fi
 
-    podman rm -f app-publisher >/dev/null 2>&1 || true
+    podman rm -f "$pub_c_name" >/dev/null 2>&1 || true
     NET_NAME=$(podman inspect "$TARGET_PUB_DB" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || podman inspect "db-publisher" --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null || podman network ls --format "{{.Name}}" 2>/dev/null | grep -v "bridge" | grep -v "host" | head -n 1 || echo "oracle-free-db-in-prod_default")
     NET_NAME="${NET_NAME:-oracle-free-db-in-prod_default}"
     
@@ -273,7 +274,7 @@ if [ "$INSTALL_MODE" = "container" ]; then
     pub_db_svc="${PROFILE_DEFAULT_SERVICE:-FREEPDB1}"
     [ "$pub_db_svc" = "none" ] && pub_db_svc="FREEPDB1"
 
-    podman run -d --name app-publisher --security-opt=no-new-privileges --network="$NET_NAME" \
+    podman run -d --name "$pub_c_name" --security-opt=no-new-privileges --network="$NET_NAME" \
       --health-cmd="/usr/bin/curl -k -f -s http://127.0.0.1:9502/xmlpserver/ || exit 1" \
       --health-interval=15s \
       --health-timeout=5s \

@@ -48,10 +48,18 @@
     {
       "timestamp": "2026-09-03T23:44:08.494707",
       "duration_seconds": 29
+    },
+    {
+      "timestamp": "2026-09-14T01:14:48.030886",
+      "duration_seconds": 25
+    },
+    {
+      "timestamp": "2026-09-14T01:18:44.573759",
+      "duration_seconds": 16
     }
   ],
-  "runs_count": 12,
-  "average_duration_seconds": 451,
-  "min_duration_seconds": 29,
+  "runs_count": 14,
+  "average_duration_seconds": 389,
+  "min_duration_seconds": 16,
   "max_duration_seconds": 730
 }
