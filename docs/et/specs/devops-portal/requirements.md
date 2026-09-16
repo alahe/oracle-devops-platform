@@ -87,6 +87,16 @@ DevOps juhtpaneel on **Oracle DevOps Platformi** keskne operatsiooniline tööri
   - **When:** Esmaskülastus või tühi vahemälu.
   - **Then:** Portaal avab vaikimisi elusa `🚀 Juhtpaneeli` (mitte staatilise dokumentatsiooni).
 
+### [REQ-08]: Podman Virtuaalmasina Mootori ja Konteinerite Elutsükli Automatiseerimine
+- **Kirjeldus:** Tagada Podman virtuaalmasina (AppleHV macOS-is / WSL2 Windowsis) ja konteineripinu hõõrdevaba 1-klõpsuga käivitamine ning taastamine otse Dev Hubist ilma terminali avamata.
+- **Vastuvõtukriteerium (Given/When/Then):**
+  - **Given:** Podman virtuaalmasin on passiivne või seisatud.
+  - **When:** Arendaja avab Dev Hubis Podmani vahelehe.
+  - **Then:** Dünaamiline esmane CTA nupp kuvab `🚀 Käivita Podman masin` ning kuivade veateadete asemel kuvatakse tühi-oleku herobänner `#podman-empty-hero`.
+  - **When:** Arendaja klõpsab `🚀 Käivita Podman masin` või valib menüüst `⚡ Käivita Podman & teenused`.
+  - **Then:** Alusmasin käivitatakse käsuga `podman machine start` ja seejärel konteineripinu (`start-containers.sh`) dokitud konsoolis reaalajas väljundiga.
+  - **And:** Protsessi lõppedes sünkroniseeritakse süsteemiressursid ja konteinerite tabel automaatselt.
+
 ---
 
 ## 4. Loogiliste Vastuolude Analüüs (Contradiction Analysis)

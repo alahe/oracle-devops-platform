@@ -82,6 +82,16 @@ The DevOps Portal is the central operational workstation of the **Oracle DevOps 
   - **When:** Tab has been pinned via `📌 Set as Home`.
   - **Then:** Portal loads directly to the pinned view with active pin indicator.
 
+### [REQ-08]: Podman Virtual Machine Engine & Container Lifecycle Automation
+- **Description:** Provide zero-friction 1-click startup and recovery for Podman virtual machines (AppleHV on macOS / WSL2 on Windows) and container stacks directly inside Dev Hub.
+- **Acceptance Criteria (Given/When/Then):**
+  - **Given:** Podman virtual machine is inactive or stopped.
+  - **When:** Developer views the Podman tab in Dev Hub.
+  - **Then:** Dynamic primary CTA displays `🚀 Start Podman Machine` and an empty-state hero banner `#podman-empty-hero` replaces dry error messages.
+  - **When:** Developer clicks `🚀 Start Podman Machine` or chooses `⚡ Start Podman & Services`.
+  - **Then:** Underlying VM is started via `podman machine start`, followed by container stack startup (`start-containers.sh`) in the bottom docked console with live streaming.
+  - **And:** System resources and container tables hot-sync automatically upon completion.
+
 ---
 
 ## 4. Contradiction & Edge Case Analysis

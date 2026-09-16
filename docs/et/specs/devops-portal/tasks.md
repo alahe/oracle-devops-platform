@@ -20,6 +20,7 @@
 | **TSK-DP-07** | NFR-Mitmekeelsus | `i18n.js` (6 Keelt EN/ET/FI/SV/LV/LT) | `./tests/test-multilingual-support.sh` | ✅ Valmis |
 | **TSK-DP-08** | `[REQ-06]` | `bump-iteration.sh`, `release.sh` | `./tests/unit/test-semantic-versioning.sh` | ✅ Valmis |
 | **TSK-DP-09** | `[REQ-07]` | `layout.html`, `app.js`, `i18n.js` | `./tests/unit/test-devhub-landing-tab.sh` | ✅ Valmis |
+| **TSK-DP-10** | `[REQ-08]` | `dev-hub-bridge.py`, `layout.html`, `app.js`, `i18n.js` | `./tests/unit/test-devhub-podman-runner.sh` | ✅ Valmis |
 
 ---
 
@@ -34,6 +35,7 @@
 - [x] **TSK-DP-07:** 26 uue tõlkevõtme lisamine ja verifitseerimine 6 keeles (12/12 PASS).
 - [x] **TSK-DP-08:** 4-kohaline iteratsiooniloendur (`bump-iteration.sh`), Conventional Commits semantiline reliis (`release.sh`) ja pre-push hook.
 - [x] **TSK-DP-09:** Kodulehe nööpnõela kinnitamine (Home Tab Pinning 📌), nutikas adaptiivne maandumine (Lahendus 4) ja 6-keelne sünkroonimine.
+- [x] **TSK-DP-10:** Podman VM-i ja konteinerite käivitamise võimekuse lisamine Dev Hubi (`dev-hub-bridge.py`, `layout.html`, `app.js`, `i18n.js`, `test-devhub-podman-runner.sh`).
 
 ---
 

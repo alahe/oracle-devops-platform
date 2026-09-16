@@ -392,9 +392,64 @@
                         <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-dim);" data-i18n="desc_podman_infra">Aktiivsed konteinerid, andmemahud, virtuaalvõrgud ja kohalikud tõmmised</p>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <div class="dropdown" id="podman-startup-dropdown" style="position: relative; display: inline-flex; align-items: center;">
+                        <button class="btn btn-primary" id="btn-podman-primary-action" onclick="triggerSmartPodmanStartup('auto', this)" style="padding: 7px 14px; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;" title="Käivita Podman masin ja blueprinti konteinerid">
+                            <span id="btn-podman-primary-icon">🚀</span>
+                            <span id="btn-podman-primary-label" data-i18n="btn_podman_smart_start">Käivita teenused</span>
+                        </button>
+                        <button class="btn btn-primary" id="btn-podman-dropdown-toggle" onclick="togglePodmanStartupMenu(event)" style="padding: 7px 9px; font-size: 0.82rem; font-weight: 600; margin-left: 1px; border-left: 1px solid rgba(255,255,255,0.25);" title="Täiendavad käivitusvalikud">
+                            ▾
+                        </button>
+                        <div id="podman-startup-menu" class="dropdown-menu" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; min-width: 250px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); z-index: 120; padding: 6px 0;">
+                            <a href="javascript:void(0)" class="dropdown-item" onclick="triggerSmartPodmanStartup('auto', this)">
+                                <span>⚡</span>
+                                <div class="item-text">
+                                    <span class="item-title" data-i18n="menu_podman_auto">Käivita Podman & teenused</span>
+                                    <span class="item-desc" data-i18n="menu_podman_auto_desc">Käivitab vajadusel VM-i ja blueprinti</span>
+                                </div>
+                            </a>
+                            <a href="javascript:void(0)" class="dropdown-item" id="menu-item-podman-machine-start" onclick="triggerSmartPodmanStartup('machine', this)">
+                                <span>🚀</span>
+                                <div class="item-text">
+                                    <span class="item-title" data-i18n="menu_podman_machine_start">Käivita ainult Podman masin</span>
+                                    <span class="item-desc" data-i18n="menu_podman_machine_start_desc">podman machine start</span>
+                                </div>
+                            </a>
+                            <a href="javascript:void(0)" class="dropdown-item" onclick="triggerSmartPodmanStartup('containers', this)">
+                                <span>📦</span>
+                                <div class="item-text">
+                                    <span class="item-title" data-i18n="menu_podman_containers_start">Käivita aktiivsed konteinerid</span>
+                                    <span class="item-desc" data-i18n="menu_podman_containers_start_desc">./scripts/start-containers.sh</span>
+                                </div>
+                            </a>
+                            <div style="border-top: 1px solid var(--border); margin: 4px 0;"></div>
+                            <a href="javascript:void(0)" class="dropdown-item" id="menu-item-podman-machine-stop" onclick="triggerSmartPodmanStartup('machine-stop', this)">
+                                <span>⏹️</span>
+                                <div class="item-text">
+                                    <span class="item-title" data-i18n="menu_podman_machine_stop">Peata Podman masin</span>
+                                    <span class="item-desc" data-i18n="menu_podman_machine_stop_desc">podman machine stop</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
                     <button class="btn btn-secondary" onclick="loadPodmanResources(true);" style="padding: 7px 14px; font-size: 0.82rem; font-weight: 600;" title="Refresh Podman Resources">
                         <span id="podman-refresh-icon">🔄</span> <span data-i18n="btn_refresh">Värskenda</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Podman Offline / Empty State Hero Banner -->
+            <div id="podman-empty-hero" style="display: none; margin-bottom: 20px; padding: 24px; border-radius: var(--radius-md); background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(16, 185, 129, 0.05)); border: 1px solid var(--border); text-align: center;">
+                <div style="font-size: 2.6rem; margin-bottom: 8px;">🐳</div>
+                <h3 id="podman-hero-title" style="margin: 0 0 6px 0; color: var(--text-main); font-size: 1.25rem;" data-i18n="podman_hero_default_title">Podman teenused vajavad käivitamist</h3>
+                <p id="podman-hero-desc" style="margin: 0 auto 16px auto; max-width: 600px; color: var(--text-dim); font-size: 0.9rem;" data-i18n="podman_hero_default_desc">Lokaalne Podman virtuaalmasin või selle blueprinti konteinerid ei tööta. Käivita need ühe klõpsuga otse Dev Hubist.</p>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn btn-primary" id="podman-hero-btn-primary" onclick="triggerSmartPodmanStartup('auto', this)" style="padding: 9px 22px; font-weight: 600; font-size: 0.9rem;">
+                        <span>🚀</span> <span id="podman-hero-btn-label" data-i18n="btn_podman_smart_start">Käivita Podman ja teenused</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="runDevOpsCommand('start-containers', this, '▶️ Start Containers')" style="padding: 9px 18px; font-weight: 600; font-size: 0.9rem;">
+                        <span>📦</span> <span data-i18n="btn_podman_start_containers">Käivita ainult konteinerid</span>
                     </button>
                 </div>
             </div>
@@ -661,7 +716,7 @@
         </div>
 
         <!-- BENCHMARK COMPARISON BAR -->
-        <div class="card" style="border: 1px solid rgba(34, 197, 94, 0.4); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%); margin-bottom: 24px;">
+        <div class="card" style="border: 1px solid rgba(34, 197, 94, 0.4); margin-bottom: 24px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
                 <h4 style="color: var(--success); margin: 0; font-size: 1.05rem;" data-i18n="snap_bench_title">⚡ Ajakulu Mõõdikud: Kiirtaastamine ja Paigaldus</h4>
                 <span class="badge badge-success" style="font-size: 0.8rem; font-weight: 700;" data-i18n="snap_badge_faststart">FastStart Taastamine</span>
@@ -680,7 +735,7 @@
             </div>
         </div>
         <!-- SNAPSHOT MANAGER INTERACTIVE CARD -->
-        <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35); margin-bottom: 28px; background: rgba(15, 23, 42, 0.7);">
+        <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35); margin-bottom: 28px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                 <div>
                     <h4 style="color: var(--primary); margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
@@ -782,7 +837,7 @@
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 24px;">
             <!-- CARD 1: Oracle Publisher Desktop Word noVNC -->
-            <div class="card" style="border: 1px solid rgba(168, 85, 247, 0.4); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);">
+            <div class="card" style="border: 1px solid rgba(168, 85, 247, 0.4);">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                     <h4 style="color: var(--pastel-violet-text); margin: 0;">🖥️ Oracle BI Publisher Desktop (Word GUI)</h4>
                     <span class="badge badge-primary" style="font-size: 0.75rem;">Port 6083</span>
@@ -856,7 +911,7 @@
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 24px;">
             <!-- CARD 1: Syntax & Compiler -->
-            <div class="card" style="border: 1px solid rgba(168, 85, 247, 0.4); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);">
+            <div class="card" style="border: 1px solid rgba(168, 85, 247, 0.4);">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                     <h4 style="color: var(--pastel-violet-text); margin: 0;">🪄 APEXlang Deklaratiivne Süntaks (.apx)</h4>
                     <span class="badge badge-primary" style="font-size: 0.75rem;">EBNF Grammar</span>
@@ -905,7 +960,7 @@
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
                 <h4 style="color: var(--text-main); margin: 0; font-size: 1.05rem;">📦 Näidisrakendused (Production-Ready APEXlang Templates)</h4>
                 <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-secondary" onclick="showApxSample('crm')" id="btn-apx-crm" style="padding: 4px 10px; font-size: 0.8rem; background: #38bdf8; color: #030712; font-weight: 600;">CRM & Kliendihaldus</button>
+                    <button class="btn btn-secondary" onclick="showApxSample('crm')" id="btn-apx-crm" style="padding: 4px 10px; font-size: 0.8rem; background: #38bdf8; color: #0f172a; font-weight: 600;">CRM & Kliendihaldus</button>
                     <button class="btn btn-secondary" onclick="showApxSample('helpdesk')" id="btn-apx-helpdesk" style="padding: 4px 10px; font-size: 0.8rem;">Kasutajatugi & Piletid</button>
                     <button class="btn btn-secondary" onclick="showApxSample('incidents')" id="btn-apx-incidents" style="padding: 4px 10px; font-size: 0.8rem;">Intsidentide Juhtimine</button>
                 </div>
@@ -951,7 +1006,7 @@
         </div>
 
         <!-- NOTICE CARD: LINK TO ZERO-TO-HERO SCRATCH GUIDE -->
-        <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35); background: rgba(15, 23, 42, 0.7); margin-bottom: 20px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35); margin-bottom: 20px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 1.4rem;">💡</span>
                 <div>
@@ -967,7 +1022,7 @@
         </div>
 
         <!-- HERO CARD: KIIRSTART 3 LIHTSAT SAMMU -->
-        <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.45); background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(3, 7, 18, 0.98) 100%); margin-bottom: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.15);">
+        <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.45); margin-bottom: 24px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 12px;">
                 <div>
                     <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px;">
@@ -1056,7 +1111,7 @@
         </div>
 
         <!-- FREQUENTLY ASKED QUESTIONS (FAQ ACCORDION) -->
-        <div class="card" style="border: 1px solid var(--border); background: rgba(15, 23, 42, 0.6); margin-bottom: 28px;">
+        <div class="card" style="border: 1px solid var(--border); margin-bottom: 28px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
                 <h4 style="margin: 0; font-size: 1.05rem; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
                     <span>❓</span> <span data-i18n="ob_faq_title">Korduma Kippuvad Küsimused (KKK)</span>
@@ -1138,7 +1193,7 @@
         <!-- 2x2 GRID FOR 4 BEGINNER WORKFLOW CARDS -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; margin-bottom: 20px;">
             <!-- CARD 1: Blueprint Selection & Architecture -->
-            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%);">
+            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.35);">
                 <div class="card-top">
                     <div class="card-location-badge" data-i18n="ob_step0_loc">📍 Asukoht: Juhtpaneel (Cockpit) → Sektsioon "Arhitektuursed Blueprintid"</div>
                     <div style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
@@ -1164,7 +1219,7 @@
             </div>
 
             <!-- CARD 2: 1-Click Zero-Trust Portal Launch -->
-            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.3); background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(3, 7, 18, 0.95) 100%);">
+            <div class="card" style="border: 1px solid rgba(56, 189, 248, 0.3);">
                 <div class="card-top">
                     <div class="card-location-badge" data-i18n="ob_step1_loc">📍 Asukoht: Juhtpaneel (Cockpit) → Ülarida "Aktiivsed Teenused"</div>
                     <div style="font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
@@ -1187,7 +1242,7 @@
             </div>
 
             <!-- CARD 3: Credential Matrix & Clipboard Helpers -->
-            <div class="card" style="border: 1px solid rgba(168, 85, 247, 0.3); background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(3, 7, 18, 0.95) 100%);">
+            <div class="card" style="border: 1px solid rgba(168, 85, 247, 0.3);">
                 <div class="card-top">
                     <div class="card-location-badge card-location-badge-purple" data-i18n="ob_step2_loc">📍 Asukoht: Juhtpaneel (Cockpit) → Teenusekaartide Volitused & Terminal</div>
                     <div style="font-size: 1.1rem; font-weight: 700; color: var(--pastel-violet-text); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
@@ -1213,7 +1268,7 @@
             </div>
 
             <!-- CARD 4: VS Code & SQLcl Instant Setup -->
-            <div class="card" style="border: 1px solid rgba(34, 197, 94, 0.3); background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(3, 7, 18, 0.95) 100%);">
+            <div class="card" style="border: 1px solid rgba(34, 197, 94, 0.3);">
                 <div class="card-top">
                     <div class="card-location-badge card-location-badge-green" data-i18n="ob_step3_loc">📍 Asukoht: Sinu Arvuti → VS Code Redaktor & Kohalik Terminal</div>
                     <div style="font-size: 1.1rem; font-weight: 700; color: var(--success); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
@@ -1240,7 +1295,7 @@
         </div>
 
         <!-- FULL-WIDTH CARD 5: ADVANCED USERS & DEVOPS / ADMIN -->
-        <div class="card" style="border: 1px solid rgba(234, 179, 8, 0.4); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(3, 7, 18, 0.98) 100%); margin-bottom: 28px; box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.4);">
+        <div class="card" style="border: 1px solid rgba(234, 179, 8, 0.4); margin-bottom: 28px; box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.4);">
             <div class="card-top">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
                     <div class="card-location-badge card-location-badge-amber" data-i18n="ob_step5_loc" style="margin-bottom: 0;">📍 Asukoht: DevOps Vahekaart (⚡ DevOps) & Dokumentatsioon (📚 Dokumendid)</div>
@@ -2384,6 +2439,28 @@
                 <div class="devops-console" style="display:none;"></div>
             </div>
 
+            <!-- MGMT: PODMAN MACHINE LIFECYCLE -->
+            <div class="card card-action" id="card-devops-podman-machine" data-cat="mgmt">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_podman_machine">🚀 Podman Virtual Machine Engine</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge action" data-i18n="badge_action">⚡ Tegevus</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_podman_machine">Manages the underlying Podman virtual machine (AppleHV on macOS / WSL2 on Windows) providing zero-friction startup and shutdown.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    podman machine start
+                </div>
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('podman-machine-start', this, '🚀 Podman Machine Start')"><span>🚀</span> <span data-i18n="btn_start_machine">Käivita masin</span></button>
+                    <button class="btn btn-secondary btn-sm" onclick="runDevOpsCommand('podman-machine-stop', this, '⏹️ Podman Machine Stop')"><span>⏹️</span> <span data-i18n="btn_stop_machine">Peata masin</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
+
             <!-- MGMT: DEV HUB BRIDGE SERVER -->
             <div class="card card-action" id="card-devops-start-bridge" data-cat="mgmt">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -3016,7 +3093,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                                 <button type="button" class="mermaid-btn" onclick="openBlueprintMermaidZoom()">🔍 <span data-i18n="mermaid_zoom">Suurenda</span></button>
                             </div>
                         </div>
-                        <div id="bp-modal-mermaid" class="bp-modal-mermaid-container" style="background: #030712; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; min-height: 180px; overflow-x: auto;"></div>
+                        <div id="bp-modal-mermaid" class="bp-modal-mermaid-container" style="background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; min-height: 180px; overflow-x: auto;"></div>
                         <pre id="bp-modal-mermaid-raw" class="mermaid-raw-code" style="display: none; border-radius: var(--radius-md); margin-top: 10px;"></pre>
                     </div>
 
@@ -3060,7 +3137,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                         </div>
 
                         <!-- Active File Path & Mode Banner -->
-                        <div class="bp-config-file-banner" style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-bottom: none; border-radius: var(--radius-md) var(--radius-md) 0 0; padding: 8px 14px; font-size: 0.8rem;">
+                        <div class="bp-config-file-banner" style="display: flex; justify-content: space-between; align-items: center; background: var(--surface-subtle); border: 1px solid var(--border); border-bottom: none; border-radius: var(--radius-md) var(--radius-md) 0 0; padding: 8px 14px; font-size: 0.8rem;">
                             <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
                                 <span id="bp-config-file-icon">📁</span>
                                 <code id="bp-config-active-path" style="color: var(--primary); font-size: 0.8rem; font-family: ui-monospace, monospace;"></code>
@@ -3071,7 +3148,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
 
                         <!-- Code Editor Textarea -->
                         <div style="position: relative;">
-                            <textarea id="bp-config-editor-textarea" readonly spellcheck="false" style="width: 100%; min-height: 420px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.84rem; line-height: 1.5; background: #030712; color: var(--text-main); border: 1px solid var(--border); border-radius: 0 0 var(--radius-md) var(--radius-md); padding: 14px; box-sizing: border-box; resize: vertical; tab-size: 2; outline: none;"></textarea>
+                            <textarea id="bp-config-editor-textarea" readonly spellcheck="false" style="width: 100%; min-height: 420px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.84rem; line-height: 1.5; background: var(--code-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 0 0 var(--radius-md) var(--radius-md); padding: 14px; box-sizing: border-box; resize: vertical; tab-size: 2; outline: none;"></textarea>
                         </div>
 
                         <!-- Variables & Resolved Profiles Table / Info -->
@@ -3110,7 +3187,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                                 <button type="button" class="mermaid-btn" onclick="openBlueprintWorkflowMermaidZoom()">🔍 <span data-i18n="mermaid_zoom">Suurenda</span></button>
                             </div>
                         </div>
-                        <div id="bp-modal-workflow-mermaid" class="bp-modal-mermaid-container" style="background: #030712; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; min-height: 180px; max-height: 380px; overflow-x: auto; overflow-y: auto;"></div>
+                        <div id="bp-modal-workflow-mermaid" class="bp-modal-mermaid-container" style="background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; min-height: 180px; max-height: 380px; overflow-x: auto; overflow-y: auto;"></div>
                         <pre id="bp-modal-workflow-mermaid-raw" class="mermaid-raw-code" style="display: none; border-radius: var(--radius-md); margin-top: 10px;"></pre>
                     </div>
                 </div>
@@ -3155,7 +3232,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                     </div>
 
                     <!-- Quick Navigation to Logs & Benchmarks -->
-                    <div class="modal-section bp-diag-hint-box" style="background: rgba(15, 23, 42, 0.4); border: 1px dashed var(--border); border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 22px;">
+                    <div class="modal-section bp-diag-hint-box" style="background: var(--surface-subtle); border: 1px dashed var(--border); border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 22px;">
                         <div style="font-size: 0.82rem; color: var(--text-muted);">
                             <span>📊</span> <span data-i18n="diag_logs_hint">Põhjalikud paigalduslogid, sammude ajakulu ja varukoopiate ajalugu asuvad vahelehel:</span>
                         </div>
@@ -3169,9 +3246,9 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                 <div id="bp-modal-tab-logs" class="bp-tab-content">
                     <div class="modal-section" style="margin-bottom: 0;">
                         <!-- Benchmarks Summary Bar -->
-                        <div id="bp-modal-benchmarks" style="background: #090d16; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;"></div>
+                        <div id="bp-modal-benchmarks" style="background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;"></div>
                         <!-- Filter Toolbar: Categories, Search, Refresh -->
-                        <div class="bp-logs-filter-toolbar" style="display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 14px; background: rgba(15, 23, 42, 0.5); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+                        <div class="bp-logs-filter-toolbar" style="display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 14px; background: var(--surface-subtle); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
                             <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                                 <button type="button" class="btn btn-sm active" id="btn-bp-log-cat-all" onclick="filterBpLogsCategory('all')" data-i18n="logs_cat_all">Kõik</button>
                                 <button type="button" class="btn btn-sm" id="btn-bp-log-cat-setup" onclick="filterBpLogsCategory('setup')" data-i18n="logs_cat_setup">Paigaldus</button>
@@ -3256,7 +3333,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                 </div>
             </div>
             <div class="modal-body" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 14px 20px;">
-                <pre id="log-viewer-modal-content" style="flex: 1; margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.78rem; color: var(--text-main); background: #020617; border: 1px solid #1e293b; border-radius: 8px; padding: 14px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.5;"></pre>
+                <pre id="log-viewer-modal-content" style="flex: 1; margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.78rem; color: var(--text-main); background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.5;"></pre>
             </div>
         </div>
     </div>
@@ -3314,12 +3391,12 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                     <!-- Inline Clone Input Bar (hidden by default) -->
                     <div id="profile-clone-bar" style="display: none; background: rgba(56, 189, 248, 0.08); border: 1px dashed #38bdf8; padding: 8px 12px; border-radius: 6px; align-items: center; gap: 8px;">
                         <span style="font-size: 0.8rem; color: var(--primary); font-weight: 600;">Uue profiili failinimi:</span>
-                        <input type="text" id="profile-clone-name" style="flex: 1; background: #030712; border: 1px solid var(--border); color: #f8fafc; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-family: ui-monospace, monospace;" placeholder="nt db-custom-oracle.yaml" />
+                        <input type="text" id="profile-clone-name" style="flex: 1; background: var(--surface-subtle); border: 1px solid var(--border); color: var(--text-main); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-family: ui-monospace, monospace;" placeholder="nt db-custom-oracle.yaml" />
                         <button class="btn btn-primary" onclick="confirmCloneProfile()" style="padding: 4px 10px; font-size: 0.78rem;">Klooni</button>
                         <button class="btn btn-secondary" onclick="cancelCloneProfile()" style="padding: 4px 10px; font-size: 0.78rem;">Loobu</button>
                     </div>
                     <div style="flex: 1; position: relative;">
-                        <textarea id="profile-editor-textarea" readonly style="width: 100%; height: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.82rem; background: #030712; color: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; resize: none; line-height: 1.5; outline: none;" spellcheck="false" placeholder="Profile YAML content will appear here..."></textarea>
+                        <textarea id="profile-editor-textarea" readonly style="width: 100%; height: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.82rem; background: var(--code-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; resize: none; line-height: 1.5; outline: none;" spellcheck="false" placeholder="Profile YAML content will appear here..."></textarea>
                     </div>
                     <!-- Status / Validation Bar -->
                     <div id="profile-editor-status" style="font-size: 0.82rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; padding-top: 4px;">
@@ -3372,7 +3449,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                             </div>
                         </div>
                         <div style="flex: 1; position: relative;">
-                            <textarea id="bp-view-textarea" readonly style="width: 100%; height: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.82rem; background: #030712; color: var(--primary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; resize: none; line-height: 1.5; outline: none;" spellcheck="false" placeholder="Blueprint .env content will appear here..."></textarea>
+                            <textarea id="bp-view-textarea" readonly style="width: 100%; height: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.82rem; background: var(--code-bg); color: var(--primary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; resize: none; line-height: 1.5; outline: none;" spellcheck="false" placeholder="Blueprint .env content will appear here..."></textarea>
                         </div>
                         <div id="bp-view-status" style="font-size: 0.82rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; padding-top: 4px;">
                             <span id="bp-view-msg" style="color: var(--text-muted);">Vali vasakult blueprint selle sisu vaatamiseks</span>
@@ -3433,7 +3510,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                         </div>
                         <div>
                             <label style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Generated Blueprint .env Content (Editable)</label>
-                            <textarea id="cbp-env-content" style="width: 100%; height: 130px; font-family: ui-monospace, monospace; font-size: 0.82rem; background: #030712; color: var(--primary); border: 1px solid var(--border); border-radius: 6px; padding: 10px; resize: vertical; line-height: 1.4; outline: none;"></textarea>
+                            <textarea id="cbp-env-content" style="width: 100%; height: 130px; font-family: ui-monospace, monospace; font-size: 0.82rem; background: var(--code-bg); color: var(--primary); border: 1px solid var(--border); border-radius: 6px; padding: 10px; resize: vertical; line-height: 1.4; outline: none;"></textarea>
                         </div>
                         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px;">
                             <button class="btn btn-secondary" onclick="showBlueprintView()">Loobu</button>
@@ -3485,7 +3562,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
         <div id="suite-tests-list-view" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
             <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);">
                 <div style="position: relative;">
-                    <input type="text" id="suite-tests-search-input" class="search-input" data-i18n-placeholder="modal_tests_search_ph" placeholder="Otsi testskripti..." oninput="filterSuiteTestsModal(this.value)" style="width: 100%; padding: 8px 12px 8px 32px; font-size: 0.85rem; border-radius: 6px; border: 1px solid var(--border); background: #0b0f19; color: #f8fafc; outline: none;">
+                    <input type="text" id="suite-tests-search-input" class="search-input" data-i18n-placeholder="modal_tests_search_ph" placeholder="Otsi testskripti..." oninput="filterSuiteTestsModal(this.value)" style="width: 100%; padding: 8px 12px 8px 32px; font-size: 0.85rem; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); outline: none;">
                     <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;">🔍</span>
                 </div>
             </div>
@@ -3521,7 +3598,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                 </div>
             </div>
 
-            <div style="padding: 12px 16px; overflow-y: auto; flex: 1; min-height: 250px; max-height: 54vh; background: #030712;">
+            <div style="padding: 12px 16px; overflow-y: auto; flex: 1; min-height: 250px; max-height: 54vh; background: var(--code-bg);">
                 <pre class="script-code-box" id="suite-script-code-pre"><code id="suite-script-code-content">Laadin skripti sisu...</code></pre>
             </div>
 
@@ -3538,8 +3615,8 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
 
 <!-- MERMAID DIAGRAM FULLSCREEN ZOOM MODAL -->
 <div id="mermaid-zoom-modal" class="modal-backdrop" style="display: none;" onclick="if(event.target===this) closeMermaidZoomModal();">
-    <div class="modal-content" style="max-width: 95vw; width: 1200px; max-height: 90vh; display: flex; flex-direction: column; background: #030712; border: 1px solid var(--border);">
-        <div class="modal-header" style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #0b1120;">
+    <div class="modal-content" style="max-width: 95vw; width: 1200px; max-height: 90vh; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border);">
+        <div class="modal-header" style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--surface-subtle);">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-size: 1.4rem;">📊</span>
                 <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-main);" data-i18n="mermaid_zoom_title">Arhitektuuriskeemi suurendatud vaade</h3>
@@ -3549,7 +3626,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                 <button type="button" class="modal-close-btn" onclick="closeMermaidZoomModal()">✕</button>
             </div>
         </div>
-        <div id="mermaid-zoom-content" style="padding: 24px; overflow: auto; flex: 1; display: flex; justify-content: center; align-items: center; background: #030712; min-height: 300px;">
+        <div id="mermaid-zoom-content" style="padding: 24px; overflow: auto; flex: 1; display: flex; justify-content: center; align-items: center; background: var(--surface); min-height: 300px;">
         </div>
     </div>
 </div>
@@ -3814,7 +3891,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
         <div id="skill-modal-relations-bar" class="skill-modal-relations-bar"></div>
 
         <!-- AI Triggers Pill Bar -->
-        <div id="skill-modal-triggers-bar" style="padding: 10px 20px; background: rgba(15, 23, 42, 0.5); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"></div>
+        <div id="skill-modal-triggers-bar" style="padding: 10px 20px; background: var(--surface-subtle); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"></div>
 
         <!-- Rendered Markdown Body -->
         <div class="modal-body" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
@@ -3910,7 +3987,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
             <button class="modal-close-btn" onclick="closeCodePreviewModal()" title="Sulge (Esc)">✕</button>
         </div>
         <div class="modal-body code-preview-body" style="padding: 16px 20px; max-height: 70vh; overflow-y: auto;">
-            <pre style="margin: 0; padding: 14px; background: #0b1120; border: 1px solid #1e293b; border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace; font-size: 0.82rem; line-height: 1.5; color: #f8fafc; overflow-x: auto; white-space: pre;"><code id="code-preview-code">Laadimine...</code></pre>
+            <pre style="margin: 0; padding: 14px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace; font-size: 0.82rem; line-height: 1.5; color: var(--text-main); overflow-x: auto; white-space: pre;"><code id="code-preview-code">Laadimine...</code></pre>
         </div>
     </div>
 </div>
@@ -3974,13 +4051,13 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
 
 <!-- PUBLISHER REPORT STUDIO (REPORT LAB) MODAL -->
 <div id="report-studio-modal-backdrop" class="modal-backdrop" onclick="closeReportStudioModal(event)">
-    <div id="report-studio-modal-card" class="modal-content report-studio-modal-card" style="max-width: 1440px; width: 96vw; height: 90vh; max-height: 94vh; display: flex; flex-direction: column; overflow: hidden; background: #0f172a; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);" onclick="event.stopPropagation()">
+    <div id="report-studio-modal-card" class="modal-content report-studio-modal-card" style="max-width: 1440px; width: 96vw; height: 90vh; max-height: 94vh; display: flex; flex-direction: column; overflow: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--card-shadow);" onclick="event.stopPropagation()">
         <!-- Header -->
-        <div class="modal-header" style="padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(30, 41, 59, 0.7);">
+        <div class="modal-header" style="padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--surface-subtle);">
             <div>
                 <h3 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; color: var(--text-main);">
                     <span>🎨</span> <span data-i18n="report_lab_title">Analytics Publisher Aruannete Labor</span>
-                    <span class="badge" style="background: rgba(168,85,247,0.2); color: var(--pastel-violet-text); border:1px solid rgba(168,85,247,0.4); font-size:0.75rem; padding:2px 8px;">Fast-Render & Deploy</span>
+                    <span class="badge" style="background: var(--pastel-violet-bg, rgba(168,85,247,0.15)); color: var(--pastel-violet-text); border:1px solid var(--pastel-violet-border, rgba(168,85,247,0.3)); font-size:0.75rem; padding:2px 8px;">Fast-Render & Deploy</span>
                 </h3>
                 <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: var(--text-muted);" data-i18n="report_lab_subtitle">
                     Kujunda, testi ja paigalda Pixel-Perfect RTF malle vahetu integreeritud PDF eelvaatega.
@@ -3993,9 +4070,9 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
         </div>
 
         <!-- Body: 2 Columns -->
-        <div style="display: flex; flex: 1; min-height: 480px; overflow: hidden; background: #0b1329;">
+        <div id="report-studio-body" style="display: flex; flex: 1; min-height: 480px; overflow: hidden; background: var(--bg);">
             <!-- Left Pane: Template Controls -->
-            <div style="width: 360px; min-width: 310px; border-right: 1px solid var(--border); padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; background: rgba(15, 23, 42, 0.6);">
+            <div id="report-studio-left-pane" style="width: 360px; min-width: 310px; border-right: 1px solid var(--border); padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; background: var(--surface);">
                 <!-- Template Selection -->
                 <div>
                     <label style="display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-main); margin-bottom: 5px;">
@@ -4006,13 +4083,13 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                     </select>
 
                     <!-- Template Info Card -->
-                    <div id="report-template-info-card" style="display: none; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56,189,248,0.25); border-radius: 6px; padding: 8px 10px; font-size: 0.76rem; color: var(--text-muted); margin-top: 6px;">
+                    <div id="report-template-info-card" style="display: none; background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 0.76rem; color: var(--text-muted); margin-top: 6px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <span id="tpl-info-type" class="badge" style="background: rgba(168,85,247,0.15); color: var(--pastel-violet-text); font-size: 0.68rem; padding: 1px 6px;">RTF Template</span>
+                            <span id="tpl-info-type" class="badge" style="background: var(--pastel-violet-bg, rgba(168,85,247,0.12)); color: var(--pastel-violet-text); border: 1px solid var(--pastel-violet-border, rgba(168,85,247,0.25)); font-size: 0.68rem; padding: 1px 6px;">RTF Template</span>
                             <button type="button" class="btn-xs btn-secondary" onclick="copyReportTemplatePath()" style="padding: 1px 6px; font-size: 0.7rem;" title="Kopeeri failitee" data-i18n="btn_copy_path">📋 Kopeeri tee</button>
                         </div>
                         <div id="tpl-info-path" style="font-family: monospace; color: var(--text-main); word-break: break-all; font-size: 0.72rem;">templates/publisher/...</div>
-                        <div id="tpl-info-target-wrap" style="display: none; margin-top: 4px; font-size: 0.72rem; color: #64748b;">🎯 <span id="tpl-info-target" style="font-family: monospace; color: var(--primary);"></span></div>
+                        <div id="tpl-info-target-wrap" style="display: none; margin-top: 4px; font-size: 0.72rem; color: var(--text-muted);">🎯 <span id="tpl-info-target" style="font-family: monospace; color: var(--primary);"></span></div>
                     </div>
                 </div>
 
@@ -4082,29 +4159,29 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                             <button type="button" class="btn-xs btn-secondary" onclick="clearReportConsoleLog()" title="Tühjenda" style="font-size: 0.7rem; padding: 2px 6px;" data-i18n="btn_clear_log">🗑️</button>
                         </div>
                     </div>
-                    <pre id="report-console-pre" style="display: none; background: #030712; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; font-size: 0.72rem; font-family: monospace; max-height: 240px; overflow-y: auto; color: #a3e635; margin: 0; white-space: pre-wrap; word-break: break-all;"></pre>
+                    <pre id="report-console-pre" style="display: none; background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 0.72rem; font-family: monospace; max-height: 240px; overflow-y: auto; color: var(--text-main); margin: 0; white-space: pre-wrap; word-break: break-all;"></pre>
                 </div>
             </div>
 
             <!-- Right Pane: Tabbed Workspace -->
-            <div style="flex: 1; display: flex; flex-direction: column; background: #0f172a; position: relative; overflow: hidden;">
+            <div id="report-studio-right-pane" style="flex: 1; display: flex; flex-direction: column; background: var(--surface); position: relative; overflow: hidden;">
                 <!-- Workspace Toolbar with 3 Tabs -->
-                <div style="padding: 8px 16px; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <div id="report-studio-workspace-toolbar" style="padding: 8px 16px; background: var(--surface-subtle); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <!-- Workspace Tabs -->
-                    <div style="display: flex; gap: 4px; align-items: center;">
-                        <button id="btn-tab-report-pdf" class="btn-compact" onclick="switchReportViewTab('pdf')" style="background: rgba(56,189,248,0.2); border-color: rgba(56,189,248,0.5); color: var(--primary); font-weight: 600;">
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <button id="btn-tab-report-pdf" class="btn-compact report-tab-btn active" onclick="switchReportViewTab('pdf')">
                             <span>📄</span> <span data-i18n="tab_view_pdf">PDF Eelvaade</span>
                         </button>
-                        <button id="btn-tab-report-rtf" class="btn-compact" onclick="switchReportViewTab('rtf')" style="background: rgba(255,255,255,0.05); border-color: var(--border); color: var(--text-muted);">
+                        <button id="btn-tab-report-rtf" class="btn-compact report-tab-btn" onclick="switchReportViewTab('rtf')">
                             <span>📝</span> <span data-i18n="tab_view_rtf">RTF Mall</span>
                         </button>
-                        <button id="btn-tab-report-xml" class="btn-compact" onclick="switchReportViewTab('xml')" style="background: rgba(255,255,255,0.05); border-color: var(--border); color: var(--text-muted);">
+                        <button id="btn-tab-report-xml" class="btn-compact report-tab-btn" onclick="switchReportViewTab('xml')">
                             <span>📦</span> <span data-i18n="tab_view_xml">XML Andmed</span>
                         </button>
-                        <button id="btn-tab-report-audit" class="btn-compact" onclick="switchReportViewTab('audit')" style="background: rgba(255,255,255,0.05); border-color: var(--border); color: var(--text-muted);">
+                        <button id="btn-tab-report-audit" class="btn-compact report-tab-btn" onclick="switchReportViewTab('audit')">
                             <span>♿</span> <span data-i18n="tab_view_audit">Ligipääsetavuse Audit</span>
                         </button>
-                        <button id="btn-tab-report-e2e" class="btn-compact" onclick="switchReportViewTab('e2e')" style="background: rgba(255,255,255,0.05); border-color: var(--border); color: var(--text-muted);">
+                        <button id="btn-tab-report-e2e" class="btn-compact report-tab-btn" onclick="switchReportViewTab('e2e')">
                             <span>🧪</span> <span data-i18n="tab_view_e2e">E2E Tulemus</span>
                         </button>
                     </div>
@@ -4112,28 +4189,28 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                     <!-- Right Meta & Actions -->
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <span id="report-viewer-meta" class="badge" style="display: none; background: rgba(56,189,248,0.15); color: var(--primary); font-size: 0.72rem; font-weight: 600;"></span>
-                        <a id="btn-pdf-fullscreen" href="javascript:void(0)" target="_blank" class="btn-compact" style="display: none;" title="Ava PDF uues aknas">
+                        <a id="btn-pdf-fullscreen" href="javascript:void(0)" target="_blank" class="btn-compact btn-secondary" style="display: none;" title="Ava PDF uues aknas">
                             <span>↗</span> <span data-i18n="btn_open_fullscreen">Uues aknas</span>
                         </a>
                     </div>
                 </div>
 
                 <!-- Tab 1: PDF Viewer Container -->
-                <div id="report-pdf-frame-container" style="flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
-                    <div id="report-empty-state" style="text-align: center; padding: 40px; color: #64748b;">
-                        <div style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;">📄</div>
-                        <h4 style="margin: 0 0 6px 0; color: var(--text-muted); font-weight: 500;" data-i18n="report_empty_title">Vali vasakult mall ja klõpsa "Kiir-eelvaade"</h4>
-                        <p style="margin: 0; font-size: 0.8rem; color: #64748b;" data-i18n="report_empty_subtitle">PDF genereeritakse reaalajas ja kuvatakse otse siin aknas ilma allalaadimisteta.</p>
+                <div id="report-pdf-frame-container" style="flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; background: var(--surface);">
+                    <div id="report-empty-state" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <div style="font-size: 3rem; margin-bottom: 12px; opacity: 0.6;">📄</div>
+                        <h4 style="margin: 0 0 6px 0; color: var(--text-main); font-weight: 600;" data-i18n="report_empty_title">Vali vasakult mall ja klõpsa "Kiir-eelvaade"</h4>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);" data-i18n="report_empty_subtitle">PDF genereeritakse reaalajas ja kuvatakse otse siin aknas ilma allalaadimisteta.</p>
                     </div>
                     <div id="report-loading-state" style="display: none; text-align: center; padding: 40px; color: var(--primary);">
                         <div class="spinner" style="margin: 0 auto 16px auto; width: 40px; height: 40px; border-width: 3px;"></div>
                         <h4 id="report-loading-text" style="margin: 0; font-weight: 500;">Genereerin PDF eelvaadet...</h4>
                     </div>
-                    <iframe id="report-pdf-frame" src="" style="display: none; width: 100%; height: 100%; border: none; background: #1e293b;"></iframe>
+                    <iframe id="report-pdf-frame" src="" style="display: none; width: 100%; height: 100%; border: none; background: var(--surface-subtle);"></iframe>
                 </div>
 
                 <!-- Tab: RTF Template Inspector Container -->
-                <div id="report-rtf-container" style="display: none; flex: 1; flex-direction: column; overflow: hidden; background: #0b1329; padding: 12px; gap: 8px;">
+                <div id="report-rtf-container" style="display: none; flex: 1; flex-direction: column; overflow: hidden; background: var(--surface); padding: 12px; gap: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; font-size: 0.78rem; color: var(--text-muted); flex-wrap: wrap; gap: 6px;">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <span>📝</span> <span data-i18n="report_rtf_active_file">Aktiivne RTF mall:</span>
@@ -4149,11 +4226,11 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                             </button>
                         </div>
                     </div>
-                    <pre id="report-rtf-pre" style="flex: 1; overflow: auto; background: #030712; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 0; font-family: monospace; font-size: 0.76rem; color: #e2e8f0; white-space: pre-wrap; word-break: break-all;"></pre>
+                    <pre id="report-rtf-pre" style="flex: 1; overflow: auto; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 0; font-family: monospace; font-size: 0.76rem; color: var(--text-main); white-space: pre-wrap; word-break: break-all;"></pre>
                 </div>
 
                 <!-- Tab 2: XML Data Inspector Container -->
-                <div id="report-xml-container" style="display: none; flex: 1; flex-direction: column; overflow: hidden; background: #0b1329; padding: 12px; gap: 8px;">
+                <div id="report-xml-container" style="display: none; flex: 1; flex-direction: column; overflow: hidden; background: var(--surface); padding: 12px; gap: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; font-size: 0.78rem; color: var(--text-muted);">
                         <div>
                             <span>📦</span> <span data-i18n="report_xml_active_file">Aktiivne XML testandmefail:</span>
@@ -4161,15 +4238,15 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                         </div>
                         <button type="button" class="btn-xs btn-secondary" onclick="copyReportXmlContent()" style="font-size: 0.72rem; padding: 3px 8px;" data-i18n="btn_copy_xml">📋 Kopeeri XML</button>
                     </div>
-                    <pre id="report-xml-pre" style="flex: 1; overflow: auto; background: #030712; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 0; font-family: monospace; font-size: 0.78rem; color: var(--primary); white-space: pre-wrap; word-break: break-all;"></pre>
+                    <pre id="report-xml-pre" style="flex: 1; overflow: auto; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 0; font-family: monospace; font-size: 0.78rem; color: var(--primary); white-space: pre-wrap; word-break: break-all;"></pre>
                 </div>
 
                 <!-- Tab 3: Accessibility Audit Scorecard & Report Container -->
-                <div id="report-audit-container" style="display: none; flex: 1; flex-direction: column; overflow-y: auto; background: #0b1329; padding: 16px; gap: 14px;">
-                    <div id="report-audit-empty" style="text-align: center; padding: 40px; color: #64748b;">
-                        <div style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;">♿</div>
-                        <h4 style="margin: 0 0 6px 0; color: var(--text-muted); font-weight: 500;" data-i18n="report_audit_empty_title">Ligipääsetavuse audit pole veel käivitatud</h4>
-                        <p style="margin: 0; font-size: 0.8rem; color: #64748b;" data-i18n="report_audit_empty_subtitle">Tee esmalt "Kiir-eelvaade" ja klõpsa seejärel "Audit (PDF/UA-1)".</p>
+                <div id="report-audit-container" style="display: none; flex: 1; flex-direction: column; overflow-y: auto; background: var(--surface); padding: 16px; gap: 14px;">
+                    <div id="report-audit-empty" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <div style="font-size: 3rem; margin-bottom: 12px; opacity: 0.6;">♿</div>
+                        <h4 style="margin: 0 0 6px 0; color: var(--text-main); font-weight: 600;" data-i18n="report_audit_empty_title">Ligipääsetavuse audit pole veel käivitatud</h4>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);" data-i18n="report_audit_empty_subtitle">Tee esmalt "Kiir-eelvaade" ja klõpsa seejärel "Audit (PDF/UA-1)".</p>
                     </div>
 
                     <div id="report-audit-results" style="display: none; flex-direction: column; gap: 14px;">
@@ -4187,19 +4264,19 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
 
                         <!-- 4 Pillars Checklist Cards -->
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
-                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+                            <div style="background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
                                 <div style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="a11y_check_tagged">🏷️ Tagged PDF struktuur</div>
                                 <div id="a11y-val-tagged" style="font-size: 0.95rem; font-weight: 700; color: var(--success); margin-top: 4px;">✅ Kehtiv</div>
                             </div>
-                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+                            <div style="background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
                                 <div style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="a11y_check_headings">📑 Pealkirjade hierarhia (H1-H3)</div>
                                 <div id="a11y-val-headings" style="font-size: 0.95rem; font-weight: 700; color: var(--success); margin-top: 4px;">✅ Kehtiv</div>
                             </div>
-                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+                            <div style="background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
                                 <div style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="a11y_check_tables">📊 Tabelite päised & TH elemendid</div>
                                 <div id="a11y-val-tables" style="font-size: 0.95rem; font-weight: 700; color: var(--success); margin-top: 4px;">✅ Kehtiv</div>
                             </div>
-                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
+                            <div style="background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 6px; padding: 10px;">
                                 <div style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="a11y_check_alttext">🖼️ Alt-tekstid & Kontrast</div>
                                 <div id="a11y-val-alttext" style="font-size: 0.95rem; font-weight: 700; color: var(--success); margin-top: 4px;">✅ Kehtiv</div>
                             </div>
@@ -4208,17 +4285,17 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                         <!-- Raw Technical Output -->
                         <div>
                             <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px;" data-i18n="a11y_tech_details">Detailne auditi aruanne:</div>
-                            <pre id="report-audit-pre" style="background: #030712; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 0; font-family: monospace; font-size: 0.74rem; color: #a3e635; white-space: pre-wrap; word-break: break-all; max-height: 260px; overflow-y: auto;"></pre>
+                            <pre id="report-audit-pre" style="background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 0; font-family: monospace; font-size: 0.74rem; color: var(--text-main); white-space: pre-wrap; word-break: break-all; max-height: 260px; overflow-y: auto;"></pre>
                         </div>
                     </div>
                 </div>
 
                 <!-- Tab 4: E2E Verification & Audit Panel -->
-                <div id="report-e2e-container" style="display: none; flex: 1; flex-direction: column; overflow-y: auto; background: #0b1329; padding: 16px; gap: 14px;">
-                    <div id="report-e2e-empty" style="text-align: center; padding: 40px; color: #64748b;">
-                        <div style="font-size: 3rem; margin-bottom: 12px; opacity: 0.5;">🧪</div>
-                        <h4 style="margin: 0 0 6px 0; color: var(--text-muted); font-weight: 500;" data-i18n="report_e2e_empty_title">E2E testi pole veel käivitatud</h4>
-                        <p style="margin: 0; font-size: 0.8rem; color: #64748b;" data-i18n="report_e2e_empty_subtitle">Klõpsa vasakul "🧪 Käivita E2E Test & Kontroll". Nõutav on Blueprint 5.</p>
+                <div id="report-e2e-container" style="display: none; flex: 1; flex-direction: column; overflow-y: auto; background: var(--surface); padding: 16px; gap: 14px;">
+                    <div id="report-e2e-empty" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <div style="font-size: 3rem; margin-bottom: 12px; opacity: 0.6;">🧪</div>
+                        <h4 style="margin: 0 0 6px 0; color: var(--text-main); font-weight: 600;" data-i18n="report_e2e_empty_title">E2E testi pole veel käivitatud</h4>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);" data-i18n="report_e2e_empty_subtitle">Klõpsa vasakul "🧪 Käivita E2E Test & Kontroll". Nõutav on Blueprint 5.</p>
                     </div>
 
                     <div id="report-e2e-results" style="display: none; flex-direction: column; gap: 14px;">
@@ -4252,7 +4329,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                                 </button>
 
                                 <!-- Dropdown Menu -->
-                                <div id="e2e-publisher-dropdown" style="display: none; position: absolute; top: calc(100% + 4px); right: 0; min-width: 250px; background: #0f172a; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); z-index: 50; padding: 6px 0;">
+                                <div id="e2e-publisher-dropdown" style="display: none; position: absolute; top: calc(100% + 4px); right: 0; min-width: 250px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--card-shadow); z-index: 50; padding: 6px 0;">
                                     <div style="padding: 6px 12px; font-size: 0.72rem; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="label_open_report_as">Ava raport rollis:</div>
                                     <button type="button" class="dropdown-item" onclick="openE2EReportInPortal('bip_developer', 'report', event)" style="width: 100%; text-align: left; padding: 8px 14px; background: none; border: none; color: var(--primary); font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                                         <span>🎨</span> <span>bip_developer (Arendaja)</span>
@@ -4287,7 +4364,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                                     <span>📋</span> <span data-i18n="btn_copy_log">Kopeeri Logi</span>
                                 </button>
                             </div>
-                            <pre id="report-e2e-pre" style="background: #030712; border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin: 0; font-family: monospace; font-size: 0.76rem; line-height: 1.45; color: #a3e635; white-space: pre-wrap; word-break: break-all; max-height: 420px; min-height: 200px; overflow-y: auto;"></pre>
+                            <pre id="report-e2e-pre" style="background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin: 0; font-family: monospace; font-size: 0.76rem; line-height: 1.45; color: var(--text-main); white-space: pre-wrap; word-break: break-all; max-height: 420px; min-height: 200px; overflow-y: auto;"></pre>
                         </div>
                     </div>
                 </div>
@@ -4461,7 +4538,7 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                     <kbd style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; padding: 2px 6px; font-size: 0.72rem;">Shift+R</kbd>
                 </button>
 
-                <div style="background: #020617; border: 1px solid #1e293b; border-radius: 8px; padding: 12px 16px;">
+                <div style="background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px;">
                     <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px;" data-i18n="version_inspector_cli_label">Terminali CLI värskenduskäsk (Chrome automaatne reload):</div>
                     <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px;">
                         <code style="color: var(--primary); font-family: ui-monospace, monospace; font-size: 0.85rem;">./scripts/refresh-devhub.sh</code>

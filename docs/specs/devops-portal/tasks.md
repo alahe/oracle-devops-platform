@@ -20,6 +20,7 @@
 | **TSK-DP-07** | NFR-i18n | `i18n.js` (6 Languages EN/ET/FI/SV/LV/LT) | `./tests/test-multilingual-support.sh` | ✅ Completed |
 | **TSK-DP-08** | `[REQ-06]` | `bump-iteration.sh`, `release.sh` | `./tests/unit/test-semantic-versioning.sh` | ✅ Completed |
 | **TSK-DP-09** | `[REQ-07]` | `layout.html`, `app.js`, `i18n.js` | `./tests/unit/test-devhub-landing-tab.sh` | ✅ Completed |
+| **TSK-DP-10** | `[REQ-08]` | `dev-hub-bridge.py`, `layout.html`, `app.js`, `i18n.js` | `./tests/unit/test-devhub-podman-runner.sh` | ✅ Completed |
 
 ---
 
@@ -34,6 +35,7 @@
 - [x] **TSK-DP-07:** Integrated 26 new translation keys across 6 languages (100% test pass).
 - [x] **TSK-DP-08:** Implemented 4-part iteration counter (`bump-iteration.sh`), Conventional Commits semantic release, and pre-push hook.
 - [x] **TSK-DP-09:** Implemented home tab pinning (📌), smart adaptive landing, and 6-language synchronization.
+- [x] **TSK-DP-10:** Implemented Podman VM and container startup capability in Dev Hub (`dev-hub-bridge.py`, `layout.html`, `app.js`, `i18n.js`, `test-devhub-podman-runner.sh`).
 
 ---
 

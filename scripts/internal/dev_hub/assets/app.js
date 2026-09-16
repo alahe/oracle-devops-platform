@@ -848,6 +848,9 @@ function setLanguage(lang) {
   if (typeof renderPodmanCurrentView === 'function' && gPodmanData) {
     renderPodmanCurrentView();
   }
+  if (typeof updatePodmanStartupUI === 'function') {
+    updatePodmanStartupUI();
+  }
 
   renderBlueprints(currentActiveFilter);
   renderDocsNav(currentSelectedDocIdx);
@@ -6190,10 +6193,12 @@ async function runDevOpsCommand(cmdKey, btn, customTitle, extraPayload = {}) {
     if (resp.ok && (data.ok || data.status === 'ok')) {
       appendDockedTerminalOutput(data.output || '(Käsk lõpetas ilma väljundita)');
       setDockedTerminalFinished(data.exit_code, data.duration_s, data.output);
+      return data;
     } else {
       const err = data.error || 'Server tagastas tõrke.';
       appendDockedTerminalOutput(`❌ Viga: ${err}`);
       setDockedTerminalFinished(data.exit_code || 1, data.duration_s, err);
+      return data;
     }
   } catch (err) {
     if (btn) {
@@ -6203,6 +6208,7 @@ async function runDevOpsCommand(cmdKey, btn, customTitle, extraPayload = {}) {
     const msg = `Silda ei saanud kätte: ${err.message}. Veendu, et python3 scripts/internal/dev-hub-bridge.py töötab taustal.`;
     appendDockedTerminalOutput(`❌ Ühenduse tõrge: ${msg}`);
     setDockedTerminalFinished(1, 0, msg);
+    return { ok: false, error: msg, exit_code: 1 };
   }
 }
 
@@ -9069,9 +9075,175 @@ function scrollToWallet(alias, el) {
  * ============================================================================== */
 
 let gPodmanData = null;
+let gPodmanEngineStatus = null;
 let gPodmanActiveSubTab = 'containers';
 let gPodmanStatusFilter = 'all';
 let gPodmanSearchQuery = '';
+
+function togglePodmanStartupMenu(event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const menu = document.getElementById('podman-startup-menu');
+  if (!menu) return;
+  const isHidden = menu.style.display === 'none' || !menu.style.display;
+  menu.style.display = isHidden ? 'block' : 'none';
+}
+
+function updatePodmanStartupUI() {
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  const hero = document.getElementById('podman-empty-hero');
+  const heroTitle = document.getElementById('podman-hero-title');
+  const heroDesc = document.getElementById('podman-hero-desc');
+  const heroBtnLabel = document.getElementById('podman-hero-btn-label');
+  const heroBtnPrimary = document.getElementById('podman-hero-btn-primary');
+
+  const btnPrimary = document.getElementById('btn-podman-primary-action');
+  const btnPrimaryIcon = document.getElementById('btn-podman-primary-icon');
+  const btnPrimaryLabel = document.getElementById('btn-podman-primary-label');
+
+  const menuItemStart = document.getElementById('menu-item-podman-machine-start');
+  const menuItemStop = document.getElementById('menu-item-podman-machine-stop');
+
+  const status = gPodmanEngineStatus || {};
+  const hasMachine = Boolean(status.has_machine);
+  const machineRunning = Boolean(status.machine_running);
+  let containersRunning = status.containers_running || 0;
+  if (!status.containers_running && gPodmanData && Array.isArray(gPodmanData.containers)) {
+    containersRunning = gPodmanData.containers.filter(c => (c.state || '').toLowerCase() === 'running').length;
+  }
+
+  // Dropdown items visibility
+  if (menuItemStart) {
+    if (!hasMachine) {
+      menuItemStart.style.display = 'none';
+    } else {
+      menuItemStart.style.display = 'flex';
+      menuItemStart.style.opacity = machineRunning ? '0.6' : '1';
+      menuItemStart.style.pointerEvents = machineRunning ? 'none' : 'auto';
+    }
+  }
+  if (menuItemStop) {
+    if (!hasMachine) {
+      menuItemStop.style.display = 'none';
+    } else {
+      menuItemStop.style.display = 'flex';
+      menuItemStop.style.opacity = machineRunning ? '1' : '0.6';
+      menuItemStop.style.pointerEvents = machineRunning ? 'auto' : 'none';
+    }
+  }
+
+  // Dynamic context-sensitive primary CTA and empty-state hero
+  if (hasMachine && !machineRunning) {
+    if (btnPrimaryIcon) btnPrimaryIcon.textContent = '🚀';
+    if (btnPrimaryLabel) btnPrimaryLabel.textContent = dict.btn_podman_start_machine || 'Start Podman Machine';
+    if (btnPrimary) {
+      btnPrimary.setAttribute('onclick', "triggerSmartPodmanStartup('machine', this)");
+      btnPrimary.title = dict.btn_podman_start_machine || 'Start Podman Machine';
+    }
+
+    if (hero) {
+      hero.style.display = 'block';
+      if (heroTitle) heroTitle.textContent = dict.podman_hero_machine_stopped_title || 'Podman Machine is Stopped';
+      if (heroDesc) heroDesc.textContent = dict.podman_hero_machine_stopped_desc || 'The local virtual machine is currently inactive. Launch it to access containers.';
+      if (heroBtnLabel) heroBtnLabel.textContent = dict.btn_podman_start_machine || 'Start Podman Machine';
+      if (heroBtnPrimary) heroBtnPrimary.setAttribute('onclick', "triggerSmartPodmanStartup('machine', this)");
+    }
+  } else if (containersRunning === 0) {
+    if (btnPrimaryIcon) btnPrimaryIcon.textContent = '▶️';
+    if (btnPrimaryLabel) btnPrimaryLabel.textContent = dict.btn_podman_start_containers || 'Start Containers';
+    if (btnPrimary) {
+      btnPrimary.setAttribute('onclick', "triggerSmartPodmanStartup('containers', this)");
+      btnPrimary.title = dict.btn_podman_start_containers || 'Start Containers';
+    }
+
+    if (hero) {
+      hero.style.display = 'block';
+      if (heroTitle) heroTitle.textContent = dict.podman_hero_containers_stopped_title || 'Containers are Stopped';
+      if (heroDesc) heroDesc.textContent = dict.podman_hero_containers_stopped_desc || 'Podman engine is ready, but no containers are currently running for this blueprint.';
+      if (heroBtnLabel) heroBtnLabel.textContent = dict.btn_podman_start_containers || 'Start Containers';
+      if (heroBtnPrimary) heroBtnPrimary.setAttribute('onclick', "triggerSmartPodmanStartup('containers', this)");
+    }
+  } else {
+    if (btnPrimaryIcon) btnPrimaryIcon.textContent = '⚡';
+    if (btnPrimaryLabel) btnPrimaryLabel.textContent = dict.btn_podman_smart_start || 'Start Services';
+    if (btnPrimary) {
+      btnPrimary.setAttribute('onclick', "triggerSmartPodmanStartup('auto', this)");
+      btnPrimary.title = dict.btn_podman_smart_start || 'Start Services';
+    }
+
+    if (hero) {
+      hero.style.display = 'none';
+    }
+  }
+}
+
+async function checkPodmanEngineStatus() {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const resp = await fetch(`${BRIDGE_URL}/api/podman/engine/status`, { signal: controller.signal, mode: 'cors' });
+    clearTimeout(timeoutId);
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.status === 'ok') {
+        gPodmanEngineStatus = data;
+        updatePodmanStartupUI();
+        return data;
+      }
+    }
+  } catch (e) {
+    console.warn('Could not query Podman engine status:', e.message);
+  }
+  return null;
+}
+
+async function triggerSmartPodmanStartup(action, btn) {
+  const menu = document.getElementById('podman-startup-menu');
+  if (menu) menu.style.display = 'none';
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = I18N_DICT[currentLang] || I18N_DICT['en'];
+
+  if (action === 'machine') {
+    const title = dict.btn_podman_start_machine || '🚀 Start Podman Machine';
+    const res = await runDevOpsCommand('podman-machine-start', btn, title);
+    await checkPodmanEngineStatus();
+    await loadPodmanResources(true);
+    checkServiceHealth();
+    return res;
+  } else if (action === 'machine-stop') {
+    const title = dict.menu_podman_machine_stop || '⏹️ Stop Podman Machine';
+    const res = await runDevOpsCommand('podman-machine-stop', btn, title);
+    await checkPodmanEngineStatus();
+    await loadPodmanResources(true);
+    checkServiceHealth();
+    return res;
+  } else if (action === 'containers') {
+    const title = dict.btn_podman_start_containers || '▶️ Start Containers';
+    const res = await runDevOpsCommand('start-containers', btn, title);
+    await checkPodmanEngineStatus();
+    await loadPodmanResources(true);
+    checkServiceHealth();
+    return res;
+  } else {
+    // action === 'auto'
+    if (gPodmanEngineStatus && gPodmanEngineStatus.has_machine && !gPodmanEngineStatus.machine_running) {
+      const resMach = await runDevOpsCommand('podman-machine-start', btn, '🚀 Podman Machine Start');
+      if (resMach && (resMach.exit_code === 0 || resMach.ok)) {
+        await runDevOpsCommand('start-containers', btn, '▶️ Start Containers');
+      }
+    } else {
+      await runDevOpsCommand('start-containers', btn, '▶️ Start Containers');
+    }
+    await checkPodmanEngineStatus();
+    await loadPodmanResources(true);
+    checkServiceHealth();
+  }
+}
 
 function escapePodmanHtml(str) {
   if (str === undefined || str === null) return '';
@@ -9142,6 +9314,10 @@ async function loadPodmanResources(force) {
     const data = await resp.json();
     if (data.status === 'ok' && data.resources) {
       gPodmanData = data.resources;
+      if (data.resources.engine) {
+        gPodmanEngineStatus = data.resources.engine;
+      }
+      updatePodmanStartupUI();
       const statusPillSummary = document.getElementById('podman-status-pill-summary');
       [statusPill, statusPillSummary].forEach(p => {
         if (p) {
@@ -9176,6 +9352,7 @@ async function loadPodmanResources(force) {
       }
     });
     renderPodmanError();
+    updatePodmanStartupUI();
   } finally {
     if (refreshIcon) {
       setTimeout(() => { refreshIcon.style.animation = ''; }, 500);
@@ -11773,6 +11950,17 @@ document.addEventListener('DOMContentLoaded', () => {
   applyPinnedCardsOrder();
   updatePinnedCounter();
 
+  // Click listener to close Podman startup dropdown menu on click outside
+  document.addEventListener('click', (e) => {
+    const dd = document.getElementById('podman-startup-dropdown');
+    const menu = document.getElementById('podman-startup-menu');
+    if (menu && dd && !dd.contains(e.target)) {
+      menu.style.display = 'none';
+    }
+  });
+
+  checkPodmanEngineStatus();
+
   // Auto-load snapshots if tab active
   const snapTab = document.getElementById('tab-snapshots');
   if (snapTab && snapTab.classList.contains('active')) {
@@ -14188,17 +14376,11 @@ function switchReportViewTab(tab) {
 
   tabs.forEach(t => {
     if (t.btn) {
-      if (t.key === tab) {
-        t.btn.style.background = 'rgba(56,189,248,0.2)';
-        t.btn.style.borderColor = 'rgba(56,189,248,0.5)';
-        t.btn.style.color = '#38bdf8';
-        t.btn.style.fontWeight = '600';
-      } else {
-        t.btn.style.background = 'rgba(255,255,255,0.05)';
-        t.btn.style.borderColor = 'var(--border)';
-        t.btn.style.color = '#94a3b8';
-        t.btn.style.fontWeight = 'normal';
-      }
+      t.btn.classList.toggle('active', t.key === tab);
+      t.btn.style.background = '';
+      t.btn.style.borderColor = '';
+      t.btn.style.color = '';
+      t.btn.style.fontWeight = '';
     }
     if (t.box) {
       t.box.style.display = (t.key === tab) ? 'flex' : 'none';

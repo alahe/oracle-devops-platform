@@ -5402,6 +5402,26 @@ details.faq-item[open] summary.faq-summary::after {
     background: rgba(255, 255, 255, 0.08) !important;
 }
 
+.report-tab-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+.report-tab-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text-main);
+    border-color: var(--border-highlight);
+}
+.report-tab-btn.active {
+    background: var(--primary-glow) !important;
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    font-weight: 600 !important;
+}
+
 /* ==============================================================================
  * GITHUB COPILOT AI ASSISTANT WIDGET & SLIDE-OUT DRAWER
  * ============================================================================== */
@@ -6912,9 +6932,9 @@ body.copilot-drawer-open.copilot-fullscreen .devops-docked-terminal {
 
 /* Cards & Containers */
 [data-theme="light"] .card {
-    background: var(--surface);
-    border-color: var(--border);
-    box-shadow: var(--card-shadow);
+    background: #ffffff !important;
+    border-color: var(--border) !important;
+    box-shadow: var(--card-shadow) !important;
 }
 [data-theme="light"] .card:hover {
     border-color: var(--primary);
@@ -8544,18 +8564,79 @@ body.copilot-drawer-open.copilot-fullscreen .devops-docked-terminal {
     box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.2) !important;
 }
 
-[data-theme="light"] #report-studio-modal-card > div,
+[data-theme="light"] #report-studio-body,
+[data-theme="light"] #report-studio-left-pane,
+[data-theme="light"] #report-studio-right-pane,
+[data-theme="light"] #report-pdf-frame-container,
 [data-theme="light"] #report-rtf-container,
 [data-theme="light"] #report-xml-container,
 [data-theme="light"] #report-audit-container,
 [data-theme="light"] #report-e2e-container {
+    background: #ffffff !important;
+}
+
+[data-theme="light"] #report-studio-workspace-toolbar {
     background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .report-tab-btn {
+    background: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+}
+
+[data-theme="light"] .report-tab-btn:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .report-tab-btn.active {
+    background: rgba(2, 132, 199, 0.12) !important;
+    border-color: #0284c7 !important;
+    color: #0284c7 !important;
+}
+
+[data-theme="light"] #report-template-info-card {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #334155 !important;
+}
+
+[data-theme="light"] #tpl-info-path {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] #report-empty-state,
+[data-theme="light"] #report-audit-empty,
+[data-theme="light"] #report-e2e-empty {
+    color: #64748b !important;
+}
+
+[data-theme="light"] #report-empty-state h4,
+[data-theme="light"] #report-audit-empty h4,
+[data-theme="light"] #report-e2e-empty h4 {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] #report-rtf-pre,
+[data-theme="light"] #report-xml-pre,
+[data-theme="light"] #report-audit-pre,
+[data-theme="light"] #report-console-pre,
+[data-theme="light"] #report-e2e-pre {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
 }
 
 [data-theme="light"] #e2e-publisher-dropdown {
     background: #ffffff !important;
     border-color: #cbd5e1 !important;
     box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1) !important;
+}
+
+[data-theme="light"] #e2e-publisher-dropdown .dropdown-item:hover {
+    background: #f1f5f9 !important;
 }
 
 [data-theme="light"] #cbp-number,

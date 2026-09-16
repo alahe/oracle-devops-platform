@@ -160,6 +160,8 @@ DEVOPS_WHITELIST = {
     "reset-help": ["./scripts/reset-all.sh", "--help"],
     "start-containers": ["./scripts/start-containers.sh"],
     "start-containers-help": ["./scripts/start-containers.sh", "--help"],
+    "podman-machine-start": [PODMAN_BIN, "machine", "start"],
+    "podman-machine-stop": [PODMAN_BIN, "machine", "stop"],
     "start-bridge": ["./scripts/start-bridge.sh", "--restart"],
     "start-bridge-status": ["./scripts/start-bridge.sh", "--status"],
     "deploy-status": ["./scripts/deploy-blueprint.sh", "--status"],
@@ -779,6 +781,64 @@ def format_bytes_human(sz):
     except Exception:
         return str(sz) if sz else "-"
 
+def get_podman_engine_status():
+    """
+    Checks status of Podman engine, platform virtual machine (macOS/Windows),
+    and active containers.
+    """
+    status = {
+        "status": "ok",
+        "installed": False,
+        "platform": sys.platform,
+        "has_machine": False,
+        "machine_running": False,
+        "machine_name": "",
+        "containers_running": 0,
+        "containers_total": 0,
+        "can_start_machine": False,
+        "can_start_containers": False,
+        "engine_error": ""
+    }
+
+    if not PODMAN_BIN or (isinstance(PODMAN_BIN, str) and not os.path.exists(PODMAN_BIN) and not shutil.which(PODMAN_BIN)):
+        status["engine_error"] = "Podman binary not found in PATH"
+        return status
+
+    status["installed"] = True
+
+    # Query Podman Machine on macOS / Windows
+    if sys.platform in ["darwin", "win32", "cygwin"]:
+        try:
+            r_mach = subprocess.run([PODMAN_BIN, "machine", "list", "--format", "json"], capture_output=True, text=True, timeout=5, cwd=WORKSPACE_DIR)
+            if r_mach.returncode == 0 and r_mach.stdout.strip():
+                machines = json.loads(r_mach.stdout)
+                if isinstance(machines, list) and machines:
+                    status["has_machine"] = True
+                    def_m = next((m for m in machines if m.get("Default")), machines[0])
+                    status["machine_name"] = def_m.get("Name", "")
+                    status["machine_running"] = bool(def_m.get("Running", False))
+                    status["can_start_machine"] = not status["machine_running"]
+        except Exception as e:
+            status["engine_error"] = f"Machine query warning: {str(e)}"
+
+    # Query container status
+    try:
+        r_ps = subprocess.run([PODMAN_BIN, "ps", "-a", "--format", "json"], capture_output=True, text=True, timeout=5, cwd=WORKSPACE_DIR)
+        if r_ps.returncode == 0 and r_ps.stdout.strip():
+            raw_c = json.loads(r_ps.stdout)
+            if isinstance(raw_c, list):
+                status["containers_total"] = len(raw_c)
+                status["containers_running"] = sum(1 for c in raw_c if (c.get("State") or "").lower() == "running")
+                status["can_start_containers"] = (status["containers_running"] < status["containers_total"]) or (status["containers_total"] == 0)
+        else:
+            if not status["machine_running"] and status["has_machine"]:
+                status["can_start_machine"] = True
+    except Exception as e:
+        if not status["engine_error"]:
+            status["engine_error"] = str(e)
+
+    return status
+
 def get_podman_system_resources():
     containers = []
     volumes = []
@@ -923,6 +983,7 @@ def get_podman_system_resources():
     return {
         "status": "ok",
         "ok": True,
+        "engine": get_podman_engine_status(),
         "containers": containers,
         "volumes": volumes,
         "networks": networks,
@@ -1581,6 +1642,10 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             res = get_podman_system_resources()
             self._send_json({"status": "ok", "resources": res}, cb)
 
+        elif parsed.path in ["/api/podman/engine/status", "/api/podman/status", "/api/podman/machine/status"]:
+            status_data = get_podman_engine_status()
+            self._send_json(status_data, cb)
+
         elif parsed.path == "/api/profile":
             rel_p = params.get("path", [""])[0]
             full_p = os.path.normpath(os.path.join(WORKSPACE_DIR, rel_p))
@@ -2153,6 +2218,8 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
             self.handle_copilot_deeplink(post_body, parsed.query, cb)
         elif parsed.path == "/api/ai/deeplink":
             self.handle_ai_deeplink(post_body, parsed.query, cb)
+        elif parsed.path in ["/api/podman/engine/start", "/api/podman/start"]:
+            self.handle_podman_engine_start(post_body, parsed.query, cb)
         elif parsed.path == "/api/podman/action":
             self.handle_podman_action(post_body, parsed.query, cb)
         elif parsed.path == "/api/bridge/restart" or parsed.path == "/api/bridge/reload":
@@ -2279,6 +2346,71 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 }, cb, status=500)
         except Exception as e:
             self._send_json({"status": "error", "error": str(e)}, cb, status=500)
+
+    def handle_podman_engine_start(self, post_body, query_str, cb=None):
+        """Starts Podman machine (macOS/Windows) and/or platform containers with full execution logging."""
+        target = "auto"
+        try:
+            if post_body.strip().startswith("{"):
+                data = json.loads(post_body)
+                target = data.get("target", "auto").lower()
+            else:
+                q = urllib.parse.parse_qs(post_body or query_str)
+                target = q.get("target", ["auto"])[0].lower()
+        except Exception:
+            pass
+
+        eng = get_podman_engine_status()
+        log_name = f"podman_startup_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        log_full = os.path.join(WORKSPACE_DIR, "install_logs", log_name)
+        os.makedirs(os.path.join(WORKSPACE_DIR, "install_logs"), exist_ok=True)
+
+        commands_to_run = []
+        if target == "machine":
+            commands_to_run.append(([PODMAN_BIN, "machine", "start"], "Starting Podman Machine VM"))
+        elif target == "containers":
+            commands_to_run.append(([os.path.join(WORKSPACE_DIR, "scripts/start-containers.sh")], "Starting Platform Containers"))
+        elif target == "machine-stop":
+            commands_to_run.append(([PODMAN_BIN, "machine", "stop"], "Stopping Podman Machine VM"))
+        else:  # auto / all
+            if eng.get("has_machine") and not eng.get("machine_running"):
+                commands_to_run.append(([PODMAN_BIN, "machine", "start"], "Starting Podman Machine VM"))
+            commands_to_run.append(([os.path.join(WORKSPACE_DIR, "scripts/start-containers.sh")], "Starting Platform Containers"))
+
+        start_t = time.time()
+        combined_output = []
+        exit_code = 0
+
+        with open(log_full, "w", encoding="utf-8") as lf:
+            lf.write(f"=== PODMAN ENGINE & CONTAINER STARTUP: {target.upper()} at {datetime.datetime.now().isoformat()} ===\n\n")
+            for cmd, label in commands_to_run:
+                lf.write(f"▶️ [{label}]: {' '.join(cmd)}\n")
+                try:
+                    res = subprocess.run(cmd, cwd=WORKSPACE_DIR, capture_output=True, text=True, timeout=180)
+                    out = (res.stdout or "") + ("\n" + res.stderr if res.stderr else "")
+                    lf.write(out + "\n\n")
+                    combined_output.append(f"[{label}]\n{out.strip()}")
+                    if res.returncode != 0:
+                        exit_code = res.returncode
+                        break
+                except Exception as e:
+                    err_msg = f"Failed to execute {cmd}: {str(e)}"
+                    lf.write(err_msg + "\n\n")
+                    combined_output.append(err_msg)
+                    exit_code = 1
+                    break
+
+        elapsed = round(time.time() - start_t, 2)
+        resp_data = {
+            "status": "ok" if exit_code == 0 else "error",
+            "exit_code": exit_code,
+            "duration_s": elapsed,
+            "target": target,
+            "output": "\n".join(combined_output),
+            "log_file": log_name,
+            "log_full_path": log_full
+        }
+        self._send_json(resp_data, cb, status=200 if exit_code == 0 else 500)
 
     def handle_profile_save(self, post_body, query_str, cb=None):
         rel_p = ""
