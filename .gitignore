@@ -107,7 +107,7 @@ docker/publisher/dockerfiles/*/*.zip
 docker/forms/dockerfiles/*/*.rpm
 docker/forms/dockerfiles/*/*.zip
 
-# 9. OS / Editor Files / Python Cache
+# 9. OS / Editor Files / Python Cache / UI Testing Artifacts
 .DS_Store
 .vscode/
 .idea/
@@ -116,3 +116,8 @@ __pycache__/
 .~lock.*#
 templates/publisher/.previews/
 templates/publisher/tmp/
+tests/ui/node_modules/
+tests/ui/test-results/
+tests/reports/playwright-report/
+tests/reports/ui-failures/
+

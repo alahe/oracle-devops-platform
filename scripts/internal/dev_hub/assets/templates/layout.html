@@ -2733,6 +2733,27 @@
                 </div>
                 <div class="devops-console" style="display:none;"></div>
             </div>
+
+            <!-- 27. DIAG: DEV HUB UI & CONTRAST TEST -->
+            <div class="card card-safe" id="card-devops-test-ui" data-cat="diag">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h4 style="color: var(--primary); margin: 0;" data-i18n="title_devops_test_ui">🎭 Dev Hub UI, Contrast & E2E Test</h4>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="safety-badge safe" data-i18n="badge_safe">🛡️ Ohutu</span>
+                        <button class="pin-card-btn" onclick="togglePinCard(this)" title="Märgi lemmikuks">☆</button>
+                    </div>
+                </div>
+                <p data-i18n="desc_devops_test_ui">Audits Dev Hub interface, Light/Dark mode, zero black-box leaks, WCAG 2.1 AA text contrast, and Golden 7 navigation tabs.</p>
+                <div class="code-box">
+                    <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+                    ./tests/test-devhub-ui.sh --all
+                </div>
+                <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <button class="btn btn-primary btn-run-devops" onclick="runDevOpsCommand('test-devhub-ui', this)"><span>▶️</span> <span data-i18n="btn_run_now">Käivita kohe</span></button>
+                    <button type="button" class="btn btn-secondary btn-sm btn-explain-ai" onclick="explainDevOpsCardWithAi(this)"><span>✨</span> <span data-i18n="studio_btn_explain_ai">Selgita AI-ga</span></button>
+                </div>
+                <div class="devops-console" style="display:none;"></div>
+            </div>
         </div>
     </div>
 

@@ -4120,6 +4120,13 @@ function renderBlueprintDiagTab(bNum) {
       color: '#fbbf24'
     },
     {
+      key: 'test-devhub-ui',
+      title: dict.diag_ui_title || '🎭 Dev Hub UI & Blueprint Modal Test',
+      desc: dict.diag_ui_desc || 'Tests Dev Hub UI, themes, contrast, and this blueprint modal in browser.',
+      cmd: `./tests/test-devhub-ui.sh -b ${bNum}`,
+      color: '#38bdf8'
+    },
+    {
       key: 'get-passwords',
       title: dict.diag_pwd_title || 'Read Wallet Credentials',
       desc: dict.diag_pwd_desc || 'Reads and verifies decrypted credentials from SEPS Wallet safely in-memory.',

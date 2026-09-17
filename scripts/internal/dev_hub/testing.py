@@ -148,6 +148,16 @@ def get_test_suites_catalog(ws):
             "tests": ["test-apex-suite.sh --tier db", "test-apex-suite.sh --tier rest", "test-apex-suite.sh --tier e2e", "test-apex-suite.sh --tier advisor"],
             "cmd": "./tests/test-apex-suite.sh"
         },
+        "devhub_ui": {
+            "key": "devhub_ui",
+            "category": "e2e",
+            "title": "Dev Hub UI, Contrast & E2E Suite",
+            "desc": "Tests Dev Hub interface, themes, WCAG 2.1 AA contrast, Golden 7 tabs, 6 languages, and blueprints",
+            "icon": "🎭",
+            "count": 3,
+            "tests": ["test-devhub-ui.sh --all", "test-devhub-ui.sh --group themes", "test-devhub-ui.sh --group core"],
+            "cmd": "./tests/test-devhub-ui.sh --all"
+        },
         "browser": {
             "key": "browser",
             "category": "e2e",

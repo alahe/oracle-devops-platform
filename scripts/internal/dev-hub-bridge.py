@@ -195,6 +195,8 @@ DEVOPS_WHITELIST = {
     "test-mermaid": ["./tests/unit/test-devhub-mermaid-rendering.sh"],
     "test-publisher-a11y": ["./tests/integration/test-publisher-accessibility-suite.sh"],
     "test-publisher-designer-e2e": ["./tests/integration/test-publisher-designer-e2e.sh"],
+    "test-devhub-ui": ["./tests/test-devhub-ui.sh", "--all"],
+    "playwright-ui": ["./tests/test-devhub-ui.sh", "--all"],
     "rtf-lint": ["./scripts/publisher/validate-rtf-accessibility.sh"],
     "pdf-a11y-validate": ["./scripts/publisher/validate-pdf-accessibility.sh", "templates/publisher/accessibility_suite/01-standard-invoice/output_accessible.pdf"],
     "xml-inspect": ["./scripts/publisher/validate-rtf-accessibility.sh"],

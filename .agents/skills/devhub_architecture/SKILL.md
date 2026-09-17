@@ -202,6 +202,27 @@ python3 scripts/internal/dev-hub-bridge.py &
 curl -s http://localhost:8089/api/health | jq .
 ```
 
+### 5.4 Automated UI & WCAG Contrast Testing Engine
+To ensure zero regressions across themes, tabs, modals, and WCAG 2.1 AA contrast compliance:
+```bash
+# Full test suite in mock mode (~1-2s):
+./tests/test-devhub-ui.sh --all
+
+# Group-specific tests:
+./tests/test-devhub-ui.sh --group themes
+./tests/test-devhub-ui.sh --group core
+
+# Specific blueprint modal test:
+./tests/test-devhub-ui.sh -b 3
+```
+
+#### Semantic Selectors Contract for UI Elements
+To ensure UI modifications never break automated tests:
+- Main navigation tabs must declare `id="tab-<name>"` and `data-tab-id="tab-<name>"`.
+- Blueprints must declare `data-bp="<id>"` on cards and `id="blueprint-modal"` on the detail modal.
+- Controls must preserve semantic IDs: `#theme-toggle-btn`, `#btn-podman-primary-action`, `#podman-empty-hero`.
+- Translatable elements must declare `data-i18n="<key>"`.
+
 ---
 
 ## 6. Prohibited Anti-Patterns

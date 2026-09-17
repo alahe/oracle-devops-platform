@@ -67,6 +67,7 @@ tests/
 | **APEX Test Suite** | Provisions developer accounts and tests APEX REST endpoints | `./scripts/test-apex-suite.sh` | HTTP 200 on all endpoints |
 | **SEPS Wallet Verification** | Tests passwordless DB auto-login across all PDBs | `./scripts/check-wallet.sh` | All aliases CONNECTED |
 | **Web Service Health Check** | Verifies HTTP/HTTPS responses for APEX, ORDS, Forms, Publisher | `./scripts/check-urls.sh` | All active services 🟢 ONLINE |
+| **Dev Hub UI & Contrast Audit** | Verifies Golden 7 tabs, themes, zero black-boxes, WCAG 2.1 AA | `./tests/test-devhub-ui.sh --all` | 100% PASS (< 1s) |
 | **Full Lifecycle Matrix** | Stresses start, snapshot capture, reset-deep, and recovery | `./tests/test-devhub-lifecycle-full.sh` | Total recovery in ~15s |
 
 ---

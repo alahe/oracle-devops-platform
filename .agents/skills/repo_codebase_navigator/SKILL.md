@@ -70,8 +70,10 @@ oracle-free-db-in-prod/
 │
 ├── tests/                      # 🧪 155 Automated Tests & Verification Suites
 │   ├── unit/                   # Fast isolation tests (portability, rules, parsers)
+│   ├── ui/                     # 🎭 Playwright & DOM browser UI test suite (specs, runner, config)
 │   ├── reports/                # Markdown test execution reports & summaries
 │   ├── test-local-ci.sh        # Local GitHub Actions runner & CI simulator
+│   ├── test-devhub-ui.sh       # 🎭 Dev Hub UI & WCAG 2.1 AA Contrast Orchestrator
 │   ├── test-multilingual-support.sh # 6-language i18n compliance verification (Rule 9)
 │   ├── test-devhub-browser-blueprints.sh # Browser-based blueprint test suite
 │   └── test-devhub-lifecycle-full.sh # Full lifecycle matrix stress tests
