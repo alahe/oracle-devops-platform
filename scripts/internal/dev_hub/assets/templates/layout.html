@@ -2811,6 +2811,86 @@
 
         <!-- SUBTAB 1: RUNNER (TEST SUITES & EMBEDDED TERMINAL) -->
         <div id="testing-subtab-runner" class="testing-subtab-content active">
+            <!-- Interactive Batch Test Runner Panel -->
+            <div class="card" id="card-batch-test-runner" style="margin-bottom: 22px; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 16px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.5rem;">🎛️</span>
+                            <h3 style="margin: 0; font-size: 1.15rem; color: var(--primary);" data-i18n="batch_runner_title">Interaktiivne Testipakettide Käivitaja (Batch Test Runner)</h3>
+                            <span class="badge badge-primary" style="font-size: 0.72rem; padding: 2px 8px;" data-i18n="batch_badge_smart">Smart Multi-Tier</span>
+                        </div>
+                        <p style="margin: 4px 0 0 0; font-size: 0.84rem; color: var(--text-dim);" data-i18n="batch_runner_desc">Vali märkeruutudega sobivad testitasemed ja käivita need korraga reaalajas logivooga.</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="setBatchSelection('quick')" data-i18n="btn_batch_quick">⚡ Ainult kiirtestid (~15s)</button>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="setBatchSelection('all')" data-i18n="btn_batch_all">🌟 Vali kõik</button>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="setBatchSelection('clear')" data-i18n="btn_batch_clear">↺ Tühjenda</button>
+                    </div>
+                </div>
+
+                <!-- 4 Testing Tiers Checkboxes Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 18px;">
+                    <!-- Tier 1 -->
+                    <label class="batch-tier-item" style="display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+                        <input type="checkbox" id="batch-chk-unit" checked onchange="updateBatchRunnerUI()" style="margin-top: 3px; cursor: pointer; accent-color: var(--primary);">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                                <strong style="font-size: 0.88rem; color: var(--text-main);" data-i18n="batch_tier1_title">Tase 1: Ühik- & Süntaks</strong>
+                                <span class="badge" style="background: rgba(56,189,248,0.15); color: var(--primary); font-size: 0.7rem;">~3–5s</span>
+                            </div>
+                            <p style="margin: 3px 0 0 0; font-size: 0.78rem; color: var(--text-dim);" data-i18n="batch_tier1_desc">71 skripti ühikutesti, konfiguratsioonid, mallid ja reeglite kontroll.</p>
+                        </div>
+                    </label>
+
+                    <!-- Tier 2 -->
+                    <label class="batch-tier-item" style="display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+                        <input type="checkbox" id="batch-chk-compliance" checked onchange="updateBatchRunnerUI()" style="margin-top: 3px; cursor: pointer; accent-color: var(--primary);">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                                <strong style="font-size: 0.88rem; color: var(--text-main);" data-i18n="batch_tier2_title">Tase 2: Vastavus & Turvalisus</strong>
+                                <span class="badge" style="background: rgba(34,197,94,0.15); color: var(--success); font-size: 0.7rem;">~8–12s</span>
+                            </div>
+                            <p style="margin: 3px 0 0 0; font-size: 0.78rem; color: var(--text-dim);" data-i18n="batch_tier2_desc">6-keelne i18n sümmeetria (Rule 9), failinimede porditavus (Rule 13) ja pre-commit turvakontroll.</p>
+                        </div>
+                    </label>
+
+                    <!-- Tier 3 -->
+                    <label class="batch-tier-item" style="display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+                        <input type="checkbox" id="batch-chk-ui" checked onchange="updateBatchRunnerUI()" style="margin-top: 3px; cursor: pointer; accent-color: var(--primary);">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                                <strong style="font-size: 0.88rem; color: var(--text-main);" data-i18n="batch_tier3_title">Tase 3: Dev Hub UI & Kontrast</strong>
+                                <span class="badge" style="background: rgba(168,85,247,0.15); color: var(--accent); font-size: 0.7rem;">~1–2s</span>
+                            </div>
+                            <p style="margin: 3px 0 0 0; font-size: 0.78rem; color: var(--text-dim);" data-i18n="batch_tier3_desc">7 vahelehte, 12 blueprinti, heleda režiimi mustade kastide puudumine ja WCAG 2.1 AA kontrast.</p>
+                        </div>
+                    </label>
+
+                    <!-- Tier 4 -->
+                    <label class="batch-tier-item" style="display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+                        <input type="checkbox" id="batch-chk-live" onchange="updateBatchRunnerUI()" style="margin-top: 3px; cursor: pointer; accent-color: var(--warning);">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                                <strong style="font-size: 0.88rem; color: var(--text-main);" data-i18n="batch_tier4_title">Tase 4: E2E Live Konteinerid</strong>
+                                <span class="badge" style="background: var(--warning-bg); color: var(--warning); font-size: 0.7rem;">~10–20m</span>
+                            </div>
+                            <p style="margin: 3px 0 0 0; font-size: 0.78rem; color: var(--text-dim);" data-i18n="batch_tier4_desc">Reaalne Podmani elutsükkel, andmebaasid, listenerid ja veebiteenused.</p>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Run Trigger Bar -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 14px; border-top: 1px solid var(--border);">
+                    <div style="font-size: 0.82rem; color: var(--text-muted);">
+                        <span id="batch-selected-summary">Valitud: 3 taset (Tase 1, Tase 2, Tase 3) • Hinnanguline aeg: ~15s</span>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="btn-run-batch-tests" onclick="runBatchTests(this)" style="padding: 9px 24px; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                        <span id="btn-run-batch-icon">▶️</span>
+                        <span id="btn-run-batch-label" data-i18n="btn_run_selected_tests">Käivita valitud testid</span>
+                    </button>
+                </div>
+            </div>
             <!-- Testing Search and Filter Toolbar -->
             <div class="testing-filter-bar" style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 10px 16px;">
                 <div style="display: flex; gap: 10px; align-items: center; flex: 1; min-width: 260px;">

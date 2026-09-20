@@ -2,10 +2,10 @@
 
 - **Staatus:** ✅ PASS
 - **Kestus:** 0s
-- **Käivitatud:** 2026-09-17 06:52:25
+- **Käivitatud:** 2026-09-20 23:31:54
 - **Režiim:** Mock Safe
 - **Grupp:** all
-- **Blueprint:** 3
+- **Blueprint:** kõik
 
 ## Tulemuste Kokkuvõte
 | Valdkond | Kontroll | Tulemus |

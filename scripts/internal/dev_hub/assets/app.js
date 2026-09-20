@@ -861,6 +861,7 @@ function setLanguage(lang) {
   updateServiceCardsUI();
   if (typeof renderTestingSuites === 'function') renderTestingSuites();
   if (typeof updateTestTerminalLangBadge === 'function') updateTestTerminalLangBadge(lang);
+  if (typeof updateBatchRunnerUI === 'function') updateBatchRunnerUI();
   if (typeof setMasterAutoRefresh === 'function') setMasterAutoRefresh(gMasterAutoRefresh, false);
   const gModal = document.getElementById('glossary-modal-backdrop');
   if (gModal && gModal.classList.contains('active') && typeof renderGlossaryModal === 'function') {
@@ -10743,6 +10744,7 @@ function initTestingTab() {
     renderCoverageExplorer(coverage);
     renderTestHistoryTable(history);
     updateTestTerminalLangBadge();
+    updateBatchRunnerUI();
   }
 
   // Live refresh from Bridge if available
@@ -10811,6 +10813,206 @@ function switchTestingSubTab(subTabId) {
     activeContent.classList.add('active');
     activeContent.style.display = 'block';
   }
+}
+
+function setBatchSelection(mode) {
+  const chkUnit = document.getElementById('batch-chk-unit');
+  const chkComp = document.getElementById('batch-chk-compliance');
+  const chkUi = document.getElementById('batch-chk-ui');
+  const chkLive = document.getElementById('batch-chk-live');
+  if (!chkUnit || !chkComp || !chkUi || !chkLive) return;
+
+  if (mode === 'quick') {
+    chkUnit.checked = true;
+    chkComp.checked = true;
+    chkUi.checked = true;
+    chkLive.checked = false;
+  } else if (mode === 'all') {
+    chkUnit.checked = true;
+    chkComp.checked = true;
+    chkUi.checked = true;
+    chkLive.checked = true;
+  } else if (mode === 'clear') {
+    chkUnit.checked = false;
+    chkComp.checked = false;
+    chkUi.checked = false;
+    chkLive.checked = false;
+  }
+  updateBatchRunnerUI();
+}
+
+function updateBatchRunnerUI() {
+  const chkUnit = document.getElementById('batch-chk-unit');
+  const chkComp = document.getElementById('batch-chk-compliance');
+  const chkUi = document.getElementById('batch-chk-ui');
+  const chkLive = document.getElementById('batch-chk-live');
+  const summaryEl = document.getElementById('batch-selected-summary');
+  const runBtn = document.getElementById('btn-run-batch-tests');
+  const runLabel = document.getElementById('btn-run-batch-label');
+  if (!summaryEl || !runBtn) return;
+
+  const lang = localStorage.getItem('dev_hub_lang') || 'en';
+  const dict = (typeof I18N_DICT !== 'undefined' && (I18N_DICT[lang] || I18N_DICT['en'])) || {};
+
+  const tiers = [];
+  const tierNames = [];
+  let estSeconds = 0;
+  let hasLive = false;
+
+  if (chkUnit && chkUnit.checked) {
+    tiers.push('unit');
+    tierNames.push(dict.batch_tier_num1 || 'Tase 1');
+    estSeconds += 4;
+  }
+  if (chkComp && chkComp.checked) {
+    tiers.push('compliance');
+    tierNames.push(dict.batch_tier_num2 || 'Tase 2');
+    estSeconds += 10;
+  }
+  if (chkUi && chkUi.checked) {
+    tiers.push('ui');
+    tierNames.push(dict.batch_tier_num3 || 'Tase 3');
+    estSeconds += 2;
+  }
+  if (chkLive && chkLive.checked) {
+    tiers.push('live');
+    tierNames.push(dict.batch_tier_num4 || 'Tase 4');
+    hasLive = true;
+  }
+
+  let estTimeStr = '';
+  if (hasLive) {
+    estTimeStr = '~10–20m';
+  } else if (estSeconds > 0) {
+    estTimeStr = `~${estSeconds}s`;
+  } else {
+    estTimeStr = '0s';
+  }
+
+  const count = tiers.length;
+  if (count === 0) {
+    const noneText = dict.batch_none_selected || 'Ühtegi taset pole valitud. Märgi vähemalt üks tase testimiseks.';
+    summaryEl.innerText = noneText;
+    runBtn.disabled = true;
+    runBtn.style.opacity = '0.5';
+    runBtn.style.cursor = 'not-allowed';
+    if (runLabel) runLabel.innerText = dict.btn_select_tiers || 'Vali vähemalt üks tase';
+  } else {
+    const selectedTemplate = dict.batch_selected_summary_tpl || 'Valitud: {count} taset ({tiers}) • Hinnanguline aeg: {time}';
+    const summaryText = selectedTemplate
+      .replace('{count}', count)
+      .replace('{tiers}', tierNames.join(', '))
+      .replace('{time}', estTimeStr);
+    summaryEl.innerText = summaryText;
+    runBtn.disabled = false;
+    runBtn.style.opacity = '1';
+    runBtn.style.cursor = 'pointer';
+    const runBtnTemplate = dict.btn_run_selected_tests_tpl || 'Käivita valitud testid ({time})';
+    if (runLabel) runLabel.innerText = runBtnTemplate.replace('{time}', estTimeStr);
+  }
+}
+
+function runBatchTests(btn) {
+  const chkUnit = document.getElementById('batch-chk-unit');
+  const chkComp = document.getElementById('batch-chk-compliance');
+  const chkUi = document.getElementById('batch-chk-ui');
+  const chkLive = document.getElementById('batch-chk-live');
+
+  const tiers = [];
+  if (chkUnit && chkUnit.checked) tiers.push('unit');
+  if (chkComp && chkComp.checked) tiers.push('compliance');
+  if (chkUi && chkUi.checked) tiers.push('ui');
+  if (chkLive && chkLive.checked) tiers.push('live');
+
+  if (tiers.length === 0) {
+    const lang = localStorage.getItem('dev_hub_lang') || 'en';
+    const dict = (typeof I18N_DICT !== 'undefined' && (I18N_DICT[lang] || I18N_DICT['en'])) || {};
+    alert(dict.batch_alert_select || 'Palun vali vähemalt üks testimise tase!');
+    return;
+  }
+
+  if (activeTestTaskId) {
+    if (!confirm('Üks test on juba käimas. Kas soovid selle katkestada ja alustada uut?')) {
+      return;
+    }
+    stopActiveTest();
+  }
+
+  if (currentTestingSubTab !== 'runner') {
+    switchTestingSubTab('runner');
+  }
+
+  const termEl = document.getElementById('testing-terminal-output');
+  const badgeEl = document.getElementById('test-terminal-task-badge');
+  const statusEl = document.getElementById('test-terminal-footer-status');
+  const timerEl = document.getElementById('test-terminal-footer-timer');
+  const activeIndEl = document.getElementById('testing-active-indicator');
+  const stopBtn = document.getElementById('btn-stop-test');
+  const dlBtn = document.getElementById('btn-download-test-log');
+
+  const currentLang = localStorage.getItem('dev_hub_lang') || 'en';
+  updateTestTerminalLangBadge(currentLang);
+
+  const testLabel = `Batch [${tiers.join(', ')}]`;
+  if (termEl) {
+    termEl.innerHTML = `🚀 Initializing Batch Test Suite: [${tiers.join(', ')}] in ${currentLang.toUpperCase()}...\nDispatching multi-tier background orchestrator via bridge...\n`;
+  }
+  if (badgeEl) {
+    badgeEl.className = 'badge badge-warning';
+    badgeEl.innerText = 'RUNNING';
+  }
+  if (statusEl) statusEl.innerText = `Olek: Käimas [${testLabel}] (${currentLang.toUpperCase()})`;
+  if (activeIndEl) {
+    activeIndEl.style.display = 'inline-block';
+    activeIndEl.innerText = `⏳ Test running: ${testLabel}`;
+  }
+  if (stopBtn) stopBtn.style.display = 'inline-flex';
+  if (dlBtn) dlBtn.style.display = 'none';
+
+  const termSection = document.getElementById('testing-terminal-section');
+  if (termSection) {
+    termSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  testTimerSeconds = 0;
+  if (timerEl) timerEl.innerText = '00:00:00';
+  if (testTimerInterval) clearInterval(testTimerInterval);
+  testTimerInterval = setInterval(() => {
+    testTimerSeconds++;
+    const h = String(Math.floor(testTimerSeconds / 3600)).padStart(2, '0');
+    const m = String(Math.floor((testTimerSeconds % 3600) / 60)).padStart(2, '0');
+    const s = String(testTimerSeconds % 60).padStart(2, '0');
+    if (timerEl) timerEl.innerText = `${h}:${m}:${s}`;
+  }, 1000);
+
+  fetch(`${BRIDGE_URL}/api/tests/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      suite: 'batch',
+      tiers: tiers,
+      lang: currentLang
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'ok' || data.status === 'started' || data.status === 'running') {
+      activeTestTaskId = data.task_id || 'test_runner';
+      currentTestLogPath = data.log_relative_path || data.log_file || null;
+      if (dlBtn && currentTestLogPath) dlBtn.style.display = 'inline-flex';
+      startPollingTestRunner();
+    } else {
+      throw new Error(data.message || data.error || 'Failed to start batch test runner');
+    }
+  })
+  .catch(err => {
+    const isEt = (localStorage.getItem('dev_hub_lang') || 'en') === 'et';
+    const bridgeNotice = isEt
+      ? `\n❌ Batch-testi käivitamine ebaõnnestus: ${err.message}\n💡 Märkus: Dev Hubi veebiliidesest taustal testimiseks peab töötama bridge:\n   ./scripts/internal/dev-hub-bridge.py &\nAlternatiivina saad testi käivitada otse oma terminalis:\n   ./tests/test-batch.sh ${tiers.map(t => '--' + t).join(' ')}\n`
+      : `\n❌ Failed to launch batch tests: ${err.message}\n💡 Note: To run tests directly via Dev Hub web UI, start the bridge daemon:\n   ./scripts/internal/dev-hub-bridge.py &\nAlternatively, you can run the test directly in your terminal:\n   ./tests/test-batch.sh ${tiers.map(t => '--' + t).join(' ')}\n`;
+    if (termEl) termEl.innerHTML += bridgeNotice;
+    finishActiveTest('FAILED', -1);
+  });
 }
 
 function renderTestingSuites(suites) {

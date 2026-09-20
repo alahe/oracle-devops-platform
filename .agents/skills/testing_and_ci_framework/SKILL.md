@@ -47,10 +47,14 @@ tests/
 │
 ├── reports/                    # 📄 Generated Markdown Test Summaries
 │   ├── blueprints_live_test_report.md
+│   ├── devhub_ui_test_report.md
+│   ├── test_batch_report.md
 │   └── devhub_lifecycle_full_report.md
 │
+├── test-batch.sh               # 🎛️ Universal Multi-Tier Batch Test Runner (--quick, --all)
 ├── test-local-ci.sh            # 🚀 Tier 2: Local GitHub Actions Runner & CI Simulator
 ├── test-multilingual-support.sh# 🌐 Tier 3: 6-Language Nordic-Baltic i18n Audit (Rule 9)
+├── test-devhub-ui.sh           # 🎭 Tier 3: Dev Hub UI & WCAG Contrast Test Suite
 ├── test-devhub-browser-blueprints.sh # 🖥️ Tier 4: Browser Headless Blueprint Live Testing
 └── test-devhub-lifecycle-full.sh     # 🔄 Full Lifecycle (Start, Snapshot, Reset, Rebuild)
 ```
@@ -61,14 +65,35 @@ tests/
 
 | Test Suite | Purpose | Command to Execute | Expected Outcome |
 |:---|:---|:---|:---|
+| **Batch Test Runner** | Executes selected test tiers with summary matrix & metrics | `./tests/test-batch.sh [--quick\|--all\|--unit\|--compliance\|--ui\|--live]` | 100% PASS with table & JSON report |
 | **Portability Audit (Rule 13)** | Verifies all 1890+ repository paths for Windows NTFS/FAT compliance | `./tests/unit/test-filename-portability.sh` | 100% PASS (0 invalid chars) |
-| **Multi-Language Audit (Rule 9)** | Verifies 100% dictionary symmetry across EN, ET, FI, SV, LV, LT | `./tests/test-multilingual-support.sh --all` | 100% PASS (12 / 12 tests) |
+| **Multi-Language Audit (Rule 9)** | Verifies 100% dictionary symmetry across EN, ET, FI, SV, LV, LT | `./tests/test-multilingual-support.sh --all` | 100% PASS (16 / 16 tests) |
 | **Local CI/CD Simulator** | Simulates GitHub Actions `.github/workflows/deploy-apex.yml` locally | `./scripts/test-local-ci.sh` | Ephemeral container passes |
+| **Dev Hub UI & Contrast Audit** | Verifies Golden 7 tabs, themes, zero black-boxes, WCAG 2.1 AA | `./tests/test-devhub-ui.sh --all` | 100% PASS (< 1s) |
 | **APEX Test Suite** | Provisions developer accounts and tests APEX REST endpoints | `./scripts/test-apex-suite.sh` | HTTP 200 on all endpoints |
 | **SEPS Wallet Verification** | Tests passwordless DB auto-login across all PDBs | `./scripts/check-wallet.sh` | All aliases CONNECTED |
 | **Web Service Health Check** | Verifies HTTP/HTTPS responses for APEX, ORDS, Forms, Publisher | `./scripts/check-urls.sh` | All active services 🟢 ONLINE |
-| **Dev Hub UI & Contrast Audit** | Verifies Golden 7 tabs, themes, zero black-boxes, WCAG 2.1 AA | `./tests/test-devhub-ui.sh --all` | 100% PASS (< 1s) |
 | **Full Lifecycle Matrix** | Stresses start, snapshot capture, reset-deep, and recovery | `./tests/test-devhub-lifecycle-full.sh` | Total recovery in ~15s |
+
+### 2.1 🎛️ Interactive Batch Test Runner (Tiers & Options)
+
+The platform provides a unified orchestrator `tests/test-batch.sh` and an interactive UI card in Dev Hub (`tab-testing` -> `card-batch-test-runner`):
+
+| Tier | Category | Scope & Scripts | Duration | Default |
+|:---|:---|:---|:---|:---|
+| **Tier 1** | **Unit & Syntax** | 71 script unit tests (`tests/unit/test-script-*.sh`), configs, templates | ~3–5s | ✅ Enabled |
+| **Tier 2** | **Compliance & Security** | Filename portability (Rule 13), 6-language i18n (Rule 9), Git pre-commit audit | ~8–12s | ✅ Enabled |
+| **Tier 3** | **Dev Hub UI & Contrast** | Golden 7 tabs, 12 blueprints, light theme dark box check, WCAG 2.1 AA luminance | ~1–2s | ✅ Enabled |
+| **Tier 4** | **E2E Live Containers** | Live Podman container lifecycle, databases, listeners, web services | ~10–20m | ❌ Disabled |
+
+**CLI Execution Examples:**
+```bash
+./tests/test-batch.sh --quick        # Default combination of Tiers 1, 2, 3 (~15s)
+./tests/test-batch.sh --unit --ui    # Run only unit tests and Dev Hub UI tests (~5s)
+./tests/test-batch.sh --compliance   # Run portability, i18n, and pre-commit checks (~12s)
+./tests/test-batch.sh --all          # Full suite including live container stacks (~15m)
+```
+Outputs ANSI color summary table, persists metrics into `metrics/test_batch_benchmarks.json`, and generates report at `tests/reports/test_batch_report.md`.
 
 ---
 

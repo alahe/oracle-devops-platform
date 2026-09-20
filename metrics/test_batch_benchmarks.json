@@ -1,0 +1,13 @@
+{
+  "suite": "batch_test_runner",
+  "status": "PASS",
+  "duration_seconds": 12,
+  "start_time": "2026-09-20 23:31:57",
+  "end_time": "2026-09-20 23:32:09",
+  "tiers": {
+    "unit": { "enabled": false, "status": "SKIPPED", "duration_seconds": 0 },
+    "compliance": { "enabled": true, "status": "PASS", "duration_seconds": 12 },
+    "ui": { "enabled": false, "status": "SKIPPED", "duration_seconds": 0 },
+    "live": { "enabled": false, "status": "SKIPPED", "duration_seconds": 0 }
+  }
+}

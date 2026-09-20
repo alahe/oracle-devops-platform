@@ -72,6 +72,7 @@ oracle-free-db-in-prod/
 │   ├── unit/                   # Fast isolation tests (portability, rules, parsers)
 │   ├── ui/                     # 🎭 Playwright & DOM browser UI test suite (specs, runner, config)
 │   ├── reports/                # Markdown test execution reports & summaries
+│   ├── test-batch.sh           # 🎛️ Universal Multi-Tier Batch Test Runner (--quick, --all)
 │   ├── test-local-ci.sh        # Local GitHub Actions runner & CI simulator
 │   ├── test-devhub-ui.sh       # 🎭 Dev Hub UI & WCAG 2.1 AA Contrast Orchestrator
 │   ├── test-multilingual-support.sh # 6-language i18n compliance verification (Rule 9)
@@ -116,6 +117,7 @@ oracle-free-db-in-prod/
 | **Modify Dev Hub Bridge API** | `scripts/internal/dev-hub-bridge.py` | `./scripts/internal/dev-hub-bridge.py &` |
 | **Calculate Codebase Stats** | `scripts/internal/generate-repo-report.py` | `./scripts/report-repo-stats.sh` |
 | **Create / Restore Snapshots** | `scripts/snapshots/` | `./scripts/snapshots/create-golden-snapshots.sh` (~15s) |
+| **Run Interactive Batch Tests** | `tests/test-batch.sh` | `./tests/test-batch.sh [--quick\|--all]` |
 | **Run Automated Local CI** | `scripts/test-local-ci.sh` | `./scripts/test-local-ci.sh` |
 | **Audit Multilingual Support** | `tests/test-multilingual-support.sh` | `./tests/test-multilingual-support.sh --all` |
 | **Verify Filename Portability** | `tests/unit/test-filename-portability.sh` | `./tests/unit/test-filename-portability.sh` |

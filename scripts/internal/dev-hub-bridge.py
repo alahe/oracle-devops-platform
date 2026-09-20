@@ -197,6 +197,8 @@ DEVOPS_WHITELIST = {
     "test-publisher-designer-e2e": ["./tests/integration/test-publisher-designer-e2e.sh"],
     "test-devhub-ui": ["./tests/test-devhub-ui.sh", "--all"],
     "playwright-ui": ["./tests/test-devhub-ui.sh", "--all"],
+    "test-batch": ["./tests/test-batch.sh"],
+    "batch-runner": ["./tests/test-batch.sh"],
     "rtf-lint": ["./scripts/publisher/validate-rtf-accessibility.sh"],
     "pdf-a11y-validate": ["./scripts/publisher/validate-pdf-accessibility.sh", "templates/publisher/accessibility_suite/01-standard-invoice/output_accessible.pdf"],
     "xml-inspect": ["./scripts/publisher/validate-rtf-accessibility.sh"],
@@ -3409,6 +3411,7 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
         test_script = ""
         dry_run = False
         lang = "en"
+        tiers = []
         try:
             if post_body.strip().startswith("{"):
                 data = json.loads(post_body)
@@ -3416,12 +3419,20 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 test_script = (data.get("script") or data.get("test") or "").strip()
                 lang = (data.get("lang") or "en").strip().lower()
                 dry_run = bool(data.get("dry_run", False))
+                tiers_val = data.get("tiers", [])
+                if isinstance(tiers_val, list):
+                    tiers = [str(t).strip() for t in tiers_val if str(t).strip()]
+                elif isinstance(tiers_val, str):
+                    tiers = [t.strip() for t in tiers_val.split(",") if t.strip()]
             else:
                 q = urllib.parse.parse_qs(post_body or query_str)
                 suite = q.get("suite", ["unit"])[0]
                 test_script = (q.get("script", [""])[0] or q.get("test", [""])[0]).strip()
                 lang = q.get("lang", ["en"])[0].strip().lower()
                 dry_run = q.get("dry_run", ["false"])[0].lower() in ["1", "true", "yes"]
+                tiers_str = q.get("tiers", [""])[0]
+                if tiers_str:
+                    tiers = [t.strip() for t in tiers_str.split(",") if t.strip()]
         except Exception:
             pass
 
@@ -3496,6 +3507,15 @@ class DevHubBridgeHandler(http.server.BaseHTTPRequestHandler):
                 cmd = [os.path.join(WORKSPACE_DIR, "tests", "unit", "test-devhub-doc-links.sh")]
             elif suite == "title_capitalization":
                 cmd = [os.path.join(WORKSPACE_DIR, "tests", "unit", "test-title-capitalization-rules.sh")]
+            elif suite in ["batch", "batch_runner", "test_batch"]:
+                if not tiers:
+                    tiers = ["quick"]
+                batch_cmd = [os.path.join(WORKSPACE_DIR, "tests", "test-batch.sh")]
+                for tier in tiers:
+                    tier_clean = tier.strip()
+                    if tier_clean in ["unit", "compliance", "ui", "live", "all", "quick"]:
+                        batch_cmd.append(f"--{tier_clean}")
+                cmd = batch_cmd
             elif suite in ["ci_sim", "offline_ci"]:
                 ci_path = os.path.join(WORKSPACE_DIR, "tests", "test-local-ci.sh")
                 if not os.path.isfile(ci_path):

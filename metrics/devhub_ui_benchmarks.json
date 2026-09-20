@@ -2,9 +2,9 @@
   "suite": "devhub_ui_playwright",
   "status": "PASS",
   "duration_seconds": 0,
-  "start_time": "2026-09-17 06:52:25",
-  "end_time": "2026-09-17 06:52:25",
+  "start_time": "2026-09-20 23:31:54",
+  "end_time": "2026-09-20 23:31:54",
   "group": "all",
-  "blueprint": "3",
+  "blueprint": "none",
   "live_mode": false
 }
