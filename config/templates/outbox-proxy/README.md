@@ -1,3 +1,5 @@
+[ 🇬🇧 English ](README.md) | [ 🇪🇪 Eesti ](README.et.md) | [ 🇫🇮 Suomi ](README.fi.md) | [ 🇸🇪 Svenska ](README.sv.md) | [ 🇱🇻 Latviešu ](README.lv.md) | [ 🇱🇹 Lietuvių ](README.lt.md)
+
 # Passive Core Database & DMZ Proxy Architecture (Transactional Outbox Pattern)
 
 This architectural pattern enforces strict enterprise security boundaries for financial core databases.
