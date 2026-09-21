@@ -5,29 +5,39 @@
  * ============================================================================== */
 
 :root {
-  /* Core Financial Palette */
-  --fin-yellow-primary:       #FDCB22;
-  --fin-yellow-hover:         #E5B518;
-  --fin-yellow-active:        #CCA112;
-  --fin-dark-espresso:        #2F2424;
-  --fin-charcoal:             #1E1E1E;
-  --fin-sand-bg:              #F9F6F0;
+  /* Core Financial Palette - Pixel-Perfect Official Tokens */
+  --fin-yellow-primary:       #FDC92A;
+  --fin-yellow-light:         #FBDD91;
+  --fin-yellow-light-2:       #FFDF88;
+  --fin-yellow-light-3:       #FFF3D5;
+  --fin-solid-brown:          #2F2424;
+  --fin-dark-brown:           #493C3B;
+  --fin-medium-brown:         #72605E;
+  --fin-soft-brown:           #A38B80;
+  --fin-light-brown:          #D4C4BC;
   --fin-surface-white:        #FFFFFF;
-  --fin-border-subtle:        #E4DFD7;
-  --fin-border-strong:        #CFC7BC;
+  --fin-sand-bg:              #FBF2EA;
+  --fin-light-gray:           #F9F8F6;
+  --fin-gray-bg:              #EBE7E2;
+  --fin-border-subtle:        #D4C4BC;
+  --fin-border-strong:        #72605E;
   
   /* Semantic Status Palette (WCAG Contrast Compliant) */
-  --fin-status-success:       #2DA944;
-  --fin-status-warning:       #D97706;
+  --fin-status-success:       #3C7213;
+  --fin-status-success-light: #F2F7EB;
+  --fin-status-warning:       #E97423;
+  --fin-status-warning-light: #FEF2E2;
   --fin-status-danger:        #D9383A;
-  --fin-status-info:          #0284C7;
+  --fin-status-danger-light:  #FCEEED;
+  --fin-status-info:          #31A3AE;
+  --fin-status-info-light:    #EBF8F2;
 
   /* APEX Universal Theme Overrides */
-  --ut-palette-primary:       var(--fin-yellow-primary);
-  --ut-palette-primary-contrast: var(--fin-dark-espresso);
-  --ut-body-bg:               var(--fin-sand-bg);
-  --ut-body-text-color:       var(--fin-charcoal);
-  --ut-component-border-radius: 4px;
+  --ut-palette-primary:          var(--fin-yellow-primary);
+  --ut-palette-primary-contrast: var(--fin-solid-brown);
+  --ut-body-bg:                  var(--fin-sand-bg);
+  --ut-body-text-color:          var(--fin-solid-brown);
+  --ut-component-border-radius:  4px;
 }
 
 /* Page Body & Background */

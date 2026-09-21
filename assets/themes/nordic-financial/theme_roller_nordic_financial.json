@@ -1,19 +1,19 @@
 {
   "name": "Nordic Financial",
   "vars": {
-    "@g_Accent-BG": "#FDCB22",
+    "@g_Accent-BG": "#FDC92A",
     "@g_Accent-Text": "#2F2424",
     "@g_Link-Base": "#2F2424",
-    "@g_Body-BG": "#F9F6F0",
-    "@g_Body-Text": "#1E1E1E",
+    "@g_Body-BG": "#FBF2EA",
+    "@g_Body-Text": "#2F2424",
     "@g_Header-BG": "#FFFFFF",
     "@g_Header-Text": "#2F2424",
     "@g_Nav-BG": "#2F2424",
-    "@g_Nav-Text": "#F3EFEA",
-    "@g_Nav-Active-BG": "rgba(253, 203, 34, 0.2)",
-    "@g_Nav-Active-Text": "#FDCB22",
-    "@g_Button-Success-BG": "#2DA944",
-    "@g_Button-Warning-BG": "#D97706",
+    "@g_Nav-Text": "#F9F8F6",
+    "@g_Nav-Active-BG": "rgba(253, 201, 42, 0.2)",
+    "@g_Nav-Active-Text": "#FDC92A",
+    "@g_Button-Success-BG": "#3C7213",
+    "@g_Button-Warning-BG": "#E97423",
     "@g_Button-Danger-BG": "#D9383A",
     "@g_Base-Border-Radius": "4px"
   }
