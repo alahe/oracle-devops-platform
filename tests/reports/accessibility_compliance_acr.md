@@ -2,8 +2,8 @@
 ## Oracle Analytics Publisher Document Generation Platform
 
 - **Report Standard:** ISO 14289-1 (PDF/UA-1), EN 301 549, WCAG 2.1 Level AA, Section 508
-- **Evaluation Date:** 2026-09-14T05:19:18Z
-- **Git Commit:** `d913a93d`
+- **Evaluation Date:** 2026-09-20T20:20:13Z
+- **Git Commit:** `5a4505df`
 - **Compliance Rate:** **100%** (3 of 3 test cases passing)
 - **Quality Gate:** Zero-Tolerance Hard Blocker (Exit 1 on failure)
 

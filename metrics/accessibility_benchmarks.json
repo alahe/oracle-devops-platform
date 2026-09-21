@@ -1,8 +1,8 @@
 {
   "test_suite": "oracle_publisher_accessibility_suite",
   "standard": "PDF/UA-1 (ISO 14289-1:2014) & WCAG 2.1 Level AA",
-  "timestamp": "2026-09-14T05:19:18Z",
-  "git_commit": "d913a93d",
+  "timestamp": "2026-09-20T20:20:13Z",
+  "git_commit": "5a4505df",
   "total_cases": 3,
   "passed_cases": 3,
   "failed_cases": 0,

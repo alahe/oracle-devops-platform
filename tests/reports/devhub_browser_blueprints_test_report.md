@@ -1,10 +1,10 @@
 # 🧪 Dev-Hub Browser Blueprints E2E Testiraport
 
-- **Aeg:** 2026-09-14 08:08:30 EEST
+- **Aeg:** 2026-09-20 23:19:35 EEST
 - **Testitud Blueprintide arv:** 12
 - **Õnnestus:** 12
 - **Ebaõnnestus:** 0
-- **Kogukestus:** 6s
+- **Kogukestus:** 5s
 - **Tuumbaasi puutumatus:** ✅ Tagatud (Blueprint #0: `db-proxy` ja `app-ords` jäid alati aktiivseks)
 - **Zero-Trust paroolihaldus:** ✅ Tagatud (Paroolid ainult protsessi mälus, mitte kunagi kettal)
 
@@ -12,7 +12,7 @@
 
 | Blueprint | Nimi & Profiil | Kestus | Olek | Märkused |
 | :---: | :--- | :---: | :---: | :--- |
-| **#0** | 0-default-proxy-ords | 2s | ✅ **PASS** | URLs & Mälupõhine Login OK |
+| **#0** | 0-default-proxy-ords | 1s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 | **#1** | 1-standalone-alise-db | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 | **#2** | 2-standalone-proxy-db | 2s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 | **#3** | 3-standalone-gvenzl-db | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
@@ -21,8 +21,8 @@
 | **#6** | 6-standalone-forms | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 | **#7** | 7-consolidated-forms-publisher | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 | **#8** | 8-standalone-web-ide | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
-| **#9** | 9-standalone-publisher-designer | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
-| **#10** | 10-remote-ords | 1s | ✅ **PASS** | URLs & Mälupõhine Login OK |
+| **#9** | 9-standalone-publisher-designer | 1s | ✅ **PASS** | URLs & Mälupõhine Login OK |
+| **#10** | 10-remote-ords | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 | **#11** | 11-remote-publisher | 0s | ✅ **PASS** | URLs & Mälupõhine Login OK |
 
 ## 🧠 Ressursihaldus ja RAM Watchdog Sündmused
