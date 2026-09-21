@@ -1,7 +1,7 @@
 {
   "system_safety_reserve_gb": 2.0,
   "description": "Blueprint memory benchmarks: expected range, measured startup RAM, and runtime RAM",
-  "last_updated": "2026-09-20T22:10:20.123344",
+  "last_updated": "2026-09-21T22:31:08.922569",
   "blueprints": {
     "0": {
       "name": "default-proxy-ords",
@@ -11,8 +11,8 @@
       ],
       "expected_ram_range_gb": "2-3 GB",
       "startup_ram_mb": 1475,
-      "runtime_ram_mb": 1802,
-      "last_measured": "2026-09-20T22:10:20.123316"
+      "runtime_ram_mb": 1502,
+      "last_measured": "2026-09-21T22:31:08.922548"
     },
     "1": {
       "name": "standalone-alise",

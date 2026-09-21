@@ -1,0 +1,168 @@
+/* ==============================================================================
+ * Enterprise Nordic Financial Theme Style for Oracle APEX (Universal Theme 42)
+ * High-Contrast Financial Palette, Accessible WCAG 2.1 AA/AAA Compliant
+ * 100% Vendor-Neutral, Enterprise-Generic
+ * ============================================================================== */
+
+:root {
+  /* Core Financial Palette */
+  --fin-yellow-primary:       #FDCB22;
+  --fin-yellow-hover:         #E5B518;
+  --fin-yellow-active:        #CCA112;
+  --fin-dark-espresso:        #2F2424;
+  --fin-charcoal:             #1E1E1E;
+  --fin-sand-bg:              #F9F6F0;
+  --fin-surface-white:        #FFFFFF;
+  --fin-border-subtle:        #E4DFD7;
+  --fin-border-strong:        #CFC7BC;
+  
+  /* Semantic Status Palette (WCAG Contrast Compliant) */
+  --fin-status-success:       #2DA944;
+  --fin-status-warning:       #D97706;
+  --fin-status-danger:        #D9383A;
+  --fin-status-info:          #0284C7;
+
+  /* APEX Universal Theme Overrides */
+  --ut-palette-primary:       var(--fin-yellow-primary);
+  --ut-palette-primary-contrast: var(--fin-dark-espresso);
+  --ut-body-bg:               var(--fin-sand-bg);
+  --ut-body-text-color:       var(--fin-charcoal);
+  --ut-component-border-radius: 4px;
+}
+
+/* Page Body & Background */
+body.t-PageBody {
+  background-color: var(--fin-sand-bg);
+  color: var(--fin-charcoal);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Card & Region Containers */
+.t-Region, .t-Card {
+  background-color: var(--fin-surface-white);
+  border: 1px solid var(--fin-border-subtle);
+  border-radius: var(--ut-component-border-radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.t-Region-header {
+  border-bottom: 1px solid var(--fin-border-subtle);
+  background-color: var(--fin-surface-white);
+}
+
+.t-Region-title {
+  color: var(--fin-dark-espresso);
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+/* Primary "Hot" Action Buttons */
+.t-Button--hot,
+button.t-Button--hot {
+  background-color: var(--fin-yellow-primary) !important;
+  color: var(--fin-dark-espresso) !important;
+  font-weight: 600 !important;
+  border: 1px solid var(--fin-yellow-hover) !important;
+  box-shadow: 0 1px 2px rgba(47, 36, 36, 0.1) !important;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.t-Button--hot:hover,
+button.t-Button--hot:hover {
+  background-color: var(--fin-yellow-hover) !important;
+  border-color: var(--fin-yellow-active) !important;
+  color: var(--fin-dark-espresso) !important;
+}
+
+.t-Button--hot:active,
+button.t-Button--hot:active {
+  background-color: var(--fin-yellow-active) !important;
+}
+
+/* Secondary & Standard Buttons */
+.t-Button:not(.t-Button--hot) {
+  border: 1px solid var(--fin-border-strong);
+  color: var(--fin-dark-espresso);
+  background-color: var(--fin-surface-white);
+}
+
+.t-Button:not(.t-Button--hot):hover {
+  background-color: var(--fin-sand-bg);
+  border-color: var(--fin-dark-espresso);
+}
+
+/* Navigation Side Bar */
+.t-TreeNav {
+  background-color: var(--fin-dark-espresso);
+}
+
+.t-TreeNav .a-TreeView-node--topLevel > .a-TreeView-row.is-selected,
+.t-TreeNav .a-TreeView-node--topLevel > .a-TreeView-row:hover {
+  background-color: rgba(253, 203, 34, 0.15);
+}
+
+.t-TreeNav .a-TreeView-label {
+  color: #F3EFEA;
+}
+
+.t-TreeNav .is-selected .a-TreeView-label {
+  color: var(--fin-yellow-primary);
+  font-weight: 600;
+}
+
+/* Financial Grids & Tables (Interactive Grid / Report) */
+.a-GV-table th,
+.t-Report-report th {
+  background-color: #F2EDE4;
+  color: var(--fin-dark-espresso);
+  font-weight: 700;
+  border-bottom: 2px solid var(--fin-border-strong);
+}
+
+.a-GV-cell,
+.t-Report-report td {
+  border-bottom: 1px solid var(--fin-border-subtle);
+}
+
+/* Financial Number Alignment: Tabular Nums & Right Alignment */
+.a-GV-cell.u-textRight,
+.t-Report-report td[headers*="AMOUNT"],
+.t-Report-report td[headers*="BALANCE"],
+.t-Report-report td[headers*="TOTAL"],
+.t-Report-report td[headers*="SUM"] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-weight: 600;
+  text-align: right !important;
+}
+
+/* Financial Status Badges */
+.badge-fin-success {
+  background-color: rgba(45, 169, 68, 0.15);
+  color: #196929;
+  border: 1px solid #2DA944;
+  border-radius: 3px;
+  padding: 2px 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.badge-fin-warning {
+  background-color: rgba(217, 119, 6, 0.15);
+  color: #92400E;
+  border: 1px solid #D97706;
+  border-radius: 3px;
+  padding: 2px 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.badge-fin-danger {
+  background-color: rgba(217, 56, 58, 0.15);
+  color: #991B1B;
+  border: 1px solid #D9383A;
+  border-radius: 3px;
+  padding: 2px 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}

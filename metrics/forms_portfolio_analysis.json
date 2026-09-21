@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-09-21T21:08:54.966050Z",
+  "total_forms_scanned": 1,
+  "wave_breakdown": {
+    "wave_1_simple": 1,
+    "wave_2_master_detail": 0,
+    "wave_3_complex_monolith": 0
+  },
+  "aggregate_metrics": {
+    "total_blocks": 1,
+    "total_items": 3,
+    "total_triggers": 1,
+    "total_trigger_code_lines": 4,
+    "total_program_unit_code_lines": 0
+  },
+  "forms": [
+    {
+      "file": "test_fmb.xml",
+      "form_name": "test",
+      "title": "Oracle Forms Module test",
+      "data_blocks": 1,
+      "control_blocks": 0,
+      "total_items": 3,
+      "item_types": {
+        "Text Item": 3
+      },
+      "db_items": 3,
+      "non_db_items": 0,
+      "triggers_count": 1,
+      "trigger_names": [
+        "WHEN-NEW-FORM-INSTANCE"
+      ],
+      "trigger_code_lines": 4,
+      "program_units_count": 0,
+      "program_units_code_lines": 0,
+      "canvases_count": 0,
+      "windows_count": 0,
+      "lovs_count": 0,
+      "db_tables": [
+        "MAIN_BLOCK"
+      ],
+      "complexity_score": 12,
+      "wave": 1,
+      "category": "Wave 1: Simple CRUD / Lookups"
+    }
+  ]
+}
