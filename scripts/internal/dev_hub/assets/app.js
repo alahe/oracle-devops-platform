@@ -6294,6 +6294,20 @@ function filterDevOpsCards() {
     clearBtn.style.display = q ? 'inline-block' : 'none';
   }
 
+  // Ensure stored view mode is applied to gridEl
+  if (gridEl) {
+    const savedMode = localStorage.getItem('devops_view_mode') || 'grid';
+    if (savedMode === 'list' && !gridEl.classList.contains('devops-list-view')) {
+      gridEl.classList.add('devops-list-view');
+      const btnList = document.getElementById('btn-devops-view-list');
+      const btnGrid = document.getElementById('btn-devops-view-grid');
+      if (btnList && btnGrid) {
+        btnList.classList.add('active');
+        btnGrid.classList.remove('active');
+      }
+    }
+  }
+
   // Manage Command Studios container visibility
   if (studiosContainer) {
     const showStudiosByCat = (currentDevOpsCategoryFilter === 'all' || currentDevOpsCategoryFilter === 'lifecycle');
@@ -6345,8 +6359,40 @@ function filterDevOpsCards() {
     emptyEl.style.display = (visibleCount === 0) ? 'block' : 'none';
   }
   if (gridEl) {
-    gridEl.style.display = (visibleCount === 0) ? 'none' : 'grid';
+    const isListView = gridEl.classList.contains('devops-list-view');
+    gridEl.style.display = (visibleCount === 0) ? 'none' : (isListView ? 'flex' : 'grid');
   }
+}
+
+function setDevOpsViewMode(mode) {
+  const gridEl = document.getElementById('devops-cards-grid');
+  const btnList = document.getElementById('btn-devops-view-list');
+  const btnGrid = document.getElementById('btn-devops-view-grid');
+  
+  const isList = (mode === 'list');
+  try {
+    localStorage.setItem('devops_view_mode', mode);
+  } catch (e) {}
+
+  if (gridEl) {
+    if (isList) {
+      gridEl.classList.add('devops-list-view');
+    } else {
+      gridEl.classList.remove('devops-list-view');
+    }
+  }
+
+  if (btnList && btnGrid) {
+    if (isList) {
+      btnList.classList.add('active');
+      btnGrid.classList.remove('active');
+    } else {
+      btnGrid.classList.add('active');
+      btnList.classList.remove('active');
+    }
+  }
+
+  filterDevOpsCards();
 }
 
 function clearDevOpsSearch() {
@@ -6538,14 +6584,26 @@ function renderRepoStatisticsUI(stats) {
   }
 }
 
-function toggleTelemetryRibbon() {
-  const body = document.getElementById('telemetry-ribbon-body');
-  const label = document.getElementById('telemetry-toggle-label');
-  if (!body) return;
-  const isOpen = body.classList.toggle('open');
-  if (label) {
-    label.innerText = isOpen ? 'Peida mõõdikud ▲' : 'Kuva mõõdikud ▼';
+function openRepoStatsModal() {
+  const modal = document.getElementById('repo-stats-modal');
+  if (modal) {
+    modal.style.display = 'flex';
   }
+  loadRepoStatistics();
+}
+
+function closeRepoStatsModal(e) {
+  if (e && e.target && e.target !== e.currentTarget && !e.target.classList.contains('modal-close-btn') && e.target.tagName !== 'BUTTON') {
+    return;
+  }
+  const modal = document.getElementById('repo-stats-modal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function toggleTelemetryRibbon() {
+  openRepoStatsModal();
 }
 
 function toggleFaqItem(faqId) {

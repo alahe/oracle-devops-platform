@@ -2497,6 +2497,105 @@
             padding-left: 2px;
         }
 
+        /* DevOps View Mode Switcher & List View (Variant 3 Declutter) */
+        .devops-view-btn.active {
+            background: var(--primary) !important;
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+        .devops-view-btn:hover:not(.active) {
+            color: var(--text-main) !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        /* Compact Linear-Style List View for DevOps Cards */
+        .devops-list-view {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+        }
+        .devops-list-view .card {
+            display: grid !important;
+            grid-template-columns: minmax(260px, 1.8fr) minmax(200px, 1.4fr) auto auto;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 8px 14px !important;
+            min-height: 48px !important;
+            margin: 0 !important;
+        }
+        .devops-list-view .card > div:first-child {
+            margin-bottom: 0 !important;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .devops-list-view .card > div:first-child h4 {
+            font-size: 0.86rem !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 320px;
+        }
+        .devops-list-view .card > div:first-child .safety-badge {
+            font-size: 0.65rem !important;
+            padding: 1px 6px !important;
+        }
+        .devops-list-view .card > p {
+            display: none !important;
+        }
+        .devops-list-view .card .code-box {
+            margin: 0 !important;
+            padding: 4px 10px !important;
+            font-size: 0.76rem !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 32px;
+            display: flex;
+            align-items: center;
+        }
+        .devops-list-view .card .code-box .copy-btn {
+            display: none !important;
+        }
+        .devops-list-view .card > div[style*="margin-top: 10px"] {
+            margin-top: 0 !important;
+            display: flex;
+            align-items: center;
+            gap: 6px !important;
+            flex-wrap: nowrap !important;
+        }
+        .devops-list-view .card .btn-primary,
+        .devops-list-view .card .btn-run-devops {
+            padding: 4px 10px !important;
+            font-size: 0.75rem !important;
+            white-space: nowrap;
+        }
+        .devops-list-view .card .btn-explain-ai {
+            padding: 4px 8px !important;
+            font-size: 0.72rem !important;
+        }
+        .devops-list-view .card .pin-card-btn {
+            font-size: 0.85rem !important;
+        }
+        .devops-list-view .card .devops-console {
+            grid-column: 1 / -1;
+            margin-top: 8px !important;
+        }
+
+        /* Light Mode List View Overrides */
+        [data-theme="light"] .devops-view-btn.active {
+            background: var(--primary) !important;
+            color: #ffffff !important;
+        }
+        [data-theme="light"] .devops-list-view .card {
+            background: #ffffff !important;
+            border-color: #e2e8f0 !important;
+        }
+        [data-theme="light"] .devops-list-view .card:hover {
+            background: #f8fafc !important;
+            border-color: #cbd5e1 !important;
+        }
+
         /* ==========================================================================
            TAB-TESTING: AUTOMATED TESTING CENTER & CI QUALITY GATE
            ========================================================================== */

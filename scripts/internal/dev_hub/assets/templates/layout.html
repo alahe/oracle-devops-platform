@@ -1766,129 +1766,6 @@
             <span data-i18n="title_cheatsheet">⚡ Developer & DevOps Quick Commands</span>
         </div>
 
-        <!-- Repository Codebase Health & Statistics Widget (Collapsible Telemetry Ribbon) -->
-        <div id="repo-stats-widget" class="telemetry-collapsible-ribbon">
-            <div class="telemetry-ribbon-header" onclick="toggleTelemetryRibbon()">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 1.15rem;">📈</span>
-                    <div>
-                        <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-main);" data-i18n="stats_title">Koodibaasi Tervis & Statistiline Ülevaade</span>
-                        <span style="margin-left: 8px; font-size: 0.75rem; color: var(--text-dim);" data-i18n="stats_subtitle">SLOC, testide tihedus, skaala ja i18n katvus</span>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span id="repo-stats-updated-badge" style="font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border);">Laadimine...</span>
-                    <span id="telemetry-toggle-label" style="font-size: 0.8rem; color: var(--primary); font-weight: 600;">Kuva mõõdikud ▼</span>
-                </div>
-            </div>
-
-            <div id="telemetry-ribbon-body" class="telemetry-ribbon-content">
-                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-                    <button type="button" id="btn-refresh-repo-stats" class="btn btn-sm btn-secondary" onclick="refreshRepoStatistics()" style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; font-size: 0.78rem;">
-                        <span id="refresh-stats-icon">🔄</span> <span data-i18n="stats_btn_refresh">Värskenda aruannet</span>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="downloadRepoReport('markdown')" title="Laadi alla Markdown raport" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 0.78rem;">
-                        <span>📄</span> <span>Markdown</span>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="downloadRepoReport('json')" title="Laadi alla JSON mõõdikud" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 0.78rem;">
-                        <span>📊</span> <span>JSON</span>
-                    </button>
-                </div>
-
-            <!-- 4 Hero KPI Cards -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 18px;">
-                <div class="stat-card" style="background: var(--surface); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px 14px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;" data-i18n="stats_kpi_sloc_title">🏷️ Hallatav Kood (SLOC)</span>
-                        <span style="font-size: 0.7rem; color: var(--primary); background: rgba(56, 189, 248, 0.1); padding: 2px 6px; border-radius: 4px;" id="stats-kpi-files-count">0 faili</span>
-                    </div>
-                    <div style="font-size: 1.4rem; font-weight: 700; color: var(--text-main); margin: 4px 0;" id="stats-kpi-sloc-val">--</div>
-                    <div style="font-size: 0.72rem; color: #64748b;" id="stats-kpi-gross-val">Kogu repo: -- rida</div>
-                </div>
-
-                <div class="stat-card" style="background: var(--surface); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 8px; padding: 12px 14px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;" data-i18n="stats_kpi_test_density_title">🧪 Testide Tihedus</span>
-                        <span style="font-size: 0.7rem; color: var(--success); background: rgba(34, 197, 94, 0.1); padding: 2px 6px; border-radius: 4px;" id="stats-kpi-test-count">0 testi</span>
-                    </div>
-                    <div style="font-size: 1.4rem; font-weight: 700; color: var(--success); margin: 4px 0;" id="stats-kpi-test-density-val">--%</div>
-                    <div style="font-size: 0.72rem; color: #64748b;" id="stats-kpi-test-pass-val">Edukus: 100% PASS</div>
-                </div>
-
-                <div class="stat-card" style="background: var(--surface); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 8px; padding: 12px 14px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;" data-i18n="stats_kpi_arch_scale_title">🏛️ Arhitektuuri Skaala</span>
-                        <span style="font-size: 0.7rem; color: var(--pastel-violet-text); background: rgba(168, 85, 247, 0.1); padding: 2px 6px; border-radius: 4px;" id="stats-kpi-db-count">0 DB profiili</span>
-                    </div>
-                    <div style="font-size: 1.4rem; font-weight: 700; color: var(--text-main); margin: 4px 0;" id="stats-kpi-bp-val">12 Blueprinti</div>
-                    <div style="font-size: 0.72rem; color: #64748b;" id="stats-kpi-cli-count">CLI: 0 | Internal: 0</div>
-                </div>
-
-                <div class="stat-card" style="background: var(--surface); border: 1px solid rgba(251, 191, 36, 0.25); border-radius: 8px; padding: 12px 14px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;" data-i18n="stats_kpi_i18n_title">🌐 Mitmekeelsus & Git</span>
-                        <span style="font-size: 0.7rem; color: var(--warning); background: rgba(251, 191, 36, 0.1); padding: 2px 6px; border-radius: 4px;" id="stats-kpi-commits-count">0 commit'i</span>
-                    </div>
-                    <div style="font-size: 1.4rem; font-weight: 700; color: var(--warning); margin: 4px 0;" id="stats-kpi-i18n-val">6 Keelt (100%)</div>
-                    <div style="font-size: 0.72rem; color: #64748b;" id="stats-kpi-keys-val">0 i18n võtit</div>
-                </div>
-            </div>
-
-            <!-- Visual Multi-Color Stacked Language Proportion Bar -->
-            <div style="margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-main);" data-i18n="stats_lang_bar_label">Koodi jaotus programmeerimiskeelte kaupa:</span>
-                    <span style="font-size: 0.72rem; color: var(--text-muted);" id="stats-lang-legend"></span>
-                </div>
-                <div id="stats-stacked-bar" style="height: 12px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; display: flex; width: 100%;">
-                    <!-- Populated dynamically by JS -->
-                </div>
-            </div>
-
-            <!-- Collapsible Drawer for Detailed Language Table & Top Files -->
-            <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 4px 0;" onclick="toggleRepoStatsDetails()">
-                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--primary);" id="stats-details-toggle-lbl" data-i18n="stats_show_details">▶ Kuva detailne keelte jaotus ja suurimad failid (Top 5 Outliers)</span>
-                    <span id="stats-details-caret" style="color: var(--primary); font-size: 0.8rem;">▼</span>
-                </div>
-                <div id="stats-details-drawer" style="display: none; margin-top: 12px;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
-                        <div>
-                            <h5 style="margin: 0 0 8px 0; font-size: 0.82rem; color: var(--text-muted);" data-i18n="stats_table_lang_title">📊 Keelte jaotus (Maintainable SLOC)</h5>
-                            <div class="table-responsive" style="margin: 0;">
-                                <table style="font-size: 0.78rem;">
-                                    <thead>
-                                        <tr>
-                                            <th data-i18n="th_language">Keel / Tüüp</th>
-                                            <th data-i18n="th_files">Failid</th>
-                                            <th data-i18n="th_sloc">SLOC</th>
-                                            <th data-i18n="th_percent">Osa (%)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="stats-lang-table-tbody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div>
-                            <h5 style="margin: 0 0 8px 0; font-size: 0.82rem; color: var(--text-muted);" data-i18n="stats_table_top_files_title">⚠️ Suurimad lähtekoodifailid (Top 5 Outliers)</h5>
-                            <div class="table-responsive" style="margin: 0;">
-                                <table style="font-size: 0.78rem;">
-                                    <thead>
-                                        <tr>
-                                            <th data-i18n="th_file">Fail</th>
-                                            <th data-i18n="th_language">Keel</th>
-                                            <th data-i18n="th_sloc">SLOC</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="stats-top-files-tbody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        </div>
 
 
 
@@ -1940,24 +1817,42 @@
             </div>
         </div>
 
-        <!-- DevOps Search and Filter Toolbar -->
+        <!-- DevOps Search and Filter Toolbar (with Modal Trigger & View Switcher - Variant 3) -->
         <div class="devops-filter-bar" style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 10px 16px;">
             <div style="display: flex; gap: 10px; align-items: center; flex: 1; min-width: 260px;">
-                <div style="position: relative; flex: 1; max-width: 380px;">
+                <div style="position: relative; flex: 1; max-width: 340px;">
                     <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; font-size: 0.85rem;">🔍</span>
                     <input type="text" id="devops-search-input" oninput="filterDevOpsCards()" placeholder="Otsi käske, skripte või märksõnu..." data-i18n-placeholder="devops_search_placeholder" style="width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text-main); padding: 7px 32px 7px 34px; border-radius: 20px; font-size: 0.82rem; outline: none; transition: border-color 0.2s;">
                     <button type="button" id="devops-search-clear" onclick="clearDevOpsSearch()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.85rem; display: none;">✕</button>
                 </div>
                 <span id="devops-filter-counter" style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; padding: 3px 10px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid var(--border);">-- / --</span>
+                
+                <!-- Discrete Repo Metrics Button (Variant 3) -->
+                <button type="button" id="btn-open-repo-stats" class="btn btn-secondary btn-sm" onclick="openRepoStatsModal()" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 0.8rem; border-radius: 20px; white-space: nowrap;" title="Vaata koodibaasi SLOC, testide tiheduse ja arhitektuuri mõõdikuid">
+                    <span>📊</span> <span data-i18n="stats_btn_open">Repo mõõdikud</span>
+                </button>
             </div>
-            <div class="bp-filters" id="devops-category-filters" style="margin-bottom: 0; gap: 6px;">
-                <button type="button" class="bp-filter-btn active" onclick="filterDevOpsCategory('all', this)" data-i18n="filter_all_cards">🌟 Kõik</button>
-                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('pinned', this)" data-i18n="devops_filter_pinned">⭐ Lemmikud (<span id="devops-pinned-count">0</span>)</button>
-                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('lifecycle', this)" data-i18n="devops_filter_lifecycle">🔄 Paigaldus &amp; Lähtestus</button>
-                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('wallet', this)" data-i18n="devops_filter_wallet">🔐 Wallet, Kasutajad &amp; SQL</button>
-                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('mgmt', this)" data-i18n="devops_filter_mgmt">🛠️ Tuumiktööriistad</button>
-                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('snapshots', this)" data-i18n="devops_filter_snapshots">📸 Snapshotid &amp; Sertifikaadid</button>
-                <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('diag', this)" data-i18n="devops_filter_diag">🩺 Diagnostika</button>
+            
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <div class="bp-filters" id="devops-category-filters" style="margin-bottom: 0; gap: 6px;">
+                    <button type="button" class="bp-filter-btn active" onclick="filterDevOpsCategory('all', this)" data-i18n="filter_all_cards">🌟 Kõik</button>
+                    <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('pinned', this)" data-i18n="devops_filter_pinned">⭐ Lemmikud (<span id="devops-pinned-count">0</span>)</button>
+                    <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('lifecycle', this)" data-i18n="devops_filter_lifecycle">🔄 Paigaldus &amp; Lähtestus</button>
+                    <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('wallet', this)" data-i18n="devops_filter_wallet">🔐 Wallet, Kasutajad &amp; SQL</button>
+                    <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('mgmt', this)" data-i18n="devops_filter_mgmt">🛠️ Tuumiktööriistad</button>
+                    <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('snapshots', this)" data-i18n="devops_filter_snapshots">📸 Snapshotid &amp; Sertifikaadid</button>
+                    <button type="button" class="bp-filter-btn" onclick="filterDevOpsCategory('diag', this)" data-i18n="devops_filter_diag">🩺 Diagnostika</button>
+                </div>
+                
+                <!-- List / Grid View Mode Toggle -->
+                <div class="devops-view-toggle" style="display: inline-flex; background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px; padding: 2px;">
+                    <button type="button" id="btn-devops-view-list" class="devops-view-btn" onclick="setDevOpsViewMode('list')" title="Kompaktne nimekirjavaade" style="border: none; background: transparent; color: var(--text-muted); padding: 4px 8px; font-size: 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">
+                        <span>☰</span> <span data-i18n="view_list">Nimekiri</span>
+                    </button>
+                    <button type="button" id="btn-devops-view-grid" class="devops-view-btn active" onclick="setDevOpsViewMode('grid')" title="Kaardiruudustik" style="border: none; background: transparent; color: var(--text-muted); padding: 4px 8px; font-size: 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.2s ease;">
+                        <span>⊞</span> <span data-i18n="view_grid">Kaardid</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -4146,6 +4041,126 @@ Live stdout/stderr stream with millisecond timings will appear here.</span></pre
                     <span>⚡</span> <span data-i18n="btn_execute_recipe">Käivita retsept</span>
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- REPOSITORY CODEBASE HEALTH & STATISTICS MODAL (VARIANT 3) -->
+<div id="repo-stats-modal" class="modal-backdrop" onclick="closeRepoStatsModal(event)" style="display: none; z-index: 99999;">
+    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 900px; width: 94%; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); overflow: hidden; background: var(--surface); border: 1px solid var(--border);">
+        <div class="modal-header" style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); background: var(--surface-subtle);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.5rem;">📊</span>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-main);" data-i18n="stats_title">Koodibaasi Tervis &amp; Statistiline Ülevaade</h3>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px;">
+                        <span id="repo-stats-updated-badge" style="font-size: 0.72rem; color: var(--text-muted); background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border);">Laadimine...</span>
+                        <span style="font-size: 0.75rem; color: var(--text-dim);" data-i18n="stats_subtitle">SLOC, testide tihedus, skaala ja i18n katvus</span>
+                    </div>
+                </div>
+            </div>
+            <button class="modal-close-btn" onclick="closeRepoStatsModal()" title="Sulge (Esc)">✕</button>
+        </div>
+        <div class="modal-body" style="padding: 20px; max-height: 75vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+                <button type="button" id="btn-refresh-repo-stats" class="btn btn-sm btn-secondary" onclick="refreshRepoStatistics()" style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; font-size: 0.78rem;">
+                    <span id="refresh-stats-icon">🔄</span> <span data-i18n="stats_btn_refresh">Värskenda aruannet</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="downloadRepoReport('markdown')" title="Laadi alla Markdown raport" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; font-size: 0.78rem;">
+                    <span>📄</span> <span>Markdown</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="downloadRepoReport('json')" title="Laadi alla JSON mõõdikud" style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; font-size: 0.78rem;">
+                    <span>📊</span> <span>JSON</span>
+                </button>
+            </div>
+
+            <!-- 4 Hero KPI Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                <div class="stat-card" style="background: var(--surface-subtle); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;" data-i18n="stats_kpi_sloc_title">🏷️ Hallatav Kood (SLOC)</span>
+                        <span style="font-size: 0.7rem; color: var(--primary); background: rgba(56, 189, 248, 0.1); padding: 2px 6px; border-radius: 4px;" id="stats-kpi-files-count">0 faili</span>
+                    </div>
+                    <div style="font-size: 1.45rem; font-weight: 700; color: var(--text-main); margin: 6px 0;" id="stats-kpi-sloc-val">--</div>
+                    <div style="font-size: 0.72rem; color: #64748b;" id="stats-kpi-gross-val">Kogu repo: -- rida</div>
+                </div>
+
+                <div class="stat-card" style="background: var(--surface-subtle); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 8px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;" data-i18n="stats_kpi_test_density_title">🧪 Testide Tihedus</span>
+                        <span style="font-size: 0.7rem; color: var(--success); background: rgba(34, 197, 94, 0.1); padding: 2px 6px; border-radius: 4px;" id="stats-kpi-test-count">0 testi</span>
+                    </div>
+                    <div style="font-size: 1.45rem; font-weight: 700; color: var(--success); margin: 6px 0;" id="stats-kpi-test-density-val">--%</div>
+                    <div style="font-size: 0.72rem; color: #64748b;" id="stats-kpi-test-pass-val">Edukus: 100% PASS</div>
+                </div>
+
+                <div class="stat-card" style="background: var(--surface-subtle); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 8px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;" data-i18n="stats_kpi_arch_scale_title">🏛️ Arhitektuuri Skaala</span>
+                        <span style="font-size: 0.7rem; color: var(--pastel-violet-text); background: rgba(168, 85, 247, 0.1); padding: 2px 6px; border-radius: 4px;" id="stats-kpi-db-count">0 DB profiili</span>
+                    </div>
+                    <div style="font-size: 1.45rem; font-weight: 700; color: var(--text-main); margin: 6px 0;" id="stats-kpi-bp-val">12 Blueprinti</div>
+                    <div style="font-size: 0.72rem; color: #64748b;" id="stats-kpi-cli-count">CLI: 0 | Internal: 0</div>
+                </div>
+
+                <div class="stat-card" style="background: var(--surface-subtle); border: 1px solid rgba(251, 191, 36, 0.25); border-radius: 8px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;" data-i18n="stats_kpi_i18n_title">🌐 Mitmekeelsus &amp; Git</span>
+                        <span style="font-size: 0.7rem; color: var(--warning); background: rgba(251, 191, 36, 0.1); padding: 2px 6px; border-radius: 4px;" id="stats-kpi-commits-count">0 commit'i</span>
+                    </div>
+                    <div style="font-size: 1.45rem; font-weight: 700; color: var(--warning); margin: 6px 0;" id="stats-kpi-i18n-val">6 Keelt (100%)</div>
+                    <div style="font-size: 0.72rem; color: #64748b;" id="stats-kpi-keys-val">0 i18n võtit</div>
+                </div>
+            </div>
+
+            <!-- Visual Multi-Color Stacked Language Proportion Bar -->
+            <div style="margin-bottom: 20px; background: var(--surface-subtle); padding: 14px; border-radius: 8px; border: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-main);" data-i18n="stats_lang_bar_label">Koodi jaotus programmeerimiskeelte kaupa:</span>
+                    <span style="font-size: 0.72rem; color: var(--text-muted);" id="stats-lang-legend"></span>
+                </div>
+                <div id="stats-stacked-bar" style="height: 14px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; display: flex; width: 100%;">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+
+            <!-- Detailed Language Table & Top Files -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+                <div>
+                    <h5 style="margin: 0 0 8px 0; font-size: 0.82rem; color: var(--text-muted);" data-i18n="stats_table_lang_title">📊 Keelte jaotus (Maintainable SLOC)</h5>
+                    <div class="table-responsive" style="margin: 0;">
+                        <table style="font-size: 0.78rem;">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="th_language">Keel / Tüüp</th>
+                                    <th data-i18n="th_files">Failid</th>
+                                    <th data-i18n="th_sloc">SLOC</th>
+                                    <th data-i18n="th_percent">Osa (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-lang-table-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div>
+                    <h5 style="margin: 0 0 8px 0; font-size: 0.82rem; color: var(--text-muted);" data-i18n="stats_table_top_files_title">⚠️ Suurimad lähtekoodifailid (Top 5 Outliers)</h5>
+                    <div class="table-responsive" style="margin: 0;">
+                        <table style="font-size: 0.78rem;">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="th_file">Fail</th>
+                                    <th data-i18n="th_language">Keel</th>
+                                    <th data-i18n="th_sloc">SLOC</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-top-files-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" style="padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; background: var(--surface-subtle);">
+            <button type="button" class="btn btn-secondary" onclick="closeRepoStatsModal()" style="font-size: 0.8rem; padding: 6px 16px;">Sulge</button>
         </div>
     </div>
 </div>
